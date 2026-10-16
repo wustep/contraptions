@@ -1018,7 +1018,7 @@ function drawLamps(p: p5, k: number, t: number): void {
 }
 /**
  * The sweep's pool of light where it strikes the house fronts and the street, running down the facade and over her:
- * drawn over her (in `over`), so her silver flares pale as it passes.
+ * drawn over her (in `over`), so her silver goes pale as it passes. A wide low pool, no hot core of its own.
  */
 function drawSweepPool(p: p5, k: number, t: number): void {
   for (const find of FINDS) {
@@ -1030,7 +1030,6 @@ function drawSweepPool(p: p5, k: number, t: number): void {
     const low = smooth(y, -6.5, -4.5)
     const on = Math.exp(-Math.pow((t - CAUGHT) / 0.16, 2))
     glow(p, k, x, y, 0.95, TOWN.glow, (0.2 + 0.12 * on) * hold * low, 0.85)
-    glow(p, k, x, y, 0.4, '#FFF6DA', (0.12 + 0.2 * on) * hold * low)
   }
 }
 
@@ -1377,7 +1376,6 @@ function drawWindows(p: p5, k: number, W: number, ink: string, t: number): void 
         p.noStroke()
         p.fill(litNow ? TOWN.glow : w.dormer ? DARK_DORMER : DARK_GLASS)
         p.rect(w.x * k, w.y * k, w.w * k, w.h * k)
-        if (litNow) glow(p, k, w.x + w.w / 2, w.y + w.h / 2, 0.8, TOWN.glow, 0.1)
       }
       if (!w.dormer) {
         p.stroke(alpha(p, ink, 0.55))
@@ -1387,9 +1385,6 @@ function drawWindows(p: p5, k: number, W: number, ink: string, t: number): void 
       }
       p.pop()
     })
-    // The lamps going out: the last of their light on the wall, gone in a breath.
-    const since = t - out
-    if (since >= 0 && since < 0.5) for (const w of f.windows) if (w.lit) glow(p, k, w.x + w.w / 2, w.y + w.h / 2, 0.6, TOWN.glow, 0.25 * (1 - since / 0.5))
   })
 }
 
@@ -1799,8 +1794,6 @@ function drawHowl(p: p5, k: number, W: number, ink: string, t: number): void {
   // Seen looking up (and in the war's first wide) he is the one silhouette in the sky, bigger across than a bomber; in
   // her frames in the street, where he stoops over her head, as he was. The change is only ever at a cut.
   const S = wingScale(t) * (skyward(t) ? LOOK_WINGS : 1)
-  // The fire's light behind him, so he reads against the dark.
-  glow(p, k, x, y + 0.1, 0.75 * S, TOWN.fire, 0.16)
   p.push()
   p.translate(x * k, y * k)
   const wings = { t, spread: 1 - 0.3 * dive, flap: flap + jolt - 0.5 * dive, heading, torso: true }

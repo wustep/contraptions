@@ -1105,7 +1105,6 @@ function drawShop(p: p5, k: number, W: number, ink: string, t: number, tone: Ton
   p.vertex(X(wx1), X(wy1 - 0.4))
   p.vertex(X(wx1), X(wy1))
   p.endShape(p.CLOSE)
-  if (t < SEAM.curse) glow(p, k, wx1 - 0.2, wy1 - 0.5, 0.9, TOWN.glow, 0.35 * smooth(t, 2, 12))
   p.stroke(inTone(TOWN.timber))
   p.strokeWeight(W * 1.2)
   p.line(X((wx0 + wx1) / 2), X(wy0), X((wx0 + wx1) / 2), X(wy1))

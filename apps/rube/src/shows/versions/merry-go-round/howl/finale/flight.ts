@@ -1,9 +1,9 @@
 import type p5 from 'p5'
 import { ball, laneAt, mixHex, R, type Lane, type Pt } from '../../../../../parts'
 import { drawCalcifer, drawWarship } from '../cast'
-import { alpha, box, carried, frame, hash, knock, part, smooth, type Company, type PartShot } from '../kit'
+import { box, carried, frame, hash, knock, part, smooth, type Company, type PartShot } from '../kit'
 import { AIR_STEPS, bar, CHORD, DURATION, SEAM } from '../music'
-import { drawDeck, drawGrate, drawPipes, drawStar, PLANK_AFTER, PLANK_END } from '../plank/plank'
+import { drawDeck, drawGrate, drawPipes, PLANK_AFTER, PLANK_END, starLift } from '../plank/plank'
 import { calciferAt, DECK, LAND, T1 } from '../plank/plank-rig'
 import { CASTLE, doorAt, drawCastle, drawChimneyFire, drawLeg, FAR, feetAt, MODULE_PIVOT, onBody, puff, STRIDE, type CastlePose, type ModuleId, type ModuleMove } from '../wastes/castle'
 import { skyGradient, wastesSky } from '../wastes/sky'
@@ -697,51 +697,12 @@ function bursts(p: p5, k: number, t: number) {
   }
 }
 
-/* ------------------------------------------------------------------ the chord: fire out of the chimney, every window */
-
-/** The castle's windows (standing cells: x, y, w, h), as `drawCastle` draws them, for their flare. */
-const WINDOWS: [number, number, number, number][] = [
-  [-6.95, -18.85, 0.5, 0.85], [-6.95, -16.35, 0.5, 0.85], [-6.95, -13.95, 0.5, 0.75], [-8.55, -18.05, 0.3, 0.55],
-  [-4.7, -16.6, 0.62, 0.85], [-4.7, -14.1, 0.62, 0.8], [-1.5, -20.2, 0.55, 0.6],
-  [-2.55, -15.95, 0.72, 0.9], [-0.6, -15.95, 0.72, 0.9], [1.3, -13.95, 0.68, 0.85], [-2.45, -13.95, 0.62, 0.8],
-  [-1.05, -17.75, 0.6, 0.7], [3.66, -14.9, 0.46, 0.7], [6.95, -15.45, 0.45, 0.8], [-5.75, -9.75, 0.62, 0.7], [3.1, -9.55, 0.62, 0.7],
-]
-const FLARE = mixHex(WASTES.window, '#FFFFFF', 0.45)
-
-/**
- * Every window flares with each roar, the fire running out through the house from the hearth (a few hundredths of
- * a second from the chimney to the farthest): the glass goes near white and a warm light spills round it.
- */
-function flareWindows(p: p5, k: number, t: number, L: Look) {
-  if (t < CHORD[0] - 0.05 || t > CHORD[2] + 4) return
-  const [ax, ay] = onCastle(L, [0, -6.9])
-  const [bx, by] = onCastle(L, [1, -6.9])
-  const ang = Math.atan2(by - ay, bx - ax)
-  const chim = CASTLE.chimney
-  p.push()
-  p.noStroke()
-  p.rectMode(p.CORNER)
-  for (const [x, y, w, h] of WINDOWS) {
-    const c: Pt = [x + w / 2, y + h / 2]
-    const f = fireAt(t - 0.0015 * Math.hypot(c[0] - chim[0], c[1] - chim[1])) - 0.2 * smooth(t, 301.75, CHORD[0])
-    if (f < 0.01) continue
-    const [cx, cy] = onCastle(L, c)
-    puff(p, k, cx, cy, Math.max(w, h) * (1.3 + 1.4 * f), mixHex(WASTES.window, CALCIFER.core, 0.45), 0.5 * f, 1.15)
-    p.push()
-    p.translate(cx * k, cy * k)
-    p.rotate(ang)
-    p.fill(alpha(p, FLARE, Math.min(1, 1.3 * f)))
-    p.rect((-w / 2 + 0.05) * k, (-h / 2 + 0.05) * k, (w - 0.1) * k, (h - 0.1) * k, 0.05 * k)
-    p.pop()
-  }
-  p.pop()
-}
+/* ------------------------------------------------------------------ the chord: fire out of the chimney */
 
 /**
  * Calcifer's roars out of the chimney: a sheaf of tongues of his fire leaping up out of its mouth and swept back on
- * the wind, his three colours one inside the other, flames tearing off the tips as they die, and a warm light
- * thrown on the sky and the roofs round it (a long soft haze, never a disc). The castle's own (`drawChimneyFire`),
- * as on the walk's roar: the same fire.
+ * the wind, his three colours one inside the other, flames tearing off the tips as they die. The castle's own
+ * (`drawChimneyFire`), as on the walk's roar: the same fire.
  */
 function drawFire(p: p5, k: number, t: number, L: Look) {
   const f = fireAt(t)
@@ -1125,14 +1086,12 @@ export const flight = part<null>(
       }
       const cal = calAt(t)
       if (cal) {
-        if (cal.star > 0.01) drawStar(p, k, t, cal.at, cal.star)
+        // As he lands in the grate he flares up (his size), no glow round him.
+        const fl = knock(t - DIVE, 0.4)
         p.push()
         p.translate(cal.at[0] * k, cal.at[1] * k)
-        drawCalcifer(p, k, W, ink, { t, size: cal.size, weak: 0, look: cal.look, lean: cal.lean, mouth: cal.mouth, shut: 0 })
+        drawCalcifer(p, k, W, ink, { t, size: cal.size * starLift(t, cal.star) * (1 + 0.3 * fl), weak: 0, look: cal.look, lean: cal.lean, mouth: cal.mouth + 0.3 * fl, shut: 0 })
         p.pop()
-        // His flare as he lands: a warm breath of light over the grate (never a disc).
-        const fl = knock(t - DIVE, 0.4)
-        if (fl > 0.01) puff(p, k, cal.at[0], cal.at[1] - 0.35, 0.9 + 0.8 * (1 - fl), CALCIFER.core, 0.3 * fl)
       }
       heaveBreath(p, k, t)
       // The pieces behind the castle as they come, the castle, then those that come in front of it.
@@ -1171,7 +1130,6 @@ export const flight = part<null>(
         if (folded) flightLegs(p, k, W, ink, L.pose, 'near')
         p.pop()
       }
-      flareWindows(p, k, t, L)
       porchLight(t, p.drawingContext as CanvasRenderingContext2D, k, L)
       footClouds(p, k, t, false)
       shakenLoose(p, k, W, ink, t)
