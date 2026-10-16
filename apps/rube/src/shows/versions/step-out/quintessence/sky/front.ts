@@ -1,17 +1,17 @@
 import type { Pt } from '../../../../../parts'
-import { layer, motes, rgbaOf, view, type View } from '../depth'
+import { layer, rgbaOf, view, type View } from '../depth'
 import { hash, scenery, smooth } from '../kit'
 import { jolt } from './air'
-import { END, heli, LIFT, WIDE_FROM, WIDE_TO } from './sky-plan'
+import { END, LIFT, WIDE_FROM, WIDE_TO } from './sky-plan'
 
 /**
  * What stands between the camera and the machine in this place, and the light over all of it: the near plane, the
  * air, the grade. Drawn after the set and the parts and before Walter (`depth.ts`), so nothing here hides him or
  * changes his colour. It is handed show time as `t`.
  *
- * On the pad, the rotor's wash throwing grit and spray out flat along the quay as the skids leave it. In the flight,
- * wisps of low cloud nearer than the helicopter going by fast at the frame's head (never across the middle, where he
- * is), which is what says how quick it is when the sea below hardly moves; and rain streaking past.
+ * Rain, falling on the pad and streaking back past the helicopter in the flight; and in the flight a few rags of scud
+ * nearer than the helicopter going by fast at the frame's head (never across the middle, where he is). They are what
+ * say how quick it is when the sea below hardly moves.
  */
 
 /** Where the camera mostly is in the cruise, and how tall its frame: what the near planes are composed against. */
@@ -27,60 +27,48 @@ export const skyFront = scenery<null>({
     const g = p.drawingContext as CanvasRenderingContext2D
     const v = view(p, c.k)
     const t = c.t
-    drawGrit(g, v, t)
-    drawWisps(g, v, t)
+    drawScud(g, v, t)
     drawRain(g, v, t)
   },
 })
 
-/** The wash on the pad: grit and spray thrown out flat both ways from under the rotor as it spools up and lifts. */
-function drawGrit(g: CanvasRenderingContext2D, v: View, t: number): void {
-  const a = smooth(t, LIFT - 1.6, LIFT - 0.2) * (1 - smooth(t, LIFT + 1.2, LIFT + 3))
-  if (a <= 0.01) return
-  const hx = heli(t).x + 0.4
-  for (const dir of [-1, 1]) {
-    const box = dir < 0 ? { x0: hx - 6, y0: -0.55, x1: hx - 0.8, y1: 0.12 } : { x0: hx + 0.8, y0: -0.55, x1: hx + 6, y1: 0.12 }
-    motes(g, v, t, { n: 12, seed: dir < 0 ? 61 : 67, tile: [2.4, 0.7], r: [0.008, 0.016], v: [dir * 5.5, -0.35], spread: 0.45, color: rgbaOf('#E3E8E5', 0.45 * a), streak: 0.05, within: box })
-  }
-}
-
 /**
- * The wisps: low cloud nearer than the helicopter, on three planes in front of it, so the nearest goes by quickest.
- * Each is a few flat, pale, overlapping lozenges, in the frame's top sixth only, against the overcast. The drops in
- * the air jolt them, the nearest most.
+ * The scud: rags of low cloud torn off the overcast, on one plane in front of the helicopter, in the frame's top sixth
+ * only. Each is one flat grey, darker than the overcast above it, ragged along its foot. The drops in the air jolt them.
  */
-function drawWisps(g: CanvasRenderingContext2D, v: View, t: number): void {
+function drawScud(g: CanvasRenderingContext2D, v: View, t: number): void {
   const a = smooth(t, LIFT + 2, LIFT + 3.5) * (1 - smooth(t, END - 2.4, END - 1.2))
   if (a <= 0.01) return
-  for (const [z, n, seed] of [[1.4, 3, 1], [1.6, 3, 2], [1.85, 2, 3]] as [number, number, number][]) {
-    layer(g, v, z, CRUISE_AT, CRUISE_REF, (inner) => {
-      const k = inner.k
-      const span = inner.w + 8
-      const body = new Path2D()
-      const core = new Path2D()
-      const kick = jolt(t) * 0.12 * z
-      for (let i = 0; i < n; i++) {
-        const gx = hash(i, seed, 1) * span * 1.7 - t * 0.6
-        const x = inner.x0 - 4 + ((((gx - (inner.x0 - 4)) % span) + span) % span)
-        const y = inner.y0 + inner.h * (0.03 + 0.12 * hash(i, seed, 3)) + kick
-        const w = (2 + 2.6 * hash(i, seed, 4)) * (z / 1.6)
-        const h = (0.1 + 0.1 * hash(i, seed, 5)) * (z / 1.6)
-        for (let j = 0; j < 3; j++) {
-          const ox = (j - 1) * w * 0.42 + (hash(i, j, seed + 7) - 0.5) * w * 0.2
-          const oy = (hash(i, j, seed + 8) - 0.5) * h * 0.9
-          const ww = w * (0.45 + 0.25 * hash(i, j, seed + 9))
-          body.moveTo((x + ox + ww) * k, (y + oy) * k)
-          body.ellipse((x + ox) * k, (y + oy) * k, ww * k, h * k, 0, 0, Math.PI * 2)
-          core.moveTo((x + ox + ww * 0.6) * k, (y + oy) * k)
-          core.ellipse((x + ox) * k, (y + oy) * k, ww * 0.6 * k, h * 0.55 * k, 0, 0, Math.PI * 2)
-        }
+  layer(g, v, 1.5, CRUISE_AT, CRUISE_REF, (inner) => {
+    const k = inner.k
+    const span = inner.w + 8
+    const rags = new Path2D()
+    const kick = jolt(t) * 0.18
+    for (let i = 0; i < 3; i++) {
+      const gx = hash(i, 1, 1) * span * 1.7 - t * 0.6
+      const x = inner.x0 - 5 + ((((gx - (inner.x0 - 5)) % span) + span) % span)
+      const y = inner.y0 + inner.h * (0.04 + 0.08 * hash(i, 3, 1)) + kick
+      const w = 3 + 2.5 * hash(i, 4, 1)
+      const h = 0.16 + 0.1 * hash(i, 5, 1)
+      const n = 24
+      for (let j = 0; j <= n; j++) {
+        const u = j / n
+        const p = Math.pow(Math.sin(u * Math.PI), 0.7)
+        const yy = y - h * 0.4 * p * (1 + 0.25 * Math.sin(u * 7 + i))
+        if (j) rags.lineTo((x + u * w) * k, yy * k)
+        else rags.moveTo(x * k, yy * k)
       }
-      g.fillStyle = rgbaOf('#EEF1EF', 0.24 * a)
-      g.fill(body)
-      g.fillStyle = rgbaOf('#F7F8F5', 0.3 * a)
-      g.fill(core)
-    })
-  }
+      for (let j = n; j >= 0; j--) {
+        const u = j / n
+        const p = Math.pow(Math.sin(u * Math.PI), 0.7)
+        const rag = Math.abs(Math.sin(u * 11 + i * 2 + t * 0.4)) * (0.6 + 0.4 * Math.sin(u * 4.3 + i))
+        rags.lineTo((x + u * w) * k, (y + h * p * (0.35 + 0.5 * rag)) * k)
+      }
+      rags.closePath()
+    }
+    g.fillStyle = rgbaOf('#8E989C', a)
+    g.fill(rags)
+  })
 }
 
 /**
