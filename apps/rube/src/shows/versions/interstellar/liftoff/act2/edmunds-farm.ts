@@ -9,7 +9,7 @@ import { DARK, DUST as FARM, VOID } from '../worlds'
  * yard's, again) pumps into a tank, and a channel from it runs across the plain, catching the dawn, to a field of
  * young corn in rows; a hoop house with more corn in it stands on the left, panels on the right turn to the sun as it
  * comes up, and her rover is parked near, its tracks running back to the horizon. Over it all: high cirrus going
- * from slate to rose to gold, dust devils walking far off, and sand blowing low across the near ground.
+ * from slate to rose to gold, and sand blowing low across the near ground.
  *
  * The plain is painted in depth as `edmunds.ts` paints it: a thing on the ground `s` times nearer than the landing
  * site stands `s` times as far below the horizon as the site does, `s` times its size, and slides `s` times as far
@@ -141,41 +141,6 @@ export function drawCirrus(p: p5, c: Ctx, v: Plain, site: Site): void {
 
 /* ------------------------------------------------------------------ the far plain */
 
-/** Dust devils walking downwind far off: a few at a time, each living some twenty seconds. */
-export function drawDevils(p: p5, c: Ctx, v: Plain, site: Site): void {
-  const { k, weight } = c
-  const X = (x: number) => x * k
-  const LIFE = 22
-  for (let i = 0; i < 6; i++) {
-    // Staggered lives, each at its own depth and place.
-    const age = (site.T + hash(i, 501) * LIFE) % LIFE
-    const n = Math.floor((site.T + hash(i, 501) * LIFE) / LIFE)
-    const s = 0.12 + 0.22 * hash(i, n, 502)
-    const gx = site.lx + (hash(i, n, 503) - 0.35) * 34 + age * 0.55
-    const [x, y] = at(v, gx, s)
-    if (x < v.f.x0 - 1 || x > v.f.x1 + 1) continue
-    const life = smooth(age, 0, 3) * (1 - smooth(age, LIFE - 4, LIFE))
-    if (life <= 0.02) continue
-    const H = (4 + 3 * hash(i, n, 504)) * s
-    const lean = 0.25 * s * Math.sin(site.T * 0.4 + i)
-    p.noFill()
-    p.strokeWeight(Math.max(0.8, weight * 0.5))
-    // Rings of dust up the column, widening as they go, each turning on its own.
-    for (let j = 0; j < 9; j++) {
-      const u = j / 8
-      const r = (0.08 + 0.55 * u * u) * s * 1.6
-      const cy = y - H * u
-      const cx = x + lean * u + 0.06 * s * Math.sin(site.T * 3 + j * 1.3)
-      p.stroke(alpha(p, SAND, 0.4 * life * (1 - 0.55 * u)))
-      p.arc(X(cx), X(cy), X(2 * r), X(r * 0.5), Math.PI * (0.1 + 0.2 * Math.sin(site.T * 2 + j)), Math.PI * (1.6 + 0.2 * Math.sin(site.T * 2 + j)))
-    }
-    // Its skirt on the ground.
-    p.noStroke()
-    p.fill(alpha(p, SAND, 0.18 * life))
-    p.ellipse(X(x), X(y), X(0.9 * s * 1.6), X(0.12 * s))
-  }
-}
-
 /** Sand blowing low across the near ground, faster the nearer: thin skeins that come, run and go. */
 export function drawSkeins(p: p5, c: Ctx, v: Plain, site: Site): void {
   const { k, weight } = c
@@ -260,54 +225,29 @@ function sides(v: Plain, lx: number, line: Ground[], w: number): [Pt[], Pt[]] {
   return [left, right]
 }
 
-/** A dry river winding across the plain behind the camp: what her windmill draws its water from, under the sand. */
-const RIVER = winding([[-70, 260], [-44, 140], [-30, 92], [-17, 118], [-6, 74], [3, 52], [13, 62], [25, 45], [41, 34], [64, 30]], 10)
-/** Her rover's ways out of the camp and back, worn into the plain: to the river, and out to his lander. */
-const ROUTES: Ground[][] = [
-  winding([[-1.6, 9.3], [-3.2, 15], [-7, 23], [-13, 32], [-20, 41], [-26, 49], [-29.4, 53.5]], 8),
-  winding([[-1.4, 9.3], [1.5, 16], [5, 24], [7.5, 34], [9.5, 45], [12, 56]], 8),
-]
+/** Her rover's way out of the camp and back, worn into the plain: out to his lander, and home. */
+const ROUTE = winding([[-1.6, 9.3], [-3.2, 15], [-7, 23], [-13, 32], [-20, 41], [-26, 49], [-29.4, 53.5]], 8)
 /** Edmunds' lander, where he came down: far out on the plain, half in the sand. */
 const EDMUNDS: Ground = [-31, 55]
 
-/** The river, the ways, and his lander: laid on the plain before the stones and the near ground. */
+/**
+ * Her way and his lander: laid on the plain before the stones and the near ground, and nearer than the mesas on it, so
+ * drawn over them. (A dry river wound across the plain here too: it ran out behind the nearer mesas but was drawn over
+ * them, and seen from the air it folded back on itself into a dark hook near the horizon.)
+ */
 export function drawPlainStory(p: p5, c: Ctx, v: Plain, site: Site): void {
   const { k, weight } = c
   const X = (x: number) => x * k
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const poly = (pts: Pt[]) => pts.forEach(([x, y], i) => (i ? ctx.lineTo(X(x), X(y)) : ctx.moveTo(X(x), X(y))))
-  // The river's bed: a darker band, its sunward bank caught by the dawn, a pale streak of salt down its middle.
-  const [l, r] = sides(v, site.lx, RIVER, 3.2)
-  ctx.fillStyle = mixHex(LAND, VOID.bg, 0.32)
-  ctx.beginPath()
-  poly(l)
-  for (let i = r.length - 1; i >= 0; i--) ctx.lineTo(X(r[i][0]), X(r[i][1]))
-  ctx.closePath()
-  ctx.fill()
+  // Two ruts, worn by many runs out and back.
   ctx.lineJoin = 'round'
-  ctx.lineWidth = Math.max(0.8, weight * 0.55)
-  ctx.strokeStyle = `rgba(217, 164, 65, ${0.28 + 0.2 * site.dawn})`
-  ctx.beginPath()
-  poly(r)
-  ctx.stroke()
-  ctx.strokeStyle = 'rgba(11, 15, 29, 0.35)'
-  ctx.beginPath()
-  poly(l)
-  ctx.stroke()
-  const [sl] = sides(v, site.lx, RIVER, 0.5)
-  ctx.strokeStyle = `rgba(236, 229, 211, ${0.1 + 0.06 * site.dawn})`
-  ctx.beginPath()
-  poly(sl)
-  ctx.stroke()
-  // Her ways: two ruts each, worn by many runs out and back.
   ctx.strokeStyle = 'rgba(11, 15, 29, 0.24)'
   ctx.lineWidth = Math.max(0.7, weight * 0.45)
   ctx.beginPath()
-  for (const route of ROUTES) {
-    for (const off of [0.42, -0.42]) {
-      const [a] = sides(v, site.lx + off, route, 0)
-      poly(a)
-    }
+  for (const off of [0.42, -0.42]) {
+    const [a] = sides(v, site.lx + off, ROUTE, 0)
+    poly(a)
   }
   ctx.stroke()
   drawLander(p, c, v, site)
