@@ -152,15 +152,6 @@ function poly(g: C2, k: number, pts: [number, number][], fill: string): void {
   g.closePath()
   g.fill()
 }
-/** A soft pool of light: a radial gradient, `a` at its middle. */
-function glow(g: C2, k: number, x: number, y: number, r: number, color: string, a: number): void {
-  if (a <= 0.002) return
-  const gr = g.createRadialGradient(x * k, y * k, 0, x * k, y * k, r * k)
-  gr.addColorStop(0, hexA(color, a))
-  gr.addColorStop(1, hexA(color, 0))
-  g.fillStyle = gr
-  g.fillRect((x - r) * k, (y - r) * k, 2 * r * k, 2 * r * k)
-}
 /** The most recent of `times` at or before t: its knock (1 on it, decaying), scaled by how hard the music hit there. */
 function hitOf(times: readonly number[], t: number, decay = 0.14): number {
   const { i, ago } = lastOf(times, t)
@@ -338,10 +329,9 @@ function drawTable(g: C2, k: number, t: number): void {
     rect(g, k, sx, ny - 0.1, 0.02, 0.012, hexA(PAL.paper, 0.6))
     rect(g, k, sx - 0.01, ny - 0.035, 0.02, 0.012, hexA(PAL.paper, 0.6))
   }
-  // The little gust it makes, and the lamp catching it.
+  // The little gust it makes.
   if (since >= 0 && since < 0.8) {
     const a = knock(since, 0.22)
-    glow(g, k, nx + NEG.w / 2, ny - 0.06, 0.45, PAL.paper, 0.35 * a)
     for (let i = 0; i < 6; i++) {
       const d = (0.08 + since * 0.9) * (0.6 + 0.6 * hash(i, 3))
       const s = i < 3 ? -1 : 1

@@ -157,23 +157,6 @@ export function blob(pen: Pen, pts: Pt[], fill: string, a = 1): void {
   ctx.restore()
 }
 
-/** A small four-pointed glint: the light catching something. */
-export function glint(pen: Pen, c: Pt, r: number, col: string, a: number): void {
-  if (a <= 0.01) return
-  glow(pen, c, r * 1.6, col, a * 0.5)
-  const s = r * 0.16
-  const { k } = pen
-  const ctx = ctxOf(pen.p)
-  ctx.save()
-  ctx.fillStyle = rgba(pen, col, a)
-  ctx.beginPath()
-  const q: Pt[] = [[c[0], c[1] - r], [c[0] + s, c[1] - s], [c[0] + r, c[1]], [c[0] + s, c[1] + s], [c[0], c[1] + r], [c[0] - s, c[1] + s], [c[0] - r, c[1]], [c[0] - s, c[1] - s]]
-  q.forEach(([x, y], i) => (i ? ctx.lineTo(x * k, y * k) : ctx.moveTo(x * k, y * k)))
-  ctx.closePath()
-  ctx.fill()
-  ctx.restore()
-}
-
 /** A damped wobble: 0 before `since` is 0, a ring that dies away (`f` hertz, `tau` seconds). */
 export const ring = (since: number, f = 6, tau = 0.25): number => (since < 0 ? 0 : Math.exp(-since / tau) * Math.sin(since * f * Math.PI * 2))
 /** 1 at the moment, decaying. */

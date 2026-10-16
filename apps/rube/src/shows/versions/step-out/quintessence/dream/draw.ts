@@ -225,7 +225,7 @@ function smoke(pen: Pen, from: Pt, t: number, seed: number, amount: number, rise
 
 /**
  * The night: the sky (only where it can be seen: over the far towers, beside and above the building), the fire's light
- * on it, the window's flash as it goes on the cut; then the city on its planes (`city.ts`) and the smoke going away
+ * on it, warmer for a moment as the window goes on the cut; then the city on its planes (`city.ts`) and the smoke going away
  * over it.
  */
 export function drawSky(pen: Pen, v: View, t: number): void {
@@ -237,30 +237,18 @@ export function drawSky(pen: Pen, v: View, t: number): void {
   if (v.x0 < BX) rects.push([v.x0 - 0.1, v.y0 - 0.1, Math.min(v.x1, BX + 0.1) + 0.1, low])
   if (v.x1 > BX && v.y0 < ROOF - 0.4) rects.push([Math.max(v.x0, BX) - 0.1, v.y0 - 0.1, v.x1 + 0.1, Math.min(low, ROOF - 0.4)])
   // One plain wash for the sky and the fire's light on it: dark far off and high, warming toward the building.
-  const warm = 0.22 * fire
+  // The window going, on the band's first downbeat, warms it at once.
+  const warm = 0.22 * fire + 0.12 * flash(t - BURST, 0.5)
   const sky = ctx.createLinearGradient(-3 * k, -7.5 * k, 6.2 * k, -2.6 * k)
   sky.addColorStop(0, pen.tone(C.skyTop))
   sky.addColorStop(0.45, pen.tone(mix(C.skyTop, C.skyMid, 0.5)))
   sky.addColorStop(0.8, pen.tone(mix(C.skyMid, C.flame1, warm * 0.42)))
   sky.addColorStop(1, pen.tone(mix(C.skyMid, C.flame1, warm)))
-  const glowAt = (cx: number, cy: number, r: number, col: string, a: number) => {
-    const g = ctx.createRadialGradient(cx * k, cy * k, 0, cx * k, cy * k, r * k)
-    g.addColorStop(0, rgba(pen, col, a))
-    g.addColorStop(0.45, rgba(pen, col, a * 0.42))
-    g.addColorStop(1, rgba(pen, col, 0))
-    return g
-  }
-  // The window going, on the band's first downbeat.
-  const glows: CanvasGradient[] = []
-  const burst = flash(t - BURST, 0.5)
-  if (burst > 0.01) glows.push(glowAt(BX - 0.2, (WIN[0] + WIN[1]) / 2, 6.5, C.flame2, 0.45 * burst))
   ctx.save()
+  ctx.fillStyle = sky
   for (const [x0, y0, x1, y1] of rects) {
     if (x1 <= x0 || y1 <= y0) continue
-    for (const style of [sky, ...glows]) {
-      ctx.fillStyle = style
-      ctx.fillRect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k)
-    }
+    ctx.fillRect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k)
   }
   ctx.restore()
   drawCity(pen, v, t, fire)

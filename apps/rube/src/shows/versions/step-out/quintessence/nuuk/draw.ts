@@ -3,7 +3,7 @@ import { hash } from '../kit'
 import type { View } from '../depth'
 import { drawHarbour } from './harbour'
 import { drawDoorDetail, drawDoorLight, drawGrain, drawSkirt, drawUnderFloor, drawWallThings, drawWindowRain, lampAt, WIN } from './room'
-import { blob, ctxOf, ellipse, flash, glint, line, mix, path, rect, rgba, ring, shape, type Pen } from '../dream/pen'
+import { blob, ctxOf, ellipse, flash, line, mix, path, rect, rgba, ring, shape, type Pen } from '../dream/pen'
 import {
   BELL,
   CEIL,
@@ -178,7 +178,6 @@ export function drawDoorIn(pen: Pen, t: number): void {
   const by = b[1] + 0.12
   blob(pen, [[bx, by - 0.08], [bx + 0.05, by - 0.05], [bx + 0.065, by + 0.04], [bx + 0.09, by + 0.08], [bx - 0.09, by + 0.08], [bx - 0.065, by + 0.04], [bx - 0.05, by - 0.05]], C.amber)
   line(pen, [b[0], b[1] + 0.02], [bx, by - 0.07], C.iron, 0.8)
-  glint(pen, [bx, by + 0.02], 0.08, C.lamp, 0.8 * flash(t - BELL, 0.3))
 }
 
 /** The back door: ajar, banged open as he runs out, slammed shut behind him. Shut it is seen edge on; open, face on. */
