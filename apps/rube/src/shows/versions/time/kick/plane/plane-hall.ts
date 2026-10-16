@@ -1,9 +1,9 @@
 import { mixHex, type Pt } from '../../../../../parts'
-import { beam, rgba } from '../cast'
+import { rgba } from '../cast'
 import { hash, type frame } from '../kit'
 import { HOME, PLANE } from '../worlds'
 import { AT_BOOTH, BRIDGE, CAB, CLEAR, DOCK, GLASS, GROUND, HOME as HOME_T, INSIDE, STAMP, TERM, TOUCH, clamp01, cobbAt, lerp, sm } from './plane-geo'
-import { asP5, box, line, oval, polyline, puff, rbox, shape, vwash, type Pen } from './plane-kit'
+import { box, line, oval, polyline, puff, rbox, shape, vwash, type Pen } from './plane-kit'
 
 /**
  * Off the plane (the PLANE builder's): the jet bridge that swings out from the terminal and closes on the door; the
@@ -196,8 +196,6 @@ function drawTerminal(pen: Pen, t: number, f: Frame): void {
   for (let x = w0; x <= w1 + 1e-6; x += (w1 - w0) / 5) line(pen, [x, wt], [x, wb], STEEL, 0.9)
   line(pen, [w0, (wt + wb) / 2 - 0.2], [w1, (wt + wb) / 2 - 0.2], STEEL, 0.6)
   box(pen, w0, wt, w1, wb, null, 0.9, STEEL)
-  // The morning in through it, laid across the hall in shafts.
-  for (let x = air + 1.2; x < land; x += 0.95) beam(asP5(pen), pen.k, [x, wb], [x - 0.9, 0.4], 0.35, 0.7, PLANE.lamp, 0.2)
   // The floor going back to the wall, polished: darker at the wall's foot, the windows faint in it.
   box(pen, air, foot, land, floor, HALL_FLOOR, 0)
   vwash(pen, air, land, foot, floor, [

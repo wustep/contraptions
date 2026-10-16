@@ -19,9 +19,6 @@ export interface Pen {
 /** The one ink of the cabin, the airframe and the hall: the night's own dark. */
 export const INK = PLANE.night
 
-/** The pen as the stage's p5, for the canonical drawings (`cast.ts`), which only want its canvas. */
-export const asP5 = (pen: Pen): p5 => ({ drawingContext: pen.ctx }) as unknown as p5
-
 export const penFor = (p: p5, k: number, w: number): Pen => ({ ctx: p.drawingContext as CanvasRenderingContext2D, k, w, ink: INK })
 
 function finish(pen: Pen, fill: string | null, lw: number, ink: string): void {

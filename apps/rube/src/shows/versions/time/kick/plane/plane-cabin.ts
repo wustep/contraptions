@@ -1,5 +1,5 @@
 import { mixHex, R, type Pt } from '../../../../../parts'
-import { beam, rgba } from '../cast'
+import { rgba } from '../cast'
 import type { frame } from '../kit'
 import { HOME, PLANE } from '../worlds'
 import {
@@ -31,7 +31,7 @@ import {
   teamNod,
   wallAt,
 } from './plane-geo'
-import { arcPts, asP5, box, clipCircle, clipTo, line, oval, polyline, puff, rbox, shape, type Pen } from './plane-kit'
+import { arcPts, box, clipCircle, clipTo, line, oval, polyline, puff, rbox, shape, type Pen } from './plane-kit'
 import { isDay, spinAt, treads } from './plane-sky'
 
 /**
@@ -194,14 +194,11 @@ function drawInside(pen: Pen, t: number, p: Pal): void {
     // The far bulkhead, and the galley's doorway in it at the aisle's end.
     shape(pen, at(OPENING, S_FAR), p.bulk, 0.5)
     shape(pen, at([[0.62, CAB.floor], [0.62, -1.35], [1.38, -1.35], [1.38, CAB.floor]], S_FAR), day ? mixHex(p.bulk, p.far, 0.45) : mixHex(PLANE.cabin, PLANE.dawnHigh, 0.15), 0.5)
-    // The morning aft: the low sun in through the windows on the right, laying shafts across the aisle.
+    // The morning aft: the low sun in through the windows on the right, lying across the aisle's floor.
     if (day) {
       for (let i = 1; i < WINDOWS.length; i++) {
         const [s0, s1] = WINDOWS[i]
         const sm0 = (s0 + s1) / 2
-        const from = proj([wallAt(-0.45)[1], -0.45], sm0)
-        const to = proj([wallAt(0.35)[0] + 0.3, 0.45], sm0 * 0.93)
-        beam(asP5(pen), pen.k, from, to, 0.4 * sm0, 1.0 * sm0, PLANE.lamp, 0.32 * aft)
         puff(pen, proj([0.4, CAB.floor], sm0 * 0.93), 0.9 * sm0, 0.22 * sm0, PLANE.lamp, 0.35 * aft)
       }
     }
@@ -510,39 +507,30 @@ function drawNoseGear(pen: Pen, t: number, p: Pal): void {
 
 /* ------------------------------------------------------------------ light */
 
-/** The lamp's cone over the case at night, the moon at the left window; the sun through Fischer's window in the morning. */
+/**
+ * The reading lamp's light where it falls at night, on the seat backs and the case; the sun's through Fischer's window
+ * in the morning, on the row and the case. Light on things, not shafts in the air.
+ */
 export function drawLight(pen: Pen, t: number, over: boolean): void {
   const dy = jolt(t)
   const lamp = lampAt(t)
-  const p5 = asP5(pen)
   if (lamp > 0.002) {
-    beam(p5, pen.k, [CASE_X, CAB.bin + 0.04], [CASE_X, 0.42], 0.12, 1.35, PLANE.lamp, (over ? 0.2 : 0.42) * lamp)
     if (!over) {
       puff(pen, [CASE_X, -0.1], 0.8, 0.45, PLANE.lamp, 0.2 * lamp)
       puff(pen, [CASE_X, CASE.top], 0.6, 0.12, PLANE.lamp, 0.3 * lamp)
       box(pen, CASE_X - 0.06, CAB.bin, CASE_X + 0.06, CAB.bin + 0.03, rgba(PLANE.lamp, 0.95 * lamp), 0)
     }
   }
-  if (!isDay(t)) {
-    if (!over) beam(p5, pen.k, proj([wallAt(-0.45)[0], -0.45], 0.93), [0.4, 0.4], 0.3, 0.9, PLANE.dawnHigh, 0.09)
-    return
-  }
-  // The morning off the left window, soft.
-  if (!over) beam(p5, pen.k, proj([wallAt(-0.45)[0], -0.45 + dy], 0.93), [0.4, 0.45 + dy], 0.3, 1.0, PLANE.dawn, 0.14 * (1 - sm(t, DOCK - 1.5, DOCK)))
-  // The sun, low, through Fischer's window once he has it up: across him, the aisle, Cobb, the case, Ariadne.
+  if (!isDay(t)) return
+  // The sun, low, through Fischer's window once he has it up: on him, the aisle, Cobb, the case, Ariadne.
   const sun = sunAt(t)
   if (sun > 0.002) {
-    const q = windowQuad(1, WINDOWS[0])
-    const src = onDoor(t, [(q[0][0] + q[2][0]) / 2, (q[0][1] + q[2][1]) / 2 + dy])
     const col = mixHex(PLANE.lamp, PLANE.dawn, 0.4)
-    beam(p5, pen.k, src, [-1.0, 0.4 + dy], 0.4, 1.35, col, (over ? 0.26 : 0.7) * sun)
-    beam(p5, pen.k, src, [-0.7, 0.25 + dy], 0.26, 0.7, HOME.sun, (over ? 0.16 : 0.5) * sun)
     if (!over) {
       puff(pen, [0.8, CAB.floor + dy], 2.4, 0.2, col, 0.4 * sun)
       // Where it falls: on the seat backs of the row, on the case, warm.
       for (const x of [SEAT.fischer, SEAT.team, SEAT.cobb, SEAT.ariadne]) puff(pen, [x, -0.3 + dy + 0.06 * (x - 2.6) * -0.3], 0.28, 0.32, HOME.sun, 0.42 * sun)
       puff(pen, [CASE_X, CASE.top + 0.1 + dy], 0.45, 0.15, HOME.sun, 0.4 * sun)
-      puff(pen, src, 0.2, 0.35, HOME.sun, 0.6 * sun)
     }
   }
 }
