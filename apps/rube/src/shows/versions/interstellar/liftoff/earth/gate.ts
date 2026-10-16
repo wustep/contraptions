@@ -1157,16 +1157,10 @@ function bunker(d: Draw, s: GateState): void {
   }
   // The landing lamps at the roof's two corners.
   const on = t >= THROW
-  const flick = on && t < THROW + 0.12 ? (Math.sin((t - THROW) * 90) > -0.2 ? 1 : 0.2) : 1
-  // Lit, each throws a beam up into the dusty air to bring the drone down, a flat shaft that fades once it is down.
-  const guide = on ? flick * (1 - smooth(t, beat(112.5), beat(114))) : 0
+  // Lit is the glass alone, lit as the lever throws: a beam up into the dusty air read as a pale column standing in
+  // front of the storm, and a flash to white on the strike as shine.
   for (const x of [a + 0.1, b - 0.1]) {
-    if (guide > 0.01) {
-      p.noStroke()
-      p.fill(alpha(p, DUST.light, 0.16 * guide))
-      p.quad(X(x - 0.05), X(ROOF - 0.05), X(x + 0.05), X(ROOF - 0.05), X(x + 0.32 * (x > (a + b) / 2 ? 1 : -1) + 0.2), X(ROOF - 2.4), X(x + 0.32 * (x > (a + b) / 2 ? 1 : -1) - 0.2), X(ROOF - 2.4))
-    }
-    solid(p, ink, weight * 0.8, on ? mixHex(DUST.light, '#FFFFFF', 0.7 * flick * knock(t - THROW, 0.3)) : DUST.shade)
+    solid(p, ink, weight * 0.8, on ? DUST.light : DUST.shade)
     p.arc(X(x), X(ROOF), X(0.13), X(0.13), Math.PI, Math.PI * 2, p.CHORD)
   }
 }
