@@ -433,6 +433,45 @@ function drawLamp(ctx: C2, k: number): void {
   slab(ctx, k, x + 0.46, -4.62, x + 0.8, -4.58, '#E9E3D2')
 }
 
+/** A bicycle locked to the lamp post, its front wheel past it: the wheels, the frame, the saddle and the bars, the chain round the post. */
+function drawBike(ctx: C2, k: number): void {
+  const r = 0.3
+  const y = PAVE - r
+  const back: Pt = [2.35, y]
+  const front: Pt = [3.42, y]
+  const crank: Pt = [2.86, y + 0.03]
+  const seat: Pt = [2.72, y - 0.5]
+  const head: Pt = [3.27, y - 0.48]
+  const neck: Pt = [3.31, y - 0.34]
+  const line = (pts: Pt[], color: string, w: number) => {
+    ctx.strokeStyle = color
+    ctx.lineWidth = Math.max(1, w * k)
+    ctx.beginPath()
+    pts.forEach(([x, py], i) => (i ? ctx.lineTo(x * k, py * k) : ctx.moveTo(x * k, py * k)))
+    ctx.stroke()
+  }
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  for (const [wx, wy] of [back, front]) {
+    ctx.strokeStyle = '#2A2E31'
+    ctx.lineWidth = Math.max(1, 0.045 * k)
+    ctx.beginPath()
+    ctx.arc(wx * k, wy * k, r * k, 0, Math.PI * 2)
+    ctx.stroke()
+    line([[wx - r * 0.7, wy - r * 0.7], [wx + r * 0.7, wy + r * 0.7]], rgba('#2A2E31', 0.5), 0.012)
+    line([[wx - r * 0.7, wy + r * 0.7], [wx + r * 0.7, wy - r * 0.7]], rgba('#2A2E31', 0.5), 0.012)
+  }
+  line([back, crank, seat, back], '#4A5E6A', 0.04)
+  line([seat, head, neck, crank], '#4A5E6A', 0.04)
+  line([head, front], '#4A5E6A', 0.035)
+  line([[seat[0] - 0.02, seat[1]], [seat[0] - 0.04, seat[1] - 0.1]], '#4A5E6A', 0.03)
+  line([[seat[0] - 0.14, seat[1] - 0.11], [seat[0] + 0.08, seat[1] - 0.12]], '#2A2E31', 0.05)
+  line([head, [head[0] - 0.04, head[1] - 0.12], [head[0] - 0.16, head[1] - 0.14]], '#2A2E31', 0.035)
+  line([[2.83, y - 0.42], [2.97, y - 0.36], [2.97, y - 0.3], [2.84, y - 0.25]], '#6E7478', 0.02)
+  ctx.lineJoin = 'miter'
+  ctx.lineCap = 'butt'
+}
+
 /** The steam stack the gas company has put over a manhole, orange and white, steam pouring off its top. */
 function drawStack(ctx: C2, v: View): void {
   const x = -1.75
@@ -593,6 +632,7 @@ export function drawStreet(p: p5, k: number, t: number): void {
     for (let x = a + 0.08; x < b - 0.04; x += 0.12) rule(ctx, k, x, y + 0.03, x + 0.05, y + 0.07, rgba(INK, 0.4), 0.8)
   }
   drawLamp(ctx, k)
+  drawBike(ctx, k)
   drawStand(ctx, k, t)
   drawPapers(ctx, k, t)
   drawSale(ctx, k, t)
@@ -604,7 +644,7 @@ export function drawStreet(p: p5, k: number, t: number): void {
   // and the shade falls across it. Never more than two plumes in the frame.
   const m = morning(t)
   steam(ctx, v, t, -1.75, -1.0, 2.4, 5, 1, 1.2)
-  steam(ctx, v, t, 3.75, KERB + 0.4, 1.8, 5, 2, 1.0 + 0.3 * m)
+  steam(ctx, v, t, 3.75, KERB + 0.4, 2.1, 5, 2, 1.1 + 0.3 * m)
   steam(ctx, v, t, 11.6, KERB + 0.4, 2.2, 5, 3, 1.0 + 0.3 * m)
   drawTraffic(ctx, v, t, 'near')
   drawCrossers(ctx, v, t)
