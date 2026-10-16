@@ -378,7 +378,10 @@ export function drawSteps(pen: Pen, f: Frame, t: number): void {
   drawRope(pen, f, t, tn)
 }
 
-/** The old fixed rope up the last pitch: pitons in the rock above every fourth step, clear of his leaps, and one over the ledge. */
+/**
+ * The old fixed rope's pitons: in the rock above every fourth step of the last pitch, clear of his leaps, and over the
+ * ledge.
+ */
 const PITONS: Pt[] = [...[18, 22, 26, 30].map((k): Pt => [STEPS[k].p[0] - 0.12, STEPS[k].p[1] - 0.68]), [STEPS[STEPS.length - 1].p[0] - 0.3, LEDGE_Y - 0.62]]
 
 /**

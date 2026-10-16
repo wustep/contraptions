@@ -7,8 +7,8 @@ import { litY, sunAt, SUN_R, tone, VALLEY, REF, wind, type LitPlane, type Tone }
 
 /**
  * Everything beyond the valley, on its own planes behind the mountain he climbs: the sky (painted at depth 0, with the
- * last stars, rolls of high cloud lit from under, a skein of geese and the sun); the great range at 0.08, its highest summit
- * streaming a long plume; a second range at 0.2 and a third at 0.35, a few of their highest summits streaming
+ * last stars, rolls of high cloud lit from under, a skein of geese and the sun); the great range at 0.08, its highest
+ * summit streaming a long plume; a second range at 0.2 and a third at 0.35, a few of their highest summits streaming
  * spindrift, and cloud at their feet; and the sea of cloud at 0.55 filling the valley under the ledge.
  * Each plane moves and scales less than the world as the camera goes, so the climb raises the far peaks over the near
  * ridges and the pull-back opens on all of them.
