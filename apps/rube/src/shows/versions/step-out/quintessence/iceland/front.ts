@@ -1,7 +1,7 @@
 import type { Pt } from '../../../../../parts'
 import { layer, motes, rgbaOf, sway, view, type View } from '../depth'
 import { hash, scenery } from '../kit'
-import { fireLight, lightning } from './erupt'
+import { fireLight } from './erupt'
 import { ERUPT, FINAL, HUSH, T1 } from './geo'
 import { ICE } from './theme'
 import { edges } from './vignette'
@@ -12,8 +12,8 @@ import { edges } from './vignette'
  * changes his colour. It is handed show time as `t`.
  *
  * Near: tufts of grass at the frame's foot, bent by the wind; now and then a reflector post going by close, faster
- * than the road, while he rides; grit on the wind. The fire's warm light over the land from the burst on, and the
- * lightning's. Then the hush: the ash in the air, the light going grey-mauve, flakes falling near and far.
+ * than the road, while he rides; grit on the wind. The fire's warm light over the land from the burst on. Then the
+ * hush: the ash in the air, the light going grey-mauve, the flakes falling.
  */
 
 const sm = (t: number, a: number, b: number): number => {
@@ -106,7 +106,7 @@ export const icelandFront = scenery<null>({
     const v = view(p, c.k)
 
     // The ash in the air: the haze it makes, going grey-mauve and thickening to the cut (the director's cover then
-    // takes the frame), and the flakes coming down through it.
+    // takes the frame), and the flakes coming down through it on the wind, grey, a few at first and then more.
     const haze = 0.24 * sm(t, ERUPT + 5, T1)
     if (haze > 0.003) {
       ctx.save()
@@ -118,11 +118,11 @@ export const icelandFront = scenery<null>({
     if (ash > 0) {
       ctx.save()
       ctx.globalAlpha = ash
-      motes(ctx, v, t, { n: 80, seed: 621, tile: [5, 3.5], r: [0.008, 0.02], v: [0.12, 0.22], spread: 0.4, sway: [0.08, 0.3], color: ICE.ash, square: true })
+      motes(ctx, v, t, { n: 70, seed: 621, tile: [5, 3.5], r: [0.009, 0.018], v: [0.12, 0.22], spread: 0.4, sway: [0.08, 0.3], color: ICE.ashDark })
       ctx.globalAlpha = sm(t, HUSH + 2, T1 - 3)
-      motes(ctx, v, t, { n: 160, seed: 622, tile: [5, 3.5], r: [0.008, 0.018], v: [0.1, 0.2], spread: 0.4, sway: [0.06, 0.25], color: ICE.ashDark, square: true })
+      motes(ctx, v, t, { n: 140, seed: 622, tile: [5, 3.5], r: [0.008, 0.016], v: [0.1, 0.2], spread: 0.4, sway: [0.06, 0.25], color: ICE.ashDeep })
       ctx.globalAlpha = sm(t, HUSH + 5, T1 - 2)
-      motes(ctx, v, t, { n: 220, seed: 623, tile: [5, 3.5], r: [0.007, 0.016], v: [0.09, 0.18], spread: 0.4, sway: [0.06, 0.2], color: ICE.ash, square: true })
+      motes(ctx, v, t, { n: 220, seed: 623, tile: [5, 3.5], r: [0.007, 0.015], v: [0.09, 0.18], spread: 0.4, sway: [0.06, 0.2], color: ICE.ashDark })
       ctx.globalAlpha = sm(t, HUSH + 7, T1 - 1)
       motes(ctx, v, t, { n: 420, seed: 624, tile: [5, 3.5], r: [0.006, 0.013], v: [0.08, 0.16], spread: 0.4, sway: [0.05, 0.2], color: ICE.ashDeep, square: true })
       ctx.restore()
@@ -141,22 +141,14 @@ export const icelandFront = scenery<null>({
         ctx.globalAlpha = 0.55 * near * (1 - sm(t, HUSH, HUSH + 2))
         motes(ctx, inner, t, { n: 7, seed: 631, tile: [4, 2.5], r: [0.01, 0.02], v: [2.6 * gust, 0.25], spread: 0.5, sway: [0.15, 0.8], color: ICE.grit, streak: 0.035, within: { x0: -1e9, x1: 1e9, y0: inner.y1 - inner.h * 0.3, y1: inner.y1 } })
         ctx.restore()
-        if (ash > 0) {
-          ctx.save()
-          ctx.globalAlpha = ash * 0.9
-          motes(ctx, inner, t, { n: 6, seed: 641, tile: [4, 3], r: [0.025, 0.045], v: [0.15, 0.3], spread: 0.4, sway: [0.12, 0.25], color: ICE.ash })
-          ctx.restore()
-        }
       })
     }
 
-    // The eruption's light: the fire's, a plain warm wash over the land that comes up with the burst and fades as the
-    // ash takes the light; and the lightning's, the whole frame going pale for an instant.
+    // The fire's light: a plain warm wash over the land that comes up with the burst and fades as the ash takes the
+    // light.
     const warm = 0.12 * fireLight(t) * (1 - sm(t, ERUPT + 5, ERUPT + 9))
-    const bolt = (t < ERUPT + 9 ? 0.16 : 0.12) * lightning(t)
-    for (const [hex, a] of [[ICE.fire, warm], [ICE.flash, bolt]] as const) {
-      if (a <= 0.004) continue
-      ctx.fillStyle = rgbaOf(hex, a)
+    if (warm > 0.004) {
+      ctx.fillStyle = rgbaOf(ICE.fire, warm)
       ctx.fillRect((v.x0 - 0.5) * c.k, (v.y0 - 0.5) * c.k, (v.w + 1) * c.k, (v.h + 1) * c.k)
     }
 

@@ -49,7 +49,6 @@ export const ICE = {
   fireGold: '#FFD27A',
   bolt: '#B8A6FF',
   boltCore: '#F7F3FF',
-  flash: '#ECE8F6',
   mid: '#5F6E6C',
   midGreen: '#6C7D57',
   midDeep: '#4D5957',
