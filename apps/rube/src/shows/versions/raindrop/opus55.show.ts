@@ -10,7 +10,7 @@ export default defineShow({
   title: 'Raindrop',
   label: 'Opus 5.5',
   about: "Chopin's Raindrop Prelude as a Rube Goldberg machine the rain runs, on a stormy night at the charterhouse of Valldemossa where he finished it.",
-  still: 172,
+  still: 18,
   async load() {
     return (await import('./charterhouse')).performance
   },

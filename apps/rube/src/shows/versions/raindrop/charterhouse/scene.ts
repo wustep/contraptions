@@ -15,7 +15,7 @@ import { drawNoria, drawSling } from './noria'
 import { doorOpen, drawGate, drawGateFront, drawGateLight, lanternY, litAt } from './gate'
 import { drawTravelers, theirLight, woman } from './travelers'
 import { GATE, groundY } from './geo'
-import { drawBucket, drawCurb, drawGardenBack, drawGardenGround, drawLemon, drawRack, drawRillBack, drawRillFront, drawRopeDrip, drawTiles, drawWellBack } from './garden'
+import { drawBucket, drawCurb, drawGardenBack, drawGardenGround, drawLemon, drawPots, drawRack, drawRillBack, drawRillFront, drawRopeDrip, drawTiles, drawWellBack } from './garden'
 
 /** How hard the pipe's length `i` is jolted at `t`: a knock as the ball goes through it, dying in a tenth of a second. */
 function knock(t: number, i: number): number {
@@ -91,6 +91,7 @@ export function scenery(duration: number): Placed[] {
         'garden',
         (b, t) => {
           drawGardenGround(b, t)
+          drawPots(b, t)
           drawLemon(b, t)
           drawRillBack(b, t)
           drawRack(b, t)

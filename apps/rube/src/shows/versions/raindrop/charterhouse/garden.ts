@@ -148,6 +148,41 @@ export function drawGardenGround(b: Brush, t: number): void {
   }
 }
 
+/**
+ * Pots along the cell's wall, behind the rill: terracotta, a geranium in one, rosemary in another, an empty one
+ * filling with rain. Mallorca keeps them by every door.
+ */
+export function drawPots(b: Brush, t: number): void {
+  const c = tones(t)
+  const clay = mix(c.tile, c.stone, 0.2)
+  const leaf = mix(c.leafDark, c.cypress, 0.3)
+  const sway = (windAt(t) - 0.1) * 0.25
+  for (const [x, w, h, kind] of [[17.6, 0.75, 0.9, 1], [24.3, 0.6, 0.7, 2], [26.0, 0.85, 1.05, 0], [31.2, 0.7, 0.8, 1]] as const) {
+    const top = -0.15 - h
+    part(b, [[x - w, top], [x + w, top], [x + w * 0.72, -0.15], [x - w * 0.72, -0.15]], clay, mix(c.tileDeep, c.ink, 0.4), 0.03)
+    rect(b, x - w - 0.06, top - 0.06, x + w + 0.06, top + 0.12, mix(clay, c.tileShade, 0.4))
+    if (kind === 1) {
+      // A geranium: a dark round of leaves, a few muted red heads.
+      b.g.fillStyle = leaf
+      b.g.beginPath()
+      b.g.ellipse(x + sway * 0.5, top - 0.55, w * 1.15, 0.6, 0, 0, Math.PI * 2)
+      b.g.fill()
+      for (let k = 0; k < 4; k++) disc(b, x - w * 0.7 + k * w * 0.45 + sway, top - 0.95 + (k % 2) * 0.22, 0.13, mix('#B04A3A', leaf, 0.35))
+    } else if (kind === 2) {
+      // Rosemary: upright sprigs.
+      b.g.strokeStyle = leaf
+      b.g.lineWidth = 0.08
+      b.g.beginPath()
+      for (let k = 0; k < 7; k++) {
+        const bx = x - w * 0.6 + (k * w * 1.2) / 6
+        b.g.moveTo(bx, top)
+        b.g.lineTo(bx + (k - 3) * 0.06 + sway, top - 0.9 - hash(k, 77) * 0.5)
+      }
+      b.g.stroke()
+    }
+  }
+}
+
 /** The rill's bed: a stone channel along the ground, a thread of water in it. Behind the ball. */
 export function drawRillBack(b: Brush, t: number): void {
   const c = tones(t)
