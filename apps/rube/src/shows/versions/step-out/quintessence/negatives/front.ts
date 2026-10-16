@@ -10,9 +10,9 @@ import { ENLARGER, GLASS, LAMP, NUUK, PICTURE } from './plan'
  * changes his colour. It is handed show time as `t`.
  *
  * The room's air: a little dust going up slowly through the table's light, warm close to the glass and cool above
- * it; the enlarger's throw, faint, once its lamp is on. Nearest of all, out of focus along the bottom of the frame,
- * the desk's edge and what is left on it: a reel, a mug, a short stack of cans. Over everything, a cold teal and the
- * top of the frame falling away into the dark.
+ * it; the enlarger's throw, faint, once its lamp is on. Nearest of all, in silhouette along the bottom of the frame,
+ * the desk's edge and what is left on it: a mug, short stacks of film cans. Over everything, a cold teal and the top
+ * of the frame falling away into the dark.
  */
 
 type C2 = CanvasRenderingContext2D
@@ -93,105 +93,57 @@ function cone(ctx: C2, v: View, t: number): void {
 
 /* ------------------------------------------------------------------ the near plane */
 
-/** A soft-edged out-of-focus disc, near the lens: its rim falls away rather than ending. */
-function softDisc(ctx: C2, x: number, y: number, r: number, hex: string, a: number, k: number): void {
-  if (a <= 0.003) return
-  const g = ctx.createRadialGradient(x * k, y * k, r * 0.55 * k, x * k, y * k, r * 1.12 * k)
-  g.addColorStop(0, rgbaOf(hex, a))
-  g.addColorStop(1, rgbaOf(hex, 0))
-  ctx.fillStyle = g
-  ctx.beginPath()
-  ctx.arc(x * k, y * k, r * 1.12 * k, 0, Math.PI * 2)
-  ctx.fill()
-}
-
-/** What is on the desk nearest the camera, in its own plane's cells: [kind, x]. */
-const NEAR_THINGS: [string, number][] = [
-  ['cans', -5.8],
-  ['reel', -1.9],
-  ['mug', 2.25],
-  ['cans', 6.7],
-  ['reel', 10.6],
+/** What is on the desk nearest the camera, in its own plane's cells: [kind, x, cans in the stack]. */
+const NEAR_THINGS: [string, number, number][] = [
+  ['cans', -5.8, 3],
+  ['cans', -1.9, 5],
+  ['mug', 2.25, 0],
+  ['cans', 6.7, 3],
 ]
 const DESK = 1.1
+const NEAR = '#0B0E0F'
+const RIM = '#8C836F'
 
 function nearPlane(ctx: C2, v: View, light: number): void {
   layer(ctx, v, 1.4, ANCHOR, REF, (inner) => {
     const k = inner.k
     if (inner.y1 < DESK - 0.6 || light < 0.01) return
-    const lit = light
     ctx.globalAlpha = Math.min(1, light * 2.5)
-    // The desk's edge, soft, its lip catching the table's light.
-    const g = ctx.createLinearGradient(0, (DESK - 0.06) * k, 0, (DESK + 0.04) * k)
-    g.addColorStop(0, rgbaOf('#0A0D0E', 0))
-    g.addColorStop(1, rgbaOf('#0A0D0E', 0.95))
-    ctx.fillStyle = g
-    ctx.fillRect((inner.x0 - 0.2) * k, (DESK - 0.06) * k, (inner.w + 0.4) * k, 0.1 * k)
-    ctx.fillStyle = rgbaOf('#0A0D0E', 0.95)
-    ctx.fillRect((inner.x0 - 0.2) * k, (DESK + 0.04) * k, (inner.w + 0.4) * k, (inner.y1 - DESK + 0.2) * k)
-    const edge = ctx.createLinearGradient(0, (DESK - 0.035) * k, 0, (DESK + 0.05) * k)
-    edge.addColorStop(0, rgbaOf('#6E6758', 0))
-    edge.addColorStop(0.5, rgbaOf('#6E6758', 0.35 * lit))
-    edge.addColorStop(1, rgbaOf('#6E6758', 0))
-    ctx.fillStyle = edge
-    ctx.fillRect((inner.x0 - 0.2) * k, (DESK - 0.035) * k, (inner.w + 0.4) * k, 0.085 * k)
-    for (const [kind, x] of NEAR_THINGS) {
+    // The desk's edge in silhouette, and its lip catching the table's light.
+    ctx.fillStyle = rgbaOf(NEAR, 0.95)
+    ctx.fillRect((inner.x0 - 0.2) * k, DESK * k, (inner.w + 0.4) * k, (inner.y1 - DESK + 0.2) * k)
+    ctx.fillStyle = rgbaOf('#6E6758', 0.3 * light)
+    ctx.fillRect((inner.x0 - 0.2) * k, DESK * k, (inner.w + 0.4) * k, 0.02 * k)
+    for (const [kind, x, n] of NEAR_THINGS) {
       if (x < inner.x0 - 1 || x > inner.x1 + 1) continue
-      if (kind === 'reel') {
-        // A reel stood on its edge, out of focus: its dark flange, the light through its three windows, its hub.
-        const r = 0.34
-        const cy = DESK - r + 0.02
-        softDisc(ctx, x, cy, r, '#0B0E0F', 0.96, k)
-        for (let i = 0; i < 3; i++) {
-          const a = -Math.PI / 2 + (i * Math.PI * 2) / 3 + 0.3
-          softDisc(ctx, x + Math.cos(a) * r * 0.52, cy + Math.sin(a) * r * 0.52, r * 0.22, '#3B3E3A', 0.45 * lit, k)
-        }
-        softDisc(ctx, x, cy, r * 0.14, '#55524A', 0.5 * lit, k)
-        // The rim's highlight where the table's light finds it.
-        ctx.strokeStyle = rgbaOf('#8C836F', 0.2 * lit)
-        ctx.lineWidth = 0.05 * k
-        ctx.beginPath()
-        ctx.arc(x * k, cy * k, r * 0.88 * k, -2.5, -0.9)
-        ctx.stroke()
-      } else if (kind === 'mug') {
-        // A mug left on the desk, out of focus: its dark body and handle, soft at the edges, the table's light
-        // along its rim.
+      ctx.fillStyle = rgbaOf(NEAR, 0.95)
+      ctx.strokeStyle = rgbaOf(RIM, 0.3 * light)
+      if (kind === 'mug') {
+        // A mug left on the desk: its dark body and handle, the table's light along its rim.
         const w = 0.3
         const h = 0.36
         const x0 = x - w / 2
         const top = DESK + 0.01 - h
-        const body = new Path2D()
-        body.roundRect(x0 * k, top * k, w * k, h * k, [0.02 * k, 0.02 * k, 0.06 * k, 0.06 * k])
-        const handle = new Path2D()
-        handle.arc((x0 + w) * k, (top + h * 0.45) * k, 0.1 * k, -Math.PI / 2, Math.PI / 2)
-        ctx.lineCap = 'round'
-        for (const [a, grow] of [[0.4, 0.045], [0.95, 0]] as const) {
-          ctx.fillStyle = rgbaOf('#0B0E0F', a)
-          ctx.strokeStyle = rgbaOf('#0B0E0F', a)
-          ctx.fill(body)
-          if (grow) {
-            ctx.lineWidth = grow * k
-            ctx.stroke(body)
-          }
-          ctx.lineWidth = (0.05 + grow) * k
-          ctx.stroke(handle)
-        }
-        ctx.strokeStyle = rgbaOf('#8C836F', 0.3 * lit)
-        ctx.lineWidth = 0.025 * k
         ctx.beginPath()
-        ctx.moveTo((x0 + 0.03) * k, (top + 0.008) * k)
-        ctx.lineTo((x0 + w - 0.03) * k, (top + 0.008) * k)
+        ctx.roundRect(x0 * k, top * k, w * k, h * k, [0.02 * k, 0.02 * k, 0.06 * k, 0.06 * k])
+        ctx.fill()
+        ctx.strokeStyle = rgbaOf(NEAR, 0.95)
+        ctx.lineWidth = 0.05 * k
+        ctx.beginPath()
+        ctx.arc((x0 + w) * k, (top + h * 0.45) * k, 0.1 * k, -Math.PI / 2, Math.PI / 2)
         ctx.stroke()
+        ctx.fillStyle = rgbaOf(RIM, 0.3 * light)
+        ctx.fillRect((x0 + 0.03) * k, top * k, (w - 0.06) * k, 0.02 * k)
       } else {
-        // Film cans lying flat in a short stack, out of focus: three flat drums, a little askew, soft at the edges,
-        // the top one's lid seen from a little above and its rim catching the table's light.
+        // Film cans lying flat in a short stack, a little askew, the top one's lid seen from a little above and its
+        // rim catching the table's light.
         const r = 0.33
         const h = 0.065
         const cans = new Path2D()
         let lx = x
         let ly = DESK
-        for (let i = 0; i < 3; i++) {
-          const cx = x + [0, 0.035, -0.02][i]
+        for (let i = 0; i < n; i++) {
+          const cx = x + [0, 0.035, -0.02, 0.02, -0.01][i]
           const bot = DESK + 0.005 - i * (h + 0.006)
           cans.moveTo((cx - r) * k, (bot - h) * k)
           cans.lineTo((cx - r) * k, bot * k)
@@ -201,20 +153,11 @@ function nearPlane(ctx: C2, v: View, light: number): void {
           lx = cx
           ly = bot - h
         }
-        for (const [a, grow] of [[0.4, 0.04], [0.95, 0]] as const) {
-          ctx.fillStyle = rgbaOf('#0C0F10', a)
-          ctx.fill(cans)
-          if (grow) {
-            ctx.strokeStyle = rgbaOf('#0C0F10', a)
-            ctx.lineWidth = grow * k
-            ctx.stroke(cans)
-          }
-        }
+        ctx.fill(cans)
         ctx.fillStyle = rgbaOf('#1C2224', 0.95)
         ctx.beginPath()
         ctx.ellipse(lx * k, ly * k, r * k, 0.05 * k, 0, 0, Math.PI * 2)
         ctx.fill()
-        ctx.strokeStyle = rgbaOf('#8C836F', 0.28 * lit)
         ctx.lineWidth = 0.02 * k
         ctx.beginPath()
         ctx.ellipse(lx * k, ly * k, r * k, 0.05 * k, 0, Math.PI * 1.05, Math.PI * 1.95)
