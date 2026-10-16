@@ -776,36 +776,85 @@ function drawFace(ctx: C2D, c: Ctx, x0: number, x1: number): void {
 /** The pistes: the groove the skis cut, a soft shade a little wider than a ball, under the path they run. */
 function drawPistes(ctx: C2D, k: number, x0: number, x1: number): void {
   ctx.save()
-  ctx.lineCap = 'round'
+  ctx.lineCap = 'butt'
   ctx.lineJoin = 'round'
-  // Each kind is one path, stroked once: where one piste runs on into the next their ends overlap, and stroked apart
-  // the overlap showed as a darker blot.
+  // Where one piste runs on into the next they are one line, stroked once (stroked apart, the overlap showed as a
+  // darker blot). Where a groove begins or ends on open snow (a landing, a lip, the top of the run, the ledge), it fades
+  // in or out over its last cell: a round cap there read as the end of a tube laid on the face.
+  const TAPER = 0.9
   for (const which of ['piste', 'branch'] as const) {
-    ctx.beginPath()
+    const chains: Pt[][] = []
     for (const { path: pth, kind } of PISTES) {
       if (kind !== which) continue
-      const pts = pth.pts
-      const xs = pts.map((q) => q[0])
-      if (Math.max(...xs) < x0 - 1 || Math.min(...xs) > x1 + 1) continue
       // The groove sits under the ball's path, on the snow: straight down from it, so that round a hairpin's turn it
       // follows the arc a ball's width lower rather than jumping from one side of the path to the other.
-      const under = (i: number): Pt => [pts[i][0], pts[i][1] + R]
-      for (let i = 0; i < pts.length; i++) {
-        const [x, y] = under(i)
-        if (i === 0) ctx.moveTo(x * k, y * k)
-        else ctx.lineTo(x * k, y * k)
-      }
+      const pts = pth.pts.map(([x, y]): Pt => [x, y + R])
+      const last = chains[chains.length - 1]
+      const end = last?.[last.length - 1]
+      if (end && Math.hypot(end[0] - pts[0][0], end[1] - pts[0][1]) < 1e-6) last.push(...pts.slice(1))
+      else chains.push(pts)
     }
-    ctx.strokeStyle = rgba(SNOW.snowDeep, which === 'piste' ? 0.34 : 0.26)
+    const body = new Path2D()
+    const tips: [Pt, Pt, Pt[]][] = []
+    for (const ch of chains) {
+      const xs = ch.map((q) => q[0])
+      if (Math.max(...xs) < x0 - 1 || Math.min(...xs) > x1 + 1) continue
+      let len = 0
+      for (let i = 1; i < ch.length; i++) len += Math.hypot(ch[i][0] - ch[i - 1][0], ch[i][1] - ch[i - 1][1])
+      const tl = Math.min(TAPER, len / 3)
+      const head = cutAt(ch, tl)
+      const tail = cutAt(ch, len - tl)
+      const mid = [head.at, ...ch.slice(head.i + 1, tail.i + 1), tail.at]
+      mid.forEach(([x, y], i) => (i ? body.lineTo(x * k, y * k) : body.moveTo(x * k, y * k)))
+      tips.push([head.at, ch[0], [ch[0], ...ch.slice(1, head.i + 1), head.at].reverse()])
+      tips.push([tail.at, ch[ch.length - 1], [tail.at, ...ch.slice(tail.i + 1)]])
+    }
+    const deep = rgba(SNOW.snowDeep, which === 'piste' ? 0.34 : 0.26)
+    ctx.strokeStyle = deep
     ctx.lineWidth = Math.max(1, 0.1 * k)
-    ctx.stroke()
+    ctx.stroke(body)
     ctx.strokeStyle = rgba(SNOW.snowShade, 0.9)
     ctx.lineWidth = Math.max(1, 0.24 * k)
     ctx.globalCompositeOperation = 'multiply'
-    ctx.stroke()
+    ctx.stroke(body)
     ctx.globalCompositeOperation = 'source-over'
+    // The fading ends: from where the body stops to the open end, thinning to nothing.
+    for (const [from, to, pts] of tips) {
+      const tip = new Path2D()
+      pts.forEach(([x, y], i) => (i ? tip.lineTo(x * k, y * k) : tip.moveTo(x * k, y * k)))
+      const fade = (col: string, a: number) => {
+        const g = ctx.createLinearGradient(from[0] * k, from[1] * k, to[0] * k, to[1] * k)
+        g.addColorStop(0, rgba(col, a))
+        g.addColorStop(1, rgba(col, 0))
+        return g
+      }
+      ctx.strokeStyle = fade(SNOW.snowDeep, which === 'piste' ? 0.34 : 0.26)
+      ctx.lineWidth = Math.max(1, 0.1 * k)
+      ctx.stroke(tip)
+      ctx.strokeStyle = fade(SNOW.snowShade, 0.9)
+      ctx.lineWidth = Math.max(1, 0.24 * k)
+      ctx.globalCompositeOperation = 'multiply'
+      ctx.stroke(tip)
+      ctx.globalCompositeOperation = 'source-over'
+    }
   }
   ctx.restore()
+}
+
+/** The point `s` cells along a polyline, and the index of the vertex at or before it. */
+function cutAt(pts: Pt[], s: number): { at: Pt; i: number } {
+  let run = 0
+  for (let i = 1; i < pts.length; i++) {
+    const [ax, ay] = pts[i - 1]
+    const [bx, by] = pts[i]
+    const d = Math.hypot(bx - ax, by - ay)
+    if (run + d >= s) {
+      const u = d > 0 ? (s - run) / d : 0
+      return { at: [ax + (bx - ax) * u, ay + (by - ay) * u], i: i - 1 }
+    }
+    run += d
+  }
+  return { at: pts[pts.length - 1], i: pts.length - 2 }
 }
 
 /** The shoulder's cornice, the kicker at the rock step's lip, the ledge's lip. */
