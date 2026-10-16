@@ -1,18 +1,17 @@
 import { scenery } from '../kit'
 import { layer, motes, rgbaOf, view, type View } from '../depth'
-import { lampAt, tubeAt } from './draw'
+import { tubeAt } from './draw'
 import { clamp01 } from './hand'
-import { ENLARGER, GLASS, LAMP, NUUK, PICTURE } from './plan'
+import { GLASS } from './plan'
 
 /**
  * What stands between the camera and the machine in this place, and the light over all of it: the near plane, the
  * air, the grade. Drawn after the set and the parts and before Walter (`depth.ts`), so nothing here hides him or
  * changes his colour. It is handed show time as `t`.
  *
- * The room's air: a little dust going up slowly through the table's light, warm close to the glass and cool above
- * it; the enlarger's throw, faint, once its lamp is on. Nearest of all, in silhouette along the bottom of the frame,
- * the desk's edge and what is left on it: a mug, short stacks of film cans. Over everything, a cold teal and the top
- * of the frame falling away into the dark.
+ * The room's air: a little dust going up slowly through the table's light, close over the glass. Nearest of all, in
+ * silhouette along the bottom of the frame, the desk's edge and what is left on it: a mug, short stacks of film cans.
+ * Over everything, a cold teal and the top of the frame falling away into the dark.
  */
 
 type C2 = CanvasRenderingContext2D
@@ -23,8 +22,8 @@ const REF = 3.4
 /* ------------------------------------------------------------------ the air */
 
 function air(ctx: C2, v: View, t: number, light: number): void {
-  // A few motes going up slowly through the table's light: warm close to the glass, cooler higher up. They come up
-  // with the tubes, on an eased curve of their light, as the eye finds them.
+  // A few motes going up slowly through the table's light, close over the glass. They come up with the tubes, on an
+  // eased curve of their light, as the eye finds them.
   const eased = 1 - (1 - light) * (1 - light)
   if (eased <= 0.02) return
   ctx.save()
@@ -39,54 +38,6 @@ function air(ctx: C2, v: View, t: number, light: number): void {
     sway: [0.05, 0.13],
     color: 'rgba(255, 236, 206, 0.5)',
     within: { x0: GLASS.x0 - 0.6, y0: GLASS.top - 1.6, x1: GLASS.x1 + 0.6, y1: GLASS.top + 0.05 },
-  })
-  ctx.globalAlpha = clamp01(0.4 * eased)
-  motes(ctx, v, t, {
-    n: 5,
-    seed: 4,
-    tile: [3.1, 2.3],
-    r: [0.005, 0.011],
-    v: [-0.03, -0.03],
-    spread: 0.6,
-    sway: [0.06, 0.09],
-    color: 'rgba(196, 222, 222, 0.4)',
-    within: { x0: GLASS.x0 - 1.2, y0: GLASS.top - 3.2, x1: GLASS.x1 + 1.2, y1: GLASS.top - 0.6 },
-  })
-  ctx.restore()
-}
-
-/* ------------------------------------------------------------------ the light */
-
-/** The enlarger's throw, once its lamp is on: a faint wedge from the lens to the picture, a few motes turning in it. */
-function cone(ctx: C2, v: View, t: number): void {
-  const on = lampAt(t)
-  if (on <= 0) return
-  const k = v.k
-  const [lx, ly] = ENLARGER.lens
-  const { x1, y0, y1 } = PICTURE
-  const beam = new Path2D()
-  beam.moveTo((lx + 0.04) * k, (ly - 0.06) * k)
-  beam.lineTo(x1 * k, y0 * k)
-  beam.lineTo(x1 * k, y1 * k)
-  beam.lineTo((lx + 0.04) * k, (ly + 0.06) * k)
-  beam.closePath()
-  ctx.save()
-  const g = ctx.createLinearGradient(lx * k, 0, x1 * k, 0)
-  g.addColorStop(0, rgbaOf('#F4F2EA', 0.07 * on))
-  g.addColorStop(1, rgbaOf('#F4F2EA', 0.015 * on))
-  ctx.fillStyle = g
-  ctx.fill(beam)
-  ctx.clip(beam)
-  motes(ctx, v, t, {
-    n: 12,
-    seed: 9,
-    tile: [2.4, 1.6],
-    r: [0.006, 0.014],
-    v: [0.035, -0.02],
-    spread: 0.7,
-    sway: [0.05, 0.17],
-    color: rgbaOf('#FFF7E6', 0.45 * on),
-    within: { x0: lx, y0: y0, x1: x1, y1: y1 },
   })
   ctx.restore()
 }
@@ -188,7 +139,6 @@ export const negativesFront = scenery<null>({
     const v = view(p, c.k)
     const light = tubeAt(t)
     ctx.save()
-    if (t > LAMP - 0.1 && t < NUUK + 1.5) cone(ctx, v, t)
     air(ctx, v, t, light)
     nearPlane(ctx, v, light)
     // A cold teal over the room's darks, and the top of the frame going into them.
