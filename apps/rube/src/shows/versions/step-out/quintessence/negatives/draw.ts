@@ -3,12 +3,9 @@ import { frame, hash } from '../kit'
 import { flicker, view } from '../depth'
 import { archiveLights, drawArchive } from './archive'
 import { at } from '../music'
-import { CHERYL } from '../worlds'
 import { clamp01, INK, knock, mix, pool, ramp, rgba, rule, settle, slab } from './hand'
 import {
   BENCH,
-  BLANK,
-  cherylAt,
   DOOR,
   DREAM,
   ENLARGER,
@@ -27,8 +24,6 @@ import {
   LOUPE,
   LOUPE_CLICKS,
   loupeX,
-  NOTCH,
-  NUUK,
   OFFICE,
   PICTURE,
   RAPS,
@@ -45,7 +40,7 @@ import {
 /**
  * The negatives room, drawn (the B1 builder's). One standing drawing for both visits, on show time: the dark, the
  * shelves going into it, the light table and its strip, the loupe on its rail, the frosted door, the enlarger and the
- * picture it throws. Nothing here is a ball; the balls are lit by it in `drawOver`.
+ * picture it throws. Nothing here is a ball, and nothing is drawn over one but the tray's front rail.
  */
 
 type C2 = CanvasRenderingContext2D
@@ -103,10 +98,13 @@ export function blankAt(t: number): number {
   return 1 - ramp(t, OFFICE + 0.05, OFFICE + 1.6)
 }
 
-/** A frame's own light over the glass's: up as he lands on it, held while he is on it. */
+/** A swell for a landing at `at`: up over a sixth of a second as he lands, then easing back. */
+const swell = (t: number, at: number): number => (t < at - 0.05 ? 0 : ramp(t, at - 0.05, at + 0.12) * Math.exp(-Math.max(0, t - at - 0.12) / 0.5))
+
+/** A frame's own light over the glass's: it comes up as he lands on it, and is held while he is on it. */
 function frameLight(n: number, t: number): number {
   let v = 0
-  for (const land of FRAME_LANDS[n] ?? []) v = Math.max(v, 0.55 * knock(t, land, 0.35))
+  for (const land of FRAME_LANDS[n] ?? []) v = Math.max(v, 0.4 * swell(t, land))
   const [wx] = walterAt(t)
   const on = 1 - clamp01(Math.abs(wx - frameX(n)) / 0.5)
   if (n === 21 && t > TO_TRAY.leave) v = Math.max(v, 0.5)
@@ -415,9 +413,8 @@ function drawPicture(ctx: C2, k: number, t: number): void {
   const blur = 1 - sharp
   const light = on * (0.7 + 0.3 * ramp(t, LAMP, LAMP + 0.5)) * flicker(t, 5, 0.035)
   const tone = positive(light)
-  // The soft light past its edges: the throw does not stop at the frame.
+  // The soft light past its edges on the wall: the throw does not stop at the frame.
   ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
   const spill = 0.32
   const edgeA = 0.07 * on
   for (const [ax, ay, bx, by, rx, ry, rw, rh] of [
@@ -570,7 +567,7 @@ function drawHead(ctx: C2, k: number, t: number, light: number): void {
   rule(ctx, k, kx, ky, kx + Math.cos(turn) * 0.09, ky + Math.sin(turn) * 0.09, INK, 1)
 }
 
-/** The enlarger's own light, once its lamp is on: at its vents and its lens. */
+/** The enlarger's own light, once its lamp is on: through its vents, and its lens lit. */
 function enlargerLight(ctx: C2, k: number, t: number): void {
   const on = lampAt(t)
   if (on <= 0) return
@@ -580,8 +577,7 @@ function enlargerLight(ctx: C2, k: number, t: number): void {
     const y = h.y0 + 0.16 + i * 0.13
     slab(ctx, k, h.x0 + 0.18, y, h.x1 - 0.42, y + 0.05, rgba(R.tube, 0.35 + 0.6 * on))
   }
-  pool(ctx, k, (h.x0 + h.x1) / 2, h.y0 + 0.3, 1.0, R.tube, 0.18 * on, 0.7)
-  pool(ctx, k, E.lens[0] + 0.06, E.lens[1], 0.35, R.tube, 0.7 * on)
+  slab(ctx, k, E.lens[0] + 0.02, E.lens[1] - 0.08, E.lens[0] + 0.06, E.lens[1] + 0.08, rgba(R.tube, 0.9 * on))
 }
 
 /**
@@ -676,7 +672,6 @@ function housing(ctx: C2, k: number, light: number, t: number): void {
   // The maker's plate and the switch with its pilot lamp, at the near end.
   slab(ctx, k, x1 - 0.85, 0.64, x1 - 0.4, 0.74, mix('#22262A', '#4A4C48', light * 0.6), { color: rgba(INK, 0.8), w: 0.8 })
   slab(ctx, k, x0 + 0.25, 0.6, x0 + 0.45, 0.78, mix('#1C2023', '#3F474B', light * 0.6), { color: rgba(INK, 0.9), w: 0.8 })
-  pool(ctx, k, x0 + 0.35, 0.65, 0.07, '#F2B866', 0.6 * ramp(light, 0.05, 0.3), 1)
   slab(ctx, k, x0 + 0.33, 0.63, x0 + 0.37, 0.67, mix('#2A2622', '#F6C47A', ramp(light, 0.05, 0.3)))
   // The flex, from the switch's box down over the housing's edge to the floor.
   ctx.strokeStyle = mix('#0E1112', '#262B2D', light * 0.6)
@@ -730,28 +725,37 @@ function drawTable(ctx: C2, k: number, light: number, t: number): void {
   for (let i = 0; i < 4; i++) slab(ctx, k, 9.75, FLOOR - (i + 1) * 0.07, 10.1, FLOOR - i * 0.07 - 0.012, mix(R.can, R.canLit, under), { color: rgba(INK, 0.7), w: 0.6 })
 }
 
-function drawGlass(ctx: C2, k: number, t: number, light: number): void {
-  // The glass: the light itself.
-  const glass = mix(R.dark, R.glass, light)
-  slab(ctx, k, GLASS.x0, GLASS.top, GLASS.x1, LIP, glass)
-  // The housing's rim round the glass, and the rail the loupe runs on.
-  slab(ctx, k, GLASS.x0 - 0.05, GLASS.top - 0.08, GLASS.x1 + 0.05, GLASS.top, mix(R.dark, R.housingLit, light * 0.8), { color: rgba(INK, 0.9), w: 1 })
-  // The strip: the film's base, its sprocket holes letting the light through.
-  const base = mix(R.dark, R.base, light)
-  ctx.fillStyle = base
-  ctx.fillRect(STRIP.x0 * k, STRIP.top * k, (GAP_X - 0.5 - STRIP.x0) * k, (STRIP.bot - STRIP.top) * k)
-  ctx.fillRect((GAP_X + 0.5) * k, STRIP.top * k, (STRIP.x1 - GAP_X - 0.5) * k, (STRIP.bot - STRIP.top) * k)
+/**
+ * The strip on the glass from `xa` to `xb`: the glass itself (the light), the film's base with its sprocket holes,
+ * the frames, each lit by the glass and more as he lands on it, and the blank. Drawn on the table, and again,
+ * magnified, in the loupe's lens.
+ */
+function strip(ctx: C2, k: number, t: number, light: number, xa: number, xb: number): void {
+  const gx0 = Math.max(GLASS.x0, xa)
+  const gx1 = Math.min(GLASS.x1, xb)
+  if (gx1 <= gx0) return
+  slab(ctx, k, gx0, GLASS.top, gx1, LIP, mix(R.dark, R.glass, light))
+  ctx.fillStyle = mix(R.dark, R.base, light)
+  for (const [s0, s1] of [[STRIP.x0, GAP_X - 0.5], [GAP_X + 0.5, STRIP.x1]]) {
+    const a = Math.max(s0, xa)
+    const b = Math.min(s1, xb)
+    if (b > a) ctx.fillRect(a * k, STRIP.top * k, (b - a) * k, (STRIP.bot - STRIP.top) * k)
+  }
   const holes = new Path2D()
   for (let x = STRIP.x0 + 0.06; x < STRIP.x1 - 0.05; x += 0.125) {
     if (x > GAP_X - 0.5 - 0.02 && x < GAP_X + 0.5) continue
+    if (x + 0.07 < xa || x > xb) continue
     for (const y of [STRIP.top + 0.06, STRIP.imgBot + 0.06]) holes.roundRect(x * k, y * k, 0.07 * k, 0.07 * k, 0.015 * k)
   }
   ctx.fillStyle = mix(R.dark, R.glass, light * 0.85)
   ctx.fill(holes)
-  // The frames, each lit by the glass and more as he lands on it.
+  // As he stares into the blank the rest of the strip falls back a little, and comes up again once he is back.
+  const blank = blankAt(t)
+  const away = 1 - 0.3 * blank
   for (const n of FRAMES) {
     const cx = frameX(n)
-    const b = light * (0.42 + 0.58 * frameLight(n, t))
+    if (cx + IMG_W / 2 < xa || cx - IMG_W / 2 > xb) continue
+    const b = light * (0.42 + 0.58 * frameLight(n, t)) * away
     ctx.save()
     ctx.translate((cx - IMG_W / 2) * k, STRIP.imgTop * k)
     ctx.scale(IMG_W * k, (STRIP.imgBot - STRIP.imgTop) * k)
@@ -761,13 +765,19 @@ function drawGlass(ctx: C2, k: number, t: number, light: number): void {
     picture(ctx, n, negative(b))
     ctx.restore()
   }
-  // The blank where frame 25 should be: the glass alone, and brighter as he stares into it.
-  const blank = blankAt(t)
-  const white = mix(R.dark, mix(R.glass, '#FFFFFF', blank), Math.min(1, light * (1 + 0.25 * blank)))
-  slab(ctx, k, GAP_X - 0.5, STRIP.top, GAP_X + 0.5, LIP, white)
-  rule(ctx, k, GAP_X - 0.5, STRIP.top, GAP_X - 0.5, LIP, rgba(INK, 0.5), 0.8)
-  rule(ctx, k, GAP_X + 0.5, STRIP.top, GAP_X + 0.5, LIP, rgba(INK, 0.5), 0.8)
-  if (blank > 0) pool(ctx, k, GAP_X, (STRIP.top + LIP) / 2, 0.6 + 1.6 * blank, '#FFFFFF', 0.5 * blank * light)
+  // The blank where frame 25 should be: the glass alone, whiter as he stares into it.
+  if (GAP_X + 0.5 > xa && GAP_X - 0.5 < xb) {
+    const white = mix(R.dark, mix(R.glass, '#FFFFFF', blank), Math.min(1, light * (1 + 0.25 * blank)))
+    slab(ctx, k, GAP_X - 0.5, STRIP.top, GAP_X + 0.5, LIP, white)
+    rule(ctx, k, GAP_X - 0.5, STRIP.top, GAP_X - 0.5, LIP, rgba(INK, 0.5), 0.8)
+    rule(ctx, k, GAP_X + 0.5, STRIP.top, GAP_X + 0.5, LIP, rgba(INK, 0.5), 0.8)
+  }
+}
+
+function drawGlass(ctx: C2, k: number, t: number, light: number): void {
+  strip(ctx, k, t, light, GLASS.x0, GLASS.x1)
+  // The housing's rim round the glass, and the rail the loupe runs on.
+  slab(ctx, k, GLASS.x0 - 0.05, GLASS.top - 0.08, GLASS.x1 + 0.05, GLASS.top, mix(R.dark, R.housingLit, light * 0.8), { color: rgba(INK, 0.9), w: 1 })
   // What an editor leaves on a light table: tape holding the strip's ends down, and grease-pencil ticks over the
   // frames that matter (graphite; a cross over the one that is missing).
   if (light > 0.02) {
@@ -802,59 +812,47 @@ function drawGlass(ctx: C2, k: number, t: number, light: number): void {
   ctx.strokeStyle = rgba(INK, 0.95)
   ctx.lineWidth = 1
   ctx.stroke()
-  void NOTCH
 }
 
-function drawLoupe(ctx: C2, k: number, t: number, light: number, magnify: boolean): void {
+/** How much the loupe magnifies, and where in its lens it looks: a little up and right, where frame 21's ship is. */
+const ZOOM = 2.2
+const LOOK: [number, number] = [0.1, -0.13]
+
+/**
+ * The loupe on its carriage. Its lens shows the strip under it magnified, so what is in it slides through as the
+ * loupe goes along: the blank's white, the base between frames, the next frame. It lifts a hair off the glass while
+ * it slides and is set down as it stops, with a small settle on each click.
+ */
+function drawLoupe(ctx: C2, k: number, t: number, light: number): void {
   const x = loupeX(t)
-  const moving = Math.abs(loupeX(t + 0.03) - loupeX(t - 0.03)) > 0.004
-  const lift = moving ? 0.035 : 0
-  const y = LOUPE.y - lift
+  const speed = Math.abs(loupeX(t + 0.04) - loupeX(t - 0.04)) / 0.08
+  const lift = 0.035 * clamp01(speed / 0.6)
+  const click = LOUPE_CLICKS.reduce((s, c) => s + 0.012 * settle(t, c, 7, 0.07), 0)
+  const y = LOUPE.y - lift + click
   const r = LOUPE.r
-  const click = LOUPE_CLICKS.reduce((s, c) => s + knock(t, c, 0.1), 0)
   // The rail on the glass's rim, and the carriage's arm down to the ring.
   rule(ctx, k, x, LOUPE.rail, x, y - r, rgba(mix(R.metal, R.glass, light * 0.3), 0.9), 1.6)
   slab(ctx, k, x - 0.12, LOUPE.rail - 0.06, x + 0.12, LOUPE.rail + 0.03, mix(R.housing, R.housingLit, 0.5 + light * 0.3), { color: rgba(INK, 0.9), w: 1 })
-  if (!magnify) {
-    // Parked: only the ring, over frame 27.
-  } else {
-    // What it sees: the frame under it, magnified (21, the ship, the closest).
-    const n = Math.round(x + 0.5) + 20
-    const which = n === BLANK ? -1 : n
-    const zoom = which === 21 ? 2.4 : 1.8
-    ctx.save()
-    ctx.beginPath()
-    ctx.arc(x * k, y * k, r * k, 0, Math.PI * 2)
-    ctx.clip()
-    const b = light * (0.5 + 0.5 * frameLight(Math.max(20, Math.min(27, n)), t))
-    if (which < 0 || !FRAMES.includes(which)) {
-      ctx.fillStyle = mix(R.dark, '#FFFFFF', light)
-      ctx.fillRect((x - r) * k, (y - r) * k, 2 * r * k, 2 * r * k)
-    } else {
-      const fx = frameX(which)
-      const w = IMG_W * zoom
-      const h = (STRIP.imgBot - STRIP.imgTop) * zoom
-      // The magnified frame, centred on the ring, its own middle (the ship's middle, for 21) under the glass.
-      const ax = which === 21 ? 0.62 : 0.5
-      const ay = which === 21 ? 0.36 : 0.5
-      ctx.translate((x - (x - fx) * zoom - w * ax) * k, (y - h * ay) * k)
-      ctx.scale(w * k, h * k)
-      picture(ctx, which, negative(b))
-    }
-    ctx.restore()
-  }
-  // The ring's glint and its rim; a flash round it as it clicks down.
-  ctx.strokeStyle = rgba(INK, 1)
-  ctx.lineWidth = Math.max(1.6, 0.05 * k)
+  const lx = x + LOOK[0]
+  const ly = LOUPE.y + LOOK[1]
+  const span = r / ZOOM + 0.05
+  ctx.save()
   ctx.beginPath()
   ctx.arc(x * k, y * k, r * k, 0, Math.PI * 2)
-  ctx.stroke()
-  ctx.strokeStyle = rgba('#FFFFFF', (0.25 + 0.5 * Math.min(1, click)) * light)
-  ctx.lineWidth = 1.2
+  ctx.clip()
+  ctx.translate(x * k, y * k)
+  ctx.scale(ZOOM, ZOOM)
+  ctx.translate(-lx * k, -ly * k)
+  strip(ctx, k, t, light, lx - span, lx + span)
+  ctx.restore()
+  // The glass's own faint tint, and its ring.
+  ctx.fillStyle = rgba('#BFD3D6', 0.06 * light)
   ctx.beginPath()
-  ctx.arc(x * k, y * k, (r - 0.04) * k, -2.4, -1.3)
+  ctx.arc(x * k, y * k, r * k, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.strokeStyle = rgba(INK, 1)
+  ctx.lineWidth = Math.max(1.6, 0.05 * k)
   ctx.stroke()
-  if (lift > 0) pool(ctx, k, x + 0.04, y + 0.06, r * 1.1, R.dark, 0.25 * light)
 }
 
 /* ------------------------------------------------------------------ the set */
@@ -903,29 +901,14 @@ export function drawRoom(p: p5, k: number, t: number): void {
   drawDoor(ctx, k, t, light, true)
   enlargerLight(ctx, k, t)
   drawGlass(ctx, k, t, light)
-  drawLoupe(ctx, k, t, light, t >= OFFICE)
+  drawLoupe(ctx, k, t, light)
   ctx.restore()
 }
 
-/** Over the balls: the light from the glass on them from below, strongest in the blank; the tray's front rail. */
+/** Over the balls: the tray's front rail, which he rides behind. */
 export function drawRoomOver(p: p5, k: number, t: number): void {
   const ctx = p.drawingContext as C2
-  const light = tubeAt(t)
   ctx.save()
-  const [wx, wy] = walterAt(Math.min(t, NUUK))
-  const onTable = wy > -0.3
-  if (onTable) {
-    const inBlank = 1 - clamp01(Math.abs(wx - GAP_X) / 0.5)
-    const blank = blankAt(t) * inBlank
-    pool(ctx, k, wx, wy + 0.1, 0.2 + 0.12 * blank, '#FFFFFF', light * (0.16 + 0.42 * blank), 0.75)
-  }
-  if (t >= OFFICE) {
-    const [cx, cy] = cherylAt(t)
-    pool(ctx, k, cx, cy + 0.1, 0.2, '#FFFFFF', light * 0.14, 0.75)
-    void CHERYL
-  }
-  // In the picture's light, once the lamp is on: he takes its grey on his top.
-  if (t >= LAMP && !onTable) pool(ctx, k, wx, wy - 0.08, 0.22, R.picSky, 0.22 * lampAt(t), 0.8)
-  drawTray(ctx, k, t, light, true)
+  drawTray(ctx, k, t, tubeAt(t), true)
   ctx.restore()
 }
