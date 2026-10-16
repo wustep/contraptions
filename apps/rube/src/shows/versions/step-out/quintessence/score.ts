@@ -98,8 +98,8 @@ const ashCut = scenery<null>({
     wash(ctx, v, rgbaOf(ASH.color, Math.min(1, a * 1.08)), rgbaOf(ASH.color, a * 0.97))
     ctx.save()
     ctx.globalAlpha = 0.4 + 0.5 * Math.sin(Math.PI * Math.min(1, a * 1.4))
-    motes(ctx, v, c.t, { n: 70, seed: 41, tile: [6, 5], r: [0.02, 0.05], v: [0.25, 0.55], sway: [0.12, 0.35], color: '#A9A49B', square: true })
-    motes(ctx, v, c.t, { n: 26, seed: 42, tile: [6, 5], r: [0.05, 0.1], v: [0.4, 0.9], sway: [0.2, 0.25], color: '#BDB8AF' })
+    motes(ctx, v, c.t, { n: 60, seed: 41, tile: [6, 5], r: [0.015, 0.035], v: [0.25, 0.55], sway: [0.12, 0.35], color: '#A9A49B', square: true })
+    motes(ctx, v, c.t, { n: 18, seed: 42, tile: [6, 5], r: [0.04, 0.065], v: [0.4, 0.9], sway: [0.2, 0.25], color: '#BDB8AF' })
     ctx.restore()
   },
 })
