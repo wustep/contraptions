@@ -712,13 +712,13 @@ function drawFire(p: p5, k: number, t: number, L: Look) {
 }
 
 /**
- * The room's light out of the open door onto the porch, where the two of them stand: a long low wash on the iron
- * round the doorway and a pool along the porch's boards under their feet, warm (the hearth's). Soft all the way out
- * from its middle (no rim, no core), so it lights them and never reads as a round thing by them. It opens with the
- * door and stays lit under the credits, so as the castle goes small the porch is the warm point where they are.
+ * The room's light out of the open door onto the porch, where the two of them stand: a pool along the porch's boards
+ * under their feet, warm (the hearth's), soft all the way out from its middle (no rim, no core). Nothing on the iron
+ * round the doorway: the light goes out of the door, not along the wall beside it. It opens with the door and stays
+ * lit under the credits.
  */
 function porchLight(t: number, ctx: CanvasRenderingContext2D, k: number, L: Look) {
-  const a = smooth(t, 299.95, 300.95) * (L.pose.lights ?? 0) * (1 + 0.6 * smooth(t, 304, 312))
+  const a = smooth(t, 299.95, 300.95) * (L.pose.lights ?? 0)
   if (a < 0.01) return
   const warm = rgbHex(mixHex(WASTES.window, CALCIFER.body, 0.35))
   const wash = (at: Pt, rx: number, ry: number, alpha: number) => {
@@ -738,8 +738,6 @@ function porchLight(t: number, ctx: CanvasRenderingContext2D, k: number, L: Look
     ctx.restore()
   }
   const [dx, dy] = CASTLE.door
-  // On the iron round the doorway, leaning out toward them.
-  wash([dx - 0.45, dy - 1.0], 2.3, 1.45, 0.2 * a)
   // The pool along the boards, from the sill out past where they stand.
   wash([dx - 0.9, dy + 0.05], 1.8, 0.38, 0.34 * a)
 }
@@ -903,16 +901,6 @@ function porchLantern(p: p5, k: number, W: number, ink: string, pose: CastlePose
   p.triangle(X(-0.11), X(0.04), X(0.11), X(0.04), 0, X(-0.06))
   p.rect(0, X(0.26), X(0.17), X(0.04))
   p.pop()
-  if (lit > 0.01) {
-    const ctx = p.drawingContext as CanvasRenderingContext2D
-    const cx = lx - 0.14 * Math.sin(angle)
-    const cy = ly + 0.14 * Math.cos(angle)
-    const g = ctx.createRadialGradient(X(cx), X(cy), 0, X(cx), X(cy), X(0.45))
-    g.addColorStop(0, `rgba(255, 227, 163, ${0.4 * lit})`)
-    g.addColorStop(1, 'rgba(255, 227, 163, 0)')
-    ctx.fillStyle = g
-    ctx.fillRect(X(cx - 0.45), X(cy - 0.45), X(0.9), X(0.9))
-  }
 }
 
 /**
