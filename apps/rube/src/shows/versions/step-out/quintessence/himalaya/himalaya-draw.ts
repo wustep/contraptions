@@ -736,6 +736,16 @@ export function drawTripod(pen: Pen, t: number): void {
   const low: Pt = [sx + 0.56 + swing * 0.12, sy - 0.0 - Math.abs(swing) * 0.02]
   line(pen, [top, [(top[0] + low[0]) / 2 + 0.03 + swing * 0.02, (top[1] + low[1]) / 2 + 0.03], low], C.strap, 0.022)
   ellipse(pen, low[0], low[1], 0.022, 0.018, '#8B8F92')
+  // On each tick the buckle knocks the leg and shakes a few grains of rime off it, which fall to the ledge.
+  for (const k of TICKS) {
+    const g = t - k
+    if (g < 0 || g > 0.45) continue
+    for (let j = 0; j < 4; j++) {
+      const vx = (j - 1.5) * 0.2
+      const vy = -0.5 - 0.3 * hash(j, 5, 93)
+      ellipse(pen, low[0] + vx * g, Math.min(LEDGE_Y - 0.02, low[1] + vy * g + 5 * g * g), 0.012, 0.012, rgba('#FFFFFF', 0.9 * (1 - g / 0.45)))
+    }
+  }
   // The camera body, and the lens: long, with a pale band, its hood toward the cat.
   fillPoly(pen, [[sx + 0.16, sy - 0.24], [sx + 0.42, sy - 0.24], [sx + 0.42, sy - 0.04], [sx + 0.16, sy - 0.04]], C.tripod)
   ellipse(pen, sx + 0.15, sy - 0.12, 0.025, 0.04, '#1E2124')

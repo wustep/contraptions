@@ -289,7 +289,6 @@ function drawSky(ctx: C2, s: View, t: number, tn: Tone): void {
  * The high cloud: long rolls of altocumulus in rows across the sky going off toward the horizon, thinner and closer
  * together, broken into lengths with sky between and in patches, a little paler than the sky round them. The sun
  * lights each roll's underside before it is up (rose, then gold, then white), and the rolls drift with the wind aloft.
- * The sun's way up is left clear.
  */
 function rolls(ctx: C2, t: number, tn: Tone, sky: (y: number) => string): void {
   const lit = smooth(t, 155, 168)
@@ -313,11 +312,10 @@ function rolls(ctx: C2, t: number, tn: Tone, sky: (y: number) => string): void {
       const u = x0 + L / 2 - drift
       const where = 0.55 * Math.sin(u * 0.5 + 1.1 + j * 0.3) + 0.45 * Math.sin(u * 1.13 - j * 0.9 + 0.4)
       if (where < -0.55 + 0.4 * h(3)) continue
-      const mid = x0 + L / 2
-      if (mid > 12.9 && mid < 15.4 && y > -13.35) continue
       const yy = y + 0.05 * Math.sin(u * 0.6 + j)
       const n = Math.max(5, Math.round(L * 10 / f))
-      const T = (q: number) => th * Math.sin(Math.PI * q) ** 0.6
+      // Thinning to nothing where the sun climbs, so its way up stays clear.
+      const T = (q: number) => th * Math.sin(Math.PI * q) ** 0.6 * (y > -13.35 ? smooth(Math.abs(x0 + L * q - 14.15), 0.6, 1.4) : 1)
       const top = (q: number): Pt => [x0 + L * q, yy - T(q) * (0.5 + 0.5 * (0.5 + 0.5 * Math.sin(q * L * 11 / f + h(4) * 6)))]
       const base = (q: number): Pt => [x0 + L * q, yy + T(q) * 0.4]
       const lift = (q: number): Pt => [x0 + L * q, yy + T(q) * 0.12]
