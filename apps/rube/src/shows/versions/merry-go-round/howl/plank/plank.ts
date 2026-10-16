@@ -555,6 +555,35 @@ function cragH(s: number): number {
  * it) instead of the moor's pale mist. Its foot goes down into the gorge's mist; its right side rises from behind the
  * far wall's top, which stays in front of it.
  */
+/**
+ * At the brink, mist up out of the gorge: a few long faint wisps lying across the crag's flank, drifting slowly back
+ * along it, so the stillness of the cadenza breathes. Uneven soft heaps along each, never outlined; above the deck,
+ * under everyone.
+ */
+const WISPS: { x: number; y: number; len: number; a: number; v: number }[] = [
+  { x: -3.4, y: -3.3, len: 4.2, a: 0.2, v: 0.12 },
+  { x: -7.6, y: -2.2, len: 3.1, a: 0.16, v: 0.17 },
+  { x: -1.2, y: -4.4, len: 2.6, a: 0.13, v: 0.09 },
+]
+function drawWisps(p: p5, k: number, t: number, f: View) {
+  const on = smooth(t, 278, 281.5) * (1 - smooth(t, 294, 297))
+  if (on < 0.01) return
+  const { x0 } = farWall(f.cx)
+  const g = LAND.ledge
+  for (const [i, w] of WISPS.entries()) {
+    const cx = x0 + w.x - w.v * (t - 278)
+    if (cx + w.len < f.x0 - 1 || cx - w.len > f.x1 + 1) continue
+    const n = 7
+    for (let j = 0; j < n; j++) {
+      const u = j / (n - 1)
+      const r = (0.32 + 0.3 * Math.sin(Math.PI * u)) * (0.75 + 0.5 * hash(j, i, 31))
+      const x = cx - w.len / 2 + u * w.len
+      const y = g + w.y - 0.25 * u + 0.08 * Math.sin(t * 0.4 + j + i)
+      puff(p, k, x, y, r * 1.6, WASTES.mist, on * w.a * (0.6 + 0.4 * Math.sin(Math.PI * u)), 0.38)
+    }
+  }
+}
+
 function drawCrag(p: p5, k: number, W: number, ink: string, f: View) {
   const { x0, lip, face } = farWall(f.cx)
   const xl = x0 + CRAG_H[0][0]
@@ -1145,6 +1174,7 @@ export const plank = part<PlankState>(
       if (land) {
         drawBack(p, k, W, ink, f, t)
         drawCrag(p, k, W, ink, f)
+        drawWisps(p, k, t, f)
         drawGround(p, k, W, ink, f)
         drawTors(p, k, W, ink, f)
         drawBrink(p, k, W, ink, f)
