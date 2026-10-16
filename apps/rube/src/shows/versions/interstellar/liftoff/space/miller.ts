@@ -338,7 +338,7 @@ export const miller = part<MillerState>(
     name: 'miller',
     flight: true,
     draw: (p, s, c) => drawMiller(p, s, c),
-    over: (p, s, c) => drawNear(p, s, c),
+    over: (p, s, c) => drawSill(p, s, c),
   },
   (slot) => {
     const at = (t: number) => t - slot.begin
@@ -460,59 +460,6 @@ function drawMiller(p: p5, s: MillerState, c: Ctx): void {
   p.pop()
 }
 
-/**
- * The near water, between the camera and the things on it: the swells, nearer still, rolling under the frame's foot
- * faster than anything out on the sea, their backs catching the haze. They draw down and go as the wave comes.
- */
-function drawNear(p: p5, s: MillerState, c: Ctx): void {
-  if (c.t < 0) return
-  const t = c.t + s.begin
-  const on = presence(t, s) * (1 - smooth(waveS(t), 0.55, 0.9))
-  if (on <= 0.01) return
-  const { k } = c
-  const X = (v: number) => v * k
-  const f = frame(p, k)
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  const G = 1.2
-  const phase = (t * 0.45) % 1
-  ctx.lineCap = 'round'
-  for (let j = 0; j < 6; j++) {
-    const sd = 1.3 * Math.pow(G, j + phase)
-    const y = depthY(sd)
-    if (y > f.y1 + 0.3) break
-    const fade = on * smooth(j + phase, 0, 0.8)
-    if (fade <= 0.01) continue
-    // Nearer than the machine: it slides with the camera more than the world does, and runs on its own way too.
-    const slide = -(sd - 1) * (0.35 * (f.cx - 152) + 0.5 * t)
-    const amp = 0.035 * sd
-    const step = 0.25
-    const yAt = (x: number) => {
-      const u = (x - slide) / sd
-      return y + amp * Math.sin(u * 2.1 + j * 1.9) * (0.55 + 0.45 * Math.sin(u * 0.6 + j * 0.7))
-    }
-    // The trough: a dark band under the swell's back.
-    ctx.fillStyle = rgba(DARK.deep, 0.28 * fade)
-    ctx.beginPath()
-    ctx.moveTo(X(f.x0 - 0.5), X(yAt(f.x0 - 0.5)))
-    for (let x = f.x0 - 0.5; x <= f.x1 + 0.5; x += step) ctx.lineTo(X(x), X(yAt(x)))
-    for (let x = f.x1 + 0.5; x >= f.x0 - 0.5; x -= step) ctx.lineTo(X(x), X(yAt(x) + 0.05 * sd))
-    ctx.closePath()
-    ctx.fill()
-    // The back, catching the haze in broken lengths.
-    ctx.strokeStyle = rgba(HAZE, 0.3 * fade)
-    ctx.lineWidth = Math.max(0.8, X(0.02 * sd))
-    ctx.beginPath()
-    for (let i = Math.floor((f.x0 - slide) / 1.1) - 1; i <= Math.ceil((f.x1 - slide) / 1.1); i++) {
-      if (hash(i, j, 15) > 0.6) continue
-      const xa = slide + (i + hash(i, j, 16) * 0.5) * 1.1
-      const len = (0.3 + 0.5 * hash(i, j, 17)) * sd
-      ctx.moveTo(X(xa), X(yAt(xa) - 0.01))
-      for (let x = xa + 0.1; x <= xa + len; x += 0.1) ctx.lineTo(X(x), X(yAt(x) - 0.01))
-    }
-    ctx.stroke()
-  }
-}
-
 /* ------------------------------------------------------------------ the sky */
 
 function drawSky(p: p5, c: Ctx, f: Frame, t: number): void {
@@ -540,23 +487,23 @@ function drawSky(p: p5, c: Ctx, f: Frame, t: number): void {
       if (hash(i, j, 91) > 0.5) continue
       const x = ox + (i + hash(i, j, 92)) * cell
       const y = oy + (j + hash(i, j, 93)) * cell
-      const a = (1 - smooth(y, top + 1.2, HZ - 1)) * (0.4 + 0.5 * hash(i, j, 94)) * (0.8 + 0.2 * Math.sin(t * 1.7 + i * 3 + j))
+      const a = (1 - smooth(y, top + 1.2, HZ - 1)) * (0.4 + 0.5 * hash(i, j, 94))
       if (a <= 0.02) continue
       p.fill(alpha(p, '#F4EEDF', a))
       p.circle(X(x), X(y), 1.2 + 1.2 * hash(i, j, 95))
     }
   }
-  // Mist: long thin banks of it in layers over the water, the far ones low and fine, the near ones higher and broader,
-  // each drifting at its own pace and moving with the camera by how near it is.
+  // Mist: long thin banks of it in two layers low over the water, the far one finer, each drifting slowly and moving
+  // with the camera by how near it is. (Four layers of it, two rows each, streaked the whole sky.)
   ctx.lineCap = 'round'
-  for (let m = 0; m < 4; m++) {
+  for (let m = 0; m < 2; m++) {
     const F = 0.12 + 0.12 * m
     const P = 2.6 + 0.9 * m
     const lo = HZ - 0.25 - 0.55 * m
     const hi = HZ - 1.1 - 0.9 * m
     const ox2 = f.cx * (1 - F) - (0.04 + 0.03 * m) * t
     for (let i = Math.floor((f.x0 - ox2) / P) - 1; i <= Math.ceil((f.x1 - ox2) / P); i++) {
-      for (let r = 0; r < 2; r++) {
+      for (let r = 0; r < 1; r++) {
         if (hash(i, r, 101 + m) > 0.58) continue
         const x = ox2 + (i + hash(i, r, 102 + m)) * P
         const y = lo + (hi - lo) * hash(i, r, 103 + m)
@@ -655,17 +602,19 @@ const SEA = mixHex('#2C474C', DARK.deep, 0.42)
 const HAZE = '#86B4AC'
 
 /**
- * The swells: long low lines rolling in from the horizon, a row after a row, spreading and thickening as they come,
- * each with a dark trough under its bright back. Their pace is the planet's, not the music's: the sea is never still.
+ * The swells: long low lines rolling in from the horizon, a row after a row, spreading as they come, each one dark
+ * line of trough. Their pace is the planet's, not the music's, and slow: the sea is never quite still, but it is
+ * calm, so the wave is the one thing on it that moves big. (Fifteen rows, each a trough and a bright back wobbling
+ * on its own, with glints between them and a faster near layer under the frame, was more motion than the machine.)
  */
 function drawSwells(p: p5, c: Ctx, f: Frame, t: number, bottom: number): void {
   const { k } = c
   const X = (v: number) => v * k
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const G = 1.24
-  const phase = (t * 0.32) % 1
+  const G = 1.5
+  const phase = (t * 0.16) % 1
   ctx.lineCap = 'round'
-  for (let j = 0; j < 15; j++) {
+  for (let j = 0; j < 9; j++) {
     const s = 0.1 * Math.pow(G, j + phase)
     const y = depthY(s)
     if (y > bottom + 0.2) break
@@ -680,18 +629,15 @@ function drawSwells(p: p5, c: Ctx, f: Frame, t: number, bottom: number): void {
       ctx.beginPath()
       for (let x = x0; x <= x1 + step; x += step) {
         const u = (x - VPX) / s
-        const yy = y + dy + amp * Math.sin(u * 1.7 + j * 2.3 + t * 0.6) * (0.6 + 0.4 * Math.sin(u * 0.43 + j))
+        const yy = y + dy + amp * Math.sin(u * 1.7 + j * 2.3) * (0.6 + 0.4 * Math.sin(u * 0.43 + j))
         if (x === x0) ctx.moveTo(X(x), X(yy))
         else ctx.lineTo(X(x), X(yy))
       }
       ctx.stroke()
     }
-    ctx.strokeStyle = rgba(DARK.deep, 0.45 * fade)
-    ctx.lineWidth = Math.max(0.6, X(0.035 * Math.min(1.8, s)))
+    ctx.strokeStyle = rgba(DARK.deep, 0.4 * fade)
+    ctx.lineWidth = Math.max(0.6, X(0.03 * Math.min(1.8, s)))
     line(0.03 * s)
-    ctx.strokeStyle = rgba(HAZE, (0.1 + 0.12 * Math.min(1, s)) * fade)
-    ctx.lineWidth = Math.max(0.6, X(0.016 * Math.min(1.8, s)))
-    line(0)
   }
 }
 
@@ -709,38 +655,16 @@ function drawSea(p: p5, c: Ctx, f: Frame, t: number): void {
   ctx.fillStyle = g
   ctx.fillRect(X(f.x0 - 0.5), X(HZ), X(f.x1 - f.x0 + 1), X(1.1))
   drawSwells(p, c, f, t, bottom)
-  // Glints, closer together as they go off.
-  ctx.lineCap = 'round'
-  for (let j = 0; j < 16; j++) {
-    const sd = 2.3 * Math.pow(0.79, j)
-    const y = depthY(sd)
-    if (y > bottom) continue
-    ctx.strokeStyle = rgba(HAZE, 0.1 + 0.1 * (1 - sd / 2.3))
-    ctx.lineWidth = Math.max(0.6, k * 0.022 * Math.min(1, sd))
-    ctx.beginPath()
-    const a = VPX + (f.x0 - VPX) / sd
-    const b = VPX + (f.x1 - VPX) / sd
-    const gap = 1.6
-    for (let i = Math.floor(a / gap) - 1; i <= Math.ceil(b / gap); i++) {
-      if (hash(i, j, 11) > 0.55) continue
-      const x = i * gap + hash(i, j, 12) * gap + 0.25 * Math.sin(t * 0.5 + i + j)
-      const l = (0.25 + hash(i, j, 13) * 0.7) * sd
-      const sx = depthX(x, sd)
-      ctx.moveTo(X(sx), X(y))
-      ctx.lineTo(X(sx + l), X(y))
-    }
-    ctx.stroke()
-  }
-  // Gargantua's light lying on the water under it.
-  for (let j = 0; j < 14; j++) {
-    const y = HZ + 0.06 + j * 0.14 + j * j * 0.012
+  // Gargantua's light lying on the water under it: a few still bars, widening toward us.
+  for (let j = 0; j < 6; j++) {
+    const y = HZ + 0.08 + j * 0.24 + j * j * 0.03
     if (y > bottom) break
-    const w = 0.18 + 0.05 * j + 0.08 * Math.sin(t * 1.3 + j * 2.1)
-    ctx.strokeStyle = rgba(DARK.gold, 0.22 * (1 - j / 14) * (0.42 + 0.58 * smooth(t, beat(179.2), beat(180.2))))
+    const w = 0.2 + 0.09 * j
+    ctx.strokeStyle = rgba(DARK.gold, 0.2 * (1 - j / 6) * (0.42 + 0.58 * smooth(t, beat(179.2), beat(180.2))))
     ctx.lineWidth = Math.max(0.6, k * 0.025)
     ctx.beginPath()
-    ctx.moveTo(X(GARG[0] - w / 2 + 0.05 * Math.sin(t + j)), X(y))
-    ctx.lineTo(X(GARG[0] + w / 2 + 0.05 * Math.sin(t + j)), X(y))
+    ctx.moveTo(X(GARG[0] - w / 2), X(y))
+    ctx.lineTo(X(GARG[0] + w / 2), X(y))
     ctx.stroke()
   }
   // The horizon.
@@ -864,7 +788,7 @@ function drawWave(p: p5, c: Ctx, f: Frame, t: number): void {
     // Spray, always coming off the top and blown back the way it came from.
     p.noStroke()
     const peak = xc
-    for (let i = 0; i < 44; i++) {
+    for (let i = 0; i < 18; i++) {
       const period = 0.9 + 0.5 * hash(i, 31)
       const age = (t / period + hash(i, 32)) % 1
       const d0 = (hash(i, 33) - 0.35) * 3
@@ -926,33 +850,27 @@ function drawWave(p: p5, c: Ctx, f: Frame, t: number): void {
 
 /* ------------------------------------------------------------------ ripples */
 
+/** One ring on the water where something touched it, spreading and fading. (Three, nested, at every touch, crowded the water.) */
 function ring(p: p5, k: number, x: number, y: number, age: number, size: number, flat: number, a0: number): void {
-  for (let r = 0; r < 3; r++) {
-    const a = age - r * 0.2
-    if (a <= 0 || a > 2.6) continue
-    const rx = (0.1 + 0.55 * Math.pow(a, 0.65)) * size
-    const al = a0 * Math.pow(1 - a / 2.6, 1.6) * (1 - r * 0.28)
-    p.noFill()
-    p.stroke(alpha(p, DARK.hull, al))
-    p.strokeWeight(Math.max(0.6, k * 0.02))
-    p.ellipse(x * k, y * k, 2 * rx * k, 2 * rx * flat * k)
-  }
+  if (age <= 0 || age > 2.2) return
+  const rx = (0.1 + 0.55 * Math.pow(age, 0.65)) * size
+  const al = a0 * Math.pow(1 - age / 2.2, 1.6)
+  p.noFill()
+  p.stroke(alpha(p, DARK.hull, al))
+  p.strokeWeight(Math.max(0.6, k * 0.02))
+  p.ellipse(x * k, y * k, 2 * rx * k, 2 * rx * flat * k)
 }
 
 function drawRipples(p: p5, c: Ctx, t: number, sWave: number): void {
   const { k } = c
   // Swallowed once the wave is over them.
   const under = (x: number) => sWave >= 1 && t > FOOT && surface(x, t) < NEAR - 0.02
-  // The Ranger's feet as it takes the ball, and as they leave the water.
+  // The Ranger's feet as it takes the ball, and as they leave the water; a buoy as it takes the ball (not as it throws).
   for (const fx of FEET_X) {
-    ring(p, k, fx, NEAR, t - COLLAR, 0.8, FLAT, 0.55)
-    ring(p, k, fx, NEAR, t - RANGER_UP, 0.9, FLAT, 0.5)
+    ring(p, k, fx, NEAR, t - COLLAR, 0.8, FLAT, 0.5)
+    ring(p, k, fx, NEAR, t - RANGER_UP, 0.9, FLAT, 0.45)
   }
-  ring(p, k, RX, NEAR, t - RANGER_UP, 1.8, FLAT, 0.55)
-  for (let i = 0; i < BUOYS.length; i++) {
-    ring(p, k, BUOYS[i], NEAR, t - BUOY_AT[i], 1, FLAT, 0.6)
-    ring(p, k, BUOYS[i], NEAR, t - BUOY_TOSS[i], 0.7, FLAT, 0.35)
-  }
+  for (let i = 0; i < BUOYS.length; i++) ring(p, k, BUOYS[i], NEAR, t - BUOY_AT[i], 1, FLAT, 0.55)
   for (const at of PLANTS) {
     const x = plantAt(at)[0]
     if (!under(x)) ring(p, k, x, NEAR, t - at, 0.8, FLAT, 0.5)
@@ -1330,6 +1248,43 @@ function drawRanger(p: p5, c: Ctx, t: number): void {
     detail: 1,
   })
   p.pop()
+}
+
+/** The cockpit's span along the ship (its units), from the hull's step behind the seat to the windscreen's foot, and the sill. */
+const WELL: [number, number] = [-0.46, 0.56]
+const SILL = 0.1
+
+/**
+ * In front of the ball while it is in the cockpit: the hull's near side, below the sill, drawn again inside the ball's
+ * own disc and only over the cockpit's span. So he sinks in behind the hull's side and sits in the cockpit, rather than
+ * on top of the white of the hull; kicked out over the nose (which falls away below the sill) nothing of him is hidden.
+ */
+function drawSill(p: p5, s: MillerState, c: Ctx): void {
+  const t = c.t + s.begin
+  if (t < OUT || t >= RANGER_UP) return
+  const b = laneAt(s.lane, c.t)
+  if (b.hidden) return
+  const { k, ink, weight } = c
+  const S = RANGER_SCALE
+  const y = SEAT_Y + rangerDip(t)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.beginPath()
+  ctx.arc(b.x * k, b.y * k, R * b.scale * k + weight, 0, TAU)
+  ctx.clip()
+  p.push()
+  p.translate(RX * k, y * k)
+  p.scale(S)
+  ctx.beginPath()
+  ctx.rect(WELL[0] * k, (SILL - 0.04) * k, (WELL[1] - WELL[0]) * k, 0.5 * k)
+  ctx.clip()
+  solid(p, ink, weight / S, DARK.hull)
+  poly(p, k, HULL)
+  p.noStroke()
+  p.fill(DARK.deep)
+  poly(p, k, BLACK)
+  p.pop()
+  ctx.restore()
 }
 
 /* ------------------------------------------------------------------ the buoys */
