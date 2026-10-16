@@ -148,8 +148,8 @@ function shotsFor(begin: number, end: number): PartShot[] {
     hold(begin + 0.9, 3.7, [at(begin)[0] + 0.62, at(begin)[1] - 0.45]),
     follow(SADDLE + 1.6, 4.3, [0.95, -0.55]),
     follow(CRASH - 0.9, 4.5, [1.0, -0.6]),
-    hold(LANDS + 0.2, 4.4, [trade[0] + 0.45, trade[1] - 0.6]),
-    hold(BOARD_DOWN, 4.2, [trade[0] + 0.55, trade[1] - 0.55]),
+    hold(LANDS + 0.2, 4.6, [trade[0] + 0.4, trade[1] - 0.48]),
+    hold(BOARD_DOWN, 4.2, [trade[0] + 0.55, trade[1] - 0.48]),
     follow(APEX[0] - 0.4, 4.8, [0.95, -0.3]),
     follow(APEX[0] + 0.8, 5.1, [-0.95, -0.15]),
     // The wide: the mountain's face, the hairpins, the fjord, the volcano.
