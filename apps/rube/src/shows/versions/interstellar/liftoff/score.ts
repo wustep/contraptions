@@ -19,7 +19,6 @@ import { gantry } from './earth/gantry'
 import { PUNCH, punchHeight, rocket, rocketPose, ROCKET_LENGTH } from './rocket'
 import { cloud } from './cloud'
 import { voidSky } from './space/sky'
-import { spaceNear } from './space/near'
 import { endurance } from './space/endurance'
 import { miller } from './space/miller'
 import { gargantua } from './space/gargantua'
@@ -179,7 +178,7 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
         theme: VOID,
         scenery: [standing(voidSky, 0, 0, all, { deck, leave: beat(160) }, DURATION)],
         chain: [lift, ...space.placed],
-        after: [standing(spaceNear, 0, 0, all, null, DURATION), deckCloud],
+        after: [deckCloud],
         from: SWITCH,
       },
       {

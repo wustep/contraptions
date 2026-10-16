@@ -78,7 +78,6 @@ export const voidSky = scenery<VoidState>({
     if (gone >= 1) return
     drawMoon(p, c, f, s, gone)
     drawEarth(p, c, f, s, gone)
-    drawSatellites(p, c, f, gone)
   },
 })
 
@@ -296,44 +295,4 @@ function drawMoon(p: p5, c: Drawn, f: Frame, s: VoidState, gone: number): void {
   ctx.lineWidth = Math.max(0.6, c.weight * 0.45)
   ctx.stroke()
   ctx.restore()
-}
-
-/**
- * Satellites, far off between the stars and the machine, each crossing the frame once on its own orbit at its own
- * depth (`f`, how much of the camera's move it makes): a box and two dark wings, turning slowly, gold foil on its box.
- */
-const SATS: { from: number; to: number; f: number; x: number; y: number; vx: number; vy: number; size: number; spin: number }[] = [
-  { from: 89.2, to: 98.5, f: 0.2, x: 17.2, y: -0.9, vx: 1.15, vy: -0.08, size: 0.13, spin: 0.35 },
-  { from: 93.5, to: 104, f: 0.35, x: 51.5, y: -10.4, vx: -0.9, vy: 0.05, size: 0.18, spin: -0.5 },
-  { from: 97.5, to: 104, f: 0.14, x: 12.9, y: -5.6, vx: 0.75, vy: 0.04, size: 0.1, spin: 0.25 },
-]
-function drawSatellites(p: p5, c: Drawn, f: Frame, gone: number): void {
-  const { k, t } = c
-  const X = (x: number) => x * k
-  for (const sat of SATS) {
-    if (t < sat.from || t > sat.to) continue
-    const fade = smooth(t, sat.from, sat.from + 0.6) * (1 - smooth(t, sat.to - 0.6, sat.to)) * (1 - gone * 0.5)
-    const x = f.cx * (1 - sat.f) + sat.x + sat.vx * (t - sat.from)
-    const y = f.cy * (1 - sat.f) + sat.y + sat.vy * (t - sat.from)
-    if (x < f.x0 - 1 || x > f.x1 + 1 || y < f.y0 - 1 || y > f.y1 + 1) continue
-    const z = sat.size
-    p.push()
-    p.translate(X(x), X(y))
-    p.rotate(sat.spin * t)
-    p.strokeWeight(Math.max(0.6, c.weight * 0.4))
-    p.stroke(alpha(p, '#ECE5D3', 0.6 * fade))
-    // The wings: dark cells on a boom.
-    p.fill(alpha(p, DARK.slate, 0.95 * fade))
-    p.rect(X(-z * 1.55), 0, X(z * 1.6), X(z * 0.44))
-    p.rect(X(z * 1.55), 0, X(z * 1.6), X(z * 0.44))
-    p.line(X(-z * 0.75), 0, X(-z * 0.3), 0)
-    p.line(X(z * 0.3), 0, X(z * 0.75), 0)
-    // The box, gold foil on its sunlit side.
-    p.fill(alpha(p, DARK.hull, fade))
-    p.rect(0, 0, X(z * 0.6), X(z * 0.7))
-    p.noStroke()
-    p.fill(alpha(p, DARK.gold, 0.85 * fade))
-    p.rect(X(-z * 0.15), 0, X(z * 0.28), X(z * 0.62))
-    p.pop()
-  }
 }

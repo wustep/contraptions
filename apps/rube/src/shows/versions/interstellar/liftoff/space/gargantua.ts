@@ -3,7 +3,7 @@ import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInOutSine, easeInQuad, easeOutCubic } from '../../../../../../../../src/core/ease'
 import { FLOOR, R, laneAt, mixHex, type Lane, type Pt } from '../../../../../parts'
 import type { ShowBall } from '../../../../../show'
-import { alpha, box, carried, frame, hash, knock, lensedArc, part, route, smooth, type Ctx, type PartShot } from '../kit'
+import { alpha, box, carried, frame, hash, knock, part, route, smooth, type Ctx, type PartShot } from '../kit'
 import { ACT1_END, ACT2, beat, LAST } from '../music'
 import { G_EARTH } from '../physics'
 import { drawLander, FALL_NOTES, LANDER_X, SHELF_TOP, stayRow } from '../earth/house'
@@ -718,17 +718,6 @@ function drawGargantua(p: p5, _s: GargState, c: Ctx, T: number): void {
   const h = holeLook(T)
   // Its light goes first as the dark opens.
   const fade = 1 - smooth(T, HORIZON - 0.02, HORIZON + 0.22)
-  // The stars behind it, bent round it by its pull: arcs, drawn out longer the nearer they lie to its edge, wheeling
-  // slowly about it, the near ones faster. No halo: the dark is ringed by what it bends.
-  if (fade > 0.01 && X(h.r) > 12) {
-    for (let i = 0; i < 22; i++) {
-      const rho = 1.22 + 2.4 * hash(i, 7, 201) ** 1.6
-      const len = 0.06 + 0.75 / (rho * rho)
-      const a = hash(i, 7, 202) * TAU + T * (0.04 + 0.12 / rho)
-      lensedArc(p, X(h.cx), X(h.cy), X(rho * h.r), a, len, VOID.ink, (0.22 + 0.4 * hash(i, 7, 203)) * fade, Math.max(0.8, X(h.r) * 0.011))
-    }
-  }
-
   // Behind the hole: the Ranger and the ball's tether when they are on the far side.
   const sw = swingAt(T)
   const shipBehind = T >= CATCH && T <= RELEASE && sw.behind
