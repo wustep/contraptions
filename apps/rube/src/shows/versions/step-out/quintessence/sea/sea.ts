@@ -25,7 +25,7 @@ import {
   swingAt,
   TOP,
 } from './sea-plan'
-import { drawBubbles, drawDeckLight, drawDeckThings, drawLine, drawNet, drawParcelSinking, drawShark, drawSplashes, drawUnder } from './sea-draw'
+import { drawBubbles, drawDeckThings, drawLine, drawNet, drawParcelSinking, drawShark, drawSplashes, drawUnder } from './sea-draw'
 import { smooth } from '../kit'
 
 /**
@@ -92,7 +92,6 @@ export const sea = part<State>(
       drawParcelSinking(p, c.k, t)
       drawBubbles(p, c.k, t)
       drawLine(p, c.k, t, him)
-      drawDeckLight(p, c.k, t)
       drawDeckThings(p, c.k, t)
       g.restore()
     },

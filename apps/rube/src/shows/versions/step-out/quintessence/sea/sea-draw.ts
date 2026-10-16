@@ -5,13 +5,12 @@ import { hash, smooth } from '../kit'
 import { view } from '../depth'
 import { drawDeepBack, drawSnow, drawWeb } from './deep'
 import { G } from '../physics'
-import { ctxOf, glow, mix, oval, poly, rgba, scribble, vgrad, type C2 } from '../sky/paint'
+import { ctxOf, mix, oval, poly, rgba, scribble, vgrad, type C2 } from '../sky/paint'
 import { drawParcel } from '../sky/sky-draw'
 import { BOAT, boomTip } from './boat'
 import {
   BEGIN,
   BOAT_X0,
-  BY_CAKE,
   CAKE,
   CAKE_X,
   DECK_ON,
@@ -73,6 +72,17 @@ export function waterAt(d: number): string {
   return mix(SEA.deep, SEA.abyss, Math.min(1, (d - 4.5) / 4))
 }
 
+/**
+ * The water's colour down from the skin in flat steps, each about a shade from the next (finer near the top, where it
+ * darkens fastest): in software a gradient over the whole frame costs many times these fills.
+ */
+const WATER_STEPS: { y0: number; y1: number; colour: string }[] = []
+for (let d = 0.06; d < 9; ) {
+  const step = d < 1.5 ? 0.05 : d < 4.5 ? 0.12 : 0.22
+  WATER_STEPS.push({ y0: W + d, y1: W + d + step, colour: waterAt(d + step / 2) })
+  d += step
+}
+
 /** The surface's line, a little lift and fall along it. */
 export const skinY = (x: number, t: number): number => W + 0.028 * Math.sin(x * 2.1 + t * 1.3) + 0.016 * Math.sin(x * 5.3 - t * 2.1)
 
@@ -91,13 +101,19 @@ export function drawUnder(p: p5, k: number, t: number): void {
   for (let x = x0; x <= x1 + 0.25; x += 0.25) g.lineTo(x * k, skinY(x, t) * k)
   g.lineTo(x1 * k, yb * k)
   g.closePath()
-  g.fillStyle = vgrad(g, k, W, W + 9, [
-    [0, SEA.shallow],
-    [1.5 / 9, SEA.mid],
-    [4.5 / 9, SEA.deep],
-    [1, SEA.abyss],
-  ])
+  g.fillStyle = SEA.shallow
   g.fill()
+  for (const b of WATER_STEPS) {
+    if (b.y1 < v.y0 || b.y0 > yb) continue
+    g.fillStyle = b.colour
+    // A pixel over into the next step, so no seam of the skin's colour shows between them.
+    g.fillRect(x0 * k, b.y0 * k, (x1 - x0) * k, (b.y1 - b.y0) * k + 1)
+  }
+  const last = WATER_STEPS[WATER_STEPS.length - 1].y1
+  if (yb > last) {
+    g.fillStyle = SEA.abyss
+    g.fillRect(x0 * k, last * k, (x1 - x0) * k, (yb - last) * k)
+  }
   // Everything under is kept under the skin's mean line: a plain rectangle, which costs nothing to keep to (the wavy
   // skin itself as a clip would put a mask under every ray and speck).
   g.save()
@@ -118,8 +134,50 @@ export function drawUnder(p: p5, k: number, t: number): void {
   }
   // The snow drifting by at his own distance.
   drawSnow(g, v, t, 'mid', 1)
-  // The boat's hull from below: dark on the light.
+  // A line let down over the boat's far side, and the boat's hull from below: dark on the light.
+  drawHandLine(g, k, t)
   drawHullUnderLocal(g, k, t)
+  g.restore()
+}
+
+/**
+ * A hand line let down over the boat's far side and made fast there: it comes out from under the keel and goes down
+ * into the dark, leaning a little in the current, a lead at its end and two pale jigs on short snoods above it. The
+ * swell lifts the boat and the line rises and settles with it. Paler near the top, where the light still reaches it.
+ */
+function drawHandLine(g: C2, k: number, t: number): void {
+  const x0 = BOAT_X0 + 2.6
+  const L = 6.2
+  const lift = 0.06 * Math.sin(t * 0.7 + 0.4)
+  const at = (u: number): Pt => [x0 + 0.5 * u * u + 0.04 * Math.sin(t * 0.5 + u * 2.4) * u, W + 0.3 + (L - 0.3) * u + lift]
+  g.save()
+  g.lineCap = 'round'
+  g.lineWidth = Math.max(0.8, 0.012 * k)
+  for (const [u0, u1, a] of [[0, 0.35, 0.5], [0.35, 0.7, 0.36], [0.7, 1, 0.24]]) {
+    g.beginPath()
+    for (let i = 0; i <= 8; i++) {
+      const [x, y] = at(u0 + ((u1 - u0) * i) / 8)
+      if (i) g.lineTo(x * k, y * k)
+      else g.moveTo(x * k, y * k)
+    }
+    g.strokeStyle = rgba(SEA.line, a)
+    g.stroke()
+  }
+  // The jigs on their snoods, swinging a little out from the line, and the lead.
+  for (const [u, side] of [[0.8, 1], [0.9, -1]]) {
+    const [x, y] = at(u)
+    const sw = 0.05 * Math.sin(t * 0.9 + u * 7)
+    const jx = x + side * (0.16 + sw)
+    const jy = y + 0.1
+    g.strokeStyle = rgba(SEA.line, 0.22)
+    g.beginPath()
+    g.moveTo(x * k, y * k)
+    g.lineTo(jx * k, jy * k)
+    g.stroke()
+    oval(g, k, jx, jy + 0.06, 0.022, 0.06, rgba('#8FA7A3', 0.5), side * 0.15)
+  }
+  const [lx, ly] = at(1)
+  oval(g, k, lx, ly + 0.06, 0.045, 0.08, rgba('#0A1A1E', 0.85))
   g.restore()
 }
 
@@ -182,12 +240,11 @@ function drawHullUnderLocal(g: C2, k: number, t: number): void {
 /* ------------------------------------------------------------------ bubbles */
 
 /**
- * The bubbles of a frame, gathered and drawn together: a ring, a faint fill and a glint each, in three bands of
- * brightness, so fifty bubbles are nine paths and not a hundred and fifty fills.
+ * The bubbles of a frame, gathered and drawn together: a ring and a faint fill each, in three bands of brightness, so
+ * fifty bubbles are six paths and not a hundred fills.
  */
 class Bubbles {
   private rings = [new Path2D(), new Path2D(), new Path2D()]
-  private glints = new Path2D()
   constructor(private k: number) {}
   add(x: number, y: number, r: number, a: number): void {
     if (a <= 0.05) return
@@ -195,12 +252,6 @@ class Bubbles {
     const ring = this.rings[a > 0.7 ? 2 : a > 0.4 ? 1 : 0]
     ring.moveTo((x + r) * k, y * k)
     ring.arc(x * k, y * k, r * k, 0, Math.PI * 2)
-    if (a > 0.4) {
-      const gx = x - r * 0.35
-      const gy = y - r * 0.35
-      this.glints.moveTo((gx + r * 0.28) * k, gy * k)
-      this.glints.arc(gx * k, gy * k, r * 0.28 * k, 0, Math.PI * 2)
-    }
   }
   draw(g: C2): void {
     g.save()
@@ -212,8 +263,6 @@ class Bubbles {
       g.strokeStyle = rgba(SEA.bubble, 0.75 * a)
       g.stroke(this.rings[b])
     }
-    g.fillStyle = rgba('#FFFFFF', 0.65)
-    g.fill(this.glints)
     g.restore()
   }
 }
@@ -484,18 +533,29 @@ const DECK_TOP = W + BOAT.deck
 const DECK_BACK = W + BOAT.deckBack
 
 /**
- * The fisherman: a dark oilskin against the white wheelhouse, drawn, never a ball. He comes out round the house as
- * Walter is swung in, holding the cake; stoops on bar 50 to set it down beside him; straightens, and stays to watch.
+ * The fisherman: a dark oilskin against the white wheelhouse, drawn, never a ball. As Walter is hauled out he comes
+ * up out of the hatch before the house with the cake (its coaming hides him until he is up), steps off it toward the
+ * stern as Walter is dropped, stoops on bar 50 to set the cake down beside him, straightens, and stays to watch.
  */
 const MAN_X = BOAT_X0 + BOAT.house.x0 + 0.78
 const MAN_FOOT = DECK_BACK + 0.07
-/** Where he stands: out from behind the house's far end, a little bob in each step. */
-const manX = (t: number): number => MAN_X + 1.5 * (1 - smooth(t, DECK_ON - 0.9, DECK_ON + 0.5))
-const walking = (t: number): number => (t > DECK_ON - 0.9 && t < DECK_ON + 0.5 ? 1 : 0)
+/** Where he comes up (the hatch's middle, a little toward its far end so the cake held out before him clears it). */
+const UP_X = BOAT_X0 + BOAT.hatch.x0 + 0.8
+/** He starts low enough in the hatch that none of him shows, and is up as the net opens. */
+const UP0 = OUT + 0.25
+const UP1 = DECK_ON - 0.35
+const RISE = 1.8
+/** Where he stands, and where his feet are: down in the hatch, up to its rim, and the step down off it onto the deck. */
+const manX = (t: number): number => UP_X + (MAN_X - UP_X) * smooth(t, UP1, DECK_ON + 0.5)
+const RIM = W + BOAT.hatch.rim
+const footAt = (t: number): number => MAN_FOOT + RISE * (1 - smooth(t, UP0, UP1)) + (RIM - MAN_FOOT) * (1 - smooth(t, UP1, UP1 + 0.3))
+/** How much he is walking: from the hatch to his place, easing in and out so his step never stops short. */
+const walking = (t: number): number => smooth(t, UP1, UP1 + 0.2) * (1 - smooth(t, DECK_ON + 0.25, DECK_ON + 0.5))
 /** How far he is stooped, 0 standing to 1 down at the deck. */
 const stoop = (t: number): number => smooth(t, CAKE - 1.0, CAKE - 0.08) * (1 - smooth(t, CAKE + 0.45, CAKE + 1.5))
 
 interface Man {
+  foot: number
   hip: Pt
   shoulder: Pt
   head: Pt
@@ -504,13 +564,14 @@ interface Man {
 function manAt(t: number): Man {
   const b = stoop(t)
   const x = manX(t)
+  const foot = footAt(t)
   const bob = walking(t) * 0.025 * Math.abs(Math.sin((t - DECK_ON) * 9))
-  const hip: Pt = [x + 0.04 * b, MAN_FOOT - 0.74 + 0.16 * b - bob]
+  const hip: Pt = [x + 0.04 * b, foot - 0.74 + 0.16 * b - bob]
   const lean = 1.15 * b + 0.06
   const shoulder: Pt = [hip[0] - 0.6 * Math.sin(lean), hip[1] - 0.6 * Math.cos(lean)]
   const hl = lean + 0.25 * b
   const head: Pt = [shoulder[0] - 0.21 * Math.sin(hl), shoulder[1] - 0.21 * Math.cos(hl)]
-  return { hip, shoulder, head, lean }
+  return { foot, hip, shoulder, head, lean }
 }
 
 /** Where the cake (its foot's middle) is: held at his chest, then set down on bar 50. */
@@ -527,20 +588,22 @@ export function cakeAt(t: number): Pt {
 }
 
 export function drawDeckThings(p: p5, k: number, t: number): void {
-  if (t < DECK_ON - 0.9) return
+  if (t < UP0) return
   const g = ctxOf(p)
   const c = cakeAt(t)
   const down = t >= CAKE
+  g.save()
+  if (t < UP1) {
+    // Still in the hatch: nothing of him (or what he holds) below its coaming's top.
+    g.beginPath()
+    g.rect(-1e4, -1e4, 2e4, 1e4 + RIM * k)
+    g.clip()
+  }
   // The wrapper: carried under the cake, then lying on the deck, Sean's notes on it.
   if (down) drawWrapper(g, k, t)
   else {
     g.fillStyle = SEA.paper
-    poly(g, k, [
-      [c[0] - 0.5, c[1] + 0.06],
-      [c[0] + 0.5, c[1] + 0.03],
-      [c[0] + 0.42, c[1] - 0.02],
-      [c[0] - 0.42, c[1]],
-    ])
+    poly(g, k, carried(c))
     g.fill()
   }
   drawMan(g, k, t, c)
@@ -552,31 +615,45 @@ export function drawDeckThings(p: p5, k: number, t: number): void {
     g.ellipse(h[0] * k, h[1] * k, 0.085 * k, 0.065 * k, -0.4, 0, Math.PI * 2)
     g.fill()
   }
+  g.restore()
 }
+
+/** The carried paper under the cake (its four corners, near side first), around the cake's foot at `c`. */
+const carried = (c: Pt): Pt[] => [
+  [c[0] - 0.42, c[1] + 0.06],
+  [c[0] + 0.42, c[1] + 0.03],
+  [c[0] + 0.36, c[1] - 0.02],
+  [c[0] - 0.36, c[1]],
+]
 
 function drawWrapper(g: C2, k: number, t: number): void {
   const y0 = DECK_TOP - 0.01
   const y1 = DECK_BACK + 0.06
   const skew = 0.14
+  // Set down, the paper slides out flat from under the cake over a third of a second.
+  const u = smooth(t, CAKE, CAKE + 0.35)
+  const from = carried(cakeAt(CAKE))
+  const spread = (to: Pt[], dy = 0): Pt[] => to.map(([x, y], i) => [from[i][0] + (x - from[i][0]) * u, from[i][1] + dy + (y - from[i][1]) * u])
   // The paper on the deck, its far corners a little lifted, and its shade.
   g.fillStyle = SEA.paperShade
-  poly(g, k, [
-    [WRAP.x0, y0 + 0.012],
-    [WRAP.x1, y0 + 0.012],
-    [WRAP.x1 + skew, y1 + 0.012],
-    [WRAP.x0 + skew, y1 + 0.012],
-  ])
+  poly(g, k, spread([
+    [WRAP.x0, y0],
+    [WRAP.x1, y0],
+    [WRAP.x1 + skew, y1],
+    [WRAP.x0 + skew, y1],
+  ], 0.012))
   g.fill()
   g.fillStyle = SEA.paper
-  poly(g, k, [
+  poly(g, k, spread([
     [WRAP.x0, y0],
     [WRAP.x1, y0],
     [WRAP.x1 + skew + 0.02, y1 - 0.02],
     [WRAP.x0 + skew - 0.03, y1],
-  ])
+  ]))
   g.fill()
-  // Sean's notes: lines of a hand, and no letters.
+  // Sean's notes: lines of a hand, and no letters, on as much of the paper as is out.
   g.save()
+  g.clip()
   g.transform(1, 0, -skew / (y0 - y1), 1, (skew / (y0 - y1)) * y0 * k, 0)
   scribble(g, k, WRAP.x0 + 0.07, y1 + 0.03, CAKE_X - 0.38 - WRAP.x0, y0 - y1 - 0.06, 4, 7, SEA.pencil, 0.75, Math.max(0.6, 0.012 * k))
   scribble(g, k, CAKE_X + 0.36, y1 + 0.05, WRAP.x1 - CAKE_X - 0.42, (y0 - y1) * 0.6, 2, 13, SEA.pencil, 0.6, Math.max(0.6, 0.012 * k))
@@ -646,7 +723,7 @@ function arm(g: C2, k: number, from: Pt, to: Pt, w: number): void {
 }
 
 function drawMan(g: C2, k: number, t: number, c: Pt): void {
-  if (t < DECK_ON - 0.9) return
+  if (t < UP0) return
   const m = manAt(t)
   const holding = t < CAKE + 0.45
   // Where his hands are: on the cake while he has it, then back at his sides.
@@ -668,17 +745,17 @@ function drawMan(g: C2, k: number, t: number, c: Pt): void {
   for (const sx of [-0.09, 0.09]) {
     g.beginPath()
     g.moveTo((m.hip[0] + sx * 0.6) * k, m.hip[1] * k)
-    g.lineTo((m.hip[0] + sx + (sx < 0 ? step : -step)) * k, (MAN_FOOT - 0.08) * k)
+    g.lineTo((m.hip[0] + sx + (sx < 0 ? step : -step)) * k, (m.foot - 0.08) * k)
     g.stroke()
   }
   g.fillStyle = '#1F2622'
   for (const sx of [-0.09, 0.09]) {
     const fx = m.hip[0] + sx + (sx < 0 ? step : -step)
     poly(g, k, [
-      [fx - 0.13, MAN_FOOT],
-      [fx + 0.09, MAN_FOOT],
-      [fx + 0.08, MAN_FOOT - 0.2],
-      [fx - 0.07, MAN_FOOT - 0.2],
+      [fx - 0.13, m.foot],
+      [fx + 0.09, m.foot],
+      [fx + 0.08, m.foot - 0.2],
+      [fx - 0.07, m.foot - 0.2],
     ])
     g.fill()
   }
@@ -718,13 +795,6 @@ function drawMan(g: C2, k: number, t: number, c: Pt): void {
   g.ellipse(hand[0] * k, hand[1] * k, 0.085 * k, 0.065 * k, -0.4, 0, Math.PI * 2)
   g.fill()
   g.restore()
-}
-
-/** Light from above through the surface onto him and the cake: a little brighter round the deck once he is up. */
-export function drawDeckLight(p: p5, k: number, t: number): void {
-  if (t < DECK_ON - 1) return
-  const g = ctxOf(p)
-  glow(g, k, REST_X + 0.5, DECK_Y, 1.6, '#FFFFFF', 0.06 * smooth(t, DECK_ON, BY_CAKE))
 }
 
 export { TOP }
