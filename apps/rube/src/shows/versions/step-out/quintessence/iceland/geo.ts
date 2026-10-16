@@ -1,6 +1,7 @@
 import type { Pt } from '../../../../../parts'
 import { LAST_HIT, ONSETS, SEAM, at, beats } from '../music'
 import { G } from '../physics'
+import { hash } from '../kit'
 
 /**
  * Iceland's clock and its ground (95.226 → 133.278, bars 52 to 74): where Walter is at every instant, worked out from
@@ -302,14 +303,18 @@ export function walterSpin(t: number): number {
 
 /* ------------------------------------------------------------------ the posts */
 
-/** The reflector posts: one passed on every second beat along the ridge, every beat down the face. Each glints as he goes by. */
+/**
+ * The reflector posts: one passed on every second beat along the ridge, every beat down the face. Each lights as he
+ * goes by. Down the face they are set up by hand, a little nearer or farther each, so the rows on the tiers never
+ * stand in columns one over another.
+ */
 export const POSTS: { t: number; p: Pt }[] = (() => {
   const out: { t: number; p: Pt }[] = []
   for (const t of beats([52, 4], [55, 4]).filter((_, i) => i % 2 === 0)) {
     const x = bikeX(t) + SADDLE_DX
     out.push({ t, p: [x, ridgeY(x)] })
   }
-  for (const t of beats([58, 3], [66, 4])) out.push({ t, p: roadAt(boardS(t)).p })
+  beats([58, 3], [66, 4]).forEach((t, i) => out.push({ t, p: roadAt(boardS(t) + 0.75 * (hash(i, 1, 315) - 0.5)).p }))
   return out
 })()
 

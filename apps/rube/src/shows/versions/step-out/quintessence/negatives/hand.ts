@@ -65,13 +65,6 @@ export function rule(ctx: Ctx2D, k: number, x0: number, y0: number, x1: number, 
   ctx.stroke()
 }
 
-/** A rounded box path, in cells (not filled or stroked). */
-export function roundBox(ctx: Ctx2D, k: number, x0: number, y0: number, x1: number, y1: number, r: number): void {
-  const rr = Math.min(r, (x1 - x0) / 2, (y1 - y0) / 2) * k
-  ctx.beginPath()
-  ctx.roundRect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k, rr)
-}
-
 /** A soft pool of light: a radial gradient of `color` at `a` in the middle, gone at `r` cells (squashed by `sy`). */
 export function pool(ctx: Ctx2D, k: number, x: number, y: number, r: number, color: string, a: number, sy = 1): void {
   if (a <= 0.002 || r <= 0) return

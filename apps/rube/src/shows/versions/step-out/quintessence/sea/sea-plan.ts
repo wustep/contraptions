@@ -151,4 +151,3 @@ export function sharkAt(t: number): Shark | null {
   }
   return null
 }
-export const SHARK_PASSES = PASSES

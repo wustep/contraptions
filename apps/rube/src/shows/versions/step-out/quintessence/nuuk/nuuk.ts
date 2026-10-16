@@ -3,9 +3,10 @@ import { follower } from '../camera'
 import { box, frame, part, scenery, type PartShot } from '../kit'
 import { SEAMS } from '../seams'
 import { WALTER_WARM } from '../worlds'
-import { drawCounter, drawDoorIn, drawDoorOut, drawGuitar, drawOver, drawPilot, drawQuay, drawRoom, drawSpot, drawStage } from './draw'
+import { drawCounter, drawDoorIn, drawDoorOut, drawGuitar, drawPilot, drawQuay, drawRoom, drawSpot, drawStage } from './draw'
 import { CHERYL_FROM, CHERYL_GONE, cherylAt, EXIT_X, HINGE, NUUK_STRIKES, OUT, PLANK, SHE_LANDS, STOP, T0, T1, V_SKY, WAY } from './geo'
 import type { Pen } from '../dream/pen'
+import { drawAshtray, drawCounterFront, drawLamps, drawRail } from './room'
 
 /**
  * The bar at Nuuk (37.05 → 50.41, bars 17 to 24). He rolls in over the threshold out of the grey harbour into the dark
@@ -31,7 +32,14 @@ export const nuukSet = scenery<null>({
     const pen = penOf(p, c.k, c.ink, c.weight)
     p.push()
     drawRoom(pen, c.t, frame(p, c.k))
-    drawCounter(pen, c.t)
+    drawCounter(pen)
+    const g = p.drawingContext as CanvasRenderingContext2D
+    drawCounterFront(g, c.k)
+    drawRail(g, c.k, c.t)
+    drawAshtray(g, c.k, c.t)
+    // The lamps over the counter, in front of the back bar: low, amber, swinging slowly on their cords, their light
+    // lying on the boards and the counter's top.
+    drawLamps(g, c.k, c.t)
     drawStage(pen, c.t)
     p.pop()
   },
@@ -58,12 +66,6 @@ export const bar = part<BarState>(
       drawGuitar(pen, t)
       p.pop()
     },
-    over: (p, s, c) => {
-      const t = s.begin + c.t
-      p.push()
-      drawOver(penOf(p, c.k, c.ink, c.weight), t)
-      p.pop()
-    },
   },
   (slot) => ({
     cells: box(-4, -5, Math.ceil(EXIT_X) + 4, 3),
@@ -88,9 +90,10 @@ export const bar = part<BarState>(
 )
 
 /**
- * The camera: in with him over the threshold; settling on him and the pilot, close, the stage out of the frame to the
- * right; on the hinge a cut wide to the three of them, him, the pilot and her in the light; then away with him out of
- * the back door to the seam's framing, running.
+ * The camera: in with him over the threshold; settling on him and the pilot, and then a slow push in on the pilot's
+ * thumb, him low in the frame and the thumb high in its other third, the stage out of the frame to the right; on the
+ * hinge a cut wide to the three of them, him, the pilot and her in the light, that drifts in on the stage; then away
+ * with him out of the back door to the seam's framing, running.
  */
 function shots(): PartShot[] {
   const hold = (t: number, cells: number, at: Pt): PartShot => ({ t, cells, hold: at, w: 1 })
@@ -101,9 +104,10 @@ function shots(): PartShot[] {
   const offEnd: Pt = [EXIT_X + seam.frame[0] - fl[0], seam.frame[1] - fl[1]]
   return [
     hold(STOP + 0.2, 3.3, [1.05, -0.95]),
-    hold(HINGE - 0.25, 3.05, [0.95, -0.9]),
-    { t: HINGE, cells: 4.4, hold: [2.6, -1.05], w: 1, cut: true },
-    hold(SHE_LANDS - 0.3, 4.3, [2.9, -1.0]),
+    hold(HINGE - 0.85, 2.98, [1.15, -0.9]),
+    hold(HINGE - 0.03, 2.72, [1.22, -0.86]),
+    { t: HINGE, cells: 4.6, hold: [2.75, -1.1], w: 1, cut: true },
+    hold(SHE_LANDS - 0.3, 4.2, [2.95, -1.0]),
     follow(OUT + 0.3, 4.3, [1.1, -0.75]),
     follow(T1, seam.cells, offEnd),
   ]

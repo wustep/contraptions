@@ -1,8 +1,9 @@
-import type { BallState, Pt } from '../../../../parts'
+import type { BallState, Piece, Pt } from '../../../../parts'
+import type { Placed } from '../../../../plan'
 import type { Framing } from '../../../registry'
 import { director, follower, type Shot } from './camera'
 import { credits } from './credits'
-import { frame, lay, scenery, standing, type Chain, type Link } from './kit'
+import { lay, scenery, smooth, standing, type Chain, type Link } from './kit'
 import { DURATION, PEAK, SEAM } from './music'
 import { FIRST, SEAMS } from './seams'
 import { QuintessenceShow, type Leg, type Riders, type Spans, type WorldSet } from './show'
@@ -17,6 +18,18 @@ import { homeSet, HOME_CELLS, HOME_AT, piano } from './home/home'
 import { himalayaSet, HIMALAYA_CELLS, HIMALAYA_AT, ghostCat } from './himalaya/himalaya'
 import { pressSet, PRESS_CELLS, PRESS_AT, press } from './press/press'
 import { streetSet, STREET_CELLS, STREET_AT, newsstand } from './street/street'
+import { negativesFront } from './negatives/front'
+import { dreamFront } from './dream/front'
+import { nuukFront } from './nuuk/front'
+import { skyFront } from './sky/front'
+import { seaFront } from './sea/front'
+import { icelandFront } from './iceland/front'
+import { homeFront } from './home/front'
+import { himalayaFront } from './himalaya/front'
+import { pressFront } from './press/front'
+import { streetFront } from './street/front'
+import { passages } from './passage'
+import { motes, rgbaOf, sway, view, wash } from './depth'
 
 /**
  * The whole show, in order: which place has Walter from when to when, and which part has him in each. Every part is
@@ -79,15 +92,16 @@ const ashCut = scenery<null>({
   over: (p, _s, c) => {
     const a = ashAt(c.t)
     if (a <= 0.001) return
-    const f = frame(p, c.k)
-    const col = p.color(ASH.color)
-    col.setAlpha(255 * a)
-    p.push()
-    p.noStroke()
-    p.rectMode(p.CORNER)
-    p.fill(col)
-    p.rect((f.x0 - 1) * c.k, (f.y0 - 1) * c.k, (f.x1 - f.x0 + 2) * c.k, (f.y1 - f.y0 + 2) * c.k)
-    p.pop()
+    const v = view(p, c.k)
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    // The ash is a weather, not a card: thicker overhead, still falling in two planes of flakes over the grey.
+    wash(ctx, v, rgbaOf(ASH.color, Math.min(1, a * 1.08)), rgbaOf(ASH.color, a * 0.97))
+    ctx.save()
+    // The flakes come and go with the grey, so none hang in his mother's room once it has lifted.
+    ctx.globalAlpha = 0.8 * Math.min(1, a * 2)
+    motes(ctx, v, c.t, { n: 60, seed: 41, tile: [6, 5], r: [0.015, 0.035], v: [0.25, 0.55], sway: [0.12, 0.35], color: '#9C978E', square: true })
+    motes(ctx, v, c.t, { n: 14, seed: 42, tile: [6, 5], r: [0.025, 0.04], v: [0.4, 0.9], sway: [0.2, 0.25], color: '#ABA69D', square: true })
+    ctx.restore()
   },
 })
 
@@ -99,19 +113,25 @@ const claim = (x0: number, y0: number, x1: number, y1: number): Pt[] => {
 }
 const AROUND = claim(-80, -60, 80, 40)
 
-/** Each place's standing scenery, and what is drawn over everything (the ash, the credits' shade). */
-const SETS = (): Partial<Record<WorldKey, WorldSet>> => ({
-  negatives: { scenery: [standing(negativesSet, 0, 0, NEGATIVES_CELLS, null, DURATION)], after: [] },
-  dream: { scenery: [standing(dreamSet, 0, 0, DREAM_CELLS, null, DURATION)], after: [] },
-  nuuk: { scenery: [standing(nuukSet, 0, 0, NUUK_CELLS, null, DURATION)], after: [] },
-  sky: { scenery: [standing(skySet, 0, 0, SKY_CELLS, null, DURATION)], after: [] },
-  sea: { scenery: [standing(seaSet, 0, 0, SEA_CELLS, null, DURATION)], after: [] },
-  iceland: { scenery: [standing(icelandSet, 0, 0, ICELAND_CELLS, null, DURATION)], after: [standing(ashCut, 0, 0, AROUND, null, DURATION)] },
-  home: { scenery: [standing(homeSet, 0, 0, HOME_CELLS, null, DURATION)], after: [standing(ashCut, 0, 0, AROUND, null, DURATION)] },
-  himalaya: { scenery: [standing(himalayaSet, 0, 0, HIMALAYA_CELLS, null, DURATION)], after: [] },
-  press: { scenery: [standing(pressSet, 0, 0, PRESS_CELLS, null, DURATION)], after: [] },
-  street: { scenery: [standing(streetSet, 0, 0, STREET_CELLS, null, DURATION)], after: [standing(credits, 0, 0, AROUND, null, DURATION)] },
-})
+/**
+ * Each place's standing scenery; what is drawn over its machine (its near plane, its air and its light, then the ash
+ * or the credits' haze); and last, over everything, the passage that lays the next place over it (`passage.ts`).
+ */
+const SETS = (passage: Placed): Partial<Record<WorldKey, WorldSet>> => {
+  const front = (piece: Piece<null>) => standing(piece, 0, 0, AROUND, null, DURATION)
+  return {
+    negatives: { scenery: [standing(negativesSet, 0, 0, NEGATIVES_CELLS, null, DURATION)], after: [front(negativesFront), passage] },
+    dream: { scenery: [standing(dreamSet, 0, 0, DREAM_CELLS, null, DURATION)], after: [front(dreamFront), passage] },
+    nuuk: { scenery: [standing(nuukSet, 0, 0, NUUK_CELLS, null, DURATION)], after: [front(nuukFront), passage] },
+    sky: { scenery: [standing(skySet, 0, 0, SKY_CELLS, null, DURATION)], after: [front(skyFront), passage] },
+    sea: { scenery: [standing(seaSet, 0, 0, SEA_CELLS, null, DURATION)], after: [front(seaFront), passage] },
+    iceland: { scenery: [standing(icelandSet, 0, 0, ICELAND_CELLS, null, DURATION)], after: [front(icelandFront), standing(ashCut, 0, 0, AROUND, null, DURATION), passage] },
+    home: { scenery: [standing(homeSet, 0, 0, HOME_CELLS, null, DURATION)], after: [front(homeFront), standing(ashCut, 0, 0, AROUND, null, DURATION), passage] },
+    himalaya: { scenery: [standing(himalayaSet, 0, 0, HIMALAYA_CELLS, null, DURATION)], after: [front(himalayaFront), passage] },
+    press: { scenery: [standing(pressSet, 0, 0, PRESS_CELLS, null, DURATION)], after: [front(pressFront), passage] },
+    street: { scenery: [standing(streetSet, 0, 0, STREET_CELLS, null, DURATION)], after: [front(streetFront), standing(credits, 0, 0, AROUND, null, DURATION), passage] },
+  }
+}
 
 /**
  * The looks the camera takes: on each it pushes in, at once (18 ms), and eases back slowly (τ 1 s, gone by 3.5 s).
@@ -131,6 +151,24 @@ function punch(t: number): number {
     v += 0.045 * s * (1 - Math.exp(-u / 0.018)) * ((Math.exp(-u / PUNCH_TAU) - floor) / (1 - floor))
   }
   return v
+}
+
+/**
+ * The camera is held, not bolted down: under every framing the score and the places ask for, it breathes. A slow
+ * drift of a percent of the frame and a push of two, on rates that never line up, so the picture is never quite still
+ * even where nothing in it moves. It is a function of show time alone, the same on both sides of every cut, so the
+ * cuts stay matched on Walter; it comes up over the first seconds, so the show still opens on its first frame; and it
+ * breathes deeper as the song builds (the Himalayas, the presses) and settles for the hush and the credits.
+ */
+const BREATH: [number, number][] = [[0, 0.5], [10.4, 0.8], [70.4, 1.0], [120.06, 0.55], [133.3, 0.7], [146.5, 1.0], [191.4, 1.35], [226.4, 0.9], [240, 0.6]]
+function breathAt(t: number): number {
+  let v = BREATH[0][1]
+  for (let i = 1; i < BREATH.length; i++) v += (BREATH[i][1] - BREATH[i - 1][1]) * smooth(t, BREATH[i][0] - 2, BREATH[i][0] + 2)
+  return v
+}
+function life(t: number): [number, number, number] {
+  const a = smooth(t, 0, 4) * breathAt(t)
+  return [1 + a * 0.018 * sway(t, 1 / 19, 1), a * 0.008 * sway(t, 1 / 13, 2), a * 0.006 * sway(t, 1 / 11, 3)]
 }
 
 export function compose(): { show: QuintessenceShow; camera: (t: number) => Framing } {
@@ -166,7 +204,9 @@ export function compose(): { show: QuintessenceShow; camera: (t: number) => Fram
     for (const s of chain.company) company.push({ ...s, world: legs[i].world })
   })
 
-  const show = new QuintessenceShow(legs, SETS(), DURATION, riders, company.sort((a, b) => a.from - b.from))
+  const passage = passages()
+  const show = new QuintessenceShow(legs, SETS(standing(passage.piece, 0, 0, AROUND, null, DURATION)), DURATION, riders, company.sort((a, b) => a.from - b.from))
+  passage.bind(show)
 
   // The camera: one director per leg, each following the ball only inside its own leg, and each leg opening on
   // exactly the framing the last one closed on, carried by the cut: a match cut on Walter. Inside a leg, at a seam
@@ -214,7 +254,9 @@ export function compose(): { show: QuintessenceShow; camera: (t: number) => Fram
   const camera = (t: number): Framing => {
     const owner = show.owner(t)
     const f = cams[owner](t)
-    return { ...f, cells: f.cells * (1 - punch(t)) }
+    const cells = f.cells * (1 - punch(t))
+    const [z, dx, dy] = life(t)
+    return { ...f, x: f.x + dx * cells, y: f.y + dy * cells, cells: cells * z }
   }
   return { show, camera }
 }

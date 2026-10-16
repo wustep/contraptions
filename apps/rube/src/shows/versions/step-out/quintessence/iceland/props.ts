@@ -1,4 +1,4 @@
-import type { Pt } from '../../../../../parts'
+import { mixHex, type Pt } from '../../../../../parts'
 import { hash } from '../kit'
 import { G } from '../physics'
 import {
@@ -10,8 +10,6 @@ import {
   CRASH,
   CRASH_X,
   CRESTS,
-  ERUPT,
-  FINAL,
   FLAKES,
   HUSH,
   KIDS,
@@ -19,7 +17,6 @@ import {
   POSTS,
   SADDLE,
   STRETCH,
-  T1,
   TOY_LAND_X,
   bikeLevel,
   bikeX,
@@ -27,15 +24,18 @@ import {
   ridgeY,
   roadAt,
 } from './geo'
-import { about, clamp01, disc, glow, lerp, rgba, shape, sm, stroke, type Pen } from './pen'
-import { FAR_P, HZ, farFn, plumeMid, plumeTop } from './set'
+import { about, clamp01, disc, lerp, rgba, shape, sm, stroke, type Pen } from './pen'
+import { FAR_P, HZ, farFn, plumeMid } from './set'
 import { ICE } from './theme'
 
 type Frame = { x0: number; y0: number; x1: number; y1: number; cx: number; cy: number }
 
 /* ------------------------------------------------------------------ the posts */
 
-/** A reflector post at the road's far edge; its reflector flares as he goes by. */
+/**
+ * A reflector post at the road's far edge, its reflector set in its black band. The reflector is dull until he comes
+ * by, when it catches the low sun and shows lit, the whole of it at once, then goes dull again.
+ */
 export function drawPosts(pen: Pen, t: number, f: Frame): void {
   for (const post of POSTS) {
     const [x, y] = post.p
@@ -43,14 +43,10 @@ export function drawPosts(pen: Pen, t: number, f: Frame): void {
     const b = y - 0.27
     const h = 0.34
     stroke(pen, [[x, b], [x, b - h]], ICE.post, 0.045, 0, 'butt')
-    stroke(pen, [[x, b - h + 0.02], [x, b - h + 0.09]], ICE.postBand, 0.047, 0, 'butt')
-    disc(pen, [x, b - h + 0.13], 0.018, 0.022, ICE.reflector)
+    stroke(pen, [[x, b - h + 0.02], [x, b - h + 0.13]], ICE.postBand, 0.047, 0, 'butt')
     const since = t - post.t
-    if (since >= -0.03 && since < 0.6) {
-      const a = since < 0 ? (since + 0.03) / 0.03 : Math.exp(-since / 0.16)
-      glow(pen, [x, b - h + 0.13], 0.2, ICE.glint, 0.85 * a)
-      stroke(pen, [[x - 0.09 * a, b - h + 0.13], [x + 0.09 * a, b - h + 0.13]], rgba(ICE.glint, 0.9 * a), 0.012)
-    }
+    const lit = since < -0.04 || since > 0.7 ? 0 : since < 0 ? (since + 0.04) / 0.04 : 1 - sm(since, 0.15, 0.7)
+    stroke(pen, [[x, b - h + 0.045], [x, b - h + 0.105]], lit > 0 ? mixHex(ICE.reflector, ICE.reflectorLit, lit) : ICE.reflector, 0.024, 0, 'butt')
   }
 }
 
@@ -306,16 +302,28 @@ export function drawBoard(pen: Pen, t: number): void {
 
 /* ------------------------------------------------------------------ crests and turns */
 
-/** Each crest and each hairpin's apex on the board: a little spray of grit off the wheels, and the air under them. */
+/**
+ * Each crest and each hairpin's apex on the board: a spray of grit off the wheels, and a cloud of dust kicked up behind,
+ * spreading and thinning on the wind.
+ */
 export function drawCarves(pen: Pen, t: number): void {
   const marks = [...CRESTS, ...APEX]
   for (const m of marks) {
     const u = t - m
-    if (u < 0 || u > 0.55) continue
+    if (u < 0 || u > 1.1) continue
     const r = roadAt(boardS(m))
     const turn = APEX.includes(m)
-    const n = turn ? 9 : 5
     const back = Math.cos(r.dir) >= 0 ? -1 : 1
+    // The dust: a few soft rounds, growing, drifting with the wind, fading.
+    for (let i = 0; i < (turn ? 4 : 2); i++) {
+      const g = u / 1.1
+      const x = r.p[0] + back * (0.08 + 0.25 * g) * (0.6 + 0.8 * hash(i, 3)) + 0.25 * g
+      const y = r.p[1] - 0.06 - 0.22 * g * (0.5 + hash(i, 4))
+      const rr = (0.06 + 0.2 * g) * (0.7 + 0.5 * hash(i, 5))
+      disc(pen, [x, y], rr, rr * 0.7, rgba(ICE.dust, 0.32 * (1 - g) * (turn ? 1 : 0.7)))
+    }
+    if (u > 0.55) continue
+    const n = turn ? 12 : 6
     for (let i = 0; i < n; i++) {
       const v = 0.3 + 0.6 * hash(i, Math.round(m * 10))
       const a = turn ? (hash(i, 7) - 0.5) * Math.PI : Math.PI * (back < 0 ? 1 : 0) + (hash(i, 8) - 0.5) * 1.2
@@ -382,32 +390,11 @@ export function drawPlane(pen: Pen, t: number, f: Frame): void {
     stroke(pen, [[-s * 0.1, -s * 0.05], [-s * 0.25, -s * 0.5]], rgba(ICE.plane, fade), 0, 1)
     stroke(pen, [[-s * 0.85, 0], [-s * 1.0, -s * 0.4]], rgba(ICE.plane, fade), 0, 0.9)
   })
-  void plumeTop
 }
 
 /* ------------------------------------------------------------------ the ash */
 
-/** The ash coming down: a few flakes after the hush begins, thickening to the cut. Light grey, slow, drifting. */
-export function drawAsh(pen: Pen, t: number, f: Frame): void {
-  if (t < HUSH + 0.5) return
-  const thick = sm(t, HUSH + 0.5, T1)
-  const N = Math.floor(30 + 280 * thick)
-  const span = 14
-  for (let i = 0; i < N; i++) {
-    const born = HUSH + 0.5 + 11 * hash(i, 61) * (i < 30 ? 0.3 : 1)
-    if (t < born) continue
-    const fall = 0.22 + 0.18 * hash(i, 62)
-    const x0 = FINAL[0] + (hash(i, 63) - 0.5) * span
-    const y = FINAL[1] - 6 + ((t - born) * fall + hash(i, 64) * 8) % 8
-    const x = x0 + 0.15 * Math.sin(t * (0.6 + hash(i, 65)) + i)
-    if (x < f.x0 - 0.2 || x > f.x1 + 0.2 || y < f.y0 - 0.2 || y > f.y1 + 0.2) continue
-    const r = 0.012 + 0.022 * hash(i, 66)
-    const a = 0.85 * sm(t - born, 0, 0.8)
-    disc(pen, [x, y], r, r * 0.8, rgba(hash(i, 67) < 0.3 ? ICE.ashDark : ICE.ash, a))
-  }
-}
-
-/** The flakes that land on the guitar's soft onsets: falling to their place by him, a breath of dust, and staying. */
+/** The flakes that land on the guitar's soft onsets: falling to their place by him, and staying. */
 export function drawLanding(pen: Pen, t: number, onHim: boolean): void {
   for (const fl of FLAKES) {
     if (fl.onHim !== onHim) continue
@@ -421,16 +408,5 @@ export function drawLanding(pen: Pen, t: number, onHim: boolean): void {
       continue
     }
     disc(pen, fl.p, r * 1.05, r * 0.6, rgba(ICE.ash, 0.95))
-    if (u < 0.5) {
-      const a = 1 - u / 0.5
-      disc(pen, fl.p, 0.03 + 0.12 * u, 0.012 + 0.04 * u, null, 0.6 * a, rgba(ICE.ash, 0.9 * a))
-    }
   }
-}
-
-/** The haze the ash makes of the air as it thickens: the director's cover finishes it. */
-export function drawHaze(pen: Pen, t: number, f: Frame): void {
-  const a = 0.32 * sm(t, ERUPT + 6, T1)
-  if (a <= 0) return
-  shape(pen, [[f.x0 - 1, f.y0 - 1], [f.x1 + 1, f.y0 - 1], [f.x1 + 1, f.y1 + 1], [f.x0 - 1, f.y1 + 1]], rgba(ICE.ash, a))
 }
