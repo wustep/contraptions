@@ -78,7 +78,7 @@ function vgrad(ctx: C2D, k: number, y0: number, y1: number, stops: [number, stri
   return g
 }
 /** A soft mass of leaves: a lobed blob about (cx, cy), `rx` by `ry`, its lobes stirring a little. */
-function foliage(ctx: C2D, k: number, cx: number, cy: number, rx: number, ry: number, seed: number, t: number, fill: string, flatBottom = false): void {
+function foliage(ctx: C2D, k: number, cx: number, cy: number, rx: number, ry: number, seed: number, t: number, fill: string | CanvasGradient, flatBottom = false): void {
   ctx.beginPath()
   const n = 36
   for (let i = 0; i <= n; i++) {
@@ -176,7 +176,10 @@ function garden(ctx: C2D, k: number, f: Frame, t: number, w: number): void {
   const shrubs: [number, number, number][] = [[6.9, 0.55, 0.42], [8.35, 0.9, 0.55], [11.9, 1.1, 0.72], [13.6, 0.6, 0.4], [15.4, 1.0, 0.62], [17.6, 0.7, 0.5], [19.5, 1.2, 0.7]]
   shrubs.forEach(([cx, rx, ry], i) => {
     if (cx + rx < f.x0 - 1 || cx - rx > f.x1 + 1) return
-    foliage(ctx, k, cx, GARDEN.back + 0.03, rx, ry, i * 1.9, t, LEAVES, true)
+    // The morning on their crowns, their feet in their own shade on the lawn.
+    const foot = GARDEN.back + 0.03
+    const lit = vgrad(ctx, k, foot - ry * 1.15, foot, [[0, mixHex(LEAVES, HOME.sun, 0.24), 1], [0.4, LEAVES, 1], [1, mixHex(LEAVES, HOME.lawnDark, 0.4), 1]])
+    foliage(ctx, k, cx, foot, rx, ry, i * 1.9, t, lit, true)
   })
   // The ground: the terrace's stone by the doors, then the lawn, brighter toward the low sun behind it.
   fillBox(ctx, k, x0, GARDEN.back, GARDEN.terrace, FLOOR, vgrad(ctx, k, GARDEN.back, FLOOR, [[0, mixHex(STONE, HOME.wallShade, 0.5), 1], [1, STONE, 1]]))
