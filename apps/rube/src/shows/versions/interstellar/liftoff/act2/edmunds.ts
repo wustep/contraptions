@@ -6,7 +6,7 @@ import { alpha, box, carried, frame, glassLimb, hash, knock, lastOf, lensedArc, 
 import { cue, DURATION, FINAL, MIX_END, PEAK } from '../music'
 import { G_EARTH, hop } from '../physics'
 import { BRAND, DARK, VOID } from '../worlds'
-import { clearOfFarm, dawnBands, drawCirrus, drawPlainStory, drawSettlement, drawSkeins, RANGES, shadow, sunlight, type Site } from './edmunds-farm'
+import { clearOfFarm, dawnBands, drawCirrus, drawPlainStory, drawSettlement, RANGES, shadow, sunlight, type Site } from './edmunds-farm'
 
 /**
  * Edmunds' planet: the end of the show.
@@ -633,7 +633,6 @@ function drawAll(p: p5, s: EdmundsState, c: Ctx): void {
   drawRanger(p, c, T)
   drawRamp(p, c, T)
   drawDust(p, c, T, 1)
-  drawSkeins(p, c, v, siteOf(v, T))
   drawMouthGlass(p, c, T)
   drawBallShadow(p, s, c, T)
   ctx.restore()
@@ -930,7 +929,9 @@ function drawLand(p: p5, c: Ctx, v: View, T: number): void {
           p.line(X(x + w * 0.08), X(yy - hh * 0.98), X(x + w * 0.42), X(yy - hh * 0.5))
         }
       } else if (kind < 0.78) {
-        // A crack, or a ripple of sand.
+        // A crack, or a ripple of sand: a third of them, so the plain is not hatched with lines that slide as the
+        // camera cranes.
+        if (hash(i, j, 88) > 0.33) continue
         const l = (0.25 + 0.7 * hash(i, j, 87)) * sj
         if (l < 0.05) continue
         p.stroke(alpha(p, VOID.bg, 0.2))

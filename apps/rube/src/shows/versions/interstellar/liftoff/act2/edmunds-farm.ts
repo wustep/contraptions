@@ -9,7 +9,8 @@ import { DARK, DUST as FARM, VOID } from '../worlds'
  * yard's, again) pumps into a tank, and a channel from it runs across the plain, catching the dawn, to a field of
  * young corn in rows; a hoop house with more corn in it stands on the left, panels on the right turn to the sun as it
  * comes up, and her rover is parked near, its tracks running back to the horizon. Over it all: high cirrus going
- * from slate to rose to gold, and sand blowing low across the near ground.
+ * from slate to rose to gold. (Sand blew low across the near ground too, in thin wavy skeins that came, ran and went:
+ * on a still dawn plain they were the busiest thing in the frame.)
  *
  * The plain is painted in depth as `edmunds.ts` paints it: a thing on the ground `s` times nearer than the landing
  * site stands `s` times as far below the horizon as the site does, `s` times its size, and slides `s` times as far
@@ -140,43 +141,6 @@ export function drawCirrus(p: p5, c: Ctx, v: Plain, site: Site): void {
 }
 
 /* ------------------------------------------------------------------ the far plain */
-
-/** Sand blowing low across the near ground, faster the nearer: thin skeins that come, run and go. */
-export function drawSkeins(p: p5, c: Ctx, v: Plain, site: Site): void {
-  const { k, weight } = c
-  const X = (x: number) => x * k
-  const { f } = v
-  // The wash of the landing whips them up; otherwise a steady dawn wind.
-  const wind = 0.9
-  p.noFill()
-  p.strokeCap(p.ROUND)
-  for (let row = 0; row < 7; row++) {
-    const s = 1.15 * Math.pow(1.22, row)
-    const yRow = v.E + v.A * s
-    if (yRow > f.y1 + 0.3 || yRow < v.E) continue
-    const step = 2.6
-    const drift = site.T * wind
-    const b0 = f.cx + (f.x0 - 1 - f.cx) / s - drift
-    const b1 = f.cx + (f.x1 + 1 - f.cx) / s - drift
-    for (let i = Math.floor(b0 / step) - 1; i <= Math.ceil(b1 / step); i++) {
-      const ph = (site.T * 0.33 + hash(i, row, 601)) % 1
-      const life = Math.sin(Math.PI * ph)
-      if (life < 0.05) continue
-      const gx = (i + hash(i, row, 602)) * step + drift
-      const len = (0.6 + 0.9 * hash(i, row, 603)) * s * 0.6
-      const [x, y] = at(v, gx, s)
-      const yy = y - 0.01 * s - 0.02 * s * hash(i, row, 604)
-      p.stroke(alpha(p, SAND, 0.38 * life * Math.min(1, 2.2 / s)))
-      p.strokeWeight(Math.max(0.7, weight * 0.45 * Math.min(1.6, s)))
-      p.beginShape()
-      for (let q = 0; q <= 6; q++) {
-        const u = q / 6
-        p.vertex(X(x - len / 2 + len * u), X(yy + 0.012 * s * Math.sin(u * 6 + site.T * 5 + i)))
-      }
-      p.endShape()
-    }
-  }
-}
 
 /* ------------------------------------------------------------------ the plain's story, seen from the air */
 
