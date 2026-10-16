@@ -294,8 +294,10 @@ function street(d: Draw, t: number): void {
 
 function shell(d: Draw): void {
   const { p, ink, w } = d
-  // The ground outside, under its snow, both sides; the floor's own section under the room.
+  // The ground outside, under its snow, both sides; the floor's own section under the room; and the earth under them
+  // all, so the picture ends in ground wherever the camera sits.
   solid(p, ink, w * 0.6, CUT)
+  box(d, -40, ROOM.floor, 40, ROOM.floor + 8)
   box(d, -40, ROOM.floor, ROOM.wallL0, ROOM.floor + 0.5)
   box(d, ROOM.wallR1, ROOM.floor, 40, ROOM.floor + 0.5)
   box(d, ROOM.wallL0, ROOM.floor, ROOM.wallR1, ROOM.floor + 0.5)
