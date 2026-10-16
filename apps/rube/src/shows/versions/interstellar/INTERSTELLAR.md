@@ -231,9 +231,29 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 160 (latest): less is more
+## Polish pass 161 (latest)
 
-Stephen, after pass 159: "There's some bugginess with all the extra background elements you added to Voyage, please inspect and fix that. You also added a lot of elements in space scenes that are sometimes buggy and a bit too much at times. You added a ball trail too that's a lot on the baseball hit. Do a big audit and improve it overall. Remove some of the unnecessary elements that add too much noise. Find the opportunities of 'less is more' and take it."
+Stephen: Miller's water "is a little too busy. Calm and simplify it: fewer ripples and elements, less motion noise, while keeping the giant wave beat clearly readable." And two more for the same round: when Cooper gets into the ship, the bottom of the ball drew in front of it; and the moving lines on the ground in the last scene were excessive.
+
+**Miller's water** (104 to 114 s, `space/miller.ts`). Seven things moved on it at once; now the sea is calm and the wave is the one big thing that moves.
+- The swells: nine rows instead of fifteen, rolling in at half the pace, each one still dark line of trough. Each row had been a trough and a bright back, both wobbling on their own.
+- Gone: the sixteen rows of glints, short dashes that wandered; and the near-water layer rolling under the frame's foot, faster than anything on the sea (it was the part's `over`).
+- One ring on the water where something touches it (the Ranger's feet, a buoy taking the ball, TARS's plants, the ball on the wave's foot), not three nested; none when a buoy throws.
+- The mist in two layers, one row each, instead of four layers of two rows streaking the whole sky; the stars through it steady.
+- Gargantua's light on the water: six still bars, widening toward us, instead of fourteen wobbling. It still brightens as the wave throws him at it.
+- The wave is as it was (its body, the light through its face, the lines running with it, the white of the crest, the lip pitching out and coming down), with its spray off the top lighter, eighteen drops instead of forty-four.
+
+**Into the ship.** Both times he gets into the Ranger he now sits down in the cockpit, behind the hull's side, where the ball's foot had been drawn over the white of the hull: dropping into it on Miller's water (104.9 to 105.5 s), and lowered into the seat by the arm in the hub (199.3 s on). Each part draws the hull's near side again in its `over`, inside the ball's own disc and only over the cockpit's span below the sill (`drawSill` in `space/miller.ts` and `act2/hub.ts`). Kicked out over the nose, which falls away below the sill, nothing of him is hidden, so nothing pops.
+
+**Her plain, still** (236 s to the end, `act2/edmunds.ts` and `act2/edmunds-farm.ts`). The skeins of sand blowing low across the ground, thin wavy lines that came, ran and went all the way to the last frame, are gone. A third of the plain's cracks and ripples are left, so the ground is not hatched with lines sliding under the crane. The stones, the drifts, her rover's ruts and the long sunrise shadows stay.
+
+**The bible's heading.** Pass 160 had been headed "Polish pass 160 (latest): less is more", which the check on these headings does not read, so `check:shows` failed on the head of that round (it was run before the bible was written). It is "Polish pass 160" now, and this pass is the latest.
+
+Measured against pass 160 with both builds served at once: driven from `requestAnimationFrame` in a Chrome window on the GPU (2,390 frames), 59.9 frames a second before and after, no frame over 20 ms in either, paint 1.3 ms at the median (1.4 before) and 2.6 ms at the 99th percentile (3.1). Painted on demand at 1920 × 1080 every 60th of a second through Miller (104 to 113 s), 1.1 to 1.3 ms at the median in both; through the landing and the camp (250 to 262 s), 1.2 ms in both.
+
+## Polish pass 160
+
+Less is more. Stephen, after pass 159: "There's some bugginess with all the extra background elements you added to Voyage, please inspect and fix that. You also added a lot of elements in space scenes that are sometimes buggy and a bit too much at times. You added a ball trail too that's a lot on the baseball hit. Do a big audit and improve it overall. Remove some of the unnecessary elements that add too much noise. Find the opportunities of 'less is more' and take it."
 
 The audit: the whole show captured every 2 s, twice, offset by a second; the key frames looked at again at 960 × 540 and cropped where something looked wrong; and every frame of the show painted at 60 a second and diffed against its neighbours, block by block, for anything that pops in one frame or shakes back and forth. The pops it found were scored ones (the lamps striking, the iris, the far side opening, the dock turning to its cutaway on beat 158) and the strikes; the shaking was the scanner's own aliasing on fine meshes (the chain-link fence, the stair rails), not motion on the screen. The bugs were in the layers added for fullness, and so was most of the noise.
 
@@ -1351,7 +1371,7 @@ These are visual and mechanical only. There are no stills, no text, and no audio
   - the farm: `earth/light.ts` (the day's one light, which the sky, the window and the near layer all read), `earth/far.ts` (farms, the freight, crows, the storm, NASA's base) and `earth/near.ts` (grass, stones, wire, blowing dust, and the afternoon's grade);
   - the dark: the Earth and the Moon in `space/sky.ts`, and nothing over the machine;
   - the station: `act2/depth.ts` (the cylinder going away down its length, its fields and haze, the clouds, two flocks and the airship), `act2/daylight.ts` (its day, which the air and the haze read), `act2/hub-bay.ts` (the bay's hall behind the Ranger) and `act2/near.ts` (two birds crossing close), over the ring;
-  - outside: `act2/undock-far.ts` (the moons, the sister habitats and their cargo lines, the ring ice) and `act2/edmunds-farm.ts` (her farm, the cirrus, the nearer mesas, her rover's way out to his lander, the blowing sand).
+  - outside: `act2/undock-far.ts` (the moons, the sister habitats and their cargo lines, the ring ice) and `act2/edmunds-farm.ts` (her farm, the cirrus, the nearer mesas, her rover's way out to his lander).
   - `act2/iris.ts` is the port's iris at the undock, drawn in both universes either side of the change of world.
 - **The camera's roll.** `Framing.angle` (optional, in `shows/registry.ts`) turns the picture about its middle. The engine (`drawWorld`) rotates after the backdrop and chooses pieces from the box round the turned view. `kit.frame()` takes the canvas's corners back through the turned transform, so skies and culling still cover the frame. Liftoff's roll curve is `rollAt` in `score.ts`; no other show sets an angle.
 - **Checks.** `apps/rube/checks/shows.ts` has a Liftoff block, run by `npm run check:shows`.
