@@ -1,11 +1,10 @@
 import type { Pt } from '../../../../parts'
 import { R } from '../../../../parts'
 import { clamp, easeInOut, hash, mix, oval, poly, rect, rgba, smooth, turn, type Brush } from './brush'
-import { CISTERN, GARDEN, WELL } from './geo'
+import { CISTERN, WELL } from './geo'
 import { DOWN_TO, bucketTop } from './garden'
-import { drawWall } from './land'
-import { DRIPS, at, bar, dripIndex } from './music'
-import { tones } from './look'
+import { DRIPS, at, dripIndex } from './music'
+import { rainAt, stormAt, tones } from './look'
 
 /**
  * Under the lower garden, the cistern: a vaulted room of black water the well goes down into, seen in section, the
@@ -17,7 +16,7 @@ import { tones } from './look'
 
 /** When the cut is shown: from the bucket's going down to a little after the ball is out. */
 export const CUT_FROM = at(26, 2)
-export const CUT_TO = bar(36)
+export const CUT_TO = at(35, 0)
 export const cutOn = (t: number): boolean => t >= CUT_FROM && t < CUT_TO
 
 /** The ball's float: from where the bucket tips it to the weir's lip, by bar 32. */
@@ -27,10 +26,25 @@ export const OVER_LIP = at(32, 0)
 export const STEPS = [at(32, 0), at(33, 0), at(34, 0)]
 export const OUT = at(35, 0)
 const STEP_AT: Pt[] = [
-  [76.1, 14.75],
-  [78.2, 15.25],
-  [80.3, 15.75],
+  [74.9, 14.65],
+  [76.75, 15.1],
+  [78.6, 15.55],
 ]
+
+/** The hole broken in the garden wall's face for the camera: a ragged edge round the cistern. */
+const HOLE: Pt[] = (() => {
+  const pts: Pt[] = []
+  const [x0, y0, x1, y1] = [53.2, 5.75, 80.0, 17.9]
+  const n = 14
+  const jag = (i: number, s: number) => (hash(i, s, 3) - 0.5) * 0.7
+  for (let i = 0; i <= n; i++) pts.push([x0 + ((x1 - x0) * i) / n, y0 + Math.abs(jag(i, 1)) * 0.6])
+  for (let i = 1; i <= 6; i++) pts.push([x1 + jag(i, 2), y0 + ((y1 - y0) * i) / 6])
+  for (let i = n - 1; i >= 0; i--) pts.push([x0 + ((x1 - x0) * i) / n, y1 + jag(i, 4)])
+  for (let i = 5; i >= 1; i--) pts.push([x0 + jag(i, 5), y0 + ((y1 - y0) * i) / 6])
+  return pts
+})()
+/** Where the overflow passes inside the wall, between the hole's edge and the outlet. */
+export const IN_WALL: [number, number] = [79.7, 80.9]
 
 /** The bucket's tilt, radians: it meets the water, leans east and spills the ball. */
 export function bucketTilt(t: number): number {
@@ -50,57 +64,100 @@ export function afloat(t: number): Pt {
 /** The ball's place on the overflow's step `i`, cells. */
 export const stepAt = (i: number): Pt => [STEP_AT[i][0], STEP_AT[i][1] - R]
 
-/** The earth round the cistern, cut, and the cistern's chamber: masonry, vault, water. Behind the ball. */
+/**
+ * The cistern, seen through a hole broken in the garden wall's face: the earth behind the wall, the chamber's lining
+ * of dressed stone, its vault, its black water, and the overflow's stepped channel going off east through the wall
+ * to the outlet. Behind the ball.
+ */
 export function drawCistern(b: Brush, t: number): void {
-  if (!cutOn(t)) return
   const c = tones(t)
-  const { x0, x1, crown, spring, floor, water } = CISTERN
   const g = b.g
-  // The cut: earth from under the garden's gravel to below the cistern, from the steps to the terrace wall.
-  const earth = mix(c.earthDark, c.ink, 0.25)
-  rect(b, 50, GARDEN.lower + 0.7, 82.1, floor + 3, earth)
-  g.fillStyle = rgba(mix(c.earth, c.stone, 0.3), 0.35)
-  for (let i = 0; i < 160; i++) {
-    const x = 50.3 + hash(i, 81) * 31.5
-    const y = GARDEN.lower + 1 + hash(i, 82) * (floor + 1.6 - GARDEN.lower)
-    if (x > x0 - 0.6 && x < x1 + 0.6 && y > crown - 0.6 && y < floor + 0.6) continue
-    g.beginPath()
-    g.ellipse(x, y, 0.12 + hash(i, 83) * 0.2, 0.08 + hash(i, 84) * 0.12, hash(i, 85) * 3, 0, Math.PI * 2)
-    g.fill()
-  }
-  // The terrace wall's face beyond, cut through: the outlet goes out through it.
-  drawWall(b, c, 81.0, GARDEN.lower + 0.4, 82.2, 17.3, 9)
-  // The chamber's lining: a ring of dressed stone.
+  const [ox, oy] = CISTERN.outlet
+  // The outlet in the wall's face, there always: a round mouth of stone, the overflow running out of it.
   const lining = mix(c.stoneDeep, c.ink, 0.25)
-  const room = mix(c.ink, '#0B0F15', 0.35)
-  const vault: Pt[] = []
+  g.fillStyle = mix(c.stone, c.plaster, 0.15)
+  g.beginPath()
+  g.arc(ox, oy, 0.62, 0, Math.PI * 2)
+  g.fill()
+  g.fillStyle = mix(c.ink, '#0B0F15', 0.4)
+  g.beginPath()
+  g.arc(ox, oy, 0.42, 0, Math.PI * 2)
+  g.fill()
+  const run = 0.06 + 0.12 * clamp(stormAt(t) + rainAt(t) * 0.5)
+  g.fillStyle = rgba(mix(c.waterLight, c.rain, 0.35), 0.6)
+  g.fillRect(ox - 0.18, oy + 0.15, 0.36, 0.1)
+  g.beginPath()
+  g.moveTo(ox + 0.1, oy + 0.2)
+  g.quadraticCurveTo(ox + 0.9, oy + 0.25, ox + 1.2, oy + 1.4)
+  g.lineTo(ox + 1.2 - run * 3, oy + 1.4)
+  g.quadraticCurveTo(ox + 0.6, oy + 0.4, ox - 0.1, oy + 0.3)
+  g.fill()
+  if (!cutOn(t)) return
+  const { x0, x1, crown, spring, floor, water } = CISTERN
+  // The broken edge of the hole: stones cut through, a lighter line where the face breaks.
+  g.save()
+  g.beginPath()
+  g.moveTo(HOLE[0][0], HOLE[0][1])
+  for (const [x, y] of HOLE) g.lineTo(x, y)
+  g.closePath()
+  g.lineWidth = 0.22
+  g.strokeStyle = mix(c.stone, c.plaster, 0.25)
+  g.stroke()
+  g.clip()
+  // Behind the face: the earth the wall holds back, stones in it.
+  rect(b, 52, 5, 81, 19, mix(c.earthDark, c.ink, 0.3))
+  g.fillStyle = rgba(mix(c.earth, c.stone, 0.35), 0.4)
+  g.beginPath()
+  for (let i = 0; i < 150; i++) {
+    const x = 53 + hash(i, 81) * 27
+    const y = 5.8 + hash(i, 82) * 12.2
+    if (x > x0 - 0.7 && x < x1 + 0.7 && y > crown - 0.7 && y < floor + 0.7) continue
+    const rx = 0.1 + hash(i, 83) * 0.22
+    g.moveTo(x + rx, y)
+    g.ellipse(x, y, rx, 0.07 + hash(i, 84) * 0.12, hash(i, 85) * 3, 0, Math.PI * 2)
+  }
+  g.fill()
+  // The chamber: a lining of dressed stone, a barrel vault in three bays.
+  const room = mix(c.ink, '#0B0F15', 0.4)
   const bays = 3
   const w = (x1 - x0) / bays
+  const vault: Pt[] = []
   for (let k = 0; k < bays; k++) {
     for (let i = 0; i <= 10; i++) {
       const a = Math.PI + (i / 10) * Math.PI
       vault.push([x0 + w * (k + 0.5) + Math.cos(a) * (w / 2), spring + Math.sin(a) * (spring - crown)])
     }
   }
-  poly(b, [[x0 - 0.5, crown - 0.6], [x1 + 0.5, crown - 0.6], [x1 + 0.5, floor + 0.5], [x0 - 0.5, floor + 0.5]], lining)
+  poly(b, [[x0 - 0.55, crown - 0.65], [x1 + 0.55, crown - 0.65], [x1 + 0.55, floor + 0.55], [x0 - 0.55, floor + 0.55]], lining)
   poly(b, [[x0, spring], ...vault, [x1, spring], [x1, floor], [x0, floor]], room)
-  // Faint courses in the walls, and the piers between the bays.
-  g.fillStyle = rgba(lining, 0.9)
-  for (let k = 1; k < bays; k++) g.fillRect(x0 + w * k - 0.25, spring - 0.2, 0.5, floor - spring)
-  g.fillStyle = rgba(mix(c.stoneDeep, c.ink, 0.45), 0.6)
-  for (let y = spring + 0.8; y < floor; y += 0.8) g.fillRect(x0, y, x1 - x0, 0.04)
-  // The well's shaft, through the vault's crown up to the curb: a dark throat.
-  rect(b, WELL.x - WELL.inner - 0.3, GARDEN.lower + 0.7, WELL.x + WELL.inner + 0.3, crown + 0.3, lining)
-  rect(b, WELL.x - WELL.inner, WELL.curb - 0.1, WELL.x + WELL.inner, crown + 0.4, room)
-  // The water: black, a little paler at its face.
-  rect(b, x0, water, x1, floor, mix(room, c.water, 0.22))
-  // The weir: a sill of stone at the water's east end, and the overflow's stepped channel through the wall.
+  // The vault's courses, faint; the piers between the bays.
+  g.strokeStyle = rgba(mix(c.stoneDeep, c.ink, 0.1), 0.55)
+  g.lineWidth = Math.max(b.px, 0.04)
+  g.beginPath()
+  for (let k = 0; k < bays; k++) {
+    const cx = x0 + w * (k + 0.5)
+    for (let i = 1; i < 8; i++) {
+      const a = Math.PI + (i / 8) * Math.PI
+      g.moveTo(cx + Math.cos(a) * (w / 2), spring + Math.sin(a) * (spring - crown))
+      g.lineTo(cx + Math.cos(a) * (w / 2 - 0.45), spring + Math.sin(a) * (spring - crown - 0.45))
+    }
+  }
+  g.stroke()
+  for (let k = 1; k < bays; k++) rect(b, x0 + w * k - 0.3, spring - 0.25, x0 + w * k + 0.3, water, lining)
+  // The well's shaft, through the vault's crown: a dark throat with the night at the top of it.
+  rect(b, WELL.x - WELL.inner - 0.32, 5, WELL.x + WELL.inner + 0.32, crown + 0.3, lining)
+  rect(b, WELL.x - WELL.inner, 5, WELL.x + WELL.inner, crown + 0.45, room)
+  // The water: black, the faintest of the sky at its face, and under the shaft the shaft's own pale mouth.
+  rect(b, x0, water, x1, floor, mix(room, c.water, 0.16))
+  rect(b, WELL.x - WELL.inner * 0.8, water + 0.12, WELL.x + WELL.inner * 0.8, water + 0.2, rgba(c.skyLow, 0.18))
+  rect(b, WELL.x - WELL.inner * 0.55, water + 0.32, WELL.x + WELL.inner * 0.55, water + 0.38, rgba(c.skyLow, 0.1))
+  // The weir and the overflow's stepped channel east through the wall to the outlet.
   const [lx, ly] = CISTERN.lip
-  rect(b, lx - 0.15, ly - 0.05, lx + 0.25, floor, lining)
-  const chan: Pt[] = [[lx + 0.25, ly - 1.1], [82.2, CISTERN.outlet[1] - 1.1], [82.2, CISTERN.outlet[1] + 0.25], [lx + 0.25, ly + 0.25]]
-  poly(b, chan, room)
-  for (const [sx, sy] of STEP_AT) rect(b, sx - 1.05, sy, sx + 1.05, sy + 0.5, lining)
-  rect(b, lx + 0.25, ly + 0.25, 82.2, CISTERN.outlet[1] + 0.9, lining)
+  rect(b, lx - 0.18, ly - 0.05, lx + 0.22, floor, lining)
+  poly(b, [[lx + 0.22, ly - 1.0], [81, oy - 0.9], [81, oy + 0.42], [lx + 0.22, ly + 0.2]], room)
+  for (const [sx, sy] of STEP_AT) rect(b, sx - 0.95, sy, sx + 0.95, sy + 0.45, lining)
+  rect(b, lx + 0.22, ly + 0.25, 81, oy + 1.1, lining)
+  g.restore()
 }
 
 /** The bucket, down in the water: tipping, and floating empty after. */
@@ -134,7 +191,7 @@ export function drawCisternWater(b: Brush, t: number): void {
   const skin = mix(mix(c.ink, '#0B0F15', 0.35), c.water, 0.3)
   g.fillStyle = rgba(skin, 0.72)
   g.fillRect(x0, water, CISTERN.lip[0] - 0.15 - x0, 0.6)
-  g.strokeStyle = rgba(mix(c.water, c.glass, 0.3), 0.55)
+  g.strokeStyle = rgba(mix(c.water, c.glass, 0.45), 0.7)
   g.lineWidth = Math.max(b.px, 0.025)
   g.beginPath()
   g.moveTo(x0, water)

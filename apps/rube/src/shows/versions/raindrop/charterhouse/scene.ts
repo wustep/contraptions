@@ -2,18 +2,19 @@ import type { Placed } from '../../../../plan'
 import { smooth } from './brush'
 import { HOUSE, PIPE } from './geo'
 import { drawDoor, drawEave, drawGutterBack, drawGutterFront, drawNeighbours, drawPipe, drawRoof, drawWall, drawWindow } from './house'
-import { drawBehind, drawGround, drawGully, drawRoad, drawTerraces, drawValley } from './land'
+import { drawBehind, drawCypress, drawFaces, drawGround, drawGully, drawRoad, drawTerraces, drawValley } from './land'
 import { drawDrip, drawJar, drawLever } from './jar'
 import { bar } from './music'
-import { drawRain } from './rain'
+import { drawRain, type Lit } from './rain'
 import { KNOCKS } from './route'
 import { cover, drawing, everywhere, standing } from './show'
 import { drawSky, drawVeil } from './sky'
 import { drawCistern, drawCisternWater, drawSunkBucket } from './cistern'
 import { drawChannels, drawChannelsFront } from './terraces'
 import { drawNoria, drawSling } from './noria'
-import { drawGate, drawGateFront, drawGateLight } from './gate'
-import { drawTravelers } from './travelers'
+import { doorOpen, drawGate, drawGateFront, drawGateLight, lanternY, litAt } from './gate'
+import { drawTravelers, theirLight, woman } from './travelers'
+import { GATE, groundY } from './geo'
 import { drawBucket, drawCurb, drawGardenBack, drawGardenGround, drawLemon, drawRack, drawRillBack, drawRillFront, drawRopeDrip, drawTiles, drawWellBack } from './garden'
 
 /** How hard the pipe's length `i` is jolted at `t`: a knock as the ball goes through it, dying in a tenth of a second. */
@@ -25,6 +26,25 @@ function knock(t: number, i: number): number {
   return Math.exp(-u * 18) * Math.sin(u * 70)
 }
 
+/** What is lit in the rain at `t`: the cell's window, the gate's lantern and its door, the travellers' lantern. */
+function lightsAt(t: number): Lit[] {
+  const w = HOUSE.window
+  const out: Lit[] = [{ x0: w.x0 - 0.2, y0: w.y0 - 0.2, x1: w.x1 + 0.2, y1: w.y1 + 0.3, strength: 0.32 }]
+  const lit = litAt(t)
+  if (lit > 0) {
+    const y = lanternY(t)
+    out.push({ x0: GATE.lamp.x - 1.8, y0: y - 1.2, x1: GATE.lamp.x + 1.8, y1: y + 2.6, strength: 0.4 * lit })
+  }
+  const open = doorOpen(t)
+  if (open > 0) out.push({ x0: GATE.door.x0, y0: GATE.door.y0, x1: GATE.door.x1 + 1.5 * open, y1: GATE.door.y1, strength: 0.35 * open })
+  const theirs = theirLight(t)
+  if (theirs > 0) {
+    const [x, y] = woman(t).p
+    out.push({ x0: x - 1.6, y0: y - 5, x1: x + 3, y1: y + 0.2, strength: 0.25 * theirs })
+  }
+  return out
+}
+
 /** Everything on the stage, in the order it is drawn. The first is the stand-in the stage spins the ball by. */
 export function scenery(duration: number): Placed[] {
   const out: Placed[] = [standing(drawing('spin', null), [], duration)]
@@ -33,9 +53,14 @@ export function scenery(duration: number): Placed[] {
   out.push(everywhere(drawing('behind', (b, t) => drawBehind(b, t)), duration))
   out.push(standing(drawing('neighbours', (b, t) => drawNeighbours(b, t)), cover(-50, -64, 0, 1, 3), duration))
   out.push(everywhere(drawing('ground', (b, t) => drawGround(b, t)), duration))
+  out.push(standing(drawing('faces', (b, t) => drawFaces(b, t)), cover(-46, 0, 141, 42, 3), duration))
   out.push(standing(drawing('terraces', (b, t) => drawTerraces(b, t)), cover(60, 0, 152, 30, 3), duration))
   out.push(standing(drawing('gully', (b, t) => drawGully(b, t)), cover(150, 26, 172, 48, 3), duration))
-  out.push(standing(drawing('road', (b, t) => drawRoad(b, t)), cover(180, 30, 520, 98, 3), duration))
+  out.push(standing(drawing('road', (b, t) => {
+    drawRoad(b, t)
+    // Two cypresses on the ridge the road climbs, and a third lower down: against the sky.
+    for (const [x, h, seed] of [[214, 11, 11], [262, 13, 12], [318, 10, 13]] as const) drawCypress(b, t, x, groundY(x) + 0.3, h, seed)
+  }), cover(180, 18, 520, 98, 3), duration))
   out.push(standing(drawing('valley', (b, t) => drawValley(b, t)), cover(226, 84, 266, 140, 3), duration))
   out.push(standing(drawing('cistern', (b, t) => { drawCistern(b, t); drawSunkBucket(b, t) }, (b, t) => drawCisternWater(b, t)), cover(48, 2, 84, 21, 2), duration))
   out.push(standing(drawing('channels', (b, t) => drawChannels(b, t), (b, t) => drawChannelsFront(b, t)), cover(80, 12, 148, 52, 3), duration))
@@ -97,6 +122,6 @@ export function scenery(duration: number): Placed[] {
     ),
   )
   out.push(standing(drawing('travelers', null, (b, t) => drawTravelers(b, t)), cover(170, 30, 300, 104, 3), duration))
-  out.push(everywhere(drawing('rain', null, (b, t) => drawRain(b, t)), duration))
+  out.push(everywhere(drawing('rain', null, (b, t) => drawRain(b, t, lightsAt(t))), duration))
   return out
 }

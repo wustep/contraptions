@@ -86,9 +86,9 @@ export const CHIME = {
     [55.5, 0.94],
   ] as const,
   /** Half a tile's length. */
-  half: 0.8,
+  half: 0.95,
   /** The hollow's depth at its middle. */
-  sag: 0.16,
+  sag: 0.2,
 }
 
 /** The well in the lower garden: its curb, its iron arch and pulley, the bucket and the stone that answers it. */
@@ -109,14 +109,14 @@ export const WELL = {
 /** The cistern under the lower garden: its vault, its water, the weir to the outlet in the terrace wall. */
 export const CISTERN = {
   x0: 54,
-  x1: 79,
+  x1: 77.6,
   crown: 6.6,
   spring: 8.2,
   floor: 17.4,
   water: 14.1,
   /** The weir's lip, where the overflow goes over, and the outlet in the wall's face. */
-  lip: [74.5, 14.1] as const,
-  outlet: [82.4, 15.9] as const,
+  lip: [73.4, 14.1] as const,
+  outlet: [81.1, 15.7] as const,
 }
 
 /** The rill along the house and through the upper garden: the ball's foot in it, west to east. */
@@ -239,20 +239,20 @@ export interface Channel {
 export const chanY = (ch: Channel, x: number): number => ch.y0 + ((ch.y1 - ch.y0) * (x - ch.x0)) / (ch.x1 - ch.x0)
 
 /** The first terrace's channel, from the cistern's outlet to the spout over the next wall. */
-export const T1CH: Channel = { x0: 83.2, x1: 105.4, y0: 17.02, y1: 17.32 }
+export const T1CH: Channel = { x0: 82.5, x1: 105.4, y0: 16.2, y1: 16.4 }
 /** The second's, from the basin under the first's spout to its own spout. */
-export const T2CH: Channel = { x0: 109.2, x1: 121.4, y0: 25.02, y1: 25.22 }
+export const T2CH: Channel = { x0: 109.2, x1: 121.4, y0: 24.2, y1: 24.35 }
 /** The third's, from its basin to the chute down into the gully. */
-export const T3CH: Channel = { x0: 125.2, x1: 137.4, y0: 33.02, y1: 33.22 }
+export const T3CH: Channel = { x0: 125.2, x1: 137.4, y0: 32.2, y1: 32.35 }
 
 /**
  * The water hammers: troughs on pins, open at their east ends. Each rests with its closed west end down on a stone;
  * the channel pours into it; when it holds enough, it goes over east and empties, and swings back onto its stone.
  */
 export const HAMMERS = [
-  { x: 106.9, y: 17.45 },
-  { x: 122.9, y: 25.45 },
-  { x: 138.9, y: 33.45 },
+  { x: 106.9, y: 16.55 },
+  { x: 122.9, y: 24.55 },
+  { x: 138.9, y: 32.55 },
 ] as const
 
 /** The wheel in the gully: pots on its rim, turned by the torrent, lifting what it scoops from the bottom. */
@@ -263,7 +263,7 @@ export const SLING = { pivot: [159.7, 37.1] as const, long: 4.5, short: 1.6 }
 
 /** The chute from the third terrace's end down the gully's wall into the wheel's lowest pot. */
 export const CHUTE: readonly (readonly [number, number])[] = [
-  [140.4, 33.6],
+  [140.4, 32.9],
   [142.6, 38.4],
   [144.2, 43.4],
   [146.4, 48.4],

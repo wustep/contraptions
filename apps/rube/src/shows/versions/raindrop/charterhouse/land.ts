@@ -93,7 +93,7 @@ export function drawGround(b: Brush, t: number): void {
 export function drawBehind(b: Brush, t: number): void {
   const c = tones(t)
   const f = frame(b)
-  const col = mix(c.hillDark, c.mtNear, 0.45)
+  const col = mix(mix(c.hillDark, c.mtNear, 0.3), c.ink, 0.18)
   const pts: Pt[] = []
   const x0 = f.x0 - 2
   const x1 = f.x1 + 2
@@ -120,33 +120,51 @@ export function drawBehind(b: Brush, t: number): void {
 
 /**
  * A dry-stone wall's face, from `x0` to `x1` and `y0` (its top) to `y1`: courses of rough stones, laid with no
- * mortar, a wet sheen of the sky along the coping. Stones only when they would be seen.
+ * mortar, a wet sheen of the sky along the coping. The stones are fixed in the world (each course's joints by a
+ * hash of where they are), so a wall panned across or only partly in the frame is always the same wall; only the
+ * stones in the frame are drawn, and only when they would be seen.
  */
-export function drawWall(b: Brush, c: Palette, x0: number, y0: number, x1: number, y1: number, seed: number): void {
+export function drawWall(b: Brush, c: Palette, x0: number, y0: number, x1: number, y1: number, seed: number, coping = true): void {
   rect(b, x0, y0, x1, y1, c.stone)
   if (b.k > 9) {
-    const g = b.g
-    const h = 0.55
-    let row = 0
-    for (let y = y0 + 0.25; y < y1 - 0.05; y += h, row++) {
-      let x = x0 + (row % 2 ? -0.3 : 0)
-      let i = 0
-      while (x < x1) {
-        const w = 0.55 + hash(row, i, seed) * 0.8
-        const sx0 = Math.max(x0, x + 0.04)
-        const sx1 = Math.min(x1, x + w - 0.04)
-        if (sx1 > sx0) {
-          const v = hash(row, i, seed + 1)
-          g.fillStyle = v < 0.33 ? c.stoneShade : v < 0.66 ? mix(c.stone, c.stoneShade, 0.45) : mix(c.stone, c.plaster, 0.2)
-          g.fillRect(sx0, y + 0.04, sx1 - sx0, Math.min(h - 0.08, y1 - y - 0.06))
+    const f = frame(b)
+    const vx0 = Math.max(x0, f.x0 - 1)
+    const vx1 = Math.min(x1, f.x1 + 1)
+    const vy0 = Math.max(y0, f.y0 - 1)
+    const vy1 = Math.min(y1, f.y1 + 1)
+    if (vx1 > vx0 && vy1 > vy0) {
+      const g = b.g
+      const h = 0.55
+      const W = 0.95
+      const r0 = Math.max(0, Math.floor((vy0 - y0 - 0.25) / h))
+      const r1 = Math.ceil((vy1 - y0) / h)
+      const tones3 = [c.stoneShade, mix(c.stone, c.stoneShade, 0.45), mix(c.stone, c.plaster, 0.2)]
+      for (let row = r0; row <= r1; row++) {
+        const y = y0 + 0.25 + row * h
+        if (y > y1 - 0.06) break
+        const hh = Math.min(h - 0.08, y1 - y - 0.06)
+        const shift = hash(row, seed, 7) * W
+        const j0 = Math.floor((vx0 - shift) / W) - 1
+        const j1 = Math.ceil((vx1 - shift) / W) + 1
+        const edge = (j: number) => shift + j * W + (hash(row, j, seed) - 0.5) * 0.5 * W
+        for (let k = 0; k < 3; k++) {
+          g.fillStyle = tones3[k]
+          g.beginPath()
+          for (let j = j0; j < j1; j++) {
+            if (Math.floor(hash(row, j, seed + 1) * 3) !== k) continue
+            const sx0 = Math.max(x0, edge(j) + 0.05)
+            const sx1 = Math.min(x1, edge(j + 1) - 0.05)
+            if (sx1 > sx0) g.rect(sx0, y + 0.04, sx1 - sx0, hh)
+          }
+          g.fill()
         }
-        x += w
-        i++
       }
     }
-    g.fillStyle = rgba(c.stoneDeep, 0.55)
-    for (let y = y0 + 0.25; y < y1; y += h) g.fillRect(x0, y, x1 - x0, 0.05)
   }
+  // Shade gathering toward the foot.
+  b.g.fillStyle = rgba(c.stoneDeep, 0.28)
+  b.g.fillRect(x0, y0 + (y1 - y0) * 0.55, x1 - x0, (y1 - y0) * 0.45)
+  if (!coping) return
   // The coping: flat stones along the top, wet.
   rect(b, x0 - 0.15, y0 - 0.3, x1 + 0.15, y0 + 0.08, mix(c.stone, c.plaster, 0.3))
   rect(b, x0 - 0.15, y0 + 0.02, x1 + 0.15, y0 + 0.12, c.stoneShade)
@@ -230,18 +248,37 @@ export const OLIVES: readonly [number, number, number][] = [
   [130.5, 0.85, 4],
 ]
 
-/** The fields' soil and grass, their walls, and the olives. */
+/**
+ * The terraces, each a block of field held up by a dry-stone wall that faces us: its wall's face down to the next
+ * level below; the field's soil and grass along its top; the olives on it. The lower garden is one more, its wall
+ * taller (it holds the cistern), and the house and upper garden stand on another.
+ */
+export const FACES: readonly { x0: number; x1: number; y: number; foot: number; seed: number }[] = [
+  { x0: -46, x1: 44, y: 0.7, foot: 4.5, seed: 31 },
+  { x0: 49.5, x1: 82, y: GARDEN.lower + 0.7, foot: TERRACES[0].y, seed: 32 },
+  { x0: TERRACES[0].x0, x1: TERRACES[0].x1, y: TERRACES[0].y + 0.6, foot: TERRACES[1].y, seed: 33 },
+  { x0: TERRACES[1].x0, x1: TERRACES[1].x1, y: TERRACES[1].y + 0.6, foot: TERRACES[2].y, seed: 34 },
+  { x0: TERRACES[2].x0, x1: TERRACES[2].x1, y: TERRACES[2].y + 0.6, foot: TERRACES[2].y + 8, seed: 35 },
+]
+
+export function drawFaces(b: Brush, t: number): void {
+  const c = tones(t)
+  for (const f of FACES) {
+    drawWall(b, c, f.x0, f.y, f.x1, f.foot, f.seed, false)
+    // Its east end: the corner where the next terrace steps down, in shade.
+    rect(b, f.x1 - 0.5, f.y, f.x1, f.foot, rgba(c.stoneDeep, 0.5))
+    // The wall's foot, where it meets the ground below: a dark seam.
+    rect(b, f.x0, f.foot - 0.25, f.x1, f.foot + 0.15, rgba(c.hillDark, 0.8))
+  }
+}
+
 export function drawTerraces(b: Brush, t: number): void {
   const c = tones(t)
-  // The lower garden's front wall (the step down to the first terrace) and each terrace's own.
-  const walls: [number, number, number][] = [[GARDEN.edge, GARDEN.lower, TERRACES[0].y]]
-  for (let i = 1; i < TERRACES.length; i++) walls.push([TERRACES[i].x0, TERRACES[i - 1].y, TERRACES[i].y])
   // Fields: a band of dark soil, a fringe of grass along its lip.
   for (const tr of TERRACES) {
     rect(b, tr.x0, tr.y - 0.25, tr.x1, tr.y + 0.6, c.earth)
     if (b.k > 14) grass(b, c, tr.x0 + 0.3, tr.x1 - 0.3, tr.y - 0.2, tr.x0)
   }
-  for (const [x, top, foot] of walls) drawWall(b, c, x - 1.1, top, x + 0.05, foot, Math.round(x))
   for (const [x, s, seed] of OLIVES) drawOlive(b, t, x, groundY(x) - 0.1, s, seed)
 }
 
@@ -333,6 +370,40 @@ export function drawRoad(b: Brush, t: number): void {
   g.moveTo(ROAD[0][0], ROAD[0][1])
   for (let i = 1; i < ROAD.length; i++) g.lineTo(ROAD[i][0], ROAD[i][1])
   g.stroke()
+  // Its parapet on the valley side: a low run of dry stone just under the road's edge, broken here and there.
+  if (b.k > 3) {
+    g.strokeStyle = mix(c.stoneShade, c.hill, 0.25)
+    g.lineWidth = 0.5
+    g.beginPath()
+    for (let i = 1; i < ROAD.length - 1; i++) {
+      const [ax, ay] = ROAD[i - 1]
+      const [bx, by] = ROAD[i]
+      const n = Math.max(1, Math.floor(Math.hypot(bx - ax, by - ay) / 6))
+      for (let k = 0; k < n; k++) {
+        if (hash(i, k, 141) < 0.3) continue
+        const u0 = k / n + 0.04
+        const u1 = (k + 1) / n - 0.04
+        g.moveTo(lerp(ax, bx, u0), lerp(ay, by, u0) + 0.9)
+        g.lineTo(lerp(ax, bx, u1), lerp(ay, by, u1) + 0.9)
+      }
+    }
+    g.stroke()
+    // Shrubs on the slope under it: mastic and rosemary, dark low mounds.
+    g.fillStyle = mix(c.leafDark, c.hillDark, 0.45)
+    g.beginPath()
+    for (let i = 0; i < 40; i++) {
+      const j = 5 + Math.floor(hash(i, 151) * (ROAD.length - 7))
+      const u = hash(i, 152)
+      const [ax, ay] = ROAD[j]
+      const [bx, by] = ROAD[j + 1]
+      const x = lerp(ax, bx, u)
+      const y = lerp(ay, by, u) + 1.6 + hash(i, 153) * 3
+      const r = 0.6 + hash(i, 154) * 0.9
+      g.moveTo(x + r * 1.4, y)
+      g.ellipse(x, y, r * 1.4, r * 0.8, 0, Math.PI, Math.PI * 2)
+    }
+    g.fill()
+  }
   // Puddles along it in the rain: flat lozenges of the sky.
   const wet = clamp(rainAt(t) * 2 + 0.3)
   g.fillStyle = rgba(c.skyLow, 0.3 * wet)

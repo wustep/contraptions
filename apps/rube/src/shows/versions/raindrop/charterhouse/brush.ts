@@ -117,6 +117,24 @@ export function line(b: Brush, x0: number, y0: number, x1: number, y1: number, c
   g.stroke()
 }
 
+/**
+ * A part of the machine: a flat fill with a line of ink round it, the way the Machine's own pieces are drawn, so a
+ * part reads against the painted world behind it. The line is a share of a cell, never under a pixel.
+ */
+export function part(b: Brush, pts: readonly Pt[], fill: string, ink: string, w = 0.035): void {
+  const { g } = b
+  g.beginPath()
+  g.moveTo(pts[0][0], pts[0][1])
+  for (let i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1])
+  g.closePath()
+  g.fillStyle = fill
+  g.fill()
+  g.lineWidth = Math.max(b.px, w)
+  g.lineJoin = 'round'
+  g.strokeStyle = ink
+  g.stroke()
+}
+
 /** An open path `w` pixels wide. */
 export function stroke(b: Brush, pts: readonly Pt[], color: string, w = 1, close = false): void {
   const { g } = b
@@ -141,6 +159,13 @@ export function bar(b: Brush, x0: number, y0: number, x1: number, y1: number, co
   g.lineCap = cap
   g.strokeStyle = color
   g.stroke()
+}
+
+/** A timber or a rod `w` cells thick with a line of ink along its sides: a part of the machine. */
+export function timber(b: Brush, x0: number, y0: number, x1: number, y1: number, color: string, ink: string, w: number, cap: CanvasLineCap = 'butt'): void {
+  const edge = Math.max(b.px, 0.03)
+  bar(b, x0, y0, x1, y1, ink, w + 2 * edge, cap)
+  bar(b, x0, y0, x1, y1, color, w, cap)
 }
 
 /** Points round an arc, from `a0` to `a1` (radians, y down). */

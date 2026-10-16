@@ -1,5 +1,5 @@
 import type { Pt } from '../../../../parts'
-import { arc, bar, disc, line, mix, poly, rect, rgba, stroke, type Brush } from './brush'
+import { arc, bar, disc, hash, line, mix, poly, rect, rgba, stroke, type Brush } from './brush'
 import { GUTTER, HOUSE, PIPE, gutterY } from './geo'
 import { tones, type Palette } from './look'
 
@@ -29,6 +29,13 @@ export function drawWall(b: Brush, t: number): void {
     const x = PANS[i] + 0.1
     b.g.fillRect(x - 0.08, eave + 1.1, 0.16, 4 + ((i * 7) % 5))
   }
+  // Damp: the whitewash darker where the rain has soaked it, at the foot and in patches under the eave.
+  b.g.fillStyle = rgba(c.plasterShade, 0.5)
+  b.g.beginPath()
+  b.g.moveTo(x0, -0.6)
+  for (let x = x0; x <= x1; x += 0.8) b.g.lineTo(x, -1.4 - 0.7 * hash(Math.round(x * 3), 51) - 0.4 * Math.sin(x * 0.7))
+  b.g.lineTo(x1, -0.6)
+  b.g.fill()
   // The plinth: a course of stone along the foot.
   rect(b, x0, -0.75, x1, 0.4, c.stone)
   rect(b, x0, -0.75, x1, -0.62, c.stoneShade)
@@ -36,24 +43,49 @@ export function drawWall(b: Brush, t: number): void {
   rect(b, x0, eave, x0 + 0.35, 0.4, c.plasterShade)
 }
 
-/** The roof: the tile courses going up and back to the ridge, and the eave's row of pans and covers. */
+/**
+ * The roof: courses of canal tiles going up and back to the ridge, each course's covers a row of round-topped ribs
+ * over the pans between them, each course a little lower in tone than the one in front of it, as a roof seen from
+ * under its eave is.
+ */
 export function drawRoof(b: Brush, t: number): void {
   const c = tones(t)
   const { x0, x1, eave, ridge, over } = HOUSE
   const left = x0 - over
   const right = x1 + over
-  // The roof's slope, seen from below: a band of tile, darker toward the ridge.
-  rect(b, left, ridge, right, eave + 0.05, c.tileShade)
-  rect(b, left, eave - 1.6, right, eave + 0.05, c.tile)
-  // The rows: covers stand up as ribs from the eave toward the ridge, foreshortened.
+  rect(b, left, ridge, right, eave + 0.05, c.tileDeep)
   const g = b.g
-  g.fillStyle = c.tileDeep
-  for (const x of PANS) g.fillRect(x - TILE / 2 - 0.05, ridge, 0.1, eave - ridge)
-  g.fillStyle = mix(c.tile, c.plaster, 0.12)
-  for (const x of PANS) g.fillRect(x + TILE / 2 - 0.22, eave - 1.55, 0.13, 1.5)
-  // The courses: a faint line across every tile's length.
-  g.fillStyle = rgba(c.tileDeep, 0.5)
-  for (let y = eave - 1.6; y > ridge; y -= 1.05 - (eave - y) * 0.06) g.fillRect(left, y, right - left, 0.07)
+  const course = 0.62
+  const n = Math.ceil((eave - ridge) / course)
+  for (let k = n - 1; k >= 0; k--) {
+    const y1 = eave - k * course
+    const y0 = y1 - course - 0.12
+    const shade = k / n
+    // The pans: the course's back, darker.
+    g.fillStyle = mix(c.tileShade, c.tileDeep, 0.3 + shade * 0.4)
+    g.fillRect(left, y0, right - left, y1 - y0)
+    // The covers: ribs with round heads, lit on their west side.
+    const cover = mix(c.tile, c.tileDeep, shade * 0.55)
+    const lit = mix(cover, c.plaster, 0.12)
+    const off = (k % 2) * 0.12
+    g.fillStyle = cover
+    g.beginPath()
+    for (const px of PANS) {
+      const cx = px + TILE / 2 + off
+      g.moveTo(cx - 0.24, y1)
+      g.lineTo(cx - 0.24, y0 + 0.2)
+      g.arc(cx, y0 + 0.2, 0.24, Math.PI, 0)
+      g.lineTo(cx + 0.24, y1)
+    }
+    g.fill()
+    g.fillStyle = lit
+    g.beginPath()
+    for (const px of PANS) {
+      const cx = px + TILE / 2 + off
+      g.rect(cx - 0.22, y0 + 0.2, 0.09, y1 - y0 - 0.2)
+    }
+    g.fill()
+  }
   // The ridge's cap.
   rect(b, left, ridge - 0.35, right, ridge + 0.1, c.tileDeep)
 }

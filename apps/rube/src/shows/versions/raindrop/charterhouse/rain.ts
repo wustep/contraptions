@@ -55,8 +55,21 @@ function layer(b: Brush, t: number, L: Layer, density: number, slant: number, co
   g.stroke()
 }
 
-/** The rain at `t`, nothing under `above` (cells): a roof, or the ground over the cistern. */
-export function drawRain(b: Brush, t: number, above = Infinity, scale = 1): void {
+/** A lit place the rain falls past: its streaks there take the light's colour. Cells, and how strong the light is. */
+export interface Lit {
+  x0: number
+  y0: number
+  x1: number
+  y1: number
+  strength: number
+}
+
+/**
+ * The rain at `t`, nothing under `above` (cells): a roof, or the ground over the cistern. Where it falls past a
+ * light (a lit window, a lantern, an open door) the same streaks are drawn again in the light's warmth, inside that
+ * light's box: rain lit by what is behind it, no more.
+ */
+export function drawRain(b: Brush, t: number, lights: Lit[] = [], above = Infinity, scale = 1): void {
   const d = rainAt(t) * scale
   if (d <= 0.01) return
   const c = tones(t)
@@ -64,4 +77,17 @@ export function drawRain(b: Brush, t: number, above = Infinity, scale = 1): void
   const col = mix(c.rain, c.skyLow, 0.2)
   layer(b, t, FAR, d, slant * 0.9, col, above)
   layer(b, t, NEAR, d * d, slant, col, above)
+  const f = frame(b)
+  for (const l of lights) {
+    if (l.strength <= 0.02 || l.x1 < f.x0 || l.x0 > f.x1 || l.y1 < f.y0 || l.y0 > f.y1) continue
+    b.g.save()
+    b.g.beginPath()
+    b.g.rect(l.x0, l.y0, l.x1 - l.x0, l.y1 - l.y0)
+    b.g.clip()
+    const warm = mix(c.warm, c.flame, 0.3)
+    b.g.globalAlpha = Math.min(1, l.strength * 2.2)
+    layer(b, t, FAR, d, slant * 0.9, warm, above)
+    layer(b, t, NEAR, d * d, slant, warm, above)
+    b.g.restore()
+  }
 }

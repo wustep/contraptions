@@ -1,6 +1,6 @@
 import type { Pt } from '../../../../parts'
 import { R } from '../../../../parts'
-import { bar as beam, clamp, easeIn, hash, line, mix, poly, rect, rgba, smooth, turn, type Brush } from './brush'
+import { bar as beam, clamp, disc, easeIn, hash, line, mix, part, poly, rgba, smooth, turn, type Brush } from './brush'
 import { CHUTE, HAMMERS, T1CH, T2CH, T3CH, TERRACES, chanY, type Channel } from './geo'
 import { at, bar } from './music'
 import { rainAt, stormAt, tones } from './look'
@@ -69,6 +69,11 @@ function fullness(i: number, t: number): number {
 /** A channel's bed and water: behind the ball. */
 function channelBack(b: Brush, c: ReturnType<typeof tones>, ch: Channel, t: number): void {
   const { x0, x1 } = ch
+  // The runnel stands on a low wall of its own along the terrace's edge.
+  const tread = TERRACES.find((tr) => x0 >= tr.x0 - 1 && x0 < tr.x1)?.y ?? chanY(ch, x0) + 1
+  poly(b, [[x0 - 0.3, chanY(ch, x0) + 0.2], [x1 + 0.15, chanY(ch, x1) + 0.2], [x1 + 0.15, tread + 0.1], [x0 - 0.3, tread + 0.1]], c.stoneShade)
+  b.g.fillStyle = rgba(c.stoneDeep, 0.6)
+  for (let x = x0 + 0.4; x < x1; x += 0.9) b.g.fillRect(x, chanY(ch, x) + 0.25, 0.04, tread - chanY(ch, x) - 0.2)
   poly(b, [[x0, chanY(ch, x0) - 0.3], [x1, chanY(ch, x1) - 0.3], [x1, chanY(ch, x1) + 0.06], [x0, chanY(ch, x0) + 0.06]], c.stoneDeep)
   // The water: higher in the storm, its face streaked with the run of it.
   const s = clamp(stormAt(t) * 0.6 + rainAt(t) * 0.6)
@@ -99,58 +104,69 @@ function channelFront(b: Brush, c: ReturnType<typeof tones>, ch: Channel): void 
   line(b, x0, chanY(ch, x0) - 0.06, x1, chanY(ch, x1) - 0.06, mix(c.stone, c.skyLow, 0.35), Math.max(1, b.k * 0.02))
 }
 
-/** A hammer: its post and stone, its trough at its angle, the water in it; and what pours from it. */
+/** The terrace a hammer stands on: its tread's level. */
+const treadOf = (i: number): number => TERRACES[i].y
+
+/** A hammer: its trestle and stone, its trough at its angle, the water in it; and what pours from it. */
 function hammer(b: Brush, c: ReturnType<typeof tones>, i: number, t: number, front: boolean): void {
   const h = HAMMERS[i]
   const a = hammerAngle(i, t)
-  const wood = mix(c.wood, c.ink, 0.12)
+  const wood = mix(c.wood, c.plaster, 0.08)
+  const ink = c.ink
   const P = (pts: Pt[]) => turn(pts, a, 0, 0, h.x, h.y)
+  const tread = treadOf(i)
   if (!front) {
-    // The stone it knocks on, under its closed end, and its post.
-    const knock = turn([[WEST + 0.15, 0.12]], REST, 0, 0, h.x, h.y)[0]
-    rect(b, knock[0] - 0.45, knock[1] + 0.02, knock[0] + 0.35, knock[1] + 0.7, c.stoneShade)
-    rect(b, knock[0] - 0.45, knock[1] + 0.02, knock[0] + 0.35, knock[1] + 0.12, mix(c.stone, c.skyLow, 0.2))
-    beam(b, h.x, h.y, h.x, h.y + 0.75, wood, 0.16)
-    // The back of the trough, and its water.
-    poly(b, P([[WEST, FLOOR + 0.1], [EAST, FLOOR + 0.1], [EAST, FLOOR - 0.38], [WEST, FLOOR - 0.42]]), mix(wood, c.ink, 0.25))
+    // The trestle: two legs from the tread up to the pin.
+    beam(b, h.x - 0.55, tread + 0.05, h.x, h.y + 0.05, mix(wood, ink, 0.3), 0.15)
+    beam(b, h.x + 0.55, tread + 0.05, h.x, h.y + 0.05, mix(wood, ink, 0.3), 0.15)
+    // The stone its closed end knocks down on.
+    const k = turn([[WEST + 0.3, FLOOR + 0.24]], REST, 0, 0, h.x, h.y)[0]
+    part(b, [[k[0] - 0.55, tread + 0.05], [k[0] - 0.5, k[1] + 0.02], [k[0] + 0.45, k[1]], [k[0] + 0.55, tread + 0.05]], c.stoneShade, mix(c.stoneDeep, ink, 0.4), 0.03)
+    // The trough's back wall, and its water.
+    part(b, P([[WEST, FLOOR + 0.12], [EAST, FLOOR + 0.12], [EAST, FLOOR - 0.32], [WEST, FLOOR - 0.4]]), mix(wood, ink, 0.32), ink, 0.03)
     const f = fullness(i, t)
     if (f > 0.02) {
       const depth = 0.3 * f
-      poly(b, P([[WEST + 0.05, FLOOR], [EAST - 0.4 + 0.4 * (1 - f), FLOOR], [EAST - 0.4 + 0.4 * (1 - f), FLOOR - depth * 0.4], [WEST + 0.05, FLOOR - depth]]), mix(c.water, c.glass, 0.15))
+      poly(b, P([[WEST + 0.05, FLOOR + 0.1], [EAST - 0.5 + 0.5 * (1 - f), FLOOR + 0.1], [EAST - 0.5 + 0.5 * (1 - f), FLOOR + 0.1 - depth * 0.35], [WEST + 0.05, FLOOR + 0.1 - depth]]), mix(c.water, c.glass, 0.2))
     }
     return
   }
-  // The trough's floor and front wall (low, so the ball shows over it), its end plate, its pin.
-  poly(b, P([[WEST - 0.08, FLOOR + 0.12], [EAST, FLOOR + 0.12], [EAST, FLOOR - 0.05], [WEST - 0.08, FLOOR - 0.1]]), wood)
-  poly(b, P([[WEST - 0.12, FLOOR + 0.14], [WEST + 0.04, FLOOR + 0.14], [WEST + 0.04, FLOOR - 0.45], [WEST - 0.12, FLOOR - 0.45]]), mix(wood, c.ink, 0.2))
-  const bands = P([[WEST + 0.6, FLOOR + 0.13], [EAST - 0.45, FLOOR + 0.13]])
-  for (const [x, y] of bands) beam(b, x, y - 0.14, x, y + 0.02, c.iron, 0.06)
-  const pin = P([[0, 0]])[0]
-  beam(b, pin[0], pin[1] - 0.05, pin[0], pin[1] + 0.1, c.iron, 0.1)
+  // The trough's floor and its low front wall (the ball shows over it), the closed end and its knob, the bands, the pin.
+  part(b, P([[WEST - 0.06, FLOOR + 0.24], [EAST, FLOOR + 0.24], [EAST, FLOOR - 0.06], [WEST - 0.06, FLOOR - 0.1]]), wood, ink, 0.035)
+  part(b, P([[WEST - 0.16, FLOOR + 0.3], [WEST + 0.06, FLOOR + 0.3], [WEST + 0.06, FLOOR - 0.46], [WEST - 0.16, FLOOR - 0.46]]), mix(wood, ink, 0.2), ink, 0.035)
+  for (const s0 of [WEST + 0.75, EAST - 0.6]) part(b, P([[s0 - 0.05, FLOOR + 0.25], [s0 + 0.05, FLOOR + 0.25], [s0 + 0.05, FLOOR - 0.07], [s0 - 0.05, FLOOR - 0.07]]), c.iron, ink, 0.02)
+  const pin = P([[0, 0.05]])[0]
+  disc(b, pin[0], pin[1], 0.1, c.iron)
   // The channel pouring into it: a thin fall from the channel's end into the trough.
   const ch = CHANNELS[i]
   const s = clamp(stormAt(t) * 0.6 + rainAt(t) * 0.6)
   const from: Pt = [ch.x1 + 0.05, chanY(ch, ch.x1) - 0.12]
-  const to = P([[WEST + 0.55, FLOOR - 0.15]])[0]
-  b.g.strokeStyle = rgba(mix(c.waterLight, c.rain, 0.3), 0.5 + 0.3 * s)
-  b.g.lineWidth = 0.08 + 0.08 * s
+  const to = P([[WEST + 0.5, FLOOR - 0.1]])[0]
+  b.g.strokeStyle = rgba(mix(c.waterLight, c.rain, 0.3), 0.55 + 0.3 * s)
+  b.g.lineWidth = 0.07 + 0.07 * s
   b.g.lineCap = 'round'
   b.g.beginPath()
   b.g.moveTo(from[0], from[1])
-  b.g.quadraticCurveTo(from[0] + 0.35, from[1], to[0], to[1])
+  b.g.quadraticCurveTo(from[0] + 0.3, from[1], to[0], to[1])
   b.g.stroke()
-  // Over: the water pours from the open end and down the wall in a sheet.
+  // Over: the water pours from the open end and down the wall, spreading as it falls.
   const o = OVER[i]
-  if (t > o - 0.15 && t < o + 1.1) {
-    const u = clamp((t - (o - 0.15)) / 1.25)
-    const mouth = P([[EAST, FLOOR - 0.1]])[0]
-    const fall = TERRACES[Math.min(i + 1, TERRACES.length - 1)].y - mouth[1]
-    const len = i < 2 ? fall : 6
-    const head = Math.min(len, 0.5 * 30 * (t - (o - 0.15)) ** 2)
-    const tail = Math.max(0, 0.5 * 30 * Math.max(0, t - (o + 0.35)) ** 2)
+  if (t > o - 0.15 && t < o + 1.2) {
+    const mouth = P([[EAST, FLOOR]])[0]
+    const foot = i < 2 ? TERRACES[i + 1].y : mouth[1] + 1.4
+    const fall = foot - mouth[1]
+    const head = Math.min(fall, 0.5 * 30 * (t - (o - 0.15)) ** 2)
+    const tail = Math.min(fall, Math.max(0, 0.5 * 30 * Math.max(0, t - (o + 0.4)) ** 2))
     if (head > tail) {
-      b.g.fillStyle = rgba(mix(c.waterLight, c.rain, 0.35), 0.55 * (1 - u * 0.5))
-      b.g.fillRect(mouth[0] - 0.05, mouth[1] + tail, 0.32, head - tail)
+      const w0 = 0.18 + (tail / Math.max(1, fall)) * 0.4
+      const w1 = 0.18 + (head / Math.max(1, fall)) * 0.4
+      b.g.fillStyle = rgba(mix(c.waterLight, c.rain, 0.35), 0.5)
+      b.g.beginPath()
+      b.g.moveTo(mouth[0] - w0 / 2 + 0.1, mouth[1] + tail)
+      b.g.lineTo(mouth[0] + w0 / 2 + 0.1, mouth[1] + tail)
+      b.g.lineTo(mouth[0] + w1 / 2 + 0.25, mouth[1] + head)
+      b.g.lineTo(mouth[0] - w1 / 2 + 0.25, mouth[1] + head)
+      b.g.fill()
     }
   }
 }

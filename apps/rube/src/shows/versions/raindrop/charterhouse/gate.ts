@@ -1,9 +1,9 @@
 import type { Pt } from '../../../../parts'
 import { R } from '../../../../parts'
-import { arc, bar as beam, clamp, disc, easeIn, easeInOut, line, mix, poly, rect, rgba, smooth, turn, type Brush } from './brush'
+import { arc, bar as beam, clamp, disc, easeIn, easeInOut, hash, line, mix, oval, poly, rect, rgba, smooth, turn, type Brush } from './brush'
 import { GATE, SPUR } from './geo'
 import { drawWall } from './land'
-import { FORM, NOTES, at } from './music'
+import { DRIPS, FORM, NOTES, at, dripIndex } from './music'
 import { tones } from './look'
 import { drawTravelers } from './travelers'
 
@@ -177,16 +177,13 @@ export function drawGate(b: Brush, t: number): void {
   }
   // The niche, with its candle, low by the door.
   const [nx, ny] = GATE.lamp.candle
-  poly(b, [...arc(nx, ny - 1.0, 0.7, 0.7, Math.PI, Math.PI * 2, 10), [nx + 0.7, ny + 0.5], [nx - 0.7, ny + 0.5]], mix(c.stoneDeep, c.ink, 0.3))
+  // Its hollow, warmed by the candle in it.
+  poly(b, [...arc(nx, ny - 1.0, 0.7, 0.7, Math.PI, Math.PI * 2, 10), [nx + 0.7, ny + 0.5], [nx - 0.7, ny + 0.5]], mix(mix(c.stoneDeep, c.ink, 0.3), c.warmDeep, 0.38))
+  poly(b, [...arc(nx, ny - 1.0, 0.42, 0.42, Math.PI, Math.PI * 2, 8), [nx + 0.42, ny + 0.5], [nx - 0.42, ny + 0.5]], mix(mix(c.stoneDeep, c.ink, 0.3), c.warmDeep, 0.55))
   rect(b, nx - 0.85, ny + 0.45, nx + 0.85, ny + 0.65, c.stone)
   rect(b, nx - 0.07, ny - 0.4, nx + 0.07, ny + 0.45, '#E8DECA')
   const flick = 1 + 0.12 * Math.sin(t * 13) * Math.sin(t * 7.3)
   poly(b, [[nx, ny - 0.4 - 0.32 * flick], [nx + 0.07, ny - 0.47], [nx, ny - 0.4], [nx - 0.07, ny - 0.47]], c.flame)
-  // The candle's light in the niche: its back wall warmed, no more.
-  b.g.fillStyle = rgba(c.warm, 0.25)
-  b.g.beginPath()
-  b.g.ellipse(nx, ny - 0.5, 0.55, 0.65, 0, 0, Math.PI * 2)
-  b.g.fill()
   // The catch at the roof's east end, and the chute down the wall from it.
   const [px, py] = GATE.catch.pivot
   const ca = catchAngle(t)
@@ -238,6 +235,24 @@ export function drawGateFront(b: Brush, t: number): void {
     b.g.globalAlpha = 1
   }
   b.g.restore()
+  // The roof's edge drips on the pulse: a drop off a tile's end on every eighth, a small splash where it lands.
+  const eave = GATE.top + 0.3
+  const fall = Math.sqrt((2 * (SPUR.y - eave)) / 30)
+  const i = dripIndex(t + fall)
+  const bead = rgba(mix(c.rain, c.glass, 0.4), 0.85)
+  for (let j = i; j >= 0 && j > i - 4; j--) {
+    const land = DRIPS[j]
+    const x = GATE.roof.x0 + 0.4 + hash(j, 131) * (GATE.roof.x1 - GATE.roof.x0 - 0.8)
+    const u = (t - (land - fall)) / fall
+    if (u >= 0 && u <= 1) {
+      const y = eave + (SPUR.y - eave) * u * u
+      oval(b, x, y, 0.045, 0.045 * (1 + u * 1.4), bead)
+    } else if (u > 1 && t - land < 0.22) {
+      const k = (t - land) / 0.22
+      line(b, x - 0.1 - k * 0.2, SPUR.y - k * 0.25, x - 0.15 - k * 0.3, SPUR.y - 0.1 - k * 0.3, rgba(c.rain, 0.6 * (1 - k)), 1)
+      line(b, x + 0.1 + k * 0.2, SPUR.y - k * 0.25, x + 0.15 + k * 0.3, SPUR.y - 0.1 - k * 0.3, rgba(c.rain, 0.6 * (1 - k)), 1)
+    }
+  }
   // The bell rope's cup.
   const [cx, cy] = cupAt(t)
   poly(b, [[cx - 0.3, cy - 0.3], [cx + 0.3, cy - 0.3], [cx + 0.22, cy + 0.12], [cx - 0.22, cy + 0.12]], mix(c.wood, c.ink, 0.3))
@@ -250,20 +265,33 @@ export function drawGateLight(b: Brush, t: number): void {
   const c = tones(t)
   const g = b.g
   if (lit > 0) {
+    // Its light down the wall and onto the ground: a wide faint fall and a narrower one inside it, and the pool.
     const y = lanternY(t) + 0.5
     const x = GATE.lamp.x
-    g.fillStyle = rgba(c.warm, 0.13 * lit)
+    for (const [spread, a] of [[6.5, 0.07], [3.6, 0.06]] as const) {
+      g.fillStyle = rgba(c.warm, a * lit)
+      g.beginPath()
+      g.moveTo(x - 0.4, y)
+      g.lineTo(x + 0.4, y)
+      g.lineTo(x + spread, SPUR.y)
+      g.lineTo(x - spread, SPUR.y)
+      g.closePath()
+      g.fill()
+    }
+    g.fillStyle = rgba(c.warm, 0.14 * lit)
     g.beginPath()
-    g.moveTo(x - 0.5, y)
-    g.lineTo(x + 0.5, y)
-    g.lineTo(x + 6.5, SPUR.y)
-    g.lineTo(x - 6.5, SPUR.y)
-    g.closePath()
+    g.ellipse(x, SPUR.y + 0.12, 5.5, 0.3, 0, 0, Math.PI * 2)
     g.fill()
-    g.fillStyle = rgba(c.warm, 0.22 * lit)
-    g.beginPath()
-    g.ellipse(x, SPUR.y + 0.15, 6.5, 0.35, 0, 0, Math.PI * 2)
-    g.fill()
+  }
+  // A puddle before the door: the sky in it, the lantern's light in it once lit, broken by the drips off the roof.
+  const px = GATE.lamp.x + 2.2
+  g.fillStyle = rgba(mix(c.skyLow, c.water, 0.4), 0.55)
+  g.beginPath()
+  g.ellipse(px, SPUR.y + 0.22, 2.3, 0.16, 0, 0, Math.PI * 2)
+  g.fill()
+  if (lit > 0) {
+    g.fillStyle = rgba(c.warm, 0.55 * lit)
+    g.fillRect(GATE.lamp.x + 0.35 - 0.14, SPUR.y + 0.1, 0.28, 0.24)
   }
   if (open > 0) {
     const { door } = GATE

@@ -1,7 +1,7 @@
 import { R, type Pt } from '../../../../parts'
 import { CISTERN, GATE, GUTTER, PIPE, RILL, SPUR, T1CH, T2CH, T3CH, chanY, gutterY, rillY } from './geo'
 import { DOWN_TO } from './garden'
-import { FLOAT_FROM, OUT, OVER_LIP, STEPS, afloat, stepAt } from './cistern'
+import { FLOAT_FROM, IN_WALL, OUT, OVER_LIP, STEPS, afloat, stepAt } from './cistern'
 import { OVER as HAMMER_OVER, inHammer, onChute } from './terraces'
 
 /** Down the wall from each hammer onto the next terrace's channel: a beat after it goes over. */
@@ -71,11 +71,12 @@ export function route(end: number): BallPath {
   for (let i = 0; i < STEPS.length; i++) {
     const [sx, sy] = stepAt(i)
     r.fly(STEPS[i], [sx - 0.65, sy])
-    const next = i + 1 < STEPS.length ? STEPS[i + 1] - 0.22 : OUT - 0.32
-    r.roll(next, [[sx + 0.95, sy]], 0.6, 1.4)
+    const next = i + 1 < STEPS.length ? STEPS[i + 1] - 0.22 : OUT - 0.45
+    r.roll(next, [[i + 1 < STEPS.length ? sx + 0.85 : IN_WALL[0], sy]], 0.6, 1.4)
   }
-  // Bar 35: out through the outlet in the terrace wall, into the storm, onto the first terrace's channel.
-  r.roll(OUT - 0.04, [[CISTERN.outlet[0], CISTERN.outlet[1] - 0.02 - R]], 1.4, 2.2)
+  // Bar 35: through the wall, out of the outlet in its face, into the storm, onto the first terrace's channel.
+  r.hide(OUT - 0.12, [IN_WALL[1], CISTERN.outlet[1] - 0.02 - R])
+  r.roll(OUT - 0.04, [[CISTERN.outlet[0] + 0.15, CISTERN.outlet[1] - 0.02 - R]], 1.4, 2.2)
   const t1 = T1CH.x0 + 0.5
   r.fly(at(35, 0.5), [t1, chanY(T1CH, t1) - R])
   // Bars 35 to 39: along the first terrace in the rising storm, to the first hammer, and into it.

@@ -1,7 +1,7 @@
 import type { Pt } from '../../../../parts'
 import type { Framing } from '../../../registry'
 import { lerp, smooth } from './brush'
-import { CISTERN, GATE, HAMMERS, NORIA, PIPE } from './geo'
+import { GATE, HAMMERS, NORIA, PIPE } from './geo'
 import { OVER } from './terraces'
 import { Camera, blend, follow, glide, hold, smoothed, type Frame, type Shot } from './lens'
 import { FORM, at, bar } from './music'
@@ -38,13 +38,21 @@ export function makeCamera(where: (t: number) => Pt, duration: number): (t: numb
     return { x, y, cells: 15 }
   }
   const shots: Shot[] = [
-    { from: 0, frame: glide(0, bar(5), { x: 3.7, y: -9.2, cells: 8.6 }, { x: 3.5, y: -9.35, cells: 7.9 }) },
+    { from: 0, frame: glide(0, bar(5), { x: 3.4, y: -9.55, cells: 6.9 }, { x: 3.2, y: -9.75, cells: 6.4 }) },
     { from: bar(5), frame: glide(bar(5), bar(8), { x: 136, y: 30, cells: 160 }, { x: 138, y: 31, cells: 154 }) },
     // Bar 8: back on the jar, nearly full; the tip, and away along the gutter after the ball, the camera easing in behind.
     { from: bar(8), frame: blend(hold(3.4, -9.6, 7), follow(where, 7.2, 1.6, 1.4, 0.7, 0.15, { y1: -9.4 }), at(9, 0) + 0.1, at(9, 0) + 1.6) },
     // Bar 10: the head and the pipe, the whole height of the wall; then along the rill, and on to the chime.
     { from: at(10, 0), frame: blend(hold(PIPE.x + 0.4, -6.2, 13), follow(where, 10, 2.6, -3.0, 1.0, 0.2, { x1: 45 }), at(11, 0) + 0.3, at(11, 0) + 2.2) },
-    { from: bar(14), frame: glide(bar(14) - 0.01, bar(19), { x: 50.5, y: -0.6, cells: 12.5 }, { x: 53.5, y: -0.9, cells: 12 }) },
+    // The chime, close, the frame drifting east with the ball tile to tile, and the well coming into it at the end.
+    {
+      from: bar(14),
+      frame: (t) => {
+        const [x] = smoothed(where, t, 1.6, 0)
+        const u = smooth(t, bar(17), bar(19))
+        return { x: lerp(Math.max(47.6, x + 1.4), 56.2, u), y: lerp(-0.4, -1.0, u), cells: lerp(8.4, 10, u) }
+      },
+    },
     // The road.
     { from: bar(20), frame: them, focus: theirMiddle },
     // The bucket, then down.
@@ -53,10 +61,10 @@ export function makeCamera(where: (t: number) => Pt, duration: number): (t: numb
     {
       from: bar(27),
       frame: blend(
-        glide(bar(27), bar(28) + 0.6, { x: 59.8, y: -0.6, cells: 8.4 }, { x: 62.5, y: 10.2, cells: 15 }),
+        glide(bar(27), bar(28) + 0.6, { x: 59.8, y: -0.6, cells: 8.4 }, { x: 61.5, y: 10.6, cells: 12 }),
         (t) => {
           const [x] = smoothed(where, t, 1.5, 0)
-          return { x: Math.max(62.5, Math.min(x + 1.5, CISTERN.x1 - 1)), y: 10.2 + 1.2 * smooth(t, bar(32), bar(35)), cells: 15 }
+          return { x: Math.max(61.5, Math.min(x + 1.8, 78)), y: lerp(10.6, 12.6, smooth(t, bar(30), bar(33))), cells: lerp(12, 10.5, smooth(t, bar(29), bar(32))) }
         },
         bar(28) + 0.6,
         bar(29),
@@ -71,7 +79,7 @@ export function makeCamera(where: (t: number) => Pt, duration: number): (t: numb
       from: bar(44),
       frame: (t) => {
         // Each hammer framed as it goes over, with the wall it pours down; between, over to the next.
-        const at = (k: number) => ({ x: HAMMERS[k].x - 1.2, y: HAMMERS[k].y + 3.4, cells: 11.5 })
+        const at = (k: number) => ({ x: HAMMERS[k].x - 0.6, y: HAMMERS[k].y + 3.6, cells: 10.5 })
         let f = at(0)
         for (let k = 0; k < 2; k++) {
           const t0 = OVER[k] + 1.0
@@ -80,7 +88,7 @@ export function makeCamera(where: (t: number) => Pt, duration: number): (t: numb
             const u = smooth(t, t0, t1)
             const a = at(k)
             const b = at(k + 1)
-            f = { x: lerp(a.x, b.x, u), y: lerp(a.y, b.y, u), cells: 11.5 }
+            f = { x: lerp(a.x, b.x, u), y: lerp(a.y, b.y, u), cells: 10.5 }
           }
         }
         return f
@@ -99,7 +107,7 @@ export function makeCamera(where: (t: number) => Pt, duration: number): (t: numb
       from: bar(68),
       frame: (t) => {
         const [x, y] = theirMiddle(t)
-        return { x: lerp(x, GATE.lamp.x, 0.42), y: lerp(y, GATE.lamp.hang, 0.45), cells: 30 }
+        return { x: lerp(x, GATE.lamp.x, 0.5), y: lerp(y, GATE.lamp.hang, 0.5) + 1.5, cells: 36 }
       },
       focus: theirMiddle,
     },

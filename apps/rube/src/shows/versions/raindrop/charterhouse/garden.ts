@@ -1,6 +1,6 @@
 import type { Pt } from '../../../../parts'
 import { R } from '../../../../parts'
-import { arc, bar, clamp, disc, easeIn, hash, line, mix, oval, poly, rect, rgba, smooth, turn, type Brush } from './brush'
+import { arc, bar, clamp, disc, easeIn, hash, line, mix, oval, part, poly, rect, rgba, smooth, timber, turn, type Brush } from './brush'
 import { CHIME, GARDEN, LEMON, RILL, WELL, rillY } from './geo'
 import { G } from './path'
 import { drawCypress, drawWall } from './land'
@@ -24,8 +24,8 @@ const REST = -0.05
 const OVER = 0.55
 /** How long a tile takes to go over once the ball has run past its pin. */
 const GO = 0.5
-const LAND_S = -0.62
-const LEAVE_S = 0.74
+const LAND_S = -0.72
+const LEAVE_S = 0.86
 
 /** How far tile `i` is turned at `t`, radians (east end down, positive). */
 export function tileAngle(i: number, t: number): number {
@@ -103,6 +103,7 @@ export function drawGardenBack(b: Brush, t: number): void {
   drawCypress(b, t, 31.5, -3.4, 15, 1)
   drawCypress(b, t, 67, -3.4, 17, 2)
   drawCypress(b, t, 76.5, -3.4, 13, 3)
+  drawCypress(b, t, 51.6, -0.6, 12, 4)
   // The wall: shoulder high along the upper garden, stepping down with the steps to a low one along the lower.
   const wall = mix(mix(c.plaster, c.stone, 0.45), c.hill, 0.25)
   const cap = mix(c.tile, c.hill, 0.3)
@@ -215,17 +216,17 @@ export function drawRack(b: Brush, t: number): void {
     [P[0][0] - 1.0, P[0][1] + 0.42],
     [P[4][0] + 1.0, P[4][1] + 0.42],
   ]
-  const wood = mix(c.wood, c.ink, 0.1)
+  const wood = mix(c.wood, c.plaster, 0.06)
   for (const x of [P[0][0] - 0.7, P[2][0], P[4][0] + 0.6]) {
     const y = beam[0][1] + ((beam[1][1] - beam[0][1]) * (x - beam[0][0])) / (beam[1][0] - beam[0][0])
     const foot = x < GARDEN.steps.x0 + 0.2 ? 0.05 : x < GARDEN.steps.x1 ? ((x - GARDEN.steps.x0) / (GARDEN.steps.x1 - GARDEN.steps.x0)) * GARDEN.lower : GARDEN.lower
-    bar(b, x, y, x, foot + 0.1, wood, 0.18)
+    timber(b, x, y, x, foot + 0.1, mix(wood, c.ink, 0.15), c.ink, 0.2)
   }
-  bar(b, beam[0][0], beam[0][1], beam[1][0], beam[1][1], wood, 0.2)
+  timber(b, beam[0][0], beam[0][1], beam[1][0], beam[1][1], wood, c.ink, 0.22)
   for (const [px, py] of P) {
-    bar(b, px, py, px, py + 0.38, c.iron, 0.06)
+    timber(b, px, py, px, py + 0.4, c.iron, c.ink, 0.07)
     // The stop the tile knocks on as it goes over: a peg east of the pin.
-    bar(b, px + 0.55, py + 0.28, px + 0.55, py + 0.42, wood, 0.1)
+    timber(b, px + 0.62, py + 0.26, px + 0.62, py + 0.42, wood, c.ink, 0.12)
   }
 }
 
@@ -241,10 +242,10 @@ export function drawTiles(b: Brush, t: number): void {
     for (let k = 0; k <= n; k++) {
       const s = -CHIME.half + (2 * CHIME.half * k) / n
       top.push([s, surface(s)])
-      bot.push([s, surface(s) + 0.09])
+      bot.push([s, surface(s) + 0.12])
     }
     const shape = turn([...top, ...bot.reverse()], a, 0, 0, px, py)
-    poly(b, shape, c.tile)
+    part(b, shape, c.tile, mix(c.tileDeep, c.ink, 0.5), 0.03)
     const under = turn(bot.slice(0, n - 1).map(([s, y]) => [s, y - 0.035] as Pt), a, 0, 0, px, py)
     if (b.k > 20) {
       b.g.strokeStyle = c.tileShade
