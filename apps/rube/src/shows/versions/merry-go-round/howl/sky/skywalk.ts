@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { mixHex, R, type Pt, type Seg } from '../../../../../parts'
 import { alpha, box, carried, hash, part, type Company, type Ctx, type PartShot } from '../kit'
 import { beatsIn } from '../music'
-import { DIAL, TOWN } from '../worlds'
+import { DIAL, TOWN, WASTES } from '../worlds'
 import { drawPerched, drawPigeon, drawSoldier } from './figures'
 import { ALLEY_EXIT, BALCONY, barAt, ease, END, foot, HOP_OFF, howlWalk, LAND, LAND_AT, LIFT, NOON_BAR, pchip, RAIL_TOP, sophieWalk, STROKES, TOWER_X, W, walkBase } from './path'
 import { CAFE, G, LINE, lightAt, POTS, SQUARE, TOWER } from './set'
@@ -208,21 +208,24 @@ function lobe(p: p5, k: number, x: number, y: number, rx: number, ry: number, he
 function drawSmoke(p: p5, c: Ctx, t: number): void {
   const { k } = c
   const L = lightAt(t)
-  const smoke = L.tone(mixHex(TOWN.plaster, TOWN.slate, 0.2))
-  const shade = L.tone(mixHex(TOWN.plasterShade, TOWN.slate, 0.55))
+  // A pale cool grey, the clouds' white gone a little toward the slate: the plaster's warm cream read as a beige
+  // smear on the blue.
+  const smoke = L.tone(mixHex(WASTES.cloud, TOWN.slate, 0.16))
+  const shade = L.tone(mixHex(WASTES.cloud, TOWN.slate, 0.34))
   POTS.forEach(({ bar, at }, n) => {
     const [x, top] = at
     // The wisp: soft lobes drifting up and to the right, thinning.
     for (let i = 0; i < 4; i++) {
       const age = ((t * 0.4 + i / 4 + n * 0.37) % 1) * 3.4
       const r = 0.16 + 0.2 * age
-      const a = 0.42 * (1 - age / 3.4) * Math.min(1, age * 2.5)
+      const a = 0.34 * (1 - age / 3.4) * Math.min(1, age * 2.5)
       lobe(p, k, x + 0.2 * age + 0.07 * Math.sin(age * 2 + n), top - 0.12 - 0.45 * age, r, r * 0.85, smoke, a)
     }
     // The puff: on the downbeat a burst of smoke leaves the pots, lobe after lobe, and rises in a column that
-    // swells and leans off on the wind, thinning; the first lobe is the highest and the widest.
+    // swells and leans off on the wind, thinning; the first lobe is the highest and the widest. Once it has reached
+    // her foot it thins away as it rises on past her, so no dense blob is left hanging in the sky over a thin wisp.
     const since = t - W[bar]
-    if (since < 0 || since > 5) return
+    if (since < 0 || since > 3.2) return
     for (let j = 5; j >= 0; j--) {
       const a = since - j * 0.1
       if (a <= 0) continue
@@ -231,8 +234,8 @@ function drawSmoke(p: p5, c: Ctx, t: number): void {
       const y = top - 0.12 - rise
       const px = x + 0.22 * a + 0.06 * Math.sin(a * 3 + j) + (j % 2 ? 0.06 : -0.06)
       const r = 0.18 + 0.42 * (1 - Math.exp(-a / 0.9)) * (1 - j * 0.05)
-      const fade = 0.75 * Math.exp(-a / 1.6) * Math.min(1, a / 0.06)
-      lobe(p, k, px + r * 0.12, y + r * 0.14, r, r * 0.85, shade, 0.5 * fade)
+      const fade = 0.75 * Math.exp(-a / 0.8) * Math.min(1, a / 0.06)
+      lobe(p, k, px + r * 0.12, y + r * 0.14, r, r * 0.85, shade, 0.32 * fade)
       lobe(p, k, px - r * 0.08, y - r * 0.08, r * 0.9, r * 0.78, smoke, fade)
     }
   })

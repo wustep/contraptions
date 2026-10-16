@@ -1,8 +1,9 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
-import { alpha, hash } from '../kit'
+import { alpha, hash, smooth } from '../kit'
+import { HEART } from '../music'
 import { WASTES } from '../worlds'
-import { ground, LAND, YG } from './plank-rig'
+import { ground, LAND, T0, YG } from './plank-rig'
 
 /**
  * The land the plank crosses (the part's frame, cells): far mountains and moor hills behind (each moving slower
@@ -77,9 +78,95 @@ const mountains = (b: number) => YG - 0.9 - (1.3 + 1.5 * (0.5 + 0.5 * Math.sin(b
 const hills = (b: number) => YG - 0.35 - (0.7 + 1.0 * (0.5 + 0.5 * Math.sin(b * 0.15 + 2.1)) + 0.45 * Math.sin(b * 0.37 + 0.4) + 0.15 * Math.sin(b * 0.95 + 1.9))
 const nearHills = (b: number) => YG - 0.1 - (0.25 + 0.5 * (0.5 + 0.5 * Math.sin(b * 0.23 + 4.0)))
 
-/** The back of the scene: mountains, hills, the mist on the moor, and the gorge's far side. */
-export function drawBack(p: p5, k: number, W: number, ink: string, v: View): void {
+/**
+ * The grey morning after the war (sky cells, before the wind and the camera move them): long banks of overcast
+ * breaking up over the range, each two heaps of uneven size on a long soft underside, big and small side by side at
+ * heights in tiers, open sky between. Laid along the way the run sees them, never a row.
+ */
+const WEATHER: { x: number; y: number; w: number; s: number }[] = (() => {
+  const out: { x: number; y: number; w: number; s: number }[] = []
+  const SIZES = [11, 4.5, 8, 14, 6, 9.5]
+  const TIERS = [2.7, -2.2, 1.2, -4.4, 2.2, -0.9, 3.0, -3.1]
+  for (let i = 0; i < 14; i++) {
+    if (i % 6 === 4) continue
+    out.push({ x: -18 + i * 4.3 + (hash(i, 71) - 0.5) * 2, y: TIERS[i % TIERS.length] + 0.5 * hash(i, 72), w: SIZES[i % SIZES.length] * (0.85 + 0.3 * hash(i, 73)), s: i })
+  }
+  return out
+})()
+/** How far off the weather is (its share of the camera's travel), and the wind it rides against the run, cells a second. */
+const WEATHER_PAR = 0.06
+const WIND = 0.38
+const rgbOf = (hex: string): string => {
+  const n = parseInt(hex.slice(1, 7), 16)
+  return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`
+}
+function heap(ctx: CanvasRenderingContext2D, x: number, y: number, rx: number, ry: number, rgb: string, a: number): void {
+  if (a <= 0.004 || rx <= 0.01) return
+  ctx.save()
+  ctx.translate(x, y)
+  ctx.scale(1, ry / rx)
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx)
+  g.addColorStop(0, `rgba(${rgb}, ${a})`)
+  g.addColorStop(0.55, `rgba(${rgb}, ${a})`)
+  g.addColorStop(1, `rgba(${rgb}, 0)`)
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.arc(0, 0, rx, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.restore()
+}
+
+/**
+ * The weather over the range at `t`: the overcast drifting back against the run on the wind (so the sky goes by as
+ * the plank does), thinning as the morning clears after the climax, and its tops taking the sun's warmth once the
+ * heart is given. Behind the far range; soft volume, never outlined. Only in the close frames on the deck, where the
+ * sky is a band over them: in the wides the castle tearing apart has a plain sky behind it, never a scatter of puffs.
+ */
+function drawWeather(p: p5, k: number, t: number, v: View): void {
+  const near = 1 - smooth(v.x1 - v.x0, 22, 30)
+  if (near <= 0.01) return
+  const thin = near * (1 - 0.55 * smooth(t, 262, 286))
+  const warm = smooth(t, HEART, HEART + 6)
+  const lit = rgbOf(mixHex(mixHex(WASTES.cloud, WASTES.grey, 0.45), WASTES.gold, 0.25 * warm))
+  const under = rgbOf(mixHex(mixHex(WASTES.grey, WASTES.slate, 0.42), WASTES.rockDark, 0.12))
+  const shift = v.cx * (1 - WEATHER_PAR) - WIND * (t - T0)
+  const lift = (v.cy - EYE) * (1 - WEATHER_PAR) * 0.9
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  for (const cl of WEATHER) {
+    const cx = cl.x + shift
+    if (cx + cl.w < v.x0 - 1 || cx - cl.w > v.x1 + 1) continue
+    const base = cl.y + lift
+    if (base - cl.w * 0.4 > v.y1 + 1 || base < v.y0 - 1) continue
+    const a = thin * (0.62 + 0.25 * hash(cl.s, 74))
+    const n = Math.max(4, Math.round(cl.w / 1.1))
+    const p1 = 0.3 + 0.15 * hash(cl.s, 9)
+    const p2 = 0.62 + 0.18 * hash(cl.s, 10)
+    const h2 = 0.45 + 0.3 * hash(cl.s, 11)
+    const puffs: [number, number, number][] = []
+    for (let i = 0; i < n; i++) {
+      // Kept in from the ends, where the long underside alone carries it out: no tail of small beads.
+      const u = 0.12 + (0.76 * (i + 0.3 + 0.4 * hash(i, cl.s, 4))) / n
+      const bell = Math.max(Math.exp(-(((u - p1) / 0.2) ** 2)), h2 * Math.exp(-(((u - p2) / 0.16) ** 2)))
+      const r = cl.w * (0.06 + 0.07 * bell) * (0.75 + 0.5 * hash(i, cl.s))
+      const x = cx - cl.w / 2 + u * cl.w + (hash(i, cl.s, 2) - 0.5) * 0.4
+      puffs.push([x, base - r * (0.3 + 0.45 * bell) - 0.15 * hash(i, cl.s, 3), r])
+    }
+    // The underside: a long soft shadow, flatter than the heaps and thinning out at the ends.
+    for (let i = 0; i < n; i++) {
+      const u = (i + 0.5) / n
+      const end = Math.sin(Math.PI * u)
+      heap(ctx, (cx - cl.w / 2 + u * cl.w) * k, (base - 0.2) * k, (0.7 + 0.8 * end) * k, (0.25 + 0.25 * end) * k, under, 0.45 * end * a)
+    }
+    for (const [x, y, r] of puffs) heap(ctx, x * k, (y + r * 0.18) * k, 1.05 * r * k, 0.9 * r * k, under, 0.5 * a)
+    // The lit tops, a little up and to the left of each heap.
+    for (const [x, y, r] of puffs) heap(ctx, (x - r * 0.12) * k, (y - r * 0.2) * k, 0.92 * r * k, 0.78 * r * k, lit, 0.6 * a)
+  }
+}
+
+/** The back of the scene: the weather, mountains, hills, the mist on the moor, and the gorge's far side. */
+export function drawBack(p: p5, k: number, W: number, ink: string, v: View, t: number): void {
   const low = v.y1 + 2
+  drawWeather(p, k, t, v)
   layer(p, k, v, 0.1, mountains, low, FAR_MTN)
   layer(p, k, v, 0.35, hills, low, FAR_HILL, alpha(p, ink, 0.25).toString(), W * 0.5)
   layer(p, k, v, 0.6, nearHills, low, NEAR_HILL, alpha(p, ink, 0.35).toString(), W * 0.6)

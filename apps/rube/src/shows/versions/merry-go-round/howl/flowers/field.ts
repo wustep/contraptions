@@ -2017,28 +2017,32 @@ function drawHullClose(p: p5, k: number, W: number, ink: string, T: number, cx: 
   ctx.fill(glints)
   ctx.restore()
   p.pop()
-  // The war's light out of the door, on the plates round it and on the porch's boards.
+  // The war's light out of the door, as a pool on the porch's boards at its foot. Never on the plates round the
+  // doorway: the light goes out of the door, not along the wall it is set in.
   const L = warLight(T, c)
   if (L > 0.01) {
     const d = doorway(c, cx)
     const mx = (d.x0 + d.x1) / 2
-    const my = d.sill - d.h * 0.35
-    const g = ctx.createRadialGradient(mx * k, my * k, 0, mx * k, my * k, 2.6 * c.s * k)
+    const r = 1.5 * c.s
     const warm = mixHex(TOWN.ember, TOWN.fire, 0.35 + 0.3 * flicker(T))
-    g.addColorStop(0, alpha(p, warm, 0.34 * L).toString())
-    g.addColorStop(0.45, alpha(p, warm, 0.12 * L).toString())
-    g.addColorStop(1, alpha(p, warm, 0).toString())
     ctx.save()
+    ctx.translate(mx * k, (d.sill + 0.06) * k)
+    ctx.scale(1, 0.16)
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r * k)
+    g.addColorStop(0, alpha(p, warm, 0.45 * L).toString())
+    g.addColorStop(0.45, alpha(p, warm, 0.2 * L).toString())
+    g.addColorStop(1, alpha(p, warm, 0).toString())
     ctx.fillStyle = g
-    ctx.fillRect((mx - 2.8) * k, (my - 2.8) * k, 5.6 * k, (d.sill + 0.25 - (my - 2.8)) * k)
+    ctx.fillRect(-r * k, -r * k, 2 * r * k, 2 * r * k)
     ctx.restore()
   }
 }
 
 /**
- * The war's light on the lake: out of the open door it falls across the porch and the water toward us, a warm fan
- * on the lake, and the doorway's own red lies in the water under it as a long broken column, the ripples breaking
- * it into bars, longer and further apart the nearer they are; the stones she runs over catch it.
+ * The war's light on the lake: the doorway's own red lies in the water under it as a long broken column, the ripples
+ * breaking it into bars, longer and further apart the nearer they are; the stones she runs over catch it. No fan of
+ * light spread over the water toward us (its stepped layers read as a stage spot): water shows the door by
+ * reflection.
  */
 function drawWarOnWater(p: p5, k: number, f: Frame, T: number, c: CastleNow): void {
   const L = warLight(T, c)
@@ -2060,24 +2064,6 @@ function drawWarOnWater(p: p5, k: number, f: Frame, T: number, c: CastleNow): vo
   ctx.beginPath()
   ctx.rect(-1e5, wl * k, 2e5, 1e5)
   ctx.clip()
-  // The fan: from the doorway's width at the sill, spreading as it comes toward us, fading; feathered at its
-  // sides (a few widening layers, each fainter), so it is light on water and never a beam with edges.
-  const fanWarm = mixHex(TOWN.fire, FLOWERS.yellow, 0.15 + 0.15 * fl)
-  for (let i = 0; i < 5; i++) {
-    const spread = 1.2 + 0.55 * i
-    const fan = ctx.createLinearGradient(0, wl * k, 0, (wl + 2.8) * k)
-    fan.addColorStop(0, alpha(p, fanWarm, 0.17 * L).toString())
-    fan.addColorStop(0.5, alpha(p, fanWarm, 0.07 * L).toString())
-    fan.addColorStop(1, alpha(p, fanWarm, 0).toString())
-    ctx.fillStyle = fan
-    ctx.beginPath()
-    ctx.moveTo((d.x0 - 0.1 - 0.12 * i) * k, wl * k)
-    ctx.lineTo((d.x1 + 0.1 + 0.12 * i) * k, wl * k)
-    ctx.lineTo((d.x1 + spread) * k, (wl + 2.9) * k)
-    ctx.lineTo((d.x0 - spread) * k, (wl + 2.9) * k)
-    ctx.closePath()
-    ctx.fill()
-  }
   ctx.globalCompositeOperation = 'screen'
   // The column: the doorway's red lying in the water under it, a soft glow down the lake toward us, and on it the
   // ripples' glints, each its own length and offset, breaking up and scattering wider the nearer they are.

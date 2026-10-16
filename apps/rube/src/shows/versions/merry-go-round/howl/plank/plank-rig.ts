@@ -468,14 +468,14 @@ export function calciferAt(t: number): CalciferPose {
     const u = (t - FREE) / 2.6
     const w = howlAt(FREE)
     const at: Pt = [w[0] + 0.45 * Math.sin(u * 5) + 1.6 * u, w[1] - 0.25 - 7.5 * Math.pow(u, 1.35)]
-    return { ...base, at, size: 0.3 - 0.06 * Math.min(1, u), weak: 0, lean: -0.4 * Math.cos(u * 5), mouth: 0.7, look: [0.5, -1], star: Math.min(1, u) * 0.5 }
+    return { ...base, at, size: 0.36 - 0.04 * Math.min(1, u), weak: 0, lean: -0.4 * Math.cos(u * 5), mouth: 0.7, look: [0.5, -1], star: Math.min(1, u) * 0.5 }
   }
   const come = smooth(t, 284.4, 286.3)
   const fall = 1 - Math.pow(1 - come, 2)
   const spin = Math.max(0, t - 285.6)
   const loop = 0.26 * smooth(t, 285.6, 287)
   const at: Pt = [hv[0] + 0.3 * (1 - fall) + loop * Math.sin(spin * 2.2), hv[1] - 7 * (1 - fall) + loop * (1 - Math.cos(spin * 2.2)) * 0.6]
-  return { ...base, at, size: 0.24, weak: 0, lean: 0.3 * Math.cos(spin * 2.2), mouth: 0.4, look: [-0.6, 0.8], star: 1, shown: t > 284.2 }
+  return { ...base, at, size: 0.32, weak: 0, lean: 0.3 * Math.cos(spin * 2.2), mouth: 0.4, look: [-0.6, 0.8], star: 1, shown: t > 284.2 }
 }
 
 /* ------------------------------------------------------------------ the legs */

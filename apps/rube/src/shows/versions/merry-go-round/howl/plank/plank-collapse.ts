@@ -491,7 +491,6 @@ function wall(p: p5, k: number, W: number, ink: string, t: number) {
       ctx.fillStyle = g
       ctx.fillRect(X(cx - r), X(cy - r), X(2 * r), X(2 * r))
     }
-    glow(lx, ly + 0.3, 1.3, '255, 196, 120', 0.13 * w)
     glow((hx0 + hx1) / 2, -0.6, 3.4, '255, 150, 70', 0.3 * w)
     ctx.restore()
   }
