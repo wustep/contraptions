@@ -1,6 +1,6 @@
 import type { Pt } from '../../../../parts'
 import { R } from '../../../../parts'
-import { bar as beam, clamp, disc, easeIn, mix, poly, rect, rgba, smooth, turn, type Brush } from './brush'
+import { clamp, disc, easeIn, mix, part, poly, rect, rgba, smooth, timber, turn, type Brush } from './brush'
 import { GULLY, NORIA, SLING } from './geo'
 import { at } from './music'
 import { rainAt, stormAt, tones } from './look'
@@ -80,40 +80,42 @@ export function drawNoria(b: Brush, t: number): void {
   const c = tones(t)
   const { x, y, r, pots } = NORIA
   const a = wheelAngle(t)
-  const wood = mix(c.wood, c.ink, 0.15)
+  // Wet timber holds a little of the sky: lighter than the rock behind it.
+  const wood = mix(mix(c.wood, c.plaster, 0.3), c.skyLow, 0.15)
+  const ink = c.ink
   const g = b.g
-  // The axle's trestle, from the gully's west wall.
-  beam(b, x, y, x - 8.6, y - 3.5, mix(wood, c.ink, 0.2), 0.32)
-  beam(b, x, y, x + 8.2, y - 2.6, mix(wood, c.ink, 0.2), 0.32)
-  // The rim: two rings, and the spokes between them and the hub.
-  g.strokeStyle = wood
-  g.lineWidth = 0.24
-  g.beginPath()
-  g.arc(x, y, r, 0, Math.PI * 2)
-  g.stroke()
-  g.lineWidth = 0.14
-  g.beginPath()
-  g.arc(x, y, r - 0.55, 0, Math.PI * 2)
-  g.stroke()
-  g.lineWidth = 0.16
-  g.beginPath()
+  // The axle's trestle, from the gully's two walls.
+  timber(b, x, y, x - 8.6, y - 3.5, mix(wood, ink, 0.3), ink, 0.32)
+  timber(b, x, y, x + 8.2, y - 2.6, mix(wood, ink, 0.3), ink, 0.32)
+  // The rim: two rings, and the spokes between them and the hub; a line of ink round each.
+  const ring = (rr: number, w: number) => {
+    g.lineWidth = w + 0.07
+    g.strokeStyle = ink
+    g.beginPath()
+    g.arc(x, y, rr, 0, Math.PI * 2)
+    g.stroke()
+    g.lineWidth = w
+    g.strokeStyle = wood
+    g.stroke()
+  }
   for (let k = 0; k < 8; k++) {
     const s = a + (k * Math.PI) / 4
-    g.moveTo(x + Math.cos(s) * 0.6, y + Math.sin(s) * 0.6)
-    g.lineTo(x + Math.cos(s) * (r - 0.1), y + Math.sin(s) * (r - 0.1))
+    timber(b, x + Math.cos(s) * 0.6, y + Math.sin(s) * 0.6, x + Math.cos(s) * (r - 0.1), y + Math.sin(s) * (r - 0.1), mix(wood, ink, 0.12), ink, 0.15)
   }
-  g.stroke()
-  disc(b, x, y, 0.75, mix(wood, c.ink, 0.25))
+  ring(r, 0.26)
+  ring(r - 0.55, 0.14)
+  disc(b, x, y, 0.8, ink)
+  disc(b, x, y, 0.72, mix(wood, ink, 0.25))
   disc(b, x, y, 0.22, c.iron)
   // The pots: clay jars lashed to the rim, mouths leading, each full on the way up, empty on the way down.
-  const clay = mix(c.tile, c.stone, 0.25)
+  const clay = mix(mix(c.tile, c.stone, 0.15), c.plaster, 0.12)
   for (let k = 0; k < pots; k++) {
     const s = a + (k * Math.PI * 2) / pots
     const px = x + Math.cos(s) * (r + 0.3)
     const py = y + Math.sin(s) * (r + 0.3)
     // The jar's axis lies along the rim; its mouth leads, so it scoops at the bottom and spills past the top.
     const jar = turn([[-0.55, -0.32], [0.35, -0.38], [0.6, -0.22], [0.6, 0.22], [0.35, 0.38], [-0.55, 0.32]], s + Math.PI / 2, 0, 0, px, py)
-    poly(b, jar, clay)
+    part(b, jar, clay, ink, 0.035)
     const mouth = turn([[0.6, -0.24], [0.68, -0.24], [0.68, 0.24], [0.6, 0.24]], s + Math.PI / 2, 0, 0, px, py)
     poly(b, mouth, mix(clay, c.ink, 0.35))
     // Spilling at the top: a short fall of water out of the mouth.
@@ -140,30 +142,32 @@ export function drawNoria(b: Brush, t: number): void {
 export function drawSling(b: Brush, t: number): void {
   const c = tones(t)
   const [px, py] = SLING.pivot
-  const wood = mix(c.wood, c.ink, 0.1)
-  // The frame: legs down to the gully's east wall, a cross-tree at the pin.
-  beam(b, px, py, px + 2.4, py + 7.2, mix(wood, c.ink, 0.2), 0.24)
-  beam(b, px, py, px + 4.6, py + 4.6, mix(wood, c.ink, 0.2), 0.24)
-  beam(b, px + 1.2, py + 3.6, px + 3.6, py + 3.6, mix(wood, c.ink, 0.25), 0.16)
-  // The stop the arm is thrown against: a padded post.
+  const ink = c.ink
+  const wood = mix(mix(c.wood, c.plaster, 0.28), c.skyLow, 0.12)
+  // The frame: legs down to the gully's east wall, a cross-tree.
+  timber(b, px, py, px + 2.4, py + 7.2, mix(wood, ink, 0.3), ink, 0.26)
+  timber(b, px, py, px + 4.6, py + 4.6, mix(wood, ink, 0.3), ink, 0.26)
+  timber(b, px + 1.2, py + 3.6, px + 3.6, py + 3.6, mix(wood, ink, 0.35), ink, 0.18)
+  // The stop the arm is thrown against: a post with a pad of rope.
   const stop = [px + Math.cos(STOP) * 2.2, py + Math.sin(STOP) * 2.2]
-  beam(b, px + 0.2, py, stop[0] + 0.2, stop[1] + 0.1, mix(wood, c.ink, 0.25), 0.14)
+  timber(b, px + 0.25, py + 0.1, stop[0] + 0.25, stop[1] + 0.1, mix(wood, ink, 0.3), ink, 0.16)
   // The arm.
   const a = slingAngle(t)
   const tip: Pt = [px + Math.cos(a) * SLING.long, py + Math.sin(a) * SLING.long]
   const tail: Pt = [px - Math.cos(a) * SLING.short, py - Math.sin(a) * SLING.short]
-  beam(b, tail[0], tail[1], tip[0], tip[1], wood, 0.22, 'round')
-  // The spoon: a shallow cup at the tip.
-  const cup = turn([[-0.38, 0], [0.38, 0], [0.3, 0.2], [-0.3, 0.2]], a + Math.PI / 2, 0, 0, tip[0], tip[1] - 0.1)
-  poly(b, cup, mix(wood, c.ink, 0.25))
-  // The counterweight: a bucket hung from the short arm, filling.
+  // The counterweight: a bucket hung from the short arm, filling from the wheel's spill.
   const bx = tail[0]
-  const by = tail[1] + 0.4
-  poly(b, [[bx - 0.55, by], [bx + 0.55, by], [bx + 0.45, by + 1.1], [bx - 0.45, by + 1.1]], mix(wood, c.ink, 0.3))
+  const by = tail[1] + 0.45
+  timber(b, tail[0], tail[1], bx, by, c.iron, ink, 0.05)
+  part(b, [[bx - 0.62, by], [bx + 0.62, by], [bx + 0.5, by + 1.25], [bx - 0.5, by + 1.25]], mix(wood, ink, 0.25), ink, 0.04)
   const f = weightFull(t)
-  if (f > 0.02) rect(b, bx - 0.45, by + 1.05 - 0.95 * f, bx + 0.45, by + 1.05, mix(c.water, c.glass, 0.2))
-  beam(b, tail[0], tail[1], bx, by, c.iron, 0.05)
-  disc(b, px, py, 0.18, c.iron)
+  if (f > 0.02) rect(b, bx - 0.5, by + 1.2 - 1.05 * f, bx + 0.5, by + 1.2, mix(c.water, c.glass, 0.25))
+  for (const hy of [0.25, 0.95]) rect(b, bx - 0.6 + hy * 0.1, by + hy, bx + 0.6 - hy * 0.1, by + hy + 0.08, c.iron)
+  timber(b, tail[0], tail[1], tip[0], tip[1], wood, ink, 0.26, 'round')
+  // The spoon: a shallow cup at the tip.
+  const cup = turn([[-0.45, 0], [0.45, 0], [0.36, 0.24], [-0.36, 0.24]], a + Math.PI / 2, 0, 0, tip[0], tip[1] - 0.1)
+  part(b, cup, mix(wood, ink, 0.2), ink, 0.04)
+  disc(b, px, py, 0.2, c.iron)
 }
 
 export { rect }

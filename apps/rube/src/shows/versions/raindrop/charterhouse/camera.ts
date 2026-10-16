@@ -3,6 +3,8 @@ import type { Framing } from '../../../registry'
 import { lerp, smooth } from './brush'
 import { GATE, HAMMERS, NORIA, PIPE } from './geo'
 import { OVER } from './terraces'
+import { FIRE } from './noria'
+import { ON_ROOF } from './gate'
 import { Camera, blend, follow, glide, hold, smoothed, type Frame, type Shot } from './lens'
 import { FORM, at, bar } from './music'
 import { LOOK } from './show'
@@ -94,10 +96,27 @@ export function makeCamera(where: (t: number) => Pt, duration: number): (t: numb
         return f
       },
     },
-    // The wheel: the whole of it in the gully, closing a little as it climbs.
-    { from: bar(51), frame: glide(bar(51), bar(56), { x: NORIA.x + 1, y: NORIA.y - 2.5, cells: 22 }, { x: NORIA.x + 1.5, y: NORIA.y - 4, cells: 19 }) },
-    // Over the gully: the wheel, the gully, the gate across it.
-    { from: bar(56), frame: glide(bar(56), bar(60), { x: 166, y: 33, cells: 34 }, { x: 170, y: 32, cells: 28 }) },
+    // The wheel: the whole of it in the gully, then in on the pot with the ball as it climbs, the sling coming into
+    // the frame; held on the throw; then after the ball across the gully, and down onto the gate.
+    {
+      from: bar(51),
+      frame: (t) => {
+        const whole = { x: NORIA.x + 1, y: NORIA.y - 2.5, cells: 21 }
+        const [bx, by] = smoothed(where, t, 0.9, 0)
+        const climb = { x: lerp(bx + 1.6, 155.6, smooth(t, at(55, 0), FIRE - 0.3)), y: lerp(by + 1.2, 35.4, smooth(t, at(55, 0), FIRE - 0.3)), cells: lerp(14, 12.5, smooth(t, at(54, 0), FIRE)) }
+        const u = smooth(t, at(52, 2), at(54, 0))
+        let f = { x: lerp(whole.x, climb.x, u), y: lerp(whole.y, climb.y, u), cells: lerp(whole.cells, climb.cells, u) }
+        if (t > FIRE) {
+          const [fx, fy] = smoothed(where, t, 0.25, 0.04)
+          const fly = { x: fx + 2.5, y: fy + 1.5, cells: lerp(12.5, 17, smooth(t, FIRE, ON_ROOF)) }
+          const gate = { x: 172.5, y: 31.2, cells: 17 }
+          const v = smooth(t, FIRE, FIRE + 0.35)
+          const w = smooth(t, ON_ROOF + 0.2, at(57, 2))
+          f = { x: lerp(lerp(f.x, fly.x, v), gate.x, w), y: lerp(lerp(f.y, fly.y, v), gate.y, w), cells: lerp(lerp(f.cells, fly.cells, v), gate.cells, w) }
+        }
+        return f
+      },
+    },
     // The lantern.
     { from: bar(60), frame: glide(bar(60), bar(64), { x: 177, y: 31.5, cells: 13 }, { x: 177.5, y: 31.2, cells: 12 }) },
     // The bell: the gable over the door.

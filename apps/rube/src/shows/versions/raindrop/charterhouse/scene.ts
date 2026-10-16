@@ -74,7 +74,7 @@ export function scenery(duration: number): Placed[] {
       drawing('cell', (b, t) => {
         drawRoof(b, t)
         drawWall(b, t)
-        drawWindow(b, t, { lean: 0.04 * Math.sin(t * 1.7) + 0.02 * Math.sin(t * 0.63), home: smooth(t, bar(84), bar(86)) })
+        drawWindow(b, t, { lean: 0.04 * Math.sin(t * 1.7) + 0.02 * Math.sin(t * 0.63), her: smooth(t, bar(84), bar(85) + 0.6), boy: smooth(t, bar(84) + 1.4, bar(86)), touch: smooth(t, bar(86), bar(87)) })
         drawDoor(b, t)
         drawGutterBack(b, t)
         drawLever(b, t)

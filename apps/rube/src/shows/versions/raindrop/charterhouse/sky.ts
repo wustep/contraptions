@@ -128,6 +128,26 @@ export function drawSky(b: Brush, t: number): void {
 
   moon(b, v, t, mix('#E9E4D2', c.skyLow, 0.15))
 
+  // The rain's own cloud, near and everywhere: faint long bands drifting with the wind, so even a close shot's
+  // patch of sky is weather and not a flat wall. Fixed to the frame, as something so far off and so wide is.
+  const storm0 = clamp(stormAt(t))
+  const night0 = clamp(nightAt(t))
+  const H = v.y1 - v.y0
+  const W = v.x1 - v.x0
+  const g0 = b.g
+  g0.fillStyle = rgba(mix(c.cloudLow, c.skyLow, 0.3), 0.05 + 0.05 * storm0 - 0.04 * night0)
+  g0.beginPath()
+  for (let i = 0; i < 9; i++) {
+    const u = (hash(i, 201) + t * (0.004 + 0.006 * storm0) * (0.7 + hash(i, 202) * 0.6)) % 1.4 - 0.2
+    const x = v.x0 + u * W
+    const y = v.y0 + (0.05 + hash(i, 203) * 0.55) * H
+    const w = (0.25 + hash(i, 204) * 0.35) * W
+    const h = (0.012 + hash(i, 205) * 0.02) * H
+    g0.moveTo(x + w / 2, y)
+    g0.ellipse(x, y, w / 2, h, 0, 0, Math.PI * 2)
+  }
+  g0.fill()
+
   // The cloud deck: low and heavy in the storm, breaking up in the clear night.
   const storm = clamp(stormAt(t))
   const night = clamp(nightAt(t))

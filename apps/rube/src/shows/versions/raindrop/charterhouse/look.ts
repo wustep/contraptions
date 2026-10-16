@@ -105,7 +105,7 @@ export function tones(t: number): Palette {
       continue
     }
     const dusk = mix(base, STORM_TO, fade)
-    const storm = key in SKY.storm ? SKY.storm[key as keyof typeof SKY.storm] : mix(base, STORM_TO, 0.58)
+    const storm = key in SKY.storm ? SKY.storm[key as keyof typeof SKY.storm] : mix(base, STORM_TO, 0.5)
     const night = key in SKY.night ? SKY.night[key as keyof typeof SKY.night] : mix(base, NIGHT_TO, 0.5)
     // The storm and the night share the dark; the night is what is left when the storm goes over.
     out[key] = mix(mix(dusk, storm, s), night, n * (1 - s))

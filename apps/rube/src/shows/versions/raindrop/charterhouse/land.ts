@@ -303,15 +303,15 @@ export function drawGully(b: Brush, t: number): void {
   const c = tones(t)
   const rock = mix(c.stone, c.ink, 0.42)
   const rockLit = mix(c.stone, c.ink, 0.25)
-  // Ledges: a few flat facets on each wall, a shade lighter where they face up.
+  // Ledges: a few flat facets on each wall, a shade lighter where they face up, just under the wall's face.
   const g = b.g
   g.fillStyle = rockLit
-  for (let i = 0; i < 9; i++) {
+  for (let i = 0; i < 10; i++) {
     const side = i % 2
-    const y = 30 + i * 1.9
-    const x = side ? GULLY.x1 - 1 - (y - 34) * 0.32 : GULLY.x0 + 0.6 + (y - 28) * 0.36
-    const w = 2 + hash(i, 9) * 2
-    g.fillRect(side ? x - w : x, y, w, 0.35)
+    const x = side ? GULLY.mid + 1.5 + (i / 10) * 9 : GULLY.mid - 1.5 - (i / 10) * 10
+    const y = groundY(x) + 0.6 + hash(i, 9) * 1.2
+    const w = 1.2 + hash(i, 10) * 1.6
+    g.fillRect(side ? x : x - w, y, w, 0.3)
   }
   // The walls' faces, under the profile, with cracks.
   g.strokeStyle = rgba(rock, 0.9)

@@ -1,5 +1,5 @@
 import type { Pt } from '../../../../parts'
-import { arc, bar, disc, hash, line, mix, poly, rect, rgba, stroke, type Brush } from './brush'
+import { arc, bar, disc, easeOut, hash, lerp, line, mix, poly, rect, rgba, stroke, type Brush } from './brush'
 import { GUTTER, HOUSE, PIPE, gutterY } from './geo'
 import { tones, type Palette } from './look'
 
@@ -114,8 +114,12 @@ export function drawEave(b: Brush, t: number): void {
 export interface Room {
   /** How far through a sway the one at the piano is (radians of lean). */
   lean: number
-  /** 0 to 1: the two who were out are home, standing by him. */
-  home: number
+  /** 0 to 1: she comes in from the room's door, off to the right, to stand behind him. */
+  her: number
+  /** 0 to 1: the boy comes in after her, to the window's right edge. */
+  boy: number
+  /** 0 to 1: her hand on his shoulder; he leans back to her. */
+  touch: number
 }
 
 export function drawWindow(b: Brush, t: number, room: Room): void {
@@ -140,27 +144,51 @@ export function drawWindow(b: Brush, t: number, room: Room): void {
   const cx = px1 - 0.35
   rect(b, cx - 0.04, top - 0.42, cx + 0.04, top - 0.12, '#E9DFC8')
   disc(b, cx, top - 0.52, 0.07, c.flame)
-  // Him, at the keys: head and shoulders, leaning into it.
-  const sx = w.x0 + 1.25
+  // The figures stay inside the window: whoever comes in from the right comes in past its frame.
+  g.save()
+  g.beginPath()
+  g.rect(w.x0, w.y0, w.x1 - w.x0, w.y1 - w.y0)
+  g.clip()
+  const dark = '#22160F'
+  // Him, at the keys: head and shoulders, leaning into it; at the end, back toward her.
+  const sx = w.x0 + 1.0
   const sy = w.y1 - 1.2
   g.save()
   g.translate(sx, sy + 0.9)
-  g.rotate(room.lean)
-  const dark = '#22160F'
+  g.rotate(room.lean * (1 - room.touch) + 0.13 * room.touch)
   poly(b, [[-0.5, 0], [-0.42, -0.72], [-0.2, -0.95], [0.22, -0.95], [0.4, -0.7], [0.48, 0]], dark)
   disc(b, 0.02, -1.22, 0.27, dark)
   g.restore()
-  // Her and the boy, home: standing behind him, nearer the window.
-  if (room.home > 0) {
-    g.globalAlpha = room.home
-    const hx = w.x1 - 0.95
-    poly(b, [[hx - 0.55, w.y1], [hx - 0.38, w.y1 - 2.2], [hx - 0.18, w.y1 - 2.55], [hx + 0.2, w.y1 - 2.55], [hx + 0.38, w.y1 - 2.2], [hx + 0.6, w.y1]], dark)
-    disc(b, hx, w.y1 - 2.85, 0.26, dark)
-    const bx = w.x0 + 2.25
-    poly(b, [[bx - 0.36, w.y1], [bx - 0.3, w.y1 - 1.55], [bx - 0.12, w.y1 - 1.78], [bx + 0.14, w.y1 - 1.78], [bx + 0.3, w.y1 - 1.55], [bx + 0.36, w.y1]], dark)
-    disc(b, bx, w.y1 - 2.02, 0.22, dark)
-    g.globalAlpha = 1
+  // Her: in from the right to stand behind him, bending to him.
+  if (room.her > 0) {
+    const hx = lerp(w.x1 + 1.3, w.x0 + 1.95, easeOut(room.her))
+    const foot = w.y1 + 0.4
+    const bend = -0.09 * room.touch
+    g.save()
+    g.translate(hx, foot)
+    g.rotate(bend)
+    poly(b, [[-0.62, 0], [-0.4, -2.35], [-0.2, -2.72], [0.22, -2.72], [0.42, -2.35], [0.66, 0]], dark)
+    disc(b, -0.02, -3.05, 0.27, dark)
+    g.restore()
+    if (room.touch > 0) {
+      // Her arm down to his shoulder.
+      g.strokeStyle = dark
+      g.lineWidth = 0.17
+      g.lineCap = 'round'
+      g.beginPath()
+      g.moveTo(hx - 0.3, foot - 2.45)
+      g.lineTo(lerp(hx - 0.3, sx + 0.35, room.touch), lerp(foot - 2.45, sy + 0.05, room.touch))
+      g.stroke()
+    }
   }
+  // The boy: in after her, at the window's edge.
+  if (room.boy > 0) {
+    const bx = lerp(w.x1 + 1.4, w.x1 - 0.42, easeOut(room.boy))
+    const foot = w.y1 + 0.4
+    poly(b, [[bx - 0.42, foot], [bx - 0.34, foot - 1.95], [bx - 0.14, foot - 2.2], [bx + 0.16, foot - 2.2], [bx + 0.34, foot - 1.95], [bx + 0.42, foot]], dark)
+    disc(b, bx, foot - 2.45, 0.23, dark)
+  }
+  g.restore()
   // The casement: two leaves of small panes; the glass between keeps a little of the night on it.
   const frameC = mix(c.wood, c.ink, 0.25)
   const mid = (w.x0 + w.x1) / 2
