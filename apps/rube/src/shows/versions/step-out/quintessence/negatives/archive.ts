@@ -7,7 +7,8 @@ import { GLASS, TUBE } from './plan'
  * The archive behind the light table (the B1 builder's): aisles of steel shelving going back into the dark, on
  * three planes, with film cans and labelled boxes on them (flat tones, no lettering), a rolling ladder, the far
  * aisle's end with its green exit sign over a door, and high on the back wall a window at street level, the city's
- * daylight coming in through its grating. In front of them, strips of negatives hang drying on lines.
+ * daylight coming in through its grating and lying on the wall under it. In front of them, strips of negatives hang
+ * drying on a line, a small picture in every frame.
  *
  * The room is lit by the table's spill and nothing else, so the archive is barely there: a can's rim, a box's edge.
  * When the tubes strike and stutter, their flashes light the whole room, and the aisles stand out of the dark for a
@@ -275,9 +276,8 @@ const dayAt = (t: number): number => (0.55 + 0.45 * Math.min(1, t / 4)) * (1 - 0
 
 /* ------------------------------------------------------------------ the street outside */
 
-/** Who passes the window, and when: a pair of feet every few seconds, from either side; a car now and then. */
+/** Who passes the window, and when: a pair of feet every few seconds, from either side. */
 const WALKER = 3.1
-const CAR = 7.3
 
 /** The window high on the back wall (far plane cells). */
 export const WINDOW = { x0: 2.95, x1: 3.85, y0: -1.9, y1: -1.74 }
@@ -335,11 +335,8 @@ function drawWindow(ctx: C2, k: number, t: number): void {
   ctx.restore()
 }
 
-/**
- * The window's light into the room: a shaft down the back of the archive, dimmed as feet cross it, and now and then
- * a passing car's glass throws a bright band that sweeps along the back wall.
- */
-function windowLight(ctx: C2, k: number, t: number, inner: View): void {
+/** The window's light into the room: laid on the back wall and the plan chest under it, dimmed as feet cross it. */
+function windowLight(ctx: C2, k: number, t: number): void {
   const { x0, x1, y1 } = WINDOW
   const day = dayAt(t)
   // Feet in the window dim its light a little as they cross it.
@@ -351,8 +348,6 @@ function windowLight(ctx: C2, k: number, t: number, inner: View): void {
     if (u > 0.15 && u < 0.85) shade = Math.max(shade, Math.sin(Math.PI * (u - 0.15) / 0.7))
   }
   const a = 0.05 * day * (1 - 0.35 * shade)
-  ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
   const g = ctx.createLinearGradient(0, y1 * k, 0, 0.6 * k)
   g.addColorStop(0, rgba('#A9C2C4', a))
   g.addColorStop(1, rgba('#A9C2C4', 0))
@@ -364,46 +359,14 @@ function windowLight(ctx: C2, k: number, t: number, inner: View): void {
   ctx.lineTo((x0 - 1.6) * k, 0.6 * k)
   ctx.closePath()
   ctx.fill()
-  // A car going by: the sun off its glass, a band of light swept along the back wall, right to left.
-  const n = Math.floor(t / CAR)
-  const s = t - n * CAR - 1.5 - hash(n, 5, 78) * 2.5
-  if (s > 0 && s < 1.1) {
-    const u = s / 1.1
-    const bx = inner.x1 + 0.6 - (inner.w + 1.8) * u
-    const b = 0.09 * Math.sin(Math.PI * u) * day
-    const band = ctx.createLinearGradient((bx - 0.5) * k, 0, (bx + 0.5) * k, 0)
-    band.addColorStop(0, rgba('#CFE0DE', 0))
-    band.addColorStop(0.5, rgba('#CFE0DE', b))
-    band.addColorStop(1, rgba('#CFE0DE', 0))
-    ctx.fillStyle = band
-    ctx.beginPath()
-    ctx.moveTo((bx - 0.3) * k, -2.5 * k)
-    ctx.lineTo((bx + 0.5) * k, -2.5 * k)
-    ctx.lineTo((bx + 0.1) * k, 0.8 * k)
-    ctx.lineTo((bx - 0.7) * k, 0.8 * k)
-    ctx.closePath()
-    ctx.fill()
-  }
-  ctx.restore()
 }
 
 /** The exit sign over the far door: green, small, the only colour in the room besides the people. */
 const EXIT = { x0: 0.81, x1: 1.02, y0: -1.62, y1: -1.55 }
 function exitSign(ctx: C2, k: number): void {
-  const cx = (EXIT.x0 + EXIT.x1) / 2
-  const cy = (EXIT.y0 + EXIT.y1) / 2
-  ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
-  for (const [r, a] of [[0.34, 0.025], [0.2, 0.035], [0.11, 0.05]] as const) {
-    ctx.fillStyle = rgba('#2F9E6A', a)
-    ctx.beginPath()
-    ctx.ellipse(cx * k, cy * k, r * 1.5 * k, r * k, 0, 0, Math.PI * 2)
-    ctx.fill()
-  }
   // Its light on the door's head and down the frame.
   ctx.fillStyle = rgba('#2F9E6A', 0.04)
   ctx.fillRect(0.65 * k, -1.45 * k, 0.52 * k, 0.6 * k)
-  ctx.restore()
   ctx.fillStyle = '#123224'
   ctx.fillRect((EXIT.x0 - 0.012) * k, (EXIT.y0 - 0.012) * k, (EXIT.x1 - EXIT.x0 + 0.024) * k, (EXIT.y1 - EXIT.y0 + 0.024) * k)
   ctx.fillStyle = '#62D49C'
@@ -420,8 +383,10 @@ const LINE_Y = -2.2
 /** Where the line runs from and to: hooked between the enlarger and the door. */
 const LINE: [number, number] = [0.0, 6.6]
 const HANGING: [number, number, number][] = [
-  // [x, length, seed]: between the enlarger and the door, clear of the window and the exit where the camera goes.
+  // [x, length, seed]: between the enlarger and the door.
   [0.5, 1.4, 3],
+  [2.05, 1.2, 7],
+  [3.3, 0.55, 9],
   [6.0, 1.45, 5],
   [6.42, 1.3, 6],
 ]
@@ -450,13 +415,28 @@ function drawStrips(ctx: C2, k: number, t: number, light: number, flash: number)
     ctx.fillRect(-w / 2, 0.05, w, len)
     const fr = new Path2D()
     const ho = new Path2D()
-    for (let f = 0.12; f + 0.22 < len; f += 0.26) fr.rect(-w / 2 + 0.05, f, w - 0.1, 0.22)
+    // In each frame a picture, small and reversed: a horizon, and something standing on it.
+    const clear = new Path2D()
+    const dense = new Path2D()
+    const fw = w - 0.1
+    for (let f = 0.12, i = 0; f + 0.22 < len; f += 0.26, i++) {
+      fr.rect(-w / 2 + 0.05, f, fw, 0.22)
+      const hz = f + 0.22 * (0.3 + 0.45 * hash(i, seed, 91))
+      clear.rect(-w / 2 + 0.05, hz, fw, f + 0.22 - hz)
+      const bw = fw * (0.14 + 0.22 * hash(i, seed, 93))
+      const bh = 0.22 * (0.15 + 0.35 * hash(i, seed, 94))
+      dense.rect(-w / 2 + 0.05 + (fw - bw) * hash(i, seed, 92), hz - bh, bw, bh)
+    }
     for (let f = 0.08; f < len; f += 0.065) {
       ho.rect(-w / 2 + 0.012, f, 0.022, 0.03)
       ho.rect(w / 2 - 0.034, f, 0.022, 0.03)
     }
     ctx.fillStyle = frame
     ctx.fill(fr)
+    ctx.fillStyle = mix(frame, holes, 0.45)
+    ctx.fill(clear)
+    ctx.fillStyle = base
+    ctx.fill(dense)
     ctx.fillStyle = holes
     ctx.fill(ho)
     // The clip it hangs by.
@@ -527,7 +507,7 @@ export function archiveLights(ctx: C2, v: View, t: number, light: number): void 
     ctx.beginPath()
     ctx.rect((inner.x0 - 1) * k, (inner.y0 - 1) * k, (inner.w + 2) * k, (glass - inner.y0 + 1) * k)
     ctx.clip()
-    windowLight(ctx, k, t, inner)
+    windowLight(ctx, k, t)
     ctx.restore()
   })
   // The strips hang in front of the window, so they come after it, dark till the light finds them.

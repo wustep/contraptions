@@ -1,20 +1,18 @@
 import { scenery } from '../kit'
-import { glow, layer, motes, rgbaOf, view, type View } from '../depth'
-import { revealAt } from './archive'
+import { layer, motes, rgbaOf, view, type View } from '../depth'
 import { lampAt, tubeAt } from './draw'
-import { clamp01, knock, ramp } from './hand'
-import { DOOR, ENLARGER, GLASS, LAMP, LIP, NUUK, OFFICE, PICTURE, RAPS } from './plan'
+import { clamp01 } from './hand'
+import { ENLARGER, GLASS, LAMP, NUUK, PICTURE } from './plan'
 
 /**
  * What stands between the camera and the machine in this place, and the light over all of it: the near plane, the
  * air, the grade. Drawn after the set and the parts and before Walter (`depth.ts`), so nothing here hides him or
  * changes his colour. It is handed show time as `t`.
  *
- * The room's air: dust going up through the table's glow, warm close to it and cool above, flaring with the tubes
- * when they strike; the table's bloom; the corridor's light through the frosted door; the enlarger's cone, full of
- * dust, once its lamp is on. Nearest of all, out of focus along the bottom of the frame, the desk's edge and what is
- * left on it: a reel, the loupe's case, a roll of tape. Over everything, a cold teal and the frame's edges falling
- * away.
+ * The room's air: a little dust going up slowly through the table's light, warm close to the glass and cool above
+ * it; the enlarger's throw, faint, once its lamp is on. Nearest of all, out of focus along the bottom of the frame,
+ * the desk's edge and what is left on it: a reel, a mug, a short stack of cans. Over everything, a cold teal and the
+ * top of the frame falling away into the dark.
  */
 
 type C2 = CanvasRenderingContext2D
@@ -24,93 +22,42 @@ const REF = 3.4
 
 /* ------------------------------------------------------------------ the air */
 
-function air(ctx: C2, v: View, t: number, light: number, flash: number): void {
-  // Warm dust, rising slowly through the table's light (which the eye finds before the tubes are fully up).
+function air(ctx: C2, v: View, t: number, light: number): void {
+  // A few motes going up slowly through the table's light: warm close to the glass, cooler higher up. They come up
+  // with the tubes, on an eased curve of their light, as the eye finds them.
   const eased = 1 - (1 - light) * (1 - light)
-  const warm = 0.6 * eased + 0.5 * flash
-  if (warm > 0.02) {
-    ctx.save()
-    ctx.globalAlpha = clamp01(warm)
-    motes(ctx, v, t, {
-      n: 34,
-      seed: 3,
-      tile: [2.6, 1.9],
-      r: [0.006, 0.014],
-      v: [0.02, -0.07],
-      spread: 0.5,
-      sway: [0.05, 0.13],
-      color: 'rgba(255, 236, 206, 0.55)',
-      twinkle: 0.6,
-      within: { x0: GLASS.x0 - 0.6, y0: GLASS.top - 1.6, x1: GLASS.x1 + 0.6, y1: GLASS.top + 0.05 },
-    })
-    ctx.restore()
-  }
-  // Cooler dust higher up, in the tubes' light, and through the whole room when they flash.
-  const cool = 0.4 * eased + 0.65 * flash
-  if (cool > 0.02) {
-    ctx.save()
-    ctx.globalAlpha = clamp01(cool)
-    motes(ctx, v, t, {
-      n: 34,
-      seed: 4,
-      tile: [3.1, 2.3],
-      r: [0.005, 0.012],
-      v: [-0.03, -0.035],
-      spread: 0.6,
-      sway: [0.06, 0.09],
-      color: 'rgba(196, 222, 222, 0.45)',
-      twinkle: 0.5,
-      within: flash > 0.2 ? { x0: v.x0, y0: v.y0, x1: v.x1, y1: GLASS.top - 0.6 } : { x0: GLASS.x0 - 1.2, y0: GLASS.top - 3.2, x1: GLASS.x1 + 1.2, y1: GLASS.top - 0.6 },
-    })
-    ctx.restore()
-  }
+  if (eased <= 0.02) return
+  ctx.save()
+  ctx.globalAlpha = clamp01(0.6 * eased)
+  motes(ctx, v, t, {
+    n: 8,
+    seed: 3,
+    tile: [2.6, 1.9],
+    r: [0.006, 0.013],
+    v: [0.02, -0.06],
+    spread: 0.5,
+    sway: [0.05, 0.13],
+    color: 'rgba(255, 236, 206, 0.5)',
+    within: { x0: GLASS.x0 - 0.6, y0: GLASS.top - 1.6, x1: GLASS.x1 + 0.6, y1: GLASS.top + 0.05 },
+  })
+  ctx.globalAlpha = clamp01(0.4 * eased)
+  motes(ctx, v, t, {
+    n: 5,
+    seed: 4,
+    tile: [3.1, 2.3],
+    r: [0.005, 0.011],
+    v: [-0.03, -0.03],
+    spread: 0.6,
+    sway: [0.06, 0.09],
+    color: 'rgba(196, 222, 222, 0.4)',
+    within: { x0: GLASS.x0 - 1.2, y0: GLASS.top - 3.2, x1: GLASS.x1 + 1.2, y1: GLASS.top - 0.6 },
+  })
+  ctx.restore()
 }
 
 /* ------------------------------------------------------------------ the light */
 
-/** The table's bloom: its light lifting off the glass into the dark above it. */
-function bloom(ctx: C2, k: number, light: number): void {
-  if (light <= 0.02) return
-  const top = GLASS.top - 0.08
-  ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
-  const g = ctx.createLinearGradient(0, top * k, 0, (top - 0.45) * k)
-  g.addColorStop(0, rgbaOf('#FFE9C8', 0.16 * light))
-  g.addColorStop(0.35, rgbaOf('#FFE9C8', 0.05 * light))
-  g.addColorStop(1, rgbaOf('#FFE9C8', 0))
-  ctx.fillStyle = g
-  ctx.fillRect((GLASS.x0 - 0.2) * k, (top - 0.45) * k, (GLASS.x1 - GLASS.x0 + 0.4) * k, 0.45 * k)
-  ctx.restore()
-}
-
-/** The corridor's light through the frosted door, into the room: a glow on the pane and a fall of light below it. */
-function corridor(ctx: C2, k: number, t: number): void {
-  const { pane } = DOOR
-  const lit = 0.5 + 0.5 * ramp(t, OFFICE - 0.5, OFFICE + 0.2)
-  // Ted's shape on the glass takes some of it; the raps shake it.
-  const ted = ramp(t, RAPS[0] - 0.75, RAPS[0] - 0.4) * (1 - ramp(t, RAPS[1] + 0.35, RAPS[1] + 0.95))
-  const rap = RAPS.reduce((s, r) => s + knock(t, r, 0.07), 0)
-  const a = lit * (1 - 0.35 * ted) * (1 + 0.25 * Math.min(1, rap))
-  const cx = (pane.x0 + pane.x1) / 2
-  const cy = (pane.y0 + pane.y1) / 2
-  glow(ctx, k, cx, cy, 1.15, '#D6E4E2', 0.09 * a, true, 1.2)
-  ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
-  const g = ctx.createLinearGradient(0, pane.y1 * k, 0, (LIP + 0.5) * k)
-  g.addColorStop(0, rgbaOf('#CFDEDC', 0.07 * a))
-  g.addColorStop(1, rgbaOf('#CFDEDC', 0))
-  ctx.fillStyle = g
-  ctx.beginPath()
-  ctx.moveTo(pane.x0 * k, pane.y1 * k)
-  ctx.lineTo(pane.x1 * k, pane.y1 * k)
-  ctx.lineTo((pane.x1 - 0.2) * k, (LIP + 0.5) * k)
-  ctx.lineTo((pane.x0 - 0.9) * k, (LIP + 0.5) * k)
-  ctx.closePath()
-  ctx.fill()
-  ctx.restore()
-}
-
-/** The enlarger's cone, once its lamp is on: from the lens to the picture, brightest at the lens, full of dust. */
+/** The enlarger's throw, once its lamp is on: a faint wedge from the lens to the picture, a few motes turning in it. */
 function cone(ctx: C2, v: View, t: number): void {
   const on = lampAt(t)
   if (on <= 0) return
@@ -124,25 +71,21 @@ function cone(ctx: C2, v: View, t: number): void {
   beam.lineTo((lx + 0.04) * k, (ly + 0.06) * k)
   beam.closePath()
   ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
-  const g = ctx.createRadialGradient(lx * k, ly * k, 0, lx * k, ly * k, 4.2 * k)
-  g.addColorStop(0, rgbaOf('#F4F2EA', 0.16 * on))
-  g.addColorStop(0.3, rgbaOf('#F4F2EA', 0.05 * on))
-  g.addColorStop(1, rgbaOf('#F4F2EA', 0))
+  const g = ctx.createLinearGradient(lx * k, 0, x1 * k, 0)
+  g.addColorStop(0, rgbaOf('#F4F2EA', 0.07 * on))
+  g.addColorStop(1, rgbaOf('#F4F2EA', 0.015 * on))
   ctx.fillStyle = g
   ctx.fill(beam)
   ctx.clip(beam)
-  // Dust turning over in the beam, catching its light.
   motes(ctx, v, t, {
-    n: 40,
+    n: 12,
     seed: 9,
     tile: [2.4, 1.6],
-    r: [0.006, 0.016],
+    r: [0.006, 0.014],
     v: [0.035, -0.02],
     spread: 0.7,
     sway: [0.05, 0.17],
-    color: rgbaOf('#FFF7E6', 0.55 * on),
-    twinkle: 0.7,
+    color: rgbaOf('#FFF7E6', 0.45 * on),
     within: { x0: lx, y0: y0, x1: x1, y1: y1 },
   })
   ctx.restore()
@@ -164,10 +107,10 @@ function softDisc(ctx: C2, x: number, y: number, r: number, hex: string, a: numb
 
 /** What is on the desk nearest the camera, in its own plane's cells: [kind, x]. */
 const NEAR_THINGS: [string, number][] = [
-  ['loupe', -5.8],
+  ['cans', -5.8],
   ['reel', -1.9],
-  ['loupe', 2.25],
-  ['tape', 6.7],
+  ['mug', 2.25],
+  ['cans', 6.7],
   ['reel', 10.6],
 ]
 const DESK = 1.1
@@ -210,40 +153,72 @@ function nearPlane(ctx: C2, v: View, light: number): void {
         ctx.beginPath()
         ctx.arc(x * k, cy * k, r * 0.88 * k, -2.5, -0.9)
         ctx.stroke()
-      } else if (kind === 'loupe') {
-        // The loupe stood on the desk, out of focus: a soft black body, and its lens's rim a ring of the table's light.
-        const top = DESK - 0.26
-        ctx.save()
-        ctx.translate(x * k, (DESK - 0.13) * k)
-        ctx.scale(1, 0.75)
-        softDisc(ctx, 0, 0, 0.2, '#0B0E0F', 0.95, k)
-        ctx.restore()
-        ctx.save()
-        ctx.translate(x * k, top * k)
-        ctx.scale(1, 0.32)
-        const rim = ctx.createRadialGradient(0, 0, 0.06 * k, 0, 0, 0.2 * k)
-        rim.addColorStop(0, rgbaOf('#A69D86', 0))
-        rim.addColorStop(0.6, rgbaOf('#C8BFA6', 0.3 * lit))
-        rim.addColorStop(1, rgbaOf('#A69D86', 0))
-        ctx.fillStyle = rim
-        ctx.fillRect(-0.2 * k, -0.2 * k, 0.4 * k, 0.4 * k)
-        ctx.restore()
-      } else {
-        // Cans lying flat in a short stack, out of focus: soft dark discs edge-on, their rims lit.
-        for (let i = 0; i < 3; i++) {
-          const cy = DESK - 0.05 - i * 0.075
-          ctx.save()
-          ctx.translate((x + i * 0.03) * k, cy * k)
-          ctx.scale(1, 0.16)
-          softDisc(ctx, 0, 0, 0.36, '#0D1011', 0.95, k)
-          ctx.restore()
-          const g2 = ctx.createLinearGradient(0, (cy - 0.03) * k, 0, (cy + 0.01) * k)
-          g2.addColorStop(0, rgbaOf('#7E7666', 0))
-          g2.addColorStop(0.5, rgbaOf('#7E7666', 0.16 * lit))
-          g2.addColorStop(1, rgbaOf('#7E7666', 0))
-          ctx.fillStyle = g2
-          ctx.fillRect((x + i * 0.03 - 0.3) * k, (cy - 0.03) * k, 0.6 * k, 0.04 * k)
+      } else if (kind === 'mug') {
+        // A mug left on the desk, out of focus: its dark body and handle, soft at the edges, the table's light
+        // along its rim.
+        const w = 0.3
+        const h = 0.36
+        const x0 = x - w / 2
+        const top = DESK + 0.01 - h
+        const body = new Path2D()
+        body.roundRect(x0 * k, top * k, w * k, h * k, [0.02 * k, 0.02 * k, 0.06 * k, 0.06 * k])
+        const handle = new Path2D()
+        handle.arc((x0 + w) * k, (top + h * 0.45) * k, 0.1 * k, -Math.PI / 2, Math.PI / 2)
+        ctx.lineCap = 'round'
+        for (const [a, grow] of [[0.4, 0.045], [0.95, 0]] as const) {
+          ctx.fillStyle = rgbaOf('#0B0E0F', a)
+          ctx.strokeStyle = rgbaOf('#0B0E0F', a)
+          ctx.fill(body)
+          if (grow) {
+            ctx.lineWidth = grow * k
+            ctx.stroke(body)
+          }
+          ctx.lineWidth = (0.05 + grow) * k
+          ctx.stroke(handle)
         }
+        ctx.strokeStyle = rgbaOf('#8C836F', 0.3 * lit)
+        ctx.lineWidth = 0.025 * k
+        ctx.beginPath()
+        ctx.moveTo((x0 + 0.03) * k, (top + 0.008) * k)
+        ctx.lineTo((x0 + w - 0.03) * k, (top + 0.008) * k)
+        ctx.stroke()
+      } else {
+        // Film cans lying flat in a short stack, out of focus: three flat drums, a little askew, soft at the edges,
+        // the top one's lid seen from a little above and its rim catching the table's light.
+        const r = 0.33
+        const h = 0.065
+        const cans = new Path2D()
+        let lx = x
+        let ly = DESK
+        for (let i = 0; i < 3; i++) {
+          const cx = x + [0, 0.035, -0.02][i]
+          const bot = DESK + 0.005 - i * (h + 0.006)
+          cans.moveTo((cx - r) * k, (bot - h) * k)
+          cans.lineTo((cx - r) * k, bot * k)
+          cans.ellipse(cx * k, bot * k, r * k, 0.05 * k, 0, Math.PI, 0, true)
+          cans.lineTo((cx + r) * k, (bot - h) * k)
+          cans.closePath()
+          lx = cx
+          ly = bot - h
+        }
+        for (const [a, grow] of [[0.4, 0.04], [0.95, 0]] as const) {
+          ctx.fillStyle = rgbaOf('#0C0F10', a)
+          ctx.fill(cans)
+          if (grow) {
+            ctx.strokeStyle = rgbaOf('#0C0F10', a)
+            ctx.lineWidth = grow * k
+            ctx.stroke(cans)
+          }
+        }
+        ctx.fillStyle = rgbaOf('#1C2224', 0.95)
+        ctx.beginPath()
+        ctx.ellipse(lx * k, ly * k, r * k, 0.05 * k, 0, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.strokeStyle = rgbaOf('#8C836F', 0.28 * lit)
+        ctx.lineWidth = 0.02 * k
+        ctx.beginPath()
+        ctx.ellipse(lx * k, ly * k, r * k, 0.05 * k, 0, Math.PI * 1.05, Math.PI * 1.95)
+        ctx.stroke()
       }
     }
   })
@@ -269,17 +244,14 @@ export const negativesFront = scenery<null>({
     const ctx = p.drawingContext as C2
     const v = view(p, c.k)
     const light = tubeAt(t)
-    const flash = revealAt(t)
     ctx.save()
-    bloom(ctx, c.k, light)
-    if (v.x1 > DOOR.x0 - 1.2) corridor(ctx, c.k, t)
     if (t > LAMP - 0.1 && t < NUUK + 1.5) cone(ctx, v, t)
-    air(ctx, v, t, light, flash)
+    air(ctx, v, t, light)
     nearPlane(ctx, v, light)
-    // A cold teal over the room's darks, and the frame's edges going into them.
+    // A cold teal over the room's darks, and the top of the frame going into them.
     ctx.fillStyle = 'rgba(30, 64, 66, 0.07)'
     ctx.fillRect((v.x0 - 0.1) * c.k, (v.y0 - 0.1) * c.k, (v.w + 0.2) * c.k, (v.h + 0.2) * c.k)
-    ceiling(ctx, v, '#060A0B', 0.6)
+    ceiling(ctx, v, '#060A0B', 0.4)
     ctx.restore()
   },
 })
