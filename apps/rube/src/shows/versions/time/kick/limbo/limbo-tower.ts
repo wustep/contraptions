@@ -186,7 +186,7 @@ function drawRoom(pen: Pen, t: number, glow: number): void {
     line(pen, [mx, WINDOW.y0], [mx, WINDOW.y1], pen.ink, 0.55)
   }
   box(pen, WINDOW.x0 - 0.05, WINDOW.y1, WINDOW.x1 + 0.05, WINDOW.y1 + 0.06, wallCol, 0.6)
-  // The glass: a faint cool sheen over the view, and the lamp's glow in it.
+  // The glass: a faint cool tint over the view.
   vwash(pen, WINDOW.x0, WINDOW.x1, WINDOW.y0, WINDOW.y1, [
     [0, LIMBO.glass, 0.12],
     [1, LIMBO.glass, 0.04],

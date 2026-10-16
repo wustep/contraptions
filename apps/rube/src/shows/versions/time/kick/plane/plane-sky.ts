@@ -29,7 +29,7 @@ export function drawSky(pen: Pen, t: number, f: Frame): void {
       [clamp01((0.9 - y0) / (y1 - y0)), mixHex(PLANE.night, PLANE.window, 0.75), 1],
       [1, mixHex(PLANE.night, PLANE.window, 0.75), 1],
     ])
-    // Stars, sparse, twinkling slowly; none low down in the haze over the clouds.
+    // Stars, sparse and still; none low down in the haze over the clouds.
     const { ctx, k } = pen
     for (let cx = Math.floor(x0); cx <= x1; cx++) {
       for (let cy = Math.floor(y0); cy <= Math.min(y1, 0); cy++) {
@@ -38,7 +38,7 @@ export function drawSky(pen: Pen, t: number, f: Frame): void {
           if (h > 0.55) continue
           const sx = cx + hash(cx, cy, i + 11)
           const sy = cy + hash(cx, cy, i + 13)
-          const a = (0.35 + 0.45 * hash(cx, cy, i + 17)) * (0.75 + 0.25 * Math.sin(t * (0.6 + h) + h * 40)) * clamp01((0.6 - sy) / 1.5)
+          const a = (0.35 + 0.45 * hash(cx, cy, i + 17)) * 0.85 * clamp01((0.6 - sy) / 1.5)
           const r = 0.008 + 0.012 * hash(cx, cy, i + 19)
           ctx.fillStyle = `rgba(221, 232, 240, ${a.toFixed(3)})`
           ctx.fillRect((sx - r) * k, (sy - r) * k, 2 * r * k, 2 * r * k)

@@ -280,7 +280,7 @@ function drawShell(p: p5, k: number, ink: string, w: number, t: number, wet: num
   ctx.fillStyle = broken ? mixHex(SHADE, RAIN.river, 0.35 * wet) : SHADE
   ctx.fillRect(X(-L - 0.1), X(0.2), X(2 * L + 0.2), X(0.4))
   ctx.restore()
-  // Its glass: a faint tint and a sheen, rain running down it; none once it has gone into the river.
+  // Its glass: a faint tint, rain running down it; none once it has gone into the river.
   if (!broken && k > 4) {
     ctx.save()
     ctx.clip(holes)
@@ -288,12 +288,6 @@ function drawShell(p: p5, k: number, ink: string, w: number, t: number, wet: num
     g.addColorStop(0, rgba(GLASS, 0.22))
     g.addColorStop(1, rgba(GLASS, 0.06))
     ctx.fillStyle = g
-    ctx.fillRect(X(-L), X(TOP), X(2 * L), X(0.9))
-    const sheen = ctx.createLinearGradient(X(-L), X(TOP), X(L), X(0.2))
-    sheen.addColorStop(0.2, rgba(RAIN.window, 0))
-    sheen.addColorStop(0.45, rgba(RAIN.window, 0.1))
-    sheen.addColorStop(0.55, rgba(RAIN.window, 0))
-    ctx.fillStyle = sheen
     ctx.fillRect(X(-L), X(TOP), X(2 * L), X(0.9))
     if (k > 20) {
       // Runs of rain on the glass, each creeping down on the rain's clock.
