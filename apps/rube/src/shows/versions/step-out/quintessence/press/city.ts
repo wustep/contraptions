@@ -270,10 +270,6 @@ export function drawCity(ctx: C2, v: View, t: number): void {
       ctx.beginPath()
       ctx.arc(x, y + 0.045, 0.018, 0, Math.PI * 2)
       ctx.fill()
-      ctx.fillStyle = rgbaOf('#FFFFFF', 0.2)
-      ctx.beginPath()
-      ctx.arc(x, y + 0.045, 0.07, 0, Math.PI * 2)
-      ctx.fill()
     }
     ctx.restore()
   })

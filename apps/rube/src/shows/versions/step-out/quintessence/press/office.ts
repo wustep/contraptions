@@ -70,9 +70,9 @@ export function drawOffice(ctx: C2, v: View, t: number, cover: (g: C2, k: number
   ctx.fill(panel)
   ctx.fillStyle = OP.ceiling
   ctx.fillRect(x0, OFFICE.top, x1 - x0, 0.1)
-  // The panes' frames: mullions, the transom, the sill; the dawn on the frames' edges; a long reflection in the glass.
+  // The panes' frames: mullions, the transom, the sill; the dawn on the frames' edges.
   const bars = new Path2D()
-  const glint = new Path2D()
+  const edge = new Path2D()
   for (const [a, b] of PANES) {
     if (b < x0) continue
     bars.rect(a - 0.05, WIN.y0, 0.07, WIN.y1 - WIN.y0)
@@ -82,29 +82,12 @@ export function drawOffice(ctx: C2, v: View, t: number, cover: (g: C2, k: number
     // Glazing bars across, a pane every half cell or so.
     for (let y = WIN.transom + 0.62; y < WIN.y1 - 0.3; y += 0.62) bars.rect(a, y - 0.012, b - a, 0.024)
     bars.rect(a - 0.05, WIN.y1 - 0.02, b - a + 0.12, 0.09)
-    glint.rect(a + 0.02, WIN.y0, 0.025, WIN.y1 - WIN.y0)
+    edge.rect(a + 0.02, WIN.y0, 0.025, WIN.y1 - WIN.y0)
   }
   ctx.fillStyle = OP.mullion
   ctx.fill(bars)
   ctx.fillStyle = rgbaOf('#E8C899', 0.45)
-  ctx.fill(glint)
-  // The glass: a faint sheen sliding across it as the camera goes, the room's lamp in it.
-  ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
-  const sheen = new Path2D()
-  for (const [a, b] of PANES) {
-    if (b < x0) continue
-    const sx = a + (b - a) * (0.25 + 0.5 * (((v.cx * 0.35 - a) % 1.7) + 1.7) % 1.7 / 1.7)
-    sheen.moveTo(sx, WIN.y0)
-    sheen.lineTo(sx + 0.28, WIN.y0)
-    sheen.lineTo(sx - 0.42, WIN.y1)
-    sheen.lineTo(sx - 0.7, WIN.y1)
-    sheen.closePath()
-  }
-  ctx.clip(new Path2D(PANES.map(([a, b]) => `M${a} ${WIN.y0}H${b}V${WIN.y1}H${a}Z`).join('')))
-  ctx.fillStyle = 'rgba(200, 220, 228, 0.06)'
-  ctx.fill(sheen)
-  ctx.restore()
+  ctx.fill(edge)
 
   // Two of the magazine's old covers, framed on the pier at the room's end.
   for (const fx of [0.82, 1.42]) {
@@ -179,10 +162,12 @@ export function drawOffice(ctx: C2, v: View, t: number, cover: (g: C2, k: number
   ctx.stroke(rings)
   ctx.fillStyle = '#252B2E'
   ctx.fill(cores)
-  // A rack of bundles waiting for the vans, by the stair's foot; a caged lamp over it, and the pipes along the slab.
+  // A rack of bundles waiting for the vans, by the stair's foot; a caged lamp over it, its light on the bundles' tops
+  // and in a pool on the floor; the pipes along the slab.
   const rack = new Path2D()
   const bundles = new Path2D()
   const straps = new Path2D()
+  const tops = new Path2D()
   const rx0 = 0.15
   const rx1 = STAIR.x0 - 0.12
   for (const y of [UP + 1.05, UP + 1.95, FLOOR - 0.04]) rack.rect(rx0, y, rx1 - rx0, 0.05)
@@ -193,6 +178,7 @@ export function drawOffice(ctx: C2, v: View, t: number, cover: (g: C2, k: number
       const bx = rx0 + 0.12 + i * 0.62 + 0.05 * hash(i, y)
       const bh = 0.36 + 0.12 * hash(i, y, 2)
       bundles.rect(bx, y - bh, bw, bh)
+      tops.rect(bx, y - bh, bw, 0.03)
       straps.rect(bx + bw / 2 - 0.012, y - bh, 0.024, bh)
       for (let c = y - 0.05; c > y - bh; c -= 0.05) straps.rect(bx, c, bw, 0.006)
     }
@@ -205,25 +191,21 @@ export function drawOffice(ctx: C2, v: View, t: number, cover: (g: C2, k: number
   ctx.fill(bundles)
   ctx.fillStyle = rgbaOf('#3A4247', 0.7)
   ctx.fill(straps)
+  ctx.fillStyle = rgbaOf('#F4C27A', 0.32)
+  ctx.fill(tops)
   const lx = 1.25
   ctx.fillStyle = '#10161A'
   ctx.fillRect(lx - 0.012, UP + 0.32, 0.024, 0.2)
   ctx.fillRect(lx - 0.1, UP + 0.52, 0.2, 0.1)
   ctx.fillStyle = rgbaOf('#F4C27A', 0.9)
   ctx.fillRect(lx - 0.06, UP + 0.6, 0.12, 0.04)
-  ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
-  ctx.fillStyle = rgbaOf('#F4C27A', 0.05)
-  for (const w of [1.6, 0.9]) {
+  const drop = FLOOR - v.cy
+  if (drop > 0.05 && v.y1 > FLOOR) {
+    ctx.fillStyle = rgbaOf('#F4C27A', 0.08)
     ctx.beginPath()
-    ctx.moveTo(lx - 0.1, UP + 0.62)
-    ctx.lineTo(lx + 0.1, UP + 0.62)
-    ctx.lineTo(lx + w, FLOOR)
-    ctx.lineTo(lx - w, FLOOR)
-    ctx.closePath()
+    ctx.ellipse(lx, FLOOR, 1.2, 0.04 + 0.1 * drop, 0, 0, Math.PI)
     ctx.fill()
   }
-  ctx.restore()
   // The columns under the mezzanine.
   ctx.fillStyle = '#182024'
   for (const cx of [-3.6, -0.4]) if (cx > x0 - 1) ctx.fillRect(cx - 0.1, UP + 0.32, 0.2, FLOOR - UP - 0.32)

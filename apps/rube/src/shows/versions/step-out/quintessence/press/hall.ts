@@ -3,12 +3,13 @@ import { hash } from '../kit'
 import { layer, onLayer, rgbaOf, sway, type View } from '../depth'
 import { cityThrough } from './city'
 import { DOOR_X, FLOOR, TREADLE } from './press-plan'
-import { downbeat, lampsOn, runOf, thump } from './pulse'
+import { lampsOn, runOf } from './pulse'
 
 /**
  * The press hall in depth (the PRESS builder's): everything behind the machine's own line. The far wall with its
  * gallery of tall windows and the city at dawn through them; three more press lines receding into the dark, each
- * printing, each under its own lamps, with catwalks over them and men on the catwalks; an overhead conveyor carrying
+ * printing, each under its own lamps and the pools of light they lay on its floor, with catwalks over them and men
+ * on the catwalks; an overhead conveyor carrying
  * bundles; the paper itself, in ribbons, running up to the roof and across it; and the roof's trusses and the hall's
  * columns on the machine's own plane. The floor runs back under all of it to the far wall.
  *
@@ -201,8 +202,6 @@ function pressLine(ctx: C2, v: View, t: number, L: Line): void {
     const h = L.h
     const lit = lampsOn(t, L.i)
     const run = runOf(t, L.i, 0.9 * L.z)
-    const beat = thump(t, 0.1) * (t >= TREADLE ? 1 : 0)
-    const swell = downbeat(t, 0.3)
     const i0 = Math.floor((s.x0 - h) / L.pitch)
     const i1 = Math.ceil((s.x1 + h) / L.pitch)
     const frame = new Path2D()
@@ -210,7 +209,7 @@ function pressLine(ctx: C2, v: View, t: number, L: Line): void {
     const spokes = new Path2D()
     const shade = new Path2D()
     const bulb = new Path2D()
-    const cone = new Path2D()
+    const pool = new Path2D()
     const paper = new Path2D()
     const top = new Path2D()
     const rims = new Path2D()
@@ -251,7 +250,7 @@ function pressLine(ctx: C2, v: View, t: number, L: Line): void {
           spokes.lineTo(x + Math.cos(b) * r * 0.85, cy + Math.sin(b) * r * 0.85)
         }
       }
-      // Its lamp, on a long cord, and the cone of light it throws.
+      // Its lamp, on a long cord, and the pool of light it lays on the floor.
       const ly = fy - 1.3 * h
       shade.moveTo(x - 0.11 * h, ly + 0.05 * h)
       shade.lineTo(x + 0.11 * h, ly + 0.05 * h)
@@ -261,11 +260,8 @@ function pressLine(ctx: C2, v: View, t: number, L: Line): void {
       shade.rect(x - 0.004 * h - 0.004, s.y0 - 0.2, 0.008 * h + 0.008, ly - s.y0 + 0.2)
       bulb.moveTo(x + 0.035 * h, ly + 0.05 * h)
       bulb.arc(x, ly + 0.05 * h, 0.035 * h, 0, Math.PI * 2)
-      cone.moveTo(x - 0.09 * h, ly + 0.05 * h)
-      cone.lineTo(x + 0.09 * h, ly + 0.05 * h)
-      cone.lineTo(x + 0.36 * h, fy)
-      cone.lineTo(x - 0.36 * h, fy)
-      cone.closePath()
+      pool.moveTo(x + 0.42 * h, fy)
+      pool.ellipse(x, fy, 0.42 * h, 0.05 * h, 0, 0, Math.PI * 2)
       // Stacks of finished copies, rising a copy a beat from when the line came up.
       if (L.stacks && i % 2 === 0) {
         const sx = x + 0.5 * L.pitch
@@ -274,12 +270,9 @@ function pressLine(ctx: C2, v: View, t: number, L: Line): void {
         paper.rect(sx - 0.17 * h, fy - sh, 0.34 * h, sh)
       }
     }
-    // The light from the lamps first, so the frames stand in it.
-    ctx.save()
-    ctx.globalCompositeOperation = 'lighter'
-    ctx.fillStyle = rgbaOf(HP.lamp, (0.035 + 0.05 * beat + 0.04 * swell) * lit)
-    if (L.i === 1) ctx.fill(cone)
-    ctx.restore()
+    // The lamps' light on the floor first, so the frames stand in it.
+    ctx.fillStyle = rgbaOf(HP.lamp, 0.1 * lit)
+    ctx.fill(pool)
     ctx.fillStyle = L.body
     ctx.fill(frame)
     ctx.fillStyle = rgbaOf(HP.lamp, Math.min(1, 0.08 + 0.3 * lit))
@@ -328,7 +321,7 @@ function pressLine(ctx: C2, v: View, t: number, L: Line): void {
     }
     ctx.fillStyle = HP.ink
     ctx.fill(shade)
-    ctx.fillStyle = rgbaOf(HP.bulb, Math.min(1, 0.12 + 0.75 * lit + 0.3 * beat))
+    ctx.fillStyle = rgbaOf(HP.bulb, 0.12 + 0.8 * lit)
     ctx.fill(bulb)
     // The catwalk over the line, its rail, and the men walking it.
     if (L.walk) {
@@ -454,18 +447,11 @@ function ribbons(ctx: C2, v: View, t: number): void {
       if (Math.max(...xs) < s.x0 - 0.5 || Math.min(...xs) > s.x1 + 0.5 || Math.max(...ys) < s.y0 - 0.5 || Math.min(...ys) > s.y1 + 0.5) return
       ctx.save()
       ctx.scale(k, k)
-      const lit = lampsOn(t, 1)
       const run = runOf(t, 1, R.v)
       const path = new Path2D()
       path.moveTo(R.pts[0][0], R.pts[0][1])
       for (const q of R.pts.slice(1)) path.lineTo(q[0], q[1])
       ctx.lineJoin = 'round'
-      ctx.save()
-      ctx.globalCompositeOperation = 'lighter'
-      ctx.strokeStyle = rgbaOf(HP.lamp, 0.05 + 0.05 * lit)
-      ctx.lineWidth = 0.22
-      ctx.stroke(path)
-      ctx.restore()
       ctx.strokeStyle = rgbaOf(HP.paper, 0.85)
       ctx.lineWidth = 0.045
       ctx.stroke(path)
@@ -511,14 +497,14 @@ const TRUSS = { top: -6.1, bottom: -5.15 }
 /** The hall's columns, standing behind the machine where it leaves room. */
 export const COLUMNS = [2.28, 9.8, 16.3, 20.5]
 
-function roof(ctx: C2, v: View, t: number): void {
+function roof(ctx: C2, v: View): void {
   const k = v.k
   ctx.save()
   ctx.scale(k, k)
   const x0 = v.x0 - 0.5
   const x1 = Math.min(v.x1 + 0.5, DOOR_X)
   if (v.y0 < TRUSS.bottom + 0.2) {
-    // The roof's underside, its north lights glowing with the dawn, and the truss under it.
+    // The roof's underside, its north lights pale with the dawn, and the truss under it.
     ctx.fillStyle = '#0D1215'
     ctx.fillRect(x0, v.y0 - 0.5, x1 - x0, ROOF - v.y0 + 0.5)
     const glass = new Path2D()
@@ -589,7 +575,7 @@ function roof(ctx: C2, v: View, t: number): void {
   }
   ctx.fillStyle = HP.column
   ctx.fill(col)
-  ctx.fillStyle = rgbaOf(HP.columnHi, 0.75 + 0.25 * thump(t))
+  ctx.fillStyle = rgbaOf(HP.columnHi, 0.8)
   ctx.fill(hi)
   ctx.restore()
 }
@@ -652,7 +638,7 @@ export function drawHall(ctx: C2, v: View, t: number): void {
   }
   ribbons(ctx, v, t)
   floorLines(ctx, v, zPrev, 1, HP.floorFar)
-  roof(ctx, v, t)
+  roof(ctx, v)
   floorLines(ctx, v, 1, 40, HP.floor)
   walkway(ctx, v)
 }
