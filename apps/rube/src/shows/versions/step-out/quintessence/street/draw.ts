@@ -162,7 +162,7 @@ function drawStand(ctx: C2, k: number, t: number): void {
   ctx.lineTo(x0 * k, PAVE * k)
   ctx.fill()
   // This morning's delivery by its side, two bundles off the van in their straps, waiting to be cut open.
-  for (const [bx, by] of [[4.3, PAVE], [4.36, PAVE - 0.25]] as [number, number][]) {
+  for (const [bx, by] of [[x1 + 0.08, PAVE], [x1 + 0.12, PAVE - 0.25]] as [number, number][]) {
     slab(ctx, k, bx, by - 0.25, bx + 0.56, by, '#E6E1D5', { color: rgba(INK, 0.8), w: 0.8 })
     for (let y = by - 0.05; y > by - 0.24; y -= 0.05) rule(ctx, k, bx + 0.02, y, bx + 0.54, y, rgba(INK, 0.22), 0.6)
     slab(ctx, k, bx + 0.25, by - 0.25, bx + 0.29, by, '#3A4247')

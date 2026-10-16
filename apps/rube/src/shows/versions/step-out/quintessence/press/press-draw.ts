@@ -586,6 +586,29 @@ function drawWeb(g: C2, k: number, t: number): void {
   }
 }
 
+/**
+ * A drive chain round two sprockets (centres and pitch radii), its links running at the press's pace: the outer
+ * tangents and the far side of each, dashed into links that move along it.
+ */
+function chain(g: C2, k: number, a: [number, number], ra: number, b: [number, number], rb: number, run: number): void {
+  const th = Math.atan2(b[1] - a[1], b[0] - a[0])
+  const ph = Math.acos((ra - rb) / Math.hypot(b[0] - a[0], b[1] - a[1]))
+  g.save()
+  g.beginPath()
+  g.arc(b[0] * k, b[1] * k, rb * k, th + ph, th - ph, true)
+  g.arc(a[0] * k, a[1] * k, ra * k, th - ph, th + ph, true)
+  g.closePath()
+  g.strokeStyle = PAL.ironLo
+  g.lineWidth = 0.035 * k
+  g.stroke()
+  g.setLineDash([0.035 * k, 0.025 * k])
+  g.lineDashOffset = -run * k
+  g.strokeStyle = hexA(PAL.steel, 0.75)
+  g.lineWidth = 0.022 * k
+  g.stroke()
+  g.restore()
+}
+
 /** The lamps' light along a turning cylinder's upper left rim: it stays put while the cylinder turns. */
 function litRim(g: C2, k: number, x: number, y: number, r: number): void {
   g.strokeStyle = hexA(PAL.steelHi, 0.7)
@@ -596,7 +619,7 @@ function litRim(g: C2, k: number, x: number, y: number, r: number): void {
 }
 
 /** A unit's side frame's face, in cells from its middle: pure geometry, made once. */
-let FACE: { panels: Path2D; rivets: Path2D; lit: Path2D; rim: Path2D } | null = null
+let FACE: { panels: Path2D; rivets: Path2D; lit: Path2D; rim: Path2D; upper: Path2D; crown: Path2D } | null = null
 function unitFace(): NonNullable<typeof FACE> {
   if (FACE) return FACE
   const top = WEB_Y - 1.55
@@ -636,16 +659,29 @@ function unitFace(): NonNullable<typeof FACE> {
       rivets.arc(x, y - 0.04, 0.014, 0, Math.PI * 2)
     }
   }
-  // The lamp's light along its top, and the window's cool light down its right edge.
+  // The lamp's light along its top and falling down its face, brightest nearest the lamp; the window's cool light
+  // down its right edge.
   const lit = new Path2D()
   lit.rect(-0.7, top, 1.4, 0.025)
+  const band = (d: number): Path2D => {
+    const w = 0.7 + ((0.85 - 0.7) * d) / (FLOOR - top)
+    const p = new Path2D()
+    p.moveTo(-0.7, top)
+    p.lineTo(0.7, top)
+    p.lineTo(w, top + d)
+    p.lineTo(-w, top + d)
+    p.closePath()
+    return p
+  }
+  const upper = band(1.0)
+  const crown = band(0.45)
   const rim = new Path2D()
   rim.moveTo(0.7, top + 0.03)
   rim.lineTo(0.85, FLOOR)
   rim.lineTo(0.82, FLOOR)
   rim.lineTo(0.675, top + 0.03)
   rim.closePath()
-  FACE = { panels, rivets, lit, rim }
+  FACE = { panels, rivets, lit, rim, upper, crown }
   return FACE
 }
 
@@ -659,19 +695,23 @@ function drawUnit(g: C2, k: number, i: number, t: number, front: boolean): void 
   const impY = WEB_Y + WEB_T + IMP_R
   const plY = WEB_Y - PLATE_R - lift + 0.015 * hit
   if (!front) {
-    // The side frame: a heavy plate behind, with its foot; its panels, their rivets, the lamp's light on its top.
+    // The side frame: a heavy plate behind, with its foot; the lamps' light on its upper face; its panels, their
+    // rivets, the light along its top.
     poly(g, k, [[x - 0.85, FLOOR], [x - 0.7, WEB_Y - 1.55], [x + 0.7, WEB_Y - 1.55], [x + 0.85, FLOOR]], PAL.ironLo)
     rect(g, k, x - 0.95, FLOOR - 0.12, 1.9, 0.12, PAL.iron)
     g.save()
     g.translate(x * k, 0)
     g.scale(k, k)
     const face = unitFace()
+    const on = lampsOn(t, 0)
+    g.fillStyle = hexA(PAL.lamp, 0.05 * on)
+    g.fill(face.upper)
+    g.fill(face.crown)
     g.strokeStyle = hexA(PAL.ironHi, 0.55)
     g.lineWidth = 0.018
     g.stroke(face.panels)
     g.fillStyle = hexA(PAL.steel, 0.5)
     g.fill(face.rivets)
-    const on = lampsOn(t, 0)
     g.fillStyle = hexA(PAL.lamp, 0.15 + 0.5 * on)
     g.fill(face.lit)
     g.fillStyle = hexA(PAL.steelHi, 0.35)
@@ -704,12 +744,13 @@ function drawUnit(g: C2, k: number, i: number, t: number, front: boolean): void 
     g.arc(-0.55, FLOOR - 0.36, 0.028, 0, Math.PI * 2)
     g.fill()
     g.restore()
-    // The gears on the frame, turning with the press, one driving the other.
+    // The sprockets on the frame, the small one driving the large by a chain, all turning with the press.
     disc(g, k, x - 0.28, impY + 0.98, 0.19, PAL.iron)
     spokes(g, k, x - 0.28, impY + 0.98, 0.19, run / 0.19, 5, PAL.ironHi, 0.03)
     disc(g, k, x + 0.42, impY + 0.62, 0.3, PAL.iron)
-    spokes(g, k, x + 0.42, impY + 0.62, 0.3, -run / 0.3, 6, PAL.ironHi, 0.04)
+    spokes(g, k, x + 0.42, impY + 0.62, 0.3, run / 0.3, 6, PAL.ironHi, 0.04)
     litRim(g, k, x + 0.42, impY + 0.62, 0.3)
+    chain(g, k, [x - 0.28, impY + 0.98], 0.21, [x + 0.42, impY + 0.62], 0.32, run)
     // The impression cylinder.
     disc(g, k, x, impY, IMP_R, PAL.iron)
     ring(g, k, x, impY, IMP_R - 0.03, PAL.ironHi, 0.02)
