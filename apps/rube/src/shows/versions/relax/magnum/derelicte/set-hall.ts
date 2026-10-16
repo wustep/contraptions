@@ -376,7 +376,8 @@ function drawWindow(p: p5, k: number, cx: number, f: Frame): void {
 
 /** A little night through the high windows: faint cold shafts, felt only when the show's lights are out. */
 export function drawWindowSpill(p: p5, k: number, f: Frame, t: number): void {
-  const a = 0.035 + 0.05 * (1 - powerAt(t)) * (1 - 0.6 * Math.min(1, worksAt(t)))
+  const a = 0.075 * (1 - powerAt(t)) * (1 - 0.6 * Math.min(1, worksAt(t)))
+  if (a < 0.004) return
   for (let i = Math.floor(f.x0 / 6) - 2; i <= Math.ceil(f.x1 / 6) + 1; i++) {
     const cx = i * 6 + 4
     if (cx < HALL.x0 || cx > HALL.x1) continue
