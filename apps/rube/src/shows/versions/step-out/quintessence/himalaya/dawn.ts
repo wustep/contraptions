@@ -7,8 +7,8 @@ import { mix } from '../home/pen'
  * The build is a sunrise. It opens in the blue hour: cold slate-blue shadows, pale blue-grey snow, an indigo sky with
  * the last stars in it. The horizon warms to apricot through the climb; as the choir comes in, first light touches the
  * highest far peaks in rose-gold; by the leopard the far range is gold and the sun's edge lifts over a ridge; by the
- * peak everything is gold-white and the snow in the air glitters. The light comes down each range in turn, the far
- * ones first, and last onto the face they are on.
+ * peak everything is gold-white. The light comes down each range in turn, the far ones first, and last onto the face
+ * they are on.
  *
  * Everything here is a function of show time alone: the colours, where the light has reached, the sun, the wind.
  */
@@ -46,12 +46,11 @@ function num(t: number, vals: readonly number[]): number {
 
 export interface Tone {
   t: number
-  /** The sky, top to bottom, and the glow on the horizon under the sun. */
+  /** The sky, top to bottom. */
   zenith: string
   high: string
   low: string
   horizon: string
-  dawnGlow: string
   /** The far ranges: snow in shadow, the shadowed flanks, rock, and the light where it has reached. */
   snow: string
   shade: string
@@ -67,7 +66,7 @@ export interface Tone {
   faceShade: string
   faceRock: string
   faceRockTop: string
-  /** The light on the face, and the snow's sparkle in it. */
+  /** The light on the face. */
   faceLit: string
   /** The air's tint for distance. */
   haze: string
@@ -91,7 +90,6 @@ export function tone(t: number): Tone {
     high: ramp(t, ['#33407A', '#3E4E86', '#566596', '#7782AE', '#9DAACB', '#BFCCE0', '#D6E4F0']),
     low: ramp(t, ['#5E6390', '#7D7598', '#B38C9A', '#D6A79E', '#EBC7A6', '#F6DDBA', '#FCEDD4']),
     horizon: ramp(t, ['#8A86A8', '#B994A0', '#E2AE96', '#F0C095', '#F7D39C', '#FBE3B8', '#FFF2DA']),
-    dawnGlow: ramp(t, ['#9C8FAE', '#D6A398', '#EEB98F', '#F6C78F', '#FAD99A', '#FDEBC0', '#FFF6E2']),
     snow: ramp(t, ['#7E89AE', '#8892B4', '#97A0BE', '#A7AFC9', '#B9C3D8', '#CBD5E4', '#DCE5EF']),
     shade: ramp(t, ['#47517C', '#4E5882', '#5A6489', '#64709A', '#6E7FAE', '#7C8FBC', '#8DA1C9']),
     rock: ramp(t, ['#353D62', '#3B4468', '#454E70', '#525C7B', '#616C88', '#717D97', '#8290A8']),

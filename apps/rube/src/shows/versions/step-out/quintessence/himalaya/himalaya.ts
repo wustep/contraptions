@@ -2,7 +2,7 @@ import type { Pt } from '../../../../../parts'
 import { box, frame, part, scenery, smooth, type Company, type PartShot } from '../kit'
 import { SEAMS } from '../seams'
 import { penOf } from '../home/pen'
-import { drawCat, drawFace, drawFarRocks, drawFarSide, drawKicks, drawSifts, drawSteps, drawTripod, drawTripodShadow, openings } from './himalaya-draw'
+import { drawCat, drawDeck, drawFace, drawFarRocks, drawFarSide, drawKicks, drawSifts, drawSteps, drawTripod, drawTripodShadow, openings } from './himalaya-draw'
 import { drawBeyond } from './far'
 import { view } from '../depth'
 import { BACK, CAT_GO, CAT_IN, CAT_STILL, CAT_STEPS_IN, CAT_STEPS_OUT, GUST, LANDINGS, LEAN, LIFT, ON_LEDGE, REST, SEAN_AT, SETTLE, SIFTS, STEPS, TICKS, himalayaLane } from './himalaya-plan'
@@ -28,7 +28,7 @@ export const HIMALAYA_AT: Pt = [0, 0]
 /** Everything the place's standing set draws, claimed coarsely so the stage draws it wherever the camera is. */
 export const HIMALAYA_CELLS = box(-16, -18, 28, 8, 2)
 
-/** The sky, the ranges, the cloud, the far side, the face and its steps: drawn first, wherever the camera is. */
+/** The sky, the ranges, the far side, the sea of cloud, the face and its steps: drawn first, wherever the camera is. */
 export const himalayaSet = scenery<null>({
   name: 'himalaya-set',
   draw: (p, _s, c) => {
@@ -48,6 +48,7 @@ export const himalayaSet = scenery<null>({
       drawFarSide(pen, f, c.t)
       drawCat(pen, c.t)
       drawFarRocks(pen, c.t)
+      drawDeck(pen, f, c.t)
     }
     drawFace(pen, f, c.t)
     drawSteps(pen, f, c.t)

@@ -1,10 +1,10 @@
 import type { Pt } from '../../../../../parts'
 import { hash, smooth } from '../kit'
 import { level } from '../music'
-import { ellipse, fillPoly, glow, line, mix, rgba, type Pen } from '../home/pen'
+import { ellipse, fillPoly, line, mix, rgba, type Pen } from '../home/pen'
 import { litY, tone, wind, type Tone } from './dawn'
-import { plumes, type Plume } from './far'
-import { along, bands, cut, sunOn } from './paint'
+import { DECK, drawChoughs, plumes, type Plume } from './far'
+import { along, bands, billow, cut, ROWS, rowOutline, SAMPLES, sunOn } from './paint'
 import {
   CAT_LOOK,
   CAT_LOOK_AWAY,
@@ -26,7 +26,8 @@ import {
 /**
  * The Himalayas, drawn on the machine's plane: the face he climbs, its snow wind-rippled and its rock in bands, its
  * steps capped with snow; the ledge at the top with Sean's tripod and long lens on it; across the valley, the far
- * spur and the mountain behind it, and on the spur, if you look, the snow leopard. Beyond the valley is `far.ts`.
+ * spur and the mountain behind it, and on the spur, if you look, the snow leopard; and the sea of cloud filling the
+ * valley between them, the spur standing out of it. Beyond the valley is `far.ts`.
  *
  * All of it is in the hour's light (`dawn.ts`): blue-grey through the climb, and lit from the right once the sun is
  * up, the light coming down the face from its summit ridge to the ledge, and on down past it.
@@ -59,6 +60,22 @@ function litSnow(tn: Tone, t: number, y: number, shadow: string): string {
 
 /* ------------------------------------------------------------------ the mountain he climbs */
 
+/** The snow the climb starts in: its edge drifted in long low waves, level where he waits at the foot. */
+const FOOT: Pt[] = [
+  ...Array.from({ length: 58 }, (_, i): Pt => {
+    const x = -22 + i * 0.35
+    return [x, R + 0.02 - 0.08 * (0.5 + 0.5 * Math.sin(x * 1.7 + 0.6)) * (0.6 + 0.4 * Math.sin(x * 0.53)) * smooth(-x, 1.6, 2.6)]
+  }),
+  [-1.6, R - 0.02],
+  [-0.2, R],
+  [0.5, R + 0.06],
+  [1.6, R + 0.45],
+  [3.2, R + 1.3],
+  [5.5, R + 2.4],
+  [5.5, 9],
+  [-22, 9],
+]
+
 /** The boulder over the foot, up to his left: the gust takes the snow off its top. */
 const BOULDER: Pt = [-1.6, -1.75]
 
@@ -66,8 +83,16 @@ const BOULDER: Pt = [-1.6, -1.75]
 const FACE: Pt[] = [
   [-22, 9],
   [11.6, 9],
-  [11.1, -2.5],
-  [10.6, -6.4],
+  [11.3, 5.5],
+  [11.45, 3],
+  [11.15, 0.4],
+  [11.25, -1.4],
+  [10.95, -3.2],
+  [11.05, -4.6],
+  [10.7, -5.9],
+  [10.75, -6.7],
+  [10.42, -7.4],
+  [10.3, -8.0],
   [10.0, -8.4],
   [9.75, LEDGE_Y + 0.05],
   [9.9, LEDGE_Y],
@@ -89,8 +114,8 @@ const FACE: Pt[] = [
   [-17, -10.9],
   [-22, -9.6],
 ]
-/** The summit ridge's high points: where the spindrift leaves it. */
-const CRESTS: Pt[] = [[4.2, -13.3], [5.1, -12.9], [1.3, -12.8], [3.0, -12.6], [-3.2, -12.3], [6.3, -12.2], [-0.6, -11.8], [-9.5, -11.4], [8.5, -11.25]]
+/** The summit ridge's high points the spindrift streams off: a few, the summit first. */
+const CRESTS: Pt[] = [[4.2, -13.3], [1.3, -12.8], [-3.2, -12.3], [8.5, -11.25]]
 
 /** Each polygon's bounding box, for a quick no. */
 const boxes = new WeakMap<readonly Pt[], [number, number, number, number]>()
@@ -289,9 +314,6 @@ function paintField(c: C2, g: Field, tn: Tone, t: number, f: Frame, rock: string
   }
 }
 
-/** Whether a point of the world is inside the face (for the sun's bloom: hidden behind the mountain or not). */
-export const inFace = (x: number, y: number): boolean => inside(FACE, x, y)
-
 export function drawFace(pen: Pen, f: Frame, t: number): void {
   const tn = tone(t)
   const g = faceOf()
@@ -304,7 +326,7 @@ export function drawFace(pen: Pen, f: Frame, t: number): void {
     // The snow the climb starts in, along the foot.
     if (f.y1 > R - 0.5) {
       const foot = new Path2D()
-      ;([[-22, R + 0.02], [-1.6, R - 0.02], [-0.2, R], [0.5, R + 0.06], [1.6, R + 0.45], [3.2, R + 1.3], [5.5, R + 2.4], [5.5, 9], [-22, 9]] as Pt[]).forEach(([x, y], i) => (i ? foot.lineTo(x, y) : foot.moveTo(x, y)))
+      FOOT.forEach(([x, y], i) => (i ? foot.lineTo(x, y) : foot.moveTo(x, y)))
       foot.closePath()
       const top = mix(tn.faceSnow, '#FFFFFF', 0.25)
       bands(c, f.x0 - 1, f.x1 + 1, R - 0.1, 9, (y) => mix(top, tn.faceLow, Math.max(0, Math.min(1, (y - R) / 3))), foot)
@@ -326,11 +348,13 @@ export function drawFace(pen: Pen, f: Frame, t: number): void {
 /** The steps: a slab of rock under every landing, capped with snow; the ledge at the top. */
 export function drawSteps(pen: Pen, f: Frame, t: number): void {
   const tn = tone(t)
-  // The trail: a shelf worn along each leg of the switchback, the steps on it.
+  // The trail: a shelf worn along each leg of the switchback, the steps on it, its ends tapering into the snow.
+  const ext = (a: Pt, b: Pt, u: number): Pt => [a[0] + (a[0] - b[0]) * u, a[1] + (a[1] - b[1]) * u]
   for (const [a, b] of [[0, 9], [9, 17], [17, STEPS.length]] as [number, number][]) {
     const leg = STEPS.slice(a, b).map((s) => s.p).sort((p, q) => p[0] - q[0])
-    const top: Pt[] = leg.flatMap(([x, y]): Pt[] => [[x - 0.3, y + R + 0.1], [x + 0.3, y + R + 0.1]])
-    const low = top.map(([x, y]): Pt => [x, y + 0.34]).reverse()
+    const n = leg.length
+    const top = [ext(leg[0], leg[1], 0.8), ...leg, ext(leg[n - 1], leg[n - 2], 0.8)].map(([x, y]): Pt => [x, y + R + 0.1])
+    const low = [ext(leg[0], leg[1], 0.3), ...leg, ext(leg[n - 1], leg[n - 2], 0.3)].map(([x, y]): Pt => [x, y + R + 0.42]).reverse()
     fillPoly(pen, [...top, ...low], rgba(tn.faceRock, 0.22))
   }
   const cap = mix(tn.faceSnow, '#FFFFFF', 0.5)
@@ -351,6 +375,45 @@ export function drawSteps(pen: Pen, f: Frame, t: number): void {
   line(pen, [[a + 0.5, y + 0.2], [a + 0.9, y + 0.38]], rgba(tn.ink, 0.35), 0.02)
   line(pen, [[8.6, y + 0.12], [8.9, y + 0.36]], rgba(tn.ink, 0.35), 0.02)
   line(pen, [[9.3, y + 0.1], [9.5, y + 0.26]], rgba(tn.ink, 0.35), 0.02)
+  drawRope(pen, f, t, tn)
+}
+
+/**
+ * The old fixed rope's pitons: in the rock above every fourth step of the last pitch, clear of his leaps, and over the
+ * ledge.
+ */
+const PITONS: Pt[] = [...[18, 22, 26, 30].map((k): Pt => [STEPS[k].p[0] - 0.12, STEPS[k].p[1] - 0.68]), [STEPS[STEPS.length - 1].p[0] - 0.3, LEDGE_Y - 0.62]]
+
+/**
+ * An old fixed rope, weathered dark, up the last pitch to the ledge from some earlier party: clipped to a piton above
+ * every fourth step, sagging between them and stirring in the wind, its loose end lying in the snow below the first.
+ */
+function drawRope(pen: Pen, f: Frame, t: number, tn: Tone): void {
+  if (f.x1 < PITONS[0][0] - 1 || f.x0 > PITONS[PITONS.length - 1][0] + 1 || f.y1 < PITONS[PITONS.length - 1][1] - 1 || f.y0 > PITONS[0][1] + 1) return
+  const { c, k } = pen
+  const w = wind(t)
+  const rope = mix(tn.ink, C.strap, 0.4)
+  c.save()
+  c.beginPath()
+  const [x0, y0] = PITONS[0]
+  c.moveTo((x0 - 0.35) * k, (y0 + 0.42) * k)
+  c.quadraticCurveTo((x0 - 0.05) * k, (y0 + 0.3) * k, x0 * k, y0 * k)
+  for (let i = 1; i < PITONS.length; i++) {
+    const [ax, ay] = PITONS[i - 1]
+    const [bx, by] = PITONS[i]
+    const sag = 0.1 + 0.03 * w * Math.sin(t * 1.9 + i * 1.3)
+    c.quadraticCurveTo(((ax + bx) / 2 - 0.02 * w) * k, ((ay + by) / 2 + sag) * k, bx * k, by * k)
+  }
+  c.strokeStyle = rope
+  c.lineWidth = 0.022 * k
+  c.lineCap = 'round'
+  c.stroke()
+  c.restore()
+  // The pitons: a blade in the rock, an eye, the rope through it.
+  for (const [px, py] of PITONS) {
+    fillPoly(pen, [[px - 0.07, py - 0.015], [px + 0.02, py - 0.03], [px + 0.02, py + 0.015]], tn.faceRock)
+    ellipse(pen, px + 0.03, py, 0.028, 0.028, null, mix(tn.ink, '#8B8F92', 0.4), 0.012)
+  }
 }
 
 /* ------------------------------------------------------------------ across the valley */
@@ -360,10 +423,16 @@ const ROCK_A: Pt[] = [[11.75, FAR_Y + 0.2], [11.95, FAR_Y - 0.42], [12.35, FAR_Y
 const ROCK_B: Pt[] = [[14.7, FAR_Y + 0.2], [14.85, FAR_Y - 0.36], [15.3, FAR_Y - 0.58], [15.75, FAR_Y - 0.4], [16.0, FAR_Y + 0.2]]
 
 const FY = FAR_Y + 0.1
-/** The mountain behind the spur: the cat is against it, pale on pale, not against the sky. Low enough for the sun to come up over the range beyond it. */
-const BEHIND: Pt[] = [[11.6, FY], [12.2, FY - 0.7], [12.9, FY - 1.05], [13.5, FY - 0.95], [14.2, FY - 1.15], [14.9, FY - 1.55], [15.5, FY - 1.35], [16.3, FY - 1.95], [17.1, FY - 1.6], [17.9, FY - 1.1], [19.0, FY - 0.6], [20.4, FY + 0.2], [22.0, FY + 1.4], [24.0, FY + 3.0], [26.5, 4], [11.6, 4]]
-/** The spur: its top where the cat walks, its flank falling into the cloud, and its ridge going down to the right. */
-const SPUR: Pt[] = [[11.2, 2], [11.5, -3.6], [11.9, -7.6], [12.0, FY - 0.05], [13.1, FY - 0.1], [14.4, FY], [16.2, FY - 0.25], [16.9, FY + 0.1], [18.0, FY + 0.55], [19.4, FY + 1.3], [20.8, FY + 2.3], [22.6, FY + 3.8], [24.6, FY + 5.6], [26.5, 2]]
+/**
+ * The mountain behind the spur: the cat is against it, pale on pale, not against the sky. Low enough for the sun to
+ * come up over the range beyond it. It rises from behind the spur's top, so no edge of it shows below.
+ */
+const BEHIND: Pt[] = [[12.0, FY - 0.05], [12.4, FY - 0.66], [12.9, FY - 1.05], [13.5, FY - 0.95], [14.2, FY - 1.15], [14.9, FY - 1.55], [15.5, FY - 1.35], [16.3, FY - 1.95], [17.1, FY - 1.6], [17.9, FY - 1.1], [19.0, FY - 0.6], [20.4, FY + 0.2], [22.0, FY + 1.4], [24.0, FY + 3.0], [26.5, 4], [12.6, 4], [12.6, FY + 0.3]]
+/**
+ * The spur: its top where the cat walks, its flank stepping down in broken rock into the cloud, and its ridge going
+ * down to the right into the cloud.
+ */
+const SPUR: Pt[] = [[11.2, 2], [11.5, -3.6], [11.66, -7.4], [11.6, -7.75], [11.8, -8.1], [11.72, -8.42], [11.9, -8.72], [11.85, -8.98], [12.0, FY - 0.05], [13.1, FY - 0.1], [14.4, FY], [16.2, FY - 0.25], [16.9, FY + 0.1], [18.0, FY + 0.55], [19.4, FY + 1.3], [20.8, FY + 2.3], [22.6, FY + 3.8], [24.6, FY + 5.6], [26.5, 2]]
 
 let farGeo: { behind: Field; spur: Field; snowTop: Path2D } | null = null
 function farOf() {
@@ -417,11 +486,12 @@ export function openings(f: Frame): { beyond: Path2D | null; far: boolean } {
     top = Math.min(top, f.y0 + (j - 1) * dy)
     bottom = Math.max(bottom, f.y0 + (j + 1) * dy)
   }
-  // It runs on down to the frame's foot: the gorge between the face and the spur narrows below what the grid can see.
+  // It runs on down to the sea of cloud, which covers everything below its top that the face does not.
   let path: Path2D | null = null
-  if (a <= b) {
+  const foot = Math.min(Math.max(bottom, f.y1 + 0.1), DECK + 0.1)
+  if (a <= b && foot > top) {
     path = new Path2D()
-    path.rect(a - dx, top, b - a + 2 * dx, Math.max(bottom, f.y1 + 0.1) - top)
+    path.rect(a - dx, top, b - a + 2 * dx, foot - top)
   }
   return { beyond: path, far }
 }
@@ -431,18 +501,21 @@ export function drawFarSide(pen: Pen, f: Frame, t: number): void {
   const g = farOf()
   const ly = litY(t, 'world')
   const lit = (y: number, shadow: string) => mix(shadow, tn.faceLit, smooth(ly - y, -0.2, 0.4) * 0.85)
+  // Only what stands out of the sea of cloud is drawn.
+  const low = Math.min(f.y1, DECK + 0.3)
+  const above = { ...f, y1: low }
   inCells(pen, (c) => {
     // The mountain behind the spur, a little paler for the air between.
     const hi = mix(tn.faceSnow, tn.haze, 0.3)
     const lo = mix(tn.faceLow, tn.haze, 0.3)
-    bands(c, Math.max(11.5, f.x0 - 1), f.x1 + 1, FY - 2.2, 4, (y) => mix(hi, lo, Math.max(0, Math.min(1, (y - FY + 2) / 4))), g.behind.outline)
-    if (ly > FY - 2.5) sunOn(c, BEHIND, ly, mix(hi, tn.faceLit, 0.85))
-    paintField(c, g.behind, tn, t, f, mix(mix(tn.faceRock, tn.faceShade, 0.6), tn.haze, 0.3))
-    // The spur, its flank in its own shadow going down into the cloud, the sun only on its top.
+    bands(c, Math.max(11.5, f.x0 - 1), f.x1 + 1, FY - 2.2, low, (y) => mix(hi, lo, Math.max(0, Math.min(1, (y - FY + 2) / 4))), g.behind.outline)
+    if (ly > FY - 2.5) sunOn(c, cut(BEHIND, [0, 1], DECK + 0.3), ly, mix(hi, tn.faceLit, 0.85))
+    paintField(c, g.behind, tn, t, above, mix(mix(tn.faceRock, tn.faceShade, 0.6), tn.haze, 0.3))
+    // The spur, its flank in its own shadow going down into the cloud, the sun coming down it.
     const flank: [number, string][] = [[0, mix(tn.faceSnow, tn.faceShade, 0.25)], [0.12, mix(tn.faceSnow, tn.faceShade, 0.5)], [1, mix(tn.faceShade, tn.cloud, 0.45)]]
-    bands(c, Math.max(11, f.x0 - 1), f.x1 + 1, FY - 0.5, FY + 9.5, (y) => along(flank, (y - FY + 0.5) / 9.5), g.spur.outline)
-    if (ly > FY - 0.5) sunOn(c, cut(SPUR, [0, 1], FY + 1.1), ly, mix(flank[0][1], tn.faceLit, 0.85))
-    paintField(c, g.spur, tn, t, f, mix(tn.faceRock, tn.faceShade, 0.3))
+    bands(c, Math.max(11, f.x0 - 1), f.x1 + 1, FY - 0.5, low, (y) => along(flank, (y - FY + 0.5) / 9.5), g.spur.outline)
+    if (ly > FY - 0.5) sunOn(c, cut(SPUR, [0, 1], DECK + 0.3), ly, mix(flank[0][1], tn.faceLit, 0.85))
+    paintField(c, g.spur, tn, t, above, mix(tn.faceRock, tn.faceShade, 0.3))
     // Snow along its top, where the cat will walk.
     c.fillStyle = lit(FY - 0.1, mix(tn.faceSnow, '#FFFFFF', 0.35))
     c.fill(g.snowTop)
@@ -457,6 +530,129 @@ export function drawFarRocks(pen: Pen, t: number): void {
   fillPoly(pen, [[11.93, FAR_Y - 0.38], [12.35, FAR_Y - 0.57], [12.6, FAR_Y - 0.32], [12.3, FAR_Y - 0.42]], cap)
   fillPoly(pen, ROCK_B, rock)
   fillPoly(pen, [[14.84, FAR_Y - 0.34], [15.3, FAR_Y - 0.6], [15.75, FAR_Y - 0.41], [15.3, FAR_Y - 0.48]], cap)
+}
+
+/**
+ * The sea of cloud filling the valley, on the machine's plane, its far edge a little under the ledge: the spur and the
+ * mountain behind it stand out of it, and the face goes down into it. Seen from above, it is a surface of billows
+ * coming toward the lens, larger and further apart the nearer they are, each lit on its top and blue under, drifting
+ * with the wind (the near ones faster). It is lit when the light is down to it. Lesser summits stand out of it here
+ * and there, catching the sun on their tops and throwing long shadows across it, shorter as the sun climbs. The pair
+ * of choughs wheel over it.
+ */
+/** The summits standing out of the cloud: x, how far into the sea (below its far edge), width, height. */
+const ISLANDS: [number, number, number, number][] = [[22.6, 0.25, 2.6, 0.9], [30.2, 0.62, 3.4, 1.1], [16.6, 1.1, 2.6, 0.85], [26.0, 1.3, 4.4, 1.5], [13.3, 2.5, 3.6, 1.2]]
+export function drawDeck(pen: Pen, f: Frame, t: number): void {
+  if (f.y1 < DECK - 0.4 || f.x1 < 9.5) return
+  const tn = tone(t)
+  const sea = smooth(litY(t, 'low'), -8.4, -7.4)
+  const top = mix(tn.cloud, tn.lit, 0.6 * sea)
+  const shade = mix(top, tn.cloudUnder, 0.85)
+  const floor = mix(top, shade, 0.3)
+  // Only what the face's flank leaves open is drawn: it runs from about (10, -8.4) down to (11.1, -2.5).
+  const flank = (y: number) => 10.0 + Math.max(0, Math.min(5.9, y + 8.4)) * 0.18
+  const lo = Math.max(9.7, f.x0) - 0.6
+  const hi = f.x1 + 1
+  const ly = litY(t, 'world')
+  const reach = 2 + 9 * (1 - smooth(t, 182, 191.4)) ** 1.5
+  const island = (c: C2, [x, d, w, h]: [number, number, number, number], n: number) => {
+    if (x + w < lo || x - w - reach * h > hi) return
+    const base = DECK + d + 0.12
+    const hz = Math.max(0.1, 0.42 - 0.12 * d)
+    const q = (i: number) => hash(n, i, 91)
+    const sx = x + (q(1) - 0.4) * 0.2 * w
+    const pts: Pt[] = [
+      [x - w / 2, base],
+      [x - w * 0.36, base - h * (0.3 + 0.1 * q(2))],
+      [x - w * 0.22, base - h * 0.5],
+      [x - w * 0.1, base - h * (0.66 + 0.1 * q(3))],
+      [sx, base - h],
+      [sx + w * 0.1, base - h * 0.82],
+      [x + w * 0.18, base - h * (0.7 + 0.1 * q(4))],
+      [x + w * 0.3, base - h * 0.45],
+      [x + w / 2, base],
+    ]
+    // Its long shadow over the sea, away from the sun.
+    if (sea > 0.02) {
+      const L = reach * h
+      c.fillStyle = rgba(shade, 0.7 * sea)
+      c.beginPath()
+      c.moveTo(x + w * 0.3, base - 0.1)
+      c.lineTo(x - w / 2 - L, base - 0.1 + 0.05 * h)
+      c.lineTo(x - w / 2 - L * 0.9, base - 0.1 + 0.16 * h)
+      c.lineTo(x - w * 0.2, base)
+      c.closePath()
+      c.fill()
+    }
+    // Snow in the shade on the flank away from the sun, then the flank toward it, lit as the light comes down to it.
+    c.fillStyle = mix(mix(tn.faceShade, tn.faceSnow, 0.25), tn.haze, hz)
+    c.beginPath()
+    pts.forEach(([px, py], i) => (i ? c.lineTo(px, py) : c.moveTo(px, py)))
+    c.closePath()
+    c.fill()
+    const on = smooth(ly - (base - h), -0.2, 0.5)
+    c.fillStyle = mix(mix(tn.faceSnow, tn.faceLit, 0.9 * on), tn.haze, hz)
+    c.beginPath()
+    c.moveTo(sx, base - h)
+    c.lineTo(sx + w * 0.1, base - h * 0.82)
+    c.lineTo(x + w * 0.18, base - h * (0.7 + 0.1 * q(4)))
+    c.lineTo(x + w * 0.3, base - h * 0.45)
+    c.lineTo(x + w / 2, base)
+    c.lineTo(sx + w * 0.06, base)
+    c.lineTo(sx - w * 0.03, base - h * 0.5)
+    c.closePath()
+    c.fill()
+  }
+  inCells(pen, (c) => {
+    bands(c, lo, hi, DECK, f.y1 + 0.5, (y) => mix(top, floor, smooth(y, DECK, DECK + 0.8)), undefined, 8)
+    let next = 0
+    for (let j = 0; j < 22; j++) {
+      const d = 0.12 * j + 0.035 * j * j
+      // The summits further off than this row, before it, so its billows lie over their feet.
+      for (; next < ISLANDS.length && ISLANDS[next][1] < d; next++) island(c, ISLANDS[next], next)
+      const sc = 0.7 + 0.35 * d
+      if (DECK + d - 0.5 * sc > f.y1 + 0.2) break
+      const step = 0.8 * sc
+      const go = t * 0.2 * (1 + 0.6 * d)
+      const shift = go % step
+      const base = Math.floor(go / step)
+      const from = Math.max(lo, flank(DECK + d) - 0.2) - step
+      const i0 = Math.floor((from - shift) / step)
+      const i1 = Math.ceil((hi - shift) / step) + 1
+      // The row traced as one outline: its billows sampled across, the tops and the undersides of their union.
+      const dx = step * 0.12
+      const x0 = i0 * step + shift - step
+      const n = Math.min(SAMPLES, Math.ceil(((i1 - i0 + 2) * step) / dx) + 1)
+      const [lt, lb, st, sb] = ROWS
+      lt.fill(Infinity, 0, n)
+      lb.fill(-Infinity, 0, n)
+      st.fill(Infinity, 0, n)
+      sb.fill(-Infinity, 0, n)
+      for (let i = i0; i <= i1; i++) {
+        const id = i - base
+        const h = (k: number) => hash(id, k, 70 + j)
+        const bx = i * step + shift + (h(61) - 0.5) * 0.4 * step
+        const rx = step * (0.5 + 0.45 * h(62))
+        // Flattened, seen from above; the far rows heaped up here and there against what stands out of them.
+        const ry = rx * (0.2 + 0.1 * h(63)) * (j < 2 ? 1 + 2.4 * h(65) ** 3 : 1)
+        // Each row rolls a little, so the sea is not ruled.
+        const by = DECK + d + (h(64) - 0.5) * 0.1 * sc + (j ? 0.12 * sc * Math.sin(((bx - go) * 0.55) / sc + j * 1.7) : 0)
+        billow(lt, lb, x0, dx, n, bx, by, rx * 0.94, ry * 0.88)
+        if (j) billow(st, sb, x0, dx, n, bx - rx * 0.06, by + ry * 0.75, rx * 0.96, ry * 0.85)
+      }
+      // The row's undersides in shadow, then its tops in the light over them; nearer rows over farther ones. The
+      // shadow is only drawn where the tops will not cover it.
+      if (j) {
+        for (let k = 0; k < n; k++) if (lt[k] !== Infinity && st[k] !== Infinity) st[k] = Math.max(st[k], Math.min(lb[k] - 0.01, sb[k]))
+        c.fillStyle = shade
+        c.fill(rowOutline(st, sb, x0, dx, n))
+      }
+      c.fillStyle = top
+      c.fill(rowOutline(lt, lb, x0, dx, n))
+    }
+    for (; next < ISLANDS.length; next++) island(c, ISLANDS[next], next)
+  })
+  drawChoughs(pen.c, pen.k, t)
 }
 
 /** The snow leopard: pale on pale, long and low, its tail as long again. Barely there, in whatever light there is. */
@@ -554,6 +750,16 @@ export function drawTripod(pen: Pen, t: number): void {
   const low: Pt = [sx + 0.56 + swing * 0.12, sy - 0.0 - Math.abs(swing) * 0.02]
   line(pen, [top, [(top[0] + low[0]) / 2 + 0.03 + swing * 0.02, (top[1] + low[1]) / 2 + 0.03], low], C.strap, 0.022)
   ellipse(pen, low[0], low[1], 0.022, 0.018, '#8B8F92')
+  // On each tick the buckle knocks the leg and shakes a few grains of rime off it, which fall to the ledge.
+  for (const k of TICKS) {
+    const g = t - k
+    if (g < 0 || g > 0.45) continue
+    for (let j = 0; j < 4; j++) {
+      const vx = (j - 1.5) * 0.2
+      const vy = -0.5 - 0.3 * hash(j, 5, 93)
+      ellipse(pen, low[0] + vx * g, Math.min(LEDGE_Y - 0.02, low[1] + vy * g + 5 * g * g), 0.012, 0.012, rgba('#FFFFFF', 0.9 * (1 - g / 0.45)))
+    }
+  }
   // The camera body, and the lens: long, with a pale band, its hood toward the cat.
   fillPoly(pen, [[sx + 0.16, sy - 0.24], [sx + 0.42, sy - 0.24], [sx + 0.42, sy - 0.04], [sx + 0.16, sy - 0.04]], C.tripod)
   ellipse(pen, sx + 0.15, sy - 0.12, 0.025, 0.04, '#1E2124')
@@ -563,12 +769,6 @@ export function drawTripod(pen: Pen, t: number): void {
   // The light along the top of the lens: cold at first, warm once the sun is up.
   const tn = tone(t)
   line(pen, [[sx + 0.42, sy - 0.2], [sx + 1.1, sy - 0.215]], rgba(mix('#FFFFFF', tn.faceLit, tn.light), 0.18 + 0.3 * tn.light), 0.012)
-  // The ticks: a tiny glint where the buckle meets the leg.
-  for (const k of TICKS) {
-    const g = t - k
-    if (g < 0 || g > 0.3) continue
-    glow(pen, low[0], low[1], 0.09, [[0, rgba('#FFFFFF', 0.8 * (1 - g / 0.3))], [1, rgba('#FFFFFF', 0)]])
-  }
 }
 
 /** The strap's swing, -1..1: the wind lifts it away, and it falls back against the leg on each tick. */
