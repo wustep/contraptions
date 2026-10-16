@@ -108,16 +108,11 @@ function nearPlane(ctx: C2, pen: Pen, v: View, t: number): void {
       ctx.fillRect((bx - 1.08) * k, seat * k, 2.16 * k, 0.02 * k)
     }
     if (PILLAR > inner.x0 - 1 && PILLAR < inner.x1 + 1) {
-      // A riveted column: a soft edge (it is close to the lens), the fire's light down its far side.
+      // A riveted column, the fire's light down its far side.
       const w = 0.42
       const x0 = PILLAR - w / 2
-      const soft = ctx.createLinearGradient((x0 - 0.06) * k, 0, (x0 + w + 0.06) * k, 0)
-      soft.addColorStop(0, rgba(pen, '#0C0818', 0))
-      soft.addColorStop(0.1, near)
-      soft.addColorStop(0.9, near)
-      soft.addColorStop(1, rgba(pen, '#0C0818', 0))
-      ctx.fillStyle = soft
-      ctx.fillRect((x0 - 0.06) * k, (inner.y0 - 0.2) * k, (w + 0.12) * k, (inner.h + 0.4) * k)
+      ctx.fillStyle = near
+      ctx.fillRect(x0 * k, (inner.y0 - 0.2) * k, w * k, (inner.h + 0.4) * k)
       ctx.fillStyle = rim
       ctx.fillRect((x0 + w - 0.06) * k, (inner.y0 - 0.2) * k, 0.035 * k, (inner.h + 0.4) * k)
       ctx.fillStyle = cold

@@ -97,9 +97,10 @@ const ashCut = scenery<null>({
     // The ash is a weather, not a card: thicker overhead, still falling in two planes of flakes over the grey.
     wash(ctx, v, rgbaOf(ASH.color, Math.min(1, a * 1.08)), rgbaOf(ASH.color, a * 0.97))
     ctx.save()
-    ctx.globalAlpha = 0.4 + 0.5 * Math.sin(Math.PI * Math.min(1, a * 1.4))
-    motes(ctx, v, c.t, { n: 60, seed: 41, tile: [6, 5], r: [0.015, 0.035], v: [0.25, 0.55], sway: [0.12, 0.35], color: '#A9A49B', square: true })
-    motes(ctx, v, c.t, { n: 18, seed: 42, tile: [6, 5], r: [0.04, 0.065], v: [0.4, 0.9], sway: [0.2, 0.25], color: '#BDB8AF' })
+    // The flakes come and go with the grey, so none hang in his mother's room once it has lifted.
+    ctx.globalAlpha = 0.8 * Math.min(1, a * 2)
+    motes(ctx, v, c.t, { n: 60, seed: 41, tile: [6, 5], r: [0.015, 0.035], v: [0.25, 0.55], sway: [0.12, 0.35], color: '#9C978E', square: true })
+    motes(ctx, v, c.t, { n: 14, seed: 42, tile: [6, 5], r: [0.025, 0.04], v: [0.4, 0.9], sway: [0.2, 0.25], color: '#ABA69D', square: true })
     ctx.restore()
   },
 })
