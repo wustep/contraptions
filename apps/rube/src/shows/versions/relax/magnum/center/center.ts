@@ -64,7 +64,7 @@ import { drawSet } from './center-set'
  * doorway, the press bring their cameras up, and on the last hit they fire and the two of them give the look: the
  * last photograph, and two more, smaller, as it fades. The press lower their cameras and hurry off, and the day goes:
  * as the camera draws back to the whole Center the sky deepens to dusk over a warm horizon, its windows light one by
- * one with the kids at them, and it holds, drifting, the two of them small at its door, for the credits.
+ * one with the kids at them, and it goes on drawing back, slowly, the two of them small at its door, for the credits.
  */
 
 /** The part's origin in the Center's cells: the set and the part share one frame. */
@@ -221,13 +221,11 @@ function shots(begin: number): PartShot[] {
     on(227.4, 4.6, 3.85, -0.98),
     on(PHOTO, 4.2, 3.85, -0.9),
     on(PHOTO + 0.15, 4.22, 3.85, -0.91),
-    // And back, slowly, to the whole Center under the sky; a drift for the credits.
+    // And back, slowly, to the whole Center under the sky.
     on(232.8, 15.3, 3.6, -5.3),
-    // Under the credits the evening comes on (stars, lamps, the last lights) and the camera wanders, slowly.
-    on(240.2, 15.8, 4.5, -5.5),
-    on(248.2, 15.5, 3.7, -5.46),
-    on(256.0, 16.1, 2.9, -5.6),
-    on(DURATION, 16.4, 3.4, -5.7),
+    // Under the credits the evening comes on (stars, lamps, the last lights), and the camera keeps on drawing back
+    // and up, square on the door, so the lamps furthest down the lawn come into the frame as they light.
+    on(DURATION, 16.3, 3.55, -5.75),
   ]
 }
 

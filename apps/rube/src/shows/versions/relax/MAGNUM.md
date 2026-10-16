@@ -119,14 +119,14 @@ Times are show seconds; bar *n* is `bar(n)`, beat *k* is `beat(k)`.
 | **186.474** | the splash out of the silence | | **Magnum.** A hard cut close: the look, the biggest glint in the show, the camera's hardest punch; the star stops dead in the air a hand's width from his face. The world holds. |
 | 186.997 → 187.525 | the band back in | | The house lights clank on, flat and cold: the show is over. The star drops and sticks in the boards. |
 | 188.1 → 197.9 | the outro | | The press turn on Mugatu; he backs into the canopy's upright, its hitch slips, and the net of bin bags he hung over his own show comes down on him: a lump. The Prime Minister rises and cheers. Hansel rides the gin wheel's bucket down from the booth. |
-| 197.933 → 202.095 | | | Derek and Hansel side by side for the press, a look each. |
+| 197.933 → 202.095 | | | Derek and Hansel side by side for the press, each turned to the cameras. |
 | **202.095** | the finale | the Center | *A photographer fires: a flash cut.* A bright morning, a lawn, and the sheeted model. |
 | 204.174 | | | Derek bumps a bell-pull; the sheet goes up into a tree: a building, stately, in the morning. Then he comes up beside it (208.330): **it is smaller than he is.** A center for ants. |
 | 215.1 → 220.3 | | | He follows the hose to a foot pump and tests it; hops on every hit of the drum fill; a leap. |
 | **220.811, 221.322, 221.850** | three quick calls | | **Three times bigger, three times**: a stomp on each, and the building jumps each time, up and then out, the roofs unfolding, the lantern last, the trees popping. |
 | 222.372 | the shout | | A fourth stomp blows the doors open; the kids come running in up the steps; Derek and Hansel at the door. |
-| **229.118** | the last hit | | **The last photograph**: the press fire, a look each. Two small flashes more on the tail's call, and the press trot off. |
-| 229.1 → 263 | the tail; the credits | | The day turns to dusk, the windows light one by one, the kids at the sills, and the credits come over the deep sky. |
+| **229.118** | the last hit | | **The last photograph**: the press fire on the two of them turned to the cameras. Two small flashes more on the tail's call, and the press trot off. |
+| 229.1 → 263 | the tail; the credits | | The day turns to dusk, the windows light one by one, the kids at the sills, their light lying out on the lawn, and the credits come over the deep sky as the camera draws back. |
 
 ## The company
 
@@ -173,8 +173,10 @@ card the Center holds to the end, 263 s.
   the music is by construction), `show.ts` (the legs), `score.ts` (the order, the cuts, the flash cuts, the punches),
   `camera.ts` (authored keys through a monotone cubic), `music.ts`, `seams.ts`, `hits.ts`, `credits.ts`.
 - **The canonical drawings** (`cast.ts`): **the look** (`glint`: a cartoon "ting" of eight tapering rays on the rim of
-  whoever gives it, 0.35 for Blue Steel, 0.9 for Magnum, the one sparkle the show allows), a press camera's flash
-  (`flashBurst`), and stage light (`beam`, `pool`, `bloom`).
+  whoever gives it, the one sparkle the show allows, given three times only: 0.35 for Blue Steel, 0.45 for Hansel in
+  the grid, 0.9 for Magnum), a press camera's flash (`flashBurst`, a flat disc that pops white and cools), stage light
+  (`beam` through the haze and its `pool` where it lands), and `puff` (smoke, dust, steam: never light). There is no
+  helper for a glow.
 - **Derelicte's fixed geometry** (`derelicte/geo.ts`): the runway, the steps, the Prime Minister's seat, Mugatu's perch,
   the tower and its booth, the plug, and the fixed moments and waypoints the two builders of that scene met at.
 - **The parts:** `awards/`, `spa/`, `club/`, `derelicte/` (the runway and the set; the tower, the booth and Hansel's way
@@ -210,6 +212,28 @@ of it:
 - **A sandbag** beside the Prime Minister's chair was in every close of the climax: it hangs hidden in the tower now.
 - **Every landmark and every strong onset of the song is struck** (the drums, the call, the count-in, the wash, the
   plug, the splash, the band's return, the last hit, the tail's two calls).
+
+## The restraint pass
+
+Fullness from substance, light that falls on things, and as much cut as added:
+- **No glow anywhere.** Every halo round a lamp, a lens, a candle, a flame, a star, the trophy and the follow spot's
+  ball of light is gone; a lamp is lit by its lens, and what it lights shows it. The fires throw a fan of light up the
+  brick and a pool round the drum; the candles light their niches; the steam cabinet is lit down from its roof; the
+  Center's hall is lit inside its open doors and down its steps. The runway's edge is a lit lip, no band in the air.
+  The beams through the haze at the awards and the walk-off are thinner, so their pools carry the light.
+- **The glint is the look, three times:** Blue Steel, Hansel's move in the grid, Magnum (Derek's look loses, Hansel's
+  wins, Magnum saves). Mugatu's glee, the walk-off's other seven and the two poses for the press turn without one, and
+  the glint has no bed of light under its rays.
+- **A flash is a flash:** a flat disc at the reflector, white for a frame or two and cooling, no bloom and no rays.
+- **The stars are points**, coming out one by one, steady.
+- **Derelicte's wall at eye level**, which every close on the runway is seen against, was bare brick in a haze: a pipe
+  run under the windows, a downpipe at each pier, a steel roller door shut in the bay behind the runway's far half, and
+  rows of fly-posters in the others (newsprint, a photograph, Derelicte's own), pale only where the banks' light
+  reaches them.
+- **The Center's forecourt:** a paved walk from the stair out toward us, growing with the building. At dusk each lit
+  window lays a pane of light on the grass with its bars' shadows across it, and the open doors lay a strip down the
+  walk.
+- **The credits' camera** wandered from side to side: it draws back and up, square on the door, over all thirty seconds.
 
 ## Zoolander nods
 
