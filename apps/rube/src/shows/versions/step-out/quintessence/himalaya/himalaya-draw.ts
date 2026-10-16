@@ -4,7 +4,7 @@ import { level } from '../music'
 import { ellipse, fillPoly, line, mix, rgba, type Pen } from '../home/pen'
 import { litY, tone, wind, type Tone } from './dawn'
 import { DECK, drawChoughs, plumes, type Plume } from './far'
-import { along, bands, billow, cut, ROWS, rowOutline, SAMPLES, sunOn } from './paint'
+import { along, bands, billow, cut, lobe, ROWS, rowOutline, SAMPLES, sunOn } from './paint'
 import {
   CAT_LOOK,
   CAT_LOOK_AWAY,
@@ -115,7 +115,7 @@ const FACE: Pt[] = [
   [-22, -9.6],
 ]
 /** The summit ridge's high points the spindrift streams off: a few, the summit first. */
-const CRESTS: Pt[] = [[4.2, -13.3], [1.3, -12.8], [-3.2, -12.3], [8.5, -11.25]]
+const CRESTS: Pt[] = [[4.2, -13.3], [-3.2, -12.3]]
 
 /** Each polygon's bounding box, for a quick no. */
 const boxes = new WeakMap<readonly Pt[], [number, number, number, number]>()
@@ -181,10 +181,10 @@ function field(fs: FieldSpec): Field {
   for (let j = 0; j < fs.rows; j++) {
     const y0 = fs.y0 + (j + h(j, 41) * 0.4) * (H / fs.rows)
     for (let q = 0; q < cols; q++) {
-      if (h(j, q, 46) < 0.18) continue
+      if (h(j, q, 46) < 0.26) continue
       const xa = fs.x0 + q * 3.9 + h(j, q, 42) * 2.6 + (j % 2) * 1.7 - 1
       const len = 0.7 + h(j, q, 43) ** 1.5 * 3.2
-      if (!inside(fs.outline, xa + len / 2, y0 + (xa + len / 2 - fs.x0) * fs.tilt)) continue
+      if (![0, 0.5, 1].every((u) => inside(fs.outline, xa + len * u, y0 + (xa + len * u - fs.x0) * fs.tilt))) continue
       const th = 0.12 + h(j, q, 44) * 0.32
       const top: Pt[] = []
       const low: Pt[] = []
@@ -209,7 +209,7 @@ function field(fs: FieldSpec): Field {
 }
 
 let faceGeo: Field | null = null
-const faceOf = (): Field => (faceGeo ??= field({ outline: FACE, x0: -21, y0: -13.4, x1: 11.6, y1: 8, seed: 41, tilt: -0.09, rows: 24, density: 1 }))
+const faceOf = (): Field => (faceGeo ??= field({ outline: FACE, x0: -21, y0: -13.4, x1: 11.6, y1: 8, seed: 41, tilt: -0.09, rows: 20, density: 1 }))
 
 /**
  * The stones and the wind's ripples on a snowfield, made for what is in view: on a grid that is finer the closer the
@@ -238,7 +238,7 @@ function tileOf(fs: FieldSpec, li: number, g: number, tx: number, ty: number): {
         tile.ripples.lineTo(x + len / 2, y + (fs.tilt * len) / 2 + bow)
         tile.ripples.lineTo(x + len, y + fs.tilt * len)
       }
-      if (li < 4 && h(20) < 0.35) {
+      if (li < 4 && h(20) < 0.12) {
         const x = (gx + h(21)) * g
         const y = (gy + h(22)) * g
         const r = g * 0.07 * (0.4 + h(23))
@@ -333,7 +333,7 @@ export function drawFace(pen: Pen, f: Frame, t: number): void {
     }
     // Spindrift streaming off the summit ridge, downwind.
     const w = wind(t)
-    const list: Plume[] = CRESTS.map(([x, y], i) => ({ x: x - 0.05, y: y + 0.06, len: (1.0 + 2.2 * w) * (1 - i * 0.06), thick: (0.12 + 0.12 * w) * (1 - i * 0.05), seed: i * 5 + 3 }))
+    const list: Plume[] = CRESTS.map(([x, y], i) => ({ x: x - 0.05, y: y + 0.06, len: (0.8 + 1.5 * w) * (1 - i * 0.1), thick: (0.12 + 0.12 * w) * (1 - i * 0.1), seed: i * 5 + 3 }))
     plumes(c, list, mix('#FFFFFF', tn.faceLit, smooth(ly, -13.6, -12.5) * 0.6), 0.6, t)
   })
   // The boulder over the foot, whose snow the gust tears off.
@@ -534,21 +534,37 @@ export function drawFarRocks(pen: Pen, t: number): void {
 
 /**
  * The sea of cloud filling the valley, on the machine's plane, its far edge a little under the ledge: the spur and the
- * mountain behind it stand out of it, and the face goes down into it. Seen from above, it is a surface of billows
- * coming toward the lens, larger and further apart the nearer they are, each lit on its top and blue under, drifting
- * with the wind (the near ones faster). It is lit when the light is down to it. Lesser summits stand out of it here
- * and there, catching the sun on their tops and throwing long shadows across it, shorter as the sun climbs. The pair
- * of choughs wheel over it.
+ * mountain behind it stand out of it, and the face goes down into it. Seen from above, it is a level floor of cloud,
+ * its far edge billowed, with a few heaps standing up out of it: low and flat far off, big and round near, each lit on
+ * its crown and in shadow on its flank away from the sun, drifting slowly with the wind. It is lit when the light is
+ * down to it. Lesser summits stand out of it here and there, catching the sun on their tops and throwing long shadows
+ * across it, shorter as the sun climbs. The pair of choughs wheel over it.
  */
 /** The summits standing out of the cloud: x, how far into the sea (below its far edge), width, height. */
 const ISLANDS: [number, number, number, number][] = [[22.6, 0.25, 2.6, 0.9], [30.2, 0.62, 3.4, 1.1], [16.6, 1.1, 2.6, 0.85], [26.0, 1.3, 4.4, 1.5], [13.3, 2.5, 3.6, 1.2]]
+/** The heaps of cloud: x, how far into the sea, how big, and how much taller than the rest (the two welling up in the gorge under the ledge, which stay where they are). */
+const HEAPS: [number, number, number, number?][] = [
+  [10.9, 0.25, 0.8, 2.4], [11.75, 0.12, 0.5, 2],
+  // Far off: small and flat, close together, as the sea goes away from the lens.
+  [13.4, 0.15, 0.55], [15.2, 0.2, 0.7], [17.6, 0.12, 0.6], [21.6, 0.18, 0.75], [24.0, 0.1, 0.5], [29.4, 0.15, 0.7],
+  [31.5, 0.25, 1.0], [20.0, 0.35, 1.4], [35.0, 0.4, 1.6], [12.2, 0.45, 1.0], [25.8, 0.4, 0.9], [27.5, 0.55, 1.8],
+  [16.9, 0.6, 0.9], [22.6, 0.7, 1.0], [38.0, 0.75, 1.3], [14.4, 0.9, 1.1], [11.0, 0.95, 0.8], [24.4, 1.0, 1.3],
+  [30.4, 1.05, 1.2], [18.6, 1.4, 1.6], [12.8, 1.5, 1.4],
+  // Nearer: fewer, bigger and rounder, in twos and threes.
+  [38.6, 1.8, 2.0], [23.0, 2.2, 3.0], [26.6, 2.6, 2.0], [16.4, 2.9, 2.2], [33.5, 3.0, 3.4], [27.4, 3.5, 2.6],
+  [15.6, 4.6, 3.2], [38.4, 4.4, 3.0], [22.0, 5.4, 3.4], [25.4, 6.1, 2.6], [34.6, 5.7, 2.8], [30.0, 6.6, 4.2],
+  [18.4, 6.9, 2.8], [40.0, 7.6, 4.6], [14.6, 7.6, 3.4],
+  [22.4, 8.4, 3.8],
+]
+/** Everything standing up out of the sea, furthest first: so each lies over the feet of what is behind it. */
+const STANDING = [...HEAPS.map((h, i) => ({ d: h[1], i, heap: true })), ...ISLANDS.map((h, i) => ({ d: h[1], i, heap: false }))].sort((a, b) => a.d - b.d)
+
 export function drawDeck(pen: Pen, f: Frame, t: number): void {
   if (f.y1 < DECK - 0.4 || f.x1 < 9.5) return
   const tn = tone(t)
   const sea = smooth(litY(t, 'low'), -8.4, -7.4)
   const top = mix(tn.cloud, tn.lit, 0.6 * sea)
   const shade = mix(top, tn.cloudUnder, 0.85)
-  const floor = mix(top, shade, 0.3)
   // Only what the face's flank leaves open is drawn: it runs from about (10, -8.4) down to (11.1, -2.5).
   const flank = (y: number) => 10.0 + Math.max(0, Math.min(5.9, y + 8.4)) * 0.18
   const lo = Math.max(9.7, f.x0) - 0.6
@@ -572,18 +588,6 @@ export function drawDeck(pen: Pen, f: Frame, t: number): void {
       [x + w * 0.3, base - h * 0.45],
       [x + w / 2, base],
     ]
-    // Its long shadow over the sea, away from the sun.
-    if (sea > 0.02) {
-      const L = reach * h
-      c.fillStyle = rgba(shade, 0.7 * sea)
-      c.beginPath()
-      c.moveTo(x + w * 0.3, base - 0.1)
-      c.lineTo(x - w / 2 - L, base - 0.1 + 0.05 * h)
-      c.lineTo(x - w / 2 - L * 0.9, base - 0.1 + 0.16 * h)
-      c.lineTo(x - w * 0.2, base)
-      c.closePath()
-      c.fill()
-    }
     // Snow in the shade on the flank away from the sun, then the flank toward it, lit as the light comes down to it.
     c.fillStyle = mix(mix(tn.faceShade, tn.faceSnow, 0.25), tn.haze, hz)
     c.beginPath()
@@ -603,54 +607,74 @@ export function drawDeck(pen: Pen, f: Frame, t: number): void {
     c.closePath()
     c.fill()
   }
+  // The floor of the sea between the heaps, in their shadow: bluer toward the lens.
+  const floor = (y: number) => mix(top, tn.cloudUnder, 0.12 + 0.4 * smooth(y, DECK, DECK + 5))
+  // A heap: a dome with a lesser top behind it and two shoulders before it, each lobe in front of the one behind, so
+  // it is lumped as cloud is.
+  const heap = (c: C2, [hx, d, r, tall = 1]: [number, number, number, number?], n: number) => {
+    const x = hx + (t - 170) * (tall > 1 ? 0.01 : 0.08 * (1 + 0.3 * d))
+    const base = DECK + d
+    if (x + 1.3 * r < Math.max(lo, flank(base) - 0.6) || x - 1.3 * r > hi || base - r > f.y1) return
+    // Flat far off, rounder near.
+    const round = (0.28 + 0.2 * smooth(d, 0, 4)) * tall
+    const q = (k: number) => hash(n, k, 77)
+    const breathe = (i: number) => 1 + 0.05 * Math.sin(t * 0.4 + n + i * 1.7)
+    const dome = r * (0.68 + 0.12 * q(2))
+    const lobes: [number, number, number, number][] = [
+      [x + (q(3) - 0.5) * 0.5 * r, base - dome * round * 1.15, r * (0.36 + 0.1 * q(4)), r * (0.36 + 0.1 * q(4)) * round * breathe(0)],
+      [x + (q(1) - 0.5) * 0.25 * r, base - dome * round * 0.45, dome, dome * round * breathe(1)],
+      [x - (0.58 + 0.12 * q(5)) * r, base - 0.15 * r * round, r * (0.38 + 0.12 * q(6)), r * (0.38 + 0.12 * q(6)) * round * 0.85 * breathe(2)],
+      [x + (0.56 + 0.12 * q(7)) * r, base - 0.2 * r * round, r * (0.4 + 0.12 * q(8)), r * (0.4 + 0.12 * q(8)) * round * 0.85 * breathe(3)],
+    ]
+    const body = floor(base)
+    const side = mix(body, tn.cloudUnder, 0.5)
+    // The crowns are only a little lighter than the floor until the sun is on the sea, and then lit.
+    const crown = mix(body, mix(top, '#FFFFFF', 0.25), 0.5 + 0.5 * sea)
+    const foot = (px: number) => base + 0.05 * r * Math.sqrt(Math.max(0, 1 - ((px - x) / (1.3 * r)) ** 2))
+    for (const [cx, cy, rx, ry] of lobes) lobe(c, cx, cy, rx, ry, foot, side, body, crown)
+  }
   inCells(pen, (c) => {
-    bands(c, lo, hi, DECK, f.y1 + 0.5, (y) => mix(top, floor, smooth(y, DECK, DECK + 0.8)), undefined, 8)
-    let next = 0
-    for (let j = 0; j < 22; j++) {
-      const d = 0.12 * j + 0.035 * j * j
-      // The summits further off than this row, before it, so its billows lie over their feet.
-      for (; next < ISLANDS.length && ISLANDS[next][1] < d; next++) island(c, ISLANDS[next], next)
-      const sc = 0.7 + 0.35 * d
-      if (DECK + d - 0.5 * sc > f.y1 + 0.2) break
-      const step = 0.8 * sc
-      const go = t * 0.2 * (1 + 0.6 * d)
-      const shift = go % step
-      const base = Math.floor(go / step)
-      const from = Math.max(lo, flank(DECK + d) - 0.2) - step
-      const i0 = Math.floor((from - shift) / step)
-      const i1 = Math.ceil((hi - shift) / step) + 1
-      // The row traced as one outline: its billows sampled across, the tops and the undersides of their union.
-      const dx = step * 0.12
-      const x0 = i0 * step + shift - step
-      const n = Math.min(SAMPLES, Math.ceil(((i1 - i0 + 2) * step) / dx) + 1)
-      const [lt, lb, st, sb] = ROWS
-      lt.fill(Infinity, 0, n)
-      lb.fill(-Infinity, 0, n)
-      st.fill(Infinity, 0, n)
-      sb.fill(-Infinity, 0, n)
-      for (let i = i0; i <= i1; i++) {
-        const id = i - base
-        const h = (k: number) => hash(id, k, 70 + j)
-        const bx = i * step + shift + (h(61) - 0.5) * 0.4 * step
-        const rx = step * (0.5 + 0.45 * h(62))
-        // Flattened, seen from above; the far rows heaped up here and there against what stands out of them.
-        const ry = rx * (0.2 + 0.1 * h(63)) * (j < 2 ? 1 + 2.4 * h(65) ** 3 : 1)
-        // Each row rolls a little, so the sea is not ruled.
-        const by = DECK + d + (h(64) - 0.5) * 0.1 * sc + (j ? 0.12 * sc * Math.sin(((bx - go) * 0.55) / sc + j * 1.7) : 0)
-        billow(lt, lb, x0, dx, n, bx, by, rx * 0.94, ry * 0.88)
-        if (j) billow(st, sb, x0, dx, n, bx - rx * 0.06, by + ry * 0.75, rx * 0.96, ry * 0.85)
-      }
-      // The row's undersides in shadow, then its tops in the light over them; nearer rows over farther ones. The
-      // shadow is only drawn where the tops will not cover it.
-      if (j) {
-        for (let k = 0; k < n; k++) if (lt[k] !== Infinity && st[k] !== Infinity) st[k] = Math.max(st[k], Math.min(lb[k] - 0.01, sb[k]))
-        c.fillStyle = shade
-        c.fill(rowOutline(st, sb, x0, dx, n))
-      }
-      c.fillStyle = top
-      c.fill(rowOutline(lt, lb, x0, dx, n))
+    bands(c, lo, hi, DECK, f.y1 + 0.5, floor, undefined, 8)
+    // Its far edge, billowed: low rounded tops, heaped up here and there.
+    const step = 0.8
+    const go = t * 0.1
+    const shift = go % step
+    const id0 = Math.floor(go / step)
+    const i0 = Math.floor((Math.max(lo, flank(DECK) - 0.2) - step - shift) / step)
+    const i1 = Math.ceil((hi - shift) / step) + 1
+    const dx = step * 0.12
+    const x0 = i0 * step + shift - step
+    const n = Math.min(SAMPLES, Math.ceil(((i1 - i0 + 2) * step) / dx) + 1)
+    const [et, eb] = ROWS
+    et.fill(Infinity, 0, n)
+    eb.fill(-Infinity, 0, n)
+    for (let i = i0; i <= i1; i++) {
+      const h = (k: number) => hash(i - id0, k, 70)
+      const rx = step * (0.5 + 0.45 * h(62))
+      billow(et, eb, x0, dx, n, i * step + shift + (h(61) - 0.5) * 0.4 * step, DECK + (h(64) - 0.5) * 0.07, rx * 0.94, rx * (0.18 + 0.09 * h(63)) * (1 + 2.4 * h(65) ** 3))
     }
-    for (; next < ISLANDS.length; next++) island(c, ISLANDS[next], next)
+    c.fillStyle = top
+    c.fill(rowOutline(et, eb, x0, dx, n))
+    for (const s of STANDING) {
+      if (s.heap) heap(c, HEAPS[s.i], s.i)
+      else island(c, ISLANDS[s.i], s.i)
+    }
+    // Once the sun is on the sea, each summit's shadow lies across it and over the heaps in front, away from the sun
+    // (left, and toward the lens): from the summit's foot to the shadow of its top, long while the sun is low.
+    if (sea > 0.02) {
+      const path = new Path2D()
+      ISLANDS.forEach(([x, d, w, h]) => {
+        const base = DECK + d + 0.12
+        const L = 0.5 * reach * h
+        if (x + w < lo || x - w - L > hi) return
+        path.moveTo(x - w * 0.42, base - 0.04)
+        path.lineTo(x + w * 0.16, base)
+        path.lineTo(x - L, base + 0.38 * L)
+        path.closePath()
+      })
+      c.fillStyle = rgba(shade, 0.32 * sea)
+      c.fill(path)
+    }
   })
   drawChoughs(pen.c, pen.k, t)
 }

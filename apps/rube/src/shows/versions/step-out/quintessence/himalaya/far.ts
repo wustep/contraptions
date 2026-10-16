@@ -58,7 +58,7 @@ const P = (x: number, y: number, wl: number, wr = wl): Peak => ({ x, y, wl, wr }
 const GREAT = 4
 const SPECS: Spec[] = [
   {
-    z: 0.08, seed: 11, x0: -8, x1: 32, base: -9.2, jag: 0.05, rocky: 0.35, cloud: -9.28, flow: 0.025, haze: 0.32, plane: 'far', plumed: [1, 3, GREAT, 6, 7],
+    z: 0.08, seed: 11, x0: -8, x1: 32, base: -9.2, jag: 0.05, rocky: 0.35, cloud: -9.28, flow: 0.025, haze: 0.32, plane: 'far', plumed: [3, GREAT, 7],
     peaks: [P(-4.2, -11.2, 2.8), P(-0.2, -11.75, 3.0), P(3.9, -11.35, 2.4), P(7.1, -11.7, 2.2, 1.9), P(10.3, -12.45, 3.0, 2.3), P(12.6, -11.55, 1.5, 1.3), P(14.45, -11.7, 1.7, 2.2), P(18.4, -12.05, 2.6), P(22.2, -11.5, 2.4), P(26.0, -11.9, 2.8), P(30, -11.4, 2.5)],
   },
   {
@@ -74,8 +74,10 @@ const SPECS: Spec[] = [
 interface Range {
   spec: Spec
   body: Path2D
-  /** The summits' flanks away from the sun, their rock, and the lines on their snow (flutes, couloirs, crevasses). */
+  /** The summits' flanks away from the sun, the steeper face in each beside its arête, the gullies of snow down them, their rock, and the lines on their snow (flutes, couloirs, crevasses). */
   shade: Path2D
+  deep: Path2D
+  gullies: Path2D
   rock: Path2D
   lines: Path2D
   /** The summits: where each one's plume leaves from, and how big a summit it is (0 to 1). */
@@ -134,6 +136,8 @@ function build(s: Spec): Range {
   body.closePath()
 
   const shade = new Path2D()
+  const deep = new Path2D()
+  const gullies = new Path2D()
   const rock = new Path2D()
   const lines = new Path2D()
   const tops: Range['tops'] = []
@@ -162,28 +166,60 @@ function build(s: Spec): Range {
         lines.lineTo(lx - 0.02, ly)
       }
     }
-    // The flank away from the sun: from the summit along the ridge to the saddle on its left, down to the base, and
-    // back up the arête, which wanders a little on its way down.
+    // The flank away from the sun: from the summit along the ridge to the saddle on its left, down the gully from the
+    // saddle, which leans away under the next summit, and back up the arête, which leans the other way. Both wander a
+    // little on their way down, so no two flanks stand side by side like posts.
     let saddle = top
     const left = n > 0 ? s.peaks[n - 1].x : s.x0
     for (let q = top; q >= 0 && ridge[q][0] > left; q--) if (ridge[q][1] > ridge[saddle][1]) saddle = q
-    const foot = tx + (h(n, 7) - 0.3) * p.wr * 0.6
+    const [sx, sy] = ridge[saddle]
+    const gully = sx - (0.2 + 0.3 * h(n, 6)) * (bottom - sy)
+    const foot = tx + (0.08 + 0.25 * h(n, 7)) * (bottom - ty)
+    const steps = 10
     shade.moveTo(tx, ty)
     for (let q = top; q >= saddle; q--) shade.lineTo(ridge[q][0], ridge[q][1])
-    shade.lineTo(ridge[saddle][0], bottom)
-    const steps = 10
+    for (let k = 1; k <= steps; k++) {
+      const u = k / steps
+      shade.lineTo(sx + (gully - sx) * u ** 1.3 + (h(n * 37 + k, 5) - 0.5) * 0.14 * u, sy + (bottom - sy) * u)
+    }
+    const arete = (u: number, k: number): Pt => [tx + (foot - tx) * u + (h(n * 31 + k, 8) - 0.5) * 0.14 * u, ty + (bottom - ty) * u]
+    // Two gullies of snow down the shadowed flank, between its left edge and the arête, catching the sky's light.
+    for (let g = 0; g < 2; g++) {
+      const f = 0.3 + 0.35 * g + 0.15 * h(n, 16 + g)
+      const q0 = Math.round(saddle + (top - saddle) * f)
+      const [gx, gy] = ridge[q0]
+      const end = 0.55 + 0.35 * h(n, 18 + g)
+      gullies.moveTo(gx, gy + 0.04)
+      for (let k = 1; k <= 6; k++) {
+        const u = (k / 6) * end
+        const left = sx + (gully - sx) * u ** 1.3
+        const right = tx + (foot - tx) * u
+        const yy = gy + (bottom - gy) * u
+        gullies.lineTo(left + (right - left) * (f + (h(n * 43 + g * 7 + k, 17) - 0.5) * 0.08), yy)
+      }
+    }
+    for (let k = steps; k >= 1; k--) shade.lineTo(...arete(k / steps, k))
+    shade.closePath()
+    // Inside it, beside the arête, a steeper face turned further from the light: from partway down the ridge, down a
+    // rib to the foot, and back up the arête.
+    const pr = top - Math.max(1, Math.round((top - saddle) * (0.35 + 0.3 * h(n, 13))))
+    const [px, py] = ridge[pr]
+    const rib = px + (foot - px) * (0.3 + 0.3 * h(n, 14)) - (bottom - py) * 0.1
+    deep.moveTo(px, py)
+    for (let q = pr + 1; q <= top; q++) deep.lineTo(ridge[q][0], ridge[q][1])
+    for (let k = 1; k <= steps; k++) deep.lineTo(...arete(k / steps, k))
     for (let k = steps; k >= 1; k--) {
       const u = k / steps
-      shade.lineTo(tx + (foot - tx) * u + (h(n * 31 + k, 8) - 0.5) * 0.14 * u, ty + (bottom - ty) * u)
+      deep.lineTo(px + (rib - px) * u + (h(n * 41 + k, 15) - 0.5) * 0.12 * u, py + (bottom - py) * u)
     }
-    shade.closePath()
+    deep.closePath()
     // Rock: ribs down from the crest, more of them the lower the range.
     const ribs = Math.round(4 + 8 * s.rocky)
     for (let r = 0; r < ribs; r++) {
       const rx = tx + (h(n * 17 + r, 9) - 0.55) * 1.6 * p.wl
       const ry = ridgeY(s, rx) + 0.02
-      const len = (0.25 + 0.9 * h(n * 17 + r, 10)) * (0.5 + 0.6 * s.rocky)
-      const w = 0.03 + 0.05 * h(n * 17 + r, 11)
+      const len = (0.3 + 1.6 * h(n * 17 + r, 10) ** 1.5) * (0.5 + 0.6 * s.rocky)
+      const w = 0.04 + 0.06 * h(n * 17 + r, 11)
       const lean = (h(n * 17 + r, 12) - 0.5) * 0.3
       rock.moveTo(rx - w * 0.3, ry)
       rock.lineTo(rx + w, ry + 0.04)
@@ -193,14 +229,14 @@ function build(s: Spec): Range {
       rock.closePath()
     }
   })
-  // Flutes: the fine runnels down the steep snow, close together under the crest.
+  // Flutes: the fine runnels down the steep snow under the crest.
   for (let q = 1; q < ridge.length - 1; q++) {
     const [fx, fy] = ridge[q]
-    if (h(q, 20) < 0.2) continue
+    if (h(q, 20) < 0.6) continue
     lines.moveTo(fx, fy + 0.03)
     lines.lineTo(fx + (h(q, 22) - 0.5) * 0.08, Math.min(fy + 0.15 + 0.6 * h(q, 21), s.cloud))
   }
-  return { spec: s, body, shade, rock, lines, tops, top: Math.min(...ridge.map((r) => r[1])) }
+  return { spec: s, body, shade, deep, gullies, rock, lines, tops, top: Math.min(...ridge.map((r) => r[1])) }
 }
 
 let ranges: Range[] | null = null
@@ -246,15 +282,15 @@ function drawSky(ctx: C2, s: View, t: number, tn: Tone): void {
       const lx = s.x0 - 1 + (s.w + 2.5) * u
       const ly = s.y0 + s.h * 0.2 - u * 0.5
       const geese = new Path2D()
-      for (let i = 0; i < 11; i++) {
+      for (let i = 0; i < 15; i++) {
         const side = i % 2 ? 1 : -1
         const rank = Math.ceil(i / 2)
         const gx = lx - rank * 0.16 + Math.sin(t * 0.7 + i) * 0.02
         const gy = ly + side * rank * 0.075 + Math.sin(t * 0.9 + i * 1.3) * 0.015
         const beat = Math.sin(t * 7 + i * 0.9) * 0.022
-        geese.moveTo(gx - 0.045, gy - beat)
-        geese.lineTo(gx, gy + 0.008)
-        geese.lineTo(gx + 0.045, gy - beat)
+        geese.moveTo(gx - 0.055, gy - beat)
+        geese.lineTo(gx, gy + 0.01)
+        geese.lineTo(gx + 0.055, gy - beat)
       }
       ctx.strokeStyle = rgba(mix(tn.ink, tn.high, 0.35), 0.75)
       ctx.lineWidth = 1.4 / ctx.getTransform().a
@@ -271,9 +307,20 @@ function drawSky(ctx: C2, s: View, t: number, tn: Tone): void {
 }
 
 /**
- * The high cloud: long rolls of altocumulus in rows across the sky going off toward the horizon, thinner and closer
- * together, broken into lengths with sky between and in patches, a little paler than the sky round them. The sun
- * lights each roll's underside before it is up (rose, then gold, then white), and the rolls drift with the wind aloft.
+ * The high cloud: four rows of altocumulus, each its height, its thickness, and its rolls (where each starts, and how
+ * long it is). They lie in two patches with open sky between and above them, the high rows thin over the upper left
+ * and the low rows heavier off to the right, broken where the sun climbs.
+ */
+const ROLLS: [number, number, [number, number][]][] = [
+  [-13.28, 0.1, [[4.0, 1.9], [6.5, 1.2], [8.2, 2.4], [11.6, 1.1], [13.4, 1.7], [15.9, 1.5]]],
+  [-12.82, 0.17, [[3.3, 1.7], [5.4, 3.0], [9.1, 1.4], [10.9, 1.6], [15.4, 2.2]]],
+  [-12.28, 0.27, [[4.5, 2.5], [7.5, 1.6], [12.5, 1.7], [15.9, 2.3]]],
+  [-11.62, 0.4, [[3.9, 1.6], [6.1, 2.6], [10.4, 2.2], [13.2, 3.5], [16.9, 2.1]]],
+]
+
+/**
+ * The high cloud, a little paler than the sky round it, each roll a run of rounded cloudlets, drifting with the wind
+ * aloft. The sun lights each roll's underside before it is up: rose, then gold, then white.
  */
 function rolls(ctx: C2, s: View, t: number, tn: Tone, sky: (y: number) => string): void {
   const lit = smooth(t, 155, 168)
@@ -281,43 +328,39 @@ function rolls(ctx: C2, s: View, t: number, tn: Tone, sky: (y: number) => string
   const bodies = new Path2D()
   const lights = new Path2D()
   const ts: number[] = []
-  let y = -13.66
-  for (let j = 0; j < 9; j++) {
-    const f = 0.9 ** j
-    const th = Math.max(0.06, 0.17 * f)
-    const drift = t * 0.18 * f
-    // The row starts far enough left that, drifting right for the whole show, it never leaves the frame.
-    let x = -52 + hash(j, 1, 97) * 2 + drift
-    for (let i = 0; x < s.x1 + 0.5; i++) {
-      const h = (n: number) => hash(i, n, 100 + j)
-      const L = (1.0 + 2.8 * h(1)) * (0.6 + 0.4 * f)
-      const x0 = x
-      x += L + (0.15 + 0.5 * h(2)) * f
-      if (x < s.x0 - 0.5) continue
-      // In patches: a slow field of where the cloud is.
-      const u = x0 + L / 2 - drift
-      const where = 0.55 * Math.sin(u * 0.5 + 1.1 + j * 0.3) + 0.45 * Math.sin(u * 1.13 - j * 0.9 + 0.4)
-      if (where < -0.7 + 0.4 * h(3)) continue
-      const yy = y + 0.05 * Math.sin(u * 0.6 + j)
-      const n = Math.max(4, Math.round((L * 4.5) / f))
-      // Its thickness along it, thinning to nothing where the sun climbs, so its way up stays clear.
+  const drift = (t - 170) * 0.05
+  ROLLS.forEach(([y0, th, row], j) => {
+    row.forEach(([x, L], i) => {
+      const x0 = x + drift
+      const y = y0 + (hash(i, 5, 100 + j) - 0.5) * 0.12
+      if (x0 > s.x1 + 0.5 || x0 + L < s.x0 - 0.5) return
+      const n = Math.max(4, Math.round(L / 0.08))
+      // Its thickness along it, thinning to nothing where the sun will climb through it, so its way up stays clear.
+      const sun = y > -13.25
       for (let k = 0; k <= n; k++) {
         const q = k / n
-        ts[k] = th * Math.sin(Math.PI * q) ** 0.6 * (y > -13.35 ? smooth(Math.abs(x0 + L * q - 14.15), 0.6, 1.4) : 1)
+        ts[k] = th * Math.sin(Math.PI * q) ** 0.6 * (sun ? smooth(Math.abs(x0 + L * q - 14.15), 0.45, 0.85) : 1)
       }
-      const ph = h(4) * 6
+      // Its cloudlets: about as long as the roll is thick and a little more, each its own size. The roll is not
+      // quite level: it sags or lifts a little along its length.
+      const ph = hash(i, 4, 100 + j) * 6
+      const lump = Math.PI / (th * 2.6)
+      const lean = (hash(i, 6, 100 + j) - 0.5) * 0.16
+      const at = (k: number) => y + lean * (k / n - 0.5) * L - 0.04 * L * Math.sin((Math.PI * k) / n) * (hash(i, 7, 100 + j) - 0.3)
       // Its body down to where the light under it begins, and that light: side by side, neither over the other.
-      bodies.moveTo(x0, yy)
-      for (let k = 1; k <= n; k++) bodies.lineTo(x0 + (L * k) / n, yy - ts[k] * (0.75 + 0.25 * Math.sin((k / n) * L * (8 / f) + ph)))
-      for (let k = n; k >= 0; k--) bodies.lineTo(x0 + (L * k) / n, yy + ts[k] * (lit > 0.01 ? 0.14 : 0.4))
+      bodies.moveTo(x0, at(0))
+      for (let k = 1; k <= n; k++) {
+        const u = (L * k) / n
+        bodies.lineTo(x0 + u, at(k) - ts[k] * (0.5 + 0.5 * Math.abs(Math.sin(u * lump + ph + 0.4 * Math.sin(u * 2.3)))))
+      }
+      for (let k = n; k >= 0; k--) bodies.lineTo(x0 + (L * k) / n, at(k) + ts[k] * (lit > 0.01 ? 0.14 : 0.4))
       bodies.closePath()
-      lights.moveTo(x0, yy)
-      for (let k = 1; k <= n; k++) lights.lineTo(x0 + (L * k) / n, yy + ts[k] * 0.12)
-      for (let k = n; k >= 0; k--) lights.lineTo(x0 + (L * k) / n, yy + ts[k] * 0.4)
+      lights.moveTo(x0, at(0))
+      for (let k = 1; k <= n; k++) lights.lineTo(x0 + (L * k) / n, at(k) + ts[k] * 0.12)
+      for (let k = n; k >= 0; k--) lights.lineTo(x0 + (L * k) / n, at(k) + ts[k] * 0.4)
       lights.closePath()
-    }
-    y += 0.33 * f
-  }
+    })
+  })
   const body = mix(mix(sky(-13), tn.cloudUnder, 0.3), '#FFFFFF', 0.1 + 0.22 * tn.light)
   ctx.fillStyle = body
   ctx.fill(bodies)
@@ -391,7 +434,7 @@ export function plumes(ctx: C2, list: Plume[], col: string, a: number, t: number
 }
 
 /** The cloud at a plane's feet, flowing: billowed tops, lit when the light is down to them. */
-function clouds(ctx: C2, s: View, t: number, tn: Tone, cy: number, flow: number, seed: number, hz: (c: string) => string, lit: number, depth = 0, rowsToo = true): void {
+function clouds(ctx: C2, s: View, t: number, tn: Tone, cy: number, flow: number, seed: number, hz: (c: string) => string, lit: number, depth = 0): void {
   if (cy > s.y1 + 0.5) return
   const lo = s.x0 - 1
   const hi = s.x1 + 1
@@ -430,22 +473,10 @@ function clouds(ctx: C2, s: View, t: number, tn: Tone, cy: number, flow: number,
   const top = hz(mix(tn.cloud, tn.lit, 0.6 * lit))
   ctx.fillStyle = top
   ctx.fill(bill)
-  const stops: [number, string][] = [[0, top], [0.3, hz(mix(tn.cloud, tn.cloudUnder, 0.3))], [1, hz(tn.cloudUnder)]]
-  bands(ctx, lo, hi, cy, foot, (y) => along(stops, (y - cy) / 2.1), undefined, 8)
-  // Two rows of billows going back in the sea of cloud, each row's tops a hairline of light, as the front row's are.
-  for (const [dy, sc] of (rowsToo ? [[0.3, 0.75], [0.62, 0.55]] : []) as [number, number][]) {
-    if (cy + dy > foot - 0.05) continue
-    const st = step * sc * 1.4
-    const go = t * flow * (1 + dy)
-    const sh = go % st
-    const back = Math.floor(go / st)
-    for (let i = Math.floor((lo - sh) / st) - 1; i <= Math.ceil((hi - sh) / st) + 1; i++) {
-      const bx = i * st + sh
-      const rx = st * (0.4 + 0.25 * hash(i - back, 66, seed))
-      rim.moveTo(bx - rx, cy + dy)
-      rim.ellipse(bx, cy + dy, rx, rx * 0.35, 0, Math.PI, Math.PI * 2)
-    }
-  }
+  // Its body is the sea of cloud seen from above, going on toward the lens: it darkens only a little under its tops, so
+  // each plane's cloud is the floor the next one's stands on, and the sea on the machine's plane goes on from them.
+  const stops: [number, string][] = [[0, top], [1, hz(mix(top, tn.cloudUnder, 0.22))]]
+  bands(ctx, lo, hi, cy, foot, (y) => along(stops, (y - cy) / 0.6), undefined, 8)
   ctx.strokeStyle = rgba(hz(mix(tn.cloud, mix(tn.lit, '#FFFFFF', 0.4), 0.3 + 0.7 * lit)), 0.45)
   ctx.lineWidth = 1 / ctx.getTransform().a
   ctx.stroke(rim)
@@ -488,6 +519,11 @@ function drawRange(ctx: C2, s: View, t: number, tn: Tone, r: Range): void {
     // The flanks away from the sun, the rock, and the lines on the snow.
     ctx.fillStyle = rgba(mix(tn.shade, tn.haze, sp.haze * 0.5), 0.6 + 0.25 * tn.light)
     ctx.fill(r.shade)
+    ctx.fillStyle = rgba(mix(tn.shade, tn.haze, sp.haze * 0.5), 0.3)
+    ctx.fill(r.deep)
+    ctx.strokeStyle = rgba(hz(mix(tn.shade, tn.snow, 0.6)), 0.7)
+    ctx.lineWidth = 1.5 / ctx.getTransform().a
+    ctx.stroke(r.gullies)
     ctx.fillStyle = hz(mix(tn.rock, tn.litRock, 0.35 * tn.light))
     ctx.fill(r.rock)
     ctx.strokeStyle = rgba(hz(tn.shade), 0.5)
@@ -500,14 +536,14 @@ function drawRange(ctx: C2, s: View, t: number, tn: Tone, r: Range): void {
     r.tops.forEach((tp, n) => {
       if (!sp.plumed.includes(n)) return
       const great = sp.z < 0.1 && n === GREAT
-      const len = great ? 2.6 + 2.8 * wnd : (0.7 + 1.9 * wnd) * (0.35 + 0.9 * tp.size)
+      const len = great ? 2.2 + 1.6 * wnd : (0.6 + 1.4 * wnd) * (0.35 + 0.9 * tp.size)
       if (tp.x + len < lo || tp.x > hi) return
       list.push({ x: tp.x - 0.03, y: tp.y + 0.04, len, thick: (great ? 0.22 : 0.08 + 0.12 * tp.size) * (0.75 + 0.45 * wnd), seed: n * 7 + sp.seed })
     })
     plumes(ctx, list, hz(mix('#FFFFFF', tn.lit, 0.6 * smooth(ly, r.top, r.top + 1.5))), 0.65 * (0.6 + 0.4 * Math.min(1, wnd)), t)
     // The cloud at its feet, and the long shadows the summits throw across it once the light is down to it.
     const cl = smooth(ly, sp.cloud - 0.4, sp.cloud + 0.5)
-    clouds(ctx, s, t, tn, sp.cloud, sp.flow, sp.seed, hz, cl, 1.2, sp.z > 0.1)
+    clouds(ctx, s, t, tn, sp.cloud, sp.flow, sp.seed, hz, cl, 1.2)
     if (cl > 0.02) {
       const shadows = new Path2D()
       const len = 0.6 + 7 * (1 - smooth(t, 178, 191.4)) ** 1.5

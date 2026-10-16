@@ -103,8 +103,8 @@ export function along(stops: readonly [number, string][], u: number): string {
 
 /** How many samples across a row of billows can hold. */
 export const SAMPLES = 4096
-/** Scratch for a row of billows' tops and undersides (and their shadows'), sampled across it: filled afresh for every row of every frame. */
-export const ROWS = [new Float64Array(SAMPLES), new Float64Array(SAMPLES), new Float64Array(SAMPLES), new Float64Array(SAMPLES)] as const
+/** Scratch for a row of billows' tops and undersides, sampled across it: filled afresh for every row of every frame. */
+export const ROWS = [new Float64Array(SAMPLES), new Float64Array(SAMPLES)] as const
 
 /** One billow (an ellipse at `cx, cy`, radii `rx, ry`) into a row's samples from `x0`, `dx` apart: the highest top and lowest underside at each. */
 export function billow(tops: Float64Array, lows: Float64Array, x0: number, dx: number, n: number, cx: number, cy: number, rx: number, ry: number): void {
@@ -136,4 +136,48 @@ export function rowOutline(tops: Float64Array, lows: Float64Array, x0: number, d
     path.closePath()
   }
   return path
+}
+
+/** How many samples across a lobe of cloud. */
+const LOBE = 20
+const LX = new Float64Array(LOBE + 1)
+const LT = new Float64Array(LOBE + 1)
+const LB = new Float64Array(LOBE + 1)
+
+/**
+ * One lobe of a heap of cloud (an ellipse at `cx, cy`, radii `rx, ry`), standing in what is under it along `foot`:
+ * the whole of it in shadow (`side`); the part the sun reaches, moved toward it (`body`); and its crown, up and toward
+ * the sun (`crown`), lit. Each part is the lobe cut by another ellipse inside it, so none spills out of it.
+ */
+export function lobe(c: C2, cx: number, cy: number, rx: number, ry: number, foot: (x: number) => number, side: string, body: string, crown: string): void {
+  for (let k = 0; k <= LOBE; k++) {
+    const u = -1 + (2 * k) / LOBE
+    const v = Math.sqrt(Math.max(0, 1 - u * u))
+    LX[k] = cx + u * rx
+    LT[k] = cy - ry * v
+    LB[k] = Math.max(LT[k], Math.min(cy + ry * v, foot(LX[k])))
+  }
+  // The top of an ellipse inside the lobe, moved `ox` (of the radius) along and `oy` up, scaled `s`, at sample `k`.
+  const inner = (k: number, ox: number, oy: number, sc: number) => {
+    const u = (LX[k] - cx - ox * rx) / (sc * rx)
+    return Math.abs(u) < 1 ? Math.min(LB[k], Math.max(LT[k], cy - oy * ry - sc * ry * Math.sqrt(1 - u * u))) : NaN
+  }
+  const run = (tops: (k: number) => number, lows: (k: number, y: number) => number, col: string) => {
+    let a = -1
+    let b = -1
+    for (let k = 0; k <= LOBE; k++) {
+      if (Number.isNaN(tops(k))) continue
+      if (a < 0) a = k
+      b = k
+    }
+    if (b - a < 1) return
+    c.beginPath()
+    for (let k = a; k <= b; k++) c.lineTo(LX[k], tops(k))
+    for (let k = b; k >= a; k--) c.lineTo(LX[k], lows(k, tops(k)))
+    c.fillStyle = col
+    c.fill()
+  }
+  run((k) => LT[k], (k) => LB[k], side)
+  run((k) => inner(k, 0.28, 0, 1), (k) => LB[k], body)
+  run((k) => inner(k, 0.12, 0.18, 0.84), (k, y) => y + 0.45 * (LB[k] - y), crown)
 }
