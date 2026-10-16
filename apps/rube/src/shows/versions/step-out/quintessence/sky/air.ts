@@ -5,7 +5,7 @@ import { mix, rgba, type C2 } from './paint'
 /**
  * The sky's world beyond the machine (B's): the overcast's underside going away to the horizon in rows of cloud, the
  * banks standing on the horizon, the cold sun breaking through as the skids leave the pad, the far mountains of the
- * coast under their snow, icebergs at their own distances, the swell, the glitter under the sun, and a skein of birds.
+ * coast under their snow, icebergs at their own distances, the swell, the sun's light on it, and a skein of birds.
  *
  * Everything is drawn through the one eye the sea is drawn with (`sky-draw.ts`): the horizon at the frame's middle,
  * and a thing `z` from the eye drawn `F / z` of its size, `F` being the distance of the plane the machine is in. So
@@ -48,7 +48,7 @@ export const AIR = {
   bergShade: '#A9BEC4',
   crest: '#D7DFDC',
   trough: '#526660',
-  glitter: '#FBFBF4',
+  sunlit: '#FBFBF4',
   bird: '#3B464A',
 }
 
@@ -78,13 +78,14 @@ const DECK_Y = -15.5
 
 /**
  * The underside of the overcast, in rows of soft cells going away to the horizon, each row smaller and slower than
- * the one before it, some cells a shade darker than the rest. Round the sun the cells thin out and those left are
- * lit, paler the nearer they are to it. Four paths in all, one for each value.
+ * the one before it, some cells a shade darker than the rest. Once the sun is out the cloud is broken open round it:
+ * the cells thin as they drift toward it and fill out again past it, so the break is always there and nothing comes or
+ * goes at once. Three paths in all, one for each value.
  */
 export function drawDeck(g: C2, k: number, e: Eye, t: number): void {
   const sun = sunAt(t)
   const [sx, sy] = sunXY(e)
-  const tones = [new Path2D(), new Path2D(), new Path2D(), new Path2D()]
+  const tones = [new Path2D(), new Path2D()]
   const bellies = new Path2D()
   const shake = jolt(t)
   // The cells' spacing goes a little with the framing, so a close frame is not all one cell and the wide is not grit.
@@ -101,22 +102,25 @@ export function drawDeck(g: C2, k: number, e: Eye, t: number): void {
     const h = Math.max(0.03, 0.55 * S * s * Math.min(0.6, Math.abs(DECK_Y - e.hz) / z) * 1.6)
     if (yRow < e.y0 - h * 2) continue
     // The wind takes the deck along, the far rows slowest on the screen.
-    const drift = t * 1.6
+    const drift = t * 2.2
     const n0 = Math.floor((e.cx - (e.fw / 2 + 2) / s - drift) / S) - 1
     const n1 = Math.ceil((e.cx + (e.fw / 2 + 2) / s - drift) / S) + 1
     for (let n = n0; n <= n1; n++) {
+      const q = hash(n, r, 45)
+      if (q < 0.16) continue
       const gx = (n + 0.6 * hash(n, r, 41)) * S + drift
       const x = e.cx + (gx - e.cx) * s
       const y = yRow + (hash(n, r, 42) - 0.5) * h * 0.8
-      const w = S * s * (0.62 + 0.4 * hash(n, r, 43))
-      const hh = h * (0.7 + 0.5 * hash(n, r, 44))
-      const d = Math.hypot((x - sx) / e.fw, (y - sy) / e.fh)
-      // Round the sun the light comes and goes on the cells as they pass.
-      const near = sun * Math.max(0, 1 - d / 0.3) * (0.82 + 0.18 * Math.sin(t * 0.9 + n * 1.7 + r * 2.3))
-      if (hash(n, r, 45) < 0.16 + 0.5 * near) continue
-      // The break itself: no cell over the sun.
-      if (sun > 0.3 && Math.hypot(x - sx, (y - sy) * 1.4) < w * 0.85 + 0.09 * e.fh) continue
-      const tone = near > 0.55 ? 3 : near > 0.22 ? 2 : hash(n, r, 46) < 0.3 ? 0 : 1
+      const w0 = S * s * (0.62 + 0.4 * hash(n, r, 43))
+      // The break: a cell is smaller the nearer its edge comes to the sun, and none at all over it; some go
+      // farther out than others, so the cloud is thinner all round the break.
+      const d = Math.hypot((x - sx) / e.fw, ((y - sy) / e.fh) * 1.3) - (0.8 * w0) / e.fw
+      const far = 1 + 0.9 * (1 - q)
+      const thin = sun > 0.01 ? smooth(d, 0.03 * sun * far, 0.17 * sun * far) : 1
+      if (thin < 0.04) continue
+      const w = w0 * thin
+      const hh = h * (0.7 + 0.5 * hash(n, r, 44)) * thin
+      const tone = hash(n, r, 46) < 0.3 ? 0 : 1
       tones[tone].moveTo((x + w) * k, y * k)
       tones[tone].ellipse(x * k, y * k, w * k, hh * k, 0, 0, Math.PI * 2)
       // The grey cells have a darker belly, low in them: the overcast's underside is lumpy.
@@ -126,15 +130,12 @@ export function drawDeck(g: C2, k: number, e: Eye, t: number): void {
       }
     }
   }
-  const fills = ['#9AA4A8', AIR.deck, '#C9CFCF', '#E6EAE6']
-  for (let i = 0; i < 4; i++) {
-    g.fillStyle = fills[i]
-    g.fill(tones[i])
-    if (i === 1) {
-      g.fillStyle = rgba('#8E989D', 0.5)
-      g.fill(bellies)
-    }
-  }
+  g.fillStyle = '#9AA4A8'
+  g.fill(tones[0])
+  g.fillStyle = AIR.deck
+  g.fill(tones[1])
+  g.fillStyle = rgba('#8E989D', 0.5)
+  g.fill(bellies)
 }
 
 /**
@@ -175,60 +176,15 @@ export function drawBanks(g: C2, k: number, e: Eye, t: number): void {
   g.fill(lit)
 }
 
-/**
- * The sun itself, veiled, and the light round it, in flat rings (the house's values, and a fifth of the cost of a
- * gradient that size): drawn on the sky before the deck, so the cells pass in front.
- */
+/** The sun itself: a plain cold silver disc, drawn on the sky before the deck, in the break it opens. */
 export function drawSun(g: C2, k: number, e: Eye, t: number): void {
   const sun = sunAt(t)
   if (sun <= 0.01) return
   const [sx, sy] = sunXY(e)
-  const r = 0.11 * e.fh
-  g.save()
-  for (const [rr, a] of [[2.2, 0.14], [1.1, 0.26], [0.36, 0.75]] as [number, number][]) {
-    g.fillStyle = rgba('#F7F8F3', a * sun)
-    g.beginPath()
-    g.arc(sx * k, sy * k, r * rr * k, 0, Math.PI * 2)
-    g.fill()
-  }
-  g.restore()
-}
-
-/**
- * The sun's light coming down through the break in shafts onto the sea, and where they meet the water a sheet of
- * light; in the wide it is what the trawler sits in.
- */
-export function drawSunShafts(g: C2, k: number, e: Eye, t: number, surf: number): void {
-  const sun = sunAt(t)
-  if (sun <= 0.01) return
-  const [sx, sy] = sunXY(e)
-  const ground = e.hz + (surf - e.hz) * 0.45
-  // Each shaft fades down its length in three flat steps; a step of all of them is one path.
-  const steps = [new Path2D(), new Path2D(), new Path2D()]
-  for (let i = 0; i < 7; i++) {
-    const u = i / 6 - 0.5
-    const top = sx + u * 0.05 * e.fw
-    const bot = sx + 0.1 * e.fw + u * 0.36 * e.fw + 0.02 * e.fw * Math.sin(t * 0.13 + i)
-    const wt = 0.006 * e.fw
-    const wb = (0.025 + 0.025 * hash(i, 61)) * e.fw
-    const at = (v: number): [number, number, number] => [top + (bot - top) * v - (wt + (wb - wt) * v), top + (bot - top) * v + (wt + (wb - wt) * v), sy + (ground - sy) * v]
-    for (let j = 0; j < 3; j++) {
-      const [l0, r0, y0] = at(j / 3)
-      const [l1, r1, y1] = at((j + 1) / 3)
-      steps[j].moveTo(l0 * k, y0 * k)
-      steps[j].lineTo(r0 * k, y0 * k)
-      steps[j].lineTo(r1 * k, y1 * k)
-      steps[j].lineTo(l1 * k, y1 * k)
-      steps[j].closePath()
-    }
-  }
-  g.save()
-  const a = 0.07 * sun * (0.8 + 0.2 * Math.sin(t * 0.4))
-  for (let j = 0; j < 3; j++) {
-    g.fillStyle = rgba('#F4F6F0', a * [1, 0.6, 0.32][j])
-    g.fill(steps[j])
-  }
-  g.restore()
+  g.fillStyle = rgba('#F4F5F0', sun)
+  g.beginPath()
+  g.arc(sx * k, sy * k, 0.045 * e.fh * k, 0, Math.PI * 2)
+  g.fill()
 }
 
 /* ------------------------------------------------------------------ the coast */
@@ -374,28 +330,31 @@ export function drawSwell(g: C2, k: number, e: Eye, t: number, surf: number, a =
   g.restore()
 }
 
-/** Under the sun, the sea glitters: a path of light down the water toward us, each glint on and off on its own. */
-export function drawGlitter(g: C2, k: number, e: Eye, t: number, surf: number): void {
+/**
+ * Under the sun, its light on the sea: a path of pale dashes down the water toward us, the swell's crests where the
+ * light lies on them, each going along with the swell.
+ */
+export function drawSunPath(g: C2, k: number, e: Eye, t: number, surf: number): void {
   const sun = sunAt(t)
   if (sun <= 0.02) return
   const [sx] = sunXY(e)
   const e0 = surf - e.hz
   if (e0 <= 0.05) return
   const path = new Path2D()
-  const tick = Math.floor(t * 9)
-  for (let i = 0; i < 70; i++) {
+  for (let i = 0; i < 46; i++) {
     const v = Math.pow(hash(i, 91), 1.4)
     const y = e.hz + 0.03 + v * Math.min(e0, e.y1 - e.hz) * 0.9
     const spread = (0.06 + v * 0.3) * e.fw
-    const x = sx - 0.03 * e.fw + (hash(i, 92) - 0.5) * 2 * spread * (0.4 + 0.6 * hash(i, 93))
-    if (hash(i, tick + (i % 7), 94) < 0.45) continue
-    const len = (0.04 + 0.12 * v) * (0.6 + 0.8 * hash(i, 95)) * (e.fh / 6.6)
+    // Each crest goes along the path with the swell, and is gone at its edge and back at the other, small there.
+    const u = (((hash(i, 92) + t * (0.02 + 0.05 * v)) % 1) + 1) % 1
+    const x = sx - 0.03 * e.fw + (u - 0.5) * 2 * spread * (0.4 + 0.6 * hash(i, 93))
+    const len = (0.04 + 0.12 * v) * (0.6 + 0.8 * hash(i, 95)) * (e.fh / 6.6) * Math.sin(u * Math.PI)
     path.moveTo((x - len / 2) * k, y * k)
     path.lineTo((x + len / 2) * k, y * k)
   }
   g.save()
   g.lineWidth = Math.max(1, 0.018 * k)
-  g.strokeStyle = rgba(AIR.glitter, 0.6 * sun)
+  g.strokeStyle = rgba(AIR.sunlit, 0.5 * sun)
   g.stroke(path)
   g.restore()
 }

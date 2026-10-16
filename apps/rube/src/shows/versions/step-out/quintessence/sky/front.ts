@@ -10,9 +10,8 @@ import { END, heli, LIFT, WIDE_FROM, WIDE_TO } from './sky-plan'
  * changes his colour. It is handed show time as `t`.
  *
  * On the pad, the rotor's wash throwing grit and spray out flat along the quay as the skids leave it. In the flight,
- * wisps of low cloud nearer than the helicopter going by fast at the frame's head and foot (never across the middle,
- * where he is), which is what says how quick it is when the sea below hardly moves; rain streaking past; and the
- * cold, pearl light of the overcast closing in at the frame's edges.
+ * wisps of low cloud nearer than the helicopter going by fast at the frame's head (never across the middle, where he
+ * is), which is what says how quick it is when the sea below hardly moves; and rain streaking past.
  */
 
 /** Where the camera mostly is in the cruise, and how tall its frame: what the near planes are composed against. */
@@ -41,14 +40,14 @@ function drawGrit(g: CanvasRenderingContext2D, v: View, t: number): void {
   const hx = heli(t).x + 0.4
   for (const dir of [-1, 1]) {
     const box = dir < 0 ? { x0: hx - 6, y0: -0.55, x1: hx - 0.8, y1: 0.12 } : { x0: hx + 0.8, y0: -0.55, x1: hx + 6, y1: 0.12 }
-    motes(g, v, t, { n: 26, seed: dir < 0 ? 61 : 67, tile: [2.4, 0.7], r: [0.008, 0.016], v: [dir * 5.5, -0.35], spread: 0.45, color: rgbaOf('#E3E8E5', 0.55 * a), streak: 0.05, within: box })
+    motes(g, v, t, { n: 12, seed: dir < 0 ? 61 : 67, tile: [2.4, 0.7], r: [0.008, 0.016], v: [dir * 5.5, -0.35], spread: 0.45, color: rgbaOf('#E3E8E5', 0.45 * a), streak: 0.05, within: box })
   }
 }
 
 /**
  * The wisps: low cloud nearer than the helicopter, on three planes in front of it, so the nearest goes by quickest.
- * Each is a few flat, pale, overlapping lozenges, in the frame's top and bottom fifths only. The drops in the air jolt
- * them, the nearest most.
+ * Each is a few flat, pale, overlapping lozenges, in the frame's top sixth only, against the overcast. The drops in
+ * the air jolt them, the nearest most.
  */
 function drawWisps(g: CanvasRenderingContext2D, v: View, t: number): void {
   const a = smooth(t, LIFT + 2, LIFT + 3.5) * (1 - smooth(t, END - 2.4, END - 1.2))
@@ -63,8 +62,7 @@ function drawWisps(g: CanvasRenderingContext2D, v: View, t: number): void {
       for (let i = 0; i < n; i++) {
         const gx = hash(i, seed, 1) * span * 1.7 - t * 0.6
         const x = inner.x0 - 4 + ((((gx - (inner.x0 - 4)) % span) + span) % span)
-        const top = hash(i, seed, 2) < 0.5
-        const y = inner.y0 + inner.h * (top ? 0.03 + 0.12 * hash(i, seed, 3) : 0.86 + 0.11 * hash(i, seed, 3)) + kick
+        const y = inner.y0 + inner.h * (0.03 + 0.12 * hash(i, seed, 3)) + kick
         const w = (2 + 2.6 * hash(i, seed, 4)) * (z / 1.6)
         const h = (0.1 + 0.1 * hash(i, seed, 5)) * (z / 1.6)
         for (let j = 0; j < 3; j++) {

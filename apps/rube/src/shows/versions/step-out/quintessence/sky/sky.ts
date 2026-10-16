@@ -80,9 +80,9 @@ export const helicopter = part<State>(
 )
 
 /**
- * The camera: with him to the door; drawing back slowly as the skids leave the pad, so the helicopter is whole and the
- * harbour and the sea open round it as it climbs; out wide; close again, pushing in as the pilot looks back and shakes
- * his head; and out a little for the jump.
+ * The camera: with him to the door; in a little on him in it while the rotor spools up; drawing back slowly as the
+ * skids leave the pad, so the helicopter is whole and the harbour and the sea open round it as it climbs; out wide;
+ * close again, pushing in as the pilot looks back and shakes his head; and out a little for the jump.
  */
 function shots(): PartShot[] {
   const follow = (t: number, cells: number, off: Pt): PartShot => ({ t, cells, w: 0, off })
@@ -96,7 +96,7 @@ function shots(): PartShot[] {
   return [
     follow(BEGIN + 0.9, 4.6, [1.0, -0.55]),
     hold(IN + 0.3, 5.4, on(IN + 0.3, [0.35, -0.5])),
-    hold(LIFT - 0.1, 5.6, on(LIFT, [0.35, -0.55])),
+    hold(LIFT - 0.1, 5.0, on(LIFT, [0.35, -0.5])),
     follow(LIFT + 1.6, 6.6, [0.45, -0.5]),
     follow(at(29) - 0.6, 7.0, [0.55, -0.45]),
     follow(WIDE_FROM - 0.25, 6.9, [0.55, -0.4]),

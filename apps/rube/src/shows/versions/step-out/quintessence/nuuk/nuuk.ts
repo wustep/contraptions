@@ -6,7 +6,7 @@ import { WALTER_WARM } from '../worlds'
 import { drawCounter, drawDoorIn, drawDoorOut, drawGuitar, drawOver, drawPilot, drawQuay, drawRoom, drawSpot, drawStage } from './draw'
 import { CHERYL_FROM, CHERYL_GONE, cherylAt, EXIT_X, HINGE, NUUK_STRIKES, OUT, PLANK, SHE_LANDS, STOP, T0, T1, V_SKY, WAY } from './geo'
 import type { Pen } from '../dream/pen'
-import { drawAshtray, drawBottleGlints, drawCounterFront, drawLamps, drawRail } from './room'
+import { drawAshtray, drawCounterFront, drawLamps, drawRail } from './room'
 
 /**
  * The bar at Nuuk (37.05 → 50.41, bars 17 to 24). He rolls in over the threshold out of the grey harbour into the dark
@@ -35,10 +35,10 @@ export const nuukSet = scenery<null>({
     drawCounter(pen, c.t)
     const g = p.drawingContext as CanvasRenderingContext2D
     drawCounterFront(g, c.k)
-    drawBottleGlints(g, c.k, c.t)
     drawRail(g, c.k, c.t)
     drawAshtray(g, c.k, c.t)
-    // The lamps over the counter, in front of the back bar: low, amber, swinging slowly on their cords.
+    // The lamps over the counter, in front of the back bar: low, amber, swinging slowly on their cords, their light
+    // lying on the boards and the counter's top.
     drawLamps(g, c.k, c.t)
     drawStage(pen, c.t)
     p.pop()

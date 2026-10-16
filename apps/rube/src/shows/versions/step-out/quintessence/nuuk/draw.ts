@@ -1,9 +1,9 @@
 import type { Pt } from '../../../../../parts'
 import { hash } from '../kit'
 import type { View } from '../depth'
-import { daylight, drawHarbour } from './harbour'
-import { drawDoorDetail, drawGrain, drawSkirt, drawUnderFloor, drawWallThings, drawWindowRain, lampAt, WIN } from './room'
-import { blob, ctxOf, ellipse, flash, glint, glow, line, path, rect, rgba, ring, shape, type Pen } from '../dream/pen'
+import { drawHarbour } from './harbour'
+import { drawDoorDetail, drawDoorLight, drawGrain, drawSkirt, drawUnderFloor, drawWallThings, drawWindowRain, lampAt, WIN } from './room'
+import { blob, ctxOf, ellipse, flash, glint, line, mix, path, rect, rgba, ring, shape, type Pen } from '../dream/pen'
 import {
   BELL,
   CEIL,
@@ -66,6 +66,7 @@ const C = {
   h3: '#6E8F6A',
   h4: '#A8B4B6',
   pilot: '#0F0A08',
+  coat: '#2A1E17',
   rim: '#8E9BA1',
   ring: '#F5D27A',
   stage: '#3A2820',
@@ -128,9 +129,8 @@ export function drawRoom(pen: Pen, t: number, f: { x0: number; y0: number; x1: n
   drawWindowRain(g, k, t)
   rect(pen, (wx0 + wx1) / 2 - 0.03, wy0, (wx0 + wx1) / 2 + 0.03, wy1, C.beam)
   rect(pen, wx0, (wy0 + wy1) / 2 - 0.03, wx1, (wy0 + wy1) / 2 + 0.03, C.beam)
-  // The cold daylight off the window on the boards.
-  glow(pen, [(wx0 + wx1) / 2, wy1 + 0.4], 1.6, C.grey, 0.12 * daylight(t))
   drawWallThings(g, k, t)
+  drawDoorLight(g, k, t)
   // The ceiling and its beams.
   rect(pen, x0, CEIL - 3, x1, CEIL, C.beam)
   for (let x = x0 + 0.4; x < x1; x += 1.3) rect(pen, x, CEIL, x + 0.18, CEIL + 0.22, C.beam)
@@ -210,7 +210,6 @@ export function drawCounter(pen: Pen, t: number): void {
     rect(pen, x - 0.05, -2.05 - h, x + 0.05, -2.05, col)
     rect(pen, x - 0.02, -2.05 - h - 0.1, x + 0.02, -2.05 - h, col)
   }
-  glow(pen, [(x0 + x1) / 2, -2.2], 1.4, C.amber, 0.12)
   // The counter itself.
   rect(pen, x0, COUNTER_TOP, x1, FLOOR, C.counter)
   for (let x = x0 + 0.3; x < x1; x += 0.5) rect(pen, x, COUNTER_TOP + 0.15, x + 0.03, FLOOR - 0.1, C.seam)
@@ -222,7 +221,7 @@ export function drawCounter(pen: Pen, t: number): void {
 
 /**
  * The pilot: a big man hunched over his glass on a stool, a hard dark shape with a cold rim of the window's light.
- * His right hand on the counter, its thumb out; on the thumb the ring that catches the light on THUMB.
+ * His right hand on the counter, its thumb out; on the thumb the ring, which the lamp lights as the hand comes up.
  */
 export function drawPilot(pen: Pen, t: number): void {
   const { p, k } = pen
@@ -259,6 +258,11 @@ function pilot(pen: Pen, t: number): void {
   // The head, low between the shoulders, a heavy beard.
   ellipse(pen, head, 0.2, 0.21, C.pilot)
   blob(pen, [[head[0] - 0.05, head[1] + 0.05], [head[0] + 0.2, head[1] + 0.02], [head[0] + 0.18, head[1] + 0.26], [head[0] - 0.02, head[1] + 0.24]], C.pilot)
+  // His coat, a shade off black: the collar turned up to his ears, the seam down his back, a pocket, the hem.
+  shape(pen, [[sh[0] - 0.12, sh[1] - 0.06], [sh[0] + 0.02, sh[1] - 0.24], [sh[0] + 0.12, sh[1] - 0.2], [sh[0] + 0.08, sh[1] + 0.02]], C.coat)
+  path(pen, [[sh[0] - 0.2, sh[1] + 0.02], [sh[0] - 0.3, sh[1] + 0.45], [hip[0] - 0.22, hip[1] - 0.2], [hip[0] - 0.2, hip[1] + 0.02]], C.coat, 0.9)
+  path(pen, [[hip[0] - 0.02, hip[1] - 0.35], [hip[0] + 0.2, hip[1] - 0.38], [hip[0] + 0.2, hip[1] - 0.22]], C.coat, 0.8)
+  path(pen, [[hip[0] - 0.26, hip[1] + 0.06], [hip[0] + 0.05, hip[1] + 0.02], [hip[0] + 0.32, hip[1] - 0.06]], C.coat, 0.9)
   // A cold rim of daylight on his back, from the window.
   const ctx = ctxOf(pen.p)
   ctx.save()
@@ -292,16 +296,13 @@ function pilot(pen: Pen, t: number): void {
   // The thumb up off the fist, and its ring.
   const thumbTip: Pt = [hand[0] + 0.02, hand[1] - 0.2]
   line(pen, [hand[0] + 0.01, hand[1] - 0.05], thumbTip, C.pilot, 3.6)
+  // The ring: dull brass down on the counter, lit gold as the hand comes up into the lamp's light.
   const ringAt: Pt = [hand[0] + 0.015, hand[1] - 0.11]
-  rect(pen, ringAt[0] - 0.035, ringAt[1] - 0.012, ringAt[0] + 0.035, ringAt[1] + 0.012, C.ring)
-  // It catches the light: hard on the thumb, softer on each tap.
-  let g = 1.0 * flash(t - THUMB, 0.45)
-  for (const tap of TAPS) g = Math.max(g, 0.55 * flash(t - tap, 0.22))
-  glint(pen, [ringAt[0] + 0.02, ringAt[1] - 0.01], 0.07 + 0.12 * g, C.lamp, 0.25 + 0.75 * g)
-  // His glass.
+  rect(pen, ringAt[0] - 0.04, ringAt[1] - 0.015, ringAt[0] + 0.04, ringAt[1] + 0.015, mix(C.amber, C.ring, 0.3 + 0.7 * lift))
+  // His glass, the drink in it rocking after he sets it down hard.
   rect(pen, gx - 0.06, TOP_L - 0.2, gx + 0.06, TOP_L - 0.06, C.bottle)
-  rect(pen, gx - 0.05, TOP_L - 0.13, gx + 0.05, TOP_L - 0.07, C.amber)
-  if (t >= GLASS && t < GLASS + 0.4) glow(pen, [gx, TOP_L - 0.06], 0.3, C.lamp, 0.4 * flash(t - GLASS, 0.12))
+  const slosh = 0.022 * ring(t - GLASS, 2.4, 0.35)
+  shape(pen, [[gx - 0.05, TOP_L - 0.13 + slosh], [gx + 0.05, TOP_L - 0.13 - slosh], [gx + 0.05, TOP_L - 0.07], [gx - 0.05, TOP_L - 0.07]], C.amber)
 }
 
 /** How high the pilot's hand is off the counter, 0..1: the glass set down hard, the thumb up, the drunk taps. */
@@ -337,17 +338,18 @@ export function drawStage(pen: Pen, t: number): void {
   rect(pen, SPOT[0] - 0.25, CEIL, SPOT[0] + 0.25, CEIL + 0.12, C.beam)
   const on = spotOn(t)
   shape(pen, [[SPOT[0] - 0.1, SPOT[1] - 0.1], [SPOT[0] + 0.1, SPOT[1] - 0.12], [SPOT[0] + 0.2, SPOT[1] + 0.12], [SPOT[0] - 0.02, SPOT[1] + 0.16]], C.iron)
-  if (on > 0.01) glow(pen, [SPOT[0] + 0.12, SPOT[1] + 0.12], 0.25, C.spot, on)
+  // Its lens, lit while it is on.
+  if (on > 0.01) shape(pen, [[SPOT[0] - 0.01, SPOT[1] + 0.12], [SPOT[0] + 0.18, SPOT[1] + 0.085], [SPOT[0] + 0.2, SPOT[1] + 0.12], [SPOT[0] - 0.02, SPOT[1] + 0.16]], mix(C.iron, C.spot, on))
 }
 
-/** The spotlight, 0..1: on at the hinge with a little flare, off as she lands outside. */
+/** The spotlight, 0..1: on at the hinge, off as she lands outside. */
 export function spotOn(t: number): number {
   if (t < HINGE) return 0
-  if (t < SPOT_OFF) return 1 + 0.35 * flash(t - HINGE, 0.15)
-  return Math.max(0, 1 - (t - SPOT_OFF) / 0.12) * 0.9
+  if (t < SPOT_OFF) return 1
+  return Math.max(0, 1 - (t - SPOT_OFF) / 0.15)
 }
 
-/** The spotlight's cone on the stage, warm, with dust in it: drawn behind her. */
+/** The spotlight's cone on the stage, faint and warm, and its pool on the boards: drawn behind her. */
 export function drawSpot(pen: Pen, t: number): void {
   const on = spotOn(t)
   if (on <= 0.01) return
@@ -356,8 +358,8 @@ export function drawSpot(pen: Pen, t: number): void {
   const src: Pt = [SPOT[0] + 0.12, SPOT[1] + 0.12]
   const target: Pt = [CHERYL_AT[0], STAGE_TOP]
   const g = ctx.createLinearGradient(src[0] * k, src[1] * k, target[0] * k, target[1] * k)
-  g.addColorStop(0, rgba(pen, C.spot, 0.45 * on))
-  g.addColorStop(1, rgba(pen, C.spot, 0.16 * on))
+  g.addColorStop(0, rgba(pen, C.spot, 0.22 * on))
+  g.addColorStop(1, rgba(pen, C.spot, 0.08 * on))
   ctx.save()
   ctx.beginPath()
   ctx.moveTo((src[0] - 0.06) * k, src[1] * k)
@@ -368,31 +370,22 @@ export function drawSpot(pen: Pen, t: number): void {
   ctx.fillStyle = g
   ctx.fill()
   ctx.restore()
-  // Its pool on the boards of the stage.
-  ctx.save()
-  ctx.translate(target[0] * k, target[1] * k)
-  ctx.scale(1, 0.16)
-  const pool = ctx.createRadialGradient(0, 0, 0, 0, 0, 0.8 * k)
-  pool.addColorStop(0, rgba(pen, C.spot, 0.7 * on))
-  pool.addColorStop(1, rgba(pen, C.spot, 0))
-  ctx.fillStyle = pool
-  ctx.fillRect(-0.8 * k, -0.8 * k, 1.6 * k, 1.6 * k)
-  ctx.restore()
-  glow(pen, [target[0], target[1] - 0.35], 0.9, C.spot, 0.3 * on)
-  // Dust turning in it.
-  for (let i = 0; i < 14; i++) {
-    const u = (hash(i, 1) + t * 0.03 * (0.5 + hash(i, 2))) % 1
-    const x = src[0] + (target[0] - src[0]) * u + (hash(i, 3) - 0.5) * 1.0 * u + Math.sin(t * 0.8 + i) * 0.05
-    const y = src[1] + (target[1] - src[1]) * u
-    ellipse(pen, [x, y], 0.012, 0.012, C.spot)
-  }
+  // Its pool on the boards of the stage: two flat ovals, the inner the brighter.
+  ctx.fillStyle = rgba(pen, C.spot, 0.28 * on)
+  ctx.beginPath()
+  ctx.ellipse(target[0] * k, target[1] * k, 0.75 * k, 0.11 * k, 0, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.fillStyle = rgba(pen, C.spot, 0.22 * on)
+  ctx.beginPath()
+  ctx.ellipse(target[0] * k, target[1] * k, 0.45 * k, 0.065 * k, 0, 0, Math.PI * 2)
+  ctx.fill()
 }
 
 /** Her guitar, held across her as she stands in the light: it goes with her when she goes. */
 export function drawGuitar(pen: Pen, t: number): void {
+  // From the hinge's cut: before it she waits out of shot, and the guitar's neck would reach into the frame alone.
   const c = cherylAt(t)
-  if (!c) return
-  const on = Math.max(0.35, Math.min(1, spotOn(t)))
+  if (!c || t < HINGE) return
   const [x, y] = c
   // Body low at her right, neck up across her to the left.
   const body: Pt = [x + 0.17, y + 0.07]
@@ -409,7 +402,6 @@ export function drawGuitar(pen: Pen, t: number): void {
   for (const at of STRUMS) s = Math.max(s, flash(t - at, 0.2))
   const shimmer = 0.012 * s * Math.sin(t * 90)
   line(pen, [body[0] + 0.08, body[1] + shimmer], [neckEnd[0], neckEnd[1] + shimmer], C.spot, 0.5 + 0.8 * s)
-  if (s > 0.05) glow(pen, [body[0] - 0.02, body[1]], 0.3, C.spot, 0.45 * s * on)
 }
 
 /* ------------------------------------------------------------------ outside */
@@ -417,10 +409,8 @@ export function drawGuitar(pen: Pen, t: number): void {
 /** The quay past the back door: a loose plank that knocks under him, a bollard, a gull. */
 export function drawQuay(pen: Pen, t: number, plankX: number): void {
   // The plank that knocks.
-  const k = flash(t - PLANK, 0.1)
   const tip = 0.04 * ring(t - PLANK, 5, 0.18)
   shape(pen, [[plankX - 0.35, FLOOR + tip], [plankX + 0.35, FLOOR - tip], [plankX + 0.35, FLOOR + 0.1 - tip], [plankX - 0.35, FLOOR + 0.1 + tip]], C.quay, 0.5, C.quayDark)
-  if (k > 0.05) glow(pen, [plankX, FLOOR], 0.35, C.sky, 0.4 * k)
   // Bollards along the edge.
   for (const bx of [DOOR_X + 2.6, DOOR_X + 6.2]) {
     rect(pen, bx - 0.12, FLOOR - 0.32, bx + 0.12, FLOOR, C.bollard)

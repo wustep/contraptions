@@ -1,23 +1,23 @@
 import type { Pt } from '../../../../../parts'
-import { layer, motes, rgbaOf, shaft, view, type View } from '../depth'
+import { layer, motes, rgbaOf, view, type View } from '../depth'
 import { hash, scenery, smooth } from '../kit'
 import { edgeDark } from './grade'
 import { mix } from '../dream/pen'
 import { spotOn } from './draw'
-import { CEIL, CHERYL_AT, COUNTER_TOP, DOOR_IN, FLOOR, HEAD, SPOT, STAGE_TOP, WALL_OUT } from './geo'
+import { CEIL, CHERYL_AT, DOOR_IN, FLOOR, SPOT, STAGE_TOP, WALL_OUT } from './geo'
 import { BAR_AT, BAR_REF, daylight, flood } from './harbour'
-import { ASH, lampAt } from './room'
+import { ASH } from './room'
 
 /**
  * What stands between the camera and the machine in this place, and the light over all of it: the near plane, the
  * air, the grade. Drawn after the set and the parts and before Walter (`depth.ts`), so nothing here hides him or
  * changes his colour. It is handed show time as `t`.
  *
- * Inside: the tobacco haze hanging in slow layers, the lamps' cones in it with the dust turning in them, and when the
- * little stage's spotlight comes on, the dust in its beam. Outside the doors, sleet going by on the wind. Nearest the
- * camera, at the frame's foot: the end of the near counter with its beer tap, and out on the quay its near edge, a
- * stack of fish boxes and a coil of rope. Over it all the tungsten warmth of the room closing in at the frame's edges; and
- * when he bangs the back door open the grey daylight floods in across the boards.
+ * Inside: the cigarette's smoke going up from the ashtray, a little dust, and when the little stage's spotlight comes
+ * on, the dust in its beam. Outside the doors, sleet going by on the wind. Nearest the camera, at the frame's foot: the
+ * end of the near counter with its beer tap, and out on the quay its near edge, a stack of fish boxes and a coil of
+ * rope. Over it all the tungsten warmth of the room closing in at the frame's edges; and when he bangs the back door
+ * open the grey daylight cools the room.
  */
 export const nuukFront = scenery<null>({
   name: 'nuuk-front',
@@ -35,13 +35,10 @@ export const nuukFront = scenery<null>({
   },
 })
 
-/** The room's inside, where the haze and the dust are: from wall to wall, ceiling to floor. */
+/** The room's inside, where the smoke and the dust are: from wall to wall, ceiling to floor. */
 const ROOM = { x0: DOOR_IN[1], x1: WALL_OUT[0], y0: CEIL, y1: FLOOR }
 
-/**
- * The air in the room: the tobacco haze in long slow layers, the light of the lamps coming down through it in cones
- * with dust turning in them, and the spotlight's beam full of dust while it is on.
- */
+/** The air in the room: the cigarette's smoke, a little dust, and the spotlight's beam full of dust while it is on. */
 function drawAir(g: CanvasRenderingContext2D, v: View, t: number): void {
   const k = v.k
   if (v.x0 > ROOM.x1 || v.x1 < ROOM.x0) return
@@ -49,59 +46,32 @@ function drawAir(g: CanvasRenderingContext2D, v: View, t: number): void {
   g.beginPath()
   g.rect(ROOM.x0 * k, ROOM.y0 * k, (ROOM.x1 - ROOM.x0) * k, (ROOM.y1 - ROOM.y0) * k)
   g.clip()
-  // The haze: smoke lying in long thin layers across the room, each wavering and drifting its own way, broken here
-  // and there; and under them a faint body of it.
-  const haze = new Path2D()
-  const strands = new Path2D()
-  for (let b = 0; b < 9; b++) {
-    const y0 = CEIL + 0.45 + b * 0.31
-    const drift = t * (0.05 + 0.025 * (b % 3)) * (b % 2 ? 1 : -1)
-    let on = false
-    for (let x = ROOM.x0 - 0.2; x <= ROOM.x1 + 0.2; x += 0.12) {
-      // Each strand is broken into pieces that come and go as it drifts.
-      const piece = hash(Math.floor((x - drift) / 0.9), b, 15) > 0.35
-      const y = y0 + 0.05 * Math.sin(x * 1.3 + t * 0.4 + b) + 0.025 * Math.sin(x * 3.7 - t * 0.6 + b * 2)
-      if (piece && !on) strands.moveTo(x * k, y * k)
-      else if (piece) strands.lineTo(x * k, y * k)
-      on = piece
-    }
-    if (b % 3 === 0) {
-      const x = ROOM.x0 + ((((hash(b, 16) * 6 + drift * 2) % 6) + 6) % 6)
-      haze.moveTo((x + 1.2) * k, y0 * k)
-      haze.ellipse(x * k, y0 * k, 1.2 * k, 0.16 * k, 0, 0, Math.PI * 2)
-    }
-  }
-  g.fillStyle = rgbaOf('#B89C7E', 0.035)
-  g.fill(haze)
-  g.lineWidth = Math.max(0.7, 0.011 * k)
-  g.strokeStyle = rgbaOf('#C4AC8C', 0.13)
-  g.stroke(strands)
-  // The lamps' cones down through the haze to the counter, and the dust in them.
-  for (let i = 0; i < 2; i++) {
-    const { p, a } = lampAt(i, t)
-    const foot: Pt = [p[0] + Math.tan(a) * (COUNTER_TOP - p[1]) , COUNTER_TOP]
-    shaft(g, k, [p[0], p[1] + 0.2], 0.32, foot, 0.95, '#F2C879', 0.11, true)
-    motes(g, v, t, { n: 16, seed: 21 + i, tile: [1.2, 1.2], r: [0.006, 0.012], v: [0.02, 0.03], spread: 0.6, sway: [0.05, 0.25], color: rgbaOf('#FFE3A8', 0.7), twinkle: 0.6, within: { x0: foot[0] - 0.5, y0: p[1] + 0.25, x1: foot[0] + 0.5, y1: COUNTER_TOP - 0.02 } })
-  }
   // The cigarette's smoke going up from the ashtray in a few thin ribbons, wavering, drifting toward the lamp and
-  // thinning into the haze.
-  const smoke = new Path2D()
+  // thinning as it rises.
+  const low = new Path2D()
+  const high = new Path2D()
+  const [ax, ay] = ASH
   for (let j = 0; j < 3; j++) {
-    const [ax, ay] = ASH
-    smoke.moveTo((ax + 0.105) * k, (ay - 0.02) * k)
+    let x = ax + 0.105
+    let y = ay - 0.02
     for (let i = 1; i <= 14; i++) {
       const u = i / 14
-      const rise = 1.35 * u
+      const path = i <= 7 ? low : high
+      path.moveTo(x * k, y * k)
       const drift = 0.32 * u * u + 0.05 * j * u
       const wave = (0.03 + 0.09 * u) * Math.sin(t * (1.3 + 0.2 * j) - u * 7 + j * 2.1)
-      smoke.lineTo((ax + 0.105 + drift + wave) * k, (ay - 0.02 - rise) * k)
+      x = ax + 0.105 + drift + wave
+      y = ay - 0.02 - 1.35 * u
+      path.lineTo(x * k, y * k)
     }
   }
   g.lineWidth = Math.max(0.7, 0.012 * k)
-  g.strokeStyle = rgbaOf('#C9BBA5', 0.22)
-  g.stroke(smoke)
-  // Dust all through the room's air, faint, catching what light there is.
-  motes(g, v, t, { n: 22, seed: 27, tile: [2.2, 1.6], r: [0.005, 0.01], v: [0.03, -0.02], spread: 0.6, sway: [0.06, 0.15], color: rgbaOf('#D9B98A', 0.38), twinkle: 0.7, within: ROOM })
+  g.strokeStyle = rgbaOf('#C9BBA5', 0.24)
+  g.stroke(low)
+  g.strokeStyle = rgbaOf('#C9BBA5', 0.11)
+  g.stroke(high)
+  // A little dust in the room's air, drifting slowly.
+  motes(g, v, t, { n: 10, seed: 27, tile: [2.2, 1.6], r: [0.005, 0.009], v: [0.03, -0.02], spread: 0.6, sway: [0.06, 0.15], color: rgbaOf('#D9B98A', 0.3), within: ROOM })
   // The spotlight's beam full of dust while it is on.
   const on = Math.min(1, spotOn(t))
   if (on > 0.01) {
@@ -115,7 +85,7 @@ function drawAir(g: CanvasRenderingContext2D, v: View, t: number): void {
     g.lineTo((target[0] - 0.62) * k, target[1] * k)
     g.closePath()
     g.clip()
-    motes(g, v, t, { n: 70, seed: 33, tile: [1.6, 1.4], r: [0.006, 0.014], v: [0.03, 0.05], spread: 0.6, sway: [0.06, 0.3], color: rgbaOf('#FFE9BC', 0.85 * on), twinkle: 0.6, within: { x0: src[0] - 0.7, y0: src[1], x1: target[0] + 0.7, y1: target[1] } })
+    motes(g, v, t, { n: 24, seed: 33, tile: [1.6, 1.4], r: [0.006, 0.011], v: [0.03, 0.05], spread: 0.6, sway: [0.06, 0.3], color: rgbaOf('#FFE9BC', 0.6 * on), within: { x0: src[0] - 0.7, y0: src[1], x1: target[0] + 0.7, y1: target[1] } })
     g.restore()
   }
   g.restore()
@@ -140,14 +110,14 @@ function drawSleet(g: CanvasRenderingContext2D, v: View, t: number): void {
   g.restore()
 }
 
-/** When he bangs the back door open, the grey daylight floods in through it across the boards and up the counter. */
+/**
+ * When he bangs the back door open, a cool lift over the whole room, the tungsten no longer alone (its light on the
+ * boards beside the door is the set's, `drawDoorLight`).
+ */
 function drawDaylight(g: CanvasRenderingContext2D, v: View, t: number): void {
   const f = flood(t)
   if (f <= 0.01 || v.x0 > WALL_OUT[1] + 1) return
   const k = v.k
-  const door: Pt = [WALL_OUT[1], (HEAD + FLOOR) / 2]
-  shaft(g, k, door, FLOOR - HEAD, [door[0] - 3.4, FLOOR - 0.35], 2.2, '#C9D3D4', 0.2 * f, true)
-  // And a cool lift over the whole room, the tungsten no longer alone.
   g.fillStyle = rgbaOf('#9FB0B5', 0.1 * f)
   g.fillRect(ROOM.x0 * k, ROOM.y0 * k, (ROOM.x1 - ROOM.x0) * k, (ROOM.y1 - ROOM.y0) * k)
 }
@@ -161,13 +131,13 @@ function drawNear(g: CanvasRenderingContext2D, v: View, t: number): void {
     const k = inner.k
     const top = 0.66
     if (inner.y1 < top) return
-    // The near counter's end: its top edge catching the lamps, its dark front; the tap on it.
+    // The near counter's end: its top edge lit by the lamps, its dark front; the tap on it.
     const c0 = -4
     const c1 = -0.55
     if (c1 > inner.x0 && c0 < inner.x1) {
       g.fillStyle = '#2A1D16'
       g.fillRect(c0 * k, (top + 0.05) * k, (c1 - c0) * k, (inner.y1 - top + 1) * k)
-      // Its boards and their grain, and the lamps' light sliding on its edge.
+      // Its boards and their grain.
       const boards = new Path2D()
       for (let x = c0 + 0.05; x < c1; x += 0.07) {
         boards.moveTo(x * k, (top + 0.08) * k)
@@ -176,9 +146,6 @@ function drawNear(g: CanvasRenderingContext2D, v: View, t: number): void {
       g.lineWidth = Math.max(0.6, 0.008 * k)
       g.strokeStyle = rgbaOf('#4A3426', 0.7)
       g.stroke(boards)
-      const sheen = c1 - 0.6 + 0.35 * Math.sin(t * 0.5)
-      g.fillStyle = rgbaOf('#F2C879', 0.12)
-      g.fillRect((sheen - 0.3) * k, (top + 0.08) * k, 0.6 * k, 0.03 * k)
       g.fillStyle = '#6A4A33'
       g.fillRect(c0 * k, top * k, (c1 - c0 + 0.06) * k, 0.07 * k)
       g.fillStyle = rgbaOf('#F2C879', 0.35)
@@ -191,8 +158,8 @@ function drawNear(g: CanvasRenderingContext2D, v: View, t: number): void {
       g.fillStyle = '#1B1210'
       g.fillRect((tx - 0.13) * k, (top - 0.62) * k, 0.04 * k, 0.18 * k)
       g.fillRect((tx + 0.09) * k, (top - 0.6) * k, 0.04 * k, 0.16 * k)
-      g.fillStyle = rgbaOf('#FFE3A8', 0.7)
-      g.fillRect((tx - 0.03) * k, (top - 0.41) * k, 0.012 * k, 0.38 * k)
+      g.fillStyle = '#C4A267'
+      g.fillRect((tx - 0.035) * k, (top - 0.41) * k, 0.025 * k, 0.38 * k)
       const drip = ((t * 0.7) % 1 + 1) % 1
       if (drip < 0.35) {
         g.fillStyle = rgbaOf('#E0B060', 0.8)
