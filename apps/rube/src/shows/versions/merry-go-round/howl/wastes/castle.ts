@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
-import { alpha, hash } from '../kit'
+import { alpha, frame, hash, smooth } from '../kit'
 import { drawDoor } from '../cast'
 import { CALCIFER, DIAL, ROOM, TOWN, WASTES } from '../worlds'
 
@@ -1010,6 +1010,39 @@ export function drawCastle(p: p5, k: number, weight: number, ink: string, pose: 
     p.noStroke()
     p.fill(ironDark)
     poly(p, k, [...BELLY, ...BELLY.map(([x, y]) => [x, y - 1.05] as Pt).reverse()])
+    p.stroke(alpha(p, INK, 0.45))
+    p.strokeWeight(W * 0.6)
+    p.noFill()
+    const SEAMS_X = [-6.1, -3.7, -1.25, 1.35, 3.85, 5.65]
+    const seamX = (x: number, y: number) => x + Math.sin(((y + 12.6) / 7) * Math.PI) * x * 0.035
+    const seamY = (x: number) => -10.05 + 0.18 * Math.sin(x * 0.4)
+    for (const x of SEAMS_X) {
+      p.beginShape()
+      for (let i = 0; i <= 8; i++) p.vertex(X(seamX(x, -12.6 + (i / 8) * 7)), X(-12.6 + (i / 8) * 7))
+      p.endShape()
+    }
+    p.beginShape()
+    for (let i = 0; i <= 16; i++) {
+      const x = -8.7 + (i / 16) * 15.6
+      p.vertex(X(x), X(seamY(x)))
+    }
+    p.endShape()
+    // Rivets down either side of every seam, a dark head each, as the field's close look at the hull has them; only
+    // in the close frames on the porch, where a head is a few pixels across. Wider, they would be grain, so they fade.
+    const seen = frame(p, k)
+    const near = 1 - smooth(seen.x1 - seen.x0, 15, 24)
+    if (near > 0.02) {
+      const heads = new Path2D()
+      const R0 = 0.032
+      const rivet = (x: number, y: number) => {
+        heads.moveTo(X(x + R0), X(y))
+        heads.arc(X(x), X(y), X(R0), 0, Math.PI * 2)
+      }
+      for (const x0 of SEAMS_X) for (let y = -12.35; y < -6.0; y += 0.27) for (const side of [-0.1, 0.1]) rivet(seamX(x0, y) + side, y)
+      for (let x = -8.55; x < 6.8; x += 0.27) for (const side of [-0.1, 0.1]) rivet(x, seamY(x) + side)
+      ctx.fillStyle = alpha(p, mixHex(ironDark, INK, 0.35), 0.8 * near).toString()
+      ctx.fill(heads)
+    }
     p.stroke(INK)
     p.strokeWeight(W * 0.7)
     p.fill(rust)
@@ -1023,23 +1056,6 @@ export function drawCastle(p: p5, k: number, weight: number, ink: string, pose: 
     p.strokeWeight(W * 0.7)
     p.fill(tone(mixHex(WASTES.iron, WASTES.slate, 0.5)))
     p.rect(X(0.9), X(-9.5), X(1.7), X(1.25), X(0.05))
-    p.stroke(alpha(p, INK, 0.45))
-    p.strokeWeight(W * 0.6)
-    p.noFill()
-    for (const x of [-6.1, -3.7, -1.25, 1.35, 3.85, 5.65]) {
-      p.beginShape()
-      for (let i = 0; i <= 8; i++) {
-        const v = i / 8
-        p.vertex(X(x + Math.sin(v * Math.PI) * x * 0.035), X(-12.6 + v * 7))
-      }
-      p.endShape()
-    }
-    p.beginShape()
-    for (let i = 0; i <= 16; i++) {
-      const x = -8.7 + (i / 16) * 15.6
-      p.vertex(X(x), X(-10.05 + 0.18 * Math.sin(x * 0.4)))
-    }
-    p.endShape()
     p.stroke(INK)
     p.strokeWeight(W * 0.7)
     p.fill(ironDark)
