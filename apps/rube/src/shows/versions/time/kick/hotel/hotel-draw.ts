@@ -1,8 +1,7 @@
 import type p5 from 'p5'
 import { mixHex, R, type Pt } from '../../../../../parts'
-import { bloom, pool, rgba } from '../cast'
+import { pool, puff, rgba } from '../cast'
 import { hash } from '../kit'
-import { level } from '../music'
 import { HOTEL } from '../worlds'
 import {
   afloat,
@@ -158,10 +157,7 @@ function at(g: Pen, p: Pt, turn: number, fn: () => void): void {
 
 /* ------------------------------------------------------------------ light */
 
-function glow(g: Pen, p: Pt, r: number, a: number, t: number): void {
-  bloom(g.p, g.k, p, r, H.lamp, a * lampGain(t) * (0.9 + 0.12 * level(t)))
-}
-/** A milk-glass sconce on a wall: a brass plate and a small shade, its glow on the wall. */
+/** A milk-glass sconce on a wall: a brass plate and a small shade, its light on the wall round it. */
 function sconce(g: Pen, x: number, y: number, t: number, i: number): void {
   const flick = 1 - 0.12 * Math.pow(Math.max(0, Math.sin(ch(t) * 1.7 + i * 2.3)), 24)
   pool(g.p, g.k, [x, y + 0.05], 0.55, 0.75, H.lamp, 0.16 * lampGain(t) * flick)
@@ -169,7 +165,6 @@ function sconce(g: Pen, x: number, y: number, t: number, i: number): void {
     rect(g, x - 0.035, y - 0.13, x + 0.035, y + 0.1, H.brass)
     poly(g, [[x - 0.07, y - 0.08], [x + 0.07, y - 0.08], [x + 0.1, y + 0.08], [x - 0.1, y + 0.08]], H.glass, g.k > 14 ? g.ink : null, 0.4)
   }
-  glow(g, [x, y], 0.5, 0.3 * flick, t)
 }
 
 /* ------------------------------------------------------------------ the night outside */
@@ -338,7 +333,6 @@ function drawMiddle(g: Pen, f: View, t: number): void {
     const shade = floating([ns + 0.21, 27.55], [0.25 - (i % 3) * 0.2, -0.9 - 0.2 * (i % 2)], 5, 0.12 * (i % 2 ? 1 : -1), i, t)
     rect(g, ns + 0.18, 27.6, ns + 0.24, 27.9, H.brass)
     lampShade(g, shade.at, shade.turn, 0.34)
-    glow(g, shade.at, 1.1, 0.34, t)
     pool(g.p, g.k, [ns + 0.21, 27.9], 0.9, 0.2, H.lamp, 0.14 * lampGain(t))
   })
 }
@@ -381,7 +375,7 @@ function drawLobby(g: Pen, f: View, t: number): void {
     rect(g, 5.95, 34.0, 6.01, B.lobby, H.brass)
     const ls = floating([5.98, 33.85], [0.2, -0.3], 4, 0.05, 19, t)
     lampShade(g, ls.at, ls.turn, 0.42)
-    glow(g, ls.at, 1.4, 0.3, t)
+    pool(g.p, g.k, [5.98, B.lobby], 1.0, 0.1, H.lamp, 0.16 * lampGain(t))
   }
   // The lift's landing: its walnut surround either side of the shaft, a sconce each side, and the call buttons.
   if (seen(f, -3.6, 31.5, 3.6, 36)) {
@@ -403,7 +397,6 @@ function drawLobby(g: Pen, f: View, t: number): void {
       for (let q = -2; q <= 2; q++) poly(g, [[q * 0.25 - 0.07, -0.14], [q * 0.25 + 0.07, -0.14], [q * 0.25 + 0.05, 0], [q * 0.25 - 0.05, 0]], H.glass, g.ink, 0.4)
       rect(g, -0.03, -0.25, 0.03, 0.3, H.brass)
     })
-    glow(g, fl.at, 1.6, 0.3, t)
   }
   if (seen(f, -17.8, 33, -15.6, 36)) {
     rect(g, -17.1, 35.3, -16.5, B.lobby, H.woodLight, g.ink, 0.5)
@@ -545,16 +538,13 @@ function drawShaft(g: Pen, f: View, t: number): void {
     g.c.stroke()
   }
   drawCabin(g, t, cy)
-  // The blast: a flash, then smoke hanging (it is weightless), and bits flying out.
+  // The blast: smoke hanging (it is weightless), and bits flying out.
   if (t >= T.blast - 0.01 && t < T.blast + 6) {
     const u = t - T.blast
-    const flash = Math.exp(-u / 0.12)
-    bloom(g.p, g.k, [0, chargeY], 1.9, H.lamp, 0.95 * flash)
-    bloom(g.p, g.k, [0, chargeY], 0.7, H.glass, 0.9 * flash)
     for (let q = 0; q < 7; q++) {
       const a = hash(q, 1, 9) * Math.PI * 2
       const d = 0.15 + (0.5 + hash(q, 2, 9) * 0.6) * (1 - Math.exp(-u / 1.4))
-      bloom(g.p, g.k, [Math.cos(a) * d * 0.7, chargeY + Math.sin(a) * d * 0.5 - 0.1], 0.35 + 0.3 * (1 - Math.exp(-u / 1.5)), C.plaster, 0.28 * Math.exp(-u / 2.4) * clamp01(u / 0.08))
+      puff(g.p, g.k, [Math.cos(a) * d * 0.7, chargeY + Math.sin(a) * d * 0.5 - 0.1], 0.35 + 0.3 * (1 - Math.exp(-u / 1.5)), C.plaster, 0.28 * Math.exp(-u / 2.4) * clamp01(u / 0.08))
     }
     if (g.k > 6)
       for (let q = 0; q < 9; q++) {
@@ -566,22 +556,6 @@ function drawShaft(g: Pen, f: View, t: number): void {
         at(g, p, u * (3 + q), () => rect(g, -0.03, -0.015, 0.03, 0.015, C.concreteDark))
       }
   }
-  // Passing the middle floor's landing, its corners catch the sills: sparks.
-  if (t >= T.pass - 0.02 && t < T.pass + 0.9 && g.k > 4) {
-    const u = t - T.pass
-    for (let q = 0; q < 14; q++) {
-      const side = q % 2 ? 1 : -1
-      const a = (side > 0 ? 0 : Math.PI) + (hash(q, 1, 31) - 0.5) * 1.6
-      const v = 1.2 + 2.2 * hash(q, 2, 31)
-      const d = v * u
-      const life = 1 - u / (0.35 + 0.5 * hash(q, 3, 31))
-      if (life <= 0) continue
-      const p0: Pt = [side * 0.82 + Math.cos(a) * d, B.mid + Math.sin(a) * d * 0.6]
-      line(g, p0, [p0[0] - Math.cos(a) * 0.08, p0[1] - Math.sin(a) * 0.05], rgba(H.lamp, 0.9 * life), 0.7)
-    }
-    bloom(g.p, g.k, [0.8, B.mid], 0.5, H.lamp, 0.4 * Math.exp(-u / 0.15))
-    bloom(g.p, g.k, [-0.8, B.mid], 0.5, H.lamp, 0.4 * Math.exp(-u / 0.15))
-  }
   // The slam: dust bursting out of the pit along the lobby's floor, and bits of it.
   if (t >= T.slam && t < T.slam + 5) {
     const u = t - T.slam
@@ -589,7 +563,7 @@ function drawShaft(g: Pen, f: View, t: number): void {
     for (const sx of [-1, 1])
       for (let q = 0; q < 3; q++) {
         const d = 0.7 + (0.6 + q * 0.7) * out
-        bloom(g.p, g.k, [sx * d, B.lobby - 0.25 - q * 0.12 * out], 0.45 + 0.35 * q + 0.5 * out, H.glass, (0.5 - q * 0.1) * Math.exp(-u / (1.1 + q * 0.5)) * clamp01(u / 0.04))
+        puff(g.p, g.k, [sx * d, B.lobby - 0.25 - q * 0.12 * out], 0.45 + 0.35 * q + 0.5 * out, H.glass, (0.5 - q * 0.1) * Math.exp(-u / (1.1 + q * 0.5)) * clamp01(u / 0.04))
       }
     if (g.k > 5)
       for (let q = 0; q < 12; q++) {
@@ -622,7 +596,6 @@ function drawCabin(g: Pen, t: number, cy: number): void {
   rect(g, x0 + 0.1, y0 + 0.2, x1 - 0.1, cy - 0.12, H.wood)
   line(g, [x0 + 0.1, cy - 0.85], [x1 - 0.1, cy - 0.85], H.brass, 0.8)
   poly(g, [[-0.22, y0 + 0.1], [0.22, y0 + 0.1], [0.16, y0 + 0.2], [-0.16, y0 + 0.2]], H.glass)
-  bloom(g.p, g.k, [0, y0 + 0.3], 0.9, H.lamp, 0.25 * lampGain(t))
   // What is in it: the sleepers, tied; the line across the floor that holds the three of them.
   drawSleepers(g, t, true)
   drawCabinLine(g, t, cy)
@@ -810,8 +783,10 @@ function drumRoom(g: Pen, t: number, a: number): void {
   // A sconce on each wall, and the lamps hanging from the ceiling: they hang the way gravity is (which the drum turns).
   for (const [s, d] of [[-1, 0.42], [1, 0.14]] as const) {
     const p = pr(s * h, -0.2, d)
+    const z = sc(d)
+    pool(g.p, g.k, [p[0], p[1] + 0.04 * z], 0.28 * z, 0.4 * z, H.lamp, 0.16 * lampGain(t))
     rect(g, p[0] - 0.02, p[1] - 0.05, p[0] + 0.02, p[1] + 0.05, H.brass)
-    glow(g, p, 0.35 * sc(d) + 0.15, 0.28, t)
+    poly(g, [[p[0] - 0.05 * z, p[1] - 0.05 * z], [p[0] + 0.05 * z, p[1] - 0.05 * z], [p[0] + 0.075 * z, p[1] + 0.05 * z], [p[0] - 0.075 * z, p[1] + 0.05 * z]], H.glass, g.ink, 0.35)
   }
   for (const d of [0.62, 0.22]) pendant(g, t, a, d)
 }
@@ -846,8 +821,6 @@ function pendant(g: Pen, t: number, a: number, d: number): void {
   }
   line(g, piv, end, H.cable, 0.5)
   at(g, end, turn, () => poly(g, [[-0.08 * s, 0], [0.08 * s, 0], [0.15 * s, 0.14 * s], [-0.15 * s, 0.14 * s]], H.glass, g.ink, 0.4))
-  const lamp = rot(-turn, [0, 0.12 * s])
-  glow(g, [end[0] + lamp[0], end[1] + lamp[1]], 0.5 * s + 0.2, 0.3, t)
 }
 
 /* ------------------------------------------------------------------ what floats */
@@ -977,7 +950,7 @@ function drawSuite(g: Pen, f: View, t: number): void {
   line(g, [8.1, 20.93], [8.1, 19.42], H.brass, 0.8)
   const sh = drifting(t)
   lampShade(g, sh.at, sh.turn, 0.42)
-  glow(g, sh.at, 1.3, 0.34, t)
+  pool(g.p, g.k, [8.1, B.top], 1.0, 0.12, H.lamp, 0.16 * lampGain(t))
   // The armchair.
   const ac = floating([7.25, 20.62], [0.1, -0.3], 5, -0.03, 11, t)
   at(g, ac.at, ac.turn, () => {
