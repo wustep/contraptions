@@ -114,8 +114,8 @@ the pulse stops, and the last two bars, which slow to the chord. 687 drips: ever
 ## Measured
 
 In Chrome (headed, vsync, 3024 × 1800, the whole show at 1×), with the stage painted on every animation frame at
-wall-clock show time: 16,553 frames at 60 Hz, 3 intervals over 20 ms (a single 140 ms hitch at 204.6 s, which does
-not come again when that stretch is run once more), the paint on the main thread 0.94 ms a frame on average, 3.0 ms at
-the 95th percentile and 8.3 ms at worst. (The page's own play was not used for the timing: in an automated Chrome the
-muted file played at a quarter of real time, which is the session's audio and not the show; painting at wall-clock
-time measures the same work.)
+wall-clock show time: 16,559 frames at 60 Hz, 1 interval over 20 ms (a single 49 ms hitch at 224.7 s, which does not
+come again when that stretch is run once more), the paint on the main thread 0.90 ms a frame on average, 2.4 ms at
+the 95th percentile, 3.6 ms at the 99th and 4.8 ms at worst. (The page's own play was not used for the timing: in an
+automated Chrome the muted file played at a quarter of real time, which is the session's audio and not the show;
+painting at wall-clock time measures the same work.)
