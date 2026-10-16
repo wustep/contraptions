@@ -214,7 +214,7 @@ export function drawCounter(pen: Pen): void {
 }
 
 /**
- * The pilot: a big man hunched over his glass on a stool, a hard dark shape with a cold rim of the window's light.
+ * The pilot: a big man hunched over his glass on a stool, a hard dark shape with a cold edge of the window's light.
  * His right hand on the counter, its thumb out; on the thumb the ring, which the lamp lights as the hand comes up.
  */
 export function drawPilot(pen: Pen, t: number): void {
@@ -257,24 +257,17 @@ function pilot(pen: Pen, t: number): void {
   path(pen, [[sh[0] - 0.2, sh[1] + 0.02], [sh[0] - 0.3, sh[1] + 0.45], [hip[0] - 0.22, hip[1] - 0.2], [hip[0] - 0.2, hip[1] + 0.02]], C.coat, 0.9)
   path(pen, [[hip[0] - 0.02, hip[1] - 0.35], [hip[0] + 0.2, hip[1] - 0.38], [hip[0] + 0.2, hip[1] - 0.22]], C.coat, 0.8)
   path(pen, [[hip[0] - 0.26, hip[1] + 0.06], [hip[0] + 0.05, hip[1] + 0.02], [hip[0] + 0.32, hip[1] - 0.06]], C.coat, 0.9)
-  // A cold rim of daylight on his back, from the window.
-  const ctx = ctxOf(pen.p)
-  ctx.save()
-  ctx.strokeStyle = rgba(pen, C.rim, 0.35)
-  ctx.lineWidth = pen.w * 1.1
-  ctx.beginPath()
-  ctx.arc(head[0] * pen.k, head[1] * pen.k, 0.205 * pen.k, -Math.PI * 0.95, -Math.PI * 0.45)
-  ctx.stroke()
-  ctx.restore()
+  // A cold rim of daylight along his back, from the window.
   path(pen, [[sh[0] - 0.33, sh[1] + 0.08], [sh[0] - 0.05, sh[1] - 0.17]], C.rim, 0.5)
-  // And from the lamp hanging over him, a warm rim on his head, brighter as it swings over.
+  // And the lamp hanging over him catching the top of his head, more as it swings over: inside its edge, thin.
+  const ctx = ctxOf(pen.p)
   const lamp = lampAt(1, t).p
-  const warm = 0.25 + 0.4 * Math.max(0, 1 - Math.abs(lamp[0] - head[0]) / 0.5)
+  const warm = 0.12 + 0.3 * Math.max(0, 1 - Math.abs(lamp[0] - head[0]) / 0.5)
   ctx.save()
   ctx.strokeStyle = rgba(pen, C.lamp, warm)
-  ctx.lineWidth = pen.w * 1.3
+  ctx.lineWidth = pen.w * 0.8
   ctx.beginPath()
-  ctx.arc(head[0] * pen.k, head[1] * pen.k, 0.2 * pen.k, -Math.PI * 0.75, -Math.PI * 0.2)
+  ctx.arc(head[0] * pen.k, head[1] * pen.k, 0.18 * pen.k, -Math.PI * 0.7, -Math.PI * 0.3)
   ctx.stroke()
   ctx.restore()
   // The arm: shoulder to the elbow on the counter, the forearm to the hand by the glass.
