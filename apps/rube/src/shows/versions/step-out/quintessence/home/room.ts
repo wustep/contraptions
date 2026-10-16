@@ -146,7 +146,7 @@ const BOARDS = cache(() => {
       ends.lineTo(x + 0.01 * (next - y), next)
       x += 1.1 + 1.3 * hash(i, Math.round(x * 10), 802)
     }
-    // Grain: long fine streaks along the row, more of them on the wide boards near to; a knot here and there.
+    // Grain: long fine streaks along the row, more of them on the wide boards near to.
     const h = next - y
     const n = 30 + Math.round(h * 420)
     for (let g = 0; g < n; g++) {
@@ -155,12 +155,6 @@ const BOARDS = cache(() => {
       const len = 0.25 + 0.9 * hash(i, g, 805)
       grain.moveTo(gx, gy)
       grain.quadraticCurveTo(gx + len / 2, gy + h * 0.08 * (hash(i, g, 806) - 0.5), gx + len, gy + h * 0.04 * (hash(i, g, 807) - 0.5))
-    }
-    for (let q = 0; q < Math.round(h * 30); q++) {
-      const kx = -8 + 20 * hash(i, q, 808)
-      const ky = y + h * (0.3 + 0.4 * hash(i, q, 809))
-      grain.moveTo(kx + 0.03, ky)
-      grain.ellipse(kx, ky, 0.03, h * 0.12, 0, 0, Math.PI * 2)
     }
     y = next
   }
