@@ -28,11 +28,10 @@ const REF = 5
 /** The wide (110.4 to 115.5): the camera is off the ground, so nothing is near it. */
 const inWide = (t: number): number => sm(t, 109.9, 110.9) * (1 - sm(t, 115.0, 116.0))
 /**
- * When the near posts go by: only while he is moving and the camera with him, never on a held frame, and only while
- * the land is under the frame's foot (after the wide the fjord is).
+ * The near posts stand along the ridge and the top of the face, so they are there until the camera rises for the wide;
+ * after it the fjord is under the frame's foot, and there are none.
  */
-const postsOn = (t: number): number =>
-  Math.max(sm(t, 96.0, 96.4) * (1 - sm(t, 101.0, 101.5)), sm(t, 106.6, 107.0) * (1 - sm(t, 109.9, 110.5))) * (1 - inWide(t))
+const postsOn = (t: number): number => (t < 111 ? 1 - inWide(t) : 0)
 
 /** The tufts at the foot of the frame: clumps of blades on the near plane, swaying on the wind. */
 function tufts(ctx: CanvasRenderingContext2D, inner: View, t: number, a: number): void {
