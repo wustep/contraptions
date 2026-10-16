@@ -5,7 +5,7 @@ import { beam, pool, puff, rgba } from '../cast'
 import { hash, smooth, type frame } from '../kit'
 import { level } from '../music'
 import { DERELICTE } from '../worlds'
-import { FLOOR_Y, PM_SEAT, RUNWAY } from './geo'
+import { FLOOR_Y, PM_SEAT, RUNWAY, TOWER } from './geo'
 import { AIR, bankAt, derekAt, FOLLOW_ON, followAt, houseAt, powerAt, TRIGGER, worksAt } from './runway-clock'
 
 /**
@@ -204,7 +204,7 @@ function drawWall(p: p5, k: number, f: Frame, t: number): void {
 
 /** How much of the show's light reaches the wall at `x`: the nearest bank's, the house's, the work lamps' after. */
 function wallLight(x: number, t: number): number {
-  let v = 0.25 * houseAt(t) + 0.55 * Math.min(1, worksAt(t))
+  let v = 0.25 * houseAt(t) + 0.3 * Math.min(1, worksAt(t))
   BANK_X.forEach((bx, i) => {
     v = Math.max(v, Math.min(1, bankAt(i, t)) * Math.max(0, 1 - Math.abs(x - bx) / 4.5))
   })
@@ -256,13 +256,16 @@ function drawDressing(p: p5, k: number, x0: number, x1: number, y0: number, y1: 
   for (let i = Math.floor((x0 - 1) / 6); i <= Math.ceil((x1 - 1) / 6); i++) {
     const b0 = i * 6 + 1 + 0.5
     const b1 = b0 + 5
+    // None in the door's bay, behind the tower's scaffold, or in every bay: a street's worth, not a wallpaper.
     if (b0 < RUNWAY.head + 0.5 || b1 > HALL.x1 - 1 || (b0 < DOOR_BAY.x1 && b1 > DOOR_BAY.x0)) continue
+    if (b0 < TOWER.x1 + 1 && b1 > TOWER.x0 - 1) continue
+    if (hash(i, 30) < 0.25) continue
     if (b1 < x0 || b0 > x1) continue
     // Behind the runway they are pasted above its deck; past its end, at head height off the floor.
     const behind = b1 < RUNWAY.end + 0.5
     const top = behind ? -2.45 : -1.6
-    const rows = behind ? 2 : 3
-    const n = 3 + Math.floor(hash(i, 31) * 3)
+    const rows = behind ? 2 : 2
+    const n = 2 + Math.floor(hash(i, 31) * 3)
     const w = 0.5
     const h = 0.7
     const gap = 0.04
@@ -305,7 +308,7 @@ function drawDressing(p: p5, k: number, x0: number, x1: number, y0: number, y1: 
 /** One fly-poster, `w` by `h` from its top left: one of three sheets, a corner torn away, as pale as the light on it. */
 function drawPoster(p: p5, k: number, x: number, y: number, w: number, h: number, kind: number, torn: number, lit: number): void {
   const X = (v: number) => v * k
-  const paper = mixHex(mixHex(DERELICTE.paperShade, WALL, 0.84), mixHex(DERELICTE.paper, WALL, 0.56), lit)
+  const paper = mixHex(mixHex(DERELICTE.paperShade, WALL, 0.86), mixHex(DERELICTE.paper, WALL, 0.62), lit)
   const ink = mixHex(WALL, paper, 0.3)
   // A torn corner: the bottom right, or the top left, or none.
   const tear = torn > 0.7 ? 0.22 + 0.2 * (torn - 0.7) / 0.3 : 0
