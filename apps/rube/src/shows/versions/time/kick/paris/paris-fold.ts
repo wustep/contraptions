@@ -1,5 +1,5 @@
 import { mixHex, type Pt } from '../../../../../parts'
-import { beam, bloom } from '../cast'
+import { beam } from '../cast'
 import { frame, hash } from '../kit'
 import { PARIS } from '../worlds'
 import { crowd, figure, turned, type Figure } from './paris-crowd'
@@ -512,7 +512,4 @@ export function drawFold(pen: Pen, t: number, f: Frame): void {
   pit(pen, t, f)
   lever(pen, t, f)
   curve(pen, t, f)
-  // The slam, seen from below: a flash of the sun off the latches.
-  const u = t - LOCK
-  if (u > 0 && u < 0.6) bloom(pen.p, pen.k, [C[0], C[1] - R], 1.8, PARIS.lamp, 0.4 * (1 - u / 0.6))
 }

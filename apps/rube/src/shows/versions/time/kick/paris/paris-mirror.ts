@@ -1,5 +1,5 @@
 import { mixHex, type Pt } from '../../../../../parts'
-import { bloom, rgba } from '../cast'
+import { rgba } from '../cast'
 import { frame, hash } from '../kit'
 import { PARIS } from '../worlds'
 import {
@@ -234,8 +234,6 @@ function glass(pen: Pen, t: number, w: number): void {
       ctx.lineWidth = Math.max(0.6, RIM * s * k * 0.9)
       ctx.strokeRect(a[0] * k, a[1] * k, (b[0] - a[0]) * k, (b[1] - a[1]) * k)
     }
-    // Where it goes to: a faint light.
-    bloom(pen.p, k, V, 0.35, PARIS.mirror, 0.5 * open)
   }
   // The sheen: two soft bands of light across the glass.
   for (const [o, wd, a] of [[0.25, 0.35, 0.28], [0.62, 0.14, 0.22]] as const) {
@@ -263,7 +261,6 @@ function greatMirror(pen: Pen, t: number, f: Frame): void {
   const x1 = X0 + (X1 - X0) * Math.max(0.035, w)
   const broken = t >= SHATTER
   // The frame: iron, a lit edge along its top.
-  const { k } = pen
   if (!broken) glass(pen, t, w)
   // Outer frame as four bars, so the glass (or what is behind it, once it has gone) shows through.
   const r = RIM * Math.max(0.35, w)
@@ -279,7 +276,6 @@ function greatMirror(pen: Pen, t: number, f: Frame): void {
   // The shards: turning in the sun (a bright face now, then its edge), falling, lying on the deck.
   const plain: Pt[][] = []
   const lit: Pt[][] = []
-  const u = t - SHATTER
   for (const s of SHARD_LIST) {
     const { c, a, lying } = shardAt(s, t)
     const cs = Math.cos(a)
@@ -294,15 +290,6 @@ function greatMirror(pen: Pen, t: number, f: Frame): void {
   // facades a white one with a hairline edge read as a flat cut-out.
   fillPaths(pen, lit, mixHex('#FFFFFF', PARIS.glass, 0.3), 0.92)
   strokePaths(pen, [...plain, ...lit].map((g) => [...g, g[0]]), mixHex(PARIS.slate, PARIS.glass, 0.15), 0.6, 0.95)
-  // Light: the flash where she touched it, and a glint where each big one lands.
-  if (u < 0.7) bloom(pen.p, k, TOUCH, 1.9, '#FFFFFF', 0.55 * (1 - u / 0.7))
-  for (const s of SHARD_LIST) {
-    if (!s.big) continue
-    const w2 = t - s.land
-    if (w2 < 0 || w2 > 0.45) continue
-    const { c } = shardAt(s, t)
-    bloom(pen.p, k, [c[0], BOT - 0.05], 0.55, '#FFFFFF', 0.45 * (1 - w2 / 0.45))
-  }
 }
 
 /** Everything of the mirrors, in the bridge's frame (turned with it). */

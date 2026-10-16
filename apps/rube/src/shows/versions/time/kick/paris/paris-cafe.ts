@@ -1,5 +1,4 @@
 import { mixHex, type Pt } from '../../../../../parts'
-import { bloom } from '../cast'
 import { hash } from '../kit'
 import { PARIS, PARIS_THEME } from '../worlds'
 import { crowd, figure, turned, type Figure } from './paris-crowd'
@@ -440,7 +439,7 @@ export function drawCafe(pen: Pen, t: number, f: Frame): void {
   drawBits(pen, t, f)
 }
 
-/** The blasts' dust and light (over everything: soft air, never outlined). */
+/** The blasts' dust (over everything: soft air, never outlined). */
 export function drawCafeAir(pen: Pen, t: number, f: Frame): void {
   if (!seen(f, -10, Y_S - 6, 7, Y_S + 0.5)) return
   const sources: Pt[] = [[-0.2, Y_S - 1.1], [-5, Y_S - 0.7], [3.65, Y_S - 1.2]]
@@ -448,8 +447,7 @@ export function drawCafeAir(pen: Pen, t: number, f: Frame): void {
     const u = t - at
     if (u <= 0 || u > 9) return
     const [x, y] = sources[i]
-    // A flash of the sun off it all, and dust that swells, hangs and thins.
-    if (u < 0.5) bloom(pen.p, pen.k, [x, y], 1.6, PARIS.lamp, 0.35 * (1 - u / 0.5))
+    // Dust that swells, hangs and thins.
     for (let j = 0; j < 5; j++) {
       const r = (0.5 + 0.35 * j) * (1 - Math.exp(-u / 0.5)) + 0.04 * u
       const dx = (hash(i, j) - 0.5) * 1.6 * (1 - Math.exp(-u / 0.5))
