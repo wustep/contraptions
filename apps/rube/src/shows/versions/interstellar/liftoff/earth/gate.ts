@@ -744,12 +744,6 @@ function tarsDraw(d: Draw, s: GateState): void {
     }
     p.pop()
   }
-  if (act > 0.05) {
-    const a = pose.slabs[0]
-    const lx = hub[0] + TARS_W * 0.1 * Math.cos(a) + TARS_H * 0.24 * Math.sin(a)
-    const ly = hub[1] + TARS_W * 0.1 * Math.sin(a) - TARS_H * 0.24 * Math.cos(a)
-    glow(d, lx, ly, 0.22, 0.6 * act)
-  }
   solid(p, ink, weight * 0.7, DUST.bone)
   p.circle(X(hub[0]), X(hub[1]), X(0.1))
 }
@@ -1063,16 +1057,14 @@ function lever(d: Draw, s: GateState): void {
     p.noStroke()
     p.fill(alpha(p, DUST.light, 1 - Math.max(0, run - 1) / 0.3))
     p.circle(X(x), X(FLOOR - 0.03), X(0.1))
-    glow(d, x, FLOOR - 0.03, 0.2, 0.6 * (1 - Math.max(0, run - 1) / 0.3))
   }
   // The cabinet, its lid, and the beacon on it.
   solid(p, ink, weight, DUST.sage)
   rect4(d, left, top, left + w, FLOOR)
   solid(p, ink, weight * 0.8, DUST.sage)
   rect4(d, left - 0.03, top - 0.04, left + w + 0.03, top + 0.02)
-  solid(p, ink, weight * 0.8, on ? DUST.light : DUST.shade)
+  solid(p, ink, weight * 0.8, on ? mixHex(DUST.light, '#FFFFFF', 0.7 * knock(t - THROW, 0.25)) : DUST.shade)
   p.arc(X(cx + 0.06), X(top - 0.04), X(0.14), X(0.16), Math.PI, Math.PI * 2, p.CHORD)
-  if (on) glow(d, cx + 0.06, top - 0.08, 0.34, 0.55 + 0.45 * knock(t - THROW, 0.25))
   outline(p, ink, weight * 0.5)
   p.line(X(cx + 0.02), X(top + 0.12), X(cx + 0.14), X(top + 0.12))
   // The lever on the cabinet's side: its paddle down in the road until the ball knocks it up and over.
@@ -1123,7 +1115,12 @@ function bunker(d: Draw, s: GateState): void {
   p.noStroke()
   p.fill(alpha(p, ink, 0.72))
   rect4(d, a, lin, b, FLOOR)
-  if (t >= THROW) for (const x of [a + DOORWAY / 2, b - DOORWAY / 2]) glow(d, x, lin + 0.06, 0.28, 0.45)
+  // Its lamps light the tunnel's floor under them: a flat pool each, not a glow.
+  if (t >= THROW) {
+    p.noStroke()
+    p.fill(alpha(p, DUST.light, 0.3))
+    for (const x of [a + DOORWAY / 2, b - DOORWAY / 2]) p.arc(X(x), X(FLOOR), X(0.5), X(0.16), Math.PI, Math.PI * 2, p.CHORD)
+  }
   // While the way-out flap stands open, the lamp's light spills out of the doorway onto the apron.
   const open = t >= THROW ? clamp(flapB(t) / 1.25) : 0
   if (open > 0.02) {
@@ -1160,11 +1157,11 @@ function bunker(d: Draw, s: GateState): void {
   }
   // The landing lamps at the roof's two corners.
   const on = t >= THROW
-  const flick = on && t < THROW + 0.12 ? (Math.sin((t - THROW) * 90) > -0.2 ? 1 : 0.2) : 1
+  // Lit is the glass alone, lit as the lever throws: a beam up into the dusty air read as a pale column standing in
+  // front of the storm, and a flash to white on the strike as shine.
   for (const x of [a + 0.1, b - 0.1]) {
     solid(p, ink, weight * 0.8, on ? DUST.light : DUST.shade)
     p.arc(X(x), X(ROOF), X(0.13), X(0.13), Math.PI, Math.PI * 2, p.CHORD)
-    if (on) glow(d, x, ROOF - 0.03, 0.42, flick * (0.6 + 0.4 * knock(t - THROW, 0.3)))
   }
 }
 
@@ -1185,17 +1182,6 @@ function gear(d: Draw, at: Pt, pitch: number, g: number, squash: number): void {
     }
   }
   p.pop()
-}
-
-/** A soft light: a glow around a lamp. */
-function glow(d: Draw, x: number, y: number, r: number, a: number): void {
-  const { p, X } = d
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  const g = ctx.createRadialGradient(X(x), X(y), 0, X(x), X(y), X(r))
-  g.addColorStop(0, `rgba(255, 244, 214, ${0.75 * a})`)
-  g.addColorStop(1, 'rgba(255, 244, 214, 0)')
-  ctx.fillStyle = g
-  ctx.fillRect(X(x - r), X(y - r), X(r * 2), X(r * 2))
 }
 
 /** In front of the ball: the near side of the sweep's cup, the pail's near wall, and the bunker's flaps. */

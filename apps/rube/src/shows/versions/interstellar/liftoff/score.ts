@@ -7,6 +7,7 @@ import { ACT2, beat, cue, DROP, DURATION, IGNITION, UNDOCK } from './music'
 import { LiftoffShow } from './show'
 import { BALL, EARTH, FARM, SPACE, STATION, VOID } from './worlds'
 import { dawn, sky } from './earth/sky'
+import { grade } from './earth/grade'
 import { house, porch, shelf, stairs, toy } from './earth/house'
 import { cornrow } from './earth/field'
 import { yard, YARD_END } from './earth/yard'
@@ -23,6 +24,8 @@ import { miller } from './space/miller'
 import { gargantua } from './space/gargantua'
 import { AXIS } from './act2/station'
 import { interior } from './act2/interior'
+import { stationNear } from './act2/near'
+import { irisOpening, irisShut, type IrisState } from './act2/iris'
 import { replica } from './act2/replica'
 import { rim } from './act2/rim'
 import { ballpark } from './act2/ballpark'
@@ -157,6 +160,9 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
   }
   const deckCloud = standing(cloud, 0, 0, all, { deck, punch: SWITCH, rocket: pose, length: ROCKET_LENGTH, gone: CLOUD_GONE }, DURATION)
   const chainOf = (placed: Placed[]) => placed
+  // The port's iris round the undock, centred where he is at the change of world (set once the show can say).
+  const iris: IrisState = { at: UNDOCK, center: [0, 0] }
+  const irisBox = box(axis[0] - 30, axis[1] - 30, axis[0] + 30, axis[1] + 30, 2)
   const show = new LiftoffShow(
     [
       {
@@ -164,7 +170,7 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
         theme: FARM,
         scenery: [standing(sky, 0, 0, all, { cloud: SWITCH }, DURATION), standing(house, 0, 0, box(-2, -6, 9, 2), null, DURATION)],
         chain: chainOf(earth.placed),
-        after: [standing(drone, 0, 0, all, flight, DURATION), deckCloud, standing(dawn, 0, 0, all, null, DURATION)],
+        after: [standing(drone, 0, 0, all, flight, DURATION), standing(grade, 0, 0, all, null, DURATION), deckCloud, standing(dawn, 0, 0, all, null, DURATION)],
         from: 0,
       },
       {
@@ -180,6 +186,7 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
         theme: FARM,
         scenery: [standing(interior, 0, 0, box(axis[0] - 30, axis[1] - 30, axis[0] + 30, axis[1] + 30, 2), { axis, lights: ACT2 }, DURATION)],
         chain: station.placed,
+        after: [standing(stationNear, 0, 0, box(axis[0] - 30, axis[1] - 30, axis[0] + 30, axis[1] + 30, 2), { axis, lights: ACT2 }, DURATION), standing(irisShut, 0, 0, irisBox, iris, DURATION)],
         from: ACT2,
       },
       {
@@ -188,7 +195,7 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
         scenery: [standing(voidSky, 0, 0, box(axis[0] - 60, axis[1] - 120, axis[0] + 260, axis[1] + 60, 2), { deck: axis[1] + 1000, leave: -100 }, DURATION)],
         chain: outside.placed,
         // The end credits, over the camp at dawn once the music has stopped.
-        after: [standing(credits, 0, 0, box(axis[0] - 60, axis[1] - 120, axis[0] + 260, axis[1] + 60, 2), null, DURATION)],
+        after: [standing(irisOpening, 0, 0, irisBox, iris, DURATION), standing(credits, 0, 0, box(axis[0] - 60, axis[1] - 120, axis[0] + 260, axis[1] + 60, 2), null, DURATION)],
         from: UNDOCK,
       },
     ],
@@ -197,6 +204,7 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
     [...earth.company, ...space.company, ...station.company, ...outside.company].sort((a, b) => a.from - b.from),
   )
 
+  iris.center = show.where(UNDOCK) as Pt
   const shots: Shot[] = [
     // Dawn in Murph's room: a slow push in through the piano's first bars on the shelf and her bed under the window,
     // arriving as the first book goes (5.13) and she wakes.
@@ -217,8 +225,9 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
     // Out wide as it pulls away and the drone comes over; in with it along the road, a little ahead of it.
     { t: 35, cells: 6, off: [0.9, -1.2] },
     { t: 40, cells: 5, off: [1.0, -0.55] },
+    // Through the chase the camera closes in on the cab a little a bar, so the run at the dam is tighter than the drop.
     { t: 44, cells: 4.8, off: [1.1, -0.4] },
-    { t: 52, cells: 4.8, off: [1.1, -0.4] },
+    { t: 52, cells: 4.25, off: [0.95, -0.35] },
     { t: beat(86) - 0.3, cells: 5.4 },
     ...earth.shots,
     ...space.shots,
