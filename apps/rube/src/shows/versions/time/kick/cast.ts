@@ -44,11 +44,6 @@ export function puff(p: p5, k: number, at: Pt, r: number, color: string, a: numb
   ctx.restore()
 }
 
-/** Kept only until every part has stopped calling it. */
-export function bloom(p: p5, k: number, at: Pt, r: number, color: string, a: number): void {
-  puff(p, k, at, r, color, a)
-}
-
 /** A pool of light on a floor: an ellipse `rx` by `ry` cells about `at`, soft to its edge. */
 export function pool(p: p5, k: number, at: Pt, rx: number, ry: number, color: string, a: number): void {
   if (a <= 0.003) return
