@@ -425,26 +425,56 @@ export function drawPeople(ctx: C2, v: View, t: number): void {
 }
 
 /**
- * On the walk sign, people cross this street at the corner, on the crossing beside the two of them: one coming down
- * off the kerb toward the camera and out of the frame's foot, one coming up out of it to the corner, nearer and so
- * larger as they come down. Seen from the front, a leg lifting at each step.
+ * On the walk sign, people cross this street at the corner, on the crossing beside the two of them: one who has come
+ * down the avenue toward the camera as the light changed and waits at the kerb, then goes down off it and out of the
+ * frame's foot; one coming up out of it to the corner. Seen from the front, a leg lifting at each step, small far up
+ * the avenue and larger the nearer they come. Each way is [time, x, y] stops, walking between them.
  */
-const CROSSERS: { from: Pt; to: Pt; t0: number; t1: number; h: number; coat: string }[] = [
-  { from: [CORNER.kerb + 0.75, PAVE + 0.3], to: [CORNER.kerb + 0.68, 4.2], t0: WALK + 0.3, t1: WALK + 5.0, h: 1.14, coat: '#4B4F44' },
-  { from: [CORNER.kerb + 1.08, 4.2], to: [CORNER.kerb + 1.02, PAVE + 0.34], t0: WALK + 1.0, t1: WALK + 6.2, h: 1.1, coat: '#6E5E4E' },
+const CROSSERS: { way: [number, number, number][]; h: number; coat: string }[] = [
+  {
+    way: [
+      [255.2, CORNER.kerb + 0.95, -0.35],
+      [259.6, CORNER.kerb + 0.75, PAVE + 0.3],
+      [WALK + 0.3, CORNER.kerb + 0.75, PAVE + 0.3],
+      [WALK + 5.0, CORNER.kerb + 0.68, 4.2],
+    ],
+    h: 1.14,
+    coat: '#4B4F44',
+  },
+  {
+    way: [
+      [WALK + 1.0, CORNER.kerb + 1.08, 4.2],
+      [WALK + 6.2, CORNER.kerb + 1.02, PAVE + 0.34],
+    ],
+    h: 1.1,
+    coat: '#6E5E4E',
+  },
 ]
 
 export function drawCrossers(ctx: C2, v: View, t: number): void {
   const k = v.k
+  const kerb = PAVE + 0.3
   for (const c of CROSSERS) {
-    if (t < c.t0) continue
-    const u = clamp01((t - c.t0) / (c.t1 - c.t0))
-    const x = c.from[0] + (c.to[0] - c.from[0]) * u
-    const y = c.from[1] + (c.to[1] - c.from[1]) * u
+    const w = c.way
+    if (t < w[0][0]) continue
+    let [, x, y] = w[w.length - 1]
+    let step = 0
+    for (let i = 0; i + 1 < w.length; i++) {
+      const [ta, xa, ya] = w[i]
+      const [tb, xb, yb] = w[i + 1]
+      if (t > tb) continue
+      const u = (t - ta) / (tb - ta)
+      x = xa + (xb - xa) * u
+      y = ya + (yb - ya) * u
+      if (ya !== yb) step = (t - ta) * 1.9
+      break
+    }
+    const s = (c.h / 1.2) * (y < kerb ? (y + 0.7) / (kerb + 0.7) : 1 + (y - kerb) * 0.07)
     if (y - c.h * 1.4 > v.y1) continue
-    const s = (c.h / 1.2) * (1 + (y - PAVE) * 0.07)
-    const step = u < 1 ? (t - c.t0) * 1.9 : 0
     const lift = (side: number) => Math.max(0, Math.sin(step * Math.PI + (side > 0 ? 0 : Math.PI))) * 0.09 * s
+    ctx.save()
+    // Far up the avenue at first, coming out of the haze.
+    ctx.globalAlpha = Math.min(1, t - w[0][0])
     ctx.lineCap = 'round'
     ctx.strokeStyle = '#2C3035'
     ctx.lineWidth = Math.max(1.5, 0.085 * k * s)
@@ -474,7 +504,7 @@ export function drawCrossers(ctx: C2, v: View, t: number): void {
     ctx.beginPath()
     ctx.arc(x * k, (y - 1.09 * s) * k, 0.1 * s * k, 0, Math.PI * 2)
     ctx.fill()
-    ctx.lineCap = 'butt'
+    ctx.restore()
   }
 }
 
