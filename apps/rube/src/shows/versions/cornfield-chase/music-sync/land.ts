@@ -99,8 +99,6 @@ const nightAt = (t: number, horizon: number): Light => {
     rows: {
       ...NIGHT.rows,
       line: mixHex(mixHex(NIGHT.rows.line, '#6E4F7C', 0.55 * glowAt(t)), '#4C6088', dawn),
-      // A gust turns up the leaves' pale side to the moon, and on the full organ to the midway.
-      sheen: mixHex(mixHex('#56528A', '#7A5A86', glowAt(t)), '#5A6C96', dawn),
       flash: shellLight(t),
     },
     // The clouds' undersides take the midway's light as it comes on, and the dawn's.

@@ -57,7 +57,6 @@ export function dayAt(t: number): Light {
       far: tone('#E2E3C3', '#E2DDB6', '#E0A27F'),
       line: tone('#3F6B33', '#4A6430', '#3A2830'),
       ink: 0.5 + 0.15 * dusk,
-      sheen: tone('#F6F4DC', '#F7EECB', '#F7C59A'),
       lean: 0.03 + 0.14 * dusk,
       gust: 1 + 0.6 * dusk,
     },
@@ -356,8 +355,6 @@ export interface Rows {
   /** The leaves' and tassels' line, and how strongly the nearest row's is drawn. */
   line: string
   ink: number
-  /** Leaves turned up by a gust show their pale side. */
-  sheen?: string
   lean: number
   gust: number
   /** The gust at `x` across the frame (0 to 1), from the music. */
@@ -392,7 +389,7 @@ export interface Flash {
  * The corn from the horizon to the foot of the frame, seen from a little over it: rows of canopy, each a scalloped
  * band of leaves, smaller, paler and slower the farther off, and the near rows' tassels standing out of it. Drawn far
  * to near, so each row stands in front of the ones behind it. A gust bends the tassels and leaves as it crosses the
- * frame, and turns up the leaves' pale side.
+ * frame.
  */
 export function rows(s: Screen, t: number, hy: number, r: Rows): void {
   const { ctx, cx, w, h, f } = s
@@ -439,21 +436,21 @@ export function rows(s: Screen, t: number, hy: number, r: Rows): void {
         canopy.moveTo(x, top)
         first = false
       } else {
-        const px = tips[tips.length - 4]
-        const py = tips[tips.length - 3]
+        const px = tips[tips.length - 3]
+        const py = tips[tips.length - 2]
         canopy.quadraticCurveTo((px + x) / 2, Math.min(py, top) - 0.02 * f * sc, x, top)
       }
       const across = clamp((x - left) / frameW, -0.2, 1.2)
       // The wind reaches the far rows a moment after the near: a front crossing the field, not a shiver.
       const sway = 0.05 * Math.sin(t * (1.2 + j1 * 0.6) + i * 0.8 + n) + 0.025 * Math.sin(t * 2.6 + i * 2.3)
       const gust = r.wind ? r.wind(across + 0.04 * (d - 1)) : 0
-      tips.push(x, top, r.lean + sway + r.gust * 0.35 * gust, gust)
+      tips.push(x, top, r.lean + sway + r.gust * 0.35 * gust)
     }
     // The mounds along the crest as a curved shape, the row under them as a plain rectangle: the curves cover only
     // the thin strip they need.
     const base = Math.ceil(y)
     const band = new Path2D(canopy)
-    band.lineTo(tips[tips.length - 4], base + 1)
+    band.lineTo(tips[tips.length - 3], base + 1)
     band.lineTo(tips[0], base + 1)
     band.closePath()
     ctx.fillStyle = mixHex(r.near, r.far, haze)
@@ -464,26 +461,6 @@ export function rows(s: Screen, t: number, hy: number, r: Rows): void {
       ctx.strokeStyle = rgba(r.line, r.ink * 0.35 * (1 - haze * 0.8))
       ctx.lineWidth = Math.max(1, 0.0016 * f * Math.sqrt(sc))
       ctx.stroke(canopy)
-    }
-    // Where a gust is crossing, the crest catches the light: the leaves turned up, their pale side to the sky.
-    if (r.sheen && r.wind && d < 5) {
-      ctx.lineWidth = Math.max(1, 0.006 * f * sc)
-      ctx.lineCap = 'butt'
-      for (const level of [0.2, 0.45, 0.7]) {
-        ctx.strokeStyle = rgba(r.sheen, (level + 0.15) * 0.75 * (1 - haze * 0.5))
-        ctx.beginPath()
-        for (let k = 4; k < tips.length; k += 4) {
-          const g = (tips[k + 3] + tips[k - 1]) / 2
-          if (g < level || g >= level + 0.25) continue
-          const px = tips[k - 4]
-          const py = tips[k - 3]
-          const x = tips[k]
-          const top = tips[k + 1]
-          ctx.moveTo(px, py)
-          ctx.quadraticCurveTo((px + x) / 2, Math.min(py, top) - 0.02 * f * sc, x, top)
-        }
-        ctx.stroke()
-      }
     }
     // Leaves and tassels, on the rows near enough to see them.
     const ink = r.ink * (1 - smooth(d, 1.2, 2.3))
@@ -501,12 +478,12 @@ export function rows(s: Screen, t: number, hy: number, r: Rows): void {
     ctx.lineWidth = Math.max(1, 0.0022 * f * Math.sqrt(sc))
     ctx.lineCap = 'butt'
     ctx.beginPath()
-    for (let k = 0; k < tips.length; k += 4) {
+    for (let k = 0; k < tips.length; k += 3) {
       const x = tips[k]
       const top = tips[k + 1]
       const bend = tips[k + 2]
       // Keyed to the mound's own index, not its place in this frame's list, so a tassel is the same one as the camera pans.
-      const j = hash(i0 + k / 4, 90 + n)
+      const j = hash(i0 + k / 3, 90 + n)
       const tall = (0.07 + 0.03 * j) * f * sc
       // The stalk up out of the canopy to the tassel.
       const tx = x + bend * tall
