@@ -405,8 +405,9 @@ async function main(): Promise<void> {
   const liftoffTake = interstellar?.versions[0]
   check('interstellar is Voyage, its own work of one take, labelled the same (no subtitle), with no note',
     !!interstellar && interstellar.title === 'Voyage' && interstellar.versions.length === 1 && liftoffTake?.take === 'opus55' && liftoffTake.label === 'Voyage' && liftoffTake.note === undefined)
-  // A take named in the address opens, not the work's first (Soft Lamp's moving take, which this was, is hidden now).
-  check('a named take is still that take', shipped.works.find((w) => w.work === 'mountain-king')?.versions[0]?.take !== 'opus55-spark' && pickVersion(shipped.works, 'mountain-king', 'opus55-spark')?.take === 'opus55-spark')
+  // A work's second take, named: Soft Lamp's moving take was the one asked for here until it was hidden (Oct 15), and
+  // its name now falls to the still take, as the Soft Lamp check above says.
+  check('a named take is still that take', pickVersion(shipped.works, 'mountain-king', 'opus55-spark')?.take === 'opus55-spark')
   // A renamed take's old address still opens it, in the page and as a page the build writes (`vite.config.ts`).
   const renamed = Object.entries(RENAMED_TAKES).flatMap(([work, old]) => Object.entries(old).map(([was, now]) => ({ work, was, now })))
   const lost = renamed.filter(({ work, was, now }) => {
