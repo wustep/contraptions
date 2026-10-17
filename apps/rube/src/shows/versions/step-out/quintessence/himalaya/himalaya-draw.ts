@@ -12,7 +12,6 @@ import {
   CAT_STEPS_IN,
   CAT_STEPS_OUT,
   FAR_Y,
-  GUST,
   LANDINGS,
   LEDGE_Y,
   R,
@@ -77,7 +76,7 @@ const FOOT: Pt[] = [
 ]
 
 /** The boulder over the foot, up to his left: the gust takes the snow off its top. */
-const BOULDER: Pt = [-1.6, -1.75]
+export const BOULDER: Pt = [-1.6, -1.75]
 
 /** The face's outline: off to the left and down, its right flank down into the cloud, the ledge's lip, the summit ridge. */
 const FACE: Pt[] = [
@@ -671,7 +670,7 @@ function strapSwing(t: number): number {
 
 /* ------------------------------------------------------------------ what moves on the beats */
 
-/** His landings: a small kick of snow off each step. The gust off the boulder on the downbeat of the build. */
+/** His landings: a small kick of snow off each step. */
 export function drawKicks(pen: Pen, t: number): void {
   for (let i = 0; i < STEPS.length; i++) {
     const g = t - LANDINGS[i]
@@ -685,51 +684,33 @@ export function drawKicks(pen: Pen, t: number): void {
       ellipse(pen, x + vx * g, Math.min(y + R - 0.01, y + R + vy * g + 3 * g * g), 0.022, 0.022, rgba('#FFFFFF', 0.9 * fade))
     }
   }
-  const gg = t - GUST
-  if (gg > -0.05 && gg < 3.5) {
-    // The plume: torn off the boulder's top and streamed away right, thinning.
-    const path = new Path2D()
-    const k = pen.k
-    for (let i = 0; i < 70; i++) {
-      const delay = hash(i, 81) * 0.5
-      const g = gg - delay
-      if (g < 0 || g > 1.6 + hash(i, 86)) continue
-      const x = BOULDER[0] - 0.6 + hash(i, 82) * 1.2 + g * (2.0 + hash(i, 83) * 1.6)
-      const y = BOULDER[1] - 0.15 - hash(i, 84) * 0.15 - g * (0.3 + hash(i, 85) * 0.2) + Math.sin(g * 4 + i) * 0.05
-      const r = (0.02 + g * 0.01) * k
-      path.moveTo(x * k + r, y * k)
-      path.ellipse(x * k, y * k, r, 0.016 * k, 0, 0, Math.PI * 2)
-    }
-    pen.c.fillStyle = rgba('#FFFFFF', 0.6 * (1 - smooth(gg, 1, 3.5)))
-    pen.c.fill(path)
-  }
 }
 
-/** Snow sifting from the rock over them: a thin fall, its front landing on the ledge on the beat. */
+/**
+ * Snow sifting from the rock over them: one thin stream, drifting a little downwind and widening as it falls, thickest
+ * at its front, which lands on the ledge on the beat, and thinning to nothing up toward its tail, which follows it down.
+ */
 const SIFT_FALL = 1.5
+/** How long the stream runs off the lip. */
+const SIFT_RUN = 1.1
 export function drawSifts(pen: Pen, t: number): void {
   const top = LEDGE_Y - 1.2 + 0.02
-  const h = LEDGE_Y - top
-  const dur = h / SIFT_FALL
-  const k = pen.k
-  const path = new Path2D()
+  const dur = (LEDGE_Y - top) / SIFT_FALL
+  const x = (y: number) => SIFT_X + ((y - top) / SIFT_FALL) * 0.14
+  const w = (y: number) => 0.012 + (0.03 * (y - top)) / (LEDGE_Y - top)
   for (const s of SIFTS) {
     const g = t - (s - dur)
-    if (g < 0 || g > dur + 1.2) continue
-    for (let i = 0; i < 40; i++) {
-      const lag = i * 0.028
-      const gi = g - lag
-      if (gi < 0) continue
-      const y = top + gi * SIFT_FALL
-      if (y > LEDGE_Y) continue
-      const x = SIFT_X + (hash(i, 91) - 0.5) * 0.12 + Math.sin(gi * 3 + i) * 0.025 + gi * 0.14
-      const r = (0.01 + 0.008 * hash(i, 92)) * k
-      path.moveTo(x * k + r, y * k)
-      path.arc(x * k, y * k, r, 0, Math.PI * 2)
+    if (g < 0 || g > dur + SIFT_RUN) continue
+    const y0 = top + Math.max(0, g - SIFT_RUN) * SIFT_FALL
+    const y1 = Math.min(LEDGE_Y, top + g * SIFT_FALL)
+    if (y1 > y0) {
+      const k = pen.k
+      const fall = pen.c.createLinearGradient(x(y0) * k, y0 * k, x(y1) * k, y1 * k)
+      fall.addColorStop(0, rgba('#FFFFFF', 0))
+      fall.addColorStop(1, rgba('#FFFFFF', 0.75 * Math.min(1, (y1 - y0) / 0.4)))
+      fillPoly(pen, [[x(y0) - w(y0), y0], [x(y0) + w(y0), y0], [x(y1) + w(y1), y1], [x(y1) - w(y1), y1]], fall)
     }
     const land = t - s
     if (land >= 0 && land < 0.6) ellipse(pen, SIFT_X + 0.1, LEDGE_Y - 0.01, 0.06 + land * 0.25, 0.022, rgba('#FFFFFF', 0.8 * (1 - land / 0.6)))
   }
-  pen.c.fillStyle = rgba('#FFFFFF', 0.88)
-  pen.c.fill(path)
 }
