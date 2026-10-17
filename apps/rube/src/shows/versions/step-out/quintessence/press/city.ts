@@ -5,10 +5,10 @@ import { steam } from './steam'
 
 /**
  * Manhattan at dawn, through the windows of the Life building (the PRESS builder's): seen from Ted's office high on the
- * mezzanine, and through the gallery of tall windows on the press hall's far wall. A sky going from steel blue to a
- * low gold, a band of cloud lit underneath, towers on three planes (the far ones pale in the haze, the near ones dark
- * with lit windows, a water tank on a roof here and there, steam off a vent on some), pigeons wheeling, and the postal
- * helicopter's cousin crossing the morning.
+ * mezzanine, and through the gallery of tall windows on the press hall's far wall. A clear sky going from steel blue
+ * to a low gold, towers on three planes (the far ones pale in the haze, the near ones dark with a few windows lit, a
+ * water tank on a roof here and there, steam off one vent), five pigeons wheeling, and the postal helicopter's cousin
+ * crossing the morning.
  *
  * Drawn only inside a clip the caller sets (a window's panes), so it costs only what is seen of it.
  */
@@ -29,7 +29,7 @@ const SKY: [number, string][] = [
   [HORIZON, '#EFC58C'],
 ]
 
-/** One plane of towers: their silhouettes, and the windows lit in them. */
+/** One plane of towers: their silhouettes, and on the nearest a few windows lit. */
 interface Towers {
   z: number
   seed: number
@@ -37,18 +37,17 @@ interface Towers {
   w: Pt
   h: Pt
   body: string
-  lit: string
-  /** Share of window cells lit. */
-  share: number
-  /** Window grid pitch, cells. */
-  pitch: number
+  /** The windows lit in it: their colour, the share of the grid lit, the grid's pitch in cells. */
+  windows?: { lit: string; share: number; pitch: number }
 }
 
 const PLANES: Towers[] = [
-  { z: 0.05, seed: 3, w: [0.22, 0.4], h: [0.5, 1.9], body: '#93A9B2', lit: '#C9D3D2', share: 0, pitch: 0 },
-  { z: 0.09, seed: 7, w: [0.3, 0.55], h: [0.7, 2.4], body: '#5F7784', lit: '#E8C186', share: 0.18, pitch: 0.075 },
-  { z: 0.14, seed: 11, w: [0.42, 0.75], h: [1.0, 3.3], body: '#25333B', lit: '#F2B866', share: 0.3, pitch: 0.1 },
+  { z: 0.05, seed: 3, w: [0.22, 0.4], h: [0.5, 1.9], body: '#93A9B2' },
+  { z: 0.09, seed: 7, w: [0.3, 0.55], h: [0.7, 2.4], body: '#5F7784' },
+  { z: 0.14, seed: 11, w: [0.42, 0.75], h: [1.0, 3.3], body: '#25333B', windows: { lit: '#C99A5C', share: 0.07, pitch: 0.1 } },
 ]
+/** The one near roof with steam off its vent: in the far pane at the left of the office's framing, away from him. */
+const VENT = -4
 
 /** The tower at index i of a plane: its left edge, width, top (y), and what is on its roof. */
 function tower(pl: Towers, i: number): { x: number; w: number; top: number; crown: number } {
@@ -136,31 +135,6 @@ export function drawCity(ctx: C2, v: View, t: number): void {
     ctx.fillRect(s.x0, s.y0, s.w, s.h)
     ctx.restore()
   })
-  // A band of cloud, lit gold from underneath, going over slowly.
-  layer(ctx, v, 0.035, ANCHOR, REF, (s) => {
-    ctx.save()
-    ctx.scale(k, k)
-    const lit = new Path2D()
-    const dim = new Path2D()
-    const tile = 3.4
-    const i0 = Math.floor((s.x0 - 2 - t * 0.09) / tile)
-    const i1 = Math.ceil((s.x1 + 2 - t * 0.09) / tile)
-    for (let i = i0; i <= i1; i++) {
-      for (let j = 0; j < 6; j++) {
-        const x = i * tile + hash(i, j, 21) * tile + t * 0.09 * (1 + 0.3 * j)
-        const y = -3.3 + j * 0.42 + hash(i, j, 22) * 0.3
-        const w = 0.5 + 1.5 * hash(i, j, 23)
-        const h = 0.04 + 0.06 * hash(i, j, 24)
-        dim.roundRect(x, y, w, h, h / 2)
-        lit.roundRect(x + w * 0.12, y + h * 0.55, w * 0.76, h * 0.5, h / 4)
-      }
-    }
-    ctx.fillStyle = 'rgba(46, 70, 84, 0.55)'
-    ctx.fill(dim)
-    ctx.fillStyle = 'rgba(244, 204, 150, 0.5)'
-    ctx.fill(lit)
-    ctx.restore()
-  })
   // The towers, far to near.
   for (const pl of PLANES) {
     layer(ctx, v, pl.z, ANCHOR, REF, (s) => {
@@ -168,16 +142,15 @@ export function drawCity(ctx: C2, v: View, t: number): void {
       ctx.scale(k, k)
       const body = new Path2D()
       const lit = new Path2D()
-      const cool = new Path2D()
       const step = pl.w[0] + pl.w[1] * 0.5
       const i0 = Math.floor((s.x0 - 1.5) / step)
       const i1 = Math.ceil((s.x1 + 0.5) / step)
       const bottom = s.y1 + 0.5
-      const vents: [number, number, number][] = []
+      let vent: Pt | null = null
       for (let i = i0; i <= i1; i++) {
         const tw = tower(pl, i)
         if (tw.x > s.x1 + 0.8 || tw.x + tw.w < s.x0) continue
-        if (pl === PLANES[2] && tw.crown <= 0.4 && hash(i, 8, pl.seed) > 0.45) vents.push([tw.x + tw.w * (0.3 + 0.4 * hash(i, 9, pl.seed)), tw.top, i])
+        if (pl.windows && i === VENT) vent = [tw.x + tw.w * 0.4, tw.top]
         if (tw.x > s.x1) continue
         body.rect(tw.x, tw.top, tw.w, bottom - tw.top)
         // A setback near the top, or a spire, or a water tank on its legs.
@@ -198,9 +171,9 @@ export function drawCity(ctx: C2, v: View, t: number): void {
           body.rect(cx - 0.04, tw.top - 0.04, 0.012, 0.05)
           body.rect(cx + 0.028, tw.top - 0.04, 0.012, 0.05)
         }
-        if (!pl.share) continue
-        // Its windows: a grid, a share of them lit, each changing now and then.
-        const p = pl.pitch
+        if (!pl.windows) continue
+        // Its windows: a grid, a few of them lit.
+        const { share, pitch: p } = pl.windows
         const cols = Math.max(1, Math.floor((tw.w - p * 0.6) / p))
         const x0 = tw.x + (tw.w - cols * p) / 2 + p * 0.22
         const yTop = Math.max(tw.top + p * 0.8, s.y0 - p)
@@ -208,35 +181,28 @@ export function drawCity(ctx: C2, v: View, t: number): void {
         const r0 = Math.floor((yTop - tw.top) / (p * 1.3))
         for (let r = r0; r < r0 + rows; r++) {
           const y = tw.top + p * 0.8 + r * p * 1.3
-          for (let cI = 0; cI < cols; cI++) {
-            const h = hash(i * 131 + cI, r, pl.seed)
-            if (h > pl.share) continue
-            // Now and then a window goes on or off.
-            const epoch = Math.floor(t / 2.7 + hash(cI, r, i) * 8)
-            if (hash(i * 17 + cI, r * 13 + epoch, pl.seed + 1) < 0.1) continue
-            ;(h < pl.share * 0.25 ? cool : lit).rect(x0 + cI * p, y, p * 0.5, p * 0.62)
-          }
+          for (let cI = 0; cI < cols; cI++) if (hash(i * 131 + cI, r, pl.seed) < share) lit.rect(x0 + cI * p, y, p * 0.5, p * 0.62)
         }
       }
       ctx.fillStyle = pl.body
       ctx.fill(body)
-      ctx.fillStyle = pl.lit
-      ctx.fill(lit)
-      ctx.fillStyle = '#CFE0E4'
-      ctx.fill(cool)
-      // Steam off the vents on the near roofs, leaning off on the morning air.
-      for (const [x, y, i] of vents) steam(ctx, t, x, y, i, 0.42)
+      if (pl.windows) {
+        ctx.fillStyle = pl.windows.lit
+        ctx.fill(lit)
+      }
+      // Steam off the one vent, leaning off on the morning air.
+      if (vent) steam(ctx, t, vent[0], vent[1], VENT, 0.42)
       ctx.restore()
     })
   }
-  // Pigeons wheeling over the roofs: a loose flock going round, each bird's wings beating.
+  // Pigeons wheeling over the roofs: five going round, each bird's wings beating.
   layer(ctx, v, 0.08, ANCHOR, REF, (s) => {
     ctx.save()
     ctx.scale(k, k)
     const birds = new Path2D()
     const cx = -1.6 + 1.2 * Math.sin(t * 0.21)
     const cy = -2.0 + 0.35 * Math.sin(t * 0.33)
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < 5; i++) {
       const a = t * (0.5 + 0.2 * hash(i, 1, 33)) + hash(i, 2, 33) * 6.283
       const r = 0.25 + 0.5 * hash(i, 3, 33)
       const x = cx + Math.cos(a) * r * 1.6
