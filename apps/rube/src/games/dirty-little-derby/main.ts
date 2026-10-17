@@ -39,7 +39,7 @@ app.innerHTML = `
     <section id="intro"></section>
     <section id="score" aria-label="Derby scoreboard" hidden></section>
     <section class="track-panel" id="track-panel" aria-label="The backyard circuit">
-      <div class="track-heading"><span><span class="track-dot"></span> THE BACKYARD CIRCUIT</span><span id="track-label">TWO LANES. NO HARD FEELINGS.</span></div>
+      <div class="track-heading"><span><span class="track-dot"></span> THE BACKYARD CIRCUIT</span><span id="track-label">TWO LANES. NO HARD FEELINGS.</span><button id="course-toggle" data-action="course" aria-expanded="false" aria-controls="track" hidden>Scout course +</button></div>
       <div id="track" role="img" aria-label="Two tiny racers ride rockets and conveyors through the backyard circuit. Live race updates appear below."></div>
       <div class="track-bottom"><span id="track-comment">A short race through some questionable engineering.</span><span class="track-distance">12 METRES OF BAD INTENTIONS</span></div>
       <div id="countdown" aria-hidden="true" hidden></div>
@@ -78,7 +78,7 @@ function focusHeading(): void {
 function names(): [string, string] { return match ? [match.drivers[0].name, match.drivers[1].name] : playerNames }
 
 function visiblePoints(): [number, number] {
-  const completed = match?.results.slice(0, phase === 'result' || phase === 'podium' ? round + 1 : round) ?? []
+  const completed = match?.results.slice(0, phase === 'result' || phase === 'podium' || (phase === 'race' && replay) ? round + 1 : round) ?? []
   return [0, 1].map(i => completed.reduce((sum, heat) => sum + heat.points[i], 0)) as [number, number]
 }
 
@@ -97,6 +97,7 @@ function render(): void {
   app.dataset.phase = phase
   document.querySelector<HTMLElement>('#new-game')!.hidden = phase === 'lobby'
   trackPanel.hidden = phase === 'handoff'
+  document.querySelector<HTMLElement>('#course-toggle')!.hidden = phase !== 'plan'
   countdown.hidden = true
   renderScore()
   intro.innerHTML = ''
@@ -115,7 +116,7 @@ function renderLobby(): void {
   intro.innerHTML = `
     <div class="lobby-hero">
       <div class="hero-copy"><p class="eyebrow">A CONTRAPTIONS ORIGINAL · Nº 01</p><h1>Dirty little<br><span>Derby.</span><span class="title-period">●</span></h1><p class="hero-description">A very small race.<br>A very personal grudge.</p></div>
-      <div class="entry-card"><span class="entry-stamp">3 HEATS <i>✳</i> 1 TINY TROPHY</span><h2>Nice friends.<br>Questionable tactics.</h2><p>Pick a route. Play a secret prank.<br>Let the little machines settle it.</p>
+      <div class="entry-card"><span class="entry-stamp">3 HEATS <i>✳</i> 1 TINY TROPHY</span><h2>Nice friends.<br>Questionable tactics.</h2><p>Pick a route. Play a secret prank. <br>Let the little machines settle it.</p>
         <div class="mode-switch" role="group" aria-label="Game mode"><button data-mode="solo" aria-pressed="${mode === 'solo'}">You vs. the house</button><button data-mode="local" aria-pressed="${mode === 'local'}">Pass & play</button></div>
         ${mode === 'local' ? `<div class="name-fields"><label>PLAYER 1<input id="name-0" maxlength="18" value="${escape(playerNames[0])}" autocomplete="off" aria-label="Player 1 name"></label><label>PLAYER 2<input id="name-1" maxlength="18" value="${escape(playerNames[1])}" autocomplete="off" aria-label="Player 2 name"></label></div>` : '<p class="mode-note">One player. One shifty little opponent.</p>'}
         <button class="primary start-button" data-action="start">${mode === 'solo' ? 'Let’s race' : 'Start a friendly grudge'}${icon('arrow')}</button>
@@ -303,10 +304,13 @@ function tick(): void {
 }
 
 function openDialog(kind: 'rules' | 'restart'): void {
-  resumeAfterDialog = phase === 'race' && !paused
-  if (resumeAfterDialog) setPaused(true)
+  if (!dialog.open) {
+    resumeAfterDialog = phase === 'race' && !paused
+    if (resumeAfterDialog) setPaused(true)
+  }
   dialog.innerHTML = kind === 'rules' ? `<button class="dialog-close" data-action="close-dialog" aria-label="Close instructions">×</button><p class="eyebrow">THE VERY SHORT RULEBOOK</p><h2 id="dialog-title">Be quick.<br>Be a little awful.</h2><ol class="rules-list"><li><strong>Pick your route.</strong> The rocket is faster. The covered conveyor halves any prank delay.</li><li><strong>Choose one secret card.</strong> Snail mail adds 2.6s to your rival. Dunk tank adds 1.8s. A shield blocks either. Hot wheels saves you 1.2s.</li><li><strong>Watch the race.</strong> No steering or timing needed. Your choices decide the race before the gate opens.</li></ol><div class="rules-callout">Each card works <strong>once per three-heat derby.</strong> Play it clean any time to save a card. Your prank always targets the other racer.</div><p>First place: <strong>3 points.</strong> Second: <strong>1.</strong> Dead heat: <strong>2 each.</strong> Most points takes the trophy; equal points are settled by total race time. Equal time means a shared trophy.</p><p class="muted">Pass & play: choose in private, then hand over the device. In solo, the house commits before you choose.</p><button class="primary" data-action="close-dialog">Sounds suitably unfair.${icon('arrow')}</button>` : `<button class="dialog-close" data-action="close-dialog" aria-label="Keep racing">×</button><p class="eyebrow">BACK TO THE CLUBHOUSE</p><h2 id="dialog-title">Call it a truce?</h2><p>This will end the current derby and reset both players’ cards.</p><div class="dialog-actions"><button class="secondary" data-action="close-dialog">Keep racing</button><button class="primary" data-action="abandon">New derby${icon('arrow')}</button></div>`
-  dialog.showModal()
+  if (kind === 'rules' && phase !== 'lobby') dialog.insertAdjacentHTML('beforeend', '<button class="text-button dialog-restart" data-action="restart">Start a new derby</button>')
+  if (!dialog.open) dialog.showModal()
 }
 
 function lobby(): void {
@@ -400,6 +404,12 @@ app.addEventListener('click', event => {
   }
   if (action === 'lobby') lobby()
   if (action === 'receipt') saveReceipt()
+  if (action === 'restart') openDialog('restart')
+  if (action === 'course') {
+    const expanded = trackPanel.classList.toggle('expanded')
+    button.setAttribute('aria-expanded', String(expanded))
+    button.textContent = expanded ? 'Close course −' : 'Scout course +'
+  }
   if (action === 'close-dialog') dialog.close()
   if (action === 'abandon') { resumeAfterDialog = false; dialog.close(); lobby() }
 })
@@ -415,10 +425,10 @@ async function toggleSound(): Promise<void> {
 dialog.addEventListener('close', () => { if (resumeAfterDialog) setPaused(false); resumeAfterDialog = false })
 dialog.addEventListener('click', event => { if (event.target === dialog) { const r = dialog.getBoundingClientRect(); if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) dialog.close() } })
 document.addEventListener('keydown', event => {
-  if ((event.target as HTMLElement).closest('input, textarea, select') || dialog.open) return
+  if ((event.target as HTMLElement).closest('input, textarea, select') || dialog.open || event.repeat) return
   if (event.code === 'Space' && phase === 'race' && !(event.target as HTMLElement).closest('button, a')) { event.preventDefault(); setPaused(!paused) }
   if (event.key.toLowerCase() === 'm' && !event.metaKey && !event.ctrlKey && !event.altKey) void toggleSound()
 })
 document.addEventListener('visibilitychange', () => { if (document.hidden && phase === 'race') setPaused(true) })
-window.addEventListener('pagehide', () => { stage.destroy() }, { once: true })
+window.addEventListener('pagehide', event => { if (!event.persisted) stage.destroy() })
 render()

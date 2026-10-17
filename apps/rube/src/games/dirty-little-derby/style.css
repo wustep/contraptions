@@ -20,3 +20,32 @@ dialog{padding:42px;border:1px solid var(--ink);border-radius:10px;background:va
 /* The course is the hero: tighter lanes, larger machines, and a real finish photograph. */
 @media(min-width:761px){#track{height:470px}[data-phase=plan] #track{height:310px}[data-phase=result] #track{height:230px}}
 @media(max-width:760px){[data-phase=result] #track{height:300px}}
+
+/* Phone planning puts decisions first; the optional course inspection stays one tap away. */
+#course-toggle{display:none;background:transparent;text-decoration:underline;text-underline-offset:3px;font-size:10px;padding:8px 0;min-height:42px}
+.dialog-restart{display:block;margin:13px auto 0}
+h1{overflow-wrap:anywhere}
+@media(max-width:560px){
+  .hero-copy h1{font-size:clamp(57px,17.6vw,82px);line-height:.92;margin:20px 0 18px}
+  .hero-description{position:static;max-width:none;font-size:14px;line-height:1.4}
+  .hero-copy .title-period{font-size:27px;margin-left:12px}
+  .lobby-hero{padding-top:30px}
+  .entry-card{margin-top:23px}
+  .sound-button,.rules-button{min-width:42px;min-height:42px;justify-content:center}
+  .sound-button span{display:none}
+  .rules-button{font-size:16px}
+  .site-header nav{gap:9px}
+  [data-phase=plan] #course-toggle{display:block}
+  [data-phase=plan] #track-label{display:none}
+  [data-phase=plan] .track-heading{height:43px}
+  [data-phase=plan] .track-panel:not(.expanded) #track,[data-phase=plan] .track-panel:not(.expanded) .track-bottom{display:none}
+  .commit-bar{position:sticky;bottom:0;background:var(--paper);z-index:4;padding:12px 0 max(12px,env(safe-area-inset-bottom));margin-bottom:10px}
+  .commit-bar small{display:none}
+  .commit-bar>.primary{margin-top:10px}
+  .route-card strong{font-size:12px}
+  .route-card small{font-size:10px}
+  .route-card{min-height:151px}
+  .card-description{font-size:11px}
+  .prank-card{min-height:214px}
+  .clean-choice>span:not(.selection-dot){font-size:10px}
+}

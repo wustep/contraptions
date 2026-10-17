@@ -29,3 +29,9 @@ Completed a solo derby at 1440 × 1100: a snail blocked by a shield tied at 9.60
 Enlarged the machinery, tightened lane spacing, corrected canvas typography and tie copy, and built a split finish photograph frozen at the first crossing. Removed clipped course labels from that close-up. Added exhaustive rules and timeline checks to `npm test`.
 
 Replayed a full local derby as Miso and Bean. A snail reversed the faster route (12.20 vs 10.60); a shield blocked the next dunk (9.00 vs 10.40); both boosted in the final (8.60 vs 9.00). Miso won 7–5. Verified the handoff hides the canvas and removes all route/card controls. The headless check covers all 300 route/card/heat combinations, continuous handoffs, finish agreement, repeatable scrubbing, inventory, ties, and 300 seeded three-heat house derbies.
+
+### Improvement pass 2 — phone play and interruptions
+
+Completed a phone derby at 390 × 844, including a 0.10-second final. Found a wrapped title overlapping its description and too much scrolling before decisions. Fixed the title, made course scouting expandable on phones, kept the lock-in control within reach, enlarged touch targets, and stopped clipping course captions at the camera edge. Fixed the replay scoreboard so earned points remain visible. Hidden stages now stop drawing; browser history restoration preserves the stage.
+
+Replayed another complete phone derby, including an instant replay. Verified Space pause/resume, rules pausing the clock, Escape resuming, unchanged replay results and scores, disabled spent cards, course expansion, and the shared-trophy outcome at 6–6. Downloaded and inspected the 1200 × 900 grudge receipt. No browser console errors.

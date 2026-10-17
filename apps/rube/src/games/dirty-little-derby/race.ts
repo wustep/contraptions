@@ -157,6 +157,10 @@ export class DerbyShow extends Show {
 export function drawTrackFurniture(p: p5, show: DerbyShow, time: number, camera: { x: number; y: number }, k: number, width: number, height: number, names: [string, string], detailed = true): void {
   const x = (value: number) => width / 2 + (value - camera.x) * k
   const y = (value: number) => height / 2 + (value - camera.y) * k
+  const label = (text: string, atX: number, atY: number): void => {
+    const left = x(atX)
+    if (left >= 10 && left + p.textWidth(text) <= width - 10) p.text(text, left, y(atY))
+  }
   p.push()
   p.textFont('Arial')
   p.textAlign(p.LEFT, p.CENTER)
@@ -194,9 +198,9 @@ export function drawTrackFurniture(p: p5, show: DerbyShow, time: number, camera:
     p.fill('#636c5e')
     p.textSize(Math.max(9, k * 0.135))
     if (detailed) {
-      p.text(outcome.choice.route === 'rocket' ? 'ROCKET SHORTCUT' : 'COVERED CONVEYOR', x(1.5), y(row - 1.38))
-      p.text('MISCHIEF JUNCTION', x(6), y(row - 1.38))
-      p.text('HOME STRETCH', x(9.3), y(row - 1.38))
+      label(outcome.choice.route === 'rocket' ? 'ROCKET SHORTCUT' : 'COVERED CONVEYOR', 1.5, row - 1.38)
+      label('MISCHIEF JUNCTION', 6, row - 1.38)
+      label('HOME STRETCH', 9.3, row - 1.38)
     }
     // A literal roof makes the covered route legible.
     if (outcome.choice.route === 'covered') {
@@ -231,11 +235,11 @@ export function drawTrackFurniture(p: p5, show: DerbyShow, time: number, camera:
     p.fill(INK)
     p.textSize(Math.max(10, k * 0.18))
     const caption = before ? names[racer] : time >= runner.finish ? `${names[racer]} · ${runner.finish.toFixed(2)}s` : time >= runner.junction && outcome.incoming ? (outcome.blocked ? 'A very satisfying NO.' : `${names[1 - racer]} did this. +${outcome.penalty.toFixed(1)}s`) : names[racer]
-    if (detailed) p.text(caption, x(time >= runner.junction && time < runner.finish && outcome.incoming ? 6 : 0), y(row + (outcome.incoming === 'dunk' && outcome.penalty ? 1.45 : 0.9)))
+    if (detailed) label(caption, time >= runner.junction && time < runner.finish && outcome.incoming ? 6 : 0, row + (outcome.incoming === 'dunk' && outcome.penalty ? 1.45 : 0.9))
     if (detailed && outcome.protected && time >= runner.junction && time < runner.finish) {
       p.fill('#636c5e')
       p.textSize(Math.max(9, k * 0.14))
-      p.text('Cover halved the delay.', x(8.1), y(row + 1.2))
+      label('Cover halved the delay.', 8.1, row + 1.2)
     }
   }
   p.pop()

@@ -30,6 +30,7 @@ export class DerbyStage {
         p.frameRate(60)
       }
       p.draw = () => {
+        if (!host.clientWidth || !host.clientHeight || document.hidden) return
         this.onFrame()
         const { show, names } = this.state
         const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -67,6 +68,7 @@ export class DerbyStage {
       }
     })
     this.resize = new ResizeObserver(() => {
+      if (!host.clientWidth || !host.clientHeight) return
       if (this.sketch.width !== host.clientWidth || this.sketch.height !== host.clientHeight) this.sketch.resizeCanvas(host.clientWidth, host.clientHeight)
     })
     this.resize.observe(host)
