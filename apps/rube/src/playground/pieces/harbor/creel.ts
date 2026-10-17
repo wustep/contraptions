@@ -31,9 +31,9 @@ const HW = 0.17
 const SIDE = 0.15
 const BRIDLE = 0.07
 const HOIST_H = SIDE + HW + BRIDLE
-/** The decks: the lower one the pot sits on, the upper one it is set down on; and the post that carries both the deck and the davit. */
+/** The decks: the lower one the pot sits on, the upper one it is set down on, which stops short of the pot's way up; and the post that carries both the deck and the davit. */
 const LOWER_END = 0.08
-const UPPER_X0 = 0.02
+const UPPER_X0 = 0.08
 const POST_X = 0.45
 const DAVIT_TOP = -1.44
 const ARM = 0.57
@@ -221,15 +221,5 @@ export const creel = definePiece<{ color: string }>({
       p.rect(0.008 * k, 0.06 * k, 0.04 * k, 0.12 * k, 0.006 * k)
       p.pop()
     })
-    // The thump as it is set down.
-    const hit = t - T_LAND
-    if (hit > 0 && hit < 0.18) {
-      const f = hit / 0.18
-      p.push()
-      p.stroke(ink)
-      p.strokeWeight(weight * (1 - f))
-      for (const side of [-1, 1]) p.line((X1 + side * (HW + 0.03)) * k, (UP - 0.02) * k, (X1 + side * (HW + 0.08 + 0.06 * f)) * k, (UP - 0.05 - 0.04 * f) * k)
-      p.pop()
-    }
   },
 })
