@@ -1,4 +1,4 @@
-import { LAP, PLANK, POCKET, ROWS, SLACK, W } from './geo'
+import { LAP, PLANK, POCKET, ROWS, SLACK, THICK, W } from './geo'
 
 /**
  * The toy as it runs: where every cube and plank is at any moment, built once from the score's cues and checked as
@@ -43,6 +43,11 @@ export interface PlankMove {
   /** Where its west end is before and after (a flip leaves it where it was). */
   from: number
   to: number
+  /**
+   * A flip: how high it is lifted to turn, in cubes. Enough that turning it clears the planks beside it; more where a
+   * cube stands beside it, so that it turns clear over the cube's top.
+   */
+  lift: number
 }
 
 /** What the score says happens, in show seconds. */
@@ -65,8 +70,8 @@ export interface PlankState {
   at: number
   /** Whether its pocket is up, once any turn it is making is done. */
   up: boolean
-  /** Turning over: how far, 0 to 1, and whether the pocket was up when it began. */
-  flip: { u: number; wasUp: boolean } | null
+  /** Turning over: how far, 0 to 1, whether the pocket was up when it began, and how high it is lifted to turn. */
+  flip: { u: number; wasUp: boolean; lift: number } | null
   /** Who is seated in its pocket, if anyone (and they have finished dropping in). */
   seated: CubeName | null
 }
@@ -104,7 +109,7 @@ export class Machine {
       if (last && c.t0 < last.t1) this.problems.push(`row ${c.row}: a ${c.kind} at ${c.t0.toFixed(2)} s before its last move is done`)
       const to = c.kind === 'slide' ? c.to : at[c.row]
       if (to < 0 || to > SLACK || !Number.isInteger(to)) this.problems.push(`row ${c.row}: slid to ${to}, outside the tray`)
-      const move: PlankMove = { row: c.row, kind: c.kind, t0: c.t0, t1: c.t1, from: at[c.row], to }
+      const move: PlankMove = { row: c.row, kind: c.kind, t0: c.t0, t1: c.t1, from: at[c.row], to, lift: 0 }
       list.push(move)
       this.moves.push(move)
       at[c.row] = to
@@ -135,6 +140,7 @@ export class Machine {
       spots.set(c.cube, to)
     }
     this.flops.sort((a, b) => a.t0 - b.t0)
+    for (const mv of this.moves) if (mv.kind === 'flip') mv.lift = this.clearance(mv)
     this.checkFlips()
     this.checkRoom()
   }
@@ -192,6 +198,28 @@ export class Machine {
     return { on: 'plank', row: ty, i }
   }
 
+  /**
+   * How high a flip lifts its plank. Its cross-section's corners sweep a circle of half its diagonal round its middle,
+   * which must clear the tops of the planks beside it (z 0, half a cube out) or, where a cube stands beside it, the
+   * cube's top (z 1).
+   */
+  private clearance(mv: PlankMove): number {
+    const reach = Math.hypot(0.5, THICK / 2)
+    const beside = Math.sqrt(reach * reach - 0.25)
+    const over = (top: number) => top + beside + THICK / 2 + 0.05
+    for (let t = mv.t0; t <= mv.t1; t += 0.05) {
+      for (const c of CUBES) {
+        const s = this.cubeAt(c, t)
+        for (const p of s.flop ? [s.flop.move.from, s.flop.move.to] : [s.spot]) {
+          if (p.on === 'pocket') continue
+          const [x, y] = this.cellNow(p, t)
+          if (Math.abs(y - mv.row) === 1 && x >= mv.from - 0.5 && x <= mv.from + PLANK - 0.5) return over(1)
+        }
+      }
+    }
+    return over(0)
+  }
+
   /** No plank turns over with anything on it, seated or standing. */
   private checkFlips(): void {
     for (const m of this.moves) {
@@ -245,7 +273,7 @@ export class Machine {
     for (const m of this.byRow.get(row)!) {
       if (m.kind !== 'flip') continue
       if (t >= m.t1) up = !up
-      else if (t > m.t0) flip = { u: (t - m.t0) / (m.t1 - m.t0), wasUp: up }
+      else if (t > m.t0) flip = { u: (t - m.t0) / (m.t1 - m.t0), wasUp: up, lift: m.lift }
     }
     let seated: CubeName | null = null
     for (const c of CUBES) {
@@ -263,6 +291,16 @@ export class Machine {
       else break
     }
     return { name, spot, flop: null }
+  }
+
+  /** The flop `name` last landed from, if it landed no more than `within` seconds before `t`, and how long ago. */
+  landed(name: CubeName, t: number, within: number): { move: Flop; since: number } | null {
+    let last: Flop | null = null
+    for (const f of this.byCube.get(name)!) {
+      if (f.t1 <= t) last = f
+      else break
+    }
+    return last && t - last.t1 <= within ? { move: last, since: t - last.t1 } : null
   }
 
   /** Every landing, in order: what the check holds to the music. */

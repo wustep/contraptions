@@ -81,8 +81,16 @@ function overStruck(u: number): number {
   const v = Math.max(0, Math.min(1, u))
   return 0.4 * v + 0.6 * v * v
 }
-/** Into a pocket: over the edge in the first part, then down. */
+/** Into a pocket: over the edge in the first part; it starts down a little before it is over, already moving. */
 const OVER = 0.62
+const DOWN = 0.5
+
+/** After it lands: the face that slapped down comes up a hair and settles, twice, in a sixth of a second. */
+const SETTLE = 0.17
+function settle(since: number): number {
+  if (since < 0 || since > SETTLE) return 0
+  return 0.06 * Math.exp(-since / 0.05) * Math.abs(Math.sin((Math.PI * since) / 0.085))
+}
 
 /** Turn `p` by `a` about the edge through `pivot` that a cube tipping toward `dir` turns on. */
 function tip(p: V3, pivot: V3, dir: Dir, a: number): V3 {
@@ -99,8 +107,15 @@ function tip(p: V3, pivot: V3, dir: Dir, a: number): V3 {
   return [p[0], pivot[1] + sy * (dy * c + dz * s), pivot[2] - dy * s + dz * c]
 }
 
-function tipNormal(n: V3, dir: Dir, a: number): V3 {
-  return tip(n, [0, 0, 0], dir, a)
+/** A cube in cell `x, y` turned `a` toward `dir` over its leading bottom edge, and dropped `fall`. */
+function tipped(x: number, y: number, dir: Dir, a: number, fall: number): Solid {
+  const [sx, sy] = STEP[dir]
+  const pivot: V3 = [x + (sx > 0 ? 1 : 0), y + (sy > 0 ? 1 : 0), 0]
+  const pts = corners(x, y, 0, x + 1, y + 1, 1).map((p) => {
+    const q = tip(p, pivot, dir, a)
+    return [q[0], q[1], q[2] + fall] as V3
+  })
+  return { pts, normals: FACES.map((fc) => tip(fc.n, [0, 0, 0], dir, a)) }
 }
 
 /** A cube's box at `t`, and where it stands for the painter's order. */
@@ -108,29 +123,43 @@ function cubeSolid(m: Machine, c: CubeState, t: number): { solid: Solid; row: nu
   if (!c.flop) {
     const [x, y] = m.cellNow(c.spot, t)
     const z = c.spot.on === 'pocket' ? -DEPTH : 0
+    const last = c.spot.on === 'pocket' ? null : m.landed(c.name, t, SETTLE)
+    const e = last ? settle(last.since) : 0
+    if (last && e > 1e-4) {
+      // Turned back by `e` over the edge it came over, from the cell it came from.
+      const [sx, sy] = STEP[last.move.dir]
+      return { solid: tipped(x - sx, y - sy, last.move.dir, Math.PI / 2 - e, 0), row: y, x, sinking: null }
+    }
     return { solid: { pts: corners(x, y, z, x + 1, y + 1, z + 1), normals: FACES.map((f) => f.n) }, row: y, x, sinking: null }
   }
   const f = c.flop.move
   const u = c.flop.u
   const [x, y] = m.cellNow(f.from, t)
   const [sx, sy] = STEP[f.dir]
-  const pivot: V3 = [x + (sx > 0 ? 1 : 0), y + (sy > 0 ? 1 : 0), 0]
   const drop = f.to.on === 'pocket'
   const over = drop ? Math.min(1, u / OVER) : u
   const a = (Math.PI / 2) * (f.how === 'struck' ? overStruck(over) : overStep(over))
-  const fall = drop && u > OVER ? -DEPTH * ((u - OVER) / (1 - OVER)) ** 2 : 0
-  const pts = corners(x, y, 0, x + 1, y + 1, 1).map((p) => {
-    const q = tip(p, pivot, f.dir, a)
-    return [q[0], q[1], q[2] + fall] as V3
-  })
-  const normals = FACES.map((fc) => tipNormal(fc.n, f.dir, a))
+  const w = drop ? Math.max(0, (u - DOWN) / (1 - DOWN)) : 0
+  const fall = -DEPTH * (0.3 * w + 0.7 * w * w)
   const half = u < 0.5 ? 0 : 1
   return {
-    solid: { pts, normals },
-    row: y + (sy > 0 ? half : 0) + (sy < 0 ? -half : 0) + (sy > 0 ? 0 : 0),
+    solid: tipped(x, y, f.dir, a, fall),
+    row: y + sy * half,
     x: x + sx * u,
-    sinking: drop && fall < 0 ? { row: f.to.on === 'pocket' ? f.to.row : y, at: m.plankAt(f.to.on === 'pocket' ? f.to.row : y, t) } : null,
+    sinking: drop && fall < 0 && f.to.on === 'pocket' ? { row: f.to.row, at: m.plankAt(f.to.row, t) } : null,
   }
+}
+
+/** Keep to one side of the line through `a` and `b` on the picture: the side `n` points to. */
+function clipSide(g: G, a: [number, number], b: [number, number], n: [number, number]): void {
+  const far = 200
+  g.beginPath()
+  g.moveTo(a[0], a[1])
+  g.lineTo(b[0], b[1])
+  g.lineTo(b[0] + n[0] * far, b[1] + n[1] * far)
+  g.lineTo(a[0] + n[0] * far, a[1] + n[1] * far)
+  g.closePath()
+  g.clip()
 }
 
 /** Only what is above the pocket's near rims: the rest of a cube going down into it is behind the plank. */
@@ -141,14 +170,37 @@ function clipToPocket(g: G, row: number, at: number): void {
   const se = screen(x1, row + 1, 0)
   const ne = screen(x1, row, 0)
   g.beginPath()
-  g.moveTo(sw[0], sw[1])
+  g.moveTo(sw[0] - 3, sw[1])
+  g.lineTo(sw[0], sw[1])
   g.lineTo(se[0], se[1])
   g.lineTo(ne[0], ne[1])
-  g.lineTo(ne[0], ne[1] - 40)
-  g.lineTo(sw[0], sw[1] - 40)
+  g.lineTo(ne[0] + 3, ne[1])
+  g.lineTo(ne[0] + 3, ne[1] - 40)
+  g.lineTo(sw[0] - 3, sw[1] - 40)
   g.closePath()
   g.clip()
 }
+
+/** Only what is above the board's top round a plank's slot: below it, the next row and the east rim stand in front. */
+function clipToSlot(g: G, row: number): void {
+  // Up the picture from the slot's south edge, and up and west of the east rim's inner edge.
+  clipSide(g, screen(-20, row + 1, 0), screen(30, row + 1, 0), up(VIEW_NORTH))
+  clipSide(g, screen(W, -20, 0), screen(W, 30, 0), up(VIEW_WEST))
+}
+
+/** On the picture, which way world north and world west go from a point. */
+const VIEW_NORTH = (() => {
+  const a = screen(0, 0, 0)
+  const b = screen(0, -1, 0)
+  return [b[0] - a[0], b[1] - a[1]] as [number, number]
+})()
+const VIEW_WEST = (() => {
+  const a = screen(0, 0, 0)
+  const b = screen(-1, 0, 0)
+  return [b[0] - a[0], b[1] - a[1]] as [number, number]
+})()
+/** Lean a direction upward on the picture so the clip's far side takes in everything above the board too. */
+const up = (d: [number, number]): [number, number] => [d[0], d[1] - 0.5]
 
 /* ------------------------------------------------------------------ the tray and planks */
 
@@ -211,14 +263,13 @@ function drawPlank(g: G, p: PlankState, home: CubeName): void {
 }
 
 /** A plank lifted out of its row, turned over and set back: up, over toward the viewer, down. */
-const LIFT = 2.3
 function flipSolid(p: PlankState): { solid: Solid; pocketFace: number } {
   const u = p.flip!.u
   const ease = (v: number) => {
     const w = Math.max(0, Math.min(1, v))
     return w * w * (3 - 2 * w)
   }
-  const h = LIFT * (u < 0.5 ? ease(u / 0.3) : ease((1 - u) / 0.3))
+  const h = p.flip!.lift * (u < 0.5 ? ease(u / 0.3) : ease((1 - u) / 0.3))
   const a = Math.PI * ease((u - 0.3) / 0.4)
   const cy = p.row + 0.5
   const cz = -THICK / 2
@@ -234,6 +285,13 @@ function flipSolid(p: PlankState): { solid: Solid; pocketFace: number } {
 }
 
 function drawFlipping(g: G, p: PlankState, home: CubeName): void {
+  g.save()
+  clipToSlot(g, p.row)
+  drawFlipped(g, p, home)
+  g.restore()
+}
+
+function drawFlipped(g: G, p: PlankState, home: CubeName): void {
   const { solid, pocketFace } = flipSolid(p)
   const wood = WOOD.plank[p.row % 2]
   drawSolid(g, solid, wood)
