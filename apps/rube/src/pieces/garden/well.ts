@@ -209,17 +209,7 @@ export const well = definePiece<WellState>({
     p.noFill()
     p.bezier(0, DRUM[1] * k, 0, lerp(DRUM[1], bail[1], 0.6) * k, -turn * 0.12 * b.f * k, (bail[1] + 0.3 * b.f) * k, bail[0] * k, bail[1] * k)
 
-    // The bucket's body and bail; the ball is drawn over these, and the hoops over the ball.
-    p.push()
-    p.translate(b.o[0] * k, b.o[1] * k)
-    p.rotate(b.lean)
-    outline(p, ink, weight)
-    p.arc(0, -BH * k, (BW * 2 - 0.04) * k, 0.17 * k, Math.PI, Math.PI * 2)
-    solid(p, ink, weight, s.color)
-    p.rect(0, (-BH / 2) * k, BW * 2 * k, BH * k, 0.015 * k)
-    p.pop()
-
-    // The thud: water off the shaft's floor, and a clack of lines off the stone.
+    // The thud: water thrown up off the shaft's floor from under the bucket, behind it.
     if (landed > 0 && landed < 0.4) {
       const f = over(landed, 0, 0.4)
       for (const [dx, h] of [
@@ -231,6 +221,17 @@ export const well = definePiece<WellState>({
         drop(p, k, s.color, dx * (0.7 + 0.5 * f), bottom - 0.03 - h * 4 * f * (1 - f), 0.02 * (1 - f * 0.5))
       }
     }
+    // The bucket's body and bail; the ball is drawn over these, and the hoops over the ball.
+    p.push()
+    p.translate(b.o[0] * k, b.o[1] * k)
+    p.rotate(b.lean)
+    outline(p, ink, weight)
+    p.arc(0, -BH * k, (BW * 2 - 0.04) * k, 0.17 * k, Math.PI, Math.PI * 2)
+    solid(p, ink, weight, s.color)
+    p.rect(0, (-BH / 2) * k, BW * 2 * k, BH * k, 0.015 * k)
+    p.pop()
+
+    // The thud: a clack of lines off the stone.
     if (landed > 0 && landed < 0.18) {
       p.push()
       p.stroke(ink)
