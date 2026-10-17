@@ -52,7 +52,7 @@ import {
  * Joy is waiting on a bench halfway down. Evelyn comes to rest against her (226.56), close, and where they touch
  * their colour comes back first, spreading over each stone from there. Joy goes on (227.76), and Evelyn goes with
  * her, a beat behind, landing where Joy landed, down the gorge on the soft beats of the swell; on the long scree the
- * camera draws back once to show how far down they are, and comes in again for the last steps to the floor. At the bottom is a dark ring lying in the sand: the bagel. Joy drops into it on 241.35, and
+ * camera draws back once to show how far down they are, and comes in again for the last steps to the floor. At the bottom the everything bagel lies in the sand. Joy drops into it on 241.35, and
  * Evelyn after her on 241.755, the jump.
  */
 

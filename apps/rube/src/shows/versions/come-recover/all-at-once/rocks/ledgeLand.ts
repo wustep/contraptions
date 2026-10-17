@@ -8,7 +8,7 @@ import { groundAt, LIP, LIP_OVER, Q, RI, RO, SLAB, SLAB_BACK, TOP, type Ledge, t
 /**
  * The canyon, as it is painted: the sky, the canyon going away into the distance in slices that pale as they go,
  * the near wall the two rocks come down (cut side-on, its strata in bands, the tops of its ledges lit and the faces
- * of its cliffs in shade), and the dark ring in the sand at the bottom.
+ * of its cliffs in shade), and the everything bagel in the sand at the bottom.
  *
  * The far slices are drawn in perspective about the frame's middle, which is where the eye is: a slice `D` cells
  * behind the stage is drawn `Z / (Z + D)` of its size, `Z` being how far back the camera stands (the frame's height
