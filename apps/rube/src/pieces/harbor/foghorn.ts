@@ -146,18 +146,22 @@ export const foghorn = definePiece<{ color: string }>({
     // The gull: asleep on the horn's back; blown off it, straight up, flapping there; down again when it is
     // quiet, and a while after that its head goes back in.
     const up = since < 0 ? 0 : since < 0.12 ? easeOutCubic(since / 0.12) : since < GULL_UP ? 1 : 1 - easeInOutSine(over(since, GULL_UP, GULL_DOWN))
-    gull(p, k, ink, weight, bg, s.color, PERCH[0] - 0.02 * up, PERCH[1] - 0.05 * up + 0.008 * Math.sin(since * 14) * up - 0.004 * (1 - up) * (1 + Math.sin(t * 2.4)), up, since < 0 || since > GULL_DOWN + 0.7, t)
+    // Its head: up with a start at the blast, and sunk back into its shoulders over a few frames, not in one.
+    const tuck = since < 0 ? 1 : since < 0.05 ? 1 - since / 0.05 : easeInOutSine(over(since, GULL_DOWN + 0.7, GULL_DOWN + 1))
+    gull(p, k, ink, weight, bg, s.color, PERCH[0] - 0.02 * up, PERCH[1] - 0.05 * up + 0.008 * Math.sin(since * 14) * up - 0.004 * (1 - up) * (1 + Math.sin(t * 2.4)), up, tuck, t)
 
-    // The blast: three arcs off the mouth, one after another, racing out after the ball and thinning to nothing.
-    if (since > 0 && since < BLARE + 0.3) {
+    // The blast: two arcs off the mouth, one on the other's heels, gone before the ball is out of the cell. Three
+    // that raced out half a cell and hung in the air for three quarters of a second after the ball had gone were the
+    // biggest thing in the frame.
+    if (since > 0 && since < 0.26) {
       p.push()
       p.noFill()
       p.stroke(s.color)
-      for (let i = 0; i < 3; i++) {
-        const f = over(since - i * 0.1, 0, 0.42)
+      for (let i = 0; i < 2; i++) {
+        const f = over(since - i * 0.06, 0, 0.2)
         if (f <= 0 || f >= 1) continue
-        const r = 0.1 + 0.36 * easeOutCubic(f)
-        p.strokeWeight(weight * 1.5 * (1 - f))
+        const r = 0.1 + 0.2 * easeOutCubic(f)
+        p.strokeWeight(weight * 1.3 * (1 - f))
         p.arc(MOUTH[0] * k, MOUTH[1] * k, r * 2 * k, r * 2 * k, AXIS - 0.6, AXIS + 0.4)
       }
       p.pop()
@@ -166,23 +170,24 @@ export const foghorn = definePiece<{ color: string }>({
 })
 
 /**
- * A gull standing at (x, y): asleep with its head tucked in, or awake;
- * `lift` from 0 (standing, wings folded) to 1 (wings out and beating on `clock`).
+ * A gull standing at (x, y): `tuck` from 0 (awake, head up) to 1 (asleep,
+ * head tucked in); `lift` from 0 (standing, wings folded) to 1 (wings out
+ * and beating on `clock`).
  *
  * A bird this size is a fifth of a cell long, and the pen is a thirtieth
  * of a cell wide, so it is one silhouette — tail, back, crown, breast and
  * belly in one line — with a beak and an eye on it. A head drawn as its
  * own circle was all rim at this scale, and asleep it read as a knot.
  */
-function gull(p: p5, k: number, ink: string, weight: number, bg: string, color: string, x: number, y: number, lift: number, asleep: boolean, clock: number): void {
+function gull(p: p5, k: number, ink: string, weight: number, bg: string, color: string, x: number, y: number, lift: number, tuck: number, clock: number): void {
   const bx = x
   const by = y - 0.055
   // One leg, tucked up as it flies. Gulls stand on one.
   outline(p, ink, weight * 0.8)
   p.line((bx + 0.005) * k, (by + 0.03) * k, (bx + 0.005) * k, (y - 0.02 * lift) * k)
   // The body, tail to the west, and the head on it: up on its neck, or sunk into the shoulders.
-  const hx = bx + (asleep ? 0.04 : 0.065)
-  const hy = by - (asleep ? 0.028 : 0.06)
+  const hx = bx + lerp(0.065, 0.04, tuck)
+  const hy = by - lerp(0.06, 0.028, tuck)
   solid(p, ink, weight * 0.9, bg)
   p.beginShape()
   p.vertex((bx - 0.1) * k, (by - 0.015) * k)
@@ -193,7 +198,7 @@ function gull(p: p5, k: number, ink: string, weight: number, bg: string, color: 
   p.endShape(p.CLOSE)
   solid(p, ink, weight * 0.7, color)
   p.triangle((hx + 0.026) * k, (hy - 0.012) * k, (hx + 0.026) * k, (hy + 0.012) * k, (hx + 0.066) * k, (hy + 0.004) * k)
-  if (asleep) {
+  if (tuck > 0.5) {
     outline(p, ink, weight * 0.7)
     p.line((hx - 0.002) * k, (hy - 0.006) * k, (hx + 0.016) * k, (hy - 0.006) * k)
   } else {
