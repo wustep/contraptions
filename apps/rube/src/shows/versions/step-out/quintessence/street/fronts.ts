@@ -10,7 +10,7 @@ import { CORNER, PAVE } from './plan'
  * its fire escape; a three-storey with a café; the corner's narrow tower; and across the avenue the far side, a
  * little hazed. Their windows hold the sky, a blind, a curtain or an air conditioner.
  *
- * Shapes are gathered into one path a colour and filled once (`Ink`), so a street of windows is a handful of fills.
+ * Shapes are gathered into one path a colour and filled once (`Ink`), so a front of windows is a handful of fills.
  */
 
 type C2 = CanvasRenderingContext2D
@@ -146,8 +146,10 @@ export function drawFronts(ctx: C2, v: View, t: number): void {
         pane(ink, f, fi, b, j, wx0, wy0, wx1, wy0 + f.win[1], sky, haze)
       })
     }
+    // Each front is filled before the next is begun, so a colour two fronts share never lays the later one's glass
+    // under its own wall.
+    ink.draw(ctx)
   }
-  ink.draw(ctx)
 }
 
 /** A window: its glass holding the sky, a blind or a curtain, the reveal's shade, the sill. */
