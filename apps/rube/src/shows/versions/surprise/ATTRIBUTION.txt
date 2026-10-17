@@ -1,0 +1,25 @@
+Composure (versions/surprise/opus55.show.ts)
+
+Music
+  Joseph Haydn (1732–1809), Symphony No. 94 in G major, Hob. I:94, "Surprise" ("mit dem Paukenschlag"), second
+  movement, Andante, composed 1791 for London. Composition: public domain.
+
+Recording
+  "Haydn: Symphony No. 94 in G Major, Hob. I:94 "Surprise": II. Andante", Berliner Philharmoniker, Herbert von
+  Karajan, from "Haydn: Symphonies Nos. 94 "Surprise" & 101 "The Clock"", ℗ 1982 Deutsche Grammophon GmbH, Berlin.
+  As uploaded to YouTube by the label's distributor ("Provided to YouTube by Universal Music Group"), on the
+  Berliner Philharmoniker's channel, video 14G_PDZWXVE:
+  https://www.youtube.com/watch?v=14G_PDZWXVE
+  Duration 5:40. Copyrighted; no rights are claimed.
+
+Playback: YouTube only. No recording of the movement is shipped, and none is committed, in this branch or its history.
+
+Files:
+- scripts/shows/surprise-onsets.py — measures the movement once from a local analysis copy of the video's audio
+  (fetched with yt-dlp into the git-ignored out/surprise/, never committed): every strain's own comb, every beat on its
+  own attack, the onsets, the surprise, the last chord, the loudness.
+- scripts/shows/plans/surprise-onsets.json — what it measured: the show is timed to it and check:shows holds the show
+  to it. It holds times and numbers only, no audio.
+
+Every picture in the show is drawn for it. Nothing from the album's sleeve, the label's artwork or any score's
+engraving is used.
