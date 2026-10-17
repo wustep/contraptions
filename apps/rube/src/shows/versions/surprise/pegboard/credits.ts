@@ -25,12 +25,8 @@ export const CREDITS_AT = LAST + 3.2
 
 const script: Omit<Card, 'at'>[] = [
   { hold: 1.9, role: 'Directed by', names: ['Claude Opus 5.5'] },
-  {
-    hold: 3.4,
-    role: 'Music',
-    names: ['Joseph Haydn'],
-    notes: ['Symphony No. 94 in G major, “Surprise”: II. Andante (1791)', 'Berliner Philharmoniker · Herbert von Karajan · Deutsche Grammophon, 1982'],
-  },
+  { hold: 2.8, role: 'Music', names: ['Joseph Haydn'], notes: ['Symphony No. 94 in G major, “Surprise”', 'II. Andante (1791)'] },
+  { hold: 2.8, role: 'Played by', names: ['Berliner Philharmoniker'], notes: ['Herbert von Karajan', 'Deutsche Grammophon, 1982'] },
   { hold: 1.5, role: 'Drawn with', names: ['p5.js'] },
 ]
 
@@ -53,7 +49,7 @@ export const LAST_GONE = (() => {
 export const DURATION = Math.ceil(Math.max(RECORDING, LAST_GONE) + 1.0 - 1e-6)
 
 /** Where a card's top middle sits, as shares of the 16:9 frame: under the board, left of the launcher. */
-const AT: [number, number] = [0.25, 0.775]
+const AT: [number, number] = [0.25, 0.715]
 
 function lightOf(card: Card, t: number): { light: number; rise: number } {
   const up = clamp((t - card.at) / UP)
@@ -67,7 +63,7 @@ export function creditsAt(t: number): TitleCard[] {
   CARDS.forEach((card, i) => {
     const { light, rise } = lightOf(card, t)
     if (light <= 0) return
-    out.push({ key: `composure-${i}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: AT, scale: 0.8, least: 9, dark: true })
+    out.push({ key: `composure-${i}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: AT, scale: 0.62, least: 9, dark: true })
   })
   return out
 }

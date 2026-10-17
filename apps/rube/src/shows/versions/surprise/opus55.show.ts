@@ -8,7 +8,7 @@ export default defineShow({
   title: 'Composure',
   label: 'Opus 5.5',
   about: "Haydn's Surprise Symphony as a still board of pegs: on every accent a launcher fires a burst of colour through it, and the board settles back as if nothing had happened.",
-  still: 31,
+  still: 31.2,
   async load() {
     return (await import('./pegboard')).performance
   },

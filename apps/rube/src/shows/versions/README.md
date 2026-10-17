@@ -29,7 +29,7 @@ The folder and file names are addresses, so they are chosen once:
   freely: `come-recover` is **Everything**, `heptapod-b` **Logogram**,
   `interstellar` **Voyage**, `la-la-land` **Epilogue**, `bolero` **Ostinato**,
   `nature-of-daylight` **Palindrome**, `relax` **Magnum**, `time` **Kick**, `step-out` **Quintessence**,
-  `rule-the-world` **Rally**. The write-up says which is which.
+  `rule-the-world` **Rally**, `surprise` **Composure**. The write-up says which is which.
 - **Take**: `<take>.show.ts`, which is also `/shows/<work>/<take>/` and the
   card `public/shows/<work>/<take>.png`. Name it for who made it (`opus55`,
   `fable51`, `grok47`), or with a letter (`take-a`). La La Land's takes keep the
@@ -38,7 +38,7 @@ The folder and file names are addresses, so they are chosen once:
   Takes sort by name, and the first is the work's own page, unless the registry
   puts another first (`PREFERRED_TAKES`: Epilogue's and Cornfield Chase's Opus).
 - **Shelf**: the picker and Theater set the works out as **Machine** (Clair de
-  Lune, Première Arabesque, Cornfield Chase, Raindrop), **Movies** and **Ambient**
+  Lune, Première Arabesque, Cornfield Chase, Raindrop, Composure), **Movies** and **Ambient**
   (Gymnopédie, Soft Lamp, Ostinato). A work is Movies unless `SHELVED` in `../registry.ts` names it.
 - **Favourites**: `FAVORITES` in `../registry.ts` ranks them (Voyage, Epilogue,
   Everything, Clair de Lune). The picker stars them and pins them to the top of
@@ -176,6 +176,21 @@ is new; the show lives in `raindrop/charterhouse/`. Its clock is measured by `sc
 `scripts/shows/plans/raindrop-onsets.json` (the score laid on the recording by dynamic time warping, every note moved
 onto its own attack); `check:shows` holds every landing, tip, knock, stroke and cut to it. The report is
 `apps/rube/src/shows/versions/raindrop/RAINDROP.md`.
+
+`surprise/opus55` (in the picker, **Composure**, on the Machine shelf, one take, **Opus 5.5**) is the Andante of Haydn's
+Symphony No. 94, the "Surprise", whole, in Karajan's recording with the Berlin Philharmonic (Deutsche Grammophon, 1982),
+played by YouTube from Universal Music Group's upload only (14G_PDZWXVE; no recording is shipped:
+`apps/rube/src/shows/versions/surprise/ATTRIBUTION.txt`), and then the end credits in the quiet after it. It is an
+experiment, not a story: a still board of pegs, 28 by 12, and a launcher at its foot, seen from above, one frame for the
+whole show. On each of the music's accents (the surprise first, then the variations' fortes and fortissimos, and the
+coda's last chord) a pellet of colour lands in a gap of the board, fired a beat before; the colour goes out through the
+pegs as a ring, the pegs are pushed and swing back into place, and the board is composed again behind it. Between the
+accents nothing on the board moves; the launcher does its work in the music's time (the lift, the swing, the spring drawn
+back a click a beat). Every strain's repeat lands its shots in the mirror of the first time's. Every piece and drawing is
+new; the code is `surprise/pegboard/`. The orchestra is played, not clocked, so `scripts/shows/surprise-onsets.py` fits
+each strain its own comb and moves every beat onto its own attack, into `scripts/shows/plans/surprise-onsets.json`;
+`check:shows` holds every shot, click and landing to it (`apps/rube/checks/composure.ts`). The report is
+`apps/rube/src/shows/versions/surprise/COMPOSURE.md`.
 
 `metronome/` is not in the picker. It is a worked example of a time map: a
 procedural machine under a steady beat, and a struck bar on every strike,

@@ -52,7 +52,7 @@ export interface Burst {
 /** A burst's reach in the direction `a`: lobed, so no two are the same shape and none is a circle. */
 function lobes(seed: number): (a: number) => number {
   const ph = [hash(seed, 1, 7), hash(seed, 2, 7), hash(seed, 3, 7)].map((h) => h * Math.PI * 2)
-  const amp = [0.15 + 0.1 * hash(seed, 4, 7), 0.1 + 0.08 * hash(seed, 5, 7), 0.06]
+  const amp = [0.17 + 0.1 * hash(seed, 4, 7), 0.12 + 0.08 * hash(seed, 5, 7), 0.07]
   return (a) => 1 + amp[0] * Math.sin(2 * a + ph[0]) + amp[1] * Math.sin(3 * a + ph[1]) + amp[2] * Math.sin(5 * a + ph[2])
 }
 
@@ -75,13 +75,13 @@ function burstOf(i: number): Burst {
     const f = d / r
     if (f >= 0.97) return
     const ta = shot.at - tau * Math.log(1 - f)
-    // Loose at the edge: past a third of its reach a peg takes the colour only by chance, less often the further out it
-    // is, and less of it.
-    const chance = 1 - smooth(f, 0.35, 0.97)
+    // Loose all through, and looser at the edge: a peg takes the colour by chance (all four round the gap it lands in),
+    // less often past a third of its reach and the further out it is, and less of it.
+    const chance = d < 1.2 ? 1 : 0.84 * (1 - smooth(f, 0.35, 0.97))
     const w = hash(peg, i, 3) < chance ? 0.6 + 0.4 * (1 - smooth(f, 0.25, 0.95)) * hash(peg, i, 4) ** 0.3 : 0
     // A peg keeps the colour only a moment after the front has passed it, a little longer the further out: so the burst
     // is a ring going out, the board composed again behind it, and the ring thins and goes at its edge.
-    const hold = 0.3 + (0.3 + 0.5 * s) * f + 0.35 * hash(peg, i, 5)
+    const hold = 0.12 + (0.35 + 0.55 * s) * f + 0.3 * hash(peg, i, 5)
     // Not all one colour: some pegs take a lighter shade of it.
     const shade = 0.55 * hash(peg, i, 6) ** 2
     // Pushed hardest near the middle, falling off with distance, and nothing at the edge of its reach.
@@ -93,7 +93,7 @@ function burstOf(i: number): Burst {
     touches.push({ peg, ta, w, hold, amp, ux, uy, shade })
     until = Math.max(until, ta + Math.max(w > 0 ? hold + FADE : 0, RINGS))
   })
-  return { at: shot.at, x, y, color: shot.color, light: mix(shot.color, PAPER, 0.42), s, until, touches }
+  return { at: shot.at, x, y, color: shot.color, light: mix(shot.color, PAPER, 0.34), s, until, touches }
 }
 
 export const BURSTS: readonly Burst[] = SHOTS.map((_, i) => burstOf(i))

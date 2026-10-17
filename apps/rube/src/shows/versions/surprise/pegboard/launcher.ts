@@ -3,7 +3,7 @@ import type { Brush } from './brush'
 import { clamp, easeInOut, lerp, mix, rgba, ring } from './brush'
 import { BLOCK, HOME, PELLET_R, PIVOT, PLINTH, TROUGH, TURNTABLE_R, muzzle } from './geo'
 import { FACE, INK, PLATE, SLOT } from './look'
-import { HOMEWARD, SHOTS, type Shot } from './score'
+import { HOMEWARD, SHOTS, depth, type Shot } from './score'
 
 /**
  * The launcher, seen from above: a plinth, a turntable on it, and on the turntable an open trough with a spring-loaded
@@ -57,14 +57,14 @@ function drawn(s: Shot, t: number): number {
 export function blockAt(t: number): number {
   const i = next(t)
   let u = BLOCK.rest
-  if (i < SHOTS.length) u += (BLOCK.cocked - BLOCK.rest) * drawn(SHOTS[i], t)
+  if (i < SHOTS.length) u += (BLOCK.cocked - BLOCK.rest) * depth(SHOTS[i].s) * drawn(SHOTS[i], t)
   if (i > 0) {
     // Let go: up the trough in an instant, and back to rest on the spring.
     const fired = SHOTS[i - 1]
     const since = t - fired.launch
     if (since < SNAP) {
       const f = since / SNAP
-      return lerp(BLOCK.cocked, BLOCK.fired, Math.pow(f, 1.5))
+      return lerp(BLOCK.rest + (BLOCK.cocked - BLOCK.rest) * depth(fired.s), BLOCK.fired, Math.pow(f, 1.5))
     }
     const v = since - SNAP
     if (v < 1.2) u += (BLOCK.fired - BLOCK.rest) * Math.exp(-9 * v) * Math.cos(v * 3.2 * Math.PI * 2)

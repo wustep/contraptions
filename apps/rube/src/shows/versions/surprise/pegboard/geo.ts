@@ -19,8 +19,8 @@ export const PEGS: readonly Pt[] = (() => {
   return out
 })()
 
-/** The gaps a pellet may land in: away from the board's edge by two pegs. */
-export const GAPS = { x0: X0 + 2.5, x1: -X0 - 2.5, y0: Y0 + 1.5, y1: Y0 + ROWS - 2.5 }
+/** The gaps a pellet may land in: the board's middle, so a burst has the board round it. */
+export const GAPS = { x0: -9, x1: 9, y0: -6, y1: 0 }
 /** The middle gap, where the surprise lands. */
 export const MIDDLE: Pt = [0, -2]
 

@@ -90,8 +90,8 @@ const SPECS: Spec[] = [
   { bar: of('var4-on', 3), beat: 2, s: 0.56, color: V4[2] },
   { bar: of('var4-on', 6), s: 0.62, color: V4[3] },
   // The coda.
-  { bar: of('coda', 2), s: 0.28, color: RED },
-  { onset: 329.9, s: 0.22, color: RED, key: 'c1' },
+  { bar: of('coda', 2), s: 0.28, color: RED, at: [0, -5] },
+  { onset: 329.9, s: 0.22, color: RED, key: 'c1', at: [-5, -3] },
   { onset: 331.79, s: 0.2, color: RED, mirrors: 'c1' },
   { onset: LAST, s: 0.24, color: RED, at: MIDDLE },
 ]
@@ -123,8 +123,11 @@ export interface Shot {
   mirrors: number | null
 }
 
+/** How far back a shot of strength `s` draws the spring, of the whole way: the harder the accent, the further. */
+export const depth = (s: number): number => 0.5 + 0.5 * s
+
 /** How far a burst of strength `s` reaches, cells. */
-export const reach = (s: number): number => 2.2 + 7.2 * s
+export const reach = (s: number): number => 2.0 + 6.4 * s
 
 /** The nearest onset to `t`. */
 function onsetNear(t: number): number {
@@ -141,7 +144,7 @@ function quarterAt(t: number): number {
 }
 
 /** The gap for a shot that is not placed by hand: clear of the bursts just gone, with room for its own, an easy swing. */
-function choose(done: Shot[], at: number, s: number, angle: number, window: number, seed: number): Pt {
+function choose(done: Shot[], at: number, s: number, angle: number, window: number, seed: number, paired: boolean): Pt {
   let best: Pt = MIDDLE
   let bestScore = Infinity
   const r = reach(s)
@@ -151,19 +154,28 @@ function choose(done: Shot[], at: number, s: number, angle: number, window: numb
       for (const d of done) {
         const age = at - d.at
         if (age > 14) continue
-        const spread = 0.55 * reach(d.s) + 0.4 * r
+        const spread = 0.45 * reach(d.s) + 0.3 * r
         const dd = (gx - d.target[0]) ** 2 + (gy - d.target[1]) ** 2
-        score += 2.4 * (1 - age / 14) * Math.exp(-dd / (2 * spread * spread))
+        score += 1.6 * (1 - age / 14) * Math.exp(-dd / (2 * spread * spread))
       }
       // Room on the board for most of the burst.
-      const room = Math.min(gx - X0, -X0 - gx, gy - Y0, Y0 + ROWS - 1 - gy)
-      if (room < 0.6 * r) score += (0.6 * r - room) * 0.9
-      // An easy swing, the more so the less time there is for it.
+      // Room on the board for most of the burst: across it, and (the board being wide) a little less up and down it.
+      const across = Math.min(gx - X0, -X0 - gx)
+      const down = Math.min(gy - Y0, Y0 + ROWS - 1 - gy)
+      if (across < 0.75 * r) score += (0.75 * r - across) * 0.9
+      if (down < 0.5 * r) score += (0.5 * r - down) * 0.9
+      // The middle gap is the surprise's, and the last chord's.
+      if (gx === MIDDLE[0] && gy === MIDDLE[1]) score += 2
+      // A shot whose repeat lands in its mirror is off the middle column, or the mirror would be the same gap.
+      if (paired && Math.abs(gx) < 2) score += 3
+      // An easy swing, the more so the less time there is for it: in a quick run the shots step along the board.
       const turn = Math.abs(aimAt([gx, gy]) - angle)
-      score += (0.5 * turn * turn) / Math.max(0.4, window - 0.9)
+      score += (1.4 * turn * turn) / Math.max(0.3, window - 0.9)
+      // The far sides only now and then.
+      score += 0.05 * Math.abs(gx)
       // Not too near the launcher's own foot.
       if (gy > 1) score += (gy - 1) * 0.25
-      score += 0.35 * hash(gx + 40, gy + 40, seed)
+      score += 0.5 * hash(gx + 40, gy + 40, seed)
       if (score < bestScore) {
         bestScore = score
         best = [gx, gy]
@@ -176,6 +188,7 @@ function choose(done: Shot[], at: number, s: number, angle: number, window: numb
 function compose(): Shot[] {
   const shots: Shot[] = []
   const named = new Map<string, Shot>()
+  const paired = new Set(SPECS.map((s) => s.mirrors).filter((k) => k !== undefined))
   let angle = HOME
   let lastLaunch = -Infinity
   SPECS.forEach((spec, i) => {
@@ -185,11 +198,12 @@ function compose(): Shot[] {
     const launch = at - before <= 1.25 ? before : at - quarterAt(at)
     const window = launch - lastLaunch
     const mirrored = spec.mirrors ? named.get(spec.mirrors) : undefined
-    const target: Pt = spec.at ?? (mirrored ? [-mirrored.target[0], mirrored.target[1]] : choose(shots, at, spec.s, angle, window, i))
+    const target: Pt = spec.at ?? (mirrored ? [-mirrored.target[0], mirrored.target[1]] : choose(shots, at, spec.s, angle, window, i, spec.key !== undefined && paired.has(spec.key)))
     const aim = aimAt(target)
-    const reload: [number, number] = Number.isFinite(lastLaunch) ? [lastLaunch + 0.14, lastLaunch + 0.52] : [-1, -0.5]
+    // The first pellet comes up the lift on the music's first note; each after it just after the shot before.
+    const reload: [number, number] = Number.isFinite(lastLaunch) ? [lastLaunch + 0.1, lastLaunch + 0.4] : [beat(1, 1), beat(1, 1) + 0.5]
     const turn = Math.abs(aim - angle)
-    const aimFor = turn < 1e-3 ? 0 : clamp(0.3 + 0.5 * turn, 0.3, 1.1)
+    const aimFor = turn < 1e-3 ? 0 : clamp(0.22 + 0.45 * turn, 0.22, 1.0)
     const big = spec.s >= 0.85
     const most = i === 0 ? 7 : big ? 4 : 3
     const free = BEATS.filter((b) => b.t > reload[1] + aimFor + 0.1 && b.t < launch - 0.12 && (!big || b.beat === 1)).map((b) => b.t)

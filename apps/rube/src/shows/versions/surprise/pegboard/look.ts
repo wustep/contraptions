@@ -10,11 +10,11 @@ export const PAPER = '#ECE9E2'
 /** The machine's own faces: a lighter paper for the parts on top, a grey for the turntable under them. */
 export const FACE = '#F7F5F0'
 export const PLATE = '#D3CEC4'
-export const SLOT = '#B9B3A8'
+export const SLOT = '#C9C3B8'
 
 /** What the launcher fires. Each variation has its colour; the fourth has all of them. */
 export const RED = '#E0472C'
-export const YELLOW = '#EFA713'
+export const YELLOW = '#E99A0B'
 export const BLUE = '#2652B8'
 export const GREEN = '#1E875A'
 
