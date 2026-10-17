@@ -1,0 +1,23 @@
+Raindrop (versions/raindrop/opus55.show.ts)
+
+Music
+  Frédéric Chopin (1810–1849), Prelude in D-flat major, Op. 28 No. 15 ("Raindrop"), from the 24 Preludes, Op. 28,
+  composed 1838–39 (finished at the Charterhouse of Valldemossa, Mallorca) and first published in 1839.
+  Composition: public domain.
+
+Recording
+  "Chopin: Prelude no. 15 in D flat major", played by Ivan Ilić, recorded in Paris, October 2005, and released by him
+  on the International Music Score Library Project (IMSLP).
+  Source: https://commons.wikimedia.org/wiki/File:Ivan_Ili%C4%87-Chopin_-_Prelude_no._15_in_D_flat_major.ogg
+  License: Creative Commons Attribution 3.0 Unported (CC BY 3.0), https://creativecommons.org/licenses/by/3.0/
+  Changes: the Commons file (Ogg Vorbis, 44.1 kHz, 263.58 s) is re-encoded whole to chopin-raindrop-ilic.mp3 (MP3,
+  44.1 kHz, 160 kbit/s, constant bit rate, so that a seek lands where the show's clock says) by
+  scripts/shows/raindrop-cue.sh. Nothing is cut, faded or levelled.
+
+The score, for where its notes fall
+  The Mutopia Project's engraving of the prelude (Chop-28-15), read as MIDI by scripts/shows/raindrop-onsets.py to
+  lay the score on the recording. Nothing of it ships; scripts/shows/plans/raindrop-onsets.json holds times only.
+
+Contraptions audiovisual adaptation: a timed machine drawn over the whole recording. The credit is given beside the
+player and in the show's end credits and documentation, never on the frame. The recording ships with the show under
+its licence; the adaptation is shared under CC BY 4.0.

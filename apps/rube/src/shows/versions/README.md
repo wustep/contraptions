@@ -38,7 +38,7 @@ The folder and file names are addresses, so they are chosen once:
   Takes sort by name, and the first is the work's own page, unless the registry
   puts another first (`PREFERRED_TAKES`: Epilogue's and Cornfield Chase's Opus).
 - **Shelf**: the picker and Theater set the works out as **Machine** (Clair de
-  Lune, Première Arabesque, Cornfield Chase), **Movies** and **Ambient**
+  Lune, Première Arabesque, Cornfield Chase, Raindrop), **Movies** and **Ambient**
   (Gymnopédie, Soft Lamp, Ostinato). A work is Movies unless `SHELVED` in `../registry.ts` names it.
 - **Favourites**: `FAVORITES` in `../registry.ts` ranks them (Voyage, Epilogue,
   Everything, Clair de Lune). The picker stars them and pins them to the top of
@@ -167,6 +167,15 @@ lane, or a piece in or out of a world, means rearranging it and running
 `generate:clair` again.
 
 `cornfield-chase/grok47` (hidden for now, Oct 15: its file is `grok47.ts`, not `grok47.show.ts`) is a private tech demo for Hans Zimmer's Cornfield Chase, not part of the public catalog tour. `npm run generate:cornfield` writes it from stock lanes: Forest for the piano, one portal on the drop, then the Arcade on the chase pulse. The recording is copyrighted. See `apps/rube/src/shows/versions/cornfield-chase/ARRANGEMENT.md`.
+
+`raindrop/opus55` (in the picker, **Raindrop**, on the Machine shelf, one take, **Opus 5.5**) is Chopin's
+"Raindrop" Prelude, Op. 28 No. 15, whole, on Ivan Ilić's CC BY 3.0 recording (it ships with the show): a machine the
+rain runs on a stormy night at the charterhouse of Valldemossa, where Chopin finished the preludes, from a jar under a
+monk's cell's eave to the gate where a lantern and a bell bring two people home up the road. Every piece and drawing
+is new; the show lives in `raindrop/charterhouse/`. Its clock is measured by `scripts/shows/raindrop-onsets.py` into
+`scripts/shows/plans/raindrop-onsets.json` (the score laid on the recording by dynamic time warping, every note moved
+onto its own attack); `check:shows` holds every landing, tip, knock, stroke and cut to it. The report is
+`apps/rube/src/shows/versions/raindrop/RAINDROP.md`.
 
 `metronome/` is not in the picker. It is a worked example of a time map: a
 procedural machine under a steady beat, and a struck bar on every strike,
