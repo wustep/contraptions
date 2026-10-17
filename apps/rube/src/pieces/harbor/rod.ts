@@ -176,7 +176,8 @@ export const rod = definePiece<RodState>({
     // The sea in front; the ball's splash; bubbles while it is under; and the water off it as it is hauled out.
     water(p, k, ink, bg, weight, -0.5, 1.5)
     splash(p, k, sea, weight, IN[0] + 0.03, WATER, over(t, T_IN, T_IN + 0.5), 1)
-    if (t > T_IN + 0.05 && t < T_OUT) bubbles(p, k, ink, weight, bg, UNDER[0] + 0.03, 0.47, WATER - 0.02, t - T_IN, 3)
+    // On a quick clock, since the water is shallow: up and done half a second after the ball is out.
+    if (t > T_IN + 0.05) bubbles(p, k, ink, weight, bg, UNDER[0] + 0.03, 0.47, WATER - 0.02, (t - T_IN - 0.05) * 2.5, 3, (T_OUT - T_IN - 0.05) * 2.5)
     splash(p, k, sea, weight, UNDER[0], WATER, over(t, T_OUT - 0.02, T_OUT + 0.4), 0.8)
     if (t > T_OUT && t < landed) {
       p.push()

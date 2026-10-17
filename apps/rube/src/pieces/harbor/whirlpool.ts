@@ -120,7 +120,7 @@ export const whirlpool = definePiece<{ color: string }>({
     tank()
     p.endShape()
     // A gurgle of bubbles up the drain after the ball has gone down it.
-    if (since > 0 && since < 1.2) bubbles(p, k, ink, weight, bg, 0, DRAIN_Y + 0.4, DRAIN_Y - 0.02, since, 4)
+    if (since > 0) bubbles(p, k, ink, weight, bg, 0, DRAIN_Y + 0.4, DRAIN_Y - 0.02, since, 4, 0.9)
     // The catch: a quarter-pipe onto the deck out, facing back.
     const squash = since < 0 ? 0 : 1 - over(since, 0.15, 0.5)
     p.push()
