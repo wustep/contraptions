@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { mixHex, type Piece, type PieceCtx, type Pt } from '../../../../parts'
-import { boatAngle, boatAt, councilAngle, frodoAt, leafAt, liftAt, RADIUS, ringAt, rootAngle, stairAngle } from './motion'
+import { boatAngle, boatAt, councilAngle, frodoAt, leafAt, liftAt, RADIUS, ringAt, roadY, shutterAngle, stairAngle } from './motion'
 import { hash, mix, phase, settle, smooth } from './math'
 
 type G = CanvasRenderingContext2D
@@ -119,7 +119,7 @@ export const landscape = piece('burden-landscape', (g, t) => {
     const x = -10 + hash(i, 1) * 38, y = 4.1 + hash(i, 9) * 6
     line(g, [[x, y], [x + 0.18, y - 0.1]], '#65715A', 0.025)
   }
-  for (const [x, y, h] of [[10, 1.4, 4.8], [19, 2.8, 6.8], [25, 3, 4.5]]) branch(g, x, y, h, '#59694F', x)
+  branch(g, 25, 3, 4.5, '#59694F', 25)
 
   // Rivendell: the valley is the scale; nine empty seats stand for the council.
   shape(g, [[27, 4], [30, 0], [34, -3.2], [38, -0.6], [44, -5.3], [49, 2], [49, 26], [27, 26]], '#86968C')
@@ -210,17 +210,16 @@ export const bagEnd = piece('burden-round-door-latch', (g, t) => {
 
 export const shutters = piece('burden-root-shutters', (g, t) => {
   for (let i = 0; i < 3; i++) {
-    const x = 11 + i * 5.2, y = 1.6 + i * 0.55, hit = 34 + i * 10.2
-    const a = 0.1 + 1.15 * smooth(t, hit + 5, hit + 7) + settle(t, hit + 7, -0.08, 2.6, 3.8)
-    branch(g, x - 0.4, y + 0.3, 5, '#36483B', 120 + i)
-    g.save(); g.translate(x, y - 3.3); g.rotate(a)
-    shape(g, [[-0.12, 0], [0.14, 0], [0.65, 3], [0.35, 3.5], [0.02, 3.13], [-0.28, 3.4], [-0.43, 2.85]], '#293B31', '#77876A', 0.035)
-    line(g, [[0, 0.3], [0.1, 2.7]], '#52644E', 0.045)
+    const x = 11 + i * 5.2, y = roadY(x) + RADIUS, pivot = y - 3.35
+    branch(g, x - 0.55, y + 0.05, 5, '#43553F', 120 + i)
+    // One hinged root and one stone stop. Gravity closes the road; ornamental
+    // counterweights and their disconnected cords only obscured that action.
+    g.save(); g.translate(x, pivot); g.rotate(shutterAngle(t, i))
+    shape(g, [[-0.12, 0], [0.14, 0], [0.45, 2.9], [0.27, 3.35], [-0.28, 3.35], [-0.4, 2.85]], '#293B31', '#77876A', 0.035)
+    line(g, [[0, 0.3], [0.07, 2.9]], '#52644E', 0.045)
     g.restore()
-    disk(g, x, y - 3.3, 0.12, '#AEAE89', INK)
-    const c = Math.cos(rootAngle(t)), s = Math.sin(rootAngle(t))
-    line(g, [[x, y - 3.3], [x - 1.1, y - 3.8], [x - 1.1 + s * 0.5, y - 3.8 + c * 1.4]], '#B0AD89', 0.035)
-    shape(g, [[x - 1.32, y - 2.4], [x - 0.9, y - 2.4], [x - 0.98, y - 1.85], [x - 1.26, y - 1.85]], '#67765D', INK)
+    disk(g, x, pivot, 0.12, '#AEAE89', INK)
+    shape(g, [[x - 0.4, y + 0.03], [x + 0.42, y + 0.03], [x + 0.3, y + 0.2], [x - 0.35, y + 0.2]], '#737D60', INK)
   }
 })
 

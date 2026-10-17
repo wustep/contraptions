@@ -1,6 +1,6 @@
 # Burden — Astra review record
 
-Three improvement rounds, with one push per round. One draft PR: #219.
+Four improvement rounds, with one push per round. One draft PR: #219.
 `npm run build` passed before each push: lint, typecheck, the complete test
 suite, and the Vite production build.
 
@@ -30,3 +30,27 @@ Reproduce with Vite on port 8863 and
 `node scripts/shows/review-burden.mjs --round 3 --port 8863 --scan --export`.
 Full contact sheets, raw reports and the silent video remain in ignored
 `out/burden/`; the selected PNGs here are for review and PR screenshots.
+
+## Continuation · round 4
+
+A complete wall-clock 1× picture scrub (0–383 seconds), followed by another
+complete 1× scrub of the revised film and the exhaustive 30 fps frame scan.
+The new `--watch` option records forty-second reels and 2.5-second contact
+sheets, so the review includes the duration of the holds, not just stills.
+
+The opening hoop crossed Sam's waiting place, and the road shutters started
+closed and swung up after the travellers had already passed. Sam now waits
+clear of the chute, then eases into the travelling gap. The hoop has more
+room between the pair on the road and in the skiff. The three hinged roots
+start overhead and close onto stone stops at the original scored times.
+Removed two duplicate trees and the three disconnected counterweight/cord
+assemblies. No camera keys or score anchors changed.
+
+The 120 fps checks now include hoop/chute clearance and the swept clearance
+of both travellers against all three roots. `npm run build` passed, including
+lint, typecheck and the full tests. Selected frames: `shire.png`, `road.png`.
+Full review artifacts: `out/burden/round-4-before/` and `round-4/`.
+The revised pass painted all 11,490 scan frames with no page errors. Reverse
+scrubbing reproduced identical pixels; Zoom, Overview and matte DOM/video
+credit checks passed. The complete 1× confirmation also provides the viewing
+pass used to select round 5's worst moments.

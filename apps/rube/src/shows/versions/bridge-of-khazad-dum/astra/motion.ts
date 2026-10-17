@@ -30,7 +30,11 @@ function profile(x: number, points: Pt[]): number {
 }
 const approachX = curve([[0, -2], [8, -2], [16, 1], [24, 8], [35, 13], [43, 16], [56, 24], [64, 28.6]])
 export const roadY = (x: number): number => profile(x, [[1, 0], [8, 1], [24, 3], [28.6, 3]])
-export const rootAngle = (t: number): number => -0.13 * smooth(t, 35, 39) + 0.13 * smooth(t, 44, 49) + settle(t, 39, 0.025)
+/** Each root starts overhead and closes only after both travellers have passed. */
+export const shutterAngle = (t: number, i: number): number => {
+  const at = 39 + i * 10.2
+  return -1.18 * (1 - smooth(t, at, at + 2)) + settle(t, at + 2, -0.035, 1.6, 3.8)
+}
 export const councilAngle = (t: number): number => -0.16 * smooth(t, 78, 89) + settle(t, 89, 0.016, 3)
 export const councilDeck = (x: number, t: number): Pt => {
   const q = rotate(x, -0.8, councilAngle(t))
@@ -104,13 +108,15 @@ function traveller(t: number, offset: number): Pt {
 }
 export const frodoAt = (t: number): Pt => traveller(t, 0)
 export function samAt(t: number): Pt {
-  if (t < 319) return traveller(t, -0.85)
-  if (t < 326) return [154.15, 10.7]
+  // Wait clear of the hoop's chute, then take the familiar place behind Frodo.
+  if (t < 16) return traveller(t, mix(-1.6, -0.98, smooth(t, 8, 16)))
+  if (t < 319) return traveller(t, -0.98)
+  if (t < 326) return [154.02, 10.7]
   if (t < 329.2) {
-    const u = phase(t, 326, 329.2), end = seated(329.2, -0.46)
-    return [mix(154.15, end[0], u), mix(10.7, end[1], u) - 2.5 * 4 * u * (1 - u)]
+    const u = phase(t, 326, 329.2), end = seated(329.2, -0.65)
+    return [mix(154.02, end[0], u), mix(10.7, end[1], u) - 2.5 * 4 * u * (1 - u)]
   }
-  return seated(t, -0.46)
+  return seated(t, -0.65)
 }
 export function gandalfAt(t: number): Pt | null {
   if (t < 74) return [36.5, 3]

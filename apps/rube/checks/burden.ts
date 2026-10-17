@@ -1,6 +1,6 @@
 import type { Performance, ShowVersion } from '../src/shows/registry'
 import { zoomed } from '../src/shows/registry'
-import { CAST, DURATION, MUSIC_END, BEATS, castAt, frodoAt, liftAt, leafAt, RADIUS, stairAt } from '../src/shows/versions/bridge-of-khazad-dum/astra/motion'
+import { CAST, DURATION, MUSIC_END, BEATS, castAt, frodoAt, liftAt, leafAt, RADIUS, ringAt, roadY, samAt, shutterAngle, stairAt } from '../src/shows/versions/bridge-of-khazad-dum/astra/motion'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 
@@ -46,6 +46,25 @@ export function checkBurden(perf: Performance, version: ShowVersion, check: Chec
   check('Burden: the cast never pass through one another', separate)
   check('Burden: Frodo remains inside the composed and Zoom frames', framed)
   check('Burden: seeking backwards cannot alter a later frame', deterministic)
+  let chuteClear = true, gatesClear = true
+  for (let f = 0; f <= 8 * 120; f++) {
+    const q = ringAt(f / 120), s = samAt(f / 120)
+    chuteClear &&= Math.hypot(q[0] - s[0], q[1] - s[1]) > RADIUS + 0.223
+  }
+  // Swept clearance against the whole root, including its widest section.
+  for (let i = 0; i < 3; i++) {
+    const x = 11 + i * 5.2, y = roadY(x) + RADIUS - 3.35
+    gatesClear &&= shutterAngle(24, i) < -1.15 && Math.abs(shutterAngle(41 + i * 10.2, i)) < 1e-8
+    for (let f = 24 * 120; f <= 64 * 120; f++) {
+      const t = f / 120, a = shutterAngle(t, i), vx = -Math.sin(a) * 3.35, vy = Math.cos(a) * 3.35
+      for (const p of [frodoAt(t), samAt(t)]) {
+        const u = Math.max(0, Math.min(1, ((p[0] - x) * vx + (p[1] - y) * vy) / 3.35 ** 2))
+        gatesClear &&= Math.hypot(p[0] - x - u * vx, p[1] - y - u * vy) > RADIUS + 0.46
+      }
+    }
+  }
+  check('Burden: the opening hoop clears Sam before its pickup', chuteClear)
+  check('Burden: raised roots clear both travellers and close behind them', gatesClear)
   let contact = true
   for (let t = 112; t < 140; t += 0.05) contact &&= Math.abs(frodoAt(t)[1] - liftAt(t)[1]) < 1e-8
   for (let t = 294; t < 307; t += 0.05) contact &&= Math.abs(frodoAt(t)[1] - leafAt(t)[1]) < 1e-8

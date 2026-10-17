@@ -1,5 +1,5 @@
 // Reproducible frame scrub and contact sheets. Run against this worktree's Vite:
-// node scripts/shows/review-burden.mjs --round 1 --port 8863 [--scan] [--export]
+// node scripts/shows/review-burden.mjs --round 1 --port 8863 [--watch] [--scan] [--export]
 import { createRequire } from 'node:module'
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
@@ -50,16 +50,45 @@ async function sheet(name, times, width = 320, cols = 4) {
   }, { urls, times, width, cols })
   save(`${output}/${name}.png`, png)
 }
+// A wall-clock 1× scrub, in reviewable forty-second reels. This is deliberately
+// separate from the exhaustive accelerated frame scan below: duration is part
+// of the edit. The contact sheets are evidence for visual review, not playback.
+const realtime = []
+if (args.watch) {
+  await page.evaluate(() => window.shows.setSpeed(1))
+  for (let from = 0; from < 383; from += 40) {
+    const end = Math.min(383, from + 40)
+    const reel = await page.evaluate(async ([from, end]) => {
+      const start = performance.now()
+      let frames = 0, previous = start, maxGapMs = 0
+      await new Promise(resolve => {
+        const draw = now => {
+          maxGapMs = Math.max(maxGapMs, now - previous); previous = now
+          const t = Math.min(end, from + (now - start) / 1000)
+          window.shows.paintAt(t); frames++
+          if (t < end) requestAnimationFrame(draw)
+          else resolve()
+        }
+        requestAnimationFrame(draw)
+      })
+      return { from, end, frames, elapsed: (performance.now() - start) / 1000, maxGapMs }
+    }, [from, end])
+    realtime.push(reel)
+    await sheet(`watch-${String(from).padStart(3, '0')}`, Array.from({ length: Math.ceil((end - from) / 2.5) }, (_, i) => from + i * 2.5), 480, 4)
+    writeFileSync(`${output}/realtime.json`, JSON.stringify(realtime, null, 2) + '\n')
+    console.log(`1× review ${from}–${end} s: ${reel.frames} frames in ${reel.elapsed.toFixed(2)} s`)
+  }
+}
 await sheet('story', [0, 8, 18, 37, 56, 68, 82, 94, 113, 130, 146, 158, 174, 187.2, 198.4, 212, 240, 250, 263.4, 274.2, 276, 281, 294, 306, 317, 326, 329.2, 339, 349, 357, 365, 379])
 // Consecutive frames, not a thumbnail sampler, on the two most consequential handoffs.
-for (const [name, at] of [['stair-handoff', 190], ['bridge-break', 274.2], ['sam-catch', 329.2]]) {
+for (const [name, at] of [['ring-pickup', 7.6], ['shutter-close', 40], ['stair-handoff', 190], ['bridge-break', 274.2], ['sam-catch', 329.2]]) {
   await sheet(name, Array.from({ length: 20 }, (_, i) => at + (i - 8) / 30), 320, 4)
 }
-for (const [name, t] of [['shire', 4], ['council', 86], ['pass', 132], ['bridge', 264], ['fellowship', 345]]) {
+for (const [name, t] of [['shire', 4], ['road', 41], ['council', 86], ['pass', 132], ['bridge', 264], ['grove', 296], ['fellowship', 345]]) {
   save(`${output}/${name}.png`, await page.evaluate(t => window.shows.still(t, 1280, 720), t))
 }
 save('public/shows/bridge-of-khazad-dum/astra.png', await page.evaluate(() => window.shows.still(255, 1200, 630)))
-const report = { round: args.round, errors, frames: 0, speed: [], reversible: false, credits: false, matte: false, views: [], dom: null, export: null, youtube: null }
+const report = { round: args.round, errors, realtime, frames: 0, speed: [], reversible: false, credits: false, matte: false, views: [], dom: null, export: null, youtube: null }
 for (const speed of [1, 2]) {
   report.speed.push(await page.evaluate(speed => { window.shows.setSpeed(speed); return window.shows.state().speed }, speed))
 }

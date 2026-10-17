@@ -114,3 +114,15 @@ node scripts/shows/review-burden.mjs --round 3 --port 8863 --scan --export
 ```
 
 Selected screenshots and the review record are in `docs/shows/burden/`.
+
+### Round 4
+
+Reviewed the complete film at wall-clock 1× before editing, then re-scrubbed
+it at 1×. Moved Sam clear of the opening hoop's chute and gave the carried
+hoop breathing room. Reversed the roots' action: they now start raised and
+close behind both travellers at the existing cue times. Removed two duplicate
+trees and three ornamental counterweight/cord assemblies. Added swept gate
+and opening hoop clearance checks. Score anchors and camera timing are fixed.
+
+The review script now accepts `--watch` for the complete real-time picture
+pass, alongside `--scan` for all 11,490 frames. Both are recorded separately.
