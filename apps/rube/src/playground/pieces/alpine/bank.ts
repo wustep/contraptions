@@ -82,7 +82,7 @@ export const bank = definePiece<{ color: string; white: string }>({
     p.line(LEG * k, 0.72 * k, under(0.2)[0] * k, under(0.2)[1] * k)
     // The snow: its own line from the cell's edge, then the flat and the wall, one body.
     snow(p, k, ink, weight, -0.5, -0.12, 1.36)
-    body(p, k, ink, weight, s.white, SNOWS, 1.5)
+    body(p, k, ink, weight, s.white, SNOWS, SNOWS[0][1])
     // The rail out, a floor down, and the rail in.
     rail(p, k, ink, weight, -0.5, 0.34, FLAT)
     wand(p, k, ink, weight, s.color, -0.36, FLAT, 1.36)
