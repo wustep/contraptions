@@ -147,7 +147,8 @@ function handAt(jobs: [number, number][], t: number): Pt | null {
     from = [gx(s), at(s, a + 0.05)]
     since = a + 0.05
   }
-  const u = ramp(t, since, since + 0.45)
+  // Quick after the last, so the cover is clear of his sleeve by the chord.
+  const u = ramp(t, since, since + 0.3)
   return u >= 1 ? null : [from[0], from[1] + (hid - from[1]) * u]
 }
 
