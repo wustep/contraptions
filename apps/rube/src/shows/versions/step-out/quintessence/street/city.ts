@@ -654,50 +654,27 @@ export function drawPigeons(ctx: C2, v: View, t: number): void {
 
 /* ------------------------------------------------------------------ steam */
 
-/** A puff's round lobes, from its middle in its own radii: [across, down, radius]. The upper ones catch the light. */
-const LOBES: [number, number, number][] = [
-  [-0.45, 0.12, 0.72],
-  [0.42, 0.16, 0.66],
-  [0.02, -0.28, 0.8],
-  [-0.1, 0.34, 0.6],
-]
-
 /**
- * Steam: a puff at a time rising from `x, y`, each swelling as it climbs, bending off to the west on the air from
- * the east and thinning away, so the plume reads as puffs going up and not as one column. Each puff is a few round
- * lobes in one flat fill, cool grey where it is in its own shade, its sunward lobes warm and paler; each takes its
- * size and its lean from which puff it is, so no two come up alike.
+ * Steam: one plume rising from `x, y` and bending off to the west on the air from the east. It is made of puffs
+ * going up, each swelling as it climbs and drawing in again as it thins away at the top, but they are laid into one
+ * path and filled once, in one flat pale grey: one soft shape whose edge billows, not a stack of rounds.
  */
-export function steam(ctx: C2, v: View, t: number, x: number, y: number, height: number, n: number, seed: number, strength = 1): void {
+export function steam(ctx: C2, v: View, t: number, x: number, y: number, height: number, alpha: number): void {
   const k = v.k
+  const n = 6
   if (x + 1.5 < v.x0 || x - height * 0.8 - 1.5 > v.x1 || y + 0.5 < v.y0 || y - height - 1.5 > v.y1) return
+  const plume = new Path2D()
   for (let i = 0; i < n; i++) {
     const ph = t * 0.3 + i / n
     const age = ph - Math.floor(ph)
     const puff = Math.floor(ph) * n + i
-    const a = Math.min(1, age * 5) * (1 - age) ** 1.5 * 0.6 * strength
-    if (a < 0.01) continue
-    const px = x - age * age * height * (0.45 + 0.3 * hash(puff, 1, seed)) + 0.12 * sway(t, 0.3, puff) * age
+    const r = (0.12 + 0.4 * age) * Math.min(1, age * 6) * Math.sqrt(1 - age) * (0.85 + 0.3 * hash(puff, 2, 3))
+    if (r < 0.01) continue
+    const px = x - age * age * height * (0.45 + 0.3 * hash(puff, 1, 3)) + 0.1 * sway(t, 0.3, puff) * age
     const py = y - age * height
-    const r = (0.14 + 0.55 * age) * (0.8 + 0.4 * hash(puff, 2, seed))
-    const c = Math.cos(hash(puff, 3, seed) * 6.283) * 0.25
-    const body = new Path2D()
-    const lit = new Path2D()
-    for (const [dx, dy, s] of LOBES) {
-      const lx = px + (dx + c * dy) * r
-      const ly = py + dy * r
-      body.moveTo((lx + s * r) * k, ly * k)
-      body.arc(lx * k, ly * k, s * r * k, 0, Math.PI * 2)
-      if (dy < 0.2) {
-        const ox = lx + 0.1 * r
-        const oy = ly - 0.14 * r
-        lit.moveTo((ox + s * r * 0.7) * k, oy * k)
-        lit.arc(ox * k, oy * k, s * r * 0.7 * k, 0, Math.PI * 2)
-      }
-    }
-    ctx.fillStyle = rgba('#C9CDCC', a)
-    ctx.fill(body)
-    ctx.fillStyle = rgba('#F6F2EA', a * 0.75)
-    ctx.fill(lit)
+    plume.moveTo((px + r * 1.1) * k, py * k)
+    plume.ellipse(px * k, py * k, r * 1.1 * k, r * 0.9 * k, 0, 0, Math.PI * 2)
   }
+  ctx.fillStyle = rgba('#DCDDD8', alpha)
+  ctx.fill(plume)
 }

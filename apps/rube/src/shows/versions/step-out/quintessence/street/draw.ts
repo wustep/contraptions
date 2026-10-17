@@ -470,18 +470,6 @@ function drawBike(ctx: C2, k: number): void {
   ctx.lineCap = 'butt'
 }
 
-/** The steam stack the gas company has put over a manhole, orange and white, steam pouring off its top. */
-function drawStack(ctx: C2, v: View): void {
-  const x = -1.75
-  if (x + 3 < v.x0 || x - 4 > v.x1) return
-  const k = v.k
-  const top = -1.0
-  const foot = KERB + 0.3
-  for (let i = 0, y = foot; y > top; i++, y -= 0.28) slab(ctx, k, x - 0.15, Math.max(top, y - 0.28), x + 0.15, y, i % 2 ? '#F2EEE4' : '#E58A3A')
-  slab(ctx, k, x - 0.15, top, x + 0.15, foot, null, { color: INK, w: 0.9 })
-  slab(ctx, k, x - 0.28, foot - 0.06, x + 0.28, foot + 0.04, '#5E5C58', { color: INK, w: 0.8 })
-}
-
 /** The low wire rack of papers along the stand's front, their top sheets lifting in the air off the street. */
 function drawPapers(ctx: C2, k: number, t: number): void {
   const y = PAVE - 0.02
@@ -572,14 +560,10 @@ export function drawStreet(p: p5, k: number, t: number): void {
   drawSale(ctx, k, t)
   drawPeople(ctx, v, t)
   drawPigeons(ctx, v, t)
-  drawStack(ctx, v)
   drawTraffic(ctx, v, t, 'far')
-  // Steam, always: off the stack, and up out of the manholes in the far lane; the near lane goes by in front of it,
-  // and the shade falls across it. Never more than two plumes in the frame.
-  const m = morning(t)
-  steam(ctx, v, t, -1.75, -1.0, 2.4, 5, 1, 1.2)
-  steam(ctx, v, t, 3.75, KERB + 0.4, 2.1, 5, 2, 1.1 + 0.3 * m)
-  steam(ctx, v, t, 11.6, KERB + 0.4, 2.2, 5, 3, 1.0 + 0.3 * m)
+  // Steam, the one plume: up out of the manhole by the café in the far lane; the near lane goes by in front of it,
+  // and the shade falls across it.
+  steam(ctx, v, t, 11.6, KERB + 0.4, 1.8, 0.32 + 0.1 * morning(t))
   drawTraffic(ctx, v, t, 'near')
   drawCrossers(ctx, v, t)
   drawShade(ctx, v, t)
