@@ -29,6 +29,8 @@ import { WORLDS, builtWorlds, worldByName, type World } from './worlds'
 export interface Catalog {
   /** How far down the sheet is scrolled, so it can be opened there again. */
   scroll(): number
+  /** The world whose band the eye is on: the one under the pointer, or else the first still half on screen. */
+  world(): string | null
   /** The sheet as it stands as a PNG, supersampled by `scale`. */
   savePng(filename: string, scale: number): void
   exportSize(scale: number): [number, number]
@@ -234,6 +236,8 @@ export function createCatalog(
   const scope = options.scope ?? [stock === WORLDS.length ? 'FOUR WORLDS' : stock ? `${stock} WORLDS` : '', built ? `${built} ${built === 1 ? 'BUILD' : 'BUILDS'}` : ''].filter(Boolean).join(' · ')
   let sheet: Sheet | null = null
   let hover: Cell | null = null
+  /** Where the pointer is over the canvas, down from its top. */
+  let pointerY: number | null = null
   let scroll = options.scroll ?? 0
   let instance: p5 | null = null
   let release = () => {}
@@ -261,10 +265,12 @@ export function createCatalog(
       // The canvas takes the clicks, not the window: the panel sits beside it.
       c.elt.addEventListener('mousemove', (e: MouseEvent) => {
         hover = hit(e.offsetX, e.offsetY)
+        pointerY = e.offsetY
         c.elt.style.cursor = hover ? 'pointer' : 'default'
       })
       c.elt.addEventListener('mouseleave', () => {
         hover = null
+        pointerY = null
       })
       c.elt.addEventListener('click', (e: MouseEvent) => {
         const cell = hit(e.offsetX, e.offsetY)
@@ -322,6 +328,13 @@ export function createCatalog(
 
   return {
     scroll: () => scroll,
+    world() {
+      if (!sheet) return null
+      const { bands, top, bottom } = sheet
+      const y = pointerY !== null && pointerY >= top && pointerY <= bottom ? pointerY - top + scroll : null
+      const band = (y !== null ? bands.find((b) => y >= b.y0 && y < b.y1) : undefined) ?? bands.find((b) => (b.y0 + b.y1) / 2 >= scroll)
+      return band?.group.world.name ?? null
+    },
     savePng(filename, scale) {
       if (instance) savePng(instance, filename, exportScale(instance, scale))
     },

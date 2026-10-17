@@ -123,6 +123,7 @@ function writeUrl(how: Write): void {
 interface View {
   setOverview?(on: boolean): void
   scroll?(): number
+  world?(): string | null
   savePng(filename: string, scale: number): void
   saveLoop?(filename: string, progress?: (done: number) => void): Promise<void>
   exportSize(scale: number): [number, number]
@@ -146,7 +147,7 @@ function mountNow(): void {
       scroll: sheetScroll,
       focus,
       scope: 'THE PLAYGROUND · STAGED, NOT YET IN MACHINE',
-      hints: ['click a piece to watch it alone · scroll for the other shelves · W runs a shelf as a world', 'click a piece to watch it alone'],
+      hints: ['click a piece to watch it alone · scroll for the other shelves · W runs this shelf as a world', 'click a piece to watch it alone'],
     })
     return
   }
@@ -562,8 +563,8 @@ const onKey = (e: KeyboardEvent) => {
       reroll()
       break
     case 'w':
-      // The shelf in hand as a world: the piece's own shelf, or the first.
-      run(world ?? SHELVES[0].name)
+      // The shelf in hand as a world: the piece's own, or on the sheet the band under the pointer, or the one in view.
+      run(world ?? view?.world?.() ?? SHELVES[0].name)
       break
     case 'n':
       if (viewName() === 'world') nextWorldNow()
