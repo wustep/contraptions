@@ -3,6 +3,7 @@
   "buildCommand": "npm run build:site",
   "ignoreCommand": "bash scripts/vercel-ignore-build.sh",
   "redirects": [
+    { "source": "/games/special-delivery", "destination": "/games/special-delivery/", "permanent": false },
     { "source": "/", "destination": "/machine/", "permanent": false },
     { "source": "/rube{/}?", "destination": "/machine/", "permanent": false },
     { "source": "/sandbox{/}?", "destination": "/explorations/", "permanent": false }
