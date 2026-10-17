@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeOutCubic } from '../../../../../src/core/ease'
-import { FLOOR, ROLL, burst, definePiece, laneReach, over, rail, roll, type BallChange, type Lane } from '../../parts'
+import { FLOOR, ROLL, definePiece, laneReach, over, rail, roll, type BallChange, type Lane } from '../../parts'
 import { leaf } from './green'
 
 /**
@@ -32,11 +32,13 @@ export const sunflower = definePiece<{ color: string; pollen: string }>({
   draw: (p, s, { k, t, since, ink, weight }) => {
     // The jolt as the ball crosses the root, and the nod that follows it down.
     const rootAt = (0.5 + ROOT) / ROLL
-    const nod =
-      t < rootAt ? 0
-      : since < 0 ? NOD * easeOutCubic(over(t, rootAt, t - since))
-      : since < 0.15 ? NOD
-      : NOD * Math.cos((since - 0.15) * 5) * Math.exp(-(since - 0.15) * 1.4)
+    const fire = t - since
+    const nodAt = (tt: number) =>
+      tt < rootAt ? 0
+      : tt < fire ? NOD * easeOutCubic(over(tt, rootAt, fire))
+      : tt < fire + 0.15 ? NOD
+      : NOD * Math.cos((tt - fire - 0.15) * 5) * Math.exp(-(tt - fire - 0.15) * 1.4)
+    const nod = nodAt(t)
     const sway = 0.03 * Math.sin(t * 1.3)
 
     rail(p, k, ink, weight, -0.5, 0.5)
@@ -73,25 +75,17 @@ export const sunflower = definePiece<{ color: string; pollen: string }>({
     for (let i = 0; i < 6; i++) p.circle(Math.cos(i * 1.05) * 0.04 * k, Math.sin(i * 1.05) * 0.04 * k, 0.015 * k)
     p.pop()
     p.pop()
-    // Pollen falling from the head onto the ball while it nods.
-    if (nod > 0.2 && since < 0.5) {
-      p.push()
-      p.noStroke()
-      p.fill(s.pollen)
-      for (let i = 0; i < 6; i++) {
-        const f = ((t * 4 + i / 6) % 1 + 1) % 1
-        p.circle((HEAD.x - 0.08 + i * 0.035) * k, (HEAD.y + 0.2 + (FLOOR - HEAD.y - 0.2) * f) * k, 0.02 * k)
-      }
-      p.pop()
+    // Pollen falling from the head onto the ball while it nods: a grain
+    // leaves the head only while it is down, and falls all the way.
+    p.push()
+    p.noStroke()
+    p.fill(s.pollen)
+    for (let i = 0; i < 6; i++) {
+      const f = ((t * 4 + i / 6) % 1 + 1) % 1
+      const left = t - f / 4
+      if (nodAt(left) <= 0.2 || left - fire >= 0.5) continue
+      p.circle((HEAD.x - 0.08 + i * 0.035) * k, (HEAD.y + 0.2 + (FLOOR - HEAD.y - 0.2) * f) * k, 0.02 * k)
     }
-    // The dusting: a puff of the new colour off the ball.
-    if (since > -0.02 && since < 0.3) {
-      const f = over(since, 0, 0.3)
-      p.push()
-      p.stroke(s.pollen)
-      p.strokeWeight(weight)
-      burst(p, HEAD.x * k, 0, (0.16 + 0.14 * f) * k, (0.2 + 0.2 * f) * k, 6, 0.5 + f)
-      p.pop()
-    }
+    p.pop()
   },
 })
