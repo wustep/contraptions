@@ -45,14 +45,22 @@ phrases, the black cube on the bars, the others on the beats, and a struck cube 
     bars 17–32   A'    the board holds still (she plays the repeat softer); the walker walks home
     bars 33–48   B     the gate's plank turns over; the planks line up a column behind the gate, two bars
                        apart: its pocket, the passenger, the striker; the strike on the last note
-    bars 49–64   B'    the clock's plank turns over; the striker walks home over the others; the whole board
-                       swings, a ripple of planks a beat apart, back to front and front to back; on the last
-                       bar's downbeat all five come flush, and on the last note the clock steps home
+    bars 49–64   B'    the clock's plank turns over; the striker walks home over the others; the board swings
+                       in dominoes, each plank going as the one before it lands, back to front and front to
+                       back; on the last bar's downbeat all five come flush, and on the last note the clock
+                       steps home
 
 Each half ends the same way in the music, a run down eight sixteenths to the last note alone, and each ends in the toy
 with a cube coming home on that note. She breathes between the halves; the toy is still there.
 
-The camera stands at the table, the toy whole, and only in the last phrase leans in toward the column.
+It is one chain, end to end. The passenger home is the floor the walker steps home from; the walker home, the gate's
+plank turns over; the striker lands on the passenger's top to strike the gate home; the gate home, the clock's plank
+turns over; the striker home over all three, the board goes over in dominoes, each plank set off as the one before it
+lands; flush, and the clock steps home.
+
+The camera stands at the table, the toy whole, and only in the last phrase leans in toward the column. It names what
+is happening as its focus (the moving cube or plank, averaged over a second and a half either side), so the player's
+Zoom slides over to keep it in its closer frame.
 
 ## The clock
 
