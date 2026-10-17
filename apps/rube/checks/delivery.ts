@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { Depot, SHIFT } from '../src/games/special-delivery/game'
+import { laneAt } from '../src/parts'
 import type { Address, Color } from '../src/games/special-delivery/machines'
 
 let checks = 0
@@ -107,7 +108,14 @@ check('saturated mixed inputs cannot overflow buffers, lose identity, or create 
     const assigned = [...g.intake, ...g.production, ...g.ready, ...g.rework, ...(g.parked ? [g.parked] : [])]
     assert.equal(new Set(assigned.map((p) => p.id)).size, assigned.length)
   }
-  for (const p of g.parcels) for (const m of p.motions) {
+  for (const p of g.parcels) for (let n = 0; n < p.motions.length; n++) {
+    const m = p.motions[n]
+    if (n) {
+      const before = p.motions[n - 1]
+      const end = laneAt(before.lane, m.start - before.start)
+      const begin = laneAt(m.lane, 0)
+      assert.ok(Math.hypot(end.x - begin.x, end.y - begin.y) < 0.00001, `parcel ${p.id} changes motion continuously`)
+    }
     assert.ok(m.lane.segs.every((s) => s.dur >= 0))
     for (let i = 1; i < m.lane.segs.length; i++) {
       const a = m.lane.segs[i - 1].to, b = m.lane.segs[i].from

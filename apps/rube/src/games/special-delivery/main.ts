@@ -122,6 +122,7 @@ bind('back', () => {
   element('welcome').hidden = false; element('results').hidden = true; element('tutorial').hidden = true
   element('pause').hidden = true; element('pause-overlay').hidden = true; element('replay-badge').hidden = true
   element('depot').classList.remove('result-mode'); document.body.classList.remove('working')
+  document.querySelectorAll<HTMLButtonElement>('.workstations button').forEach((b) => { b.disabled = false })
   for (let i = 0; i < 3; i++) { element(`paint-key-${i}`).textContent = paintKeys()[i]; element(`send-key-${i}`).textContent = routeKeys()[i] }
   element('help-paint-keys').textContent = paintKeys().join(' / '); element('help-send-keys').textContent = routeKeys().join(' / ')
   element('help-hold-key').textContent = 'F'; element('help-park-key').textContent = 'H'

@@ -23,3 +23,4 @@ footer{display:flex;justify-content:space-between;gap:20px;padding:19px 0 25px;f
 
 .replay-badge{position:absolute;left:20px;top:14px;font:9px 'DM Mono',monospace;letter-spacing:.06em;background:#e6eadd;border:1px solid #a4b29a;padding:7px 9px;border-radius:3px}.result-mode .notice{min-height:42px}
 @media(max-width:740px){.replay-badge{font-size:7px;left:10px;top:8px;padding:5px 7px}}
+@media(max-width:400px) and (max-height:780px){.working .masthead .eyebrow{display:none}.working .masthead{padding-block:7px}.working .masthead h1{font-size:23px}.working .site-header{padding-block:9px}}

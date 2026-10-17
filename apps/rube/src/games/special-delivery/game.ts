@@ -97,9 +97,10 @@ export class Depot {
     this.choices.push({ at: this.time, action: 'paint', value: color })
     const p = this.rework.shift() ?? { id: this.nextId++, color, rescued: false, returns: 0, motions: [] }
     if (!this.parcels.includes(p)) this.parcels.push(p)
-    const previous = p.motions.length ? this.position(p, this.time)?.color ?? COLORS[p.color] : '#f5f1e7'
+    const previousPosition = this.position(p, this.time)
+    const previous = previousPosition?.color ?? '#f5f1e7'
     p.color = color
-    this.motion(p, [wait(inputAt(this.intake.length), 1)], [], previous)
+    this.motion(p, previousPosition ? [fly([previousPosition.x, previousPosition.y], inputAt(this.intake.length), 0.24, 0.15)] : [wait(inputAt(this.intake.length), 1)], [], previous)
     this.intake.push(p)
     this.rework.forEach((q, i) => this.move(q, returnAt(i)))
     this.onSound('paint'); this.revision++
@@ -173,7 +174,8 @@ export class Depot {
     else { this.streak = 0; this.mistakes++ }
     const start = this.time
     const cannon = worldLane('cannon')
-    const segs = [fly(readyAt(0), [6.6, 2.3], 0.3, 0), ...cannon.segs,
+    const from = this.position(p, this.time)!
+    const segs = [fly([from.x, from.y], [6.6, 2.3], 0.3, 0), ...cannon.segs,
       fly([9.6, 1.3], mailboxAt(address), 0.48, 0.45), wait(mailboxAt(address), 0.15)]
     const arrival = this.time + segTime(segs)
     this.motion(p, segs)
