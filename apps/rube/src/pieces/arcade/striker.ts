@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeOutCubic, easeOutQuad } from '../../../../../src/core/ease'
-import { FLOOR, ROLL, arrive, arriveAt, definePiece, over, rail, ramp, rankBy, wait, type Lane, type Pt } from '../../parts'
+import { FLOOR, ROLL, arrive, arriveAt, definePiece, mixHex, over, rail, ramp, rankBy, wait, type Lane, type Pt } from '../../parts'
 import { flash, score, tube } from './neon'
 
 /**
@@ -111,14 +111,14 @@ export const striker = definePiece<StrikerState>({
     p.rect(0, ((FLOOR + 0.12 + top - 0.2) / 2) * k, (TOWER - FRAME) * 2 * k, (FLOOR + 0.12 - top + 0.2) * k, 0.02 * k)
     solid(p, ink, weight, ink)
     p.rect(0, ((FLOOR + top - 0.2) / 2) * k, 0.08 * k, (FLOOR - top + 0.2) * k)
-    // The levels: a tube each side every so far up the face, lit as the puck passes and the tower fills.
+    // The levels: a tube each side every so far up the face, lit as the puck passes and the tower fills, and going out together, back to the ink, over a second and a half.
     const levels = 3 + 3 * floors
+    const fade = mixHex(ink, s.color, 1 - over(since, 1.5, 3))
     for (let i = 0; i < levels; i++) {
       const ly = FLOOR - 0.15 - ((FLOOR - 0.15 - (top - 0.1)) * i) / (levels - 1)
       const reached = puckY <= ly + 0.02 && launched > 0
-      const on = reached ? 1 - over(since, 1.5, 3) : 0
-      tube(p, k, ink, weight, s.color, -TOWER + FRAME + 0.03, ly, -0.08, ly, on)
-      tube(p, k, ink, weight, s.color, 0.08, ly, TOWER - FRAME - 0.03, ly, on)
+      tube(p, k, ink, weight, reached ? fade : ink, -TOWER + FRAME + 0.03, ly, -0.08, ly)
+      tube(p, k, ink, weight, reached ? fade : ink, 0.08, ly, TOWER - FRAME - 0.03, ly)
     }
     // The spring at the foot, and the latch.
     outline(p, ink, weight)
