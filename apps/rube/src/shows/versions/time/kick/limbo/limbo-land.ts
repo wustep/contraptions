@@ -652,28 +652,6 @@ export function drawGround(pen: Pen, f: Frame): void {
   if (edge.length > 1) polyline(pen, edge, mixHex(pen.ink, LIMBO.sand, 0.5), 0.5)
 }
 
-/**
- * The breakers' foam as they collapse, and the wash's running edge, under the balls: drawn over them, it laid a white
- * haze over him in the surf and he went pale in it.
- */
-export function drawSurf(pen: Pen, t: number, f: Frame): void {
-  if (f.x0 > SHORE_END + 3 || f.y0 > BOTTOM || f.y1 < SEA - 2) return
-  for (const tk of WAVES) {
-    const u = t - tk
-    if (u < 0 || u > UPRUSH + BACKWASH) continue
-    if (u < 1.6) {
-      const grow = sm(u / 0.5)
-      // It comes up as the crest goes over (at full strength from its first frame, it was a white blob all at once).
-      const a = 0.75 * Math.exp(-u / 0.55) * (0.6 + crestH(tk)) * sm(u / 0.15)
-      soft(pen, BREAK_X + 0.25 + 0.55 * grow, SEA - 0.1 - 0.22 * sm(u / 0.25) * (1 - sm((u - 0.25) / 0.9)), 0.45 + 0.75 * grow, 0.2 + 0.14 * grow, LIMBO.foam, a)
-    }
-    // The foam at the wash's running edge.
-    const front = washFront(tk, t)
-    if (front === null || front <= Math.max(BREAK_X, WATERLINE - 0.35) + 0.05) continue
-    soft(pen, front - 0.1, sandY(front) - 0.035, 0.28, 0.055, LIMBO.foam, u <= UPRUSH ? 0.7 : 0.3)
-  }
-}
-
 /** Drawn over the balls: the sea's body (so what is under the water is seen through it), the wash, the foam. */
 export function drawSeaOver(pen: Pen, t: number, f: Frame): void {
   if (f.x0 > SHORE_END + 3 || f.y0 > BOTTOM || f.y1 < SEA - 2) return
@@ -717,7 +695,11 @@ export function drawSeaOver(pen: Pen, t: number, f: Frame): void {
       const x = x0 + ((front - x0) * j) / n
       bottom.push([x, sandY(x) + 0.01])
     }
-    wash(pen, [...pts, ...bottom], LIMBO.sea, up ? 0.55 : 0.4)
+    // Coming in out of the sea's body over its seaward end (it began there square, a box under the water).
+    hgradFill(pen, [...pts, ...bottom], x0, x0 + 0.35, [
+      [0, LIMBO.sea, 0],
+      [1, LIMBO.sea, up ? 0.55 : 0.4],
+    ])
   }
 }
 

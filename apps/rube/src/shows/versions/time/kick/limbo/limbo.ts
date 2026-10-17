@@ -42,7 +42,7 @@ import {
   sm,
   smoother,
 } from './limbo-geo'
-import { drawCity, drawFarSea, drawGarden, drawGardenAir, drawGround, drawSea, drawSeaOver, drawSky, drawSurf, surface } from './limbo-land'
+import { drawCity, drawFarSea, drawGarden, drawGardenAir, drawGround, drawSea, drawSeaOver, drawSky, surface } from './limbo-land'
 import { ctxOf, soft, type Pen } from './limbo-pen'
 import { drawTowerBack, drawTowerFront } from './limbo-tower'
 
@@ -137,7 +137,6 @@ export const limboSet = scenery<null>({
     drawCity(pen, t, f)
     drawSea(pen, t, f)
     drawGround(pen, f)
-    drawSurf(pen, t, f)
     drawGarden(pen, t, f)
     drawTowerBack(pen, t, f)
     p.pop()
