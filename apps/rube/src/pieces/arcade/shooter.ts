@@ -1,8 +1,8 @@
 import type p5 from 'p5'
 import { coil, outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine, easeOutCubic, lerp } from '../../../../../src/core/ease'
-import { FLOOR, R, ROLL, arcPts, arrive, arriveAt, definePiece, laneAt, mixHex, over, post, rail, ramp, rankBy, segTime, wait, type Lane, type Pt, type Seg } from '../../parts'
-import { flash, score } from './neon'
+import { FLOOR, R, ROLL, arcPts, arrive, arriveAt, definePiece, laneAt, over, post, rail, ramp, rankBy, segTime, wait, type Lane, type Pt, type Seg } from '../../parts'
+import { flash, litColor, score } from './neon'
 
 /**
  * A pinball shooter lane. The rail ends at a wire lane that stands a floor
@@ -195,7 +195,7 @@ function tubePath(p: p5, k: number, ink: string, weight: number, color: string, 
   }
   p.push()
   p.noFill()
-  p.stroke(mixHex(ink, color, f))
+  p.stroke(litColor(ink, color, f))
   p.strokeWeight(weight * 1.3)
   path()
   p.pop()
@@ -274,7 +274,7 @@ export const shooter = definePiece<ShooterState>({
     coil(p, x * k, (cup + R + 0.04) * k, x * k, (HOUSING - HOUSING_H / 2) * k, 3, 0.085 * k)
     solid(p, ink, weight, ink)
     p.rect(x * k, HOUSING * k, 0.46 * k, HOUSING_H * k, 0.01 * k)
-    solid(p, ink, weight, mixHex(bg, s.color, sensed))
+    solid(p, ink, weight, litColor(bg, s.color, sensed))
     p.circle(x * k, (KNOB + cup - SEAT) * k, 0.08 * k)
     // The cup: a shallow dish on the rod's tip, the ball's seat.
     solid(p, ink, weight, s.color)

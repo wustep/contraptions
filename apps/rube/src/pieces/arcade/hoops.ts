@@ -1,8 +1,8 @@
 import type p5 from 'p5'
 import { coil, outline, solid } from '../../../../../src/core/draw'
 import { clamp, lerp } from '../../../../../src/core/ease'
-import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, fly, laneAt, mixHex, over, post, rail, ramp, segTime, trace, wait, type Lane, type Pt } from '../../parts'
-import { display, flash, score } from './neon'
+import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, fly, laneAt, over, post, rail, ramp, segTime, trace, wait, type Lane, type Pt } from '../../parts'
+import { display, flash, litColor, score } from './neon'
 
 /**
  * Arcade basketball. The rail ends at the cup on the tip of a sprung arm,
@@ -192,7 +192,7 @@ export const hoops = definePiece<{ color: string }>({
     // The rim's far half, behind the ball: a lit ring when the shot is made, that dims back to the ink rather than going out at once.
     p.push()
     p.noFill()
-    p.stroke(mixHex(ink, s.color, made))
+    p.stroke(litColor(ink, s.color, made))
     p.strokeWeight(weight * 1.2)
     p.arc(RIM[0] * k, RIM[1] * k, RIM_HALF * 2 * k, 0.09 * k, Math.PI, Math.PI * 2)
     p.pop()
@@ -246,7 +246,7 @@ export const hoops = definePiece<{ color: string }>({
     const made = since > 0 ? 1 - over(since, 1.6, 2.6) : 0
     p.push()
     p.noFill()
-    p.stroke(mixHex(ink, s.color, made))
+    p.stroke(litColor(ink, s.color, made))
     p.strokeWeight(weight * 1.2)
     p.arc(RIM[0] * k, RIM[1] * k, RIM_HALF * 2 * k, 0.09 * k, 0, Math.PI)
     p.pop()
