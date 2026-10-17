@@ -54,7 +54,7 @@ function rootToMachine(): Plugin {
 /** A page path without the slash goes to the directory, as a static host would send it. */
 function trailingSlash(): Plugin {
   const redirect: Connect.NextHandleFunction = (req, res, next) => {
-    const m = /^\/(explorations|machine|shows|theater|builder|playground|sandbox|rube|games\/extremely-normal-gifts|shows\/[a-z0-9-]+(?:\/[a-z0-9-]+)?)(\?.*)?$/.exec(req.url ?? '')
+    const m = /^\/(explorations|machine|shows|theater|builder|playground|sandbox|rube|shows\/[a-z0-9-]+(?:\/[a-z0-9-]+)?|games\/extremely-normal-gifts)(\?.*)?$/.exec(req.url ?? '')
     if (!m) return next()
     res.writeHead(302, { Location: `/${m[1]}/${m[2] ?? ''}` })
     res.end()

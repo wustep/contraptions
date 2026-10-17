@@ -70,7 +70,7 @@ function header(): string {
 
 function hero(): string {
   if (mode === 'received' || ((mode === 'playing' || mode === 'result') && !preview))
-    return `<section class="hero recipient-hero"><div><p class="eyebrow">SPECIAL DELIVERY / ${recipe.hop ? `ROUND ${recipe.hop + 1} OF THIS RUNNING JOKE` : 'NO OCCASION REQUIRED'}</p><h1>An extremely<br>normal gift<span class="accent">.</span></h1></div><div class="hero-note"><span class="mini-line"></span><p>For <strong>${esc(recipient(recipe))}</strong>,<br>from ${esc(sender(recipe))}.</p><span class="small">Someone went to unnecessary lengths.</span></div></section>`
+    return `<section class="hero recipient-hero"><div><p class="eyebrow">SPECIAL DELIVERY / ${recipe.hop ? `ROUND ${recipe.hop + 1} OF THIS RUNNING JOKE` : 'NO OCCASION REQUIRED'}</p><h1>An extremely<br>normal gift<span class="accent">.</span></h1></div><div class="hero-note"><span class="mini-line"></span><p>For <strong>${esc(recipient(recipe))}</strong>,<br> from ${esc(sender(recipe))}.</p><span class="small">Someone went to unnecessary lengths.</span></div></section>`
   return `<section class="hero"><div><p class="eyebrow">THE DEPARTMENT OF UNNECESSARY EFFORT</p><h1>Extremely<br>normal gifts<span class="accent">.</span></h1></div><div class="hero-note"><span class="mini-line"></span><p>One tiny compliment.<br> An <em>entire</em> production.</p><span class="small">Make a machine. Make someone’s day.</span></div><div class="normal-seal" aria-hidden="true"><span>100%</span><strong>NORMAL</strong><span>DEFINITELY</span></div></section>`
 }
 
@@ -132,6 +132,8 @@ function render(focus = false): void {
     stage = new GiftStage(document.querySelector('#gift-stage')!, performance(), audio)
     stage.sealed = mode === 'received'
     stage.preview = preview
+    // p5 can draw synchronously in its constructor. Paint the received state after configuring it.
+    stage.redraw()
     stage.onFrame = (frame) => {
       const caption = document.querySelector('#caption')!
       if (frame.caption !== lastCaption) {
@@ -359,14 +361,22 @@ app.addEventListener('click', async (event) => {
       break
     case 'copy': {
       const field = document.querySelector<HTMLInputElement>('#gift-link')!
+      const status = document.querySelector<HTMLElement>('#copy-status')!
+      button.disabled = true
       try {
         await navigator.clipboard.writeText(giftUrl(recipe))
-        button.textContent = 'Copied ✓'
-        document.querySelector('#copy-status')!.textContent = 'Gift link copied. Send it to your person.'
+        if (field.isConnected) {
+          button.textContent = 'Copied ✓'
+          status.textContent = 'Gift link copied. Send it to your person.'
+        }
       } catch {
-        field.focus()
-        field.select()
-        document.querySelector('#copy-status')!.textContent = 'Select and copy the link above to send your gift.'
+        if (field.isConnected) {
+          field.focus()
+          field.select()
+          status.textContent = 'Select and copy the link above to send your gift.'
+        }
+      } finally {
+        button.disabled = false
       }
       break
     }
@@ -421,6 +431,7 @@ function readLocation(): void {
   const encoded = hashRecipe()
   const linked = encoded ? decodeRecipe(encoded) : null
   const saved = encoded !== null ? null : loadDraft()
+  opening = 'deluxe'
   invalid = encoded !== null && !linked
   received = !!linked
   recipe = linked ?? saved?.recipe ?? newRecipe()

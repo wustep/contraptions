@@ -29,3 +29,11 @@ Made a gift from Alex to Juniper, ran cannon → snow day → photo booth, previ
 **Changed:** Pause while instructions are open (including correct Escape-to-close behavior), add Space/Escape playback controls and accessible progress, wrap long names, fit exported notes into three lines, defer audio creation to user input, distinguish absent and empty gift links, and provide a recoverable machinery-load error. Reduced-motion users get an immediate keepsake; switching the preference during playback also reveals it.
 
 **Replayed:** At 320 px, opened a maximum-length gift, paused/resumed with Space, held instructions open while the clock remained frozen, closed them with Escape, finished the full delivery and downloaded the corrected PNG. Repeated with reduced motion. Tested blank-note validation, empty/malformed gift fragments, HTML-shaped messages as inert text, denied clipboard access with manual selection fallback, persisted mute, and a deliberately blocked machinery request followed by successful reload. No horizontal overflow in the long-name recipient or result views, and no startup AudioContext warning.
+
+## Final integration review
+
+Screenshot review caught p5's synchronous initial draw retaining the machine overview on an unopened gift. The configured sealed state now explicitly redraws. Navigating away during an outstanding clipboard request also exposed a stale DOM update; copy completion now checks that its original field is still mounted. Replayed a full opening after both fixes, tested delayed clipboard denial while navigating, verified a successful copy equals the actual system clipboard, and confirmed the mechanical sound sequence schedules its notes from playback.
+
+The first full build caught an existing routing-source check that expected the stock page alternatives before the nested route alternatives. Reordered the new route without changing matching behavior or touching the existing check, then reran the full build.
+
+Production-bundle smoke test: opened the slashless route with a query and gift fragment, confirmed the redirect preserved both, watched a deluxe toaster → paint → stamp delivery, returned it with one snow substitution, sealed a new finale, and opened that return gently. The full chain finished with the original compliment and the next regift count, with no console exceptions or failed asset responses.

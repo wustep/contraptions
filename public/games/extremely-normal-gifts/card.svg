@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#f5f2e9"/>
+  <g fill="#292e2a">
+    <text x="64" y="69" font-family="Arial,sans-serif" font-size="22" font-weight="bold">contraptions</text>
+    <text x="218" y="67" font-family="monospace" font-size="13" fill="#656c60">/ gift department</text>
+    <text x="64" y="160" font-family="monospace" font-size="12" letter-spacing="2">THE DEPARTMENT OF UNNECESSARY EFFORT</text>
+    <text x="61" y="253" font-family="Arial,sans-serif" font-weight="bold" font-size="76" letter-spacing="-4">An extremely</text>
+    <text x="61" y="335" font-family="Arial,sans-serif" font-weight="bold" font-size="76" letter-spacing="-4">normal gift<tspan fill="#c95336">.</tspan></text>
+    <text x="64" y="407" font-family="Georgia,serif" font-size="27">One tiny compliment.</text>
+    <text x="64" y="445" font-family="Georgia,serif" font-size="27" font-style="italic">An entire production.</text>
+  </g>
+  <g stroke="#d4d4c9" stroke-width="1"><path d="M64 95h1072M64 533h1072"/></g>
+  <g transform="translate(916 322)" stroke="#292e2a" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M-168 105h333M-133 105v35m-10 0h20m238-35v35m-10 0h20" fill="none"/>
+    <rect x="-104" y="-47" width="208" height="150" rx="3" fill="#e9b64f"/>
+    <rect x="-115" y="-71" width="230" height="31" rx="3" fill="#e9b64f"/>
+    <path d="M-16-70v173h32V-70" fill="#c95336"/>
+    <path d="M0-73c-128-108-145 14 0 0c128-108 145 14 0 0" fill="none"/>
+    <g transform="translate(73 21) rotate(-9)"><rect x="-40" y="-24" width="80" height="48" fill="#f5f2e9" stroke-width="1.5"/><text x="0" y="-3" fill="#c95336" stroke="none" text-anchor="middle" font-family="monospace" font-size="9">EXTREMELY</text><text x="0" y="11" fill="#c95336" stroke="none" text-anchor="middle" font-family="monospace" font-size="10" font-weight="bold">NORMAL</text></g>
+    <g transform="translate(-199 30)"><path d="M-18 72H17M0 60v12" fill="none"/><ellipse cx="0" cy="25" rx="24" ry="36" fill="#41776b"/><ellipse cx="0" cy="25" rx="16" ry="27" fill="#292e2a"/><path d="M1 39c-23-5-8-41 1-32 17 21-16 26-9 8 4-12 17 10 6 9" stroke="#41776b" stroke-width="3" fill="none"/></g>
+  </g>
+  <g transform="translate(1055 148) rotate(12)" fill="#c95336" stroke="#c95336"><circle r="49" fill="none" stroke-width="1"/><circle r="43" fill="none" stroke-width="1"/><text text-anchor="middle" y="-13" font-family="monospace" font-size="9" stroke="none">100%</text><text text-anchor="middle" y="5" font-family="monospace" font-size="13" font-weight="bold" stroke="none">NORMAL</text><text text-anchor="middle" y="21" font-family="monospace" font-size="8" stroke="none">DEFINITELY</text></g>
+  <text x="64" y="573" font-family="monospace" font-size="12" letter-spacing="1" fill="#656c60">SOMEONE WENT TO UNNECESSARY LENGTHS.</text>
+  <text x="1136" y="574" text-anchor="end" font-family="Georgia,serif" font-size="16" font-style="italic" fill="#41776b">No occasion required.</text>
+</svg>
