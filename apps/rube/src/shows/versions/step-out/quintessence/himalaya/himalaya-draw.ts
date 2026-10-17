@@ -81,15 +81,15 @@ export const BOULDER: Pt = [-1.6, -1.75]
 /** The face's outline: off to the left and down, its right flank down into the cloud, the ledge's lip, the summit ridge. */
 const FACE: Pt[] = [
   [-22, 9],
-  [11.6, 9],
-  [11.3, 5.5],
-  [11.45, 3],
-  [11.15, 0.4],
-  [11.25, -1.4],
-  [10.95, -3.2],
-  [11.05, -4.6],
-  [10.7, -5.9],
-  [10.75, -6.7],
+  [17.1, 9],
+  [15.77, 5.5],
+  [15.02, 3],
+  [13.93, 0.4],
+  [13.44, -1.4],
+  [12.47, -3.2],
+  [11.92, -4.6],
+  [11.12, -5.9],
+  [10.87, -6.7],
   [10.42, -7.4],
   [10.3, -8.0],
   [10.0, -8.4],
@@ -399,7 +399,7 @@ export function drawFarRocks(pen: Pen, t: number): void {
  * shorter as the sun climbs. The pair of choughs wheel over it.
  */
 /** The summits standing out of the cloud: x, how far into the sea (below its far edge), width, height. */
-const ISLANDS: [number, number, number, number][] = [[26.0, 1.3, 4.4, 1.5], [13.3, 2.5, 3.6, 1.2]]
+const ISLANDS: [number, number, number, number][] = [[26.0, 1.3, 4.4, 1.5], [14.3, 2.5, 3.6, 1.2]]
 /**
  * The heaps of cloud: x, how far into the sea, how big, and how much taller than the rest. A few big ones with open
  * floor between them, so the sea is a calm floor and not dotted with heaps; and the one welling up in the gorge under
@@ -415,8 +415,8 @@ export function drawDeck(pen: Pen, f: Frame, t: number): void {
   const sea = smooth(litY(t, 'low'), -8.4, -7.4)
   const top = mix(tn.cloud, tn.lit, 0.6 * sea)
   const shade = mix(top, tn.cloudUnder, 0.85)
-  // Only what the face's flank leaves open is drawn: it runs from about (10, -8.4) down to (11.1, -2.5).
-  const flank = (y: number) => 10.0 + Math.max(0, Math.min(5.9, y + 8.4)) * 0.18
+  // Only what the face's flank leaves open is drawn: it runs from about (10, -8.4) down to (12.9, -2.5).
+  const flank = (y: number) => 10.0 + Math.max(0, Math.min(5.9, y + 8.4)) * 0.49
   const lo = Math.max(9.7, f.x0) - 0.6
   const hi = f.x1 + 1
   const ly = litY(t, 'world')
