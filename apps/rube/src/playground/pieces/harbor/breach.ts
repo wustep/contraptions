@@ -146,6 +146,11 @@ export const breach = definePiece<{ color: string; band: string }>({
     p.line(0, 0, 0, -0.1 * k)
     p.pop()
 
+    // The sea it throws up coming out and going back, behind it: drops drawn over the can were spots on it.
+    const breaking = T_OUT - (LEN * 0.9) / V_OUT
+    splash(p, k, sea, weight, BX, WATER, over(t, breaking, breaking + 0.6), 1.5)
+    splash(p, k, sea, weight, BX, WATER, over(t, T_BACK, T_BACK + 0.6), 1.2)
+
     // The buoy, about its foot: a tall can with a flat head, a fat shoulder a third of the way down, and one pale band.
     const foot = head + LEN
     p.push()
@@ -181,11 +186,8 @@ export const breach = definePiece<{ color: string; band: string }>({
     p.line((-WIDE / 2) * k, -LEN * 0.465 * k, (WIDE / 2) * k, -LEN * 0.465 * k)
     p.pop()
 
-    // The sea, and what is done to it: the ball going in, the buoy coming out with the sea pouring off it, and going back.
+    // The sea over it, and the ball going in.
     water(p, k, ink, bg, weight, -0.5, 1.5)
     splash(p, k, sea, weight, WET[0] + 0.03, WATER, over(t, T_EDGE + T_WET, T_EDGE + T_WET + 0.5), 0.9)
-    const breaking = T_OUT - (LEN * 0.9) / V_OUT
-    splash(p, k, sea, weight, BX, WATER, over(t, breaking, breaking + 0.6), 1.5)
-    splash(p, k, sea, weight, BX, WATER, over(t, T_BACK, T_BACK + 0.6), 1.2)
   },
 })

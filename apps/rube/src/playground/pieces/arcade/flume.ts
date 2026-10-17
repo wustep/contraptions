@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../../src/core/draw'
 import { clamp } from '../../../../../../src/core/ease'
 import { FLOOR, R, ROLL, definePiece, fly, laneAt, over, post, rail, ramp, roll, segTime, wait, type Lane, type Pt, type Seg } from '../../../parts'
-import { arcadeWater, flash, glow, lamp, score } from '../../../pieces/arcade/neon'
+import { arcadeWater, flash, lamp, score } from '../../../pieces/arcade/neon'
 
 /**
  * A log flume. The rail runs to the stern of a stubby boat-shaped log
@@ -13,7 +13,7 @@ import { arcadeWater, flash, glow, lamp, score } from '../../../pieces/arcade/ne
  * water's colour, the flume lamp lights, two hundred, and the log stops
  * dead in the water while the ball, which nothing was holding, rides the
  * wave on over the log's nose onto the dock and rolls out. The log rocks
- * in the pool a while, and is winched back up later.
+ * in the pool a while and lies there.
  *
  * The chute is one curve, the height of the ball's line at every x; the
  * log, the stream and the lane are all drawn from it, and the log's pace
@@ -99,17 +99,13 @@ const LANE: Lane = {
   segs: [...board, ...ride, fly(FOOT, LAND, THROW, 0.1), fly(LAND, [LAND[0] + 0.04, 1], 0.03, 0.005), ramp([LAND[0] + 0.04, 1], [1.5, 1], V_FOOT * 0.6, ROLL)],
   fire: T_SPLASH,
 }
-/** The log is winched back up from here. */
-const RESET = 2.6
-
 /** Where the log's seat is along the line. */
 function logAt(t: number): number {
   if (t <= T_GO) return STATION[0]
   if (t <= T_SPLASH) return laneAt(LANE, t).x
   const s = t - T_SPLASH
   if (s < BRAKE) return FOOT[0] + V_FOOT * s - ((V_FOOT / BRAKE) * s * s) / 2
-  if (s < RESET) return X_STOP
-  return X_STOP + (STATION[0] - X_STOP) * clamp((s - RESET) / 2.5)
+  return X_STOP
 }
 
 /** The log's frame: origin on the ball's line at `x`, turned to the chute, and rocked by `rock`. */
@@ -136,17 +132,15 @@ function hull(p: p5, k: number, ink: string, weight: number, color: string): voi
     p.vertex(x * k, y * k)
   p.endShape(p.CLOSE)
 }
-/** The splash off the bow: drops up and out, each on its own arc. */
+/** The splash off the bow: a few drops up and out, each on its own arc under the show's gravity, and back into the pool. */
 const DROPS: [number, number][] = [
-  [0.4, -3.2],
-  [0.9, -3.8],
-  [1.4, -3.4],
-  [1.9, -2.8],
-  [0.2, -2.4],
-  [1.1, -2.2],
-  [2.3, -2.0],
-  [-0.3, -2.6],
+  [-0.35, -2.2],
+  [0.05, -2.9],
+  [0.35, -2.5],
+  [0.6, -1.9],
+  [0.2, -1.6],
 ]
+const G_DROP = 22
 
 export const flume = definePiece<FlumeState>({
   name: 'flume',
@@ -215,7 +209,6 @@ export const flume = definePiece<FlumeState>({
     p.line(0, -0.1 * k, 0.04 * k, -0.1 * k)
     p.pop()
     // The flume lamp on the dock's post, lit at the splash.
-    glow(p, k, s.color, DOCK_X + 0.04, 1 + FLOOR - 0.34, 0.12, lit)
     outline(p, ink, weight)
     p.line((DOCK_X + 0.04) * k, (1 + FLOOR) * k, (DOCK_X + 0.04) * k, (1 + FLOOR - 0.3) * k)
     lamp(p, k, ink, weight, s.color, bg, DOCK_X + 0.04, 1 + FLOOR - 0.34, 0.04, lit)
@@ -236,9 +229,9 @@ export const flume = definePiece<FlumeState>({
       p.noStroke()
       p.fill(s.water)
       for (const [vx, vy] of DROPS) {
-        const y = WATER_Y + vy * since + (G / 2) * since * since
+        const y = WATER_Y + vy * since + (G_DROP / 2) * since * since
         if (y > WATER_Y) continue
-        p.circle(Math.min(DOCK_X - 0.03, FOOT[0] + 0.1 + vx * since) * k, y * k, 0.045 * k)
+        p.circle((FOOT[0] + 0.1 + vx * since) * k, y * k, 0.05 * k)
       }
       const f = over(since, 0, 0.35)
       p.fill(s.water)

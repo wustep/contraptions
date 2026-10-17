@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../src/core/draw'
 import { FLOOR, R, ROLL, arcPts, arrive, arriveAt, definePiece, over, puff, rail, ramp, trace, wait, type BallChange, type Lane, type Pt, type Seg } from '../../../parts'
-import { G, flightSeg, ledge, ledgeStart, secondColor, tossTo } from './parts-a'
+import { flightAt, flightSeg, ledge, ledgeStart, secondColor, tossTo } from './parts-a'
 import { gearColor, snow, snowAt, snowWhite, wand } from './snow'
 
 /**
@@ -50,10 +50,9 @@ const DWELL = 0.08
 const RUN_DOWN = 0.4
 /** How deep the snow lies in the drum, below the shaft. */
 const SNOW_IN = 0.1
-/** The plume: how long the chute spouts, how long a lump of it lasts, and its pace as a part of the ball's. */
-const SPOUT = 0.24
-const LIFE = 0.36
-const PLUME_PACE = 0.62
+/** The plume: how long it lasts, and its pace as a part of the ball's. */
+const LIFE = 0.55
+const PLUME_PACE = 0.32
 
 const onCarry = (a: number): Pt => [SHAFT[0] + CARRY * Math.cos(a), SHAFT[1] + CARRY * Math.sin(a)]
 const SEAT0 = onCarry(A_SEAT)
@@ -162,28 +161,16 @@ function drumSnow(f: number): Pt[] {
 }
 
 /**
- * The plume, `since` after the ball left the mouth: lumps spouted after it
- * at a part of its pace, each on its own fall, swelling and thinning to
- * nothing; drawn twice over, outlined and then filled, so they are one
- * body of snow with one outline.
+ * The plume, `since` after the ball left the mouth: one cloud of the drum's
+ * snow, out of the mouth behind the ball and along the ball's own arc at a
+ * part of its pace, swelling and then thinning away the way the engine's
+ * cough does.
  */
 function plume(p: p5, k: number, ink: string, weight: number, white: string, since: number): void {
-  const lumps: [number, number, number][] = []
-  for (let e = 0; e <= Math.min(since, SPOUT); e += 0.015) {
-    const age = since - e
-    if (age >= LIFE) continue
-    const f = age / LIFE
-    const pace = PLAN.speed * (PLUME_PACE + 0.06 * Math.cos(e * 310))
-    const a = Math.atan2(PLAN.flight.v[1], PLAN.flight.v[0]) + 0.1 * Math.sin(e * 470)
-    const r = (0.07 + 0.09 * f) * (1 - f ** 4) * (1 - 0.5 * (e / SPOUT))
-    if (r < 0.04) continue
-    lumps.push([PLAN.mouth[0] + pace * Math.cos(a) * age, PLAN.mouth[1] + pace * Math.sin(a) * age + (G * age * age) / 2, r])
-  }
-  solid(p, ink, weight * 0.8, white)
-  for (const [x, y, r] of lumps) p.circle(x * k, y * k, r * 2 * k)
-  p.noStroke()
-  p.fill(white)
-  for (const [x, y, r] of lumps) p.circle(x * k, y * k, Math.max(0, r * 2 * k - weight * 0.8))
+  const f = since / LIFE
+  if (f <= 0 || f >= 0.85) return
+  const [x, y] = flightAt(PLAN.flight, since * PLUME_PACE)
+  puff(p, k, ink, weight * 0.8, white, x, y, (0.07 + 0.1 * Math.sin((Math.PI / 2) * Math.min(1, f * 2.5))) * (1 - f ** 3))
 }
 
 export const snowblower = definePiece<{ color: string; engine: string }>({
@@ -216,7 +203,7 @@ export const snowblower = definePiece<{ color: string; engine: string }>({
     ledge(p, k, ink, weight, PLAN.ledge, 1.5, -1, 1.45)
 
     // The plume, behind the machine, so it comes out of the chute's mouth.
-    if (since > 0 && since < SPOUT + LIFE) plume(p, k, ink, weight, white, since)
+    if (since > 0) plume(p, k, ink, weight, white, since)
 
     p.push()
     p.translate(0, shakeAt(t) * k)
@@ -229,7 +216,7 @@ export const snowblower = definePiece<{ color: string; engine: string }>({
     outline(p, ink, weight)
     p.line((back + 0.12) * k, 0 * k, (back + 0.12) * k, -0.09 * k)
     const cough = over(t, T_TURN + TAU * 0.35, T_TURN + TAU * 0.35 + 0.5)
-    if (cough > 0 && cough < 1) puff(p, k, ink, weight * 0.8, bg, back + 0.13 + 0.08 * cough, -0.15 - 0.2 * cough, (0.035 + 0.06 * cough) * (1 - cough ** 3))
+    if (cough > 0 && cough < 0.8) puff(p, k, ink, weight * 0.8, bg, back + 0.13 + 0.08 * cough, -0.15 - 0.2 * cough, (0.035 + 0.06 * cough) * (1 - cough ** 3))
     solid(p, ink, weight, s.engine)
     p.rect((back + 0.17) * k, 0.17 * k, 0.4 * k, 0.32 * k, 0.04 * k)
     const axle: Pt = [back + 0.22, snowAt(back + 0.22) - 0.1]

@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../../src/core/draw'
 import { clamp, easeInOutSine, easeOutCubic, lerp } from '../../../../../../src/core/ease'
 import { R, ROLL, definePiece, over, rail, ramp, roll, trace, type Lane, type Pt } from '../../../parts'
-import { gearColor, powder, snow, snowAt, snowWhite, wand } from './snow'
+import { gearColor, snow, snowAt, snowWhite, wand } from './snow'
 
 /**
  * A husky asleep in harness on the snow, nose on paws, before a small sled
@@ -12,8 +12,7 @@ import { gearColor, powder, snow, snowAt, snowWhite, wand } from './snow'
  * is up, takes up the slack of its line and is away: the sled is jerked out
  * from under the ball, which stays where it was until the tray's back comes
  * up and takes it along, and the dog hauls it a cell and a half at a gallop.
- * Then it sits back on its haunches and skids, snow flying off its paws; the
- * line goes slack; the sled runs on into the drift at the foot of the far
+ * Then it sits back on its haunches and skids; the line goes slack; the sled runs on into the drift at the foot of the far
  * track's post and stops dead, and the ball, which nothing stopped, runs
  * down the tray, up the curl of its front and off, over onto the track,
  * and on behind the dog's back. The dog stands there, tail going.
@@ -346,11 +345,10 @@ export const husky = definePiece<{ color: string; white: string }>({
     rail(p, k, ink, weight, FAR, 2.5)
     wand(p, k, ink, weight, s.color, NEAR - 0.03)
     wand(p, k, ink, weight, s.color, FAR + 0.03)
-    // The drift at the foot of the far track's post, which stops the sled; it bursts as the runner goes into it.
+    // The drift at the foot of the far track's post, which stops the sled; the runner squashes it down as it goes in.
     const hit = t - T_STOP_START
     solid(p, ink, weight, s.white)
-    p.arc((FAR + 0.01) * k, (snowAt(FAR) + 0.01) * k, 0.26 * k, (hit > 0 ? 0.1 : 0.14) * k, Math.PI, Math.PI * 2, p.CHORD)
-    powder(p, k, ink, weight, s.white, FAR - 0.06, snowAt(FAR) - 0.03, over(hit, 0, 0.45), 1.1)
+    p.arc((FAR + 0.01) * k, (snowAt(FAR) + 0.01) * k, 0.26 * k, (0.14 - 0.04 * over(hit, 0, BRAKE)) * k, Math.PI, Math.PI * 2, p.CHORD)
 
     sled(p, k, ink, weight, s.color, sledAt(t), t, 'behind')
   },
@@ -369,9 +367,6 @@ export const husky = definePiece<{ color: string; white: string }>({
     p.quadraticVertex(((from[0] + to[0]) / 2) * k, (Math.min(snowAt((from[0] + to[0]) / 2) - 0.01, (from[1] + to[1]) / 2 + slack * 0.2)) * k, to[0] * k, to[1] * k)
     p.endShape()
 
-    // Snow off its paws as it sits back.
-    const skid = t - T_SKID
-    powder(p, k, ink, weight, s.white, pose.x + BODY + 0.2, snowAt(pose.x + BODY + 0.2) - 0.02, over(skid, 0.02, 0.5), 1.2)
     drawDog(p, k, ink, weight, s.white, s.color, pose)
   },
 })

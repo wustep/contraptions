@@ -92,15 +92,15 @@ export const tapemeasure = definePiece<{ color: string }>({
     outline(p, ink, weight)
     p.line(PEG * k, top * k, PEG * k, 0.5 * k)
 
-    // The blade, from the case's mouth to the hook over the peg: a band with a tick every eighth, and no numerals.
+    // The blade, from the case's mouth to the hook over the peg: a band with a tick every quarter, and no numerals.
     const end = PEG - 0.035
     if (end - mouth > 0.01) {
       solid(p, ink, weight * 0.8, bg)
       p.rect(((mouth - 0.02 + end) / 2) * k, BLADE_Y * k, (end - mouth + 0.02) * k, BLADE_H * k)
       outline(p, ink, weight * 0.7)
-      for (let i = 1; end - i * 0.125 > mouth + 0.03; i++) {
-        const x = end - i * 0.125
-        p.line(x * k, (BLADE_Y - BLADE_H / 2) * k, x * k, (BLADE_Y - BLADE_H / 2 + (i % 2 ? 0.03 : 0.045)) * k)
+      for (let i = 1; end - i * 0.25 > mouth + 0.03; i++) {
+        const x = end - i * 0.25
+        p.line(x * k, (BLADE_Y - BLADE_H / 2) * k, x * k, (BLADE_Y - BLADE_H / 2 + 0.035) * k)
       }
     }
     // The hook: a tab on the blade's end, turned down over the peg's far side.

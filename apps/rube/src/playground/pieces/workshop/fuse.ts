@@ -1,12 +1,13 @@
 import { outline, solid } from '../../../../../../src/core/draw'
 import { easeOutCubic } from '../../../../../../src/core/ease'
-import { FAST, FLOOR, ROLL, burst, definePiece, fly, over, puff, rail, ramp, roll, type Lane, type Pt } from '../../../parts'
+import { FAST, FLOOR, ROLL, definePiece, fly, over, puff, rail, ramp, roll, type Lane, type Pt } from '../../../parts'
 
 /**
  * A fuse that races the ball. The ball rolls over a striker as it comes
  * in and lights a fuse that runs along under the rail to a keg two cells
  * on; the spark chases the ball the whole way and the keg goes up just as
  * the ball passes it, throwing it on twice as fast. It always wins. Just.
+ * The keg goes up in a cloud of smoke and leaves nothing behind.
  */
 const STRIKE = -0.1
 const KEG_X = 2.0
@@ -14,9 +15,15 @@ const ARRIVE = (0.5 + STRIKE) / ROLL
 const BURN = (KEG_X - STRIKE) / ROLL
 const FIRE = ARRIVE + BURN
 const FUSE_Y = FLOOR + 0.14
+/** The smoke the keg goes up in: where each cloud starts from the keg's middle, and how big. */
+const SMOKE: [number, number, number][] = [
+  [0, 0, 0.17],
+  [-0.12, -0.12, 0.1],
+  [0.12, -0.18, 0.08],
+]
 
-/** The fuse's path: a slow wave under the rail from the striker to the keg. */
-const fuseAt = (f: number): Pt => [STRIKE + (KEG_X - 0.2 - STRIKE) * f, FUSE_Y + Math.sin(f * Math.PI * 7) * 0.025]
+/** The fuse's path: a slow wave under the rail from the striker into the keg's side. */
+const fuseAt = (f: number): Pt => [STRIKE + (KEG_X - 0.12 - STRIKE) * f, FUSE_Y + Math.sin(f * Math.PI * 7) * 0.025]
 
 export const fuse = definePiece<{ color: string }>({
   name: 'fuse',
@@ -75,43 +82,17 @@ export const fuse = definePiece<{ color: string }>({
     // The spark, chasing the ball along the fuse.
     if (t >= ARRIVE && since < 0) {
       const [x, y] = fuseAt(burn)
-      p.push()
-      p.translate(x * k, y * k)
-      p.rotate(t * 40)
-      p.stroke(s.color)
-      p.strokeWeight(weight)
-      burst(p, 0, 0, 0.02 * k, 0.07 * k, 5)
-      p.pop()
       solid(p, ink, weight, s.color)
       p.circle(x * k, y * k, 0.05 * k)
     }
-    // The bang: a burst, a ring, smoke, and the ground line left behind.
-    if (since >= 0) {
-      outline(p, ink, weight)
-      p.line((KEG_X - 0.16) * k, 0.5 * k, (KEG_X + 0.16) * k, 0.5 * k)
-      if (since < 0.3) {
-        const f = over(since, 0, 0.3)
-        p.push()
-        p.stroke(s.color)
-        p.strokeWeight(weight * 1.2)
-        burst(p, KEG_X * k, 0.3 * k, (0.1 + 0.45 * f) * k, (0.25 + 0.55 * f) * k, 9, f)
-        if (f < 0.6) {
-          p.stroke(ink)
-          p.strokeWeight(weight)
-          p.noFill()
-          p.circle(KEG_X * k, 0.3 * k, (0.16 + 0.7 * f) * k)
-        }
-        p.pop()
-      }
-      if (since < 1.6) {
-        const f = over(since, 0, 1.6)
-        const e = easeOutCubic(f)
-        for (let i = 0; i < 3; i++) {
-          const x = KEG_X + (i - 1) * 0.16 - e * 0.1 * (i - 1)
-          const y = 0.24 - e * 0.3 * (i + 1)
-          const r = (0.06 + 0.1 * e) * (1 - f * 0.6) * (1 - i * 0.15)
-          if (f < 0.98 && r > 0.02) puff(p, k, ink, weight, bg, x, y, r)
-        }
+    // The bang: the keg goes up in smoke, which rises, parts and thins away.
+    if (since >= 0 && since < 1.4) {
+      const f = since / 1.4
+      const e = easeOutCubic(f)
+      for (const [dx, dy, r0] of SMOKE) {
+        const r = r0 * Math.pow(1 - f, 0.7)
+        // A cloud's line thins as it does, so the last of it is not a speck of ink.
+        if (r > 0.015) puff(p, k, ink, weight * Math.min(1, r / 0.07), bg, KEG_X + dx * (0.5 + e), 0.34 + dy - e * 0.36, r)
       }
     }
   },

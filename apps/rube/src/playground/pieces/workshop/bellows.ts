@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../../src/core/draw'
 import { easeInQuad, easeInOutSine, easeOutCubic, lerp } from '../../../../../../src/core/ease'
-import { FLOOR, ROLL, definePiece, gallows, over, rail, ramp, roll, wait, type Lane } from '../../../parts'
+import { FLOOR, ROLL, definePiece, gallows, over, puff, rail, ramp, roll, wait, type Lane } from '../../../parts'
 
 /**
  * A bellows on a stand, aimed down the line, with a weight hung over it
@@ -24,6 +24,7 @@ const LEVER_W = -0.42
 const HINGE_X = -0.12
 const HINGE_Y = 0.0
 const BOARD = 0.26
+const NOZZLE = 0.08
 const OPEN = 0.75
 const SHUT = 0.22
 /** The weight, on the hook, then on the top board. */
@@ -95,30 +96,20 @@ export const bellows = definePiece<{ color: string }>({
     solid(p, ink, weight, bg)
     p.circle(PIVOT_X * k, LEVER_Y * k, 0.05 * k)
 
-    // The bellows: two boards hinged at the nozzle, pleats between, driven
-    // shut by the weight and eased open again as the weight is winched off.
+    // The bellows: two boards hinged at the nozzle, the leather between them folded once, driven shut by the weight
+    // and eased open again as the weight is winched off.
     const shut =
       t < LAND ? 0 : t < LAND + SQUEEZE ? easeOutCubic(over(t, LAND, LAND + SQUEEZE)) : 1 - easeInOutSine(over(t, RESET, RESET + 1.4))
     const gap = lerp(OPEN, SHUT, shut)
     p.push()
     p.translate(HINGE_X * k, HINGE_Y * k)
-    p.push()
-    p.stroke(s.color)
-    p.strokeWeight(weight)
-    p.noFill()
-    for (const f of [0.35, 0.6, 0.85]) {
-      const r = BOARD * f
-      const a0 = Math.PI - gap / 2
-      const a1 = Math.PI + gap / 2
-      const mid = Math.PI
-      const rr = f === 0.6 ? r * 0.82 : r
-      p.beginShape()
-      p.vertex(Math.cos(a0) * r * k, Math.sin(a0) * r * k)
-      p.vertex(Math.cos(mid) * rr * k, Math.sin(mid) * rr * k)
-      p.vertex(Math.cos(a1) * r * k, Math.sin(a1) * r * k)
-      p.endShape()
-    }
-    p.pop()
+    solid(p, ink, weight, s.color)
+    p.beginShape()
+    p.vertex(0, 0)
+    p.vertex(-Math.cos(gap / 2) * BOARD * k, -Math.sin(gap / 2) * BOARD * k)
+    p.vertex(-BOARD * 0.8 * k, 0)
+    p.vertex(-Math.cos(gap / 2) * BOARD * k, Math.sin(gap / 2) * BOARD * k)
+    p.endShape(p.CLOSE)
     for (const a of [Math.PI - gap / 2, Math.PI + gap / 2]) {
       p.push()
       p.rotate(a)
@@ -126,11 +117,9 @@ export const bellows = definePiece<{ color: string }>({
       p.rect((BOARD / 2) * k, 0, BOARD * k, 0.05 * k)
       p.pop()
     }
-    // The nozzle, level with the ball.
-    outline(p, ink, weight)
-    p.line(0, -0.05 * k, (0.12 - HINGE_X) * k * 0.6, -0.025 * k)
-    p.line(0, 0.05 * k, (0.12 - HINGE_X) * k * 0.6, 0.025 * k)
-    p.line((0.12 - HINGE_X) * k * 0.6, -0.035 * k, (0.12 - HINGE_X) * k * 0.6, 0.035 * k)
+    // The nozzle, level with the ball and short of its back.
+    solid(p, ink, weight, bg)
+    p.quad(0, -0.045 * k, NOZZLE * k, -0.022 * k, NOZZLE * k, 0.022 * k, 0, 0.045 * k)
     solid(p, ink, weight, s.color)
     p.circle(0, 0, 0.06 * k)
     p.pop()
@@ -158,24 +147,10 @@ export const bellows = definePiece<{ color: string }>({
     outline(p, ink, weight)
     p.arc(WEIGHT_X * k, (wy - WEIGHT_H / 2) * k, 0.05 * k, 0.05 * k, Math.PI, Math.PI * 2)
 
-    // The puff: three curls of air off the nozzle that race out, spread,
-    // slow, thin and fade well inside the cell, so nothing is cut off.
-    if (since > 0 && since < 0.9) {
-      const f = over(since, 0, 0.9)
-      const e = easeOutCubic(f)
-      const tint = p.color(s.color)
-      tint.setAlpha(255 * (1 - easeInQuad(f)))
-      p.push()
-      p.noFill()
-      p.stroke(tint)
-      p.strokeWeight(weight * (1.5 - 0.7 * e))
-      const x0 = 0.02 + e * 0.3
-      for (const dy of [-0.08, 0, 0.08]) {
-        const w = (0.2 + 0.12 * e) * k
-        const h = (0.12 + 0.06 * e) * k
-        p.arc((x0 + 0.1) * k, (dy * (1 + e * 1.8)) * k, w, h, Math.PI * 0.7, Math.PI * 1.3)
-      }
-      p.pop()
+    // The puff: a little cloud of dust blown out of the nozzle after the ball, swelling and gone.
+    if (since > 0 && since < 0.45) {
+      const f = since / 0.45
+      puff(p, k, ink, weight * 0.8, bg, HINGE_X + NOZZLE + 0.04 + 0.14 * f, -0.01 - 0.03 * f, 0.015 + 0.05 * Math.sin(Math.PI * f))
     }
   },
 })

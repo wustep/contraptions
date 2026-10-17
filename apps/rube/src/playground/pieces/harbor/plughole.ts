@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../src/core/draw'
 import { clamp, easeInOutSine, easeInQuad, lerp } from '../../../../../../src/core/ease'
-import { FLOOR, R, ROLL, definePiece, fly, gallows, mixHex, over, rail, ramp, roll, trace, type Lane, type Pt } from '../../../parts'
+import { FLOOR, R, ROLL, definePiece, fly, gallows, laneReach, mixHex, over, rail, ramp, roll, trace, type Lane, type Pt } from '../../../parts'
 import { bodyColor, piling, seaWater } from '../../../pieces/harbor/sea'
 
 /**
@@ -65,36 +65,32 @@ const levelAt = (t: number): number => BED - (BED - BRIM) * (1 - clamp((t - FIRE
 const T_STONE = FIRE + DRAIN * (1 - Math.sqrt((DRAFT + STONE) / (BED - BRIM)))
 const T_DOWN = T_STONE + TIP
 const T_OUT = T_DOWN + OUT
-/** Empty, it is hauled back up: the plug falls, slowly, with the tub on the other end of its chain. */
-const T_HAUL = T_OUT + 0.1
-const HAUL = 0.7
 
-/** The tub's east foot, which it goes over about; how far over it is; and the dip it takes as the ball lands in it. */
-function tubAt(t: number): { foot: Pt; lean: number } {
+interface Tub {
+  /** Its east foot, which it goes over about, and how far over it is. */
+  foot: Pt
+  lean: number
+}
+
+/** The tub with the ball in it: afloat, going down with the pool, and over on the stone, with the dip it takes as the ball lands in it. */
+function floatAt(t: number): Tub {
   const dip = t < FIRE ? 0 : 0.025 * Math.exp(-(t - FIRE) * 9) * Math.cos((t - FIRE) * 16)
-  if (t < T_HAUL) {
-    const y = Math.min(BED, levelAt(t) + DRAFT + dip)
-    return { foot: [TX + HALF, y], lean: (Math.PI / 2) * easeInQuad(over(t, T_STONE, T_DOWN)) }
-  }
-  // Hauled up by its bail: upright again as it leaves the bed, then up to where it floated, and a swing that dies away.
-  const f = easeInOutSine(over(t, T_HAUL, T_HAUL + HAUL))
-  const swing = 0.12 * Math.exp(-(t - T_HAUL) * 1.6) * Math.sin((t - T_HAUL) * 7)
-  return { foot: [TX + HALF + swing * 0.3, lerp(BED, BRIM + DRAFT, f)], lean: (Math.PI / 2) * (1 - over(t, T_HAUL, T_HAUL + 0.22)) + swing }
+  const y = Math.min(BED, levelAt(t) + DRAFT + dip)
+  return { foot: [TX + HALF, y], lean: (Math.PI / 2) * easeInQuad(over(t, T_STONE, T_DOWN)) }
 }
 /** A point in the tub's own frame, `u` across it from its middle and `v` up from its foot, in the piece's. */
-function tubPt(tub: { foot: Pt; lean: number }, u: number, v: number): Pt {
+function tubPt(tub: Tub, u: number, v: number): Pt {
   const x = u - HALF
   const y = -v
   return [tub.foot[0] + x * Math.cos(tub.lean) - y * Math.sin(tub.lean), tub.foot[1] + x * Math.sin(tub.lean) + y * Math.cos(tub.lean)]
 }
-/** How far the tub's bail has come down from where it floats: what the plug has gone up by. */
-const bailAt = (t: number): Pt => tubPt(tubAt(t), 0, TALL + 0.13)
-const BAIL0 = bailAt(-1)
-const paidAt = (t: number): number => Math.hypot(bailAt(t)[0] - TX, bailAt(t)[1] - SHEAVE) - (BAIL0[1] - SHEAVE)
+/** The bail the chain is made fast to. */
+const bailOf = (tub: Tub): Pt => tubPt(tub, 0, TALL + 0.13)
+const BAIL0 = bailOf(floatAt(-1))
 
 /** The ball in the tub: on its floor, against its east wall once it leans, and out along that wall when it lies on its side. */
 function inTub(t: number): Pt {
-  const tub = tubAt(t)
+  const tub = floatAt(t)
   const slide = over(t, T_STONE, T_STONE + TIP * 0.6)
   const out = easeInQuad(over(t, T_DOWN, T_OUT))
   return tubPt(tub, lerp(0, HALF - WALL - R, slide), WALL + R + out * (TALL + 0.04))
@@ -118,6 +114,24 @@ const LANE: Lane = {
   ],
   fire: FIRE,
 }
+
+/**
+ * Empty, the tub is lighter than the plug again, and once the ball has
+ * rolled out from under the plug it is hauled back up: the plug falls,
+ * slowly, with the tub on the other end of its chain.
+ */
+const T_HAUL = laneReach(LANE, PLUG_X + 0.09 + R)
+const HAUL = 0.7
+
+/** The tub at `t`: as it floated and sank with the ball, then hauled up by its bail, upright again as it leaves the bed, up to where it floated, and a swing that dies away. */
+function tubAt(t: number): Tub {
+  if (t < T_HAUL) return floatAt(t)
+  const f = easeInOutSine(over(t, T_HAUL, T_HAUL + HAUL))
+  const swing = 0.12 * Math.exp(-(t - T_HAUL) * 1.6) * Math.sin((t - T_HAUL) * 7)
+  return { foot: [TX + HALF + swing * 0.3, lerp(BED, BRIM + DRAFT, f)], lean: (Math.PI / 2) * (1 - over(t, T_HAUL, T_HAUL + 0.22)) + swing }
+}
+/** How far the tub's bail has come down from where it floats: what the plug has gone up by. */
+const paidAt = (t: number): number => Math.hypot(bailOf(tubAt(t))[0] - TX, bailOf(tubAt(t))[1] - SHEAVE) - (BAIL0[1] - SHEAVE)
 
 /** The tub, in its own frame: staves in the colour, open at the top. */
 function tubShape(p: p5, k: number): void {
@@ -182,12 +196,12 @@ export const plughole = definePiece<{ color: string; sea: string }>({
     p.line((PLUG_X + 0.07) * k, BED * k, FOOT_X * k, BED * k)
     p.line(FOOT_X * k, BED * k, EAST * k, FLOOR * k)
     p.line(FOOT_X * k, BED * k, 2.5 * k, BED * k)
-    // The stone the tub comes down on.
-    solid(p, ink, weight, bg)
+    // The stone the tub comes down on: solid, so it reads as a stone and not an arch in the bed.
+    solid(p, ink, weight, ink)
     p.arc((TX - 0.08) * k, BED * k, 0.16 * k, STONE * 2 * k, Math.PI, Math.PI * 2, p.CHORD)
 
     // The chain: up from the bail to its sheave, along under the beam, and down to the plug.
-    const bail = tubPt(tub, 0, TALL + 0.13)
+    const bail = bailOf(tub)
     const plugY = BED - up
     outline(p, ink, weight * 0.8)
     p.line(bail[0] * k, bail[1] * k, TX * k, SHEAVE * k)

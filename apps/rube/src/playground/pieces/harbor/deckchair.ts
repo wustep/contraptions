@@ -7,7 +7,7 @@ import { WATER, bodyColor, piling, seaWater, seabed, splash, water } from '../..
 /**
  * A deckchair. It stands in the shallows at the deck's end with its feet
  * on the sand and its back to the pier, the top bar of its back level with
- * the deck, so the striped canvas runs straight on from the planks and down
+ * the deck, so the canvas runs straight on from the planks and down
  * into its sag. The ball rolls off the deck onto the canvas and down into
  * the sag with a thump; the strut jumps its notch; and the chair does what
  * deckchairs do: the two frames snap shut like a jaw. The pocket of canvas
@@ -42,7 +42,6 @@ const SHUT = 1.49
 /** The canvas, top bar to front bar, and how thick it is drawn. */
 const CLOTH = 0.78
 const THICK = 0.07
-const BANDS = 7
 
 /** The chair's frame at angle `a`: the two tops, the pin and the two feet. */
 function frameAt(a: number): { back: Pt; front: Pt; pin: Pt; footE: Pt; footW: Pt } {
@@ -151,8 +150,11 @@ function batten(p: p5, k: number, ink: string, weight: number, a: Pt, b: Pt): vo
   p.line(a[0] * k, a[1] * k, b[0] * k, b[1] * k)
 }
 
-/** The canvas along `pts`: a band of cloth in stripes, colour and paper by turns, one ink line round it. */
-function canvas(p: p5, k: number, ink: string, weight: number, color: string, bg: string, pts: Pt[]): void {
+/**
+ * The canvas along `pts`: a band of cloth in the colour, one ink line round it. Seen side on, a deckchair's stripes
+ * run away from the eye along the cloth; drawn across it they were a row of dashes at the show's size.
+ */
+function canvas(p: p5, k: number, ink: string, weight: number, color: string, pts: Pt[]): void {
   const n = pts.length - 1
   const normal = (i: number): Pt => {
     const a = pts[Math.max(0, i - 1)]
@@ -160,19 +162,11 @@ function canvas(p: p5, k: number, ink: string, weight: number, color: string, bg
     const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1
     return [(-(b[1] - a[1]) / len) * (THICK / 2), ((b[0] - a[0]) / len) * (THICK / 2)]
   }
-  const strip = (i0: number, i1: number) => {
-    p.beginShape()
-    for (let i = i0; i <= i1; i++) p.vertex((pts[i][0] + normal(i)[0]) * k, (pts[i][1] + normal(i)[1]) * k)
-    for (let i = i1; i >= i0; i--) p.vertex((pts[i][0] - normal(i)[0]) * k, (pts[i][1] - normal(i)[1]) * k)
-    p.endShape(p.CLOSE)
-  }
-  p.noStroke()
-  for (let b = 0; b < BANDS; b++) {
-    p.fill(b % 2 ? bg : color)
-    strip(Math.round((b * n) / BANDS), Math.round(((b + 1) * n) / BANDS))
-  }
-  outline(p, ink, weight * 0.7)
-  strip(0, n)
+  solid(p, ink, weight * 0.7, color)
+  p.beginShape()
+  for (let i = 0; i <= n; i++) p.vertex((pts[i][0] + normal(i)[0]) * k, (pts[i][1] + normal(i)[1]) * k)
+  for (let i = n; i >= 0; i--) p.vertex((pts[i][0] - normal(i)[0]) * k, (pts[i][1] - normal(i)[1]) * k)
+  p.endShape(p.CLOSE)
 }
 
 export const deckchair = definePiece<DeckchairState>({
@@ -219,7 +213,7 @@ export const deckchair = definePiece<DeckchairState>({
       outline(p, ink, weight)
       p.line(hinge[0] * k, hinge[1] * k, lerp(notch[0], hang[0], out) * k, lerp(notch[1], hang[1], out) * k)
     }
-    canvas(p, k, ink, weight, s.color, bg, clothBetween(f.back, f.front))
+    canvas(p, k, ink, weight, s.color, clothBetween(f.back, f.front))
     // The two bars the canvas is slung from, end on.
     solid(p, ink, weight, bg)
     p.circle(f.back[0] * k, f.back[1] * k, 0.055 * k)

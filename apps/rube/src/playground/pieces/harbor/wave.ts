@@ -1,5 +1,5 @@
-import { outline, solid } from '../../../../../../src/core/draw'
-import { FLOOR, R, ROLL, definePiece, over, rail, roll, type Lane, type Pt, type Seg } from '../../../parts'
+import { outline } from '../../../../../../src/core/draw'
+import { FLOOR, R, ROLL, definePiece, rail, roll, type Lane, type Pt, type Seg } from '../../../parts'
 import { WATER, piling, seaColor, water } from '../../../pieces/harbor/sea'
 
 /**
@@ -8,8 +8,7 @@ import { WATER, piling, seaColor, water } from '../../../pieces/harbor/sea'
  * pier's end, a crest curling over at the top, and a face running down a
  * floor to the deck below. The ball rolls off the pier into the hollow
  * under the curl and rides the face down, fast in the steep middle, easing
- * off at the bottom, with spray coming off behind it. No mechanism; the
- * sea is the machine here.
+ * off at the bottom. No mechanism; the sea is the machine here.
  *
  * It is one shape, and the sea's: it stands on the harbor's own waterline,
  * which it leaves at one edge of its cells and comes back to at the other,
@@ -19,10 +18,8 @@ import { WATER, piling, seaColor, water } from '../../../pieces/harbor/sea'
  * The wave is never still. The face the ball rides is fixed — the lane is
  * drawn from it — but the rest moves on the piece's own clock, as one
  * circulation: a swell runs up the back into the crest, the crest heaves
- * with it, the lip reaches forward and draws back a little behind that,
- * and the foam along the crest — scallops of paper standing proud of the
- * edge — travels over the top and down the lip to its tip. Streaks of
- * water climb the face into the curl, against the ball.
+ * with it, and the lip reaches forward and draws back a little behind
+ * that. Nothing is drawn on the water: the moving silhouette is enough.
  */
 const LIP = -0.22
 /** How far down the face the underside of the curl comes in to meet it. */
@@ -76,10 +73,9 @@ const sample = (a: Pt, b: Pt, c: Pt, d: Pt, n: number, from = 1): Pt[] => {
  * The wave's outline at a moment, clockwise from where it leaves the sea:
  * up the back, over the crest, down the lip to its tip, back along the
  * underside of the curl to the pier's end, down the face, and under the
- * lower deck to the sea again. `crest` is the run of it the foam rides,
- * from the shoulder of the back to the tip.
+ * lower deck to the sea again.
  */
-function shapeAt(t: number): { pts: Pt[]; crest: Pt[] } {
+function shapeAt(t: number): Pt[] {
   const ph = t * 3.6
   const heave = Math.sin(ph)
   const lick = Math.sin(ph - 1.0)
@@ -113,25 +109,10 @@ function shapeAt(t: number): { pts: Pt[]; crest: Pt[] } {
   }
   // Off the face and under the lower deck, down to the sea at the cell's edge.
   const foot = sample([FOOT, END[1] + R], [FOOT + 0.14, END[1] + R], [1.5 - 0.16, SEA], [1.5, SEA], 8)
-  return { pts: [...back, ...shoulder, ...lip, ...curl, ...under, ...face, ...foot], crest: [...shoulder.slice(3), ...lip, ...curl] }
+  return [...back, ...shoulder, ...lip, ...curl, ...under, ...face, ...foot]
 }
 
-/** Distances along a sampled path, for spacing things evenly by length. */
-function lengths(pts: Pt[]): number[] {
-  const along = [0]
-  for (let i = 1; i < pts.length; i++) along.push(along[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]))
-  return along
-}
-/** The point `f` of the way along a sampled path. */
-function alongPath(pts: Pt[], along: number[], f: number): Pt {
-  const want = f * along[along.length - 1]
-  let i = 1
-  while (i < pts.length - 1 && along[i] < want) i++
-  const g = over(want, along[i - 1], along[i])
-  return [pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * g, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * g]
-}
-
-export const wave = definePiece<{ color: string; at: number[] }>({
+export const wave = definePiece<{ color: string }>({
   name: 'wave',
   weight: 1,
   flight: true,
@@ -148,30 +129,15 @@ export const wave = definePiece<{ color: string; at: number[] }>({
       segs: [roll([-0.5, 0], [LIP, 0], ROLL), ...segs, roll([FOOT, END[1]], END, ROLL)],
       fire: (0.5 + LIP) / ROLL + at[N >> 1],
     }
-    return { cells, exit: { at: [2, 1], dir: 1 }, lane, state: { color: seaColor(theme, color, ball.color), at } }
+    return { cells, exit: { at: [2, 1], dir: 1 }, lane, state: { color: seaColor(theme, color, ball.color) } }
   },
-  draw: (p, s, { k, t, since, ink, bg, weight }) => {
-    const { pts, crest } = shapeAt(t)
+  draw: (p, s, { k, t, ink, bg, weight }) => {
+    const pts = shapeAt(t)
 
     // The pilings first: they go down through the wave to the bed, and are
     // seen where they come out of it, below the waterline.
     piling(p, k, ink, weight, LIP - 0.06, FLOOR, 1.5)
     piling(p, k, ink, weight, 1.42, 1 + FLOOR, 1.5)
-
-    // Foam, first and under the water: scallops of paper along the crest,
-    // so only what stands proud of the edge is seen and the silhouette
-    // itself froths. They travel over the top and down the lip, swelling
-    // out of the back's shoulder and running out to nothing at the tip.
-    const along = lengths(crest)
-    const n = 7
-    solid(p, ink, weight, bg)
-    for (let i = 0; i < n; i++) {
-      const f = (((t * 0.3 + i / n) % 1) + 1) % 1
-      const r = 0.058 * Math.min(1, f / 0.2, (1 - f) / 0.25)
-      if (r < 0.012) continue
-      const [x, y] = alongPath(crest, along, f)
-      p.circle(x * k, y * k, r * 2 * k)
-    }
 
     // The water: one shape on the sea's own line, one ink line round it.
     p.push()
@@ -185,26 +151,6 @@ export const wave = definePiece<{ color: string; at: number[] }>({
       p.vertex(x * k, seaAt(x) * k)
     }
     p.endShape(p.CLOSE)
-    p.pop()
-
-    // Streaks of water climbing the face into the curl: three, at three
-    // depths under the surface, in the paper's colour on the body.
-    p.push()
-    p.stroke(bg)
-    p.strokeWeight(weight * 0.9)
-    p.noFill()
-    for (let j = 0; j < 3; j++) {
-      const g = 0.08 + 0.84 * (1 - ((((t * 0.4 + j / 3) % 1) + 1) % 1))
-      const depth = 0.1 + 0.07 * j
-      const half = 0.045 * Math.min(1, (g - 0.08) / 0.1, (0.92 - g) / 0.1)
-      if (half <= 0.004) continue
-      p.beginShape()
-      for (let i = 0; i <= 4; i++) {
-        const [x, y] = facePt(g - half + (2 * half * i) / 4)
-        p.vertex(x * k, (y + R + depth) * k)
-      }
-      p.endShape()
-    }
     p.pop()
 
     outline(p, ink, weight)
@@ -226,39 +172,5 @@ export const wave = definePiece<{ color: string; at: number[] }>({
     p.endShape()
     rail(p, k, ink, weight, FOOT - 0.02, 1.5, 1 + FLOOR)
 
-    // Spray: drops of water thrown off behind the ball while it is on the face, in the water's colour.
-    const t0 = (0.5 + LIP) / ROLL
-    const into = t - t0
-    if (into > 0 && into < s.at[N] + 0.3) {
-      p.push()
-      p.noStroke()
-      p.fill(s.color)
-      for (let j = 1; j <= 5; j++) {
-        const back = into - j * 0.05
-        if (back < 0 || back > s.at[N]) continue
-        let i = 0
-        while (i < N && s.at[i + 1] < back) i++
-        const f = (i + (back - s.at[i]) / (s.at[i + 1] - s.at[i])) / N
-        const [x, y] = facePt(f)
-        // Each drop on its own little arc, scattered a touch so they do not line up, and small at either end of the ride.
-        const rise = 0.06 * j * (1 - j / 7) + 0.025 * Math.sin(j * 2.4)
-        const d = (0.05 - j * 0.007) * Math.min(1, back / 0.08, (s.at[N] - back) / 0.12)
-        p.circle((x - 0.04 * j - 0.015 * ((j * 3) % 2)) * k, (y - R - rise) * k, d * k)
-      }
-      p.pop()
-    }
-    // The splash where the face runs out onto the deck.
-    const land = s.at[N] - s.at[N >> 1] - 0.1
-    if (since > land && since < land + 0.3) {
-      const f = over(since, land, land + 0.3)
-      p.push()
-      p.stroke(s.color)
-      p.strokeWeight(weight)
-      for (const a of [-2.4, -1.9, -1.3]) {
-        const r0 = 0.16 + 0.14 * f
-        p.line((FOOT - 0.1 + Math.cos(a) * r0) * k, (1 + Math.sin(a) * r0) * k, (FOOT - 0.1 + Math.cos(a) * (r0 + 0.06)) * k, (1 + Math.sin(a) * (r0 + 0.06)) * k)
-      }
-      p.pop()
-    }
   },
 })

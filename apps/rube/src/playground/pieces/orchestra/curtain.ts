@@ -44,6 +44,8 @@ const TIP = 0.075
 /** The sandbag's line, and the bag's height on its hook. */
 const BAG_X = -0.27
 const BAG_Y = -1.0
+/** The hook's pivot: its nose reaches under the bag's middle, its tail back over the rod, and the bag sits on it. */
+const HOOK: Pt = [PLATE[0] + 0.06, BAG_Y + 0.09 + 0.0225]
 /** The ball's run up to pace once it goes. */
 const RUN = 0.45
 
@@ -187,12 +189,13 @@ export const curtain = definePiece<{ color: string }>({
     const lift = on * Math.sin(TIP) * (PIVOT - PLATE[0])
     const thrown = since < 0 ? over(t, T_STOP, T_FIRE) : 1 - over(since, T_EXIT - T_FIRE + RESET + FALL - 0.1, T_EXIT - T_FIRE + RESET + FALL + 0.2)
     outline(p, ink, weight * 0.8)
-    p.line((PLATE[0] + 0.02) * k, (FLOOR - lift) * k, (PLATE[0] + 0.02) * k, (BAG_Y + 0.13 - lift) * k)
+    p.line((PLATE[0] + 0.02) * k, (FLOOR - lift) * k, (PLATE[0] + 0.02) * k, (HOOK[1] + 0.0225 - lift) * k)
+    // Thrown, it turns a quarter: the tail up, the nose down out of the bag's way.
     p.push()
-    p.translate((PLATE[0] + 0.05) * k, (BAG_Y + 0.13) * k)
-    p.rotate(0.9 * thrown)
+    p.translate(HOOK[0] * k, HOOK[1] * k)
+    p.rotate((Math.PI / 2) * thrown)
     solid(p, ink, weight, gold)
-    p.rect(0.045 * k, 0, 0.17 * k, 0.045 * k, 0.015 * k)
+    p.rect(0.045 * k, 0, 0.21 * k, 0.045 * k, 0.015 * k)
     p.pop()
 
     // The footlight plate, rocking on its post, and the shell footlight at the post's foot, which comes on.

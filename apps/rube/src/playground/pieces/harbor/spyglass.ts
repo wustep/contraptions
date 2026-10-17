@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../src/core/draw'
-import { R, ROLL, definePiece, laneAt, over, post, rail, ramp, roll, trace, type Lane, type Pt } from '../../../parts'
+import { R, ROLL, definePiece, laneAt, post, rail, ramp, roll, trace, type Lane, type Pt } from '../../../parts'
 import { bodyColor, piling, water } from '../../../pieces/harbor/sea'
 
 /**
@@ -95,20 +95,6 @@ function eyepiece(p: p5, k: number, ink: string, u: number): void {
   p.ellipse(u * k, 0, 0.045 * k, (RAD[2] + 0.02) * 2 * k)
 }
 
-/** A clack where one tube fetches up on the next: three short lines off the top of the collar. */
-function clack(p: p5, k: number, ink: string, weight: number, x: number, y: number, f: number): void {
-  if (f <= 0 || f >= 1) return
-  p.push()
-  p.stroke(ink)
-  p.strokeWeight(weight * (1 - f))
-  for (const a of [-2.2, -1.57, -0.94]) {
-    const r0 = 0.04 + 0.05 * f
-    const r1 = 0.08 + 0.09 * f
-    p.line((x + Math.cos(a) * r0) * k, (y + Math.sin(a) * r0) * k, (x + Math.cos(a) * r1) * k, (y + Math.sin(a) * r1) * k)
-  }
-  p.pop()
-}
-
 export const spyglass = definePiece<{ color: string }>({
   name: 'spyglass',
   weight: 0.9,
@@ -154,22 +140,14 @@ export const spyglass = definePiece<{ color: string }>({
       p.rect(((x0 + x1) / 2) * k, 0, (x1 - x0) * k, RAD[i] * 2 * k)
       p.rect((x1 - 0.0325) * k, 0, 0.065 * k, (RAD[i] + 0.02) * 2 * k, 0.012 * k)
     }
-    // The big end's bell, and the dark of its mouth; one line of light along the barrel.
+    // The big end's bell, and the dark of its mouth.
     solid(p, ink, weight, s.color)
     p.rect((MOUTH + 0.05) * k, 0, 0.1 * k, (RAD[0] + 0.03) * 2 * k, 0.012 * k)
     p.fill(ink)
     p.ellipse(MOUTH * k, 0, 0.04 * k, (RAD[0] + 0.03) * 2 * k)
-    p.push()
-    p.stroke(bg)
-    p.strokeWeight(weight * 1.2)
-    p.line((MOUTH + 0.17) * k, -(RAD[0] - 0.06) * k, (MOUTH + BIG - 0.12) * k, -(RAD[0] - 0.06) * k)
-    p.pop()
     // The eyepiece's open end, unless the ball is corking it.
     const at = laneAt(LANE, t)
     if (at.hidden || Math.abs(at.x - onGlass(ends[2], t)[0]) > R + 0.03) eyepiece(p, k, ink, ends[2])
-    // The clacks: the small tube on the middle one's collar, and the middle one on the big one's.
-    clack(p, k, ink, weight, ends[1], -RAD[1] - 0.02, over(t, T_A, T_A + 0.16))
-    clack(p, k, ink, weight, ends[0], -RAD[0] - 0.02, over(t, T_B, T_B + 0.16))
     p.pop()
 
     // The yoke's arm: the stand's post carried on up the near side of the barrel to the pin.

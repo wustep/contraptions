@@ -15,7 +15,9 @@ import { snow, snowAt } from './snow'
  * the strap's line and falls back through it, one damped swing from the
  * moment the ball touches the lowest, and the strap is drawn through the
  * bells, so it ripples because they do. The lowest bell is never inside the
- * ball: while the ball is under it, it rides up over the ball's crown.
+ * ball: while the ball is under it, it rides up over the ball's crown, and
+ * the strap lifts the bells either side of it part of the way with it, so
+ * the row stays a row.
  */
 /** The poles, the height of their tops, and the lowest bell at rest. */
 const POLE = 0.45
@@ -24,11 +26,13 @@ const TIE = TOP + 0.03
 const LOW = -0.165
 /** The bells: how far apart along the track, and how big. */
 const STEP = 0.16
-const BELL = 0.07
+const BELL = 0.062
 /** Where the ball first touches the lowest bell, and how much the brush checks it. */
 const X_TOUCH = -Math.sqrt((R + BELL) ** 2 - LOW ** 2)
 const CHECK = 2.25
 const T_TOUCH = (X_TOUCH + 0.5) / ROLL
+/** How much of the lowest bell's lift the strap hands to the next bell along. */
+const SHARE = 0.5
 /** The wave: how long it takes to reach the next bell, how much of it arrives, how fast it swings and dies. */
 const HOP = 0.06
 const PASS = 0.62
@@ -60,6 +64,9 @@ function bellAt(i: number, since: number, ballX: number): { at: Pt; turn: number
     y -= a / len
     turn = 7 * a * (i % 2 === 0 ? 1 : -1)
   }
+  // The lowest bell lifted by the ball's crown lifts its neighbours along the strap.
+  const under = Math.abs(ballX) < R + BELL ? Math.max(0, LOW + Math.sqrt((R + BELL) ** 2 - ballX * ballX)) : 0
+  y -= under * SHARE ** Math.abs(i)
   // Never inside the ball: while the ball is under it, it rides up over the ball's crown.
   const dx = x - ballX
   if (Math.abs(dx) < R + BELL) y = Math.min(y, -Math.sqrt((R + BELL) ** 2 - dx * dx))

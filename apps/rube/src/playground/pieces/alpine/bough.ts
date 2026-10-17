@@ -2,14 +2,14 @@ import type p5 from 'p5'
 import { solid } from '../../../../../../src/core/draw'
 import { R, ROLL, definePiece, laneAt, over, rail, ramp, roll, wait, type Lane, type Pt } from '../../../parts'
 import { firGreen, sprung } from './parts-c'
-import { powder, snow, snowAt, snowWhite } from './snow'
+import { snow, snowAt, snowWhite } from './snow'
 
 /**
  * A fir by the track with one long low bough bent down across the rail
  * under a load of snow, its tip on the line. The ball rolls into the bough
  * and is stopped by it, shoving it up a little; the shove is enough: the
  * load starts to slide, slowly, then quicker, off the bough's tip, and
- * whumps into the snow ahead in a burst of powder. Rid of it, the bough
+ * whumps into the snow ahead, slumping into a heap. Rid of it, the bough
  * whips up out of the ball's way, and the ball rolls on under it while it
  * nods itself still. The heap stays where it fell and the bough stays up.
  *
@@ -65,13 +65,15 @@ const dir: Pt = [Math.cos(A_SHOVED), Math.sin(A_SHOVED)]
 const OFF: Pt = [PIVOT[0] + S1 * dir[0] + RIDE * dir[1], PIVOT[1] + S1 * dir[1] - RIDE * dir[0]]
 const PACE = (2 * (S1 - S0)) / SLIDE
 const fallAt = (u: number): Pt => [OFF[0] + PACE * dir[0] * u, OFF[1] + PACE * dir[1] * u + 0.5 * G * u * u]
+/** The heap it slumps into, as wide as the load came down, and low; kept inside the cell. */
+const HEAP_W = 0.3
 /** When it lands, and where. */
 const FALL = (() => {
   let u = 0
   while (fallAt(u)[1] < snowAt(fallAt(u)[0]) - 0.04 && u < 1) u += 1 / 480
   return u
 })()
-const HEAP = fallAt(FALL)[0]
+const HEAP = Math.min(fallAt(FALL)[0], 0.5 - HEAP_W / 2 - 0.02)
 
 /** The load: a long fat lump of snow, soft on top and flat where it lay on the bough. */
 function load(p: p5, k: number, ink: string, weight: number, white: string): void {
@@ -124,13 +126,12 @@ export const bough = definePiece<{ green: string; white: string }>({
     }
     p.endShape(p.CLOSE)
 
-    // The load where it fell: a heap in the snow, and powder off the whump.
+    // The load where it fell: it slumps from the lump it was into a low heap in the snow.
     const u = since - SLIDE
     if (u >= FALL) {
-      const land = over(u, FALL, FALL + 0.12)
+      const land = over(u, FALL, FALL + 0.14)
       solid(p, ink, weight, s.white)
-      p.arc(HEAP * k, (snowAt(HEAP) + 0.01) * k, (0.2 + 0.04 * land) * k, (0.22 - 0.06 * land) * k, Math.PI, Math.PI * 2, p.OPEN)
-      powder(p, k, ink, weight, s.white, HEAP, snowAt(HEAP) - 0.02, over(u, FALL, FALL + 0.4), 0.9)
+      p.arc(HEAP * k, (snowAt(HEAP) + 0.01) * k, (HEAP_W - 0.08 * (1 - land)) * k, (0.15 + 0.1 * (1 - land)) * k, Math.PI, Math.PI * 2, p.OPEN)
     }
   },
   // The bough lies over the ball's shoulder while it holds it, so it and its load are drawn in front of the ball.

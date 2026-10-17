@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../../src/core/draw'
 import { clamp, easeOutQuad } from '../../../../../../src/core/ease'
-import { FLOOR, R, ROLL, definePiece, fly, over, post, rail, ramp, roll, trace, wait, type Lane, type Pt } from '../../../parts'
+import { FLOOR, R, ROLL, definePiece, fly, post, rail, ramp, roll, trace, wait, type Lane, type Pt } from '../../../parts'
 import { feltColor, ivory } from './hall'
 
 /**
@@ -141,14 +141,17 @@ export const score = definePiece<{ color: string }>({
       for (const f of [0.36, 0.68]) p.line((SX + side * 0.05) * k, (TOP + 0.045 + (PAGES - 0.045) * f) * k, (SX + side * (HALF + 0.035 * f)) * k, (top + (TOP + PAGES - top) * f) * k)
     }
 
-    // The catch on the desk's edge that holds the sprung leaf down, knocked open by the thud.
-    const open = over(since, 0, 0.08)
+    // The catch on the desk's edge: a hook over the sprung leaf's corner, which the thud flicks up out of the leaf's
+    // way. It stands up after, a stub on its post.
+    const arm = PAGES + BOARD + 0.045
+    const flip = since <= 0 ? 0 : (Math.PI / 2) * (1 - Math.exp(-since * 18) * Math.cos(since * 30))
     p.push()
     p.translate((SX + HALF + 0.11) * k, (desk + 0.02) * k)
-    p.rotate(open * 0.9)
     outline(p, ink, weight)
-    p.line(0, 0, 0, -(PAGES + BOARD + 0.045) * k)
-    p.line(0, -(PAGES + BOARD + 0.045) * k, -0.13 * k, -(PAGES + BOARD + 0.045) * k)
+    p.line(0, 0, 0, -arm * k)
+    p.translate(0, -arm * k)
+    p.rotate(flip)
+    p.line(0, 0, -0.13 * k, 0)
     p.pop()
 
     // The leaf: paper seen edge on, bowed by its own haste.

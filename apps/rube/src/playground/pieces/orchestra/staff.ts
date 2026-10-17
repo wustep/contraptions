@@ -152,10 +152,10 @@ export const staff = definePiece<StaffState>({
     const mirrored = c.spin(1) < c.spin(0)
     clef(p, k, ink, weight, s.turn > 0 ? -0.2 : 1.22, lineY(3), S * 0.92, mirrored ? -1 : 1)
 
-    // The top line: the rail in to the lip, and on again past where the ball comes down through it.
+    // The top line: the rail in to the lip, and on again past where the ball comes down through it, either way.
     outline(p, ink, weight)
     p.line(-0.5 * k, lineY(0) * k, lip * k, lineY(0) * k)
-    if (s.turn > 0) p.line((lip + 0.62) * k, lineY(0) * k, XE * k, lineY(0) * k)
+    p.line((lip + 0.62) * k, lineY(0) * k, XE * k, lineY(0) * k)
     // The bottom line: the rail out, to whichever edge it leaves by.
     p.line((s.turn > 0 ? XW : -0.5) * k, lineY(4) * k, (s.turn > 0 ? 1.5 : XE) * k, lineY(4) * k)
 

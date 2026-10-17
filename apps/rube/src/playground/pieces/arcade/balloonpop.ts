@@ -1,6 +1,5 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../src/core/draw'
-import { easeOutCubic } from '../../../../../../src/core/ease'
 import { R, ROLL, definePiece, laneAt, laneReach, post, rail, ramp, roll, type Lane, type Pt } from '../../../parts'
 import { flash, score } from '../../../pieces/arcade/neon'
 
@@ -10,7 +9,7 @@ import { flash, score } from '../../../pieces/arcade/neon'
  * carriage on it: a needle standing up from its back, a finger hanging down
  * from its belly into the ball's way. The ball rolls into the finger and
  * shoves the carriage along the bar ahead of it, slowed by the load, and the
- * needle goes along under the balloons: pop, pop, pop, each a burst in the
+ * needle goes along under the balloons: pop, pop, pop, each a flash in the
  * balloon's own colour and a rag of rubber left hanging on its pin. The
  * carriage fetches up against the bar's end; with nothing left to give, the
  * finger rides up over the ball's front, slips off its back, and swings
@@ -105,21 +104,9 @@ function rag(p: p5, k: number, ink: string, weight: number, color: string, x: nu
   p.endShape(p.CLOSE)
 }
 
-/** The burst: the body's outline flung outward as four scraps in its colour, thinning, gone in a fifth of a second. */
+/** The pop: the arcade's hit mark off the body's edge, in its colour, gone in a fifth of a second. */
 function burst(p: p5, k: number, weight: number, color: string, x: number, s: number): void {
-  const dur = 0.2
-  if (s < 0 || s > dur) return
-  const f = s / dur
-  flash(p, k, color, weight, x, BODY_Y, s, dur, BODY_R * 0.9, BODY_R * 1.9)
-  const c = p.color(color)
-  c.setAlpha(255 * (1 - f))
-  p.push()
-  p.noFill()
-  p.stroke(c)
-  p.strokeWeight(weight * 1.6 * (1 - f * 0.5))
-  const r = BODY_R * (1 + 1.3 * easeOutCubic(f))
-  for (const a of [-2.5, -0.7, 0.5, 2.2]) p.arc(x * k, BODY_Y * k, r * 2 * k, r * 2 * k, a, a + 0.5 * (1 - f))
-  p.pop()
+  flash(p, k, color, weight, x, BODY_Y, s, 0.2, BODY_R * 0.9, BODY_R * 1.9)
 }
 
 export interface BalloonpopState {

@@ -58,4 +58,4 @@ const orchestra: World = {
   pieces: [stageRail, ...beats.map(([piece]) => piece), portal],
 }
 
-export const shelf: Shelf = newWorld(orchestra, { rail: 'the front edge of a stage: a board on turned balusters, a shell footlight, a folded stand', ...Object.fromEntries(beats.map(([piece, note]) => [piece.name, note])) })
+export const shelf: Shelf = newWorld(orchestra, { rail: 'the front edge of a stage: a board on turned balusters, a footlight\u2019s hood, a folded stand', ...Object.fromEntries(beats.map(([piece, note]) => [piece.name, note])) })

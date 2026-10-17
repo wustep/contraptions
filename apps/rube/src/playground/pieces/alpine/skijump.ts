@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../../src/core/draw'
 import { FLOOR, R, ROLL, definePiece, fly, rail, ramp, trace, type Lane, type Pt } from '../../../parts'
 import { body, ride, rounded, trackOf } from './parts-b'
-import { gearColor, powder, snow, snowWhite } from './snow'
+import { gearColor, powder, snow, snowAt, snowWhite } from './snow'
 
 /**
  * A ski jump. The rail runs onto the head of an in-run on a trestle: over
@@ -89,18 +89,15 @@ export const skijump = definePiece<{ color: string; white: string }>({
     return { cells, exit: { at: [3, 1], dir: 1 }, lane: LANE, state: { color: gearColor(theme, color, ball.color), white: snowWhite(theme) } }
   },
   draw: (p, s, { k, ink, weight }) => {
-    // The trestle: two legs to the ground behind the hill's head, and a brace between them.
+    // The trestle: two legs stood in the snow behind the hill's head, and a brace between them.
     const under = (x: number): Pt => INRUN.at(INRUN.reach(x), -DECK).at
     outline(p, ink, weight)
-    for (const x of [-0.24, 0.12]) {
-      p.line(x * k, under(x)[1] * k, x * k, 1.5 * k)
-      p.line((x - 0.06) * k, 1.5 * k, (x + 0.06) * k, 1.5 * k)
-    }
+    for (const x of [-0.24, 0.12]) p.line(x * k, under(x)[1] * k, x * k, (snowAt(x, 1.36) + 0.03) * k)
     p.line(-0.24 * k, 0.62 * k, 0.12 * k, 1.2 * k)
 
     // The hill, and the rail out of the out-run.
     snow(p, k, ink, weight, -0.5, 0.16, 1.36)
-    body(p, k, ink, weight, s.white, HILL, 1.5, 1.9)
+    body(p, k, ink, weight, s.white, HILL, HILL[0][1])
     rail(p, k, ink, weight, RAIL_X - 0.02, 2.5, FLAT)
 
     // The in-run: the rail onto its head, and its deck from the brink to the lip.

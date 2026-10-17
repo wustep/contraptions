@@ -162,11 +162,12 @@ export const musicbox = definePiece<{ color: string; brass: string }>({
     p.push()
     p.translate(1.12 * k, 0.35 * k)
     p.rotate(phi * 5)
-    solid(p, ink, weight * 0.8, gold)
-    p.ellipse(-0.05 * k, 0, 0.09 * k, 0.07 * k)
-    p.ellipse(0.05 * k, 0, 0.09 * k, 0.07 * k)
-    p.fill(ink)
+    // Its two wings outlined and then filled over, so they are one piece of brass.
+    solid(p, ink, weight, gold)
+    for (const side of [-1, 1]) p.ellipse(side * 0.06 * k, 0, 0.12 * k, 0.085 * k)
     p.noStroke()
+    for (const side of [-1, 1]) p.ellipse(side * 0.06 * k, 0, 0.12 * k - weight, 0.085 * k - weight)
+    p.fill(ink)
     p.circle(0, 0, 0.035 * k)
     p.pop()
   },
