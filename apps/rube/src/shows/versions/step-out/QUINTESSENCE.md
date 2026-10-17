@@ -107,7 +107,7 @@ Times are show seconds. `n.p` is bar n, beat p.
 
 | Time | Music | What happens |
 | ---: | --- | --- |
-| 37.054 | 17.1 | The ship's picture dissolves into a bar on the harbour at Nuuk. The door settles and the bell over it rings. Its lamps swing on their cords, their light lying on the boards and the counter. Through the doors and the window the harbour moves on its own planes: the town's coloured houses under Sermitsiaq with low cloud across it, a trawler tied up at the quay, a boat going out with its wake, five moored boats riding the swell, gulls, sleet. |
+| 37.054 | 17.1 | The ship's picture dissolves into a bar on the harbour at Nuuk. The door settles and the bell over it rings. Its lamps swing on their cords, their light lying on the boards and the counter. Through the doors and the window the harbour moves on its own planes: the town's coloured houses under Sermitsiaq with three bands of low cloud across it, a trawler tied up at the quay, a boat going out with its wake, two moored boats, two gulls, and sleet falling outside. |
 | 38.743 to 42.923 | 18.1 to 20.3 | The helicopter pilot, hunched drunk at the bar, sets his glass down hard. His thumb comes up into the lamp's light and its brass ring goes gold: the thumb from the negative. It taps the counter while Walter edges toward the door and back. He hesitates. |
 | 43.747 | 21.1, the hinge | Cheryl drops out of the dark onto the little stage as its spotlight comes on, its light on the boards, and she has a guitar. She is imagined. She sways on the beats. |
 | 46.238 to 47.056 | 22.3 to 23.1 | She rolls off the stage and out of the back door, and the spotlight goes off. He goes after her. |
@@ -117,8 +117,8 @@ Times are show seconds. `n.p` is bar n, beat p.
 
 | Time | Music | What happens |
 | ---: | --- | --- |
-| 50.411 | 25.1 | The bar's doors open on the daylight, pale at first, and the helipad is beyond them. The postal helicopter (white, a grey belly, one dark stripe) has its rotor turning once a beat. Its strobe lamp blinks on every downbeat. Gulls on the quay's end go up one after another in the rotor's wash. |
-| 51.665 to 53.732 | 25.4 to 27.1 | He leaps in through the open side door beside the parcel, and the skids leave the pad. The overcast lies in long rolls going away to the horizon, and a cold silver sun shows through a break in them. |
+| 50.411 | 25.1 | The bar dissolves into the daylight on the helipad. The postal helicopter (white, a grey belly, one dark stripe) has its rotor turning once a beat. Its strobe lamp blinks on every downbeat. Gulls on the quay's end go up one after another in the rotor's wash. |
+| 51.665 to 53.732 | 25.4 to 27.1 | He leaps in through the open side door beside the parcel, and the skids leave the pad. The overcast lies in three long flat layers going away to the horizon, and a cold silver sun shows in a broad break in them. |
 | 55.41 to 63.740 | 28 to 33 | Out over the grey-green sea and the floes. The air drops from under the cabin twice (29.1, 31.1), and he floats up and lands. On 33.1 the one wide: the helicopter small in a big sky, coming down toward a trawler among the ice. |
 | 65.417 to 68.749 | 34.1 to 36.1 | The pilot looks back at him. Walter steps down onto the skid with the parcel. The pilot shakes his head: he will not land. |
 | 69.574 | 36.3 | He pushes off. |
@@ -139,13 +139,13 @@ Times are show seconds. `n.p` is bar n, beat p.
 
 | Time | Music | What happens |
 | ---: | --- | --- |
-| 95.226 to 100.189 | 52.1 to 55.1 | The cake's wrapper folds over into the top of a ridge road in East Iceland, under a low gold sun: cumulus lit from below and built up into towers, cirrus high over it, a glacier coming down to the fjord, sheep on the moss. He hops onto a bicycle and rolls off. The reflectors on the posts light as he passes. A flock wheels over and, for about a second, pulls into one round shape before it breaks up. |
+| 95.226 to 100.189 | 52.1 to 55.1 | The deck dissolves into the top of a ridge road in East Iceland, under a low gold sun: a few great heaps of cumulus lit gold from below, a few strokes of cirrus high over them, a glacier coming down to the fjord, sheep on the moss. He hops onto a bicycle and rolls off. The reflectors on the posts light as he passes. A flock wheels over and, for about a second, pulls into one round shape before it breaks up. |
 | 101.826 | 56.1 | The bike hits a road sign and goes down. He tumbles past it. |
 | 102.691 to 105.153 | 56.3 to 58.1 | The trade. Three kids, his stretchy toy for their longboard: the toy lands at their feet, its arms are pulled out wide, the board is swung down, and he is on it. |
 | 106.807 to 118.405 | 59 to 66 | The longboard, the film's Step Out moment. Down the mountain's face in switchbacks: hairpins on 59, 61, 63 and 65, crests on 60, 62, 64 and 66. Grit flies at every turn and a post's reflector lights on every beat. From 110.4 to 115.5 the camera draws back: the whole zigzag, the cliff, the fjord, and the volcano smoking past it. |
 | 119.845 | the band's last hit | He is out on the shore road. The volcano bursts: the land goes amber, stones are thrown, the column shoots up, lit orange from under, and the warmth fades off the land over the next seconds as the ash comes. Lava creeps down the snow, and lightning forks in the column on the guitar's onsets. |
 | 120.06 to 126.06 | the hush | Silence in the picture too. He rolls to a stop. A small plane crosses toward the plume and is gone inside it: Sean, and Walter has missed him. |
-| 122.54 to 133.28 | soft picking | Ash comes down in grey specks, 22 flakes landing on the guitar's onsets, four of them on him. From 126.06 he holds completely still. The ash thickens over the whole frame. |
+| 122.54 to 133.28 | soft picking | Ash comes down in a few grey specks, 22 flakes landing on the guitar's onsets, four of them on him. From 126.06 he holds completely still. The ash's haze thickens over the whole frame. |
 
 ### Home (133.278 to 146.519)
 
@@ -160,12 +160,12 @@ Times are show seconds. `n.p` is bar n, beat p.
 | Time | Music | What happens |
 | ---: | --- | --- |
 | 146.519 | 83.1, the build | The negative opens out to fill the frame, and he is at the foot of a snow face at eighteen thousand feet, in the blue hour. A gust tears the snow off the rock over him. The build is a sunrise. |
-| 147.3 to 168.08 | 83 to 96 | The climb, up three legs of a switchback to a ledge, an old fixed rope clipped up the last pitch. A step every other beat, then one on every beat as the choir comes up. The range rises behind the near ridges as he climbs, the wind builds, a few rows of altocumulus take the dawn on their undersides, and as the choir comes up the highest peaks take a rose-gold first light. |
+| 147.3 to 168.08 | 83 to 96 | The climb, up three legs of a switchback to a ledge, an old fixed rope clipped up the last pitch. A step every other beat, then one on every beat as the choir comes up. The range rises behind the near ridges as he climbs, the wind builds, and as the choir comes up the highest peaks take a rose-gold first light. |
 | 168.08 | 96.1 | On the ledge, Sean sits behind his long lens, still. Walter stops beside him. They wait. |
-| 169.74 to 174.75 | 97 to 99 | While the music builds, they hold still. The world round them moves on the beats: snow sifting off the rock, spindrift off the highest summits, the camera strap knocking the tripod's leg and shaking rime off it. |
+| 169.74 to 174.75 | 97 to 99 | While the music builds, they hold still. The world round them moves on the beats: snow sifting off the rock, a plume off the great summit, the camera strap knocking the tripod's leg and shaking rime off it. |
 | 174.75 to 176.79 | 100.1 to 101.2 | Across the valley, the snow leopard comes out onto the rocks, pale on pale, one soft step a beat, and stops. The sun's edge clears the far ridge. |
 | 178.91 | 102.3 | Sean does not take the picture. He comes back off the eyepiece to Walter's side, and the camera stands alone while they look. The camera draws back until the two of them are a speck on the ledge in the whole range (183.3), then comes back in past the cat. |
-| 185.15 to 188.91 | 106.2 to 108.3 | The cat goes. They are left side by side on the ledge in gold-white light, over a sea of cloud heaped in clusters, the summits' long shadows across it, and a farthest range pale in the gaps. |
+| 185.15 to 188.91 | 106.2 to 108.3 | The cat goes. They are left side by side on the ledge in gold-white light, over a sea of cloud in a few big heaps, two summits' long shadows across it. |
 
 ### Life (191.409 to 226.384)
 
@@ -391,6 +391,47 @@ the sky. Each card holds 3.4 to 5 s; the last is gone by 266.7 s.
   - after it, the show is 340 lines shorter, the same ten frames are 16% to 33% flat or still, the last third is 2.7
     times as busy as the opening (343 against 128; the middle is calmer than it was), and the pops left are the same
     twelve, all meant.
+- **The less-is-more pass** (Stephen: the details overdone, the clouds at 1:40 too much, weird defects in the piano
+  scene, a lot more visual noise, and odd transitions):
+  - the lead scrubbed the whole show (a still a second, and every passage a tenth of a second at a time) and probed
+    every frame at 60 a second for blocks that change once with calm either side, flash for one frame, or flicker
+    back and forth: 1,411 events. Six builders took the places from a list each, to subtract before adding; the lead
+    took the piano, Iceland, the passages and the credits;
+  - the passages were each a decorated wipe: a framed rectangle round Walter, a burn with a charred, wavering rim,
+    doors with bright jambs and a flare, foam, spray and bubbles on the waterline, a fold of paper with scribbles,
+    sprocket bands and streaks of snow, seven gradient blades, a curtain of strips. Now the blank frame where 25
+    should be opens out on the daydream, the last negative opens out on the snow, the sea's surface comes up as one
+    light line, Sean's shutter is one flat iris, and the rest are plain dissolves;
+  - the clouds: Iceland's 31 bands of mares' tails (about 1,500 dashes) are five strokes of cirrus, and its cumulus
+    lost their cauliflower heads and small fair-weather heaps, three or four great heaps left; the sky's seven
+    scalloped rolls and dome banks are three long flat layers; the Himalayas lost their altocumulus and geese, and
+    the sea of cloud is six heaps instead of eighty; Nuuk's nine stacked lenses on Sermitsiaq are three bands; the
+    daydream's cloud streaks went;
+  - the piano: it was a picture painted once and scaled, so its keys and strings shimmered as the camera pushed in
+    (74 flickers in the probe); its back leg showed only as a brass caster floating under the case; the pedals were
+    brass ticks beside the front leg; the treble keys' ends showed past the cheek over the case wall; the struck
+    string ran out over the wall; the floor lamp stood in front of the piano, its stem across the curve; and the
+    negative's curve jumped when he stopped it. All fixed; the room lost the shadows on the wall (hers read as a
+    ghost), the paper's sprigs, the plane, the blinking mast and the televisions in the windows, the boxes' lines,
+    the boards' grain, the dust, and the out-of-focus box, plant and chair;
+  - noise cut everywhere: the daydream's flames hanging in the sky, its glass shards, beacons, train, traffic,
+    washing and fire escapes (one fire, a whole moon, one plane of towers); the archive's joists, fins, drawers and
+    cans; the sea's seventy rays, three hundred specks, three jellyfish and three shoals (three shafts, a few specks,
+    one jellyfish, one shoal); the bar's grain and the sleet over the room; the floes' polka dots and the rain over
+    the cabin; Iceland's mottled moss and its 850 specks of ash; the Himalayan face's grain and generated rocks; the
+    press's rivets, chain drives, gauges, second catwalk and far presses' detail; the street's leaf shadows over the
+    stand and the cover, its striped light, its stack and plumes, half its traffic, most of its people, and the
+    brick, dentils and scalloped awnings; and the haze under the end credits;
+  - the bugs: the moon bitten by a tower and a lamp; a dark sliver in the burning window; the brake lever and the
+    focus knob floating loose; the fisherman's hand jumping off the cake; the coast's snow reshuffling as the frame
+    edge crossed a step; the sun going out for a frame from under the water; a beer tap vanishing for a frame; the
+    joggers and pusher appearing in mid-air; the strip curtain jumping across the bundle; the street's windows
+    losing their glass under the next front and popping back; the vendor's sleeve over the cover on the chord; the
+    stand's second shadow; and the sun sitting on a signal mast like a lamp globe;
+  - after it, the show's code is about 3,900 lines shorter and the probe finds about 900 events instead of 1,411
+    (the piano's 157 are 49, the press's 362 are 181); the ones left are strikes, the passages, the rotors turning,
+    edges moving across calm fills, and the camera's own moves. A frame paints in 1.1 ms at the median instead of
+    1.4 (2560 × 1600, with the GPU), and in under half the time from the basement to the sea.
 
 ## Judgment calls
 
@@ -424,10 +465,12 @@ the sky. Each card holds 3.4 to 5 s; the last is gone by 266.7 s.
 - In the wides Walter is a few pixels across: the burning building (about 15.5 to 17 s), the helicopter's (63.7 to
   67.1 s), the longboard's (110.4 to 115.5 s) and the whole range (182.5 to 185 s), 12.5 s in all.
 - **Frame rate**, measured on an Apple M5 Pro in Chrome with its GPU, a 1280 × 800 window at 2× (a 2560 × 1600
-  canvas), playing the whole show in real time: 60.0 frames a second, and of 16,201 frames none came more than 20 ms
-  after the last (the build before the second restraint pass had four, one of them an 80 ms paint in Iceland). The
-  paint takes 1.4 ms at the median, 3.0 ms at the 99th percentile, and 19 to 23 ms once, on the first frame of the
-  passage into Iceland, which builds its pictures of the sky and the land.
-- **Without a GPU** (Chrome with its canvas forced to software, 1280 × 800 at 1×) a frame takes 5.5 ms at the median,
-  13 to 14 ms at the 99th percentile and about 60 ms at most (the same first frame of Iceland). A passage paints two
-  places at once for about a second.
+  canvas), playing the whole show in real time against the video's clock: 59.9 frames a second, and of 16,184
+  frames 3 came more than 20 ms after the last before the show's end (main, run straight after: 2). Repeated over
+  the credits, where they fell, both builds drop 0 to 3 such frames a run, so they are the machine's, not the
+  show's. The paint, timed alone at every 60th of a second with no readback, takes 1.1 ms at the median (1.4 before
+  the less-is-more pass), 2.9 ms at the 95th percentile and 10.8 ms at most (20.3 before).
+- **Without a GPU** (Chrome with its canvas forced to software, 1280 × 800 at 1×), measured before the less-is-more
+  pass: a frame took 5.5 ms at the median, 13 to 14 ms at the 99th percentile and about 60 ms at most (the first frame
+  of Iceland, which builds its pictures of the sky and the land). The builders' software timings since then are about
+  half that under the water, in Nuuk and in the sky. A passage paints two places at once for about a second.
