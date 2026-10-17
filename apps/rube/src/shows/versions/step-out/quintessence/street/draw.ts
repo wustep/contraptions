@@ -8,7 +8,7 @@ import { drawCrossers, drawPeople, drawPigeons, drawSale, drawTraffic, FLASH, pe
 import { AVENUE_FAR, drawFireEscape, drawFronts, drawGround, drawRoofs, skyShows } from './fronts'
 import { LANE, morning, S, shadeEdge, shadeTint } from './light'
 import { CELLAR, cherylAt, CLANKS, CORNER, COVER, FLIPS, HAULS, IN, KERB, PAVE, SLOT_W, SLOTS, STAND, STOP, WALTER_STOP, walterAt } from './plan'
-import { drawAvenue, drawCity, drawSky } from './sky'
+import { drawCity, drawSky } from './sky'
 
 /**
  * The street, drawn (the B1 builder's): the negatives room's hand in a New York morning. Flat values and the one
@@ -453,7 +453,6 @@ export function drawStreet(p: p5, k: number, t: number): void {
   if (skyShows(v)) {
     drawSky(ctx, v, t)
     drawCity(ctx, v, t)
-    drawAvenue(ctx, v, t)
   }
   drawFronts(ctx, v, t)
   drawFireEscape(ctx, v)

@@ -281,28 +281,3 @@ export function drawCity(ctx: C2, v: View, t: number): void {
     })
   })
 }
-
-/**
- * Down the avenue's gap, at its own depth, a signal mast against the sun, reaching out over it with its head hung
- * (seen against the light, unlit), sliding at its own pace as the camera goes along.
- */
-export function drawAvenue(ctx: C2, v: View, t: number): void {
-  const k = v.k
-  const sky = skyAt(t)
-  const z = 0.86
-  const size = 0.25 + 0.75 * z
-  const ground = -0.75 + 0.85 * z
-  layer(ctx, v, z, ANCHOR, REF, () => {
-    inOpen(ctx, k, openSky(v, z), () => {
-      ctx.fillStyle = mix('#3A3E40', sky.low, 0.75 - 0.55 * z)
-      // The mast, its arm out over the avenue, the head hung from it.
-      const px = AVENUE + 1.25 * size
-      const top = ground - 3.1 * size
-      ctx.fillRect((px - 0.04 * size) * k, top * k, 0.08 * size * k, (ground - top) * k)
-      const arm = px - 1.5 * size
-      ctx.fillRect(arm * k, top * k, 1.5 * size * k, 0.05 * size * k)
-      const hx = px - 1.1 * size
-      ctx.fillRect((hx - 0.1 * size) * k, (top + 0.05 * size) * k, 0.2 * size * k, 0.52 * size * k)
-    })
-  })
-}
