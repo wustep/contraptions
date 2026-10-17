@@ -21,9 +21,9 @@ import { HANNAH_AGE } from './worlds'
  *   her place on the screen holds exactly while the picture changes size on the cut.
  * - `veil`: the cut happens inside a white-out the director draws over both places: the frame is white for a moment,
  *   and her place in it still holds.
- * - `shell`: the one cut that is not on Louise. The camera has pushed into the television until its picture fills the
- *   frame; the valley opens with the real shell exactly where the television's was, the same size on the screen
- *   (`score.ts` works the framing out from `TV_SHELL` and `SHELL_CUT`). Louise is out of the picture on both sides.
+ * - `shell`: the one cut that is not on Louise. The camera has pushed into the lecture hall's screen until its picture
+ *   fills the frame; the valley opens with the real shell exactly where the screen's was, the same size on the screen
+ *   (`score.ts` works the framing out from `HALL_SHELL` and `SHELL_CUT`). Louise is out of the picture on both sides.
  *
  * Hannah is always on Louise's right and a little above her at a cut into or out of the lake house (in the cradle,
  * on the swing's seat, in the bed): the three are one rhyme, and the show's last frame is its first.
@@ -86,7 +86,7 @@ export const SEAMS: Record<keyof typeof SEAM, Seam> = {
     ian: null,
     hannah: null,
     shang: null,
-    what: 'at rest. Bed side: beside the empty bed (Hannah went on the swell, 93.861), the room grey. News side: the same place in the room at night, the bed gone from it, the television\'s glow across the floor from her right: on the half cadence it comes on.',
+    what: 'at rest. Bed side: beside the empty bed (Hannah went on the swell, 93.861), the room gone to the blue hour. Hall side, the day they came: at the lectern in the lecture hall, dim for the projector, her students up the rows on her right; on the half cadence their phones light, and on the next beat she puts the news up on the screen behind her.',
   },
   arrival: {
     t: SEAM.arrival,
@@ -97,17 +97,82 @@ export const SEAMS: Record<keyof typeof SEAM, Seam> = {
     hannah: null,
     shang: null,
     shell: true,
-    what: 'the match cut on the shell, on the double bass. News side: the camera has pushed into the television until its picture fills the frame: the shell coming down out of cloud on the news, TV_SHELL (its centre and height, in the house\'s world cells, at the cut). Louise is out of the picture, in front of the set. Valley side: the real shell, coming down out of the cloud, at SHELL_CUT (its centre and height in the valley\'s cells at the cut); the valley opens on it the same size and in the same place on the screen (the score works the framing out), and finds her, far below, after.',
+    what: 'the match cut on the shell, on the double bass. Hall side: the camera has pushed into the lecture hall\'s screen until its picture fills the frame: the shell coming down out of cloud on the news, HALL_SHELL (its centre and height, in the hall\'s world cells, at the cut). Louise is out of the picture, below the screen. Valley side: the real shell, coming down out of the cloud, at SHELL_CUT (its centre and height in the valley\'s cells at the cut); the valley opens on it the same size and in the same place on the screen (the score works the framing out), and finds her, far below, after.',
   },
-  contact: {
-    t: SEAM.contact,
+  recruit: {
+    t: SEAM.recruit,
+    v: [0, 0],
+    cells: 167.7,
+    frame: [-1.47, -0.07],
+    ian: null,
+    hannah: null,
+    shang: null,
+    open: 4.4,
+    what: 'a scale cut in. Valley side: the great wide over the valley, the shell settled, the fog rolling out from under it; she is a speck in the helicopter coming up the valley. House side, the same night: on the floor before the television, still on the news, the long window dark over the lake; the room opens 4.4 cells tall on her, so she holds her place on the screen while the picture closes in round her.',
+  },
+  camp: {
+    t: SEAM.camp,
+    v: [-2.7, 0],
+    cells: 4.2,
+    frame: [-0.18, -0.61],
+    ian: null,
+    hannah: null,
+    shang: null,
+    open: 22,
+    what: 'rolling left, a scale cut out. House side: going along the floor to the left out of the searchlight, at the speed she will leave the helicopter\'s door with. Valley side: just down on the meadow out of the helicopter\'s door, rolling on to the decon tent, the camp wide round her (22 cells tall), the helicopter over her.',
+  },
+  shaft: {
+    t: SEAM.shaft,
     v: [0, 0],
     cells: 4.2,
     frame: [0.85, -0.7],
     ian: [-0.42, 0],
     hannah: null,
     shang: null,
-    what: 'at rest, Ian on her left. Valley side: on the deck of the lift at the top of its travel, in the dark of the shell\'s open belly, the camera close. Shell side: at the threshold of the chamber in the dark, the glass not yet lit, to her right.',
+    what: 'at rest, Ian on her left. Valley side: on the deck of the lift at the top of its travel, in the dark of the shell\'s open belly, the camera close. Shaft side: the same deck come up against its stops in the mouth of the shaft, a tall dark tunnel going up to a white far above.',
+  },
+  contact: {
+    t: SEAM.contact,
+    v: [1.8, 0],
+    cells: 3.9,
+    frame: [0.95, -0.75],
+    ian: [-0.53, 0],
+    hannah: null,
+    shang: null,
+    what: 'rolling toward the light, Ian half a cell behind. Shaft side: gravity has turned, the camera with it, so the shaft\'s wall is the floor and its far end is the white ahead of her on the screen\'s right (the camera turned a quarter: her velocity is (0, -1.8) in the shaft\'s cells). Chamber side: in out of the tunnel, rolling to the glass as it wakes, slowing to rest before it as Abbott looms.',
+  },
+  flash: {
+    t: SEAM.flash,
+    v: [0, 0],
+    cells: 4.3,
+    frame: [-1.12, -1.05],
+    ian: null,
+    hannah: HANNAH_BY,
+    hannahAge: [HANNAH_AGE.child, HANNAH_AGE.child],
+    shang: null,
+    what: 'at rest. Chamber side: flush against the glass on her right, her touch, Ian back under the row of cards. Lake house side, years on, a bright afternoon: on the floor by the long window, Hannah (a child) on a tall stool on her right, drawing on a sheet taped to the glass. Hannah is only on the lake house side.',
+  },
+  share: {
+    t: SEAM.share,
+    v: [0, 0],
+    cells: 2.45,
+    frame: [0.62, -0.68],
+    ian: null,
+    hannah: HANNAH_BY,
+    hannahAge: [HANNAH_AGE.child, HANNAH_AGE.child],
+    shang: null,
+    open: 14,
+    what: 'at rest, a scale cut out to the whole ring. Lake house side: beside the stool, Hannah on it on her right, her drawing done: her mother, her father and two great animals, and between them a ring. Tent side: on the table under the ring of twelve screens, all lit and linked, the phone on her right, Ian on her left; the tent opens 14 cells tall on her, so she holds her place on the screen while the picture opens out round her: her daughter\'s ring, then the world\'s. Hannah is only on the lake house side.',
+  },
+  again: {
+    t: SEAM.again,
+    v: [0, 0],
+    cells: 13.8,
+    frame: [-0.2, -3.75],
+    ian: null,
+    hannah: null,
+    shang: null,
+    what: 'at rest, wide. Tent side: on the phone\'s key, the word round the ring and the halves met. Chamber side: on the plate, her board up, the next word going down the rail, the chamber wide round her; in to the glass as she goes to it and both heptapods write at once.',
   },
   dark: {
     t: SEAM.dark,
@@ -162,15 +227,25 @@ export const SEAMS: Record<keyof typeof SEAM, Seam> = {
     shang: null,
     what: 'at rest. Lawn side: behind the swing, Hannah on its seat on her right, as at the cut in. Fog side: before Costello again, the logogram at her right complete: she knows. Hannah is only on the lawn side.',
   },
-  gala: {
-    t: SEAM.gala,
+  future: {
+    t: SEAM.future,
     v: [0, 0],
     cells: 4.4,
     frame: [0.8, -0.8],
     ian: null,
     hannah: null,
     shang: null,
-    what: 'at rest. Fog side: in the white, the logogram of the answer before her. Gala side, years on: at the gala in champagne light, in the room\'s crowd of dark figures; Shang comes to her from her right after the cut.',
+    what: 'at rest. Fog side: in the white, the logogram of the answer a ghost before her. Hall side, years on: at the lectern in the lecture hall in daylight, the rows full, the screen behind her white; on the beat she touches the lectern and their writing comes up on it.',
+  },
+  gala: {
+    t: SEAM.gala,
+    v: [0, 0],
+    cells: 4.7,
+    frame: [1.3, -1.3],
+    ian: null,
+    hannah: null,
+    shang: null,
+    what: 'at rest. Hall side: at the lectern, the great logogram whole on the screen behind her. Gala side, years on: on the pedal of the champagne tower\'s stand, the tower filling tier by tier, in the room\'s crowd of dark figures; Shang sets off toward her from her right on the cut.',
   },
   call: {
     t: SEAM.call,

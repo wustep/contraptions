@@ -7,13 +7,15 @@ import { BLAST, DURATION, PEAK, SEAM } from './music'
 import { FIRST, SEAMS } from './seams'
 import { PalindromeShow, type Leg, type Riders, type Spans, type WorldSet } from './show'
 import { LOUISE, type WorldKey } from './worlds'
-import { houseSet, HOUSE_CELLS, DAWN_AT, BED_AT, NEWS_AT, HOME_AT, TV_SHELL, dawn, bed, news, home } from './house/house'
+import { houseSet, HOUSE_CELLS, DAWN_AT, BED_AT, RECRUIT_AT, FLASH_AT, HOME_AT, dawn, bed, recruit, flash, home } from './house/house'
+import { hallSet, HALL_CELLS, HALL_AT, HALL_SHELL, lecture, teaching } from './hall/hall'
 import { lawnSet, LAWN_CELLS, SWING_AT, SEES_AT, swing, sees } from './lawn/lawn'
-import { valleySet, VALLEY_CELLS, ARRIVE_AT, GOING_AT, SHELL_CUT, arrive, going } from './valley/valley'
-import { chamberSet, CHAMBER_CELLS, CONTACT_AT, BOMB_AT, contact, bomb } from './chamber/chamber'
+import { valleySet, VALLEY_CELLS, ARRIVE_AT, CAMP_AT, GOING_AT, SHELL_CUT, arrive, arrive2, going } from './valley/valley'
+import { shaftSet, SHAFT_CELLS, SHAFT_AT, rollAt, shaft } from './shaft/shaft'
+import { chamberSet, CHAMBER_CELLS, CONTACT_AT, AGAIN_AT, BOMB_AT, contact, contact2, bomb } from './chamber/chamber'
 import { fogSet, FOG_CELLS, FOG_AT, FOG2_AT, fog1, fog2 } from './fog/fog'
 import { galaSet, GALA_CELLS, GALA_AT, gala } from './fog/gala'
-import { tentSet, TENT_CELLS, DARK_AT, CALL_AT, dark, call } from './twelve/twelve'
+import { tentSet, TENT_CELLS, DARK_AT, CALL_AT, SHARE_AT, dark, call, share } from './twelve/twelve'
 
 /**
  * The whole show, in order: which place has Louise from when to when, and which part has her in each. Every part is
@@ -23,13 +25,20 @@ import { tentSet, TENT_CELLS, DARK_AT, CALL_AT, dark, call } from './twelve/twel
  *   0        the lake house at dawn: Louise beside the cradle, baby Hannah in it (the first frame, and the last)
  *   22.111   the swing by the lake, years on: she pushes Hannah, who grows
  *   71.953   the bed by the window: the cellos; Hannah goes on the swell (93.861)
- *   98.429   the room at night: the television comes on (the news: the shells)
- *   102.110  the double bass: the television's shell becomes the real one over Montana (a match cut on the shell)
- *   129.556  inside: the chamber, the glass, the heptapods; contact; the language
+ *   98.429   the lecture hall, the day they came: the phones light; the news on the screen behind her
+ *   102.110  the double bass: the screen's shell becomes the real one over Montana (a match cut on the shell)
+ *   106.742  the same night at the lake house: a helicopter comes for her, its searchlight through the glass
+ *   110.655  Montana: she drops out of its door onto the meadow; the camp; the lift up into the slot
+ *   129.556  inside: the shaft; gravity turns, and the camera with it
+ *   135.442  the chamber, the glass, the heptapods; contact; the language
+ *   169.610  a flash: the lake house, Hannah a child drawing at the window, "Mommy and Daddy talk with animals"
+ *   177.186  the tent: the world as one, the word she sends round the ring of twelve (her ring, cut to theirs)
+ *   181.133  the chamber: the next word; both of them writing at once; the row read back; "weapon"
  *   200.626  the bass drops out: the command tent, the twelve links falling one by one
  *   214.657  the chamber: the bomb (223.370)
  *   231.039  white: beyond the glass, the fog, Costello; 250.120 what she sees (the swing, Hannah grown); 257.683 fog
- *   266.124  the gala, years on: Shang tells her what to say
+ *   266.124  the lecture hall, years on: she teaches their writing
+ *   269.915  the gala, years on: Shang tells her what to say
  *   277.647  the tent: the call (288.554); the links stand again, backwards; the ring whole on the loudest (303.827)
  *   311.293  the meadow: the shell goes up into the cloud the way it came down (318.711); daylight; Ian
  *   334.031  the lake house: home; the first frame again from the last B-flat; the credits in the quiet after
@@ -47,14 +56,21 @@ const PLAN = (): LegPlan[] => [
   { key: 'dawn', world: 'house', at: DAWN_AT, links: [{ part: dawn, end: SEAM.swing }] },
   { key: 'swing', world: 'house', at: SWING_AT, links: [{ part: swing, end: SEAM.bed }] },
   { key: 'bed', world: 'house', at: BED_AT, links: [{ part: bed, end: SEAM.news }] },
-  { key: 'news', world: 'house', at: NEWS_AT, links: [{ part: news, end: SEAM.arrival }] },
-  { key: 'arrival', world: 'valley', at: ARRIVE_AT, links: [{ part: arrive, end: SEAM.contact }] },
-  { key: 'contact', world: 'shell', at: CONTACT_AT, links: [{ part: contact, end: SEAM.dark }] },
+  { key: 'news', world: 'hall', at: HALL_AT, links: [{ part: lecture, end: SEAM.arrival }] },
+  { key: 'arrival', world: 'valley', at: ARRIVE_AT, links: [{ part: arrive, end: SEAM.recruit }] },
+  { key: 'recruit', world: 'house', at: RECRUIT_AT, links: [{ part: recruit, end: SEAM.camp }] },
+  { key: 'camp', world: 'valley', at: CAMP_AT, links: [{ part: arrive2, end: SEAM.shaft }] },
+  { key: 'shaft', world: 'shaft', at: SHAFT_AT, links: [{ part: shaft, end: SEAM.contact }] },
+  { key: 'contact', world: 'shell', at: CONTACT_AT, links: [{ part: contact, end: SEAM.flash }] },
+  { key: 'flash', world: 'house', at: FLASH_AT, links: [{ part: flash, end: SEAM.share }] },
+  { key: 'share', world: 'tent', at: SHARE_AT, links: [{ part: share, end: SEAM.again }] },
+  { key: 'again', world: 'shell', at: AGAIN_AT, links: [{ part: contact2, end: SEAM.dark }] },
   { key: 'dark', world: 'tent', at: DARK_AT, links: [{ part: dark, end: SEAM.bomb }] },
   { key: 'bomb', world: 'shell', at: BOMB_AT, links: [{ part: bomb, end: SEAM.fog }] },
   { key: 'fog', world: 'fog', at: FOG_AT, links: [{ part: fog1, end: SEAM.sees }] },
   { key: 'sees', world: 'house', at: SEES_AT, links: [{ part: sees, end: SEAM.fog2 }] },
-  { key: 'fog2', world: 'fog', at: FOG2_AT, links: [{ part: fog2, end: SEAM.gala }] },
+  { key: 'fog2', world: 'fog', at: FOG2_AT, links: [{ part: fog2, end: SEAM.future }] },
+  { key: 'future', world: 'hall', at: HALL_AT, links: [{ part: teaching, end: SEAM.gala }] },
   { key: 'gala', world: 'gala', at: GALA_AT, links: [{ part: gala, end: SEAM.call }] },
   { key: 'call', world: 'tent', at: CALL_AT, links: [{ part: call, end: SEAM.going }] },
   { key: 'going', world: 'valley', at: GOING_AT, links: [{ part: going, end: SEAM.home }] },
@@ -100,7 +116,9 @@ const SETS = (): Partial<Record<WorldKey, WorldSet>> => ({
     scenery: [standing(houseSet, 0, 0, HOUSE_CELLS, null, DURATION), standing(lawnSet, 0, 0, LAWN_CELLS, null, DURATION)],
     after: [standing(credits, 0, 0, HOUSE_CELLS, null, DURATION)],
   },
+  hall: { scenery: [standing(hallSet, 0, 0, HALL_CELLS, null, DURATION)], after: [] },
   valley: { scenery: [standing(valleySet, 0, 0, VALLEY_CELLS, null, DURATION)], after: [] },
+  shaft: { scenery: [standing(shaftSet, 0, 0, SHAFT_CELLS, null, DURATION)], after: [] },
   shell: { scenery: [standing(chamberSet, 0, 0, CHAMBER_CELLS, null, DURATION)], after: [standing(veil, 0, 0, CHAMBER_CELLS, null, DURATION)] },
   fog: { scenery: [standing(fogSet, 0, 0, FOG_CELLS, null, DURATION)], after: [standing(veil, 0, 0, FOG_CELLS, null, DURATION)] },
   gala: { scenery: [standing(galaSet, 0, 0, GALA_CELLS, null, DURATION)], after: [] },
@@ -129,6 +147,9 @@ function punch(t: number): number {
   }
   return v
 }
+
+/** A screen offset turned by `a` (the camera's roll): what a world offset looks like on the screen. */
+const turn = (v: Pt, a: number): Pt => [v[0] * Math.cos(a) - v[1] * Math.sin(a), v[0] * Math.sin(a) + v[1] * Math.cos(a)]
 
 export function compose(): { show: PalindromeShow; camera: (t: number) => Framing } {
   const plans = PLAN()
@@ -164,6 +185,8 @@ export function compose(): { show: PalindromeShow; camera: (t: number) => Framin
   })
 
   const show = new PalindromeShow(legs, SETS(), DURATION, riders, company.sort((a, b) => a.from - b.from))
+  // The camera rolls only in the shaft, after gravity; everywhere else the world is square to the frame.
+  const angleAt = (t: number): number => (legs[show.owner(t)].key === 'shaft' ? rollAt(t) : 0)
 
   // The camera: one director per leg, each following the ball only inside its own leg, and each leg opening on
   // exactly the framing the last one closed on, carried by the cut: a match cut on Louise. Inside a leg, at a seam
@@ -196,18 +219,20 @@ export function compose(): { show: PalindromeShow; camera: (t: number) => Framin
       const prev = cams[i - 1](leg.from)
       const seam = Object.values(SEAMS).find((m) => Math.abs(m.t - leg.from) < 1e-3)
       if (seam?.shell) {
-        // The television's shell onto the real one: the same place and size on the screen.
-        const s = SHELL_CUT.h / TV_SHELL.h
+        // The lecture hall screen's shell onto the real one: the same place and size on the screen.
+        const s = SHELL_CUT.h / HALL_SHELL.h
         const cells = prev.cells * s
-        const hold: Pt = [SHELL_CUT.c[0] - (TV_SHELL.c[0] - prev.x) * s, SHELL_CUT.c[1] - (TV_SHELL.c[1] - prev.y) * s]
+        const hold: Pt = [SHELL_CUT.c[0] - (HALL_SHELL.c[0] - prev.x) * s, SHELL_CUT.c[1] - (HALL_SHELL.c[1] - prev.y) * s]
         keys.unshift({ t: leg.from, cells, hold, w: 1 })
       } else {
         const scale = seam?.open ? seam.open / prev.cells : 1
-        // Where she was on the screen, as the last leg left her: (her - centre) / cells.
+        // Where she was on the screen, as the last leg left her: (her - centre) / cells, turned by its roll; and turned
+        // back by this leg's, where the roll changes at the cut (out of the shaft).
         const her = show.at(leg.from - 1e-6)
-        const onScreen: Pt = [(her.x - prev.x) / prev.cells, (her.y - prev.y) / prev.cells]
+        const onScreen = turn([(her.x - prev.x) / prev.cells, (her.y - prev.y) / prev.cells], angleAt(leg.from - 1e-6))
+        const back = turn(onScreen, -angleAt(leg.from))
         const cells = prev.cells * scale
-        const carried: Pt = [a0[0] - onScreen[0] * cells, a0[1] - onScreen[1] * cells]
+        const carried: Pt = [a0[0] - back[0] * cells, a0[1] - back[1] * cells]
         if (Math.hypot(vIn[0], vIn[1]) > 0.05) {
           const [fx, fy] = follower(where, DURATION)(leg.from)
           keys.unshift({ t: leg.from, cells, off: [carried[0] - fx, carried[1] - fy], w: 0 })
@@ -221,7 +246,8 @@ export function compose(): { show: PalindromeShow; camera: (t: number) => Framin
   const camera = (t: number): Framing => {
     const owner = show.owner(t)
     const f = cams[owner](t)
-    return { ...f, cells: f.cells * (1 - punch(t)) }
+    const angle = angleAt(t)
+    return { ...f, cells: f.cells * (1 - punch(t)), ...(angle ? { angle } : {}) }
   }
   return { show, camera }
 }

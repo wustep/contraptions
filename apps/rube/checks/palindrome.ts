@@ -12,7 +12,8 @@ import { PUNCHES, VEILED, veilAt } from '../src/shows/versions/nature-of-dayligh
 import { FIRST, HANNAH_BY, SEAMS } from '../src/shows/versions/nature-of-daylight/palindrome/seams'
 import type { PalindromeShow } from '../src/shows/versions/nature-of-daylight/palindrome/show'
 import { HANNAH_AGE } from '../src/shows/versions/nature-of-daylight/palindrome/worlds'
-import { GONE, TV_SHELL } from '../src/shows/versions/nature-of-daylight/palindrome/house/house'
+import { GONE } from '../src/shows/versions/nature-of-daylight/palindrome/house/house'
+import { HALL_SHELL } from '../src/shows/versions/nature-of-daylight/palindrome/hall/hall'
 import { COMES } from '../src/shows/versions/nature-of-daylight/palindrome/house/time'
 import { SHELL_CUT, SHELL_DOWN, SHELL_UP, shellAt } from '../src/shows/versions/nature-of-daylight/palindrome/valley/valley'
 import { FALLS, RISES } from '../src/shows/versions/nature-of-daylight/palindrome/twelve/twelve'
@@ -36,24 +37,28 @@ export function checkPalindrome(perf: Performance, version: ShowVersion, check: 
 
   // The places, in the order the story goes, each cut on a chord.
   const order = show.legs.map((l) => l.world).join(',')
-  check('palindrome: the lake house (dawn, the swing, the bed, the news), the valley, the shell, the tent, the shell, the fog, the lake house, the fog, the gala, the tent, the valley, the lake house',
-    order === 'house,house,house,house,valley,shell,tent,shell,fog,house,fog,gala,tent,valley,house', order)
+  check('palindrome: the lake house (dawn, the swing, the bed), the lecture hall (the news), the valley, the lake house (they come for her), the valley, the shaft, the shell, the lake house (a flash), the tent (the world as one), the shell, the tent, the shell, the fog, the lake house, the fog, the lecture hall (years on), the gala, the tent, the valley, the lake house',
+    order === 'house,house,house,hall,valley,house,valley,shaft,shell,house,tent,shell,tent,shell,fog,house,fog,hall,gala,tent,valley,house', order)
   const onBeat = (t: number, eps: number) => BEATS.some((b) => Math.abs(b.t - t) <= eps)
   const onChord = (t: number, eps: number) => CHORDS.some((c) => Math.abs(c.t - t) <= eps)
   const onOnset = (t: number, eps: number, min = 0.2) => ONSETS.some((o) => o.s >= min && Math.abs(o.t - t) <= eps)
   const cuts = show.legs.slice(1).map((l) => l.from)
   const seams = Object.values(SEAM)
   check('palindrome: every cut between places is on a change of chord',
-    cuts.length === 14 && cuts.every((c) => seams.some((s) => near(s, c, 1e-3))) && seams.every((s) => onChord(s, 1e-3)), cuts.map((t) => t.toFixed(3)).join(', '))
+    cuts.length === 21 && cuts.every((c) => seams.some((s) => near(s, c, 1e-3))) && seams.every((s) => onChord(s, 1e-3)), cuts.map((t) => t.toFixed(3)).join(', '))
   check('palindrome: no portal anywhere, and no cut drawn', [0, 30, 100, 150, 210, 240, 270, 300, 330, 380].every((t) => perf.cuts?.(t) === false))
 
   // One ball, one path: in a place it never jumps; at a cut the camera carries it, so on the screen it holds still
-  // (all but the cut on the shell, which carries the shell instead).
-  const onScreen = (t: number): [number, number] => {
-    const h = show.at(t)
+  // (all but the cut on the shell, which carries the shell instead). Where the camera rolls (the shaft), the screen is
+  // the world turned by its roll.
+  const screenOf = (t: number, b: { x: number; y: number }): [number, number] => {
     const f = cam(t)
-    return [(h.x - f.x) / f.cells, (h.y - f.y) / f.cells]
+    const a = f.angle ?? 0
+    const dx = (b.x - f.x) / f.cells
+    const dy = (b.y - f.y) / f.cells
+    return [dx * Math.cos(a) - dy * Math.sin(a), dx * Math.sin(a) + dy * Math.cos(a)]
   }
+  const onScreen = (t: number): [number, number] => screenOf(t, show.at(t))
   let jump = 0
   let jumpAt = 0
   let screen = 0
@@ -79,14 +84,14 @@ export function checkPalindrome(perf: Performance, version: ShowVersion, check: 
   check('palindrome: inside a place the ball never jumps (no more than 0.04 cells a millisecond)', jump <= 0.04, `${jump.toFixed(3)} at ${jumpAt.toFixed(3)} s`)
   check('palindrome: every cut is a match cut: on the screen the ball never jumps (no more than 1% of the frame a millisecond)', screen <= 0.01, `${screen.toFixed(4)} at ${screenAt.toFixed(3)} s`)
 
-  // The cut on the shell: the television's picture of it and the real one, the same size in the same place on the
+  // The cut on the shell: the lecture hall screen's picture of it and the real one, the same size in the same place on the
   // screen, on the double bass.
   const fa = cam(ARRIVAL - 1e-4)
   const fb = cam(ARRIVAL + 1e-4)
-  const sa = [(TV_SHELL.c[0] - fa.x) / fa.cells, (TV_SHELL.c[1] - fa.y) / fa.cells, TV_SHELL.h / fa.cells]
+  const sa = [(HALL_SHELL.c[0] - fa.x) / fa.cells, (HALL_SHELL.c[1] - fa.y) / fa.cells, HALL_SHELL.h / fa.cells]
   const sb = [(SHELL_CUT.c[0] - fb.x) / fb.cells, (SHELL_CUT.c[1] - fb.y) / fb.cells, SHELL_CUT.h / fb.cells]
   const real = shellAt(ARRIVAL)
-  check('palindrome: on the double bass the television\'s shell becomes the real one, the same size in the same place on the screen, and big in it',
+  check('palindrome: on the double bass the lecture hall screen\'s shell becomes the real one, the same size in the same place on the screen, and big in it',
     Math.hypot(sa[0] - sb[0], sa[1] - sb[1]) < 0.005 && Math.abs(sa[2] - sb[2]) < 0.005 && sa[2] > 0.25 && Math.hypot(real.c[0] - SHELL_CUT.c[0], real.c[1] - SHELL_CUT.c[1]) < 1e-3 && near(real.h, SHELL_CUT.h, 1e-3),
     `${sa.map((v) => v.toFixed(3)).join(',')} vs ${sb.map((v) => v.toFixed(3)).join(',')}`)
 
@@ -100,7 +105,7 @@ export function checkPalindrome(perf: Performance, version: ShowVersion, check: 
     const b = shellAt(SHELL_UP[1] - u * up)
     mirror = Math.max(mirror, Math.hypot(a.c[0] - b.c[0], a.c[1] - b.c[1]) + Math.abs(a.h - b.h))
   }
-  check('palindrome: the shell goes up the way it came down (on the television from the half cadence, then over the valley): its path out is its path in, backwards, and it is gone when the high violins stop',
+  check('palindrome: the shell goes up the way it came down (on the lecture hall screen from the half cadence, then over the valley): its path out is its path in, backwards, and it is gone when the high violins stop',
     down > 3 && Math.abs(up - down) < 0.5 && mirror < 1e-3 && near(SHELL_DOWN[0], HALF, 1e-3) && Math.abs(SHELL_UP[1] - RELEASE) < 0.05,
     `in ${down.toFixed(2)} s, out ${up.toFixed(2)} s, off by ${mirror.toFixed(4)}`)
   const fallOrder = [...FALLS].sort((a, b) => a.t - b.t).map((f) => f.screen)
@@ -169,15 +174,15 @@ export function checkPalindrome(perf: Performance, version: ShowVersion, check: 
     near(f0.cells, FIRST.cells) && !!h0 && near(h0.scale ?? 0, HANNAH_AGE.baby, 1e-6) && near(show.hannah(perf.duration)?.scale ?? 0, HANNAH_AGE.baby, 1e-6) && drift < 0.01,
     `off by ${drift.toFixed(4)}`)
   // Hannah's rhyme: at each cut into or out of the lake house, on Louise's right a little above her (the cradle, the
-  // swing, the bed), growing.
-  const rhyme = (['swing', 'bed', 'sees', 'fog2'] as const).map((key) => {
+  // swing, the bed, the flash), growing.
+  const rhyme = (['swing', 'bed', 'flash', 'share', 'sees', 'fog2'] as const).map((key) => {
     const t = SEAMS[key].t
-    const side = key === 'fog2' ? t - 1e-3 : t + 1e-3
+    const side = key === 'fog2' || key === 'share' ? t - 1e-3 : t + 1e-3
     const h = show.hannah(side)
     const l = show.at(side)
     return h ? Math.hypot(h.x - l.x - HANNAH_BY[0], h.y - l.y - HANNAH_BY[1]) : 9
   })
-  check('palindrome: at the lake house\'s cuts Hannah is on Louise\'s right, a little above her: the cradle, the swing, the bed',
+  check('palindrome: at the lake house\'s cuts Hannah is on Louise\'s right, a little above her: the cradle, the swing, the bed, the flash',
     rhyme.every((d) => d < 0.02), rhyme.map((d) => d.toFixed(3)).join(', '))
 
   // Under Zoom (half as close again as the show's camera) the ball stays in the frame wherever it is to be seen. The
@@ -220,8 +225,8 @@ export function checkPalindrome(perf: Performance, version: ShowVersion, check: 
   // cut (Hannah also on the swell, when she goes, and into the cradle at the end, when she comes back).
   const inShot = (t: number, b: { x: number; y: number; scale?: number } | null) => {
     if (!b || (b.scale ?? 1) <= 0.02) return false
-    const f = cam(t)
-    return Math.abs(b.x - f.x) < (f.cells * 16) / 9 / 2 && Math.abs(b.y - f.y) < f.cells / 2
+    const [sx, sy] = screenOf(t, b)
+    return Math.abs(sx) < 16 / 9 / 2 && Math.abs(sy) < 1 / 2
   }
   for (const who of ['ian', 'hannah', 'shang'] as const) {
     const get = (t: number) => (who === 'ian' ? show.ian(t) : who === 'hannah' ? show.hannah(t) : show.shang(t))
@@ -256,7 +261,7 @@ export function checkPalindrome(perf: Performance, version: ShowVersion, check: 
   })
   check('palindrome: Hannah comes into the cradle as she went from the bed, backwards, and with no cut',
     comes.every((d) => d < 0.01) && !cameraCuts.some((c) => c > SEAM.home + 0.1), comes.map((d) => d.toFixed(3)).join(', '))
-  const counts = [2, 30, 80, 110, 160, 205, 220, 240, 253, 270, 300, 330, 360].map((t) => (show.at(t).balls ?? []).filter((b) => b.id !== 0).map((b) => b.id))
+  const counts = [2, 30, 80, 110, 132, 160, 173, 205, 220, 240, 253, 270, 300, 330, 360].map((t) => (show.at(t).balls ?? []).filter((b) => b.id !== 0).map((b) => b.id))
   check('palindrome: never two of anyone', counts.every((ids) => new Set(ids).size === ids.length))
   const worldAt = (t: number) => show.legs[show.owner(t)].world
   const samples = Array.from({ length: Math.floor(perf.duration * 4) }, (_, i) => i / 4)

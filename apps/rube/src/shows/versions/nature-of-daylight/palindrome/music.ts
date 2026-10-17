@@ -172,12 +172,25 @@ export const SEAM = {
   swing: chord(5),
   /** The swing → the bed by the window: the cellos come in (c17). */
   bed: chord(17),
-  /** The bed → the living room at night, the television (the half cadence, c23). */
+  /** The bed → the lecture hall, the day they came: the phones, the news on the screen (the half cadence, c23). */
   news: chord(23),
-  /** The television's shell → the real one over the valley, on the double bass (c24). A scale match cut. */
+  /** The screen's shell → the real one over the valley, on the double bass (c24). A scale match cut. */
   arrival: ARRIVAL,
-  /** The valley → inside the shell: the chamber (c32). */
-  contact: chord(32),
+  /** The valley → the lake house the same night, the shell come down: a helicopter comes for her (c25, the fog). */
+  recruit: chord(25),
+  /** The lake house → the camp in Montana, as she drops out of that helicopter onto the meadow (c27). */
+  camp: chord(27),
+  /** The valley → inside the shell: the shaft above the deck, where gravity turns (c32). */
+  shaft: chord(32),
+  /** The shaft → the chamber, as the glass wakes (c33). */
+  contact: chord(33),
+  /** The chamber → the lake house: a flash of Hannah, drawing at the window (c42). */
+  flash: chord(42),
+  /** The lake house → the command tent: the world as one, the word she sends round the ring (c44). Hannah's crayon
+   * ring, cut to the world's ring of twelve. */
+  share: chord(44),
+  /** The tent → the chamber, the machine sending the next word, both of them writing at once (c45). */
+  again: chord(45),
   /** The chamber → the command tent: the bass drops out, the world breaks (c50). */
   dark: TURN,
   /** The tent → the chamber: the bomb (c55). */
@@ -188,8 +201,10 @@ export const SEAM = {
   sees: chord(66),
   /** The lawn → the fog (c68). */
   fog2: chord(68),
-  /** The fog → the gala, years on (c71). */
-  gala: chord(71),
+  /** The fog → the lecture hall, years on: she teaches their writing (c71). */
+  future: chord(71),
+  /** The hall → the gala (c72). */
+  gala: chord(72),
   /** The gala → the tent: the call (c74). */
   call: chord(74),
   /** The tent → the meadow: the shells go (c84). */
