@@ -517,20 +517,24 @@ function drawSky(ctx: Ctx, k: number, f: Frame, L: Look, t: number): void {
  */
 const SEAM_CAM: Pt = [60.55, -0.95]
 const SHORE_Y = -0.6
-function farView(f: Frame): { shore: number; dx: number; s: number } {
+function farView(f: Frame): { shore: number; dx: number; s: number; at: number } {
   const dy = f.cy - SEAM_CAM[1]
-  return { shore: SHORE_Y + dy * 0.6, dx: (f.cx - SEAM_CAM[0]) * 0.72, s: Math.pow((f.y1 - f.y0) / 4.6, 0.55) }
+  const dx = (f.cx - SEAM_CAM[0]) * 0.72
+  const s = Math.pow((f.y1 - f.y0) / 4.6, 0.55)
+  // Where the shore's own zero lies: it grows and shrinks about the seam camera, as the view does, not about the world's
+  // zero sixty cells off, which slid the whole shore sideways cells at a time on any push in or draw back.
+  return { shore: SHORE_Y + dy * 0.6, dx, s, at: dx + SEAM_CAM[0] * (1 - s) }
 }
 function drawFarShore(ctx: Ctx, k: number, f: Frame, L: Look, t: number): void {
   const x0 = Math.floor(f.x0) - 2
   const x1 = Math.ceil(f.x1) + 2
-  const { shore, dx, s } = farView(f)
+  const { shore, dx, s, at } = farView(f)
   // Hills: two long low swells.
   ctx.fillStyle = L.far
   ctx.beginPath()
   ctx.moveTo(x0 * k, (shore + 0.05) * k)
   for (let x = x0; x <= x1; x += 0.2) {
-    const v = (x - dx) / s
+    const v = (x - at) / s
     const h = (0.3 + 0.13 * Math.sin(v * 0.42 + 0.7) + 0.07 * Math.sin(v * 1.13 + 2.1) + 0.03 * Math.sin(v * 2.9)) * s
     ctx.lineTo(x * k, (shore - h) * k)
   }
@@ -550,13 +554,13 @@ function drawFarShore(ctx: Ctx, k: number, f: Frame, L: Look, t: number): void {
     ctx.beginPath()
     ctx.moveTo(x0 * k, (base + 0.02) * k)
     const gap = 0.04
-    const n1 = Math.ceil((x1 - dx) / s / gap) + 1
-    for (let n = Math.floor((x0 - dx) / s / gap) - 1; n <= n1; n++) {
+    const n1 = Math.ceil((x1 - at) / s / gap) + 1
+    for (let n = Math.floor((x0 - at) / s / gap) - 1; n <= n1; n++) {
       const v = gap * (n + 0.6 * (hash(n, seed, 5) - 0.5))
       const clump = 0.5 + 0.5 * Math.sin(v * 0.9 + seed) * Math.sin(v * 0.37 + seed * 2) + 0.25 * Math.sin(v * 2.3 + seed * 3)
       const h = (hMin + (hMax - hMin) * hash(n, seed, 2) ** 1.4) * (0.35 + 0.8 * Math.max(0, Math.min(1.2, clump))) * s
       const w = h * (0.26 + 0.1 * hash(n, seed, 3))
-      const x = v * s + dx
+      const x = v * s + at
       ctx.lineTo((x - w * 0.5) * k, (base - 0.01) * k)
       ctx.lineTo((x - w * 0.18) * k, (base - h * 0.45) * k)
       ctx.lineTo((x - w * 0.3) * k, (base - h * 0.45) * k)
