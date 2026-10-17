@@ -11,7 +11,7 @@ import { KickShow, type Leg, type Riders, type Spans, type WorldSet } from './sh
 import { ORIGIN, UP } from './stack'
 import { ARIADNE_ID, COBB, FISCHER_ID, type WorldKey } from './worlds'
 import { Q } from './limbo/limbo-geo'
-import { SEATED, T_TAXI_DOOR } from './rain/rain-geo'
+import { SEATED, SINK_AT, T_GO, T_TAXI_DOOR } from './rain/rain-geo'
 import { drumMark, T as HOTEL_T, type Who } from './hotel/hotel-geo'
 import { ARIADNE_SNOW, COBB as COBB_SNOW, FISCHER_SNOW } from './snow/snow-geo'
 import { limboSet, LIMBO_CELLS, SHORE_AT, shore, limbo } from './limbo/limbo'
@@ -257,6 +257,8 @@ export function compose(): { show: KickShow; camera: (t: number) => Framing } {
 
   const show = new KickShow(legs, SETS(), DURATION, riders, company.sort((a, b) => a.from - b.from))
   show.markPlan = MARKS(legs)
+  // Sitting in the van as it drives off, each of them drew a streak behind them in the window, as if thrown.
+  show.trailsOff = [[T_GO, SINK_AT.seat]]
   sparkInWides(
     (t) => show.where(t),
     STACK_WIDES.map((w) => [w.from, w.to]),

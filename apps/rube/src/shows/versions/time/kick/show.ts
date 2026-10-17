@@ -66,6 +66,8 @@ export class KickShow extends Show {
   cameraCuts: number[] = []
   /** A fast fall is one tapered streak, not a string of discs that read as other balls. */
   override readonly trail = 'smear' as const
+  /** Spans with no trail behind any ball (the score's): the van's drive, where they sit and the van carries them. */
+  trailsOff: [number, number][] = []
   /** How every ball's mark turns (`marks.ts`): the score's plan, rolled out the first time a moment is asked for. */
   markPlan: MarkPlan | null = null
   private marks: Marks | null = null
@@ -98,6 +100,10 @@ export class KickShow extends Show {
         journey: duration,
       }
     })
+  }
+
+  override trailOff(t: number): boolean {
+    return this.trailsOff.some(([a, b]) => t >= a && t < b)
   }
 
   clamp(t: number): number {
