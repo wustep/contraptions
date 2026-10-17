@@ -778,13 +778,20 @@ function paintBagel(ctx: Ctx2D, k: number, x: number, y: number, weight: number,
   pillPath(ctx, k, shape.top)
   ctx.fillStyle = mixHex(mixHex(crust, VOID.bagelRim, 0.5), light.sky[1], 0.24)
   ctx.fill()
-  // The low sun, behind the far wall, along the far crest: a warm streak, as the light lies along it in Jobu's dark.
+  // The low sun, behind the far wall, along the far crest: a warm sheen, as the light lies along it in Jobu's dark,
+  // fullest toward the sun and thinning away to nothing at either end.
+  const crest = y + UPPER - 0.2
+  const sheen = (u: number, inner: boolean): [number, number] => {
+    const a = Math.PI * (1.42 + 0.5 * u)
+    const w = inner ? 0.04 * Math.sin(Math.PI * u) ** 0.8 * (0.55 + 0.45 * u) : 0
+    return [(x + CORE * Math.cos(a) * (1 - w)) * k, (crest + CORE * Q * Math.sin(a) + w) * k]
+  }
   ctx.beginPath()
-  ctx.ellipse(x * k, (y + UPPER - 0.2) * k, CORE * k, CORE * Q * k, 0, Math.PI * 1.55, Math.PI * 1.88)
-  ctx.strokeStyle = rgba(mixHex(VOID.rimLight, light.sun.warm, 0.5), 0.5)
-  ctx.lineWidth = 0.03 * k
-  ctx.lineCap = 'round'
-  ctx.stroke()
+  for (let i = 0; i <= 24; i++) ctx.lineTo(...sheen(i / 24, false))
+  for (let i = 24; i >= 0; i--) ctx.lineTo(...sheen(i / 24, true))
+  ctx.closePath()
+  ctx.fillStyle = rgba(mixHex(VOID.rimLight, light.sun.warm, 0.5), 0.55)
+  ctx.fill()
   // The hole: its far inner wall going down, darker as it goes, and under it Jobu's dark.
   ctx.save()
   ellipsePath(ctx, k, x, y, RI, ri)
