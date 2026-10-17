@@ -420,7 +420,7 @@ export const CALVING: Calving[] = [
   // Behind the roof: the slab that slipped on its crack in the prologue goes at last, then the rest of that tower's
   // top, on the kick.
   { tower: 3, hit: bar(47), top: 74.7, h: 4.8, w: 1.3, side: 1, fall: 3.0 },
-  { tower: 3, hit: bar(48), top: 74.0, h: 6.4, w: 1.5, side: 1, off: 1.3, fall: 3.4 },
+  { tower: 3, hit: bar(48), top: 74.0, h: 5.5, w: 1.5, side: 1, off: 1.3, fall: 3.4 },
 ]
 /** The prologue's one sign: a slab on the broken tower slips on its crack (bar 3), and hangs there leaning. */
 export const CRACK = { tower: 3, at: P.crack, slab: 6 }

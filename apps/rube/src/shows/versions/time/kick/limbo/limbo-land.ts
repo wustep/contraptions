@@ -404,8 +404,9 @@ function drawPlume(pen: Pen, e: Calving, t: number, f: Frame): void {
   const base = tw.base
   if (e.big) {
     if (u < 0 || u > 8) return
-    // Where the face went in: under the tower, a little out on the side it leaned to.
-    const x = tw.x + e.side * 0.3 + dx
+    // Where the face went in, behind the stump and out past its side it leaned to, so the column stands up beside what
+    // is left standing (on the stump's middle, now behind it, it was hidden).
+    const x = tw.x + e.side * (tw.w / 2 + 0.5) + dx
     if (x < f.x0 - 12 || x > f.x1 + 12) return
     const H = Math.min(9, 0.95 * e.h + 1.4)
     const W = e.w * 0.7 + 0.7
