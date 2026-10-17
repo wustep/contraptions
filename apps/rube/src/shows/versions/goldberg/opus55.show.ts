@@ -9,7 +9,7 @@ export default defineShow({
   title: 'Quarter Turn',
   label: 'Opus 5.5',
   about: "Bach's first Goldberg variation as a wooden toy machine: painted cubes tumbling a quarter turn to the beat until every one is home.",
-  still: 60,
+  still: 12,
   async load() {
     return (await import('./tumble')).performance
   },

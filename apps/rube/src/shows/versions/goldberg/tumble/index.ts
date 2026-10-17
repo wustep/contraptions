@@ -1,6 +1,6 @@
 import recording from '../bach-goldberg-1-ishizaka.mp3'
 import type { Performance } from '../../../registry'
-import { MIDDLE } from './geo'
+import { cameraAt } from './camera'
 import { RECORDING } from './music'
 import { MACHINE } from './score'
 import { QuarterTurnShow } from './show'
@@ -13,8 +13,7 @@ export const show = new QuarterTurnShow(MACHINE, DURATION)
 export const performance: Performance = {
   show,
   duration: DURATION,
-  // The toy whole, a little room round it.
-  camera: () => ({ x: MIDDLE.x, y: MIDDLE.y, cells: Math.max(MIDDLE.h * 1.14, (MIDDLE.w * 1.08 * 9) / 16) }),
+  camera: cameraAt,
   cuts: () => false,
   soundtrack: {
     src: recording,

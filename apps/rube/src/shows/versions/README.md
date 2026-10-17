@@ -29,7 +29,7 @@ The folder and file names are addresses, so they are chosen once:
   freely: `come-recover` is **Everything**, `heptapod-b` **Logogram**,
   `interstellar` **Voyage**, `la-la-land` **Epilogue**, `bolero` **Ostinato**,
   `nature-of-daylight` **Palindrome**, `relax` **Magnum**, `time` **Kick**, `step-out` **Quintessence**,
-  `rule-the-world` **Rally**. The write-up says which is which.
+  `rule-the-world` **Rally**, `goldberg` **Quarter Turn**. The write-up says which is which.
 - **Take**: `<take>.show.ts`, which is also `/shows/<work>/<take>/` and the
   card `public/shows/<work>/<take>.png`. Name it for who made it (`opus55`,
   `fable51`, `grok47`), or with a letter (`take-a`). La La Land's takes keep the
@@ -38,7 +38,7 @@ The folder and file names are addresses, so they are chosen once:
   Takes sort by name, and the first is the work's own page, unless the registry
   puts another first (`PREFERRED_TAKES`: Epilogue's and Cornfield Chase's Opus).
 - **Shelf**: the picker and Theater set the works out as **Machine** (Clair de
-  Lune, Première Arabesque, Cornfield Chase, Raindrop), **Movies** and **Ambient**
+  Lune, Première Arabesque, Cornfield Chase, Raindrop, Quarter Turn), **Movies** and **Ambient**
   (Gymnopédie, Soft Lamp, Ostinato). A work is Movies unless `SHELVED` in `../registry.ts` names it.
 - **Favourites**: `FAVORITES` in `../registry.ts` ranks them (Voyage, Epilogue,
   Everything, Clair de Lune). The picker stars them and pins them to the top of
@@ -176,6 +176,17 @@ is new; the show lives in `raindrop/charterhouse/`. Its clock is measured by `sc
 `scripts/shows/plans/raindrop-onsets.json` (the score laid on the recording by dynamic time warping, every note moved
 onto its own attack); `check:shows` holds every landing, tip, knock, stroke and cut to it. The report is
 `apps/rube/src/shows/versions/raindrop/RAINDROP.md`.
+
+`goldberg/opus55` (in the picker, **Quarter Turn**, on the Machine shelf, one take, **Opus 5.5**) is Bach's first
+Goldberg variation, whole, on Kimiko Ishizaka's CC0 recording from the Open Goldberg Variations (it ships with the
+show): a wooden toy, an experiment with no stock pieces and no ball. Five painted cubes tip a quarter turn at a time
+across five maple planks in a walnut tray; the planks slide along their rows and turn over at the phrases, and each
+plank's pocket, lined in its cube's paint, takes its cube home on a half's last note, until the planks come flush and
+the black cube, which has walked the rim on every downbeat, steps into the last pocket on the last note. The code is
+`goldberg/tumble/`, its toy built from cues and checked as it is built (`machine.ts`). Its clock is measured by
+`scripts/shows/goldberg-onsets.py` into `scripts/shows/plans/goldberg-onsets.json` (the unrolled score followed note
+by note along the recording's attacks); `check:shows` holds every landing and every plank to it
+(`apps/rube/checks/goldberg.ts`). The report is `apps/rube/src/shows/versions/goldberg/QUARTER_TURN.md`.
 
 `metronome/` is not in the picker. It is a worked example of a time map: a
 procedural machine under a steady beat, and a struck bar on every strike,

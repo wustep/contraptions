@@ -1,0 +1,22 @@
+Quarter Turn (versions/goldberg/opus55.show.ts)
+
+Music
+  Johann Sebastian Bach (1685–1750), Goldberg Variations, BWV 988: Variatio 1. a 1 Clav., published in 1741 as the
+  fourth part of the Clavier-Übung. Composition: public domain.
+
+Recording
+  "Variatio 1 a 1 Clav.", played by Kimiko Ishizaka, from the Open Goldberg Variations (2012), which she and the
+  project dedicated to the public domain.
+  Source: https://commons.wikimedia.org/wiki/File:Kimiko_Ishizaka_-_J.S._Bach-_-Open-_Goldberg_Variations,_BWV_988_(Piano)_-_02_Variatio_1_a_1_Clav.mp3
+  License: CC0 1.0 Universal (public domain dedication), https://creativecommons.org/publicdomain/zero/1.0/
+  Changes: none to the sound. The Commons file (MP3, 44.1 kHz, 320 kbit/s constant, 115.47 s) has only its tags,
+  the album's cover picture among them, taken off, by scripts/shows/goldberg-cue.sh, as
+  bach-goldberg-1-ishizaka.mp3.
+
+The score, for where its notes fall
+  The Mutopia Project's engraving of the variation (bwv-988-v01), read as MIDI by scripts/shows/goldberg-onsets.py to
+  follow the score along the recording. Nothing of it ships; scripts/shows/plans/goldberg-onsets.json holds times only.
+
+Contraptions audiovisual adaptation: a timed toy drawn over the whole recording. The credit is given beside the player
+and in the show's documentation, never on the frame. The recording ships with the show; the adaptation is shared under
+CC BY 4.0.
