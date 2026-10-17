@@ -925,11 +925,12 @@ const NEW_ODD = [SHOP_SKINS, PLAY_SKINS, WILD_SKINS, SKY_SKINS, PAST_SKINS, TOY_
 export const SKINS: Record<string, Skin> & typeof FILM = { ...FILM, ...FILM_SKINS, ...FAR_SKINS, ...ODD_SKINS, ...NEW_FILM, ...Object.assign({}, ...NEW_ODD) }
 
 /**
- * Every screen of the wall is a new set of worlds. The wall splits 2, 4, 9, 16, 36, 64 and 144 (`STEPS` in
- * `mosaic.ts`), and on each break every panel but home's becomes a life not seen on any screen before it: the film's
- * own lives first, while the panels are big (the premiere at two; the dojo, the hot dogs and the kitchen at four; the
- * rest of her jumps at nine; the lives from the film's montage at sixteen and thirty-six), then the lives she might
- * have had. At 144 every world is there once, all at once, with the film's nearest home, where the dive lingers.
+ * One wall of worlds, which only grows. The wall splits 2, 4, 9, 16, 36, 64 and 144 (`STEPS` in `mosaic.ts`), each grid
+ * holding the last, home at (0, 0); every panel keeps its world and its place in the wall through every break, and a
+ * break only deals new worlds into the cells it adds round the old. The film's own lives come first, while the panels
+ * are big (the premiere at two; the dojo and the hot dogs at four; the kitchen and the rest of her jumps at nine and
+ * sixteen; the lives from the film's montage from sixteen to sixty-four), then the lives she might have had. At 144
+ * every world is there once, all at once.
  */
 const FIRST_SEEN: string[][] = [
   ['premiere'],
@@ -937,7 +938,7 @@ const FIRST_SEEN: string[][] = [
   ['void', 'rocks', 'pinata', 'karaoke', 'irs', 'spinner', 'alley', 'newyear'],
   ['opera', 'monolith', 'alpha', 'pug', 'lobby', 'trophy', 'pinky', 'elvis', 'bagel', 'googly', 'temple', 'riot', 'arrest', 'rainbow', 'spotlight'],
 ]
-/** The grids, as `mosaic.ts` lays them: the panels each one shows, home at (0, 0). */
+/** The grids, as `mosaic.ts` lays them: the panels each one shows, home at (0, 0). Each holds the one before it. */
 export const SCREENS: { i0: number; i1: number; j0: number; j1: number }[] = [
   { i0: 0, i1: 1, j0: 0, j1: 0 },
   { i0: 0, i1: 1, j0: 0, j1: 1 },
@@ -947,11 +948,17 @@ export const SCREENS: { i0: number; i1: number; j0: number; j1: number }[] = [
   { i0: -3, i1: 4, j0: -3, j1: 4 },
   { i0: -5, i1: 6, j0: -5, j1: 6 },
 ]
-const cellsOf = (s: number): [number, number][] => {
+/** The cells screen `s` adds to the wall, nearest home first. */
+const addedBy = (s: number): [number, number][] => {
   const g = SCREENS[s]
+  const was = SCREENS[s - 1]
   const out: [number, number][] = []
-  for (let j = g.j0; j <= g.j1; j++) for (let i = g.i0; i <= g.i1; i++) if (i || j) out.push([i, j])
-  // Nearest home first.
+  for (let j = g.j0; j <= g.j1; j++) {
+    for (let i = g.i0; i <= g.i1; i++) {
+      const old = was ? i >= was.i0 && i <= was.i1 && j >= was.j0 && j <= was.j1 : i === 0 && j === 0
+      if (!old) out.push([i, j])
+    }
+  }
   return out.sort((a, b) => Math.hypot(a[0] - 0.3, a[1] - 0.3) - Math.hypot(b[0] - 0.3, b[1] - 0.3) || hash(a[0], a[1], 3) - hash(b[0], b[1], 3))
 }
 
@@ -969,9 +976,9 @@ const unlike = (a: Skin, b: Skin): number => {
   return d(a.bg, b.bg) + 0.5 * d(a.floor, b.floor)
 }
 
-const TABLES: Map<string, string>[] = (() => {
-  // The pool, in the order the screens take it: the film's lives (by hand for the first four screens, then the rest),
-  // then the made-up lives, the new ones dealt round their groups so a screen gets a mix.
+const WALL: Map<string, string> = (() => {
+  // The pool, in the order the breaks take it: the film's lives (by hand for the first few, then the rest), then the
+  // made-up lives, the new ones dealt round their groups so a break gets a mix.
   const order: string[] = FIRST_SEEN.flat()
   const add = (k: string) => {
     if (!order.includes(k) && k !== 'home') order.push(k)
@@ -983,22 +990,19 @@ const TABLES: Map<string, string>[] = (() => {
   for (let n = 0; groups.some((g) => n < g.length); n++) for (const g of groups) if (n < g.length) add(g[n])
   const all = order.filter((k) => SKINS[k])
 
-  const tables: Map<string, string>[] = []
-  const shown = new Set<string>(['home'])
+  const at = new Map<string, string>([['0,0', 'home']])
   let next = 0
   for (let s = 0; s < SCREENS.length; s++) {
-    const cells = cellsOf(s)
-    const last = s === SCREENS.length - 1
-    // Each screen takes the next of the pool, as many as it has panels; the last takes every world there is.
-    const pool = last ? [...all] : all.slice(next, next + cells.length)
+    const cells = addedBy(s)
+    // Each break takes the next of the pool, as many as it adds cells; the last takes every world left.
+    const pool = s === SCREENS.length - 1 ? all.slice(next) : all.slice(next, next + cells.length)
     next += pool.length
-    const at = new Map<string, string>([['0,0', 'home']])
     const rank = new Map(pool.map((k, n) => [k, n]))
     for (const [i, j] of cells) {
       let best = -1
       let score = -Infinity
       for (let n = 0; n < pool.length; n++) {
-        // Unlike its neighbours already laid, and the earlier in the pool the nearer home.
+        // Unlike its neighbours already laid, old and new, and the earlier in the pool the nearer home.
         let near = Infinity
         for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
           const v = at.get(`${i + di},${j + dj}`)
@@ -1014,38 +1018,16 @@ const TABLES: Map<string, string>[] = (() => {
       at.set(`${i},${j}`, pool[best])
       pool.splice(best, 1)
     }
-    // Past the grid's own edges (a wider stage, the slide before the dive): worlds not yet seen if there are any, else
-    // any not on this screen, never one of a panel's neighbours.
-    for (const v of at.values()) shown.add(v)
-    const fresh = all.filter((k) => !shown.has(k))
-    const spare = fresh.length ? fresh : all.filter((k) => ![...at.values()].includes(k))
-    const g = SCREENS[s]
-    let n = 0
-    for (let j = g.j0 - 3; j <= g.j1 + 3; j++) for (let i = g.i0 - 4; i <= g.i1 + 4; i++) {
-      if (at.has(`${i},${j}`)) continue
-      const near = new Set<string>()
-      for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
-        const v = at.get(`${i + di},${j + dj}`)
-        if (v) near.add(v)
-      }
-      for (let k = 0; k < spare.length; k++) {
-        const c = spare[(n + k) % spare.length]
-        if (near.has(c) && k < spare.length - 1) continue
-        at.set(`${i},${j}`, c)
-        n += k + 1
-        break
-      }
-    }
-    tables.push(at)
   }
-  return tables
+  return at
 })()
 
-/** The world of panel (i, j) on screen `s` (0 the first split into two, 6 the wall of 144). */
-export function skinAt(s: number, i: number, j: number): Skin {
-  const t = TABLES[Math.max(0, Math.min(TABLES.length - 1, s))]
-  const k = t.get(`${i},${j}`)
-  if (k) return SKINS[k]
-  const keys = Object.keys(SKINS)
-  return SKINS[keys[(((i * 7 + j * 13) % keys.length) + keys.length) % keys.length]]
+/**
+ * The world of panel (i, j) of the wall, whichever screen it is on (home at 0, 0). Past the wall's last grid (a wider
+ * stage, the slide before the dive), the wall goes on as itself again, so no world is ever beside itself.
+ */
+export function skinAt(i: number, j: number): Skin {
+  const g = SCREENS[SCREENS.length - 1]
+  const wrap = (v: number, lo: number, hi: number) => ((((v - lo) % (hi - lo + 1)) + (hi - lo + 1)) % (hi - lo + 1)) + lo
+  return SKINS[WALL.get(`${wrap(i, g.i0, g.i1)},${wrap(j, g.j0, g.j1)}`) ?? 'home']
 }
