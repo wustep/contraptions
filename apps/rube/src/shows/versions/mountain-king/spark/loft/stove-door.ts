@@ -38,7 +38,7 @@ const SHUT_FROM = 58.4
 const SHUT_FOR = 2.4
 
 /** The return: bursts open just before the spark comes through (it is under the veil), slams on the last chord. */
-const BURST = DOORS.back[2] - 0.05
+const BURST = DOORS.back[0] - 0.05
 const BANG = LAST[1]
 /** The last swing: it leaves its stop at SWING_FROM, passes square (an edge on, the doorway still clear) at SQUARE, and covers the doorway by BANG. */
 const SWING_FROM = BANG - 0.44

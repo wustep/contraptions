@@ -31,14 +31,14 @@ export function checkSpark(perf: Performance, version: Version, check: Check): v
 
   // The worlds, in the story's order, each door on the music.
   const order = show.legs.map((l) => l.world).join(',')
-  check('spark: the loft, the glassworks, the regatta, the railway; then home back through the regatta and the glassworks to the loft',
-    order === 'loft,glassworks,regatta,railway,regatta,glassworks,loft', order)
+  check('spark: the loft, the glassworks, the regatta, the railway; then home through one door to the loft',
+    order === 'loft,glassworks,regatta,railway,loft', order)
   check('spark: the doors are on phrase 6, phrase 9 and phrase 12, the festival on phrase 16, the loft\'s hand-on on phrase 3',
     near(DOORS.glass, phrase(6)) && near(DOORS.regatta, phrase(9)) && near(DOORS.railway, phrase(12)) && near(FESTIVAL, phrase(16)) && near(LOFT_SEAM, phrase(3)) &&
     near(show.legs[1].from, DOORS.glass) && near(show.legs[2].from, DOORS.regatta) && near(show.legs[3].from, DOORS.railway))
   const o = onsets as { onsets: { t: number; s: number }[] }
   const onOnset = (t: number, min = 0.5, tol = 0.03) => o.onsets.some((x) => x.s >= min && Math.abs(x.t - t) <= tol)
-  check('spark: the dash home is on the roll\'s strokes, after the silence, before the first last chord',
+  check('spark: the door home is on the roll\'s strokes, after the silence, before the first last chord',
     DOORS.back.every((t) => t > ROLL && t < LAST[0] && onOnset(t, 0.3, 0.012)) && show.legs.slice(4).every((l, i) => near(l.from, DOORS.back[i])))
   check('spark: no portal iris drawn', [0, 58.1, 101.9, 134.3, 148.5, 170].every((t) => perf.cuts?.(t) === false))
   // The camera cuts inside a world only where the score says (the knocks' reverse shot; the express's last run, into

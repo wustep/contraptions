@@ -1,7 +1,6 @@
 import { mixHex, type Pt } from '../../../../../parts'
 import { hash, smooth } from '../kit'
 import { drawFire as drawLicks } from '../fire'
-import { DOORS } from '../music'
 import { FIRES, GLASS } from '../worlds'
 import { DRAW, FLOOR_Y, FURNACE, GLORY, LEHR, OVEN, PORT, RINGS, S0, S1, SANDBOX, SLAM } from './glass-plan'
 import { arcPts, box4, clipTo, fillWith, glow, rgba, shape, strokeLine, type Pen } from './glass-pen'
@@ -233,12 +232,8 @@ function breath(pen: Pen, x: number, y: number, hw: number, t: number, flare: nu
 
 /* ------------------------------------------------------------------ the glory hole */
 
-/** How hard the glory hole roars: it bursts as the spark comes out of it, and as it goes back through on the way home. */
-const gloryFlare = (t: number): number => {
-  const out = t >= S0 - 0.3 ? Math.exp(-Math.max(0, t - S0) / 0.6) * smooth(t, S0 - 0.3, S0) : 0
-  const home = smooth(t, DOORS.back[1] - 0.25, DOORS.back[1] - 0.05) * (1 - smooth(t, DOORS.back[2] + 0.05, DOORS.back[2] + 0.7))
-  return Math.min(1.2, out + home)
-}
+/** How hard the glory hole roars: it bursts as the spark comes out of it. */
+const gloryFlare = (t: number): number => (t >= S0 - 0.3 ? Math.exp(-Math.max(0, t - S0) / 0.6) * smooth(t, S0 - 0.3, S0) : 0)
 
 export function drawOven(pen: Pen, v: View, t: number): void {
   const { x0, x1, top } = OVEN

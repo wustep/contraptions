@@ -523,9 +523,11 @@ export function drawChock(p: p5, c: Pen, t: number): void {
   const u = Math.min(d, T)
   const x = x0 + 1.05 * u
   const y = y0 - 1.5 * u + 6 * u * u
-  const yRest = FLOOR_Y + 0.05
-  const at: Pt = d < T ? [x, Math.min(y, yRest)] : [x0 + 1.05 * T + 0.12 * (1 - Math.exp(-(d - T) / 0.1)), yRest]
-  const spin = d < T ? d * 14 : T * 14 + 0.6
+  // On the floor, as it sat on the rail: tumbling, then tipping onto its flat side as it slides to rest.
+  const yRest = FLOOR_Y - 0.05
+  const settle = d < T ? 0 : 1 - Math.exp(-(d - T) / 0.1)
+  const at: Pt = d < T ? [x, Math.min(y, yRest)] : [x0 + 1.05 * T + 0.12 * settle, yRest]
+  const spin = d < T ? d * 14 : T * 14 + (2 * Math.PI - T * 14) * settle
   const l = Math.max(0.2, lightAt(at[0], at[1], t))
   p.push()
   p.translate(at[0] * k, at[1] * k)

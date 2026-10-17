@@ -19,7 +19,7 @@ import type { Pt } from '../../../../../parts'
  *
  * The sneak goes west from the candle (LOFT-A: along the bench, the drying rack), hands on at `HANDOFF` (LOFT-B: the
  * dipping wheel, down to the floor, east past the cat) and ends in the stove's firebox on statement 2's first note.
- * The dash home at the end comes back out of the same firebox door, west and up, onto the wick.
+ * The way home at the end comes back out of the same firebox door, west and up, onto the wick.
  */
 
 /** The spark on its wick: the ball's centre. The candle stands under it. */
