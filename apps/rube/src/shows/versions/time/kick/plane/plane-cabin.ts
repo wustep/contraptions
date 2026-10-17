@@ -405,7 +405,8 @@ function drawLines(pen: Pen, t: number): void {
       if (u < 0 || s > L + 0.05) continue
       const from = along(pts, Math.max(0, s - 0.06))
       const run = along(pts, Math.min(L, s + 0.06))
-      const seg = [from[from.length - 1], ...run.slice(from.length)]
+      // From its back to its front, through any bend between (it kept only the bends, so on a straight it was nothing).
+      const seg = [from[from.length - 1], ...run.slice(from.length - 1)]
       polyline(pen, seg, rgba(PLANE.drip, 0.95 * (1 - clamp01((s - L + 0.25) / 0.3))), 1.25)
     }
   }
