@@ -201,14 +201,16 @@ function curve(pen: Pen, t: number, f: Frame): void {
   const joints: Pt[][] = []
   const knuckles: Pt[][] = []
   const d = JOINT / R
-  for (let phi = th - d * 0.5; phi > 0; phi -= d) {
-    joints.push([at(phi, R), at(phi, R + 0.1)])
-    const k0 = at(phi - 0.035, R + CURVE_T)
+  // Each knuckle grows out of the slot with the strip (drawn whole once its joint was out, it popped in at 38.98).
+  for (let phi = th - d * 0.5; phi > -0.035; phi -= d) {
+    if (phi > 0) joints.push([at(phi, R), at(phi, R + 0.1)])
+    const lo = Math.max(0, phi - 0.035)
+    const k0 = at(lo, R + CURVE_T)
     const k1 = at(phi + 0.035, R + CURVE_T)
     const k2 = at(phi + 0.035, R + CURVE_T + 0.1)
-    const k3 = at(phi - 0.035, R + CURVE_T + 0.1)
+    const k3 = at(lo, R + CURVE_T + 0.1)
     knuckles.push([k0, k1, k2, k3])
-    joints.push([at(phi, R + 0.14), at(phi, R + CURVE_T - 0.04)])
+    if (phi > 0) joints.push([at(phi, R + 0.14), at(phi, R + CURVE_T - 0.04)])
   }
   strokePaths(pen, joints, mixHex(PARIS.iron, SLAB, 0.4), 0.4)
   fillPaths(pen, knuckles, IRON_LIT)

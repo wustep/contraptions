@@ -112,22 +112,22 @@ interface State {
   begin: number
 }
 /** A patch of a slab drawn over the ball where it is inside it, so it goes into the surface and comes out of the other. */
-function patch(g: Pen, x: number, y0: number, y1: number, fill: string, top: string | null): void {
+function patch(g: Pen, x: number, y0: number, y1: number, fill: string, top: string | null, hw = 0.5): void {
   const { c, k } = g
   c.fillStyle = fill
-  c.fillRect((x - 0.5) * k, y0 * k, 1.0 * k, (y1 - y0) * k)
+  c.fillRect((x - hw) * k, y0 * k, 2 * hw * k, (y1 - y0) * k)
   if (top) {
     c.fillStyle = top
-    c.fillRect((x - 0.5) * k, y0 * k, 1.0 * k, 0.09 * k)
+    c.fillRect((x - hw) * k, y0 * k, 2 * hw * k, 0.09 * k)
   }
-  feather(g, x - 0.5, x + 0.5, y0, y1)
+  feather(g, x - hw, x + hw, y0, y1)
   c.strokeStyle = g.ink
   c.lineWidth = g.w * 0.8
   c.beginPath()
-  c.moveTo((x - 0.5) * k, y0 * k)
-  c.lineTo((x + 0.5) * k, y0 * k)
-  c.moveTo((x - 0.5) * k, y1 * k)
-  c.lineTo((x + 0.5) * k, y1 * k)
+  c.moveTo((x - hw) * k, y0 * k)
+  c.lineTo((x + hw) * k, y0 * k)
+  c.moveTo((x - hw) * k, y1 * k)
+  c.lineTo((x + hw) * k, y1 * k)
   c.stroke()
 }
 /**
@@ -212,7 +212,8 @@ function liftOver(g: Pen, t: number): void {
     // The kick: up through the cabin's roof and, at the top of the shaft, the hotel's.
     const cy = cabinY(t)
     const roofY = cy - CAB[1]
-    if (t > T.slam && p[1] < roofY + 0.2 && p[1] > roofY - 0.3) patch(g, x, roofY - 0.1, roofY + 0.02, HOTEL.brass, null)
+    // Only his own width of it: a cell wide, the three patches made one bar that stood out past the cabin's sides.
+    if (t > T.slam && p[1] < roofY + 0.2 && p[1] > roofY - 0.3) patch(g, x, roofY - 0.1, roofY + 0.02, HOTEL.brass, null, R + 0.06)
     if (t > T.slam && p[1] < B.ceil + R + 0.02 && p[1] > B.roof - R - 0.02) patch(g, x, B.roof, B.ceil, C.concrete, null)
     const lag = who === 'cobb' ? 0 : 0.35 / 19
     tear(g.p, g.k, [x, B.lobby], t - TEARS.pit.t - dy, 0.8, HOTEL.lamp)
