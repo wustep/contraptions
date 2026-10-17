@@ -1,0 +1,18 @@
+Theme from Jurassic Park — John Williams
+From the album Jurassic Park (Original Motion Picture Soundtrack), 1993. Composed by John Williams.
+Film: Jurassic Park, directed by Steven Spielberg, 1993.
+
+The recording is the soundtrack cue, as uploaded to YouTube by the label's topic channel
+("John Williams - Theme From Jurassic Park"), video lDlU08RU7Tk:
+https://www.youtube.com/watch?v=lDlU08RU7Tk
+Catalog duration about 3:27. The landmarks in this show were measured from an album rip of the same cue
+(3:24.25, last moment above a whisper at 3:21.32). That file is not in the repo.
+Copyrighted — demo only, from the YouTube embed. Do not commit audio, and do not ship the cue to a public
+Shows page without a licence.
+
+Files:
+- scripts/shows/plans/jurassic-theme-onsets.json — the phrase returns, the orchestra's entrance and the crests.
+- scripts/shows/jurassic-theme-onsets.py — checks those landmarks when a local measurement file is present.
+  It does not fit a click. The theme is legato.
+
+Playback: YouTube only. No audio file is shipped. The show embeds the topic upload above.

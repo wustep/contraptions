@@ -29,7 +29,7 @@ The folder and file names are addresses, so they are chosen once:
   freely: `come-recover` is **Everything**, `heptapod-b` **Logogram**,
   `interstellar` **Voyage**, `la-la-land` **Epilogue**, `bolero` **Ostinato**,
   `nature-of-daylight` **Palindrome**, `relax` **Magnum**, `time` **Kick**, `step-out` **Quintessence**,
-  `rule-the-world` **Rally**. The write-up says which is which.
+  `rule-the-world` **Rally**, `jurassic-theme` **Amber**. The write-up says which is which.
 - **Take**: `<take>.show.ts`, which is also `/shows/<work>/<take>/` and the
   card `public/shows/<work>/<take>.png`. Name it for who made it (`opus55`,
   `fable51`, `grok47`), or with a letter (`take-a`). La La Land's takes keep the
@@ -521,3 +521,16 @@ its cut (`rally/cab.ts`). The song is a shuffle on a machine-steady pulse, so `s
 fits one comb (112.05 bpm) and moves every beat, and every beat's shuffled "a", onto its own attack, into
 `scripts/shows/plans/rule-the-world-onsets.json`; `check:shows` holds every strike to it (`apps/rube/checks/rally.ts`).
 The report is `apps/rube/src/shows/versions/rule-the-world/RALLY.md`.
+
+`jurassic-theme/grok47` (in the picker, **Amber**, one take, **Grok 4.7**) is **Amber · after Jurassic Park**: John
+Williams's *Theme from Jurassic Park*, the cue the film opens its wonder on, played by YouTube from the official topic
+upload only (lDlU08RU7Tk; no recording is shipped: `apps/rube/src/shows/versions/jurassic-theme/ATTRIBUTION.txt`), and
+then the end credits in the quiet after it. Every piece is new. It tells the film's finding, not its scare: Grant (the
+sandstone ball) is brushed out of the Montana dust and a bone stands up; the amber cane opens, a rack of pipettes
+tips, and an egg cracks while Ellie (the green ball) waits; the gates open onto the valley and a brachiosaurus rises
+until its head clears them, then the trees, and the birds leave its neck; at dawn a helicopter lifts off the island.
+The code is `jurassic-theme/amber/`, on Kick's kit (parts built to timed slots, an authored camera, match cuts at rest
+between four places, the end credits from `Performance.titles`). The theme is legato, so
+`scripts/shows/jurassic-theme-onsets.py` does not fit a click: it keeps the phrase returns, the orchestra's entrance
+and the crests, in `scripts/shows/plans/jurassic-theme-onsets.json`; `check:shows` holds every strike to them
+(`apps/rube/checks/amber.ts`). The report is `apps/rube/src/shows/versions/jurassic-theme/AMBER.md`.

@@ -63,6 +63,7 @@ import { checkSoftLamp, checkSoftLampStill } from './soft-lamp'
 import { performance as softLampMoving } from '../src/shows/versions/soft-lamp/lamp'
 import { checkQuintessence } from './quintessence'
 import { checkRally } from './rally'
+import { checkAmber } from './amber'
 
 let failures = 0
 function check(name: string, ok: boolean, detail = ''): void {
@@ -322,8 +323,8 @@ async function main(): Promise<void> {
   check('Première is take-b only', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-b')
   check('Clair de Lune is take-b only', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-b')
   check('Clair de Lune\'s and Première\'s one takes are called Take A', ['clair-de-lune', 'premiere-arabesque'].every((w) => shipped.works.find((x) => x.work === w)?.versions[0]?.label === 'Take A'))
-  check('in the picker the works are Clair de Lune, Cornfield Chase, Epilogue, Everything, Gymnopédie, Kick, Magnum, Married Life, Merry-Go-Round, Mountain King, Ostinato, Palindrome, Première Arabesque, Quintessence, Rally, Soft Lamp and Voyage',
-    shipped.works.map((w) => w.title).sort().join('|') === 'Clair de Lune|Cornfield Chase|Epilogue|Everything|Gymnopédie|Kick|Magnum|Married Life|Merry-Go-Round|Mountain King|Ostinato|Palindrome|Première Arabesque|Quintessence|Rally|Soft Lamp|Voyage', shipped.works.map((w) => w.title).join('|'))
+  check('in the picker the works are Amber, Clair de Lune, Cornfield Chase, Epilogue, Everything, Gymnopédie, Kick, Magnum, Married Life, Merry-Go-Round, Mountain King, Ostinato, Palindrome, Première Arabesque, Quintessence, Rally, Soft Lamp and Voyage',
+    shipped.works.map((w) => w.title).sort().join('|') === 'Amber|Clair de Lune|Cornfield Chase|Epilogue|Everything|Gymnopédie|Kick|Magnum|Married Life|Merry-Go-Round|Mountain King|Ostinato|Palindrome|Première Arabesque|Quintessence|Rally|Soft Lamp|Voyage', shipped.works.map((w) => w.title).join('|'))
   check('no take carries a byline', shipped.works.every((w) => w.versions.every((v) => !('director' in v))))
 
   // Credits live are the page's DOM; a video has them painted into its frame (`words.ts`). The two are one look.
@@ -338,7 +339,7 @@ async function main(): Promise<void> {
     !!cardFace && words.includes(`'${cardFace}'`) && ['#ECE5D3', '#D9A441'].every((c) => css.includes(c) && words.includes(`'${c}'`)), cardFace)
   check('only a video\'s frame paints credits, and both canvases still refuse type',
     (stageSrc.match(/wordPainter\(/g) ?? []).length === 1 && /const words = shown && !full/.test(stageSrc) && (stageSrc.match(/refuseType\((p|s)\)/g) ?? []).length === 2)
-  check('the shows are Boléro, Clair de Lune, Come Recover, Cornfield Chase, Gymnopédie, Interstellar, La La Land, Married Life, Merry-Go-Round, Mountain King, On the Nature of Daylight, Première, Relax, Rule the World, Soft Lamp, Step Out and Time', shipped.works.map((w) => w.work).sort().join(',') === 'bolero,clair-de-lune,come-recover,cornfield-chase,gymnopedie,interstellar,la-la-land,married-life,merry-go-round,mountain-king,nature-of-daylight,premiere-arabesque,relax,rule-the-world,soft-lamp,step-out,time')
+  check('the shows are Boléro, Clair de Lune, Come Recover, Cornfield Chase, Gymnopédie, Interstellar, Jurassic Theme, La La Land, Married Life, Merry-Go-Round, Mountain King, On the Nature of Daylight, Première, Relax, Rule the World, Soft Lamp, Step Out and Time', shipped.works.map((w) => w.work).sort().join(',') === 'bolero,clair-de-lune,come-recover,cornfield-chase,gymnopedie,interstellar,jurassic-theme,la-la-land,married-life,merry-go-round,mountain-king,nature-of-daylight,premiere-arabesque,relax,rule-the-world,soft-lamp,step-out,time')
   const ostinato = shipped.works.find((w) => w.work === 'bolero')?.versions ?? []
   check('bolero is Ostinato, one take, Opus 5.5, with no note',
     ostinato.map((v) => v.take).join(',') === 'opus55' && ostinato[0].title === 'Ostinato' && ostinato[0].label === 'Opus 5.5' && ostinato[0].note === undefined)
@@ -366,6 +367,9 @@ async function main(): Promise<void> {
   const rally = shipped.works.find((w) => w.work === 'rule-the-world')?.versions ?? []
   check('rule-the-world is Rally, one take, Opus 5.5, with no note, on the Movies shelf',
     rally.map((v) => v.take).join(',') === 'opus55' && rally[0].title === 'Rally' && rally[0].label === 'Opus 5.5' && rally[0].note === undefined && sectionOf('rule-the-world') === 'Movies')
+  const amber = shipped.works.find((w) => w.work === 'jurassic-theme')?.versions ?? []
+  check('jurassic-theme is Amber, one take, Grok 4.7, with no note, on the Movies shelf',
+    amber.map((v) => v.take).join(',') === 'grok47' && amber[0].title === 'Amber' && amber[0].label === 'Grok 4.7' && amber[0].note === undefined && sectionOf('jurassic-theme') === 'Movies')
   const kick = shipped.works.find((w) => w.work === 'time')?.versions ?? []
   check('time is Kick, one take, Opus 5.5, with no note, on the Movies shelf',
     kick.map((v) => v.take).join(',') === 'opus55' && kick[0].title === 'Kick' && kick[0].label === 'Opus 5.5' && kick[0].note === undefined && sectionOf('time') === 'Movies')
@@ -422,7 +426,7 @@ async function main(): Promise<void> {
   check('the build writes a renamed take\'s old address as a page', /RENAMED_TAKES\[w\.work\]/.test(readFileSync(join(process.cwd(), 'vite.config.ts'), 'utf8')))
   const shelved = shelves(shipped.works).map((s) => `${s.section}: ${s.works.map((w) => w.title).join(', ')}`)
   check('the picker shelves the works as Machine, Movies and Ambient, each with its favourites pinned first',
-    shelved.join(' / ') === 'Machine: Clair de Lune, Cornfield Chase, Première Arabesque / Movies: Voyage, Epilogue, Everything, Kick, Magnum, Married Life, Merry-Go-Round, Mountain King, Palindrome, Quintessence, Rally / Ambient: Gymnopédie, Ostinato, Soft Lamp', shelved.join(' / '))
+    shelved.join(' / ') === 'Machine: Clair de Lune, Cornfield Chase, Première Arabesque / Movies: Voyage, Epilogue, Everything, Amber, Kick, Magnum, Married Life, Merry-Go-Round, Mountain King, Palindrome, Quintessence, Rally / Ambient: Gymnopédie, Ostinato, Soft Lamp', shelved.join(' / '))
   for (const work of shipped.works) {
     for (const version of work.versions) {
       const perf = await version.load()
@@ -655,6 +659,7 @@ async function main(): Promise<void> {
       if (work.work === 'bolero' && version.take === 'opus55') checkOstinato(perf, version, check)
       if (work.work === 'nature-of-daylight' && version.take === 'opus55') checkPalindrome(perf, version, check)
       if (work.work === 'time' && version.take === 'opus55') checkKick(perf, version, check)
+      if (work.work === 'jurassic-theme' && version.take === 'grok47') checkAmber(perf, version, check)
       // Soft Lamp's moving take: hidden for now (Stephen, Oct 15). Its checks hold the show the still take plays too (the
       // music, the ball, the kitten, the words), so they still run, on its code (`performance` in `lamp/index.ts`).
       // if (work.work === 'soft-lamp' && version.take === 'opus55') checkSoftLamp(perf, version, check)
