@@ -586,6 +586,30 @@ the picture is a cut or the train's lamp stabbing on). It found light still hang
 - **Home's hedges** (251 to 265) were the last flat cut-outs in the garden once the glare had gone: their crowns catch
   the morning now and their feet sit in their own shade.
 
+Glitch passes (Opus 5.5, fixes only: a section at a time, frame by frame at 60 fps, with Stephen's notes on the waves,
+the city, an orange circle and the balls' rolling):
+- **Every ball's mark rolls with it** (`marks.ts`): by the distance it rolls over its radius, round the hotel's drum
+  as the drum turns, and not at all where nothing turns it (the van and Fischer's taxi, weightless, on skis, afloat,
+  under the river); carried across the match cuts, so it no longer jumps at 30.9, 61.3 and 213.7. A look a part sets
+  (Mal's eye, Fischer's and Ariadne's on the plane, the children's faces) is kept while the ball stands and rolled on
+  as it moves; the children play whole turns of a roll from him, so they still come to rest facing him. No trail
+  behind them as they sit in the van driving off.
+- **Limbo's breakers** stand up as water, darker toward the crest, not a hairline; the glint and lace lines, the puff
+  past the crest, the haze of spray, the splash blobs, the wet sand's shine and lamp streak are gone; the foam is under
+  him; one beach under them, its bands one depth and cross-faded over a cell. The annex front is open before he
+  reaches it, the slot's dark starts at the floor, and Mal has no dark halo on the ladder.
+- **Limbo's city**: a tower's great top goes down behind its own stump and its spray rises behind it (it slid over
+  the stump, the floors through each other, under a white column of spray); it keeps its speed into the sea, and a
+  slab keeps its tower's glass.
+- **The spark** in the wides and Overview is his own size (it was an orange disc two and a half times his width).
+- **The snow**: the guards ride facing the way they go; skis swing under the ball at the hairpin and turn through the
+  lower branch's corner; no snow falls under the apron.
+- **Paris**: the near mirror's post fades as it swings away, a shard comes down flat, the reflections come up out of
+  the glass, the crowd parts round Mal without a figure jumping, the Seine's slosh and the dust gather.
+- **The rain, the plane, home**: the case's beads run the whole line; the van keeps its near wheels as they sink; the
+  river's mist thins to nothing; the landing gear comes down out of the wings and the bay; the glass door's foot
+  swings behind him; the children ease to rest in the embrace.
+
 ## Inception nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
