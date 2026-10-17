@@ -17,6 +17,8 @@ export class GiftStage {
   running = false
   paused = false
   sealed = false
+  preview = false
+  selected = 0
   onFrame: (frame: Frame) => void = () => {}
   onDone: () => void = () => {}
 
@@ -68,23 +70,23 @@ export class GiftStage {
     }
     const active = this.performance.departmentAt(t)
     const finale = this.running && t >= this.performance.finaleStart
-    if (finale) drawParcel(p, p.width / 2, p.height * 0.58, Math.min(p.width * 0.3, 160), t - this.performance.finaleStart, this.performance.recipe.finale, this.performance.recipe.hop)
+    if (finale) drawParcel(p, p.width / 2, p.height * 0.58, Math.min(p.width * 0.3, 160), this.preview ? -1 : t - this.performance.finaleStart, this.performance.recipe.finale, this.performance.recipe.hop)
     else {
       const overview = !this.running
-      const count = overview ? 3 : 1
+      const count = overview && p.width >= 520 ? 3 : 1
       for (let slot = 0; slot < count; slot++) {
-        const i = overview ? slot : active
+        const i = overview ? count === 1 ? this.selected : slot : active
         const department = this.performance.departments[i]
         const e = department.extent
         const view = { x: slot * p.width / count, y: 0, w: p.width / count, h: p.height - (overview ? 38 : 0) }
-        const k = Math.min((view.w - 24) / (e.x1 - e.x0 + 0.3), (view.h - 54) / (e.y1 - e.y0 + 0.45), overview ? 100 : 200)
+        const k = Math.min((view.w - 24) / (e.x1 - e.x0 + 0.3), (view.h - 54) / (e.y1 - e.y0 + 0.45), overview && count === 3 ? 100 : 200)
         const frame = this.performance.atDepartment(i, overview ? department.start : t)
         if (overview) frame.hidden = true
         drawWorld(p, this.performance, t, frame, { x: (e.x0 + e.x1) / 2, y: (e.y0 + e.y1) / 2 }, k, view, false)
         p.noStroke(); p.fill(INK); p.textFont('monospace'); p.textSize(overview ? 11 : 12); p.textAlign(p.CENTER, p.CENTER)
         if (overview) {
           p.text(`0${i + 1} / ${department.title.toUpperCase()}`, view.x + view.w / 2, p.height - 23)
-          if (i < 2) { p.stroke('#d4d4c9'); p.strokeWeight(1); p.line(view.x + view.w, 25, view.x + view.w, p.height - 50) }
+          if (slot < count - 1) { p.stroke('#d4d4c9'); p.strokeWeight(1); p.line(view.x + view.w, 25, view.x + view.w, p.height - 50) }
         }
       }
     }
@@ -92,7 +94,7 @@ export class GiftStage {
       p.noStroke(); p.fill(GREEN); p.circle(18, 18, 5)
       p.fill(INK); p.textAlign(p.LEFT, p.CENTER); p.textFont('monospace'); p.textSize(10); p.text('ALL SYSTEMS UNNECESSARY', 29, 18)
     }
-    if (this.running) this.onFrame({ time: t, progress: Math.min(1, t / this.performance.duration), department: active, caption: finale ? 'All that, just to say…' : this.performance.departments[active].caption, finale })
+    if (this.running) this.onFrame({ time: t, progress: Math.min(1, t / this.performance.duration), department: active, caption: finale ? this.preview ? 'Delivery checked. Secret ending still sealed.' : 'All that, just to say…' : this.performance.departments[active].caption, finale })
   }
 
   destroy(): void { this.release(); this.sketch.remove(); this.host.replaceChildren() }

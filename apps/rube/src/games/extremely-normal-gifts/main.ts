@@ -37,8 +37,8 @@ function header(): string {
 }
 
 function hero(): string {
-  if (mode === 'received' || (mode === 'playing' && !preview)) return `<section class="hero recipient-hero"><div><p class="eyebrow">SPECIAL DELIVERY / ${recipe.hop ? `ROUND ${recipe.hop + 1} OF THIS RUNNING JOKE` : 'NO OCCASION REQUIRED'}</p><h1>An extremely<br>normal gift<span class="accent">.</span></h1></div><div class="hero-note"><span class="mini-line"></span><p>For <strong>${esc(recipient(recipe))}</strong>,<br>from ${esc(sender(recipe))}.</p><span class="small">Someone went to unnecessary lengths.</span></div></section>`
-  return `<section class="hero"><div><p class="eyebrow">THE DEPARTMENT OF UNNECESSARY EFFORT</p><h1>Extremely<br>normal gifts<span class="accent">.</span></h1></div><div class="hero-note"><span class="mini-line"></span><p>One tiny compliment.<br>An <em>entire</em> production.</p><span class="small">Make a machine. Make someone’s day.</span></div><div class="normal-seal" aria-hidden="true"><span>100%</span><strong>NORMAL</strong><span>DEFINITELY</span></div></section>`
+  if (mode === 'received' || ((mode === 'playing' || mode === 'result') && !preview)) return `<section class="hero recipient-hero"><div><p class="eyebrow">SPECIAL DELIVERY / ${recipe.hop ? `ROUND ${recipe.hop + 1} OF THIS RUNNING JOKE` : 'NO OCCASION REQUIRED'}</p><h1>An extremely<br>normal gift<span class="accent">.</span></h1></div><div class="hero-note"><span class="mini-line"></span><p>For <strong>${esc(recipient(recipe))}</strong>,<br>from ${esc(sender(recipe))}.</p><span class="small">Someone went to unnecessary lengths.</span></div></section>`
+  return `<section class="hero"><div><p class="eyebrow">THE DEPARTMENT OF UNNECESSARY EFFORT</p><h1>Extremely<br>normal gifts<span class="accent">.</span></h1></div><div class="hero-note"><span class="mini-line"></span><p>One tiny compliment.<br> An <em>entire</em> production.</p><span class="small">Make a machine. Make someone’s day.</span></div><div class="normal-seal" aria-hidden="true"><span>100%</span><strong>NORMAL</strong><span>DEFINITELY</span></div></section>`
 }
 
 function noteForm(): string {
@@ -62,7 +62,7 @@ function studio(): string {
   const sealed = mode === 'received'
   return `<section class="machine-panel" aria-label="Gift delivery machine"><div class="machine-heading"><span class="eyebrow">${sealed ? 'UNOPENED / CONTENTS MOSTLY NICE' : playing ? preview ? 'TEST DELIVERY / PREVIEW' : 'DELIVERY IN PROGRESS' : 'YOUR MACHINE / ASSEMBLED TO ORDER'}</span><span class="serial">ENG—${String(recipe.hop + 1).padStart(3, '0')}</span></div>
   <div id="gift-stage" role="img" aria-label="${sealed ? 'A yellow parcel, tied with a ribbon, waiting to be opened' : 'Three mechanical departments connected by portals'}"></div>
-  <div class="stage-caption"><span id="caption" ${playing ? 'role="status" aria-live="polite"' : ''}>${sealed ? 'A small thing. In a suspiciously large production.' : playing ? 'Your compliment is entering the system.' : 'Three departments. Absolutely no shortcuts.'}</span>${playing ? '<span id="elapsed" class="mono">00:00</span>' : '<span class="direction" aria-hidden="true">→</span>'}</div>
+  ${!playing && !sealed ? `<div class="machine-tabs" aria-label="Inspect a department">${['Dispatch', 'Complicate', 'Certify'].map((label, i) => `<button data-inspect="${i}" aria-pressed="${i === 0}">0${i + 1} ${label}</button>`).join('')}</div>` : ''}<div class="stage-caption"><span id="caption" ${playing ? 'role="status" aria-live="polite"' : ''}>${sealed ? 'A small thing. In a suspiciously large production.' : playing ? 'Your compliment is entering the system.' : 'Three departments. Absolutely no shortcuts.'}</span>${playing ? '<span id="elapsed" class="mono">00:00</span>' : '<span class="direction" aria-hidden="true">→</span>'}</div>
   <div class="journey ${playing ? 'active-journey' : ''}">${['Dispatch', 'Complicate', 'Certify', 'Deliver'].map((title, i) => `<div class="journey-step" data-step="${i}"><span>0${i + 1}</span>${title}</div>`).join('')}</div>
   ${playing ? '<div class="progress-track"><div id="progress"></div></div><div class="transport"><button class="secondary" data-action="pause">'+icon('pause')+'Pause</button><button class="quiet" data-action="reveal">Skip to the nice part →</button></div>' : sealed ? '' : dispatchSlip() + '<div class="machine-actions"><span class="small">About 11 seconds.<br>Several questionable decisions.</span><button class="primary" data-action="preview">'+icon('play')+'Test the delivery</button></div>'}
   </section>`
@@ -91,10 +91,11 @@ function dialogs(): string {
 
 function render(focus = false): void {
   stage?.destroy(); stage = null; lastCaption = ''
-  app.innerHTML = `${header()}<main class="page ${mode}">${hero()}${invalid ? '<div class="error-note" role="alert">This gift link is incomplete or from a newer version. You can still make a fresh gift below.<button class="quiet" data-action="dismiss">Dismiss</button></div>' : ''}${replyingTo && mode === 'compose' ? `<div class="reply-banner">${icon('gift')}<span>RETURN DELIVERY ${recipe.hop + 1} · Same tiny compliment. Change one mechanism to keep the joke going.</span></div>` : ''}${mode === 'compose' ? `<div class="workbench">${studio()}<aside class="composer" aria-label="Compose your gift">${noteForm()}${optionsForm()}</aside></div>` : mode === 'received' ? `<div class="workbench">${studio()}${receivedPanel()}</div>` : mode === 'playing' ? `<div class="theatre">${studio()}<p class="small center">${preview ? 'A test run. Your secret ending comes next.' : 'Please remain extremely normal during delivery.'}</p></div>` : mode === 'result' ? result() : shared()}<footer class="page-footer"><span>BUILT WITH CONTRAPTIONS. SENT WITH FEELING.</span><span>No occasion required. <span aria-hidden="true">↗</span></span></footer></main>${dialogs()}<div id="toast" class="toast" role="status"></div>`
+  app.innerHTML = `${header()}<main class="page ${mode}">${hero()}${invalid ? '<div class="error-note" role="alert">This gift link is incomplete or from a newer version. You can still make a fresh gift below.<button class="quiet" data-action="dismiss">Dismiss</button></div>' : ''}${replyingTo && mode === 'compose' ? `<div class="reply-banner">${icon('gift')}<span>RETURN DELIVERY ${recipe.hop + 1} · Same tiny compliment. Change one mechanism to keep the joke going.</span></div>` : ''}${mode === 'compose' ? `<div class="workbench">${studio()}<aside class="composer" aria-label="Compose your gift">${noteForm()}${optionsForm()}</aside></div>` : mode === 'received' ? `<div class="workbench">${studio()}${receivedPanel()}</div>` : mode === 'playing' ? `<div class="theatre">${studio()}<p class="small center">${preview ? 'A test run. Your secret ending comes next.' : 'Please remain extremely normal during delivery.'}</p></div>` : mode === 'result' ? result() : shared()}<footer class="page-footer"><span>BUILT WITH CONTRAPTIONS. SENT WITH FEELING.</span><span>No occasion required. <span aria-hidden="true">↗</span></span></footer></main>${mode === 'compose' ? `<div class="mobile-preview"><span>1 compliment. 3 mechanisms.</span><button class="primary" data-action="preview">${icon('play')}Test delivery</button></div>` : ''}${dialogs()}<div id="toast" class="toast" role="status"></div>`
   if (mode === 'compose' || mode === 'received' || mode === 'playing') {
     stage = new GiftStage(document.querySelector('#gift-stage')!, performance(), audio)
     stage.sealed = mode === 'received'
+    stage.preview = preview
     stage.onFrame = frame => {
       const caption = document.querySelector('#caption')!
       if (frame.caption !== lastCaption) { caption.textContent = frame.caption; lastCaption = frame.caption }
@@ -156,6 +157,11 @@ app.addEventListener('click', async event => {
   const button = (event.target as Element).closest<HTMLButtonElement>('button')
   if (!button) return
   audio.click()
+  if (button.dataset.inspect !== undefined) {
+    if (stage) { stage.selected = Number(button.dataset.inspect); stage.redraw() }
+    document.querySelectorAll<HTMLButtonElement>('[data-inspect]').forEach(b => b.setAttribute('aria-pressed', String(b === button)))
+    return
+  }
   if (button.dataset.slot !== undefined) {
     const slot = Number(button.dataset.slot); const pick = Number(button.dataset.pick)
     if (replyingTo) recipe.picks = [...replyingTo.picks]
@@ -163,6 +169,8 @@ app.addEventListener('click', async event => {
     document.querySelectorAll<HTMLButtonElement>('[data-slot]').forEach(b => { const selected = recipe.picks[Number(b.dataset.slot)] === Number(b.dataset.pick); b.classList.toggle('selected', selected); b.setAttribute('aria-pressed', String(selected)) })
     recipe.picks.forEach((p, i) => { document.querySelector(`#choice-note-${i}`)!.textContent = OPTIONS[i][p].line })
     stage?.setPerformance(performance())
+    if (stage) { stage.selected = slot; stage.redraw() }
+    document.querySelectorAll<HTMLButtonElement>('[data-inspect]').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.inspect) === slot)))
     return
   }
   if (button.dataset.message) {
