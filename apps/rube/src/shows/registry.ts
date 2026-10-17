@@ -348,6 +348,7 @@ const SHELVED: Record<string, Section> = {
   'premiere-arabesque': 'Machine',
   'cornfield-chase': 'Machine',
   raindrop: 'Machine',
+  surprise: 'Machine',
   bolero: 'Ambient',
   gymnopedie: 'Ambient',
   'soft-lamp': 'Ambient',
