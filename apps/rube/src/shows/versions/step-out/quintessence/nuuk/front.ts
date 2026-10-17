@@ -24,7 +24,7 @@ export const nuukFront = scenery<null>({
     const t = c.t
     drawSmoke(g, v, t)
     drawDaylight(g, v, t)
-    drawNear(g, v, t)
+    drawNear(g, v)
     // The room's warm dark at the edges; outside on the quay, a cold grey one.
     const out = smooth(v.cx, WALL_OUT[1] + 0.5, WALL_OUT[1] + 3.5)
     edgeDark(g, v, mix('#140C08', '#3C474D', out), 0.6 - 0.25 * out, 0.6, 0.05 * (1 - out))
@@ -72,11 +72,12 @@ function drawDaylight(g: CanvasRenderingContext2D, v: View, t: number): void {
  * The near plane, at the frame's foot only: the end of the near counter with its beer tap inside; out on the quay,
  * the near edge of its deck, a stack of fish boxes and a coil of rope. They go by faster than the room as the camera moves.
  */
-function drawNear(g: CanvasRenderingContext2D, v: View, t: number): void {
+function drawNear(g: CanvasRenderingContext2D, v: View): void {
   layer(g, v, 1.38, BAR_AT, BAR_REF, (inner) => {
     const k = inner.k
     const top = 0.66
-    if (inner.y1 < top) return
+    // Nothing here stands higher than the tap's handles, 0.62 over the counter's top.
+    if (inner.y1 < top - 0.65) return
     // The near counter's end: its top edge lit by the lamps, its dark front; the tap on it.
     const c0 = -4
     const c1 = -0.55
@@ -87,7 +88,7 @@ function drawNear(g: CanvasRenderingContext2D, v: View, t: number): void {
       g.fillRect(c0 * k, top * k, (c1 - c0 + 0.06) * k, 0.07 * k)
       g.fillStyle = rgbaOf('#F2C879', 0.35)
       g.fillRect(c0 * k, top * k, (c1 - c0 + 0.06) * k, 0.012 * k)
-      // The beer tap: a brass column, a cross-bar, two handles, a drop now and then.
+      // The beer tap: a brass column, a cross-bar, two handles.
       const tx = -0.95
       g.fillStyle = '#9C7A45'
       g.fillRect((tx - 0.035) * k, (top - 0.42) * k, 0.07 * k, 0.42 * k)
@@ -97,13 +98,6 @@ function drawNear(g: CanvasRenderingContext2D, v: View, t: number): void {
       g.fillRect((tx + 0.09) * k, (top - 0.6) * k, 0.04 * k, 0.16 * k)
       g.fillStyle = '#C4A267'
       g.fillRect((tx - 0.035) * k, (top - 0.41) * k, 0.025 * k, 0.38 * k)
-      const drip = ((t * 0.7) % 1 + 1) % 1
-      if (drip < 0.35) {
-        g.fillStyle = rgbaOf('#E0B060', 0.8)
-        g.beginPath()
-        g.arc((tx + 0.11) * k, (top - 0.38 + drip * 0.9) * k, 0.012 * k, 0, Math.PI * 2)
-        g.fill()
-      }
     }
     // Out on the quay: the near edge of its deck, wet, two puddles on it holding the sky; fish boxes stacked on it,
     // and a coil of rope.
