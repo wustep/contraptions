@@ -18,7 +18,7 @@ empty council seats are architecture, not additional cast members.
 | --- | --- | --- |
 | 0:00–0:24 | Bag End; accepting the ring | The ring rolls out of the round door's pocket and withdraws a latch. Frodo and Sam leave together. |
 | 0:24–1:04 | The road and the Black Riders | Three suspended root shutters close behind the travellers. The path is progressively shut off from home. |
-| 1:04–1:39 | The Council of Elrond | Nine empty seats surround a balance. The two small weights join Gandalf; their shared load tips the east end down. |
+| 1:04–1:39 | The Council of Elrond | Nine empty seats surround a balance. The two small weights join Gandalf; their shared load brings the balance into line with the mountain road. |
 | 1:39–2:38 | The mountain pass; entering Moria | A descending stone counterweight raises the fellowship's cradle. A slab closes the high pass, sending them down to the west door. |
 | 2:38–3:54 | The long dark of Moria | A bucket falls, pulls a clutch, and rocks a monumental stair onto the far landing. The three cross its current surface together. |
 | 3:54–4:40 | The bridge; Gandalf's sacrifice | Gandalf steps onto the pin's small perch to let the others through. The iron mass tensions two chains. His weight withdraws the pin; three slabs and Gandalf fall, leaving a lasting gap. |
@@ -135,3 +135,21 @@ counterweight and survivors now move through a clear field. One bough anchors
 the pulley. Moved the distant ridges behind the waterline so the final river
 stays open ahead of the skiff. No camera or motion timing changed. Repeated
 the complete 1× review, 30 fps frame scan and full build gate.
+
+### Round 6
+
+The full 1× review and close scrubs found the hoop crossing the cast during
+its temptation and release. It now lifts clear first, then lowers after
+passing Sam; the same scored bounds remain. Extended the 120 fps clearance
+check across the whole film. Removed the river engraving's periodic reset.
+The skiff now takes the launch and Sam's landing with small decaying impulses
+shared by its passengers and hoop, replacing the perpetual sine bob.
+
+Repeated the entire film at 1×, the complete 30 fps scan, seven consecutive
+frame sheets, Zoom, Overview, and nine live portrait compositions. No camera
+keys, score anchors or credit times changed in rounds 4–6.
+
+The final browser review had zero page errors and exact reverse-scrub pixels.
+A fresh 720p Save video excerpt confirms matte credits and no audio stream.
+The official YouTube player loaded without fallback; its clock measured
+0.990× and 1.980× at the two speeds. Lint, typecheck, full tests and build passed.

@@ -12,12 +12,15 @@ export function checkBurden(perf: Performance, version: ShowVersion, check: Chec
     perf.soundtrack.youtube[0].id === 'vbKy6FuACKg' && perf.soundtrack.youtube[0].until === MUSIC_END)
   let continuous = true, stable = true, framed = true, separate = true, deterministic = true
   let worst = 0, worstAt = 0
+  let hoopGap = Infinity, hoopAt = 0
   const colours = new Map(Object.values(CAST).map(c => [c.id as number, c.color]))
   let previous = castAt(0)
   for (let frame = 1; frame <= DURATION * 120; frame++) {
-    const t = frame / 120, balls = castAt(t)
+    const t = frame / 120, balls = castAt(t), hoop = ringAt(t)
     stable &&= balls.length === (t < 282 ? 3 : 2) && new Set(balls.map(b => b.id)).size === balls.length
     for (const b of balls) {
+      const gap = Math.hypot(b.x - hoop[0], b.y - hoop[1])
+      if (gap < hoopGap) { hoopGap = gap; hoopAt = t }
       stable &&= colours.get(b.id) === b.color && b.scale === RADIUS / 0.13 && !b.ghost
       const a = previous.find(p => p.id === b.id)
       if (a && !(b.id === 2 && t > BEATS.break)) {
@@ -46,11 +49,9 @@ export function checkBurden(perf: Performance, version: ShowVersion, check: Chec
   check('Burden: the cast never pass through one another', separate)
   check('Burden: Frodo remains inside the composed and Zoom frames', framed)
   check('Burden: seeking backwards cannot alter a later frame', deterministic)
-  let chuteClear = true, gatesClear = true
-  for (let f = 0; f <= 8 * 120; f++) {
-    const q = ringAt(f / 120), s = samAt(f / 120)
-    chuteClear &&= Math.hypot(q[0] - s[0], q[1] - s[1]) > RADIUS + 0.223
-  }
+  check('Burden: the hoop clears the cast through pickup, temptation, release and landing',
+    hoopGap > RADIUS + 0.223, `minimum centre distance ${hoopGap.toFixed(4)} at ${hoopAt.toFixed(3)}s`)
+  let gatesClear = true
   // Swept clearance against the whole root, including its widest section.
   for (let i = 0; i < 3; i++) {
     const x = 11 + i * 5.2, y = roadY(x) + RADIUS - 3.35
@@ -63,7 +64,6 @@ export function checkBurden(perf: Performance, version: ShowVersion, check: Chec
       }
     }
   }
-  check('Burden: the opening hoop clears Sam before its pickup', chuteClear)
   check('Burden: raised roots clear both travellers and close behind them', gatesClear)
   let contact = true
   for (let t = 112; t < 140; t += 0.05) contact &&= Math.abs(frodoAt(t)[1] - liftAt(t)[1]) < 1e-8

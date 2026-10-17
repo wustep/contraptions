@@ -65,7 +65,9 @@ export const leafAt = (t: number): Pt => {
 }
 const shoreX = curve([[307, 149.5], [313, 152.7], [319, 155]])
 const boatX = curve([[319, 155], [326, 159.5], [330, 160.7], [339, 168], [357, 179], [383, 181]])
-export const boatAt = (t: number): Pt => [boatX(t), 10.7 + 0.026 * Math.sin((t - 319) * 1.2) * smooth(t, 319, 323)]
+// The launch and Sam's landing disturb one shared hull. Both impulses decay;
+// the long river hold has no perpetual decorative bobbing.
+export const boatAt = (t: number): Pt => [boatX(t), 10.7 + settle(t, 319, 0.045, 2.8, 1.8) + settle(t, 329.2, 0.09, 1.8, 2.8)]
 export const boatAngle = (t: number): number => 0.07 * smooth(t, 320, 324) - 0.07 * smooth(t, 329.2, 334) + settle(t, 329.2, -0.11, 3, 2.5)
 function seated(t: number, offset: number): Pt {
   const q = boatAt(t), r = rotate(offset, -0.06, boatAngle(t))
@@ -141,9 +143,11 @@ export function ringAt(t: number): Pt {
     return [p[0] + q[0], p[1] + q[1]] as Pt
   })()
   const temptation = smooth(t, 311, 315) * (1 - smooth(t, 317, 320))
+  const lifted = smooth(t, 311, 312.2) * (1 - smooth(t, 319, 320))
   // The aperture's hanging cord draws the hoop toward the empty seat; the
-  // traveller keeps moving until the tether slips free. The pull has a source.
-  return [mix(ground[0], 152.8, temptation * 0.82), mix(ground[1] + 0.045, 9.7, temptation * 0.82)]
+  // hoop lifts before crossing Frodo and stays above Sam until it slips free.
+  // The same scored pull, hold and release now have a clear physical path.
+  return [mix(ground[0], 152.8, temptation * 0.82), mix(ground[1] + 0.045, 9.7, lifted * 0.82)]
 }
 
 export function castAt(t: number): ShowBall[] {

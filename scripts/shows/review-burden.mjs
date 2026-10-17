@@ -81,7 +81,7 @@ if (args.watch) {
 }
 await sheet('story', [0, 8, 18, 37, 56, 68, 82, 94, 113, 130, 146, 158, 174, 187.2, 198.4, 212, 240, 250, 263.4, 274.2, 276, 281, 294, 306, 317, 326, 329.2, 339, 349, 357, 365, 379])
 // Consecutive frames, not a thumbnail sampler, on the two most consequential handoffs.
-for (const [name, at] of [['ring-pickup', 7.6], ['shutter-close', 40], ['stair-handoff', 190], ['bridge-break', 274.2], ['sam-catch', 329.2]]) {
+for (const [name, at] of [['ring-pickup', 7.6], ['shutter-close', 40], ['stair-handoff', 190], ['bridge-break', 274.2], ['ring-release', 319], ['sam-catch', 329.2], ['river-drift', 333.333]]) {
   await sheet(name, Array.from({ length: 20 }, (_, i) => at + (i - 8) / 30), 320, 4)
 }
 for (const [name, t] of [['shire', 4], ['road', 41], ['council', 86], ['pass', 132], ['bridge', 264], ['grove', 296], ['fellowship', 345]]) {

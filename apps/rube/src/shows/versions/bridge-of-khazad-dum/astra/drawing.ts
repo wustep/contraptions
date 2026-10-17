@@ -180,7 +180,7 @@ export const landscape = piece('burden-landscape', (g, t) => {
   // The river has no specular reflection: cut horizontal lines in a matte sheet.
   rect(g, 145, 11.2, 100, 50, mixHex('#8D9F93', '#566F65', smooth(t, 325, 353)))
   for (let i = 0; i < 85; i++) {
-    const x = 145 + hash(i, 70) * 60 - (t * 0.018 % 2), y = 11.6 + hash(i, 74) * 18
+    const x = 145 + hash(i, 70) * 60 - t * 0.018, y = 11.6 + hash(i, 74) * 18
     line(g, [[x, y], [x + 0.45 + hash(i, 80) * 2.2, y]], '#9DAA92', 0.025)
   }
 })
