@@ -97,7 +97,14 @@ export function paintShow(
   g.drawImage(canvas, 0, 0)
   g.globalCompositeOperation = 'source-over'
   const view = paintFrame(p, perf, time, overview, zoom, dest)
-  if (blend.iris) {
+  let a = Math.min(1, blend.a)
+  if (blend.iris && overview) {
+    // Overview frames each side by its whole place, so the two frames do not match and an opening would show some other
+    // part of the other place: a plain dissolve instead, as far through as the opening has come.
+    const r = blend.iris.r * view.k
+    const share = Math.min(1, (Math.PI * r * r) / (view.w * view.h))
+    a *= blend.iris.out ? 1 - share : share
+  } else if (blend.iris) {
     // The opening, in device pixels: its middle and radius taken through the live frame's camera.
     const { x, y, r, soft, out } = blend.iris
     const d = p.pixelDensity()
@@ -115,7 +122,7 @@ export function paintShow(
   }
   ctx.save()
   ctx.setTransform(1, 0, 0, 1, 0, 0)
-  ctx.globalAlpha = Math.min(1, blend.a)
+  ctx.globalAlpha = a
   ctx.drawImage(kept, 0, 0)
   ctx.restore()
 }

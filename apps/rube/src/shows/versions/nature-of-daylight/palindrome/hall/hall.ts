@@ -360,7 +360,7 @@ export const teaching = part<{ begin: number }>(
     // Held as the cut left it while the fog's white goes off it (the dissolve, `score.ts`); then the hall full in
     // daylight, her at the lectern and their writing coming up on the screen over her.
     key(slot.begin + 0.45, 4.4, 0.8, -0.8),
-    key(slot.begin + 1.2, 5.0, 1.4, -1.45),
+    key(slot.begin + 1.7, 5.0, 1.4, -1.45),
     key(slot.end, 4.7, 1.3, -1.3),
   ],
 )
