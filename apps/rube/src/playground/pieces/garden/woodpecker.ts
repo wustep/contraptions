@@ -12,15 +12,17 @@ import { nearestHue, soil, tuft } from '../../../pieces/garden/green'
  * and stops in its dish, and the jolt sets the bird nodding on its spring;
  * every nod rocks the collar through level, and every time it is level it
  * slips a notch, so bird, tray and ball judder down the pole, a rock and a
- * drop, a rock and a drop, the beak knocking the pole at the end of every
- * other one. At the foot the collar lands on a stop, the tray tips, and the
- * ball rolls off it onto the path a floor or two down: off the tray's open
- * end, back the way it came, or off its near end past the pole and on. The
- * bird nods itself still.
+ * drop, a rock and a drop, the beak knocking the pole at the bottom of
+ * every nod. At the foot the collar lands on a stop, the tray drops on its
+ * hinge, and the ball rolls off it onto the path a floor or two down: off
+ * the tray's open end, back the way it came, or off its near end past the
+ * pole and on. The bird nods itself still, clear of the pole.
  *
  * Collar, tray, bird and ball are one motion: how far the collar has slipped
  * and how far it is cocked, both from the one nod. The lane is the tray's
- * dish traced from it, so the ball is on the tray at every frame.
+ * dish traced from it, so the ball is on the tray at every frame. The bird
+ * nods with its spring, and the pole stops its beak: a nod that would carry
+ * the beak into the wood is held at the pole's face, and that is the knock.
  */
 export interface WoodpeckerState {
   color: string
@@ -41,7 +43,7 @@ const NOTCH = 0.1
 const COCK = 0.085
 /** The slip is the first part of each half nod: level, slipping, then cocked enough to bite. */
 const SLIP = 0.42
-/** How far the tray ends up tipped on the stop, radians, and how long that takes. */
+/** How far the tray ends up dropped on its hinge once the collar is on the stop, radians, and how long that takes. */
 const TIP = 0.19
 const TIP_T = 0.16
 /** How hard the ball is sent along the tipped tray, cells a second squared. */
@@ -49,8 +51,16 @@ const SHED = 7
 /** The bird: how long its spring is, where the spring leaves the collar, and how it leans at rest, radians up from level. */
 const SPRING = 0.416
 const SPRING_AT: Pt = [0.05, -0.09]
-const LEAN = 0.956
-const NODS = 0.1
+const LEAN = 0.8
+/** How far the spring swings either way in a nod, radians; the bird turns with it, a little more than it, beak down as it comes forward. */
+const SWING = 0.28
+const BOW = -0.05
+const BEND = 1.2
+/** The bird's size, and its beak's tip in its own frame. */
+const BIRD = 1.12
+const BEAK: Pt = [-0.215, -0.06]
+/** The pole's face, which stops the beak: its half width and half its outline. */
+const FACE = 0.0225 + 0.0185
 
 const SEAT_X = POLE + DISH
 const ARRIVE = arriveAt(SEAT_X)
@@ -85,27 +95,66 @@ function dropFor(floors: number, turn: 1 | -1): Drop {
   return out
 }
 
-/** The collar at piece time `t`: how far down the pole, how far cocked (clockwise positive), and the nod's phase. */
-function collarAt(t: number, d: Drop, turn: 1 | -1): { y: number; tilt: number; nod: number } {
+interface Collar {
+  /** How far down the pole, and how far cocked, clockwise positive. */
+  y: number
+  tilt: number
+  /** The tray's angle: the collar's, and its drop on the hinge at the foot. */
+  tray: number
+  /** How far the bird's spring has swung forward, radians, before the pole stops the beak. */
+  swing: number
+}
+
+/** The collar at piece time `t`. Rock and nod start from rest together, the bird coming forward first. */
+function collarAt(t: number, d: Drop, turn: 1 | -1): Collar {
   if (t < START) {
     // The tray gives a hair as the ball comes onto it.
     const give = t < ARRIVE - 0.12 ? 0 : 0.012 * Math.sin(Math.PI * clamp((t - ARRIVE + 0.12) / 0.19))
-    return { y: FLOOR + give, tilt: 0, nod: 0 }
+    return { y: FLOOR + give, tilt: 0, tray: 0, swing: 0 }
   }
   const v = Math.min(d.halves, (t - START) / (NOD / 2))
   const i = Math.floor(v)
   const f = v - i
   const slipped = i >= d.halves ? d.halves : i + Math.pow(clamp(f / SLIP), 2)
-  // After it lands the nodding dies away, and the collar goes over onto the stop.
+  // After it lands the nodding dies away, and the tray drops onto its stop.
   const after = Math.max(0, t - d.lands)
   const dying = Math.exp(-after * 7)
-  const phase = Math.PI * ((t - START) / (NOD / 2))
-  const tip = turn * TIP * (easeOutQuad(clamp(after / TIP_T)) + 0.18 * Math.exp(-after * 9) * Math.sin(after * 30) * clamp(after / 0.05))
-  return { y: FLOOR + (slipped / d.halves) * d.fall, tilt: COCK * Math.sin(phase) * dying * clamp((t - START) / NOD) + (after > 0 ? tip : 0), nod: Math.sin(phase - 0.5) * dying }
+  const rock = Math.sin(Math.PI * ((t - START) / (NOD / 2))) * dying
+  const tip = after > 0 ? turn * TIP * (easeOutQuad(clamp(after / TIP_T)) + 0.18 * Math.exp(-after * 9) * Math.sin(after * 30) * clamp(after / 0.05)) : 0
+  return { y: FLOOR + (slipped / d.halves) * d.fall, tilt: COCK * rock, tray: COCK * rock + tip, swing: SWING * rock }
 }
 
 /** A point `u` along the tray from the pole and `up` off its top, with the collar at `c`. */
-const onTray = (c: { y: number; tilt: number }, u: number, up: number): Pt => [POLE + u * Math.cos(c.tilt) + up * Math.sin(c.tilt), c.y + u * Math.sin(c.tilt) - up * Math.cos(c.tilt)]
+const onTray = (c: { y: number; tray: number }, u: number, up: number): Pt => [POLE + u * Math.cos(c.tray) + up * Math.sin(c.tray), c.y + u * Math.sin(c.tray) - up * Math.cos(c.tray)]
+
+/** The bird with its spring swung `swing`: where the spring's end is, and how the bird is turned there, in the collar's frame. */
+function birdAt(swing: number): { at: Pt; a: number } {
+  const lean = LEAN + swing
+  return { at: [SPRING_AT[0] + SPRING * Math.cos(lean), SPRING_AT[1] - SPRING * Math.sin(lean)], a: BOW - BEND * swing }
+}
+
+/** How far the beak's tip is from the pole's middle, across, with the spring swung `swing` and the collar cocked `tilt`. */
+function beakX(swing: number, tilt: number): number {
+  const { at, a } = birdAt(swing)
+  const bx = BEAK[0] * BIRD
+  const by = BEAK[1] * BIRD
+  const x = at[0] + bx * Math.cos(a) - by * Math.sin(a)
+  const y = at[1] + bx * Math.sin(a) + by * Math.cos(a)
+  return x * Math.cos(tilt) - y * Math.sin(tilt)
+}
+
+/** The swing the bird is drawn at: as far as the nod carries it, unless the pole is in the way. The beak only nears the pole as the swing grows. */
+function stopped(swing: number, tilt: number): number {
+  if (beakX(swing, tilt) >= FACE) return swing
+  let lo = 0
+  let hi = swing
+  for (let n = 0; n < 16; n++) {
+    const mid = (lo + hi) / 2
+    if (beakX(mid, tilt) >= FACE) lo = mid
+    else hi = mid
+  }
+  return lo
+}
 
 /** Where along the tray the ball is at piece time `t`. */
 function alongAt(t: number, d: Drop, turn: 1 | -1): number {
@@ -137,11 +186,11 @@ const lane = (floors: number, turn: 1 | -1): Lane => {
   return LANES.get(key)!
 }
 
-/** The bird, drawn about the end of its spring, beak toward the pole (to the left), leaning `a` radians beak down. */
+/** The bird, drawn about the end of its spring, beak toward the pole (to the left), turned `a` radians, beak up. */
 function bird(p: p5, k: number, ink: string, weight: number, body: string, crest: string, a: number): void {
   p.push()
   p.rotate(a)
-  p.scale(1.12)
+  p.scale(BIRD)
   // Tail, body, head: three shapes, one bird.
   solid(p, ink, weight, body)
   p.triangle(0.04 * k, 0.0, 0.165 * k, 0.075 * k, 0.15 * k, -0.015 * k)
@@ -152,7 +201,7 @@ function bird(p: p5, k: number, ink: string, weight: number, body: string, crest
   p.circle(-0.085 * k, -0.065 * k, 0.105 * k)
   p.fill(ink)
   p.noStroke()
-  p.triangle(-0.128 * k, -0.09 * k, -0.128 * k, -0.04 * k, -0.215 * k, -0.06 * k)
+  p.triangle(-0.128 * k, -0.09 * k, -0.128 * k, -0.04 * k, BEAK[0] * k, BEAK[1] * k)
   p.circle(-0.095 * k, -0.075 * k, 0.024 * k)
   p.pop()
 }
@@ -189,11 +238,11 @@ export const woodpecker = definePiece<WoodpeckerState>({
     solid(p, ink, weight, s.color)
     p.circle(POLE * k, -0.43 * k, 0.085 * k)
     p.rect(POLE * k, (ground - 0.03) * k, 0.2 * k, 0.06 * k, 0.015 * k)
-    p.rect(POLE * k, (FLOOR + d.fall + 0.08) * k, 0.1 * k, 0.04 * k, 0.012 * k)
+    p.rect(POLE * k, (FLOOR + d.fall + 0.04) * k, 0.1 * k, 0.04 * k, 0.012 * k)
     // The path in on its long stake, and the path out below, which the tray's low end comes down level with.
     post(p, k, ink, weight, -0.43, FLOOR, ground)
     rail(p, k, ink, weight, -0.5, RAIL_END)
-    const rest = onTray({ y: FLOOR + d.fall, tilt: turn * TIP }, d.edge, 0)
+    const rest = onTray({ y: FLOOR + d.fall, tray: turn * TIP }, d.edge, 0)
     if (turn > 0) rail(p, k, ink, weight, rest[0] + 0.01, 0.5, floors + FLOOR)
     else rail(p, k, ink, weight, -0.5, rest[0] - 0.01, floors + FLOOR)
 
@@ -201,8 +250,9 @@ export const woodpecker = definePiece<WoodpeckerState>({
     p.push()
     p.translate(POLE * k, c.y * k)
     p.rotate(c.tilt)
-    const lean = LEAN - NODS * c.nod
-    const at: Pt = [SPRING_AT[0] + SPRING * Math.cos(lean), SPRING_AT[1] - SPRING * Math.sin(lean)]
+    const swing = stopped(c.swing, c.tilt)
+    const lean = LEAN + swing
+    const { at, a } = birdAt(swing)
     // The spring: a zigzag from the collar to the bird's breast.
     outline(p, ink, weight * 0.8)
     p.noFill()
@@ -216,11 +266,12 @@ export const woodpecker = definePiece<WoodpeckerState>({
     p.endShape()
     p.push()
     p.translate(at[0] * k, at[1] * k)
-    bird(p, k, ink, weight / 1.12, s.color, s.crest, -0.2 + 0.45 * c.nod)
+    bird(p, k, ink, weight / BIRD, s.color, s.crest, a)
     p.pop()
-    // The collar, and the tray with its dish.
+    // The collar, and the tray with its dish on the collar's hinge.
     solid(p, ink, weight, s.crest)
     p.rect(0, -0.04 * k, 0.1 * k, 0.12 * k, 0.015 * k)
+    p.rotate(c.tray - c.tilt)
     solid(p, ink, weight, bg)
     p.beginShape()
     p.vertex(TRAY[0] * k, 0)
