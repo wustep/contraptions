@@ -133,15 +133,6 @@ function inside(poly: readonly Pt[], x: number, y: number): boolean {
   return hit
 }
 
-/** A snowfield: its outline, and the few bands of rock showing through its snow, each with the snow lying on its top (made once). */
-interface Field {
-  outline: Path2D
-  bands: { rock: Path2D; top: Path2D; y: number }[]
-}
-
-/** A band of rock: where its left end is, how long it runs along the strata, and how thick it stands out of the snow. */
-type Band = [number, number, number, number]
-
 /** A closed outline as a path, in cells. */
 function shape(pts: readonly Pt[]): Path2D {
   const path = new Path2D()
@@ -150,10 +141,26 @@ function shape(pts: readonly Pt[]): Path2D {
   return path
 }
 
-function field(outline: readonly Pt[], bands: readonly Band[], tilt: number, seed: number): Field {
-  return {
-    outline: shape(outline),
-    bands: bands.map(([xa, y0, len, th], j) => {
+/**
+ * The rock showing through the face's snow: a few long bands, where they hold the picture together. One beside the
+ * first leg, one in the bend of the switchback, one under the ledge, and one high on the left under the summit ridge.
+ * Each is where its left end is, how long it runs along the strata, and how thick it stands out of the snow.
+ */
+const BANDS: [number, number, number, number][] = [
+  [3.1, -1.3, 2.9, 0.4],
+  [3.4, -5.4, 3.2, 0.45],
+  [7.6, -7.9, 2.0, 0.35],
+  [-5.6, -8.6, 3.6, 0.5],
+]
+/** How the strata tilt: y per x. */
+const TILT = -0.09
+
+/** The face's outline, and its bands of rock, each with the snow lying on its top (made once). */
+let faceGeo: { outline: Path2D; bands: { rock: Path2D; top: Path2D; y: number }[] } | null = null
+function faceOf() {
+  return (faceGeo ??= {
+    outline: shape(FACE),
+    bands: BANDS.map(([xa, y0, len, th], j) => {
       // Tilted with the strata, ragged along its top where the snow lies.
       const top: Pt[] = []
       const low: Pt[] = []
@@ -161,41 +168,15 @@ function field(outline: readonly Pt[], bands: readonly Band[], tilt: number, see
       for (let i = 0; i <= n; i++) {
         const u = i / n
         const x = xa + len * u
-        const y = y0 + len * u * tilt
+        const y = y0 + len * u * TILT
         const taper = Math.sin(Math.PI * u) ** 0.6
-        top.push([x, y - th * taper * (0.55 + 0.45 * hash(j * 31, i + 100, seed))])
+        top.push([x, y - th * taper * (0.55 + 0.45 * hash(j * 31, i + 100, 41))])
         low.push([x, y + th * 0.25 * taper])
       }
       const cap = top.map(([x, y], i): Pt => [x, y + th * 0.3 * Math.sin((Math.PI * i) / n) ** 0.6])
       return { rock: shape([...top, ...[...low].reverse()]), top: shape([...top, ...cap.reverse()]), y: y0 - th }
     }),
-  }
-}
-
-/**
- * The rock showing through the face's snow: a few long bands, where they hold the picture together. One beside the
- * first leg, one in the bend of the switchback, one under the ledge, and one high on the left under the summit ridge.
- */
-const FACE_BANDS: Band[] = [
-  [3.1, -1.3, 2.9, 0.4],
-  [3.4, -5.4, 3.2, 0.45],
-  [7.6, -7.9, 2.0, 0.35],
-  [-5.6, -8.6, 3.6, 0.5],
-]
-
-let faceGeo: Field | null = null
-const faceOf = (): Field => (faceGeo ??= field(FACE, FACE_BANDS, -0.09, 41))
-
-/** The bands of rock on a snowfield, in the hour's light: the rock, and the snow on its top, which catches the sun once the light is down to it. */
-function paintField(c: C2, g: Field, tn: Tone, t: number, rock: string): void {
-  if (!g.bands.length) return
-  c.fillStyle = rock
-  for (const b of g.bands) c.fill(b.rock)
-  const snow = mix(tn.faceSnow, '#FFFFFF', 0.4)
-  for (const b of g.bands) {
-    c.fillStyle = litSnow(tn, t, b.y, snow)
-    c.fill(b.top)
-  }
+  })
 }
 
 export function drawFace(pen: Pen, f: Frame, t: number): void {
@@ -206,7 +187,15 @@ export function drawFace(pen: Pen, f: Frame, t: number): void {
     // Snow over all of it, bluer low down, and the sun on it down to where the light has reached.
     bands(c, f.x0 - 1, f.x1 + 1, -14, 10, (y) => mix(tn.faceSnow, tn.faceLow, Math.max(0, Math.min(1, (y + 13.5) / 22.5))), g.outline)
     if (ly > -14.5) sunOn(c, FACE, ly, mix(tn.faceSnow, tn.faceLit, 0.95))
-    paintField(c, g, tn, t, mix(tn.faceRock, tn.faceShade, 0.42))
+    // The bands of rock (a value lighter than the steps' slabs, so the climb reads against them), and the snow on their
+    // tops, which catches the sun once the light is down to it.
+    c.fillStyle = mix(tn.faceRock, tn.faceShade, 0.42)
+    for (const b of g.bands) c.fill(b.rock)
+    const snow = mix(tn.faceSnow, '#FFFFFF', 0.4)
+    for (const b of g.bands) {
+      c.fillStyle = litSnow(tn, t, b.y, snow)
+      c.fill(b.top)
+    }
     // The snow the climb starts in, along the foot.
     if (f.y1 > R - 0.5) {
       c.fillStyle = mix(tn.faceSnow, '#FFFFFF', 0.25)
@@ -307,18 +296,13 @@ const BEHIND: Pt[] = [[12.0, FY - 0.05], [12.4, FY - 0.66], [12.9, FY - 1.05], [
  */
 const SPUR: Pt[] = [[11.2, 2], [11.5, -3.6], [11.66, -7.4], [11.6, -7.75], [11.8, -8.1], [11.72, -8.42], [11.9, -8.72], [11.85, -8.98], [12.0, FY - 0.05], [13.1, FY - 0.1], [14.4, FY], [16.2, FY - 0.25], [16.9, FY + 0.1], [18.0, FY + 0.55], [19.4, FY + 1.3], [20.8, FY + 2.3], [22.6, FY + 3.8], [24.6, FY + 5.6], [26.5, 2]]
 
-/** Two bands of rock on the spur's flank, below where the cat walks; the mountain behind it is all snow, so the cat is pale on pale. */
-const SPUR_BANDS: Band[] = [
-  [12.9, -8.55, 1.5, 0.28],
-  [15.0, -8.3, 1.8, 0.3],
-]
-
-let farGeo: { behind: Path2D; spur: Field; snowTop: Path2D } | null = null
+/** The spur and the mountain behind it are all snow, but for the two rocks on its top: the cat is pale on pale. */
+let farGeo: { behind: Path2D; spur: Path2D; snowTop: Path2D } | null = null
 function farOf() {
   if (farGeo) return farGeo
   farGeo = {
     behind: shape(BEHIND),
-    spur: field(SPUR, SPUR_BANDS, 0.05, 47),
+    spur: shape(SPUR),
     snowTop: shape([[11.95, FY + 0.02], [12.0, FY - 0.06], [13.1, FY - 0.12], [14.4, FY - 0.03], [16.2, FY - 0.28], [16.9, FY + 0.08], [18.0, FY + 0.52], [17.9, FY + 0.62], [16.8, FY + 0.2], [16.2, FY - 0.15], [14.4, FY + 0.06], [12.6, FY + 0.05]]),
   }
   return farGeo
@@ -387,9 +371,8 @@ export function drawFarSide(pen: Pen, f: Frame, t: number): void {
     if (ly > FY - 2.5) sunOn(c, cut(BEHIND, [0, 1], DECK + 0.3), ly, mix(hi, tn.faceLit, 0.85))
     // The spur, its flank in its own shadow going down into the cloud, the sun coming down it.
     const flank: [number, string][] = [[0, mix(tn.faceSnow, tn.faceShade, 0.25)], [0.12, mix(tn.faceSnow, tn.faceShade, 0.5)], [1, mix(tn.faceShade, tn.cloud, 0.45)]]
-    bands(c, Math.max(11, f.x0 - 1), f.x1 + 1, FY - 0.5, low, (y) => along(flank, (y - FY + 0.5) / 9.5), g.spur.outline)
+    bands(c, Math.max(11, f.x0 - 1), f.x1 + 1, FY - 0.5, low, (y) => along(flank, (y - FY + 0.5) / 9.5), g.spur)
     if (ly > FY - 0.5) sunOn(c, cut(SPUR, [0, 1], DECK + 0.3), ly, mix(flank[0][1], tn.faceLit, 0.85))
-    paintField(c, g.spur, tn, t, mix(tn.faceRock, tn.faceShade, 0.3))
     // Snow along its top, where the cat will walk.
     c.fillStyle = lit(FY - 0.1, mix(tn.faceSnow, '#FFFFFF', 0.35))
     c.fill(g.snowTop)
