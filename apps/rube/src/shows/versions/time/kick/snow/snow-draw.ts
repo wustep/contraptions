@@ -171,9 +171,10 @@ function facing(m: Motion, t: number): number {
 }
 
 /** A pair of skis under a ball at `at`, lying at `a` (radians), tips curled up at the front (`front`: +1 right). */
-function skis(ctx: C2D, c: Ctx, at: Pt, a: number, front: number): void {
+function skis(ctx: C2D, c: Ctx, at: Pt, a: number, front: number, on = 1): void {
+  if (on <= 0) return
   const { k } = c
-  const L = 0.62
+  const L = 0.62 * on
   // The side they lie on, under the ball: near upright the line's two sides are both level, and as the line passed
   // upright they jumped from one to the other in a frame; there they swing round under the ball instead.
   const up = Math.max(0, 1 - Math.abs(Math.cos(a)) / 0.3)
@@ -211,8 +212,10 @@ const mixDark = () => SNOW.vault
 function drawSkis(ctx: C2D, c: Ctx, m: Motion, t: number, restX: number | null): void {
   const a = m.ski(t)
   if (a !== null && t >= m.phases[0].t1 - 0.02) {
-    // A heading left is the same line as one right: skis lie under the ball whichever way the path runs.
-    skis(ctx, c, m.at(t), skiLine(a), facing(m, t))
+    // A heading left is the same line as one right: skis lie under the ball whichever way the path runs. They come on
+    // under him as he lands, from his middle out (whole in a frame, they popped on).
+    const on = Math.min(1, (t - (m.phases[0].t1 - 0.02)) / 0.12)
+    skis(ctx, c, m.at(t), skiLine(a), facing(m, t), on * on * (3 - 2 * on))
     return
   }
   // Left where they lay down (when they have sunk out of them).
