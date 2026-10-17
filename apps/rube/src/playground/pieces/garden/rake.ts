@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../../src/core/draw'
-import { easeInQuad, easeOutBounce } from '../../../../../../src/core/ease'
-import { FAST, FLOOR, R, ROLL, arrive, arriveAt, burst, definePiece, flick, over, rail, ramp, wait, type Lane, type Pt } from '../../../parts'
+import { easeInQuad } from '../../../../../../src/core/ease'
+import { FAST, FLOOR, R, ROLL, arrive, arriveAt, definePiece, flick, over, rail, ramp, wait, type Lane, type Pt } from '../../../parts'
 import { soil, tuft } from '../../../pieces/garden/green'
 
 /**
@@ -42,12 +42,13 @@ const CONTACT = (() => {
   return Math.PI * 2 + Math.atan2(dy, dx) - Math.asin(face / d)
 })()
 
-/** The handle's angle about the hinge: lying behind (π), up and over to contact, on down to lying ahead (2π), with a bounce. */
+/** The handle's angle about the hinge: lying behind (π), up and over to contact, on down to lying ahead (2π), and a bounce off the path. */
 function handleAngle(t: number, since: number): number {
   if (t < ARRIVE) return Math.PI
   if (since < 0) return Math.PI + (CONTACT - Math.PI) * easeInQuad(over(t, ARRIVE, FIRE))
-  if (since < FALL) return CONTACT + (Math.PI * 2 - 0.3 - CONTACT) * easeInQuad(over(since, 0, FALL))
-  return Math.PI * 2 - 0.3 * (1 - easeOutBounce(Math.min(1, (since - FALL) / 0.4)))
+  if (since < FALL) return CONTACT + (Math.PI * 2 - CONTACT) * easeInQuad(over(since, 0, FALL))
+  const after = since - FALL
+  return Math.PI * 2 - 0.22 * Math.exp(-after * 7) * Math.abs(Math.sin(after * 13))
 }
 
 export const rake = definePiece<{ color: string }>({
@@ -99,14 +100,5 @@ export const rake = definePiece<{ color: string }>({
     p.rect((HANDLE / 2) * k, -OFFSET * k, HANDLE * k, THICK * k, 0.02 * k)
     p.pop()
     p.pop()
-    // The crack: lines off the back of the ball where the handle landed on it.
-    if (since > 0 && since < 0.2) {
-      const f = over(since, 0, 0.2)
-      p.push()
-      p.stroke(s.color)
-      p.strokeWeight(weight)
-      burst(p, (TINES - R) * k, -0.04 * k, (0.14 + 0.12 * f) * k, (0.2 + 0.16 * f) * k, 5, 2.2)
-      p.pop()
-    }
   },
 })
