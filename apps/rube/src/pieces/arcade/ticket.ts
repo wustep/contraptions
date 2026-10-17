@@ -78,20 +78,12 @@ const DROP = Math.sqrt((2 * -CHUTE_Y) / 24)
 const rideTime = (floors: number) => 0.4 + 0.35 * floors
 const HOLD = 0.15
 
-/** Lane time from the tip-in to the ball leaving the piece (ride + chute + exit). */
-const afterTip = (floors: number): number => {
-  const ride = rideTime(floors)
-  const flyOut = 0.03
-  const rampOut = Math.abs(0.5 - (CHUTE_X + 0.06)) / ((2.0 + ROLL) / 2)
-  return ride + HOLD + DROP + flyOut + rampOut
-}
-
-/** Elapsed payout time: continues after the ball leaves, via `since`. */
-const feedClock = (floors: number, t: number, since: number): number => {
-  const start = T_EDGE + TIP
-  if (since < 0) return Math.max(0, t - start)
-  return afterTip(floors) + since
-}
+/**
+ * Elapsed payout time, from the tip-in, running on after the ball has left. One clock throughout: it was the
+ * lane's time from the tip-in until the drop and then the time to the ball's leaving plus `since`, which put it
+ * a fifth of a second ahead the moment the ball dropped, and the strip and the count jumped with it.
+ */
+const feedClock = (t: number): number => Math.max(0, t - (T_EDGE + TIP))
 
 /** How long this payout streams: at least FEED, and at least one TICK per ticket. */
 const feedDur = (tickets: number, floors: number): number =>
@@ -134,7 +126,7 @@ export const ticket = definePiece<TicketState>({
   },
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
     const { floors, turn } = s
-    const clock = feedClock(floors, t, since)
+    const clock = feedClock(t)
     const dur = feedDur(s.tickets, floors)
     const fed = dur <= 0 ? 1 : Math.max(0, Math.min(1, clock / dur))
     // Keep whirring for the whole stream, including after the ball has left for the portal.
@@ -182,12 +174,12 @@ export const ticket = definePiece<TicketState>({
   },
   // What the points came to, over the marquee as the last ticket lands: on the cabinet's own face it was the cabinet's colour.
   scores: (p, s, { k, since, bg }) => {
-    const spill = Math.max(0, feedDur(s.tickets, s.floors) - afterTip(s.floors))
+    const spill = Math.max(0, feedDur(s.tickets, s.floors) - rideTime(s.floors) - HOLD)
     return score(p, k, s.color, bg, 0, -0.3, `x${s.tickets}`, since - spill, 1.4)
   },
   over: (p, s, { k, t, since, ink, weight, bg }) => {
     const { floors, turn } = s
-    const clock = feedClock(floors, t, since)
+    const clock = feedClock(t)
     const fed = Math.max(0, Math.min(1, clock / feedDur(s.tickets, floors)))
     const whir = fed > 0 && fed < 1
     const shake = whir ? 0.008 * Math.sin(t * 50) : 0
