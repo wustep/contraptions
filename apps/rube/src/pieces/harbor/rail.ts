@@ -12,10 +12,12 @@ export const pierRail = makeRail(['piling', 'cleat', 'ring', 'none', 'piling'] a
   water(p, k, ink, bg, weight, -0.5, 0.5)
   if (s.decor === 'piling') piling(p, k, ink, weight, 0.08)
   if (s.decor === 'cleat') {
+    // A cleat on the deck's side, and a coil of rope hung on its horn. The coil lay flat beside the cleat in the air
+    // under the deck, on nothing.
     cleat(p, k, ink, weight, s.color, -0.12)
     outline(p, ink, weight * 0.9)
-    p.ellipse(0.16 * k, (FLOOR + 0.1) * k, 0.2 * k, 0.1 * k)
-    p.ellipse(0.16 * k, (FLOOR + 0.1) * k, 0.12 * k, 0.05 * k)
+    p.ellipse(-0.06 * k, (FLOOR + 0.165) * k, 0.09 * k, 0.11 * k)
+    p.ellipse(-0.06 * k, (FLOOR + 0.175) * k, 0.05 * k, 0.06 * k)
   }
   if (s.decor === 'ring') {
     // A life ring hung on a hook under the deck.
