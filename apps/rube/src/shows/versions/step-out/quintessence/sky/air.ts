@@ -105,7 +105,9 @@ export function drawDeck(g: C2, k: number, e: Eye, t: number): void {
     const gap = D * s * 0.5 * (r === 0 ? 1.3 : 1)
     const yRow = e.hz - D * s + shake * 0.5 * s
     if (yRow - gap > e.y1 || yRow + gap < e.y0 - 0.5) continue
-    const above = yRow < sy
+    // A layer above the sun arches over it, one below bows under it; one passing its height as the camera moves goes
+    // from the one to the other by degrees.
+    const above = smooth(sy - yRow, -0.3 * gap, 0.3 * gap)
     const path = new Path2D()
     const top: Pt[] = []
     const low: Pt[] = []
@@ -124,8 +126,8 @@ export function drawDeck(g: C2, k: number, e: Eye, t: number): void {
       const f = gap * swell * end
       let a = r === 0 ? Math.min(e.y0 - 1, yRow - f * 0.4) : yRow - f * 0.4
       let b = yRow + f * 0.6 * (1 + 0.18 * Math.sin(gx / 6.1 + r * 1.3 + t * 0.08))
-      if (above) b = smin(b, sy - clear(x, 1.7), R)
-      else a = -smin(-a, -(sy + clear(x, 1.4)), R)
+      if (above > 0) b += (smin(b, sy - clear(x, 1.7), R) - b) * above
+      if (above < 1) a += (-smin(-a, -(sy + clear(x, 1.4)), R) - a) * (1 - above)
       if (r > 0 && b - a < 0.004) {
         close()
         continue
