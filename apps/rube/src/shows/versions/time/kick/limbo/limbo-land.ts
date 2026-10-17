@@ -506,8 +506,9 @@ export function surface(x: number, t: number): number {
       h = crestH(tk) * (0.2 + 0.8 * sm(1 - ahead / 5.5))
       wf = lerp(0.62, 0.24, sm(1 - ahead / 2.5))
     } else {
+      // Going over, its water slumps forward onto the beach as the wash (in place, it only sank away).
       const u = -ahead / 0.6
-      xc = BREAK_X + 0.3 * u
+      xc = BREAK_X + 0.9 * u
       h = crestH(tk) * (1 - u) * (1 - u)
       wf = 0.24
     }
@@ -656,28 +657,13 @@ export function drawGround(pen: Pen, f: Frame): void {
   if (edge.length > 1) polyline(pen, edge, mixHex(pen.ink, LIMBO.sand, 0.5), 0.5)
 }
 
-/** Drawn over the balls: the sea's body (so what is under the water is seen through it), the wash, the foam. */
-export function drawSeaOver(pen: Pen, t: number, f: Frame): void {
+/**
+ * The wash running up the sand, under the balls, in the breaker's own water: in the sea's paler tone over them, it was
+ * lost against the far sea behind it (nothing seemed to carry him up the beach) and showed only as a stain on him.
+ */
+export function drawWash(pen: Pen, t: number, f: Frame): void {
   if (f.x0 > SHORE_END + 3 || f.y0 > BOTTOM || f.y1 < SEA - 2) return
-  const xa = f.x0 - 1
-  const xb = Math.min(f.x1 + 1, SHORE_END)
-  if (xb > xa) {
-    const step = Math.max(0.035, (xb - xa) / 320)
-    const top: Pt[] = []
-    const bed: Pt[] = []
-    for (let x = xa; x <= xb + 1e-9; x += step) {
-      const s = surface(x, t)
-      const b = Math.max(s, sandY(x))
-      top.push([x, s])
-      bed.push([x, b])
-    }
-    gradFill(pen, [...top, ...bed.reverse()], SEA - 0.5, SEA + 4, [
-      [0, LIMBO.sea, 0.28],
-      [0.2, LIMBO.sea, 0.5],
-      [1, LIMBO.seaDeep, 0.72],
-    ])
-  }
-  // The wash running up the sand.
+  const water = mixHex(NEAR_SEA, LIMBO.seaDeep, 0.6)
   for (const tk of WAVES) {
     const u = t - tk
     if (u < 0 || u > UPRUSH + BACKWASH) continue
@@ -700,9 +686,33 @@ export function drawSeaOver(pen: Pen, t: number, f: Frame): void {
       bottom.push([x, sandY(x) + 0.01])
     }
     // Coming in out of the sea's body over its seaward end (it began there square, a box under the water).
+    const a = up ? 0.9 : 0.9 * (1 - sm((u - UPRUSH) / BACKWASH))
     hgradFill(pen, [...pts, ...bottom], x0, x0 + 0.35, [
-      [0, LIMBO.sea, 0],
-      [1, LIMBO.sea, up ? 0.55 : 0.4],
+      [0, water, 0],
+      [1, water, a],
+    ])
+  }
+}
+
+/** Drawn over the balls: the sea's body (so what is under the water is seen through it). */
+export function drawSeaOver(pen: Pen, t: number, f: Frame): void {
+  if (f.x0 > SHORE_END + 3 || f.y0 > BOTTOM || f.y1 < SEA - 2) return
+  const xa = f.x0 - 1
+  const xb = Math.min(f.x1 + 1, SHORE_END)
+  if (xb > xa) {
+    const step = Math.max(0.035, (xb - xa) / 320)
+    const top: Pt[] = []
+    const bed: Pt[] = []
+    for (let x = xa; x <= xb + 1e-9; x += step) {
+      const s = surface(x, t)
+      const b = Math.max(s, sandY(x))
+      top.push([x, s])
+      bed.push([x, b])
+    }
+    gradFill(pen, [...top, ...bed.reverse()], SEA - 0.5, SEA + 4, [
+      [0, LIMBO.sea, 0.28],
+      [0.2, LIMBO.sea, 0.5],
+      [1, LIMBO.seaDeep, 0.72],
     ])
   }
 }

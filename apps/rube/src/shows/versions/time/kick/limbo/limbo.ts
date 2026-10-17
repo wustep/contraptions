@@ -30,6 +30,7 @@ import {
   SEA,
   SPOTS,
   TOP_OF_SKY,
+  UPRUSH,
   WAIT_X,
   ariadneAt,
   cabinY,
@@ -41,8 +42,9 @@ import {
   sandY,
   sm,
   smoother,
+  washFront,
 } from './limbo-geo'
-import { drawCity, drawFarSea, drawGarden, drawGardenAir, drawGround, drawSea, drawSeaOver, drawSky, surface } from './limbo-land'
+import { drawCity, drawFarSea, drawGarden, drawGardenAir, drawGround, drawSea, drawSeaOver, drawSky, drawWash, surface } from './limbo-land'
 import { ctxOf, soft, type Pen } from './limbo-pen'
 import { drawTowerBack, drawTowerFront } from './limbo-tower'
 
@@ -137,6 +139,7 @@ export const limboSet = scenery<null>({
     drawCity(pen, t, f)
     drawSea(pen, t, f)
     drawGround(pen, f)
+    drawWash(pen, t, f)
     drawGarden(pen, t, f)
     drawTowerBack(pen, t, f)
     p.pop()
@@ -219,10 +222,20 @@ const onGround = (x: number): Pt => [x, sandY(x) - R]
 
 /** A roll along the ground from x0 to x1 between t0 and t1, eased in and out (sine). */
 const rollOver = (x0: number, x1: number) => (u: number): Pt => onGround(lerp(x0, x1, (1 - Math.cos(Math.PI * u)) / 2))
-/** A wave's carry up the sand: pushed hard on the chord, slowing as the wash runs out, lifted a little by the water. */
+/** A wave's carry up the sand once the wash reaches him: taken up, slowing as the wash runs out, lifted a little by the water. */
 const carryUp = (x0: number, x1: number) => (u: number): Pt => {
-  const x = lerp(x0, x1, 1 - (1 - u) * (1 - u))
+  const e = u * u * (3 - 2 * u)
+  const x = lerp(x0, x1, e)
   return [x, sandY(x) - R - 0.07 * Math.sin(Math.PI * u)]
+}
+/**
+ * When a breaker's wash, running up the sand, first reaches a ball lying at x (its seaward edge): the wave carries him
+ * from then (set off on the chord itself, he ran up the beach a cell ahead of the water carrying him).
+ */
+const reaches = (tk: number, x: number): number => {
+  let u = 0
+  while (u < UPRUSH && (washFront(tk, tk + u) ?? BREAK_X) < x - R) u += 1 / 240
+  return tk + u
 }
 /** Sample `fn(u)` for u in [0, 1] between slot times a and b as carried pieces. */
 const over = (fn: (u: number) => Pt, a: number, b: number, n: number): Seg[] => carried((s) => fn((s - a) / (b - a)), a, b, n)
@@ -237,10 +250,12 @@ function shoreLane(): Seg[] {
   const segs: Seg[] = []
   const push = (...s: Seg[]) => segs.push(...s)
   const t = () => segs.reduce((a, s) => a + s.dur, 0)
-  push(still(FIRST_AT, P.wave0))
-  push(...over(carryUp(FIRST_AT[0], SPOTS.wave0[0]), P.wave0, P.wave0 + 1.6, 16))
-  push(still(lastTo(segs), P.wave1 - t()))
-  push(...over(carryUp(SPOTS.wave0[0], SPOTS.wave1[0]), P.wave1, P.wave1 + 1.4, 16))
+  const w0 = reaches(P.wave0, FIRST_AT[0])
+  push(still(FIRST_AT, w0))
+  push(...over(carryUp(FIRST_AT[0], SPOTS.wave0[0]), w0, P.wave0 + 1.6, 16))
+  const w1 = reaches(P.wave1, SPOTS.wave0[0])
+  push(still(lastTo(segs), w1 - t()))
+  push(...over(carryUp(SPOTS.wave0[0], SPOTS.wave1[0]), w1, P.wave1 + 1.4, 16))
   // He lies a moment as the wash runs back, and then he rolls up the sand, up the step and into the lift.
   const wake = 5.652
   push(still(lastTo(segs), wake - t()))
