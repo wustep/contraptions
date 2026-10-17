@@ -99,7 +99,9 @@ export const phaser = definePiece<{ color: string; courses: string[] }>({
     const at = laneAt(LANE, t)
     const ghost = t > T_IN && t < T_OUT
     // The wall. A brick the ghost is inside goes to wireframe — its own
-    // colour, dashed, nothing in it — and the ball is seen through it.
+    // colour, dashed, nothing in it — and the ball is seen through it. The
+    // wireframe holds still: its weight flickered frame to frame, and
+    // shimmered over the ghost.
     const ctx = p.drawingContext as CanvasRenderingContext2D
     for (const b of BRICKS) {
       const dx = Math.max(b.x0 - at.x, 0, at.x - b.x1)
@@ -111,7 +113,7 @@ export const phaser = definePiece<{ color: string; courses: string[] }>({
         p.push()
         p.noFill()
         p.stroke(s.courses[b.course % s.courses.length])
-        p.strokeWeight(weight * (Math.floor(t * 30) % 2 ? 0.7 : 0.5))
+        p.strokeWeight(weight * 0.6)
         p.strokeCap(p.SQUARE)
         ctx.setLineDash([0.03 * k, 0.03 * k])
         p.rect(cx, cy, (b.x1 - b.x0) * k, (b.y1 - b.y0) * k)
