@@ -114,9 +114,9 @@ export function fir(p: p5, k: number, ink: string, weight: number, color: string
  */
 export function powder(p: p5, k: number, ink: string, weight: number, white: string, x: number, y: number, f: number, size = 1): void {
   if (f <= 0 || f >= 1) return
-  const r = 0.065 * size * (f < 0.2 ? Math.sin((Math.PI / 2) * (f / 0.2)) : 1 - ((f - 0.2) / 0.8) ** 2)
+  const r = 0.065 * size * (f < 0.15 ? 0.55 + 0.45 * Math.sin((Math.PI / 2) * (f / 0.15)) : 1 - ((f - 0.15) / 0.85) ** 2)
   if (r < 0.03 * size) return
-  const spread = 0.065 * size * (0.8 + 0.7 * Math.sqrt(f))
+  const spread = r * (0.9 + 0.5 * Math.sqrt(f))
   const lumps: [number, number][] = [[-1, 0.72], [0, 1], [1, 0.66]]
   const at = (dx: number, f2: number): [number, number, number] => [(x + dx * spread) * k, (y - r * f2 * 0.6) * k, r * f2 * 2 * k]
   solid(p, ink, weight * 0.8, white)
