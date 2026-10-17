@@ -205,9 +205,10 @@ export function drawFace(pen: Pen, f: Frame, t: number): void {
   // The boulder over the foot, whose snow the gust tears off.
   fillPoly(pen, [[BOULDER[0] - 0.8, BOULDER[1] + 0.05], [BOULDER[0], BOULDER[1] - 0.25], [BOULDER[0] + 0.65, BOULDER[1] - 0.05], [BOULDER[0] + 0.8, BOULDER[1] + 0.4], [BOULDER[0] - 0.9, BOULDER[1] + 0.45]], tn.faceRock)
   fillPoly(pen, [[BOULDER[0] - 0.84, BOULDER[1] + 0.06], [BOULDER[0], BOULDER[1] - 0.3], [BOULDER[0] + 0.68, BOULDER[1] - 0.06], [BOULDER[0] + 0.1, BOULDER[1] - 0.12], [BOULDER[0] - 0.5, BOULDER[1] + 0.12]], mix(tn.faceSnow, '#FFFFFF', 0.4))
-  // The band of rock over the ledge, its lip of snow, from which it sifts down by them.
+  // The band of rock over the ledge, its lip of snow, from which it sifts down by them: the bands' rock, not the
+  // darker rock of the steps, the ledge and the boulder that he and Sean are on.
   const by = LEDGE_Y - 1.2
-  fillPoly(pen, [[SIFT_X - 2.6, by - 0.2], [SIFT_X - 1.2, by - 0.36], [SIFT_X - 0.1, by - 0.42], [SIFT_X + 0.12, by - 0.08], [SIFT_X + 0.05, by + 0.02], [SIFT_X - 0.8, by + 0.1], [SIFT_X - 2.5, by + 0.15]], tn.faceRock)
+  fillPoly(pen, [[SIFT_X - 2.6, by - 0.2], [SIFT_X - 1.2, by - 0.36], [SIFT_X - 0.1, by - 0.42], [SIFT_X + 0.12, by - 0.08], [SIFT_X + 0.05, by + 0.02], [SIFT_X - 0.8, by + 0.1], [SIFT_X - 2.5, by + 0.15]], mix(tn.faceRock, tn.faceShade, 0.42))
   fillPoly(pen, [[SIFT_X - 2.65, by - 0.2], [SIFT_X - 1.2, by - 0.4], [SIFT_X - 0.1, by - 0.47], [SIFT_X + 0.16, by - 0.08], [SIFT_X + 0.02, by - 0.15], [SIFT_X - 0.15, by - 0.32], [SIFT_X - 1.2, by - 0.28], [SIFT_X - 2.5, by - 0.12]], litSnow(tn, t, by - 0.4, mix(tn.faceSnow, '#FFFFFF', 0.45)))
 }
 
