@@ -192,8 +192,10 @@ function slabAt(e: Calving, t: number): { gone: boolean; hinge: Pt; theta: numbe
       const v = (u - 0.42) / 0.58
       return { gone: true, hinge: [xSide + s * 0.35 * v, h0[1] + drop * v * v], theta: s * (0.13 + 0.17 * v), dust: 1 }
     }
+    // On down into the sea at the speed it hit it (it came to a dead stop on the water, then sank from rest).
     const after = t - e.hit
-    return { gone: true, hinge: [xSide + s * (0.35 + 0.2 * sm(after / 2.4)), h0[1] + drop + e.h * 1.15 * sm(after / 2.6)], theta: s * (0.3 + 0.08 * sm(after / 2.4)), dust: 1 }
+    const vHit = (2 * drop) / (0.58 * e.fall)
+    return { gone: true, hinge: [xSide + s * (0.35 + 0.2 * sm(after / 2.4)), h0[1] + drop + vHit * after], theta: s * (0.3 + 0.08 * sm(after / 2.4)), dust: 1 }
   }
   if (u < 0.55) {
     const v = u / 0.55
@@ -205,7 +207,8 @@ function slabAt(e: Calving, t: number): { gone: boolean; hinge: Pt; theta: numbe
     return { gone: true, hinge: [xSide + s * 0.7 * v, h0[1] + drop * v * v], theta: s * (0.4 + 0.7 * Math.pow(v, 1.4)), dust: 1 }
   }
   const after = t - e.hit
-  return { gone: true, hinge: [xSide + s * (0.7 + 0.25 * sm(after / 2)), h0[1] + drop + after * 1.1], theta: s * (1.1 + 0.15 * sm(after / 2)), dust: 1 }
+  const vHit = (2 * drop) / (0.45 * e.fall)
+  return { gone: true, hinge: [xSide + s * (0.7 + 0.25 * sm(after / 2)), h0[1] + drop + vHit * after], theta: s * (1.1 + 0.15 * sm(after / 2)), dust: 1 }
 }
 
 /** The prologue's one sign: the cracked slab on tower 4 slips a little on bar 3 and hangs there, leaning. */
@@ -221,6 +224,20 @@ function towerColor(tw: Tower): string {
   return tw.mid ? mixHex(MID_NEAR, CITY_NEAR, tw.far * 2) : mixHex(CITY_NEAR, CITY_FAR, tw.far)
 }
 const towerInk = (pen: Pen, tw: Tower, col: string): [number, string] => (tw.mid ? [0.7, mixHex(pen.ink, col, 0.25)] : [0.45, mixHex(pen.ink, col, 0.55)])
+
+/** A tower's glass, in one of three manners (bands of floors, tall fins, a grid), over its whole face (clip it). */
+function towerGlass(pen: Pen, tw: Tower, i: number, xl: number, xr: number, col: string): void {
+  const glass = mixHex(LIMBO.glass, col, 0.45)
+  const top = tw.top
+  const manner = i % 3
+  if (manner === 1) {
+    for (let x = xl + 0.14; x < xr - 0.1; x += 0.34) box(pen, x, top + 0.25, x + 0.15, tw.base - 0.25, glass, 0)
+  } else {
+    const gap = manner === 0 ? 0.62 : 0.5
+    for (let y = top + 0.3; y < tw.base - 0.3; y += gap) box(pen, xl + 0.12, y, xr - 0.12, y + (manner === 0 ? 0.2 : 0.26), glass, 0)
+    if (manner === 2) for (let x = xl + 0.4; x < xr - 0.2; x += 0.4) box(pen, x, top, x + 0.05, tw.base, col, 0)
+  }
+}
 
 function drawTower(pen: Pen, tw: Tower, i: number, t: number, f: Frame): void {
   const col = towerColor(tw)
@@ -254,13 +271,14 @@ function drawTower(pen: Pen, tw: Tower, i: number, t: number, f: Frame): void {
     pts.push([xl, yb], ...jag([xl, yb], [xr, yb], 7, i * 10 + 5), [xr, yb])
   } else if (nl) {
     const yb = nl.top + nl.h
-    pts.push([xl, yb], ...jag([xl, yb], [xl + nl.w, yb], 4, i * 10 + 1), [xl + nl.w, yb], ...jag([xl + nl.w, yb], [xl + nl.w, top], 5, i * 10 + 2))
+    // Broken along the break; the wall left standing is straight (its edge wobbled, as wavy as the break, close to).
+    pts.push([xl, yb], ...jag([xl, yb], [xl + nl.w, yb], 4, i * 10 + 1), [xl + nl.w, yb])
     pts.push([xl + nl.w, nl.top > top + 0.05 ? nl.top : top])
   } else pts.push([xl, top])
   if (nr && !whole(nr) && !whole(nl)) {
     const yb = nr.top + nr.h
     const xn = xr - nr.w
-    pts.push([xn, lerp(top, topR, (xn - xl) / (xr - xl))], ...jag([xn, top], [xn, yb], 5, i * 10 + 3), [xn, yb], ...jag([xn, yb], [xr, yb], 4, i * 10 + 4), [xr, yb])
+    pts.push([xn, lerp(top, topR, (xn - xl) / (xr - xl))], [xn, yb], ...jag([xn, yb], [xr, yb], 4, i * 10 + 4), [xr, yb])
   } else if (!nr && !whole(nl)) pts.push([xr, topR])
   pts.push([xr, tw.base])
   const ctx = ctxOf(pen.p)
@@ -273,9 +291,8 @@ function drawTower(pen: Pen, tw: Tower, i: number, t: number, f: Frame): void {
   }
   const [lw, ink] = towerInk(pen, tw, col)
   shape(pen, pts, col, lw, ink)
-  // Its glass, in one of three manners (bands of floors, tall fins, a grid), clipped to what is left of it.
+  // Its glass, clipped to what is left of it.
   if (pen.k * 0.5 > 3) {
-    const glass = mixHex(LIMBO.glass, col, 0.45)
     const k = pen.k
     ctx.save()
     ctx.beginPath()
@@ -283,14 +300,7 @@ function drawTower(pen: Pen, tw: Tower, i: number, t: number, f: Frame): void {
     for (let j = 1; j < pts.length; j++) ctx.lineTo(pts[j][0] * k, pts[j][1] * k)
     ctx.closePath()
     ctx.clip()
-    const manner = i % 3
-    if (manner === 1) {
-      for (let x = xl + 0.14; x < xr - 0.1; x += 0.34) box(pen, x, top + 0.25, x + 0.15, tw.base - 0.25, glass, 0)
-    } else {
-      const gap = manner === 0 ? 0.62 : 0.5
-      for (let y = top + 0.3; y < tw.base - 0.3; y += gap) box(pen, xl + 0.12, y, xr - 0.12, y + (manner === 0 ? 0.2 : 0.26), glass, 0)
-      if (manner === 2) for (let x = xl + 0.4; x < xr - 0.2; x += 0.4) box(pen, x, top, x + 0.05, tw.base, col, 0)
-    }
+    towerGlass(pen, tw, i, xl, xr, col)
     ctx.restore()
   }
   ctx.restore()
@@ -344,18 +354,23 @@ function drawSlab(pen: Pen, e: Calving, t: number, f: Frame): void {
   clipped(pen, f.x0 - 10, TOP_OF_SKY, f.x1 + 10, tw.base, () => {
     const [lw, ink] = towerInk(pen, tw, col)
     shape(pen, pts, col, lw, ink)
-    // Its glass floors, turned with it.
+    // Its glass, the tower's own where it broke from, carried with it (it was always bands of floors, so a slab off a
+    // tower of fins or a grid changed its face in the frame it came away).
     if (pen.k * 0.5 > 3) {
-      const glass = mixHex(LIMBO.glass, col, 0.45)
-      for (let y = -e.h + 0.3; y < -0.2; y += 0.62) {
-        const band: Pt[] = [
-          [-e.side * 0.1, y],
-          [-e.side * (e.w - 0.1), y],
-          [-e.side * (e.w - 0.1), y + 0.2],
-          [-e.side * 0.1, y + 0.2],
-        ].map(([x, yy]): Pt => [hinge[0] + x * Math.cos(theta) - yy * Math.sin(theta), hinge[1] + x * Math.sin(theta) + yy * Math.cos(theta)])
-        shape(pen, band, glass, 0)
-      }
+      const { k } = pen
+      const ctx = ctxOf(pen.p)
+      ctx.save()
+      ctx.beginPath()
+      ctx.moveTo(pts[0][0] * k, pts[0][1] * k)
+      for (let j = 1; j < pts.length; j++) ctx.lineTo(pts[j][0] * k, pts[j][1] * k)
+      ctx.closePath()
+      ctx.clip()
+      const h0: Pt = [xSide, e.top + e.h]
+      ctx.translate(hinge[0] * k, hinge[1] * k)
+      ctx.rotate(theta)
+      ctx.translate(-h0[0] * k, -h0[1] * k)
+      towerGlass(pen, tw, e.tower, tw.x - tw.w / 2 + dx, tw.x + tw.w / 2 + dx, col)
+      ctx.restore()
     }
   })
   // The crack: a dark gap behind the slab that slipped in the prologue, opening wider before it goes.
@@ -448,11 +463,19 @@ export function drawCity(pen: Pen, t: number, f: Frame): void {
   if (f.y0 > SEA + 1 || f.y1 < 68) return
   // The far towers first (paler), then nearer ones over them.
   const order = CITY.map((_, i) => i).sort((a, b) => CITY[b].far - CITY[a].far)
+  // A great one, the tower's whole top, goes down behind what is left standing of it, and its spray goes up behind it
+  // (in front, the top slid down over its own stump, the two sets of floors through each other, and the spray stood
+  // over the stump as a white tower of its own).
   for (const i of order) {
+    for (const e of CALVING) {
+      if (e.tower !== i || !e.big) continue
+      drawSlab(pen, e, t, f)
+      drawPlume(pen, e, t, f)
+    }
     drawTower(pen, CITY[i], i, t, f)
-    for (const e of CALVING) if (e.tower === i) drawSlab(pen, e, t, f)
+    for (const e of CALVING) if (e.tower === i && !e.big) drawSlab(pen, e, t, f)
   }
-  for (const e of CALVING) drawPlume(pen, e, t, f)
+  for (const e of CALVING) if (!e.big) drawPlume(pen, e, t, f)
 }
 
 /* ------------------------------------------------------------------ the near sea */
