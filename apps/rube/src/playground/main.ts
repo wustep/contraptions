@@ -498,7 +498,8 @@ function tick(): void {
     const [head, tail] = text.split('\n')
     readout.replaceChildren(el('b', {}, [head]), ...(tail ? [el('br'), tail] : []))
   }
-  const clock = u && here ? `${here.local.toFixed(1)} / ${u.journey.toFixed(0)}s` : `${t.toFixed(1)}s`
+  // A piece alone goes round in two or three seconds: its length to the tenth, as the time is, or the time runs past it.
+  const clock = u && here ? `${here.local.toFixed(1)} / ${u.journey.toFixed(1)}s` : `${t.toFixed(1)}s`
   if (clock !== lastTime) {
     lastTime = clock
     time.textContent = clock
