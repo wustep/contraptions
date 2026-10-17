@@ -6,7 +6,7 @@ import { FIRST, SEAMS } from '../seams'
 import { beat, half } from '../music'
 import { G } from '../physics'
 import { DOWN, FISCHER_DOWN, FISCHER_UP, ORIGIN, UP, exitFor, local } from '../stack'
-import { FISCHER, KID_DARK, KID_ID, KID_SCALE, LIMBO, SLEEP } from '../worlds'
+import { FISCHER, KID_DARK, KID_ID, KID_SCALE, LIMBO } from '../worlds'
 import {
   BOTTOM,
   BREAK_X,
@@ -157,11 +157,6 @@ export const limboSet = scenery<null>({
     drawGardenAir(pen, t, f)
     drawSeaOver(pen, t, f)
     drawTowerFront(pen, t, f)
-    // Mal in the prologue, out of the lamp's light: a still shape in the dark.
-    if (t > MAL_P_FROM && t < P.cut + 0.5) {
-      const m = malPrologue(t)
-      soft(pen, m[0], m[1], 0.4, 0.4, SLEEP.deep, 0.42)
-    }
     drawPlunge(pen, t)
     drawKicks(pen, t)
     p.pop()

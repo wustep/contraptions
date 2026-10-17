@@ -295,7 +295,8 @@ export function hatch(t: number): number {
 }
 /** How far the tower's front is cut away (the doll's house), 0 closed, 1 open. */
 export function cutaway(t: number): number {
-  if (t < 100) return window4(t, 6.3, 7.3, 38, 40)
+  // Open before he reaches the annex's wall (still half there as he rolled in, its edge cut a line through him).
+  if (t < 100) return window4(t, 6.0, 6.75, 38, 40)
   return window4(t, 161.5, 162.6, 178.6, 180.2)
 }
 
