@@ -38,12 +38,24 @@ export function glow(p: p5, k: number, color: string, x: number, y: number, r: n
 }
 
 /**
- * A lamp: a dot in the colour when lit, paper when not. A small lamp's outline thins with it, so that the fill — which is
- * what says whether it is lit — is not swallowed by its own rim: at the
- * show's line weight a lamp under a twentieth of a cell was all ink.
+ * What something lit is painted `f` of the way from `off` to `on`: a lamp,
+ * a tube or a lit face coming on or dying down goes through the shades
+ * between, rather than flipping from one to the other half way.
+ */
+export function litColor(off: string, on: string, f: number): string {
+  return f >= 1 ? on : f <= 0 ? off : mixHex(off, on, f)
+}
+
+/**
+ * A lamp: a dot in the colour when lit, paper when not, and between the two
+ * while it dies down — `lit` is how bright, so a lamp that fades out does,
+ * rather than going out all at once half way. A small lamp's outline thins
+ * with it, so that the fill — which is what says whether it is lit — is not
+ * swallowed by its own rim: at the show's line weight a lamp under a
+ * twentieth of a cell was all ink.
  */
 export function lamp(p: p5, k: number, ink: string, weight: number, color: string, bg: string, x: number, y: number, r: number, lit: number): void {
-  solid(p, ink, weight * 0.8 * Math.min(1, r / 0.04), lit > 0.5 ? color : bg)
+  solid(p, ink, weight * 0.8 * Math.min(1, r / 0.04), litColor(bg, color, lit))
   p.circle(x * k, y * k, r * 2 * k)
 }
 
@@ -67,10 +79,10 @@ export function marquee(p: p5, k: number, ink: string, weight: number, color: st
   }
 }
 
-/** A lit tube: a line in the colour when lit, ink when not, from (x0, y0) to (x1, y1). `f` is how lit. */
+/** A lit tube: a line in the colour when lit, ink when not, and between the two while it dies down, from (x0, y0) to (x1, y1). `f` is how lit. */
 export function tube(p: p5, k: number, ink: string, weight: number, color: string, x0: number, y0: number, x1: number, y1: number, f = 1): void {
   p.push()
-  p.stroke(f > 0.5 ? color : ink)
+  p.stroke(litColor(ink, color, f))
   p.strokeWeight(weight * 1.3)
   p.line(x0 * k, y0 * k, x1 * k, y1 * k)
   p.pop()

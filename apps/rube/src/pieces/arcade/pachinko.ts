@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInQuad } from '../../../../../src/core/ease'
 import { FLOOR, ROLL, definePiece, over, rail, ramp, type Lane, type Pt, type Seg } from '../../parts'
-import { flash, lamp, marquee, score } from './neon'
+import { flash, lamp, litColor, marquee, score } from './neon'
 
 /**
  * A pachinko field two floors deep. The lane stops at a lip; the ball
@@ -112,7 +112,7 @@ export const pachinko = definePiece<PachinkoState>({
         const hit = path[r]
         const struck = hit && Math.abs(hit.x - x) < 0.07 && t > hit.at
         const lit = struck ? 1 - over(t - hit.at, 0.2, 1.4) : 0
-        solid(p, ink, weight * 0.8, lit > 0.5 ? s.color : bg)
+        solid(p, ink, weight * 0.8, litColor(bg, s.color, lit))
         p.circle(x * k, y * k, PIN_R * 2 * k)
         if (struck) flash(p, k, s.color, weight, x, y, t - hit.at, 0.18, 0.05, 0.12)
       }
@@ -131,6 +131,10 @@ export const pachinko = definePiece<PachinkoState>({
     p.line(0, 0.01 * k, 0, -(FLOOR + 0.06) * k)
     p.pop()
     p.line(-CUP * k, (POCKET_Y + FLOOR) * k, CUP * k, (POCKET_Y + FLOOR) * k)
+    // The lamp sits in a dark socket let into the cup: lit in the cup's own colour on the bare cup, it was lost.
+    p.noStroke()
+    p.fill(bg)
+    p.circle(0, (POCKET_Y + 0.22) * k, 0.14 * k)
     lamp(p, k, ink, weight, s.color, bg, 0, POCKET_Y + 0.22, 0.04, jackpot)
     // The rail out from the pocket's lip.
     rail(p, k, ink, weight, turn * CUP, turn * 0.5, POCKET_Y + FLOOR)

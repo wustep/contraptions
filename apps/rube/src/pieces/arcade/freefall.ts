@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { solid } from '../../../../../src/core/draw'
 import { easeInOutSine, easeOutCubic } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, over, post, rail, ramp, trace, wait, type Lane, type Pt } from '../../parts'
-import { flash, lamp, score } from './neon'
+import { flash, lamp, litColor, score } from './neon'
 
 /**
  * A drop tower, two to four floors tall: the tallest there is room for. A
@@ -216,9 +216,9 @@ export const freefall = definePiece<{ color: string; floors?: number }>({
       const lit = passed ? 1 - over(t - at, 0.15, 0.7) : 0
       lamp(p, k, ink, weight, s.color, bg, MAST_W / 2 + 0.05, ly, 0.03, lit)
     }
-    // The brakes at the foot: a fin on either face of the mast, behind the car, from where they take hold down past where it is driven, lit at the catch.
+    // The brakes at the foot: a fin on either face of the mast, behind the car, from where they take hold down past where it is driven, lit at the catch and dying down as the lamps do.
     for (const side of [-1, 1]) {
-      solid(p, ink, weight, caught > 0.5 ? s.color : bg)
+      solid(p, ink, weight, litColor(bg, s.color, caught))
       p.rect(side * FIN_X * k, ((finTop + finFoot) / 2) * k, FIN_W * k, (finFoot - finTop) * k, 0.01 * k)
     }
     // The car's back, its floor, and its two doors: the near one a gangway at the top, the far one at the foot.

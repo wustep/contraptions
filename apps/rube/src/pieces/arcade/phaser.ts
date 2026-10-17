@@ -81,7 +81,7 @@ export const phaser = definePiece<{ color: string; courses: string[] }>({
       [GATE_IN, -1, T_IN],
       [GATE_OUT, 1, T_OUT],
     ] as [number, number, number][]) {
-      const lit = 0.5 + 0.5 * (t > at ? 1 - over(t, at + 0.15, at + 0.7) : 0)
+      const lit = t > at ? 1 - over(t, at + 0.15, at + 0.7) : 0
       const px = gate + side * 0.15
       outline(p, ink, weight)
       p.line(px * k, 0.5 * k, px * k, (HEAD_Y - 0.06) * k)
@@ -90,7 +90,7 @@ export const phaser = definePiece<{ color: string; courses: string[] }>({
       p.line(gate * k, (HEAD_Y - 0.06) * k, gate * k, HEAD_Y * k)
       solid(p, ink, weight, s.color)
       p.rect(gate * k, HEAD_Y * k, 0.17 * k, 0.08 * k, 0.015 * k)
-      lamp(p, k, ink, weight, s.color, bg, px, HEAD_Y - 0.06, 0.03, lit > 0.6 ? 1 : 0)
+      lamp(p, k, ink, weight, s.color, bg, px, HEAD_Y - 0.06, 0.03, lit)
       solid(p, ink, weight, s.color)
       p.rect(gate * k, (FLOOR + 0.025) * k, 0.17 * k, 0.05 * k, 0.01 * k)
     }
@@ -99,7 +99,9 @@ export const phaser = definePiece<{ color: string; courses: string[] }>({
     const at = laneAt(LANE, t)
     const ghost = t > T_IN && t < T_OUT
     // The wall. A brick the ghost is inside goes to wireframe — its own
-    // colour, dashed, nothing in it — and the ball is seen through it.
+    // colour, dashed, nothing in it — and the ball is seen through it. The
+    // wireframe holds still: its weight flickered frame to frame, and
+    // shimmered over the ghost.
     const ctx = p.drawingContext as CanvasRenderingContext2D
     for (const b of BRICKS) {
       const dx = Math.max(b.x0 - at.x, 0, at.x - b.x1)
@@ -111,7 +113,7 @@ export const phaser = definePiece<{ color: string; courses: string[] }>({
         p.push()
         p.noFill()
         p.stroke(s.courses[b.course % s.courses.length])
-        p.strokeWeight(weight * (Math.floor(t * 30) % 2 ? 0.7 : 0.5))
+        p.strokeWeight(weight * 0.6)
         p.strokeCap(p.SQUARE)
         ctx.setLineDash([0.03 * k, 0.03 * k])
         p.rect(cx, cy, (b.x1 - b.x0) * k, (b.y1 - b.y0) * k)

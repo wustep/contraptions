@@ -120,10 +120,14 @@ export const striker = definePiece<StrikerState>({
       tube(p, k, ink, weight, s.color, -TOWER + FRAME + 0.03, ly, -0.08, ly, on)
       tube(p, k, ink, weight, s.color, 0.08, ly, TOWER - FRAME - 0.03, ly, on)
     }
-    // The spring at the foot, and the latch.
+    // The spring at the foot, and the latch. The spring follows the puck
+    // only to its own length, a hair past where the loaded puck sat; the
+    // puck flies on without it. Stretched up the slot after the puck, it
+    // drew a wire kinked across the foot and nubs all the way up.
+    const coilTop = Math.max(puckY, -0.05) + FLOOR + 0.06
     outline(p, ink, weight)
     p.beginShape()
-    for (let i = 0; i <= 8; i++) p.vertex((i % 2 ? 0.05 : -0.05) * (i === 0 || i === 8 ? 0 : 1) * k, (0.44 - (0.44 - (puckY + FLOOR + 0.06)) * (i / 8)) * k)
+    for (let i = 0; i <= 8; i++) p.vertex((i % 2 ? 0.05 : -0.05) * (i === 0 || i === 8 ? 0 : 1) * k, (0.44 - (0.44 - coilTop) * (i / 8)) * k)
     p.endShape()
     p.push()
     p.translate((TOWER + 0.04) * k, (FLOOR + 0.1) * k)

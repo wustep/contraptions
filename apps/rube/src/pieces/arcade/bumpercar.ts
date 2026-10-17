@@ -9,14 +9,13 @@ import { flash, score, tube } from './neon'
  * rail's end with its pole up to the grid, another parked nose to it
  * further down the floor, a rubber kerb across the far end. The ball
  * rolls off the rail over the waiting car's tail into its seat and sits;
- * the shoe on the pole sparks, the grid lights, and the car drives off
- * across the floor, faster, and rams the parked car nose to nose. The
- * parked car is shoved back into the kerb, rocks off it and settles, its
- * shoe sliding along the grid with it; the car that hit it stops dead and
- * the jolt pitches the ball out of the seat, over both of them and the
- * kerb, onto the rail beyond. A hundred. The sparks die and the grid goes
- * dark. The throw goes over the far side of the floor: the parked car's
- * pole and the grid's far post stand in front of it.
+ * the grid lights, and the car drives off across the floor, faster, and
+ * rams the parked car nose to nose. The parked car is shoved back into the
+ * kerb, rocks off it and settles, its shoe sliding along the grid with it;
+ * the car that hit it stops dead and the jolt pitches the ball out of the
+ * seat, over both of them and the kerb, onto the rail beyond. A hundred.
+ * The grid goes dark. The throw goes over the far side of the floor: the
+ * parked car's pole and the grid's far post stand in front of it.
  *
  * The drive is one function of time, which the lane traces and the car is
  * drawn from.
@@ -146,7 +145,6 @@ export const bumpercar = definePiece<BumpercarState>({
   },
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
     const x = carAt(t)
-    const live = t > ARRIVE && since < 0.8
     const powered = t < ARRIVE ? 0 : 1 - over(since, 0.4, 1.2)
     const parked = parkedAt(t)
 
@@ -169,18 +167,6 @@ export const bumpercar = definePiece<BumpercarState>({
     // The parked car, nose to the one that is coming, and the driving car's pole; its body is in front of the ball.
     hull(p, k, ink, weight, s.parked, parked.x, -1, parked.a)
     pole(p, k, ink, weight, x, 1)
-    // The spark at the driving car's shoe while it is live: short flicks of light off the contact.
-    if (live && Math.floor(t * 40) % 3 !== 0) {
-      p.push()
-      p.stroke(ink)
-      p.strokeWeight(weight * 0.8)
-      for (let i = 0; i < 3; i++) {
-        const a = Math.PI * (0.55 + 0.3 * Math.sin(t * 90 + i * 2.1))
-        const r = 0.04 + 0.03 * (i % 2)
-        p.line((x - LEAN) * k, (GRID_Y + 0.06) * k, (x - LEAN + Math.cos(a) * r) * k, (GRID_Y + 0.06 + Math.sin(a) * r) * k)
-      }
-      p.pop()
-    }
     // The bump, rubber on rubber.
     flash(p, k, s.parked, weight, BUMP_X + CAR_HALF + RUBBER, DECK_Y - 0.1, since, 0.22, 0.08, 0.26)
   },

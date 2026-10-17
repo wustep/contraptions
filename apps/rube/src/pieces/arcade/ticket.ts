@@ -1,3 +1,4 @@
+import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { FLOOR, ROLL, definePiece, fly, over, rail, ramp, rankBy, wait, type Lane, type Pt } from '../../parts'
 import { cabinet, display, lamp, marquee, score } from './neon'
@@ -47,6 +48,19 @@ const TICK = 0.05
 
 const HOPPER = -0.12
 const W = 0.5
+/** The hopper's funnel: its mouth across the top, its throat across the bottom. */
+const MOUTH_Y = -0.04
+const THROAT_Y = 0.26
+const FUNNEL: [number, number][] = [
+  [HOPPER - 0.2, MOUTH_Y],
+  [HOPPER + 0.24, MOUTH_Y],
+  [0.12, THROAT_Y],
+  [-0.12, THROAT_Y],
+]
+/** The funnel's lane-side wall, across at `y`. */
+const wallAt = (y: number): number => FUNNEL[0][0] + ((y - MOUTH_Y) * (FUNNEL[3][0] - FUNNEL[0][0])) / (THROAT_Y - MOUTH_Y)
+/** How long the ball takes to sink out of sight down the throat. */
+const SINK = 0.07
 /** The rail's end: the ball tips off it into the funnel's mouth. */
 const EDGE = HOPPER - 0.14
 /** Where the ball is out of sight, at the funnel's throat. */
@@ -64,20 +78,12 @@ const DROP = Math.sqrt((2 * -CHUTE_Y) / 24)
 const rideTime = (floors: number) => 0.4 + 0.35 * floors
 const HOLD = 0.15
 
-/** Lane time from the tip-in to the ball leaving the piece (ride + chute + exit). */
-const afterTip = (floors: number): number => {
-  const ride = rideTime(floors)
-  const flyOut = 0.03
-  const rampOut = Math.abs(0.5 - (CHUTE_X + 0.06)) / ((2.0 + ROLL) / 2)
-  return ride + HOLD + DROP + flyOut + rampOut
-}
-
-/** Elapsed payout time: continues after the ball leaves, via `since`. */
-const feedClock = (floors: number, t: number, since: number): number => {
-  const start = T_EDGE + TIP
-  if (since < 0) return Math.max(0, t - start)
-  return afterTip(floors) + since
-}
+/**
+ * Elapsed payout time, from the tip-in, running on after the ball has left. One clock throughout: it was the
+ * lane's time from the tip-in until the drop and then the time to the ball's leaving plus `since`, which put it
+ * a fifth of a second ahead the moment the ball dropped, and the strip and the count jumped with it.
+ */
+const feedClock = (t: number): number => Math.max(0, t - (T_EDGE + TIP))
 
 /** How long this payout streams: at least FEED, and at least one TICK per ticket. */
 const feedDur = (tickets: number, floors: number): number =>
@@ -120,7 +126,7 @@ export const ticket = definePiece<TicketState>({
   },
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
     const { floors, turn } = s
-    const clock = feedClock(floors, t, since)
+    const clock = feedClock(t)
     const dur = feedDur(s.tickets, floors)
     const fed = dur <= 0 ? 1 : Math.max(0, Math.min(1, clock / dur))
     // Keep whirring for the whole stream, including after the ball has left for the portal.
@@ -138,7 +144,7 @@ export const ticket = definePiece<TicketState>({
     cabinet(p, k, ink, weight, s.color, 0, -0.42, floors + 0.5, W)
     // The hopper: a funnel in the top, on the lane's side, wide enough for the ball.
     solid(p, ink, weight, bg)
-    p.quad((HOPPER - 0.2) * k, -0.04 * k, (HOPPER + 0.24) * k, -0.04 * k, 0.12 * k, 0.26 * k, -0.12 * k, 0.26 * k)
+    funnel(p, k)
     // The marquee along the top, on a dark band let into the cabinet so its lamps read against it, chasing while it whirs.
     marquee(p, k, ink, weight, s.color, bg, -0.22, 0.22, -0.35, 5, t, whir, 0.09)
     // The display: the points the run earned, counting down as they are paid out. Dark until the ball is in.
@@ -149,16 +155,18 @@ export const ticket = definePiece<TicketState>({
     p.pop()
     // The tickets: one strip out of the slot, a perforation every ticket, growing without a floor cap so a long
     // payout piles up and spills off the bottom of the frame while the ball rolls into the portal.
-    if (tickets > 0) {
+    // The paper feeds out steadily, the perforations riding down with it, while the count goes a ticket at a time.
+    const h = fed * s.tickets * PITCH
+    if (h > 0.005) {
       const x = -turn * 0.12
       const y0 = floors + 0.1
-      const h = tickets * PITCH
       solid(p, ink, weight * 0.7, bg)
       p.rect(x * k, (y0 + h / 2) * k, 0.14 * k, h * k, 0.005 * k)
       outline(p, ink, weight * 0.7)
       // Perforations for the visible span (cap the loop so a long spill stays cheap to draw).
       const yMax = y0 + Math.min(h, 8) - 0.02
-      for (let y = y0 + PITCH; y < yMax; y += PITCH) {
+      for (let y = y0 + (h % PITCH || PITCH); y < yMax; y += PITCH) {
+        if (y < y0 + 0.01) continue
         p.line((x - 0.05) * k, y * k, (x - 0.02) * k, y * k)
         p.line((x + 0.02) * k, y * k, (x + 0.05) * k, y * k)
       }
@@ -166,26 +174,59 @@ export const ticket = definePiece<TicketState>({
   },
   // What the points came to, over the marquee as the last ticket lands: on the cabinet's own face it was the cabinet's colour.
   scores: (p, s, { k, since, bg }) => {
-    const spill = Math.max(0, feedDur(s.tickets, s.floors) - afterTip(s.floors))
+    const spill = Math.max(0, feedDur(s.tickets, s.floors) - rideTime(s.floors) - HOLD)
     return score(p, k, s.color, bg, 0, -0.3, `x${s.tickets}`, since - spill, 1.4)
   },
   over: (p, s, { k, t, since, ink, weight, bg }) => {
     const { floors, turn } = s
-    const clock = feedClock(floors, t, since)
+    const clock = feedClock(t)
     const fed = Math.max(0, Math.min(1, clock / feedDur(s.tickets, floors)))
     const whir = fed > 0 && fed < 1
     const shake = whir ? 0.008 * Math.sin(t * 50) : 0
-    // The prize chute: a hood on the cabinet's side at its foot, open underneath, in front of the ball.
     p.push()
     p.translate(shake * k, 0)
+    // The cabinet's face below the rail's level round the hopper, in front of the ball: what of the ball is
+    // under the sill, past the funnel's wall or down its throat is inside the cabinet, and the rest sinks into
+    // the dark of the throat, so the ball goes down it rather than blinking out whole in the funnel.
+    const sill = wallAt(FLOOR)
+    const foot = THROAT_Y + 0.08
+    p.noStroke()
+    p.fill(s.color)
+    p.beginShape()
+    for (const [x, y] of [[-W / 2, FLOOR], [sill, FLOOR], FUNNEL[3], [W / 2, THROAT_Y], [W / 2, foot], [-W / 2, foot]]) p.vertex(x * k, y * k)
+    p.endShape(p.CLOSE)
+    const gone = T_EDGE + TIP
+    if (t > gone - SINK && t < gone) {
+      // The dark, short of the mouth's and the far wall's lines, which stay as they are.
+      const d = weight / 2 / k
+      const dark = p.color(bg)
+      dark.setAlpha(255 * over(t, gone - SINK, gone))
+      p.fill(dark)
+      p.quad(wallAt(MOUTH_Y + d) * k, (MOUTH_Y + d) * k, (FUNNEL[1][0] - d) * k, (MOUTH_Y + d) * k, (FUNNEL[2][0] - d) * k, THROAT_Y * k, FUNNEL[3][0] * k, THROAT_Y * k)
+    }
+    // The lines the face was laid over: the sill, the funnel's wall and throat, and the cabinet's sides.
+    outline(p, ink, weight)
+    p.line((-W / 2) * k, FLOOR * k, sill * k, FLOOR * k)
+    p.line(sill * k, FLOOR * k, FUNNEL[3][0] * k, THROAT_Y * k)
+    p.line(FUNNEL[3][0] * k, THROAT_Y * k, FUNNEL[2][0] * k, THROAT_Y * k)
+    p.line((-W / 2) * k, FLOOR * k, (-W / 2) * k, foot * k)
+    p.line((W / 2) * k, THROAT_Y * k, (W / 2) * k, foot * k)
+    // The prize chute: a hood on the cabinet's side at its foot, open underneath, in front of the ball.
     solid(p, ink, weight, s.color)
     p.rect(turn * CHUTE_X * k, (floors + (CHUTE_TOP + CHUTE_BOTTOM) / 2) * k, CHUTE_W * k, (CHUTE_BOTTOM - CHUTE_TOP) * k, 0.02 * k)
     // Its mouth: dark along the bottom edge, where the ball comes out.
     p.fill(ink)
     p.noStroke()
     p.rect(turn * CHUTE_X * k, (floors + CHUTE_BOTTOM - 0.035) * k, (CHUTE_W - 0.06) * k, 0.05 * k)
-    // A lamp on the hood that comes on as the ball drops.
+    // A lamp on the hood that comes on as the ball drops, in a dark socket: lit in the hood's own colour on the bare hood, it was lost.
+    p.fill(bg)
+    p.circle(turn * CHUTE_X * k, (floors + CHUTE_TOP + 0.08) * k, 0.1 * k)
     lamp(p, k, ink, weight, s.color, bg, turn * CHUTE_X, floors + CHUTE_TOP + 0.08, 0.03, since > 0 && since < 0.6 ? 1 - over(since, 0.3, 0.6) : 0)
     p.pop()
   },
 })
+
+/** The hopper's funnel, in whatever stroke and fill are set. */
+function funnel(p: p5, k: number): void {
+  p.quad(FUNNEL[0][0] * k, FUNNEL[0][1] * k, FUNNEL[1][0] * k, FUNNEL[1][1] * k, FUNNEL[2][0] * k, FUNNEL[2][1] * k, FUNNEL[3][0] * k, FUNNEL[3][1] * k)
+}

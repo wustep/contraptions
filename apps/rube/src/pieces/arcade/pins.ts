@@ -238,17 +238,23 @@ export const pins = definePiece<PinsState>({
     for (const [x, y] of BODY) p.vertex(x * k, y * k)
     p.endShape(p.CLOSE)
     // The pit at work: cleats on its floor running back to the lift, and the lift's running up the back wall and the post into the hood.
+    // They stand up out of the belts as it starts and fold back down as it stops, rather than blinking in and out.
     if (clearing) {
       const v = since - T_CLEAR
+      const out = Math.min(over(v, 0, 0.15), 1 - over(since, T_SET - 0.15, T_SET))
+      p.push()
       outline(p, ink, weight * 0.8)
+      // Square ends, so a cleat folded flat is not left as a dot.
+      p.strokeCap(p.SQUARE)
       for (let n = 0; n < 5; n++) {
         const x = BIN0 + WALL + 0.03 + ((n * 0.12 + v * V_BED) % 0.6)
-        p.line(x * k, BED * k, x * k, (BED - 0.025) * k)
+        p.line(x * k, BED * k, x * k, (BED - 0.035 * out) * k)
       }
       for (let n = 0; n < 6; n++) {
         const y = BED - 0.04 - ((n * 0.14 + v * V_LIFT) % 0.84)
-        p.line((BIN1 - WALL) * k, y * k, (BIN1 - WALL - 0.04) * k, y * k)
+        p.line((BIN1 - WALL) * k, y * k, (BIN1 - WALL - 0.05 * out) * k, y * k)
       }
+      p.pop()
     }
     // Whatever goes up into the hood, or comes down out of it, is cut off at the hood's top: it is inside.
     p.push()
@@ -285,12 +291,12 @@ export const pins = definePiece<PinsState>({
     rail(p, k, ink, weight, -0.5, 1.5)
     // The lane's light along the slab's side, on as the ball goes down it: in the pins' colour, since the slab's own is lost on it.
     tube(p, k, ink, weight, s.pin, LANE0 + 0.06, FLOOR + SLAB / 2, 0.68, FLOOR + SLAB / 2, lit)
-    // The hood over the deck on its post, which stands on the pit's back wall, and the strike lamp in it.
+    // The hood over the deck on its post, which stands on the pit's back wall, and the strike lamp in it, lit in the pins' colour as the lane's light is: in the hood's own it was lost in the hood.
     outline(p, ink, weight)
     p.line((BIN1 - WALL) * k, HOOD.y1 * k, (BIN1 - WALL) * k, FLOOR * k)
     solid(p, ink, weight, s.color)
     p.rect(((HOOD.x0 + HOOD.x1) / 2) * k, ((HOOD.y0 + HOOD.y1) / 2) * k, (HOOD.x1 - HOOD.x0) * k, (HOOD.y1 - HOOD.y0) * k, 0.02 * k)
-    lamp(p, k, ink, weight, s.color, bg, LAMP[0], LAMP[1], 0.045, struck)
+    lamp(p, k, ink, weight, s.pin, bg, LAMP[0], LAMP[1], 0.045, struck)
     // The strike.
     flash(p, k, s.color, weight, PIN0, 0, since, 0.22, 0.12, 0.28)
   },

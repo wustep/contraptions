@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { FLOOR, R, ROLL, ball, definePiece, over, post, rail, ramp, roll, type BallChange, type Lane, type Pt } from '../../parts'
-import { display, flash, lamp } from './neon'
+import { display, flash, lamp, litColor } from './neon'
 
 /**
  * A Gauss gun: the desk toy. A magnet block is clamped across the lane
@@ -86,7 +86,7 @@ export const gauss = definePiece<{ color: string; next: string }>({
     for (const r of ARCS) {
       const a = Math.asin(ARC_H / r)
       const reached = since < 0 ? (pulled > 0 && front > MAG - HALF - r ? 1 : 0) : flare
-      p.stroke(reached > 0.5 ? s.color : ink)
+      p.stroke(litColor(ink, s.color, reached))
       p.strokeWeight(weight * 0.8)
       p.arc((MAG - HALF) * k, 0, r * 2 * k, r * 2 * k, Math.PI - a, Math.PI + a)
     }
@@ -116,8 +116,8 @@ export const gauss = definePiece<{ color: string; next: string }>({
     lamp(p, k, ink, weight, s.next, bg, GATE2, TRAP_Y, 0.035, clocked ? 1 - over(since, T_GATE2 + 0.25, T_GATE2 + 0.9) : 0)
     display(p, k, ink, weight, bg, (GATE1 + GATE2) / 2, TRAP_Y, 0.22, 0.15, shown > 0 ? CLOCKED : '00', s.next, shown > 0.5)
 
-    // The clack on the near face, and the shot off the far ball.
-    flash(p, k, s.color, weight, MAG - HALF, 0, since, 0.2, 0.06, 0.2)
+    // The shot off the far ball. The clack itself is the stop and the shiver: a ring off the near face too was a
+    // second mark for the one event, drawn across the ball that had just come to rest there.
     flash(p, k, s.next, weight, B2, 0, since, 0.18, 0.13, 0.26)
   },
 })
