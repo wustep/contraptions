@@ -240,7 +240,8 @@ export function kidX(i: number, t: number): number {
   let x = x0 + (MEET_X[i] - x0) * toMeet
   if (t > HUG_FROM) {
     const s = Math.min(1, (t - HUG_FROM) / (HOLD - HUG_FROM))
-    x += (HUG_X[i] - MEET_X[i]) * s * s
+    // Easing in to them and to rest against him: it ended at full speed and stopped dead in a frame.
+    x += (HUG_X[i] - MEET_X[i]) * s * s * (3 - 2 * s)
   }
   return x
 }
