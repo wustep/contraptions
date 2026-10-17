@@ -3,9 +3,16 @@ import { box, frame, part, scenery, type PartShot } from '../kit'
 import { at } from '../music'
 import { SEAMS } from '../seams'
 import type { Pen } from '../pen'
-import { drawAirfield, drawAmbDoor, drawAmbulance, drawBarn, drawFar, drawGround, drawHouse, drawRoadside, drawSky, drawTheCab } from './draw'
+import { drawMistBack } from './airfield'
+import { drawAirfield, drawAmbDoor, drawAmbulance, drawBarn, drawGround, drawHouse, drawRoadside, drawTheCab } from './draw'
+import { drawFireFront, drawFireWash, drawPlume } from './fire'
+import { drawNear } from './near'
+import { drawDog, drawLeaves, drawStarlings, drawWash } from './wind'
+import { drawFar, drawSky } from './sky'
 import {
   AMB_STOP,
+  BX0,
+  BX1,
   DOOR_OPEN,
   FLARE,
   SHOTS,
@@ -13,6 +20,7 @@ import {
   DOOR_HITS,
   GB,
   HALT,
+  HOUSE,
   IN_BARN,
   JERSEY_STRIKES,
   LAND_R,
@@ -49,20 +57,45 @@ export const JERSEY_CELLS = box(-45, -16, S + 72, 8, 2)
 
 const penOf = (p: Parameters<typeof frame>[0], k: number, ink: string, w: number): Pen => ({ p, k, ink, w, tone: (h) => h })
 
-/** The night, the road, the farm and the airfield: drawn first, on show time. */
+/**
+ * The night, the road, the farm and the airfield, far to near: drawn first, on show time. The sky and the country going
+ * by in layers behind the road (`sky.ts`), the mist on the field; the road, and the fire's warmth on the field and the
+ * air behind the farm (under the farm itself, which carries its own); the roadside, the airfield, the farmhouse; the
+ * barn's plume behind the barn, the barn, and its embers in front. Over the ball, only what passes at the foot of the
+ * picture between it and the camera (`near.ts`).
+ */
 export const jerseySet = scenery<null>({
   name: 'jersey-set',
   draw: (p, _s, c) => {
     const pen = penOf(p, c.k, c.ink, c.weight)
     const f = frame(p, c.k)
+    const t = c.t
     p.push()
-    drawSky(pen, f)
-    drawFar(pen, f)
-    drawGround(pen, c.t, f)
-    drawRoadside(pen, c.t, f)
-    drawAirfield(pen, c.t, f)
-    drawHouse(pen, c.t)
-    drawBarn(pen, c.t)
+    drawSky(pen, t, f)
+    drawFar(pen, t, f)
+    drawMistBack(pen, t, f)
+    drawGround(pen, f)
+    drawFireWash(pen, t, f)
+    drawRoadside(pen, t, f)
+    drawWash(pen, t, f)
+    drawStarlings(pen, t, f)
+    drawAirfield(pen, t, f)
+    // The farmhouse and the barn only when they (or the barn's light on the walls) can be in the picture.
+    if (f.x1 > HOUSE[0] - 4 && f.x0 < HOUSE[1] + 3) {
+      drawHouse(pen, t)
+      drawDog(pen, t, f)
+    }
+    drawPlume(pen, t, f)
+    if (f.x1 > BX0 - 8 && f.x0 < BX1 + 8) drawBarn(pen, t)
+    drawFireFront(pen, t, f)
+    drawLeaves(pen, t, f)
+    p.pop()
+  },
+  over: (p, _s, c) => {
+    const pen = penOf(p, c.k, c.ink, c.weight)
+    const f = frame(p, c.k)
+    p.push()
+    drawNear(pen, c.t, f)
     p.pop()
   },
 })

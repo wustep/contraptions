@@ -462,6 +462,12 @@ export interface Given {
   speed: number
   spin: number
   turn0: number
+  /**
+   * Whether it stays: the loud beats' things are flung past us, but the rest are slowed by the dark and left hanging
+   * round the bagel, `reach` times its radius out from the hole they came from.
+   */
+  hangs: boolean
+  reach: number
 }
 
 /** The beats something comes out on: after Joy (122), one a beat, but for Joy's landing (124), the eye (134, 136), the line's release (151) and the close (156 on). */
@@ -494,15 +500,22 @@ export const GIVEN: Given[] = (() => {
     const w = back[i]
     const f = (0.37 + i * 0.618034) % 1
     const at = fall(OUT_BEATS[i])
+    const hangs = strength('fall', OUT_BEATS[i]) < 1.4
+    // What stays hangs on the open side, away from the rig, the pulley and his line: one heading that way is
+    // turned across to the other.
+    let dir = clearOfMachine(lo + span * f, at)
+    if (hangs && Math.cos(dir) < -0.2) dir = Math.PI - dir
     out.push({
       thing: w.thing,
       at,
       size: w.size,
       variant: w.variant,
-      dir: clearOfMachine(lo + span * f, at),
+      dir,
       speed: 12 + 4 * ((i * 0.381966) % 1),
       spin: (((i * 0.7548) % 1) < 0.5 ? -1 : 1) * (2.2 + 2.6 * ((i * 0.2887) % 1)),
       turn0: ((i * 2.399) % (2 * Math.PI)),
+      hangs,
+      reach: 1.2 + 1.0 * ((i * 0.7548 + 0.3) % 1),
     })
   }
   return out
@@ -510,6 +523,11 @@ export const GIVEN: Given[] = (() => {
 
 /** How much bigger than it went in each thing comes out: it is coming toward us. */
 const BIG = 1.7
+/** And one that stays, at the bagel's own distance: a little less. */
+const HANG = 1.45
+
+/** How far the dark has taken back what hangs in it, 0..1: from a little after the line runs out to the jump. */
+export const hungGone = (t: number): number => ss((t - (RELEASE + 1.2)) / (T_OUT - 0.3 - (RELEASE + 1.2)))
 
 /** Every beat something comes out on (for the glow in the hole). */
 export const OUT_TIMES = GIVEN.map((g) => g.at)
@@ -517,6 +535,20 @@ export const OUT_TIMES = GIVEN.map((g) => g.at)
 /** Where a given thing is `x` seconds after it came out (rel), how big, how turned, and how dark (still in the hole). */
 export function givenAt(g: Given, x: number): { p: Pt; size: number; angle: number; dark: number } {
   const c = centreAt(g.at)
+  if (g.hangs) {
+    // Thrown as hard, but the dark drags it to a stop past the rim, where it hangs, drifting a little further out and
+    // round, its spin slowed to a tumble. The bagel shrinks and climbs away from it; it stays where it was left.
+    const R0 = RO1 * scaleAt(g.at) * g.reach
+    const r = R0 * (1 - Math.exp(-x / 0.4)) + 0.08 * x
+    const a = g.dir + 0.3 * (1 - Math.exp(-x / 0.6)) + 0.015 * x
+    const settle = 1 - Math.exp(-x / 0.5)
+    return {
+      p: [c[0] + r * Math.cos(a), c[1] + r * Math.sin(a) + 0.05 * Math.sin(1.3 * x + g.turn0) * settle],
+      size: g.size * HANG * (0.08 + 0.92 * ss(x / 0.22)),
+      angle: g.turn0 + g.spin * 0.5 * settle + 0.22 * Math.sign(g.spin) * x,
+      dark: Math.max(0.6 * (1 - ss(x / 0.18)), hungGone(g.at + x)),
+    }
+  }
   // Burst out of the hole's heart: thrown hard, dragged, and still coming (toward us: it grows as it comes).
   const r = g.speed * 0.3 * (1 - Math.exp(-x / 0.3)) + 4.2 * x
   const a = g.dir + 0.45 * (1 - Math.exp(-x / 0.5))
@@ -583,16 +615,21 @@ export interface Spray {
   at: number
   seeds: Seed[]
 }
-/** A spray of seeds out of the hole on each eighth the music has (122½ to 150½), and a smaller one with each thing it gives back. */
+/**
+ * A spray of seeds out of the hole on each eighth the music has (122½ to 150½), and a smaller one with each thing it
+ * gives back. A puff, not a storm: a handful of seeds, small and quick, so the eighths pulse in the hole and the
+ * things it gives back, each with its eye, are what the eye follows. (At fifteen to twenty-seven a spray, several in
+ * the air at once, they were a hundred flakes of confetti over the two of them and over every thing coming out.)
+ */
 export const SPRAYS: Spray[] = (() => {
   const out: Spray[] = []
   let n = 0
   const at: { t: number; count: number }[] = []
   for (let k = 120; k <= 150; k++) {
     const st = strength('fall', k + 0.5)
-    if (st >= 0.4) at.push({ t: fall(k + 0.5), count: 15 + Math.round(12 * Math.min(1.2, st)) })
+    if (st >= 0.4) at.push({ t: fall(k + 0.5), count: 5 + Math.round(4 * Math.min(1.2, st)) })
   }
-  for (const b of OUT_BEATS) at.push({ t: fall(b), count: 8 })
+  for (const b of OUT_BEATS) at.push({ t: fall(b), count: 3 })
   at.sort((x, y) => x.t - y.t)
   for (const { t, count } of at) {
     const seeds: Seed[] = []
@@ -600,7 +637,7 @@ export const SPRAYS: Spray[] = (() => {
       n++
       const h = (v: number) => ((Math.sin(n * 12.9898 + v * 78.233) * 43758.5453) % 1 + 1) % 1
       // A fan over the top, never down across the two of them.
-      seeds.push({ dir: Math.PI / 2 + 1.0 + (2 * Math.PI - 2.0) * h(1), speed: 5 + 6 * h(2), size: 0.16 + 0.14 * h(3), kind: (Math.floor(h(4) * 3) % 3) as 0 | 1 | 2, spin: (h(5) - 0.5) * 12 })
+      seeds.push({ dir: Math.PI / 2 + 1.0 + (2 * Math.PI - 2.0) * h(1), speed: 5 + 6 * h(2), size: 0.11 + 0.08 * h(3), kind: (Math.floor(h(4) * 3) % 3) as 0 | 1 | 2, spin: (h(5) - 0.5) * 12 })
     }
     out.push({ at: t, seeds })
   }
@@ -615,9 +652,9 @@ export function seedAt(sp: Spray, sd: Seed, x: number): { p: Pt; size: number; a
   const r = sd.speed * 0.35 * (1 - Math.exp(-x / 0.35)) + 2 * x
   return {
     p: [c[0] + r * Math.cos(sd.dir), c[1] + r * Math.sin(sd.dir)],
-    size: sd.size * (0.3 + 0.7 * ss(x / 0.15)) * (1 + 0.6 * x),
+    size: sd.size * (0.3 + 0.7 * ss(x / 0.15)) * (1 + 0.25 * x),
     angle: sd.dir + sd.spin * x,
-    fade: 1 - ss((x - 0.55) / 0.5),
+    fade: 1 - ss((x - 0.3) / 0.4),
   }
 }
 

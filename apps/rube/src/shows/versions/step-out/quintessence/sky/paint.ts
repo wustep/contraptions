@@ -32,19 +32,6 @@ export function vgrad(g: C2, k: number, y0: number, y1: number, stops: [number, 
   return gr
 }
 
-/** A soft round glow at (x, y), radius `r` cells. */
-export function glow(g: C2, k: number, x: number, y: number, r: number, hex: string, a: number): void {
-  if (a <= 0.003 || r <= 0) return
-  const gr = g.createRadialGradient(x * k, y * k, 0, x * k, y * k, r * k)
-  gr.addColorStop(0, rgba(hex, a))
-  gr.addColorStop(0.35, rgba(hex, a * 0.45))
-  gr.addColorStop(1, rgba(hex, 0))
-  g.fillStyle = gr
-  g.beginPath()
-  g.arc(x * k, y * k, r * k, 0, Math.PI * 2)
-  g.fill()
-}
-
 /** A filled ellipse. */
 export function oval(g: C2, k: number, x: number, y: number, rx: number, ry: number, fill: string, rot = 0): void {
   g.fillStyle = fill

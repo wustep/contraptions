@@ -1,5 +1,5 @@
 import { mixHex, type Pt } from '../../../../../parts'
-import { beam, bloom, rgba } from '../cast'
+import { puff, rgba } from '../cast'
 import { hash } from '../kit'
 import { BAND, RAIN_GEO, SPLASH, clock, rate, vanAt } from '../stack'
 import { RAIN } from '../worlds'
@@ -182,16 +182,6 @@ export function overRiver(pen: Pen, f: View, t: number): void {
   ctx.save()
   ctx.fillStyle = g
   ctx.fill(body)
-  // Light down through it, the rays drifting: only close enough to see.
-  if (k > 9) {
-    ctx.clip(body)
-    const c = clock('rain', t)
-    for (let i = 0; i < 9; i++) {
-      const x = x0 + ((hash(i, 1, 17) * 60 + c * 0.25) % 60)
-      if (x < f.x0 - 2 || x > f.x1 + 2) continue
-      beam(pen.p, k, [x, RAIN_GEO.river], [x - 0.9, RAIN_GEO.bed], 0.5, 1.6, RAIN.riverLight, 0.1 + 0.05 * Math.sin(c * 0.7 + i))
-    }
-  }
   ctx.restore()
   // The surface: a pale line where it meets the air, and the air's grey on it.
   const line = new Path2D()
@@ -233,7 +223,7 @@ function bubbles(pen: Pen, f: View, t: number): void {
 }
 
 /**
- * A plume where something goes into the water or comes out of it: the white of the hit at once, a crown of jets thrown
+ * A plume where something goes into the water or comes out of it: the water heaved up at once, a crown of jets thrown
  * up and out that fall back under gravity, drops, and a mist that spreads and thins. `age` in seconds since, `size` 1
  * for the van. Soft, never outlined.
  */
@@ -243,8 +233,7 @@ export function plume(pen: Pen, at: Pt, age: number, size: number, seed: number)
   const { p, k, ctx } = pen
   const [x0, y0] = at
   const fade = 1 - age / life
-  // The hit: a flash of white where it goes in, and a low dome of water heaved up round it.
-  bloom(p, k, [x0, y0 - 0.25 * size], 0.5 + 1.7 * size, RAIN.window, 0.6 * Math.exp(-age / 0.16))
+  // The hit: a low dome of water heaved up round where it goes in.
   if (age < 0.6) {
     const rx = (0.5 + 2.6 * age) * size + 0.2
     const ry = (0.35 + 0.8 * size) * (1 - age / 0.6)
@@ -263,7 +252,7 @@ export function plume(pen: Pen, at: Pt, age: number, size: number, seed: number)
     ctx.restore()
   }
   // The mist, spreading and thinning.
-  bloom(p, k, [x0, y0 - 1.1 * size], (1.2 + 2.2 * age) * size, RAIN.rain, 0.42 * Math.exp(-age / (0.6 + 1.1 * size)))
+  puff(p, k, [x0, y0 - 1.1 * size], (1.2 + 2.2 * age) * size, RAIN.rain, 0.42 * Math.exp(-age / (0.6 + 1.1 * size)))
   // The crown: jets thrown up and out, each on its own arc; each thins away as it tops out and falls back as drops.
   ctx.save()
   ctx.lineCap = 'round'

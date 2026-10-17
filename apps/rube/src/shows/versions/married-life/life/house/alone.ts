@@ -4,7 +4,7 @@ import { CREDITS_AT } from '../credits'
 import { CUT, DURATION } from '../music'
 import { CUTS } from '../seams'
 import { CHAIR } from '../props/chairs'
-import { drawFacadeFront } from './front-house'
+import { drawBayLight, drawFacadeFront } from './front-house'
 import { lookAt } from './front'
 import { ALONE, CHAIRS, FOOT_X, LAMP_X, LAMPS, P, STAR, SWINGS, TREADS } from './front-plan'
 import { climbUp, crouch, cubic, pieces, trace, type Path } from './front-motion'
@@ -198,10 +198,11 @@ function shotsFor(): PartShot[] {
   void CUTS
   return [
     // In close on his three steps, the door and the porch rail, so each step on its note fills the frame; the mailbox's
-    // faded prints just inside its right edge, the rhyme. Held (drifting with him) to the latch.
+    // faded prints just inside its right edge, the rhyme. Drifting along with him, step by step, to the latch (not in:
+    // under Zoom his feet on the steps and the balloon's crown already fill the closer frame).
     key(203.7, 3.5, 6.42, -0.95),
-    key(206.4, 3.45, 6.36, -0.97),
-    key(ALONE.latch, 3.5, 6.3, -1.0),
+    key(206.4, 3.45, 6.28, -0.97),
+    key(ALONE.latch, 3.5, 6.12, -1.0),
     // Then wider as he goes in; through the window across the room.
     key(210.3, 4.3, 4.6, -1.4),
     key(212.6, 4.1, 3.4, -1.55),
@@ -230,6 +231,7 @@ export const alone = part<AloneState>(
       p.push()
       p.translate(-ALONE_AT[0] * c.k, -ALONE_AT[1] * c.k)
       drawFacadeFront(p, c.k, c.weight, lookAt(T), SWINGS)
+      drawBayLight(p, c.k, lookAt(T))
       p.pop()
     },
   },

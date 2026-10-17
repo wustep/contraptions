@@ -1,10 +1,10 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInOutSine } from '../../../../../../../../src/core/ease'
-import { FLOOR, laneAt, R, type Lane, type Pt } from '../../../../../parts'
+import { FLOOR, laneAt, mixHex, R, type Lane, type Pt } from '../../../../../parts'
 import { alpha, box, carried, knock, part, route, type Companion, type Ctx } from '../kit'
 import { beat, IGNITION } from '../music'
-import { DUST } from '../worlds'
+import { DUST, FARM } from '../worlds'
 
 /**
  * The gantry. The ball rolls into the cage at the foot of the tower on beat
@@ -114,6 +114,9 @@ function cageY(t: number): number {
 
 /** Height of lamp i: where the cage is at its eighth. */
 const lampY = (i: number): number => cageY(LAMPS[i]) - 0.35
+/** A lamp's glass, lit and dark. */
+const LAMP_LIT = '#FFE7A0'
+const LAMP_DARK = mixHex(DUST.shade, FARM.ink, 0.55)
 
 interface GantryState {
   begin: number
@@ -179,9 +182,10 @@ export const gantry = part<GantryState>(
     { t: beat(122.2), cells: 7.6, hold: [0.2, -2.2], w: 0.95 },
     // The two-shot of the countdown: the two of them in the window at the top of the frame, and at the foot of the
     // tower, at the bottom, Murph, kept back by TARS, looking up. Held while the lamps go out, to the arm swinging back.
-    // (Under Zoom, 1.5 times closer, it keeps the window: the two of them are the shot's lead.)
+    // (Under Zoom, 1.5 times closer, it keeps the window: the two of them are the shot's lead.) Not held dead: it
+    // breathes out a little and rises while the lamps go out, the storm looming over the tower, before the push in.
     { t: SEATED, cells: 9.8, hold: [RX - 1.5, -4.6] },
-    { t: beat(130.5), cells: 9.8, hold: [RX - 1.4, -4.6] },
+    { t: beat(130.5), cells: 10.3, hold: [RX - 1.35, -4.8] },
     // The countdown: a slow push in on the two in the window as the lamps go out, and the ignition throws it wide again.
     // Close enough, by the last lamp, that the two of them read as two, side by side at the glass. The push goes on to
     // the pedal itself and turns there: the camera is thrown by the engines, it does not see them coming.
@@ -220,25 +224,19 @@ function drawGantry(p: p5, s: GantryState, c: Ctx): void {
   for (let i = 0; i < 10; i++) {
     const y = lampY(i)
     const on = t >= LAMPS[i] && t < DARK[9 - i]
-    const flash = on ? knock(t - LAMPS[i], 0.2) : 0
     const off = t >= DARK[9 - i] ? knock(t - DARK[9 - i], 0.25) : 0
     // A bulkhead lamp on a bracket: a squared housing with its guard bars, never a disc that could be taken for a ball.
-    solid(p, ink, weight * 0.8, on ? '#F4C24E' : DUST.shade)
+    // Lit, it is near white; dark, its glass is dark, cooling through amber as it
+    // goes out, so that against the storm light each one going out on its beat is seen to go. No glow round it: the
+    // glass itself is the light.
+    const glass = on ? LAMP_LIT : mixHex(LAMP_DARK, '#D9873C', 0.8 * off)
+    solid(p, ink, weight * 0.8, glass)
     p.rect(X(LEG0 - 0.22), X(y), X(0.15), X(0.11), X(0.025))
     outline(p, ink, weight * 0.5)
     p.line(X(LEG0 - 0.22), X(y - 0.055), X(LEG0 - 0.22), X(y + 0.055))
     p.line(X(LEG0 - 0.295), X(y), X(LEG0 - 0.145), X(y))
     outline(p, ink, weight * 0.8)
     p.line(X(LEG0 - 0.145), X(y), X(LEG0 - 0.04), X(y))
-    if (on || off > 0.01) {
-      const ctx = p.drawingContext as CanvasRenderingContext2D
-      const a = on ? 0.55 + 0.4 * flash : 0.45 * off
-      const g = ctx.createRadialGradient(X(LEG0 - 0.22), X(y), 0, X(LEG0 - 0.22), X(y), X(0.5))
-      g.addColorStop(0, `rgba(255, 214, 120, ${a})`)
-      g.addColorStop(1, 'rgba(255, 214, 120, 0)')
-      ctx.fillStyle = g
-      ctx.fillRect(X(LEG0 - 0.72), X(y - 0.5), X(1.0), X(1.0))
-    }
   }
 
   // The cable, and the cage on it: a floor and a roof, bars behind (the front bars are drawn over the balls).

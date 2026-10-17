@@ -221,8 +221,7 @@ export const cloud = scenery<CloudState>({
       }
     }
     // Inside it: the frame is cloud for a moment (full only for an instant, which is when the stage changes
-    // universe), with the rocket's shadow going up through it and the glow of its flame under it, drawn the
-    // same in both universes so nothing jumps.
+    // universe), with the rocket's shadow going up through it, drawn the same in both universes so nothing jumps.
     const d = t - s.punch
     const white = d < 0 ? 1 - smooth(-d, 0.025, 0.26) : 1 - smooth(d, 0.025, 0.34)
     if (white > 0) {
@@ -233,14 +232,6 @@ export const cloud = scenery<CloudState>({
       const { base, lean } = s.rocket(t)
       const ux = Math.sin(lean)
       const uy = -Math.cos(lean)
-      const ctx = p.drawingContext as CanvasRenderingContext2D
-      const g = ctx.createRadialGradient(X(base[0]), X(base[1]), 0, X(base[0]), X(base[1]), X(1.6))
-      g.addColorStop(0, `rgba(244, 178, 74, ${0.55 * white})`)
-      g.addColorStop(1, 'rgba(244, 178, 74, 0)')
-      ctx.save()
-      ctx.fillStyle = g
-      ctx.fillRect(X(base[0] - 1.6), X(base[1] - 1.6), X(3.2), X(3.2))
-      ctx.restore()
       p.stroke(alpha(p, '#8E8A80', 0.42 * white))
       p.strokeWeight(X(0.62))
       p.strokeCap(p.ROUND)

@@ -120,24 +120,7 @@ export function drawCalcifer(p: p5, k: number, weight: number, ink: string, o: C
   }
   p.push()
   p.noStroke()
-  // A soft glow round him, low and wide, so he lights what is near without a bright core of his own.
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  // (The warm glow goes out before the cool one comes up: mixed, the two made a pink halo.)
-  const glowA = 0.28 * light * (1 - 0.7 * sink)
-  ctx.save()
-  for (const [rgb, a] of [
-    ['255, 170, 80', glowA * (1 - smoothUnit(weak, 0.2, 0.5))],
-    ['120, 160, 255', glowA * 0.8 * smoothUnit(weak, 0.62, 0.95)],
-  ] as const) {
-    if (a <= 0.003) continue
-    const g = ctx.createRadialGradient(0, -0.3 * h, 0, 0, -0.3 * h, 1.6 * h)
-    g.addColorStop(0, `rgba(${rgb}, ${a})`)
-    g.addColorStop(1, `rgba(${rgb}, 0)`)
-    ctx.fillStyle = g
-    ctx.fillRect(-1.6 * h, -1.9 * h, 3.2 * h, 3.2 * h)
-  }
-  // (Restored, so p5's cached fill is the canvas's again.)
-  ctx.restore()
+  // No halo of his own: what he lights is the scene's to draw (the grate's pool, the room's warmth on the walls).
   fillShape(shape(1, 0, -0.3 * h), edge, 1)
   fillShape(shape(0.84, 0, -0.26 * h), body, 1)
   fillShape(shape(0.52, 0, -0.18 * h), core, 0.95)

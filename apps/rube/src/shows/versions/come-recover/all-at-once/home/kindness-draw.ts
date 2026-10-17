@@ -1,6 +1,7 @@
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { FLOOR, R, mixHex, type Pt } from '../../../../../parts'
 import { alpha, hash, smooth } from '../kit'
+import { JUMPS } from '../music'
 import { HOME } from '../worlds'
 import { lantern, propEye, ROOM, table, type Pen } from './set'
 import {
@@ -41,6 +42,14 @@ import {
 
 const BAMBOO = mixHex(HOME.wood, HOME.paper, 0.38)
 const BAMBOO_DEEP = mixHex(HOME.wood, HOME.steelDark, 0.25)
+const BAMBOO_RIM = mixHex(BAMBOO, HOME.wood, 0.45)
+const LID = mixHex(BAMBOO, HOME.paper, 0.22)
+/** The party's paper: red paper-cuts, mandarins for luck, a branch of plum blossom in a porcelain vase. */
+const PAPER_CUT = mixHex(HOME.red, HOME.night, 0.06)
+const MANDARIN = mixHex(HOME.red, HOME.gold, 0.58)
+const LEAF = mixHex(HOME.tileDeep, '#3F7A4E', 0.6)
+const BLOSSOM = mixHex(HOME.rose, HOME.paper, 0.2)
+const BRANCH = mixHex(HOME.wood, HOME.night, 0.5)
 const TAN = mixHex(mixHex(HOME.wood, HOME.butter, 0.45), HOME.paper, 0.15)
 const TAN_DEEP = mixHex(HOME.wood, HOME.butter, 0.2)
 const KARAOKE_BODY = mixHex(HOME.night, HOME.denim, 0.55)
@@ -167,18 +176,207 @@ export function drawPartyWall(pen: Pen, t: number): void {
   p.pop()
   solid(p, ink, w * 0.5, HOME.gold)
   p.circle(cd.x * k, (cd.y - cd.r - 0.42) * k, 0.07 * k)
+  for (const cut of CUTS) paperCut(pen, cut)
 }
 
-/** The paper lanterns on their cords from the ceiling, each swinging about its hook in the ceiling. */
+/**
+ * The paper-cuts pasted on the tile for the new year, low enough to be in every close shot of the fight: round
+ * window flowers in red paper, scalloped, a flower cut out of each so the tile shows through. One by the gift box,
+ * one past the trap, one beyond the table's end.
+ */
+const CUTS: { x: number; y: number; r: number; petals: number; turn: number }[] = [
+  { x: 27.62, y: -1.4, r: 0.21, petals: 6, turn: 0.25 },
+  { x: 30.1, y: -1.36, r: 0.25, petals: 8, turn: 0 },
+  { x: 35.06, y: -1.44, r: 0.24, petals: 5, turn: -0.2 },
+]
+function paperCut(pen: Pen, c: (typeof CUTS)[number]): void {
+  const { p, k, ink, w } = pen
+  const { r, petals: n } = c
+  p.push()
+  p.translate(c.x * k, c.y * k)
+  p.rotate(c.turn)
+  // The scalloped round, a notch between each scallop.
+  p.stroke(alpha(p, ink, 0.55))
+  p.strokeWeight(w * 0.35)
+  p.fill(PAPER_CUT)
+  p.beginShape()
+  for (let i = 0; i < 96; i++) {
+    const a = (i / 96) * Math.PI * 2
+    const rr = r * (0.87 + 0.13 * Math.sqrt(Math.abs(Math.sin(n * a))))
+    p.vertex(Math.cos(a) * rr * k, Math.sin(a) * rr * k)
+  }
+  p.endShape(p.CLOSE)
+  // What is cut away: the petals of a flower round a ringed heart, and a seed between each two petals.
+  p.noStroke()
+  p.fill(HOME.tile)
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2
+    p.push()
+    p.rotate(a)
+    p.ellipse(0.46 * r * k, 0, 0.38 * r * k, 0.16 * r * k)
+    p.pop()
+    const b = a + Math.PI / n
+    p.circle(Math.cos(b) * 0.72 * r * k, Math.sin(b) * 0.72 * r * k, 0.1 * r * k)
+    p.circle(Math.cos(b) * 0.44 * r * k, Math.sin(b) * 0.44 * r * k, 0.06 * r * k)
+  }
+  p.circle(0, 0, 0.2 * r * k)
+  p.fill(PAPER_CUT)
+  p.circle(0, 0, 0.09 * r * k)
+  p.pop()
+}
+
+/** A dish of mandarins for luck, between the karaoke machine and the steamers. */
+export function drawMandarins(pen: Pen): void {
+  const { p, k, ink, w } = pen
+  const x = 31.9
+  const top = TABLE.top
+  // The dish: a low porcelain plate, a blue line round it.
+  solid(p, ink, w * 0.6, HOME.enamel)
+  p.rect(x * k, (top - 0.016) * k, 0.21 * k, 0.032 * k, 0.016 * k)
+  outline(p, HOME.denim, Math.max(1, w * 0.4))
+  p.line((x - 0.08) * k, (top - 0.016) * k, (x + 0.08) * k, (top - 0.016) * k)
+  const r = 0.05
+  const fruit: Pt[] = [
+    [x - 0.05, top - 0.032 - r],
+    [x + 0.05, top - 0.032 - r],
+    [x, top - 0.032 - r - 0.085],
+  ]
+  fruit.forEach(([fx, fy], i) => {
+    solid(p, ink, w * 0.6, MANDARIN)
+    p.circle(fx * k, fy * k, 2 * r * k)
+    p.noFill()
+    p.stroke(alpha(p, HOME.paper, 0.55))
+    p.strokeWeight(Math.max(1, w * 0.45))
+    p.arc((fx - 0.012) * k, (fy - 0.012) * k, r * 1.1 * k, r * 1.1 * k, Math.PI * 1.05, Math.PI * 1.45)
+    p.noStroke()
+    p.fill(LEAF)
+    p.circle(fx * k, (fy - r + 0.008) * k, 0.018 * k)
+    // The top one keeps two of its leaves.
+    if (i === 2) {
+      solid(p, ink, w * 0.4, LEAF)
+      for (const s of [-1, 1]) {
+        p.push()
+        p.translate(fx * k, (fy - r + 0.004) * k)
+        p.rotate(s * 0.9 - 0.2)
+        p.ellipse(0, -0.032 * k, 0.03 * k, 0.065 * k)
+        p.pop()
+      }
+    }
+  })
+}
+
+/**
+ * A branch of plum blossom in a porcelain vase on the table's far end, behind Waymond: spring, and the new year. It
+ * leans away from where she comes down to him, toward the couplet over it, and stirs when the arm rushes past.
+ */
+const VASE = { x: 34.02, h: 0.3 }
+const BRANCHES: Pt[][] = [
+  [[0, 0], [0.05, -0.24], [0.15, -0.44], [0.22, -0.7]],
+  [[0.05, -0.24], [0.22, -0.33], [0.4, -0.4]],
+  [[0.15, -0.44], [0.3, -0.52]],
+  [[0, 0], [-0.04, -0.16], [-0.03, -0.36]],
+]
+const BLOSSOMS: { b: number; at: number; r: number }[] = [
+  { b: 0, at: 0.42, r: 1 },
+  { b: 0, at: 0.66, r: 0.85 },
+  { b: 0, at: 0.86, r: 1.05 },
+  { b: 0, at: 1, r: 0.6 },
+  { b: 1, at: 0.45, r: 0.95 },
+  { b: 1, at: 0.78, r: 1.1 },
+  { b: 1, at: 1, r: 0.55 },
+  { b: 2, at: 0.6, r: 0.9 },
+  { b: 2, at: 1, r: 0.6 },
+  { b: 3, at: 0.55, r: 0.9 },
+  { b: 3, at: 1, r: 0.65 },
+]
+/** A point `u` (0..1) of the way along a polyline. */
+function along(pts: Pt[], u: number): Pt {
+  const lens = pts.slice(1).map((q, i) => Math.hypot(q[0] - pts[i][0], q[1] - pts[i][1]))
+  let d = u * lens.reduce((a, b) => a + b, 0)
+  for (let i = 0; i < lens.length; i++) {
+    if (d <= lens[i] || i === lens.length - 1) {
+      const f = lens[i] > 0 ? Math.min(1, d / lens[i]) : 0
+      return [pts[i][0] + (pts[i + 1][0] - pts[i][0]) * f, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * f]
+    }
+    d -= lens[i]
+  }
+  return pts[pts.length - 1]
+}
+export function drawBlossoms(pen: Pen, t: number): void {
+  const { p, k, ink, w } = pen
+  const foot = TABLE.top
+  const neck: Pt = [VASE.x, foot - VASE.h + 0.02]
+  // The branch, stirred by the room's air and by the arm's rush, as the lanterns are.
+  p.push()
+  p.translate(neck[0] * k, neck[1] * k)
+  p.rotate(0.015 * Math.sin(t * 1.2) + 0.5 * lanternSway(1, t))
+  for (const [pass, col, wt] of [
+    [0, ink, 2.0],
+    [1, BRANCH, 1.0],
+  ] as const) {
+    outline(p, col, Math.max(1, w * wt))
+    BRANCHES.forEach((br, i) => {
+      if (pass === 0) p.strokeWeight(Math.max(1, w * (i === 0 ? 2.2 : 1.7)))
+      else p.strokeWeight(Math.max(1, w * (i === 0 ? 1.1 : 0.8)))
+      p.beginShape()
+      for (const [x, y] of br) p.vertex(x * k, y * k)
+      p.endShape()
+    })
+  }
+  for (const bl of BLOSSOMS) {
+    const [x, y] = along(BRANCHES[bl.b], bl.at)
+    const s = 0.05 * bl.r
+    const turn = hash(bl.b, Math.round(bl.at * 10), 5) * Math.PI
+    p.stroke(alpha(p, ink, 0.6))
+    p.strokeWeight(w * 0.3)
+    p.fill(BLOSSOM)
+    for (let i = 0; i < 5; i++) {
+      const a = turn + (i / 5) * Math.PI * 2
+      p.circle((x + Math.cos(a) * s * 0.5) * k, (y + Math.sin(a) * s * 0.5) * k, s * 0.75 * k)
+    }
+    p.noStroke()
+    p.fill(HOME.gold)
+    p.circle(x * k, y * k, s * 0.35 * k)
+  }
+  p.pop()
+  // The vase: a meiping on its foot, white porcelain with a blue band.
+  const prof: Pt[] = [
+    [0.045, 0],
+    [0.052, -0.03],
+    [0.076, -0.12],
+    [0.07, -0.19],
+    [0.036, -0.245],
+    [0.026, -0.27],
+    [0.04, -0.3],
+  ]
+  solid(p, ink, w * 0.7, HOME.enamel)
+  p.beginShape()
+  for (const [x, y] of prof) p.vertex((VASE.x + x) * k, (foot + y) * k)
+  for (let i = prof.length - 1; i >= 0; i--) p.vertex((VASE.x - prof[i][0]) * k, (foot + prof[i][1]) * k)
+  p.endShape(p.CLOSE)
+  outline(p, HOME.denim, Math.max(1, w * 0.55))
+  p.line((VASE.x - 0.072) * k, (foot - 0.17) * k, (VASE.x + 0.072) * k, (foot - 0.17) * k)
+  p.line((VASE.x - 0.06) * k, (foot - 0.05) * k, (VASE.x + 0.06) * k, (foot - 0.05) * k)
+  // Between the bands, a spray of blue dots: a flower painted on the belly.
+  p.noStroke()
+  p.fill(HOME.denim)
+  for (const [dx, dy] of [[0, -0.11], [-0.025, -0.1], [0.025, -0.1], [-0.014, -0.085], [0.014, -0.085]] as Pt[]) p.circle((VASE.x + dx) * k, (foot + dy) * k, 0.016 * k)
+}
+
+/**
+ * The paper lanterns on their cords from the ceiling, each swinging about its hook in the ceiling. They come on with
+ * the great hit, as she chooses kindness: the party is on.
+ */
 export function drawLanterns(pen: Pen, t: number): void {
   const { p, k, ink, w } = pen
+  const lit = 0.85 * smooth(t, JUMPS.eye, JUMPS.eye + 0.3)
   LANTERNS.forEach((ln, i) => {
     const a = lanternSway(i, t)
     const top: Pt = [ln.x, ROOM.ceiling]
     const hook: Pt = [ln.x + ln.cord * Math.sin(a), ROOM.ceiling + ln.cord * Math.cos(a)]
     outline(p, ink, w * 0.5)
     p.line(top[0] * k, top[1] * k, hook[0] * k, hook[1] * k)
-    lantern(pen, hook[0], hook[1], { open: 1, lit: 0, sway: -a, size: ln.size })
+    lantern(pen, hook[0], hook[1], { open: 1, lit, sway: -a, size: ln.size })
   })
 }
 
@@ -207,25 +405,113 @@ export function drawTable(pen: Pen): void {
   for (const fx of [x0 + 0.9, x0 + 2.1]) p.line(fx * k, (top + 0.04) * k, (fx - 0.03) * k, (top + drop - 0.1) * k)
 }
 
-/** One steamer basket from (x0, foot) up: bamboo, two bands; `lid` for the top one. */
-function steamer(pen: Pen, x0: number, foot: number, lid: boolean): void {
+/**
+ * One bamboo steamer basket from (x0, foot) up, seen side-on: a round basket's woven wall between two bound rims, the
+ * rattan lashing where its band overlaps; `lid` for the top one, a woven lattice lid sat in it with its rim proud.
+ * Its top is the step she rolls on, flat at foot - h.
+ */
+function steamer(pen: Pen, x0: number, foot: number, lid: boolean, seed: number): void {
   const { p, k, ink, w } = pen
   const { w: W, h: H } = STEAM
+  const x1 = x0 + W
+  const top = foot - H
+  const rim = H * 0.2
+  // The wall, its rims a shade deeper, rounded at the corners as a drum is.
   solid(p, ink, w * 0.8, BAMBOO)
-  p.rect((x0 + W / 2) * k, (foot - H / 2) * k, W * k, H * k, 0.03 * k)
-  outline(p, BAMBOO_DEEP, Math.max(1, w * 0.45))
-  p.line((x0 + 0.04) * k, (foot - H * 0.3) * k, (x0 + W - 0.04) * k, (foot - H * 0.3) * k)
-  if (lid) {
-    solid(p, ink, w * 0.6, mixHex(BAMBOO, HOME.paper, 0.3))
-    p.rect((x0 + W / 2) * k, (foot - H + 0.025) * k, (W - 0.02) * k, 0.05 * k, 0.02 * k)
-  } else {
-    p.line((x0 + 0.04) * k, (foot - H * 0.72) * k, (x0 + W - 0.04) * k, (foot - H * 0.72) * k)
+  p.rect((x0 + W / 2) * k, (foot - H / 2) * k, W * k, H * k, 0.035 * k)
+  p.noStroke()
+  p.fill(BAMBOO_RIM)
+  p.rect((x0 + W / 2) * k, (foot - rim / 2 - 0.006) * k, (W - 0.02) * k, rim * k, 0.02 * k)
+  if (!lid) p.rect((x0 + W / 2) * k, (top + rim / 2 + 0.006) * k, (W - 0.02) * k, rim * k, 0.02 * k)
+  // The weave between the rims: two courses of split bamboo, their slats staggered, the round's turn shading its ends.
+  const w0 = lid ? top + H * 0.42 : top + rim + 0.006
+  const w1 = foot - rim - 0.006
+  const courses = 2
+  faint(pen, 0.32, w * 0.35)
+  for (let c = 0; c < courses; c++) {
+    const a = w0 + ((w1 - w0) * c) / courses
+    const b = w0 + ((w1 - w0) * (c + 1)) / courses
+    if (c > 0) p.line((x0 + 0.02) * k, a * k, (x1 - 0.02) * k, a * k)
+    for (let x = x0 + 0.035 + (c % 2) * 0.022; x < x1 - 0.02; x += 0.044) p.line(x * k, (a + 0.008) * k, x * k, (b - 0.008) * k)
   }
+  p.noStroke()
+  p.fill(alpha(p, BAMBOO_DEEP, 0.28))
+  p.rect((x0 + 0.03) * k, (foot - H / 2) * k, 0.04 * k, (H - 0.03) * k, 0.02 * k)
+  p.rect((x1 - 0.03) * k, (foot - H / 2) * k, 0.04 * k, (H - 0.03) * k, 0.02 * k)
+  // Where the band's ends overlap, bound in rattan: a strip and its stitches, never in the same place twice.
+  const lx = x0 + W * (0.28 + 0.44 * hash(seed, 3, 41))
+  p.fill(BAMBOO_DEEP)
+  p.rect(lx * k, (foot - H / 2) * k, 0.035 * k, (H - 0.02) * k, 0.01 * k)
+  p.stroke(alpha(p, HOME.paper, 0.6))
+  p.strokeWeight(Math.max(1, w * 0.35))
+  for (let i = 0; i < 3; i++) {
+    const y = foot - H * (0.25 + 0.25 * i)
+    p.line((lx - 0.014) * k, (y + 0.012) * k, (lx + 0.014) * k, (y - 0.012) * k)
+  }
+  // The rims' line where wall meets band.
+  outline(p, BAMBOO_DEEP, Math.max(1, w * 0.45))
+  p.line((x0 + 0.02) * k, (foot - rim - 0.006) * k, (x1 - 0.02) * k, (foot - rim - 0.006) * k)
+  if (!lid) {
+    p.line((x0 + 0.02) * k, (top + rim + 0.006) * k, (x1 - 0.02) * k, (top + rim + 0.006) * k)
+    return
+  }
+  // The lid: a lattice of fine bamboo in a rim a hair wider than the basket, sat down into it.
+  const lh = H * 0.42
+  solid(p, ink, w * 0.7, LID)
+  p.rect((x0 + W / 2) * k, (top + lh / 2) * k, (W + 0.03) * k, lh * k, 0.03 * k)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect((x0 + 0.01) * k, (top + 0.012) * k, (W - 0.02) * k, (lh - 0.024) * k)
+  ctx.clip()
+  faint(pen, 0.28, w * 0.32)
+  for (let x = x0 - lh; x < x1 + lh; x += 0.04) {
+    p.line(x * k, (top + lh) * k, (x + lh) * k, top * k)
+    p.line(x * k, top * k, (x + lh) * k, (top + lh) * k)
+  }
+  ctx.restore()
+  outline(p, BAMBOO_DEEP, Math.max(1, w * 0.45))
+  p.line((x0 - 0.005) * k, (top + 0.02) * k, (x1 + 0.005) * k, (top + 0.02) * k)
 }
 
 /** The dumpling steamers: three stacks stepping down to the right, the steps she comes down at the end. */
 export function drawSteamers(pen: Pen): void {
-  for (const st of STACKS) for (let i = 0; i < st.n; i++) steamer(pen, st.x0, TABLE.top - i * STEAM.h, i === st.n - 1)
+  STACKS.forEach((st, s) => {
+    for (let i = 0; i < st.n; i++) steamer(pen, st.x0, TABLE.top - i * STEAM.h, i === st.n - 1, s * 4 + i)
+  })
+}
+
+/**
+ * The steam off the dumplings: thin curls rising out of each lid's lattice, swaying as they go and gone into the air a
+ * hand over it. Over the steamers, under her.
+ */
+export function drawSteam(pen: Pen, t: number): void {
+  const { p, k, w } = pen
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  STACKS.forEach((st, s) => {
+    const top = TABLE.top - st.n * STEAM.h
+    for (let j = 0; j < 2; j++) {
+      const period = 2.6 + 0.4 * hash(s, j, 17)
+      const u = (t / period + hash(s, j, 23)) % 1
+      const x = st.x0 + STEAM.w * (0.3 + 0.4 * j) + 0.02 * Math.sin(t * 0.9 + s)
+      const rise = 0.55
+      const fade = Math.sin(Math.PI * u)
+      if (fade < 0.05) continue
+      ctx.save()
+      p.noFill()
+      p.stroke(alpha(p, HOME.paper, 0.55 * fade))
+      p.strokeWeight(Math.max(1, w * 0.9))
+      p.beginShape()
+      for (let i = 0; i <= 8; i++) {
+        const v = i / 8
+        const y = top - 0.03 - rise * (u * 0.55 + v * 0.45)
+        const sway = 0.035 * Math.sin(v * 5.5 + t * 2.2 + j * 2 + s) * (0.3 + v)
+        p.vertex((x + sway) * k, y * k)
+      }
+      p.endShape()
+      ctx.restore()
+    }
+  })
 }
 
 /** The karaoke machine on the table's near end: a speaker box with its grille, a little screen, a microphone. */

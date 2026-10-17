@@ -32,8 +32,8 @@ The folder and file names are addresses, so they are chosen once:
   `rule-the-world` **Rally**. The write-up says which is which.
 - **Take**: `<take>.show.ts`, which is also `/shows/<work>/<take>/` and the
   card `public/shows/<work>/<take>.png`. Name it for who made it (`opus55`,
-  `fable51`, `grok47`), or with a letter (`take-a`). La La Land's two keep the
-  model's point as a hyphen (`opus5-5`, `fable5-1`). A second take by the same
+  `fable51`, `grok47`), or with a letter (`take-a`). La La Land's takes keep the
+  model's point as a hyphen (`opus5-5`, and `fable5-1`, hidden for now). A second take by the same
   hand adds its code name (`opus55-spark`). Don't repeat the work's name in it.
   Takes sort by name, and the first is the work's own page, unless the registry
   puts another first (`PREFERRED_TAKES`: Epilogue's and Cornfield Chase's Opus).
@@ -58,8 +58,9 @@ A name already shipped stays, even where it misses these (`come-recover/opus55-a
 is Everything's only take, with its code name in the id). Renaming a take moves a public link
 and its card, so the old name goes in `RENAMED_TAKES` (`../registry.ts`): the page opens the old
 address as the take and writes the new one back, and the build writes a page at the old address
-too. Four have moved: `la-la-land/opus55-sebs` → `opus5-5`, `la-la-land/fable51-epilogue` →
-`fable5-1`, `cornfield-chase/opus55-music-sync` → `opus55`, `cornfield-chase/tech-demo` → `grok47`.
+too. Two have moved: `la-la-land/opus55-sebs` → `opus5-5` and `cornfield-chase/opus55-music-sync` →
+`opus55`. (`la-la-land/fable51-epilogue` → `fable5-1` and `cornfield-chase/tech-demo` → `grok47` are
+commented out while those takes are hidden.)
 A work has no such map yet, so renaming one waits for it.
 
 ## The file
@@ -165,7 +166,7 @@ resonance plays over the finished machine. A change to any stock piece's
 lane, or a piece in or out of a world, means rearranging it and running
 `generate:clair` again.
 
-`cornfield-chase/grok47` is a private tech demo for Hans Zimmer's Cornfield Chase, not part of the public catalog tour. `npm run generate:cornfield` writes it from stock lanes: Forest for the piano, one portal on the drop, then the Arcade on the chase pulse. The recording is copyrighted. See `apps/rube/src/shows/versions/cornfield-chase/ARRANGEMENT.md`.
+`cornfield-chase/grok47` (hidden for now, Oct 15: its file is `grok47.ts`, not `grok47.show.ts`) is a private tech demo for Hans Zimmer's Cornfield Chase, not part of the public catalog tour. `npm run generate:cornfield` writes it from stock lanes: Forest for the piano, one portal on the drop, then the Arcade on the chase pulse. The recording is copyrighted. See `apps/rube/src/shows/versions/cornfield-chase/ARRANGEMENT.md`.
 
 `metronome/` is not in the picker. It is a worked example of a time map: a
 procedural machine under a steady beat, and a struck bar on every strike,
@@ -205,7 +206,8 @@ map handoffs, motif placement, native colors, cue precision and the whale's
 open water. Generating Take B never writes Take A's plan, score or report.
 
 `cornfield-chase/grok47` (Grok 4.7; its code is `tech-demo.ts`) is the music-sync take
-that stays in the picker, beside the Opus one. `cornfield-chase/multiball`
+that stood in the picker beside the Opus one; it is hidden for now (Oct 15: its file is
+`grok47.ts`, not `grok47.show.ts`), so Cornfield Chase is its Opus take alone. `cornfield-chase/multiball`
 and `cornfield-chase/voices` are not in the picker. All three are one-shot
 tech demos of Hans Zimmer's Cornfield Chase, not finished public Shows. The
 recording is copyrighted; the credit stays in
@@ -283,7 +285,8 @@ against it (`apps/rube/checks/sebs.ts`). The recordings are copyrighted and
 demo only: `apps/rube/src/shows/versions/la-la-land/SEBS_ATTRIBUTION.txt`. The whole story is in
 `apps/rube/src/shows/versions/la-la-land/SEBS.md`.
 
-`la-la-land/fable5-1` (in the picker, **Fable 5.1** under
+`la-la-land/fable5-1` (hidden for now, Oct 15: its file is `fable5-1.ts`, not `fable5-1.show.ts`,
+so Epilogue is its Opus take alone; it stood in the picker as **Fable 5.1** under
 **Epilogue**) is Justin Hurwitz's *Epilogue* from La La Land, demo
 only (`apps/rube/src/shows/versions/la-la-land/EPILOGUE_ATTRIBUTION.txt`), played whole from its
 first sample, with every piece new. The show lives in `la-la-land/epilogue/`,
@@ -317,7 +320,8 @@ and the flowers it opens under the moon stay lit and open until dawn, so the sea
 its night. The code is `gymnopedie/orbit/`. Licences:
 `apps/rube/src/shows/versions/gymnopedie/ATTRIBUTION.txt`; the report is `apps/rube/src/shows/versions/gymnopedie/GYMNOPEDIE.md`.
 
-`soft-lamp/opus55` (in the picker, **Soft Lamp**, one take, **Opus 5.5**, on the **Ambient** shelf) is half an hour of
+`soft-lamp/opus55-still` (in the picker, **Soft Lamp**, one take, **Opus 5.5**, on the **Ambient** shelf; the moving
+camera, `soft-lamp/opus55`, is hidden for now, Oct 15: its file is `opus55.ts`, not `opus55.show.ts`) is half an hour of
 Lofi Girl's *Best of lofi hip hop 2021*, its first twelve tracks, played from the label's upload only (YouTube
 n61ULEU7CO0, from the video's zero to 30:12.4; `apps/rube/src/shows/versions/soft-lamp/ATTRIBUTION.txt`), round a small
 machine on a study desk by a window, from dusk into a rainy night, in the manner of a lofi stream. `scripts/shows/soft-lamp-onsets.py` measures the mix once from a

@@ -306,7 +306,11 @@ export const rocket = part<RocketState>(
       // Thrown wide by the ignition (the push in on the window runs to it, earth/gantry.ts).
       { t: IGNITION + 0.55, cells: 10.6, hold: [hx - 0.3, hy - 4.1] },
       { t: LIFTOFF + 0.2, cells: 10.8, hold: [hx - 0.1, hy - 4.0] },
-      { t: LIFTOFF + 1.6, cells: 9.5, off: [0.2, 2.6] },
+      // The climb: the whole stack on its flame, and the smoke it leaves going down out of the frame, so that the
+      // surge on each beat is seen (the window high in the frame, the two of them in it); then in on the window for
+      // the cloud.
+      { t: LIFTOFF + 1.6, cells: 12.2, off: [0.2, 4.0] },
+      { t: beat(140) + 0.15, cells: 11.6, off: [0.15, 3.8] },
       { t: PUNCH - 0.4, cells: 8.2, off: [0.1, 1.8] },
       { t: STAGING + 0.4, cells: 8.6, off: [0.3, 1.6] },
       { t: OPEN - 0.5, cells: 6.2, off: [0.6, 0.4] },
@@ -475,16 +479,6 @@ function drawRocket(p: p5, s: RocketState, c: Ctx): void {
       p.ellipse(X(dx), X(dy), X(wide * 0.9), X(0.2))
     }
     p.pop()
-    // Light off the flame on the pad and the smoke.
-    if (farm && t < LIFTOFF + 2.5) {
-      const ctx = p.drawingContext as CanvasRenderingContext2D
-      const [lx, ly] = body(t, 0, -0.6)
-      const g = ctx.createRadialGradient(X(lx), X(ly), 0, X(lx), X(ly), X(3.2))
-      g.addColorStop(0, `rgba(255, 214, 140, ${0.45 * grow})`)
-      g.addColorStop(1, 'rgba(255, 214, 140, 0)')
-      ctx.fillStyle = g
-      ctx.fillRect(X(lx - 3.2), X(ly - 3.2), X(6.4), X(6.4))
-    }
   }
 
   // The stack: the first stage until it goes, the second, and the fairing.
@@ -498,13 +492,6 @@ function drawRocket(p: p5, s: RocketState, c: Ctx): void {
   p.rect(0, X(-S2_TOP + 0.35), X(W2), X(0.16))
   solid(p, ink, weight * 0.8, DUST.shade)
   p.quad(X(-0.16), X(-S1_TOP), X(0.16), X(-S1_TOP), X(0.22), X(-S1_TOP + 0.22), X(-0.22), X(-S1_TOP + 0.22))
-  // Pyro ring: a flash where the stages part.
-  const pyro = t - STAGING
-  if (pyro > 0 && pyro < 0.35) {
-    p.noStroke()
-    p.fill(alpha(p, '#FFF6DE', 1 - pyro / 0.35))
-    p.ellipse(0, X(-S1_TOP), X(W1 * (1.4 + pyro * 4)), X(0.3 + pyro))
-  }
   // The fairing: two halves split down the axis, each with its half of the window. They open on beat 147.
   const open = easeOutCubic(clamp((t - OPEN) / 0.35))
   const away = Math.max(0, t - OPEN - 0.25)

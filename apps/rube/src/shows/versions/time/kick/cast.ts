@@ -5,9 +5,10 @@ import { SLEEP, TOP } from './worlds'
 /**
  * The canonical drawings of the show's recurring things (the director's): **the top**, his totem; **going under** (the
  * floor gone soft where the sleepers sink through it); **the tear** a kick makes where it throws him up through a
- * ceiling; and light (a soft glow, a pool, a beam). Every part that shows one of these calls it from here, so the top
- * is one top and going under is one gesture everywhere. If one needs something it does not do, say so in your report;
- * do not draw your own.
+ * ceiling; light where it falls (a pool on a floor or a wall, a beam through rain or a door); and air with something in
+ * it (a puff of smoke, dust or spray). Every part that shows one of these calls it from here, so the top is one top and
+ * going under is one gesture everywhere. If one needs something it does not do, say so in your report; do not draw
+ * your own. There is no glow: a lamp is its lit shade and the light it lays on what is near it, never a halo round it.
  *
  * Every function draws in pixels from cells (`k` pixels a cell; points are in the caller's cells, the caller having
  * translated to its own origin, or not) and leaves p5's and the canvas's state as it found it. None of them draws
@@ -25,8 +26,8 @@ export function rgba(hex: string, a: number): string {
 
 /* ------------------------------------------------------------------ light */
 
-/** A soft round light at `at` (cells), `r` cells to nothing, `a` at its middle: a glow, never a disc. */
-export function bloom(p: p5, k: number, at: Pt, r: number, color: string, a: number): void {
+/** A puff of smoke, dust or spray at `at` (cells), `r` cells to nothing, `a` at its middle: matter in the air, not light. */
+export function puff(p: p5, k: number, at: Pt, r: number, color: string, a: number): void {
   if (a <= 0.003 || r <= 0) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const x = at[0] * k
@@ -263,29 +264,23 @@ export function sink(p: p5, k: number, at: Pt, u: number, through: number, w = 0
 }
 
 /**
- * **The tear.** Where a kick throws him up through a floor, a ceiling or a surface: a flattened lens of pale light that
- * flares as he passes and heals over a second (`u` seconds since he passed; 0 before), `w` cells wide, in `color`
- * (the level's light). Soft: a gradient, never an outline.
+ * **The tear.** Where a kick throws him up through a floor, a ceiling or a surface: a slit opens in it as he passes and
+ * closes over a second (`u` seconds since he passed; 0 before), `w` cells wide at its widest, in `color` (the level's
+ * light, seen through it). A flat sliver with a crisp edge, never a glow.
  */
 export function tear(p: p5, k: number, at: Pt, u: number, w = 0.9, color = '#FFF6E4'): void {
   if (u < 0 || u > 1.2) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const a = u < 0.06 ? u / 0.06 : Math.exp(-(u - 0.06) / 0.28) * (1 - clamp01((u - 0.9) / 0.3))
-  if (a <= 0.003) return
-  const x = at[0] * k
-  const y = at[1] * k
-  const R = (w / 2) * k * (0.6 + 0.8 * Math.min(1, u * 3))
+  const open = u < 0.06 ? u / 0.06 : Math.exp(-(u - 0.06) / 0.3) * (1 - clamp01((u - 0.9) / 0.3))
+  if (open <= 0.01) return
+  const rx = (w / 2) * (0.7 + 0.3 * Math.min(1, u * 4)) * k
+  const ry = Math.max(0.6, 0.07 * open * k)
   ctx.save()
-  ctx.translate(x, y)
-  ctx.scale(1, 0.2)
-  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, R)
-  g.addColorStop(0, rgba(color, 0.9 * a))
-  g.addColorStop(0.4, rgba(color, 0.45 * a))
-  g.addColorStop(1, rgba(color, 0))
-  ctx.fillStyle = g
-  ctx.fillRect(-R, -R, 2 * R, 2 * R)
+  ctx.fillStyle = rgba(color, 0.85 * Math.min(1, open * 1.5))
+  ctx.beginPath()
+  ctx.ellipse(at[0] * k, at[1] * k, rx, ry, 0, 0, TAU)
+  ctx.fill()
   ctx.restore()
-  bloom(p, k, at, w * 0.7, color, 0.35 * a)
 }
 
 /**

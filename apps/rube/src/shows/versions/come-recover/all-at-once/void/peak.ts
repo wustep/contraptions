@@ -11,6 +11,7 @@ import {
   GIVEN,
   givenAt,
   gulpAt,
+  hungGone,
   JOY_EYE as EYE_ON,
   joyLook,
   SPRAYS,
@@ -24,6 +25,7 @@ import {
   PULLEY,
   RELEASE,
   RO1,
+  RH1,
   RP,
   scaleAt,
   slackAt,
@@ -44,6 +46,7 @@ import {
   lipAt,
   S0,
 } from './peakClock'
+import { drawNearRope, drawRig, ROD_TOP } from './peakRig'
 
 /**
  * PEAK: the brink, and the pull back (241.755 to 264.144). The machine and its clock are in `peakClock.ts`.
@@ -274,6 +277,12 @@ export const peak = part<PeakState>(
       const xr = X_ROPE + OFF[0]
       const wy = waymondY(T) + OFF[1]
 
+      // The rig the line runs on: the headframe, its jib, the guides and the clock that governs it (`peakRig.ts`).
+      p.push()
+      p.translate(OFF[0] * k, OFF[1] * k)
+      drawRig(p, c, T, { x0: f.x0 - OFF[0], x1: f.x1 - OFF[0], y0: f.y0 - OFF[1], y1: f.y1 - OFF[1] })
+      p.pop()
+
       // Each lurch smears the crust: the bagel as it was a few hundredths of a second ago, faint, over itself.
       for (let kk = 119; kk <= 150; kk++) {
         const x = T - fall(kk)
@@ -380,7 +389,7 @@ export const peak = part<PeakState>(
         drawPin(p, c, wx + wave(0), top - 0.05, -Math.PI / 2 - Math.atan(dx), 1)
       }
       const travel = waymondY(T) - waymondY(T_IN)
-      drawPulley(p, c, P, -travel / RP, f.y0 - 1)
+      drawPulley(p, c, P, -travel / RP, ROD_TOP + OFF[1])
 
       // The close: the hole fills with the washer window's light, a step a beat, and the two of them stand against it.
       const win = windowAt(T)
@@ -459,12 +468,16 @@ export const peak = part<PeakState>(
         } else drawCrust(p, c, px, py, w.size, w.angle, w.dark, ch.seed)
       }
 
-      // Everything it gives back, each with a googly eye.
+      // Everything it gives back, each with a googly eye: flung past us on the loud beats, and otherwise left hanging
+      // in the dark round the bagel, so beat by beat the dark fills with what she had, until it takes them back.
+      const hole = centreAt(T)
+      const view = frame(p, k)
       for (const g of GIVEN) {
         const x = T - g.at
-        if (x < 0 || x > 2.4) continue
+        if (x < 0 || (!g.hangs && x > 2.4) || (g.hangs && hungGone(T) > 0.995)) continue
         const w = givenAt(g, x)
         const [px, py] = F(w.p)
+        if (g.hangs && (px < view.x0 - 2 || px > view.x1 + 2 || py < view.y0 - 2 || py > view.y1 + 2)) continue
         drawThing(p, k, ink, weight, g.thing, px, py, w.size, w.angle, w.dark, g.variant)
         if (x > 0.1) {
           const pop = x < 0.26 ? 1 + 0.35 * Math.sin((Math.PI * (x - 0.1)) / 0.16) : 1
@@ -486,9 +499,23 @@ export const peak = part<PeakState>(
           const m = Math.hypot(lx, ly) || 1
           lx /= m
           ly /= m
+          // One left hanging, once it has stopped, looks back at the hole: at the two of them.
+          if (g.hangs) {
+            const u = ss((x - 0.6) / 0.8)
+            const dx = hole[0] - w.p[0]
+            const dy = hole[1] + 0.6 * RH1 * scaleAt(T) - w.p[1]
+            const d = Math.hypot(dx, dy) || 1
+            lx += (dx / d - lx) * u
+            ly += (dy / d - ly) * u
+          }
           const wob = 0.95 * Math.exp(-(x - 0.1) / 0.5) * Math.sin((x - 0.1) * 21)
           const sc = er / (0.56 * R)
+          // As the dark takes back what hangs, its eye goes with it.
+          const ctx = p.drawingContext as CanvasRenderingContext2D
+          const was = ctx.globalAlpha
+          if (g.hangs) ctx.globalAlpha = was * (1 - hungGone(T))
           googly(p, k, ink, weight, ex, ey + 0.3 * R * sc, { x: lx + wob, y: ly, hx: 0 }, sc)
+          ctx.globalAlpha = was
         }
       }
 
@@ -499,22 +526,14 @@ export const peak = part<PeakState>(
         const u = (T - EYE_UP) / (EYE_ON - EYE_UP)
         const sc = e.grow * (1 + 0.5 * (1 - u))
         const spinLook = { x: Math.sin(u * 9), y: Math.cos(u * 9), hx: 0 }
-        // A soft light round it as it comes up out of the dark, so it reads as given and carried, not a fleck.
-        const ctx = p.drawingContext as CanvasRenderingContext2D
-        const gx = ex * k
-        const gy = (ey + 0.3 * R * sc) * k
-        const gr = R * (2.2 + 1.6 * sc) * k
-        const halo = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr)
-        const ga = 0.55 * Math.min(1, u / 0.2)
-        halo.addColorStop(0, `rgba(226, 214, 250, ${ga})`)
-        halo.addColorStop(0.4, `rgba(201, 178, 242, ${ga * 0.35})`)
-        halo.addColorStop(1, 'rgba(201, 178, 242, 0)')
-        ctx.save()
-        ctx.fillStyle = halo
-        ctx.fillRect(gx - gr, gy - gr, 2 * gr, 2 * gr)
-        ctx.restore()
         googly(p, k, ink, weight, ex, ey + 0.3 * R * sc, spinLook, sc)
       }
+
+      // Close to the lens, in front of all of it: the hawser across the top right (in the dark's own cells).
+      p.push()
+      p.translate(OFF[0] * k, OFF[1] * k)
+      drawNearRope(p, c, T)
+      p.pop()
     },
   },
   (slot) => {

@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import type { Pt } from '../../../../../parts'
 import { mixHex } from '../../../../../parts'
-import { bloom, flashBurst, glint, pool, rgba } from '../cast'
+import { flashBurst, pool, puff, rgba } from '../cast'
 import { hash, type Ctx } from '../kit'
 import { level } from '../music'
 import { AWARDS, CENTER, CENTER_THEME } from '../worlds'
@@ -10,13 +10,11 @@ import {
   BUMP,
   cameraUp,
   D,
-  DEREK_END,
   DOORS,
   doorsAt,
   FULL,
   GROUND,
   GROWS,
-  HANSEL_END,
   LIFTED,
   liftAt,
   MODEL,
@@ -210,6 +208,9 @@ export function drawBuilding(p: p5, c: Ctx, t: number): void {
   const thin = lw * 0.55
   const breeze = Math.sin(t * 0.9) * 0.5 + Math.sin(t * 0.37 + 1) * 0.5
 
+  // The forecourt is the ground: it grows with the building but never hops or shivers with it.
+  drawForecourt(p, c, t, X, (v: number) => GROUND - v * fx)
+
   // Its trees: the one behind the right wing first.
   const tree = (i: number) => {
     const tr = D.trees[i]
@@ -304,6 +305,102 @@ export function drawBuilding(p: p5, c: Ctx, t: number): void {
   tree(1)
 }
 
+/**
+ * The forecourt, in front of the building on the lawn (below the path, nearer us): a paved walk from the foot of the
+ * stair out toward us, at the building's own scale. At dusk the light that comes out of it lies on the grass: each
+ * lit window throws a pane of light forward, the shadows of its bars across it, and the open doors lay a long warm
+ * strip down the walk.
+ */
+function drawForecourt(p: p5, c: Ctx, t: number, X: (v: number) => number, Y: (v: number) => number): void {
+  const { k } = c
+  const { x0, x1 } = D.stair
+  const reach = 2.2
+  p.push()
+  p.noStroke()
+  // The walk, its kerbs, and its flags' joints running out toward us.
+  p.fill(dk(mixHex(CENTER.path, CENTER.plinth, 0.25), 0.55))
+  poly(p, k, [
+    [X(x0 + 0.05), Y(-0.1)],
+    [X(x1 - 0.05), Y(-0.1)],
+    [X(x1 + 0.55), Y(-reach)],
+    [X(x0 - 0.55), Y(-reach)],
+  ])
+  p.fill(dk(mixHex(CENTER.path, CENTER.lawnDark, 0.3), 0.6))
+  for (const s of [-1, 1]) {
+    const e0 = s < 0 ? x0 + 0.05 : x1 - 0.05
+    const e1 = s < 0 ? x0 - 0.55 : x1 + 0.55
+    poly(p, k, [
+      [X(e0), Y(-0.1)],
+      [X(e0 - s * 0.05), Y(-0.1)],
+      [X(e1 - s * 0.09), Y(-reach)],
+      [X(e1), Y(-reach)],
+    ])
+  }
+  const joint = rgba(dk(mixHex(CENTER.path, CENTER.lawnDark, 0.45), 0.6), 0.55)
+  p.stroke(joint)
+  p.strokeWeight(Math.max(0.5, buildingWeight(c, FULL) * 0.4 * ((X(1) - X(0)) / 1)))
+  for (const f of [0.18, 0.4, 0.66]) {
+    const yy = -0.1 - (reach - 0.1) * f
+    const w = 0.55 * f
+    p.line(X(x0 - w) * k, Y(yy) * k, X(x1 + w) * k, Y(yy) * k)
+  }
+  p.noStroke()
+  // At dusk, the windows' light on the grass, and the doors' down the walk.
+  if (DUSK > 0.01) {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const { w } = D.window
+    const fall = 1.55
+    D.windows.forEach((wx, i) => {
+      const a = litAt(i, t) * DUSK
+      if (a <= 0.01) return
+      const g = ctx.createLinearGradient(0, Y(-0.12) * k, 0, Y(-fall) * k)
+      g.addColorStop(0, rgba(LIT, 0.2 * a))
+      g.addColorStop(1, rgba(LIT, 0))
+      ctx.save()
+      ctx.fillStyle = g
+      ctx.beginPath()
+      ctx.moveTo(X(wx - w / 2) * k, Y(-0.12) * k)
+      ctx.lineTo(X(wx + w / 2) * k, Y(-0.12) * k)
+      ctx.lineTo(X(wx + w * 0.85) * k, Y(-fall) * k)
+      ctx.lineTo(X(wx - w * 0.85) * k, Y(-fall) * k)
+      ctx.closePath()
+      ctx.fill()
+      // The bars' shadows across it.
+      ctx.strokeStyle = rgba(dk(CENTER.lawnDark, 0.64), 0.35 * a)
+      ctx.lineWidth = Math.max(0.6, (X(1) - X(0)) * k * 0.05)
+      ctx.beginPath()
+      ctx.moveTo(X(wx) * k, Y(-0.12) * k)
+      ctx.lineTo(X(wx) * k, Y(-fall * 0.85) * k)
+      for (const f of [0.3, 0.62]) {
+        const yy = -0.12 - (fall - 0.12) * f
+        const half = w / 2 + (w * 0.85 - w / 2) * f
+        ctx.moveTo(X(wx - half) * k, Y(yy) * k)
+        ctx.lineTo(X(wx + half) * k, Y(yy) * k)
+      }
+      ctx.stroke()
+      ctx.restore()
+    })
+    const open = clamp01(doorsAt(t)) * DUSK
+    if (open > 0.01) {
+      const { x0: d0, x1: d1 } = D.door
+      const g = ctx.createLinearGradient(0, Y(-0.1) * k, 0, Y(-reach) * k)
+      g.addColorStop(0, rgba(LIT, 0.3 * open))
+      g.addColorStop(1, rgba(LIT, 0.04 * open))
+      ctx.save()
+      ctx.fillStyle = g
+      ctx.beginPath()
+      ctx.moveTo(X(d0) * k, Y(-0.1) * k)
+      ctx.lineTo(X(d1) * k, Y(-0.1) * k)
+      ctx.lineTo(X(d1 + 0.5) * k, Y(-reach) * k)
+      ctx.lineTo(X(d0 - 0.5) * k, Y(-reach) * k)
+      ctx.closePath()
+      ctx.fill()
+      ctx.restore()
+    }
+  }
+  p.pop()
+}
+
 function outline(p: p5, w: number, ink = INK): void {
   p.stroke(ink)
   p.strokeWeight(Math.max(0.3, w))
@@ -371,9 +468,27 @@ function drawDoor(p: p5, c: Ctx, t: number, X: (v: number) => number, Y: (v: num
   inked(p, lw, mixHex(INTERIOR, mixHex(INTERIOR, LIT, 0.4), DUSK))
   box(p, k, X(x0), Y(D.plinth), X(x1), Y(top))
   if (open > 0.001) {
-    // A warm light far inside, warmer as the day goes.
-    const f = X(1) - X(0)
-    bloom(p, k, [X((x0 + x1) / 2), Y(D.plinth + 1.0)], 1.3 * f, mixHex(CENTER.brass, CENTER.cloud, 0.35), (0.3 + 0.3 * DUSK) * clamp01(open))
+    // The hall inside, lit from above: its floor brightest, warmer as the day goes; and that light out through the
+    // doorway and down the steps.
+    const o = clamp01(open)
+    const warm = mixHex(CENTER.brass, CENTER.cloud, 0.35 - 0.2 * DUSK)
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const g = ctx.createLinearGradient(0, Y(top) * k, 0, Y(D.plinth) * k)
+    g.addColorStop(0, rgba(warm, 0.05 * o))
+    g.addColorStop(0.7, rgba(warm, (0.2 + 0.2 * DUSK) * o))
+    g.addColorStop(1, rgba(warm, (0.32 + 0.3 * DUSK) * o))
+    ctx.save()
+    ctx.fillStyle = g
+    ctx.fillRect(X(x0) * k, Y(top) * k, (X(x1) - X(x0)) * k, (Y(D.plinth) - Y(top)) * k)
+    ctx.restore()
+    p.noStroke()
+    p.fill(rgba(warm, (0.08 + 0.22 * DUSK) * o))
+    poly(p, k, [
+      [X(x0), Y(D.plinth)],
+      [X(x1), Y(D.plinth)],
+      [X(x1 + 0.45), Y(0)],
+      [X(x0 - 0.45), Y(0)],
+    ])
   }
   // The leaves, each turning on its outer hinge: its face narrows and darkens as it swings in.
   const a = Math.min(1.1, open) * 1.36
@@ -596,7 +711,7 @@ export function drawPump(p: p5, c: Ctx, t: number): void {
 
 /* ------------------------------------------------------------------ the lamps */
 
-/** A lamp on the path: a slim post, a lantern on it, lit `on` 0..1: its glass, its glow and its pool on the path. */
+/** A lamp on the path: a slim post, a lantern on it, lit `on` 0..1: its glass, and its pool on the path. */
 export function drawLamp(p: p5, c: Ctx, x: number, on: number): void {
   const { k, weight } = c
   const lw = weight * 0.7
@@ -623,10 +738,6 @@ export function drawLamp(p: p5, c: Ctx, x: number, on: number): void {
   ])
   box(p, k, x - 0.1, top - 0.02, x + 0.1, top + 0.04)
   p.pop()
-  if (on > 0.01) {
-    bloom(p, k, [x, top - 0.18], 1.4, LIT, 0.42 * on)
-    bloom(p, k, [x, top - 0.18], 0.36, mixHex(LIT, CENTER.cloud, 0.5), 0.6 * on)
-  }
 }
 
 /* ------------------------------------------------------------------ the press */
@@ -743,36 +854,31 @@ export function drawOver(p: p5, c: Ctx, t: number): void {
     ] as [number, number][]) {
       const x = MODEL.x0 + X * f + dir * u * 1.4 * f * 3
       const r = (0.9 + 2.2 * u) * f * 3
-      bloom(p, k, [x, GROUND - r * 0.35], r, mixHex(CENTER.cloud, CENTER.path, 0.4), a * (dir === 0 ? 0.6 : 1))
+      puff(p, k, [x, GROUND - r * 0.35], r, mixHex(CENTER.cloud, CENTER.path, 0.4), a * (dir === 0 ? 0.6 : 1))
     }
   })
   const ut = t - TAP - AIR
   if (ut > 0 && ut < 1.2) {
     for (const dir of [-1, 0, 1]) {
       const x = MODEL.x0 + MODEL.w * (dir + 1) * 0.5 + dir * ut * 0.2
-      bloom(p, k, [x, GROUND - 0.05 - ut * 0.12], 0.13 + 0.38 * ut, mixHex(CENTER.cloud, CENTER.path, 0.3), (dir === 0 ? 0.55 : 0.8) * Math.exp(-ut / 0.45) * sm(ut / 0.05))
+      puff(p, k, [x, GROUND - 0.05 - ut * 0.12], 0.13 + 0.38 * ut, mixHex(CENTER.cloud, CENTER.path, 0.3), (dir === 0 ? 0.55 : 0.8) * Math.exp(-ut / 0.45) * sm(ut / 0.05))
     }
   }
   const u = t - DOORS
   if (u > 0 && u < 2) {
     const [dx] = [MODEL.x0 + ((D.door.x0 + D.door.x1) / 2)]
-    bloom(p, k, [dx + u * 0.3, GROUND - D.plinth - 1.1 + 0.1 * u], 1.2 + 1.4 * u, CENTER.cloud, 0.35 * Math.exp(-u / 0.5) * sm(u / 0.06))
+    puff(p, k, [dx + u * 0.3, GROUND - D.plinth - 1.1 + 0.1 * u], 1.2 + 1.4 * u, CENTER.cloud, 0.35 * Math.exp(-u / 0.5) * sm(u / 0.06))
   }
-  // The last photograph: the press fire, and they give the look; then two more, smaller, as it fades.
+  // The last photograph: the press fire on the two of them turned to the cameras; then two more, smaller, as it fades.
   const since = t - PHOTO
-  if (since > -0.01 && since < 1.3) {
-    flashHeads(t).forEach((at, i) => flashBurst(p, k, at, since, i === 0 ? 1.7 : 1.15))
-    glint(p, k, [DEREK_END[0] + 0.09, DEREK_END[1] - 0.09], since, 0.45)
-    glint(p, k, [HANSEL_END[0] + 0.09, HANSEL_END[1] - 0.09], since, 0.45)
-  }
-  // The lit windows: a little of their light out on the stone, and the glass and its bar before the kids at them.
+  if (since > -0.01 && since < 1.3) flashHeads(t).forEach((at, i) => flashBurst(p, k, at, since, i === 0 ? 1.7 : 1.15))
+  // The lit windows: the glass and its bar before the kids at them.
   if (t > 230) {
     D.windows.forEach((wx, i) => {
       const lit = litAt(i, t)
       if (lit <= 0) return
       const x = MODEL.x0 + wx
-      const { w, y0, y1 } = D.window
-      bloom(p, k, [x, GROUND - (y0 + y1) / 2], 1.5, LIT, 0.1 * lit)
+      const { w, y0 } = D.window
       if (!WINDOW_KIDS.some((q) => q.window === i)) return
       p.push()
       p.noStroke()

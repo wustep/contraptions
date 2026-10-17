@@ -134,12 +134,13 @@ function drawShooter(p: p5, c: Ctx, s: Shooter, x: number, top: number, floor: n
   p.rect(X(-0.11 * S), X(-0.075 * S), X(0.23 * S), X(0.15 * S), X(0.02 * S))
   p.rect(X(0.11 * S), X(-0.05 * S), X(0.09 * S), X(0.1 * S))
   p.pop()
-  // The flash gun on top, upright, its reflector's face (the only thing of them that shines) toward where it points.
+  // The flash gun on top, upright, its reflector's face toward where it points.
   const side = Math.max(-1, Math.min(1, Math.cos(aim) * 4))
   p.fill(A.crowd)
   p.rect(X(cam[0] - 0.018 * S), X(cam[1] - 0.2 * S), X(0.036 * S), X(0.14 * S))
   p.rect(X(cam[0] - 0.07 * S), X(cam[1] - 0.29 * S), X(0.14 * S), X(0.085 * S), X(0.012 * S))
-  p.fill(mixHex(A.stageEdge, A.spot, 0.3))
+  // Its face catches what light reaches him; in the dark it is as dark as he is.
+  p.fill(mixHex(A.crowd, mixHex(A.stageEdge, A.spot, 0.3), Math.min(1, 0.1 + 0.45 * rim)))
   p.rect(X(cam[0] + side * 0.06 * S - 0.01 * S), X(cam[1] - 0.285 * S), X(0.02 * S), X(0.075 * S))
   personRim(p, k, x, top, S, mixHex(A.crowdRim, A.warm, 0.35), rim)
   return [cam[0] + side * 0.075 * S, cam[1] - 0.248 * S]

@@ -1,10 +1,12 @@
 import type p5 from 'p5'
 import { solid } from '../../../../../../../../src/core/draw'
 import { mixHex, type Pt } from '../../../../../parts'
-import { beam, frame, glow, hash, rgba, scenery, smooth } from '../kit'
+import { frame, glow, hash, rgba, scenery, smooth } from '../kit'
 import { picture } from '../lens'
 import { DRIVE_MAT, SEBS_MAT } from '../worlds'
 import { PIANO } from './geometry'
+import { bandPlayers, DREAM_BAND, drinkRail, fans, gallery, REAL_BAND, sitter, smoke, stander, walker, type Light, type Sitter } from './people'
+import { PIANO_SHADOW } from './piano'
 
 /**
  * Seb's: a small jazz club, drawn in section the way every building in this house is, the front wall cut away.
@@ -89,6 +91,10 @@ export const DOOR: Pt = [(ROOM.wallL0 + ROOM.wallL1) / 2 + 0.5, ROOM.floor - 0.1
 export const HOUSE_DOWN: [number, number] = [12.35, 15.0]
 /** At the end: the dream's rose drains out of the light; the band's lamps; the band. */
 export const ROSE_OUT: [number, number] = [451.5, 453.73]
+/** The dream's kiss at her table: they lean in, touch, and he leaves her side as the dream drains. */
+export const LEAN = 446.938
+export const KISS = 450.107
+export const LEAVE = 451.53
 export const BAND_LAMPS = 471.546
 export const BAND = 478.052
 
@@ -144,6 +150,9 @@ export function doorAt(t: number, end: boolean): number {
   return 0.06 * Math.exp(-since / 0.12) * Math.abs(Math.sin(since * 22))
 }
 
+/** How far the curtain's fold `i` has stirred at `t`, in the fans' air (cells). */
+const curtainStir = (t: number, i: number): number => 0.06 * Math.sin(t * 0.6 + i * 0.83) + 0.03 * Math.sin(t * 1.3 + i * 2.1)
+
 /** How far up the house lights are at show time `t` (0..1). */
 export const house = (t: number, end: boolean): number => lightsAt(t, end).house
 
@@ -155,6 +164,8 @@ const TABLES: { x: number; chairs: [number, 1 | -1][] }[] = [
   { x: -6.25, chairs: [[-0.34, 1], [0.47, -1]] },
   { x: -8.25, chairs: [[0.34, -1]] },
 ]
+/** The banquette along the wall behind her table and the next, its ends. */
+const BANQUETTE: [number, number] = [-4.75, -1.82]
 /** The sconces on the back wall: the house lights. */
 const SCONCES = [-10.6, -7.25, -5.3, -3.35]
 const SCONCE_Y = 0.95
@@ -169,6 +180,48 @@ const SPOTS: { x: number; to: Pt }[] = [
 ]
 /** The band's clip lamps on their music stands (x). */
 const STANDS = [7.75, 9.95]
+/**
+ * Who is at her table, where (room cells), as the parts that seat them say: so her table's candle can throw their
+ * shadows on the wall behind them. The opening sets `start`, the finale `end`.
+ */
+export const AT_HER_TABLE: { start: ((t: number) => Pt[]) | null; end: ((t: number) => Pt[]) | null } = { start: null, end: null }
+
+/** The house spot, hung from the ceiling over the floor and turned on her table: the light that finds her. */
+const HOUSE_SPOT: Pt = [-4.3, -5.05]
+const HOUSE_SPOT_TO: Pt = [-2.25, 2.4]
+/** How much the house spot is on her table at `t`: at the start while the camera is with her, at the end for the kiss. */
+function onHer(t: number, end: boolean): number {
+  if (!end) return smooth(t, 18.5, 21.5) * (1 - smooth(t, 32.5, 35.5))
+  return smooth(t, LEAN - 1.6, LEAN + 0.6) * (1 - smooth(t, LEAVE, LEAVE + 0.9))
+}
+
+/**
+ * Who sits where: every chair and stool, and which of them are the room as it is (a couple at the middle table, a man
+ * smoking at the bar's end, and at the start a second couple at the next table to hers, who have gone by the end, their
+ * table wiped). The rest are the dream's, and go with its rose.
+ */
+type Real = 'both' | 'start' | 'none'
+const SITTERS: (Sitter & { real: Real; bar: boolean })[] = [
+  ...TABLES.flatMap((tb, i) => tb.chairs.map(([dx, face], j) => ({ x: tb.x + dx, y: SEAT - 0.14, face, seed: hash(i, j, 61), real: (tb.x === -6.25 ? 'both' : i === 0 ? 'start' : 'none') as Real, bar: false }))),
+  ...[-11.05, -10.25].map((x, j) => ({ x, y: 2.5 - 0.14, face: -1 as const, seed: hash(j, 9, 61), real: (x === -11.05 ? 'both' : 'none') as Real, bar: true })),
+]
+/** The bartender's way along the bar, [show time, x]: at the start, and at the end. */
+const TENDER_START: [number, number][] = [[0, -10.95], [8.5, -10.95], [10.5, -10.05], [23, -10.05], [25.5, -10.95], [40, -10.95]]
+// (At the end, as the door shuts behind her, he goes down the bar to the man at its end.)
+const TENDER_END: [number, number][] = [[423.3, -10.05], [429.5, -10.05], [431.5, -10.95], [441, -10.95], [443, -10.15], [465.4, -10.15], [467.2, -10.8], [510, -10.8]]
+/**
+ * The waiters' ways across the floor, [show time, x]. The real one works both rooms: drinks out to the middle table,
+ * a table wiped, back to the bar. The dream has a second, crossing the full room with a tray.
+ */
+const WAITERS: { real: boolean; start: [number, number][]; end: [number, number][] }[] = [
+  {
+    real: true,
+    start: [[0, -9.2], [1.5, -9.2], [5.5, -7.0], [8.0, -7.0], [11.0, -4.85], [13.0, -4.85], [18.0, -9.2], [40, -9.2]],
+    end: [[423.3, -9.2], [425.5, -9.2], [429.0, -7.0], [431.0, -7.0], [434.0, -9.2], [456.2, -9.2], [459.2, -3.72], [465.5, -3.72], [469.8, -9.2], [510, -9.2]],
+  },
+  // The dream's: across the room with a tray, to the stage's edge, and back past her table, behind it, as they lean in.
+  { real: false, start: [[0, -40]], end: [[423.3, -3.4], [426, -3.4], [430, -8.6], [432, -8.6], [436, -5.4], [438.5, -5.4], [441.8, -0.8], [444.3, -0.8], [447.4, -5.9], [453.6, -5.9]] },
+]
 
 /* ------------------------------------------------------------------ drawing */
 
@@ -255,12 +308,121 @@ function table(q: Pen, x: number, part: 'all' | 'top' | 'base' = 'all', half = 0
   }
 }
 
-/** A candle lamp on a table: a small glass, its flame, the warm pool it throws. */
-function candle(q: Pen, x: number, t: number, seed: number, strength = 1): void {
+/**
+ * A wall lamp's light on the wall: a fan of it from the shade's mouth at (x, y), `len` long, opening to `spread` either
+ * side, going up (`dir` -1) or down (1), and fading as it goes. In two layers, so its sides are soft. It is light lying
+ * on the wall, not a glow round the lamp.
+ */
+function wash(p: p5, k: number, x: number, y: number, len: number, spread: number, color: string, a: number, dir: 1 | -1): void {
+  if (a < 0.004) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const y1 = y + dir * len
+  for (const [w, f] of [[spread, 0.55], [spread * 0.6, 0.6]] as const) {
+    const g = ctx.createLinearGradient(0, y * k, 0, y1 * k)
+    g.addColorStop(0, rgba(color, a * f))
+    g.addColorStop(1, rgba(color, 0))
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.moveTo((x - 0.09) * k, y * k)
+    ctx.lineTo((x + 0.09) * k, y * k)
+    ctx.lineTo((x + w) * k, y1 * k)
+    ctx.quadraticCurveTo(x * k, (y1 + dir * len * 0.22) * k, (x - w) * k, y1 * k)
+    ctx.closePath()
+    ctx.fill()
+  }
+}
+
+/**
+ * The banquette along the back wall: a buttoned back and a seat, in the club's velvet, between `x0` and `x1`. Its
+ * buttons pull the velvet into diamonds, each with a little light on its upper edge and a crease below.
+ */
+function banquette(p: p5, k: number, x0: number, x1: number, velvet: string, ink: string, weight: number, L: Lights): void {
+  const f = frame(p, k)
+  if (x1 < f.x0 || x0 > f.x1 || ROOM.floor < f.y0 || 2.15 > f.y1) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const X = (v: number) => v * k
+  const top = 2.22
+  const seat = 2.78
+  ctx.save()
+  // The back, its rolled top, the seat's cushion and the plinth under it.
+  ctx.fillStyle = velvet
+  ctx.beginPath()
+  ctx.roundRect(X(x0), X(top), X(x1 - x0), X(seat - top), X(0.05))
+  ctx.fill()
+  ctx.fillStyle = mixHex(velvet, M.ivory, 0.08 + 0.06 * L.house)
+  ctx.fillRect(X(x0 + 0.03), X(top), X(x1 - x0 - 0.06), Math.max(1, X(0.02)))
+  ctx.fillStyle = mixHex(velvet, M.lacquer, 0.15)
+  ctx.beginPath()
+  ctx.roundRect(X(x0 - 0.03), X(seat), X(x1 - x0 + 0.06), X(0.13), X(0.035))
+  ctx.fill()
+  ctx.fillStyle = mixHex(M.lacquer, velvet, 0.25)
+  ctx.fillRect(X(x0), X(seat + 0.13), X(x1 - x0), X(ROOM.floor - seat - 0.13))
+  // The tufting: diamonds of crease between the buttons, and a little light on each puff's upper edge.
+  const dx = 0.15
+  const dy = 0.12
+  const lw = Math.max(1, 0.007 * k)
+  ctx.lineWidth = lw
+  ctx.strokeStyle = rgba(M.lacquer, 0.45)
+  ctx.beginPath()
+  for (let r = 0; top + 0.06 + r * dy < seat - 0.04; r++) {
+    const y = top + 0.07 + r * dy
+    for (let x = x0 + 0.06 + (r % 2) * dx * 0.5; x < x1 - 0.05; x += dx) {
+      if (x < f.x0 - 0.2 || x > f.x1 + 0.2) continue
+      ctx.moveTo(X(x - dx * 0.5), X(y + dy * 0.5))
+      ctx.lineTo(X(x), X(y))
+      ctx.lineTo(X(x + dx * 0.5), X(y + dy * 0.5))
+    }
+  }
+  ctx.stroke()
+  ctx.strokeStyle = rgba(L.warm, 0.1 + 0.08 * L.house)
+  ctx.beginPath()
+  for (let r = 0; top + 0.06 + r * dy < seat - 0.04; r++) {
+    const y = top + 0.07 + r * dy + 0.018
+    for (let x = x0 + 0.06 + (r % 2) * dx * 0.5; x < x1 - 0.05; x += dx) {
+      if (x < f.x0 - 0.2 || x > f.x1 + 0.2) continue
+      ctx.moveTo(X(x - dx * 0.38), X(y + dy * 0.38))
+      ctx.lineTo(X(x), X(y))
+      ctx.lineTo(X(x + dx * 0.38), X(y + dy * 0.38))
+    }
+  }
+  ctx.stroke()
+  ctx.fillStyle = rgba(M.lacquer, 0.6)
+  ctx.beginPath()
+  for (let r = 0; top + 0.06 + r * dy < seat - 0.04; r++) {
+    const y = top + 0.07 + r * dy
+    for (let x = x0 + 0.06 + (r % 2) * dx * 0.5; x < x1 - 0.05; x += dx) {
+      if (x < f.x0 - 0.2 || x > f.x1 + 0.2) continue
+      ctx.moveTo(X(x + 0.012), X(y))
+      ctx.arc(X(x), X(y), X(0.012), 0, Math.PI * 2)
+    }
+  }
+  ctx.fill()
+  ctx.restore()
+  void ink
+  void weight
+}
+
+const flicker = (t: number, seed: number): number => 0.85 + 0.15 * Math.sin(t * 7.3 + seed * 2.1) * Math.sin(t * 3.1 + seed)
+
+/**
+ * A table candle's light, on the wall and the backs of the chairs behind it: warm round the flame and cut off at the
+ * table's top, which shades what is below it. Drawn under the furniture and the people, so nothing in front of the
+ * candle is lit by it as if the air were.
+ */
+function candleLight(q: Pen, x: number, t: number, seed: number, strength = 1): void {
+  const ctx = q.p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(q.X(x - 0.8), q.X(TABLE.top - 0.9), q.X(1.6), q.X(0.9))
+  ctx.clip()
+  glow(q.p, q.k, x, TABLE.top - 0.06, 0.5, M.candle, 0.2 * flicker(t, seed) * strength, 1.15, 0.8)
+  ctx.restore()
+}
+
+/** A candle lamp on a table: a small glass and its flame. */
+function candle(q: Pen, x: number, t: number, seed: number): void {
   const { p } = q
   const y = TABLE.top
-  const flick = 0.85 + 0.15 * Math.sin(t * 7.3 + seed * 2.1) * Math.sin(t * 3.1 + seed)
-  glow(p, q.k, x, y - 0.06, 0.7, M.candle, 0.2 * flick * strength, 1.25, 0.8)
   solid(p, q.ink, q.w * 0.3, rgba(M.candle, 0.3))
   q.rect(x - 0.03, y - 0.085, x + 0.03, y, 0.012, 0.012, 0.004, 0.004)
   p.noStroke()
@@ -273,7 +435,6 @@ function candle(q: Pen, x: number, t: number, seed: number, strength = 1): void 
   p.endShape(p.CLOSE)
 }
 
-/** The neon arrow's tube, as points: the level tail, the bend, the drop; and its chevron's two strokes. */
 /**
  * Seb's sign: a blue neon arrow bent down to the door, and beside it, hung from the same bracket, the note Mia drew
  * for his club's name (no letters, only the note). `tube` and `head` are the arrow, `note` the note's tubes, and
@@ -311,6 +472,17 @@ export function neonArrow(tipX: number, tipY: number): { tube: Pt[]; head: [Pt, 
     note: [ring, stem, flag],
     left: nx - 0.02,
   }
+}
+
+/** How the people at the tables are lit: their candles along an edge, warmer and fuller in the dream. */
+function patron(L: Lights): Light {
+  const tone = mixHex('#120F1B', M.velvet, 0.15 * L.rose)
+  return { tone, rim: L.warm, rimA: 0.4 + 0.25 * L.house + 0.3 * L.rose, sway: 0.35 + 0.65 * L.rose }
+}
+/** The staff, on their feet: the same, a little less. */
+function staff(L: Lights, a: number): Light {
+  const l = patron(L)
+  return { ...l, rimA: l.rimA * (0.6 + a * 0.4) }
 }
 
 function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight: number, t: number): void {
@@ -363,11 +535,14 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
       p.line(X(lx), X(-0.35), X(lx + 0.35), X(-0.5))
       solid(p, ink, weight * 0.5, M.lacquer)
       poly([[lx + 0.22, -0.55], [lx + 0.58, -0.55], [lx + 0.52, -0.43], [lx + 0.28, -0.43]])
-      glow(p, k, lx + 0.4, -0.3, 2.4, M.candle, 0.16, 1, 1.35)
+      // Its light is on the pavement under it and the side street behind, not round the lamp.
+      glow(p, k, lx + 0.4, R.floor, 1.5, M.candle, 0.14, 1, 0.3)
       p.noStroke()
       p.fill(M.candle)
       rect(lx + 0.3, -0.45, lx + 0.5, -0.41, 0.01)
     }
+    // The neon's blue, lying on the pavement under the arrow and outside the door.
+    glow(p, k, R.wallL0 - 0.5, R.floor + 0.03, 0.9, DRIVE_MAT.neon, 0.16, 1.2, 0.1)
   }
 
   // The room's back wall, lit by the house lights; a dado along its foot with a brass rail.
@@ -375,27 +550,107 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
   p.noStroke()
   p.fill(mixHex(M.wall, M.rose, 0.3 * L.rose))
   rect(R.wallL1, R.ceil, R.wallR0, R.floor)
+  // Above the wainscot the wall is the old brick, its courses seen only up close.
+  {
+    const ka = smooth(k, 30, 70)
+    const bx0 = Math.max(R.wallL1, fr.x0)
+    const bx1 = Math.min(R.stageX0 + 0.1, fr.x1)
+    const by0 = Math.max(R.ceil, fr.y0)
+    const by1 = Math.min(2.0, fr.y1)
+    if (ka > 0.01 && bx1 > bx0 && by1 > by0) {
+      const ctx = p.drawingContext as CanvasRenderingContext2D
+      const CH = 0.11
+      const CW = 0.25
+      ctx.save()
+      ctx.strokeStyle = rgba(M.lacquer, (0.34 - 0.14 * L.rose) * ka)
+      ctx.lineWidth = Math.max(1, 0.009 * k)
+      ctx.beginPath()
+      for (let i = Math.floor((by0 - R.ceil) / CH); R.ceil + i * CH < by1; i++) {
+        const y = R.ceil + i * CH
+        ctx.moveTo(X(bx0), X(y))
+        ctx.lineTo(X(bx1), X(y))
+        const off = (i % 2) * CW * 0.5
+        for (let x = Math.floor((bx0 - off) / CW) * CW + off; x < bx1; x += CW) {
+          if (x < bx0) continue
+          ctx.moveTo(X(x), X(y))
+          ctx.lineTo(X(x), X(Math.min(by1, y + CH)))
+        }
+      }
+      ctx.stroke()
+      // The courses' top edges catch a little of the room's light.
+      ctx.strokeStyle = rgba(L.warm, 0.05 * ka * (0.5 + L.house))
+      ctx.beginPath()
+      for (let i = Math.floor((by0 - R.ceil) / CH); R.ceil + i * CH < by1; i++) {
+        const y = R.ceil + i * CH + 0.012
+        ctx.moveTo(X(bx0), X(y))
+        ctx.lineTo(X(bx1), X(y))
+      }
+      ctx.stroke()
+      ctx.restore()
+    }
+  }
   vband(p, k, R.wallL1, 2.0, R.stageX0, R.floor, [[0, rgba(M.deep, 0.7)], [1, rgba(M.deep, 0.9)]])
   p.stroke(rgba(M.brass, 0.5))
   p.strokeWeight(weight * 0.5)
   p.line(X(R.wallL1), X(2.0), X(R.stageX0), X(2.0))
-  // The dado is wainscot: tall sunk panels under the rail, the same joinery as the stage's front.
+  // Along the wall behind her table and the next, a banquette: a tufted velvet bench, buttoned, under the rail.
+  banquette(p, k, BANQUETTE[0], BANQUETTE[1], mixHex(mixHex(M.velvet, M.lacquer, 0.5), M.rose, 0.25 * L.rose), ink, weight, L)
+  // The drink rail along it, and what the house has left on it; crowded in the dream.
+  {
+    const dreamHouse = s.end ? 1 - smooth(t, ROSE_OUT[0], ROSE_OUT[1] - 0.6) : 0
+    drinkRail(p, k, t, R.wallL1, R.stageX0, dreamHouse, Math.max(L.house, 0.35 * L.rose), L.warm, ink)
+  }
+  // The dado is wainscot: tall sunk panels under the rail, the same joinery as the stage's front (none where the
+  // banquette stands against it).
   p.noFill()
   p.strokeWeight(weight * 0.4)
   for (let x = R.wallL1 + 0.15; x + 1.0 < R.stageX0 - 0.1; x += 1.18) {
+    if (x + 1.0 > BANQUETTE[0] && x < BANQUETTE[1]) continue
     p.stroke(rgba(M.lacquer, 0.5))
     rect(x, 2.14, x + 1.0, R.floor - 0.12, 0.02)
     p.stroke(rgba(M.brass, 0.14))
     p.line(X(x + 0.03), X(2.145), X(x + 0.97), X(2.145))
   }
+  // Up close the wainscot is wood: its grain running down each panel, a little warm where the light is on it.
+  {
+    const ka = smooth(k, 30, 70)
+    const gx0 = Math.max(R.wallL1, fr.x0)
+    const gx1 = Math.min(R.stageX0, fr.x1)
+    if (ka > 0.01 && gx1 > gx0 && fr.y1 > 2.0 && fr.y0 < R.floor) {
+      const ctx = p.drawingContext as CanvasRenderingContext2D
+      ctx.save()
+      ctx.lineWidth = Math.max(1, 0.006 * k)
+      for (const [col, a] of [[M.lacquer, 0.26], [M.brass, 0.07]] as const) {
+        ctx.strokeStyle = rgba(col, a * ka)
+        ctx.beginPath()
+        const step = 0.045
+        for (let i = Math.floor(gx0 / step); i * step < gx1; i++) {
+          const h = hash(i, col === M.lacquer ? 1 : 2, 47)
+          if (h < 0.45) continue
+          const x = i * step + 0.03 * hash(i, 5, 47)
+          if (x > BANQUETTE[0] && x < BANQUETTE[1]) continue
+          const y0 = 2.16 + 0.3 * hash(i, 6, 47)
+          const y1 = Math.min(R.floor - 0.13, y0 + 0.25 + 0.55 * hash(i, 7, 47))
+          ctx.moveTo(X(x), X(y0))
+          ctx.quadraticCurveTo(X(x + 0.012 * (h - 0.7)), X((y0 + y1) / 2), X(x), X(y1))
+        }
+        ctx.stroke()
+      }
+      ctx.restore()
+    }
+  }
   vband(p, k, R.wallL1, R.ceil, R.wallR0, R.ceil + 1.6, [[0, rgba(M.deep, 0.75)], [1, rgba(M.deep, 0)]])
+  if (s.end) candleShadows(p, s, k, t, L)
   if (L.rose > 0.005) glow(p, k, (R.wallL1 + R.wallR0) / 2, 0.6, 12, M.rose, 0.2 * L.rose, 1.4, 0.75)
+  // The greats on the wall, in their frames, lit by the sconces; and the fans turning under the ceiling.
+  gallery(p, k, L.house, SCONCES, SCONCE_Y, L.warm)
+  fans(p, k, t, ink, mixHex(L.warm, COLD, 0.5))
 
   // The house lights: brass sconces, each throwing its warm fan up and down the wall.
   for (const x of SCONCES) {
     const on = L.house
-    glow(p, k, x, SCONCE_Y, 1.9, L.warm, 0.32 * on, 0.75, 1.5)
-    glow(p, k, x, SCONCE_Y - 0.35, 0.55, M.ivory, 0.18 * on, 0.8, 1.6)
+    wash(p, k, x, SCONCE_Y - 0.14, 1.25, 0.5, L.warm, 0.3 * on, -1)
+    wash(p, k, x, SCONCE_Y + 0.04, 0.8, 0.32, L.warm, 0.22 * on, 1)
     solid(p, ink, weight * 0.45, M.brass)
     rect(x - 0.03, SCONCE_Y + 0.02, x + 0.03, SCONCE_Y + 0.2, 0.01)
     solid(p, ink, weight * 0.5, mixHex(M.brass, L.warm, 0.3 + 0.5 * on))
@@ -430,6 +685,17 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
       }
     }
     glow(p, k, (x0 + x1) / 2, 1.1, 1.6, L.warm, 0.14 * L.house, 1.3, 0.8)
+    // The bartender, behind the counter: along it and back, polishing a glass, turned to the room.
+    {
+      const b = walker(s.end ? TENDER_END : TENDER_START, t)
+      if (b) {
+        const ctx = p.drawingContext as CanvasRenderingContext2D
+        ctx.save()
+        // (He stands on the duckboard behind the bar, a step up.)
+        stander(ctx, k, { x: b.x, feet: R.floor - 0.16, h: 1.05, face: b.face, stride: b.stride, arms: Number.isFinite(b.stride) ? 'down' : 'polish', t }, staff(L, 0.6), 'shirt', top)
+        ctx.restore()
+      }
+    }
     solid(p, ink, weight * 0.8, mixHex(M.brass, M.deep, 0.62))
     rect(x0, top, x1, R.floor)
     solid(p, ink, weight * 0.7, M.brass)
@@ -462,13 +728,42 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
     const fw = (cx1 - cx0) / folds
     for (let i = 0; i < folds; i++) {
       const x = cx0 + (i + 0.5) * fw
-      const g = ctx.createLinearGradient(X(x - fw / 2), 0, X(x + fw / 2), 0)
+      // The velvet stirs in the fans' air: its folds' light drifts a little, slowly.
+      const dx = curtainStir(t, i)
+      const g = ctx.createLinearGradient(X(x - fw / 2 + dx), 0, X(x + fw / 2 + dx), 0)
       g.addColorStop(0, rgba(M.lacquer, 0.34))
       g.addColorStop(0.45, rgba(M.lacquer, 0))
       g.addColorStop(0.62, rgba(M.rose, 0.07))
       g.addColorStop(1, rgba(M.lacquer, 0.3))
       ctx.fillStyle = g
       ctx.fillRect(X(x - fw / 2), X(R.ceil), X(fw), X(R.stage - R.ceil))
+    }
+  }
+  // Up close, the velvet's pile: a dark crease down each fold's valley and a fine light along its crown, moving as it stirs.
+  {
+    const ka = smooth(k, 30, 70)
+    if (ka > 0.01) {
+      const ctx = p.drawingContext as CanvasRenderingContext2D
+      const folds = 22
+      const fw = (cx1 - cx0) / folds
+      const y0 = Math.max(R.ceil, fr.y0)
+      const y1 = Math.min(R.stage, fr.y1)
+      if (y1 > y0) {
+        ctx.save()
+        ctx.lineWidth = Math.max(1, 0.012 * k)
+        for (const [off, col, a] of [[0, M.lacquer, 0.26], [0.6, M.rose, 0.08]] as const) {
+          ctx.strokeStyle = rgba(col, a * ka)
+          ctx.beginPath()
+          for (let i = 0; i <= folds; i++) {
+            const x = cx0 + (i + off - 0.5) * fw + curtainStir(t, i)
+            if (x < fr.x0 - 0.1 || x > fr.x1 + 0.1 || x < cx0 || x > cx1) continue
+            ctx.moveTo(X(x), X(y0))
+            ctx.quadraticCurveTo(X(x + 0.04 * Math.sin(t * 0.5 + i)), X((y0 + y1) / 2), X(x + 0.01), X(y1))
+          }
+          ctx.stroke()
+        }
+        ctx.restore()
+      }
     }
   }
   vband(p, k, cx0, R.ceil, cx1, R.ceil + 3, [[0, rgba(M.lacquer, 0.6)], [1, rgba(M.lacquer, 0)]])
@@ -478,6 +773,30 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
   glow(p, k, 2.7, -0.4, 4.2, L.stage, 0.3 * L.stageA, 1.05, 1)
   glow(p, k, 8.4, 1.2, 3.2, M.candle, 0.16 * L.band + 0.2 * L.blaze, 1.2, 0.9)
   glow(p, k, 4.8, 0.4, 7.5, mixHex(M.candle, COLD, 0.4), 0.28 * L.blaze, 1.35, 0.8)
+  // The piano's shadow on the velvet behind it, thrown up and back by the light on it from the house: it stands in
+  // front of the curtain, and the light says so. Darkest where the light on the velvet is.
+  {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const g = ctx.createRadialGradient(X(2.9), X(-0.9), 0, X(2.9), X(-0.9), X(5.4))
+    const a = 0.34 * L.stageA * (1 - 0.5 * L.blaze)
+    g.addColorStop(0, rgba(M.lacquer, a))
+    g.addColorStop(0.6, rgba(M.lacquer, a * 0.7))
+    g.addColorStop(1, rgba(M.lacquer, 0))
+    ctx.save()
+    ctx.fillStyle = g
+    ctx.beginPath()
+    for (const shape of PIANO_SHADOW) {
+      for (const [i, [x, y]] of shape.entries()) {
+        const sx = X(x * 1.05 + 0.45)
+        const sy = X(y * 1.05 - 0.55)
+        if (i === 0) ctx.moveTo(sx, sy)
+        else ctx.lineTo(sx, sy)
+      }
+      ctx.closePath()
+    }
+    ctx.fill()
+    ctx.restore()
+  }
   // The pelmet, with its gold fringe.
   solid(p, ink, weight * 0.7, mixHex(M.velvet, M.lacquer, 0.35))
   const swags = 6
@@ -512,10 +831,8 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
     const col = i === 0 ? L.stage : mixHex(M.candle, COLD, 0.3 + 0.2 * (i % 2))
     const from: Pt = [sp.x, PIPE + 0.22]
     const a = Math.atan2(sp.to[1] - from[1], sp.to[0] - from[0])
-    if (on > 0.01) {
-      beam(p, k, from[0], from[1], sp.to[0], sp.to[1], 0.16, i === 0 ? 4.6 : 2.6, col, (i === 0 ? 0.1 : 0.09) * on)
-      glow(p, k, sp.to[0], sp.to[1] + 0.3, i === 0 ? 2.8 : 1.6, col, (i === 0 ? 0.12 : 0.16) * on, 1.3, 0.35)
-    }
+    // Its light is where it falls (a pool on the boards), not a shaft in the air.
+    if (on > 0.01) glow(p, k, sp.to[0], sp.to[1] + 0.3, i === 0 ? 2.8 : 1.6, col, (i === 0 ? 0.12 : 0.16) * on, 1.3, 0.35)
     p.push()
     p.translate(X(from[0]), X(from[1]))
     p.rotate(a - Math.PI / 2)
@@ -528,6 +845,24 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
     p.stroke(ink)
     p.strokeWeight(weight * 0.4)
     p.line(X(sp.x), X(PIPE), X(sp.x), X(from[1] - 0.12))
+  }
+
+  // The house spot over the floor, on its own drop from the ceiling, turned on her table; its lens lit while it is on.
+  {
+    const [hx, hy] = HOUSE_SPOT
+    const on = onHer(t, s.end)
+    p.stroke(ink)
+    p.strokeWeight(weight * 0.45)
+    p.line(X(hx), X(R.ceil), X(hx), X(hy - 0.12))
+    p.push()
+    p.translate(X(hx), X(hy))
+    p.rotate(Math.atan2(HOUSE_SPOT_TO[1] - hy, HOUSE_SPOT_TO[0] - hx) - Math.PI / 2)
+    solid(p, ink, weight * 0.5, M.lacquer)
+    rect(-0.09, -0.2, 0.09, 0.12, 0.03)
+    p.noStroke()
+    p.fill(on > 0.01 ? mixHex(M.lacquer, M.ivory, 0.25 + 0.6 * on) : M.wall)
+    rect(-0.075, 0.08, 0.075, 0.12, 0.01)
+    p.pop()
   }
 
   // The stage itself: its boards, its front, the brass nosing.
@@ -554,37 +889,30 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
   glow(p, k, 2.7, R.stage, 3.0, L.stage, 0.22 * L.stageA, 1.2, 0.14)
 
   // The band's things, idle: the bass on its side, the kit, a stool, the stands with their clip lamps.
-  drawBand(q, L)
+  drawBand(q, L, t, s.end)
+
+  // The dream's second waiter, crossing behind the tables (and behind her table, as they lean in).
+  if (s.end) {
+    const there = 1 - smooth(t, ROSE_OUT[0], ROSE_OUT[1] - 0.6)
+    const w = WAITERS[1]
+    const at = there < 0.01 ? null : walker(w.end, t)
+    if (at) {
+      const ctx = p.drawingContext as CanvasRenderingContext2D
+      ctx.save()
+      ctx.globalAlpha = there
+      const going = Number.isFinite(at.stride)
+      stander(ctx, k, { x: at.x, feet: R.floor, h: 1.05, face: at.face, stride: at.stride, arms: going || at.x > -2 ? 'tray' : 'down', t }, staff(L, 0.5), 'apron')
+      ctx.restore()
+    }
+  }
 
   // The tables on the floor, their chairs and candles; Mia's table's top and lamp are drawn over the balls.
+  for (const tb of TABLES) candleLight(q, tb.x, t, tb.x)
+  candleLight(q, TABLE.x, t, 7, 1.15)
   for (const tb of TABLES) {
     for (const [dx, face] of tb.chairs) chair(q, tb.x + dx, face)
     table(q, tb.x)
     candle(q, tb.x, t, tb.x)
-  }
-  // In the dream's last room the club is full: someone on every chair, a dark shape with the candle's light along it,
-  // turned to the stage; and two at the bar. As the dream drains they go, and the room is as it is.
-  if (s.end && t < ROSE_OUT[1]) {
-    const there = 1 - smooth(t, ROSE_OUT[0], ROSE_OUT[1] - 0.6)
-    const seats: Pt[] = [...TABLES.flatMap((tb) => tb.chairs.map(([dx]) => [tb.x + dx, SEAT - 0.14] as Pt)), ...BAR.stools.map((x) => [x, 2.5 - 0.14] as Pt)]
-    const ctx = p.drawingContext as CanvasRenderingContext2D
-    ctx.save()
-    ctx.globalAlpha = there
-    for (const [x, y] of seats) {
-      // A person, not a ball: shoulders on the seat and a smaller head over them, so nothing here reads as one of the
-      // four; the candles' light along the head and a shoulder.
-      const hy = y - 0.2
-      p.noStroke()
-      p.fill('#1A1226')
-      p.ellipse(x * k, (y + 0.05) * k, 0.34 * k, 0.3 * k)
-      p.circle(x * k, hy * k, 0.17 * k)
-      p.noFill()
-      p.stroke(rgba(M.candle, 0.7))
-      p.strokeWeight(weight * 0.8)
-      p.arc(x * k, hy * k, 0.17 * k, 0.17 * k, Math.PI * 1.2, Math.PI * 1.95)
-      p.arc(x * k, (y + 0.05) * k, 0.34 * k, 0.3 * k, Math.PI * 1.15, Math.PI * 1.5)
-    }
-    ctx.restore()
   }
   stool(q, MIA_SEAT[0])
   stool(q, SIDE_SEAT[0])
@@ -600,12 +928,18 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
   p.stroke(rgba(M.brass, 0.55))
   p.strokeWeight(weight * 0.7)
   p.line(X(R.wallL0 - 0.12), X(R.roof - 0.02), X(R.wallR1 + 0.12), X(R.roof - 0.02))
-  glow(p, k, R.wallL1 + 0.1, 2.45, 0.9, L.warm, 0.12 * L.house, 0.6, 1)
-  // The doorway through the wall, dark, and the door in it: shut, or swung out onto the street on its closer.
-  p.noStroke()
-  p.fill(M.lacquer)
-  rect(R.wallL0 + 0.02, R.doorTop, R.wallL1 - 0.02, R.floor)
+  // The doorway through the wall, and the door in it: shut, or swung out onto the street on its closer. Open, it shows
+  // the side street's night (the block draws it, behind the wall), the reveal dark at its head, and the neon's blue
+  // lying on the threshold.
   const open = doorAt(t, s.end)
+  if (open <= 0.01) {
+    p.noStroke()
+    p.fill(M.lacquer)
+    rect(R.wallL0, R.doorTop, R.wallL1, R.floor)
+  } else {
+    vband(p, k, R.wallL0 + 0.02, R.doorTop, R.wallL1 - 0.02, R.doorTop + 0.45, [[0, rgba(M.lacquer, 0.85)], [1, rgba(M.lacquer, 0)]])
+    glow(p, k, (R.wallL0 + R.wallL1) / 2, R.floor - 0.005, 0.5, DRIVE_MAT.neon, 0.3 * open, 1.3, 0.1)
+  }
   const dw = (R.wallL1 - R.wallL0) * Math.cos(open * Math.PI / 2)
   if (dw > 0.01) {
     solid(p, ink, weight * 0.6, M.velvet)
@@ -639,8 +973,7 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
     p.line(X(note[1][1][0]), X(tube[0][1] - 0.18), X(note[1][1][0]), X(note[1][1][1]))
     p.line(X(tube[0][0] + 0.1), X(tube[0][1] - 0.18), X(tube[0][0] + 0.1), X(tube[0][1] - 0.04))
     p.line(X(a0 - 0.35), X(tube[0][1] - 0.18), X(a0 - 0.35), X(tube[4][1] - 0.02))
-    const lit = 0.92 + 0.08 * Math.sin(t * 13) * Math.sin(t * 5.3)
-    glow(p, k, tipX - 0.45, tipY - 0.55, 1.5, DRIVE_MAT.neon, 0.28 * lit, 1.2, 0.9)
+    // (The tube is its own light: no halo round it. Its blue is on the threshold when the door is open.)
     for (const [col, w] of [[rgba(DRIVE_MAT.neon, 0.9), 0.085], [DRIVE_MAT.neonCore, 0.03]] as const) {
       p.stroke(col)
       p.strokeWeight(X(w))
@@ -660,13 +993,108 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
   }
 }
 
+/**
+ * Her table's candle is at their heads' height, between them: it throws the two of them on the wall behind, bigger,
+ * one each side, and as they lean in to each other their shadows lean in too. The flame trembles, and so do they.
+ * (At the start it is drawn over the dark the house goes to, where only her pool lights the wall.)
+ */
+function candleShadows(p: p5, s: ClubRoom, k: number, t: number, L: Lights): void {
+  const X = (v: number) => v * k
+  const R = ROOM
+  const who = (s.end ? AT_HER_TABLE.end : AT_HER_TABLE.start)?.(t) ?? []
+  const fx = TABLE.x + 0.004 * Math.sin(t * 11 + 7)
+  const fy = TABLE.top - 0.06
+  const flick = flicker(t, 7)
+  const dark = (0.34 + 0.24 * (1 - L.house)) * flick
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  let clipped = false
+  for (const [bx, by] of who) {
+    const dx = bx - fx
+    const dy = by - fy
+    if (Math.hypot(dx, dy) > 0.62 || by > R.floor - 0.2) continue
+    if (!clipped) {
+      ctx.save()
+      ctx.beginPath()
+      ctx.rect(X(R.wallL1), X(R.ceil), X(R.stageX0 - R.wallL1), X(R.floor - R.ceil))
+      ctx.clip()
+      clipped = true
+    }
+    const m = 3.0 * (1 + 0.04 * (flick - 0.92))
+    const cx = fx + dx * m
+    const cy = fy + dy * m - 0.04
+    const r = 0.13 * m
+    const g = ctx.createRadialGradient(X(cx), X(cy), X(r * 0.62), X(cx), X(cy), X(r * 1.1))
+    g.addColorStop(0, rgba(M.lacquer, dark))
+    g.addColorStop(1, rgba(M.lacquer, 0))
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.arc(X(cx), X(cy), X(r * 1.1), 0, Math.PI * 2)
+    ctx.fill()
+  }
+  if (clipped) ctx.restore()
+}
+
+/**
+ * The people, drawn over the room's dark (the opening's house going down round the piano): each table its own island
+ * of candlelight, its candle and the edges of the faces round it, the way a club looks while someone plays.
+ */
+function drawPeople(p: p5, s: ClubRoom, k: number, ink: string, weight: number, t: number): void {
+  const q = pen(p, k, ink, weight)
+  const L = lightsAt(t, s.end)
+  const R = ROOM
+  if (!s.end && t < 40 && L.house < 0.99) {
+    candleLight(q, TABLE.x, t, 7, 1.15 * (1 - L.house))
+    for (const tb of TABLES) {
+      candleLight(q, tb.x, t, tb.x, 1 - L.house)
+      candle(q, tb.x, t, tb.x)
+    }
+  }
+  if (!s.end) candleShadows(p, s, k, t, L)
+  // The people. The late-night few are there in both rooms; in the dream's last room everyone else is there too,
+  // someone on every chair and at the bar and a second waiter with a tray, and as the dream drains they go.
+  {
+    const there = s.end ? 1 - smooth(t, ROSE_OUT[0], ROSE_OUT[1] - 0.6) : 0
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    ctx.save()
+    const lit = patron(L)
+    for (const st of SITTERS) {
+      const a = st.real === 'both' || (st.real === 'start' && !s.end) ? 1 : there
+      if (a < 0.01) continue
+      ctx.globalAlpha = a
+      sitter(ctx, k, st, t, lit, st.bar ? BAR.top : TABLE.top)
+    }
+    for (const w of WAITERS) {
+      // (The dream's second waiter walks behind the tables, drawn with the room.)
+      if (!w.real) continue
+      const a = 1
+      const at = a < 0.01 ? null : walker(s.end ? w.end : w.start, t)
+      if (!at) continue
+      ctx.globalAlpha = a
+      const going = Number.isFinite(at.stride)
+      const arms = going ? (at.face > 0 && at.x < -4.5 ? 'tray' : 'down') : at.x > -9 ? 'wipe' : 'down'
+      stander(ctx, k, { x: at.x, feet: R.floor, h: 1.05, face: at.face, stride: at.stride, arms, t }, staff(L, 0.5), 'apron')
+    }
+    ctx.restore()
+    // The man at the bar's cigarette, in the ashtray by his glass; in the dream, one at the far table too.
+    smoke(p, k, BAR.stools[0] - 0.34, BAR.top - 0.03, t, 0.9, 1)
+    if (there > 0.01) smoke(p, k, -8.1, TABLE.top - 0.03, t, there, 2)
+  }
+}
+
 /** The band's instruments, idle on the stage to the piano's right, and the clip lamps that come up for them. */
-function drawBand(q: Pen, L: Lights): void {
+function drawBand(q: Pen, L: Lights, t: number, end: boolean): void {
   const { p, X, rect, poly, ink, w } = q
   const st = ROOM.stage
   const wood = mixHex(M.brass, M.velvet, 0.35)
+  // The band: on its break at the start, the instruments idle; in the dream's last room playing soft under the piano
+  // that plays itself; and at the end back on the stand in the dark after she has gone, playing from The End's band.
+  const dream = end && t >= DREAM_BAND[0] && t < DREAM_BAND[1] ? L.rose : 0
+  const real = end && t >= REAL_BAND ? 1 : 0
+  const there = Math.max(dream, real)
+  const lamps = Math.max(L.band, 0.8 * dream)
+  if (there > 0.01) bandPlayers(p, q.k, t, ink, there, lamps, L.blaze, L.rose, real ? smooth(t, BAND - 0.1, BAND + 0.2) : 0.45, real > 0)
   // The stand-up bass, lying on its side: the body's two bouts and waist, the neck, the scroll, the strings.
-  {
+  if (there <= 0.01) {
     const bx = 6.95
     const by = st - 0.25
     solid(p, ink, w * 0.6, wood)
@@ -724,14 +1152,15 @@ function drawBand(q: Pen, L: Lights): void {
     p.line(X(x), X(st), X(x), X(1.78))
     p.line(X(x - 0.12), X(st), X(x), X(st - 0.2))
     p.line(X(x + 0.12), X(st), X(x), X(st - 0.2))
-    solid(p, ink, w * 0.45, M.lacquer)
+    const on = lamps
+    // The lamp lights the music on the desk, and a pool on the boards under the stand.
+    solid(p, ink, w * 0.45, mixHex(M.lacquer, M.ivory, 0.55 * on))
     p.push()
     p.translate(X(x), X(1.72))
     p.rotate(-0.18)
     rect(-0.17, -0.2, 0.17, 0.02, 0.015)
     p.pop()
-    const on = L.band
-    if (on > 0.01) glow(p, q.k, x, 1.62, 0.8, M.candle, 0.4 * on, 1.1, 0.8)
+    if (on > 0.01) glow(p, q.k, x, st, 0.75, M.candle, 0.22 * on, 1.4, 0.22)
     solid(p, ink, w * 0.4, mixHex(M.brass, M.candle, on))
     poly([[x - 0.09, 1.5], [x + 0.05, 1.46], [x + 0.08, 1.54], [x - 0.07, 1.57]])
   }
@@ -745,22 +1174,74 @@ function drawBand(q: Pen, L: Lights): void {
 }
 
 /** What stands in front of the balls: Mia's table's top and its lamp, whose light is on their faces. */
-function drawOver(p: p5, s: ClubRoom, k: number, ink: string, weight: number, t: number): void {
+function drawOver(p: p5, k: number, ink: string, weight: number, t: number): void {
   const q = pen(p, k, ink, weight)
-  const L = lightsAt(t, s.end)
   table(q, TABLE.x, 'top', 0.19)
-  candle(q, TABLE.x, t, 7, 1.15)
-  glow(p, k, TABLE.x, TABLE.top - 0.12, 0.42, L.warm, 0.12, 1.4, 0.8)
+  candle(q, TABLE.x, t, 7)
+}
+
+/** The house spot's pool at her table: an ellipse of its light on the wall behind them, the table and the floor. */
+const POOL = { x: TABLE.x, y: TABLE.top - 0.1, rx: 0.92, ry: 0.78, lip: 0.28 }
+
+/**
+ * The dark the room goes to, with the house spot's pool at her table cut out of it: the dark is laid over everything
+ * but the pool (`dark` at most, from `darkAt`), and inside the pool it lifts to `lift` of itself at the middle, with a
+ * soft lip at its edge, the way a spot's pool has one. What is in the pool is lit by the dark not being there; a faint
+ * warmth lies on what it falls on.
+ */
+function darkWithPool(ctx: CanvasRenderingContext2D, k: number, f: { x0: number; y0: number; x1: number; y1: number }, fill: CanvasGradient | string, dark: number, her: number, warm: string, tint: number): void {
+  const { x, y, rx, ry, lip } = POOL
+  const sy = ry / rx
+  const ellipse = (r: number) => {
+    ctx.moveTo((x + r) * k, y * k)
+    ctx.ellipse(x * k, y * k, r * k, r * sy * k, 0, 0, Math.PI * 2)
+  }
+  ctx.save()
+  if (her > 0.01) {
+    ctx.beginPath()
+    ctx.rect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
+    ellipse(rx)
+    ctx.clip('evenodd')
+  }
+  ctx.fillStyle = fill
+  ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
+  ctx.restore()
+  if (her <= 0.01) return
+  ctx.save()
+  ctx.translate(x * k, y * k)
+  ctx.scale(1, sy)
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx * k)
+  const inner = dark * (1 - her)
+  g.addColorStop(0, rgba(M.lacquer, inner))
+  g.addColorStop(Math.max(0, 1 - lip / rx), rgba(M.lacquer, inner))
+  g.addColorStop(1, rgba(M.lacquer, dark))
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.arc(0, 0, rx * k, 0, Math.PI * 2)
+  ctx.fill()
+  if (tint > 0.004) {
+    const w = ctx.createRadialGradient(0, 0, 0, 0, 0, rx * k)
+    w.addColorStop(0, rgba(warm, tint * her))
+    w.addColorStop(Math.max(0, 1 - lip / rx), rgba(warm, tint * her * 0.85))
+    w.addColorStop(1, rgba(warm, 0))
+    ctx.fillStyle = w
+    ctx.beginPath()
+    ctx.arc(0, 0, rx * k, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
 }
 
 /**
  * The follow-spot, at the start: as the house lights go down the dark closes round the piano (which is drawn over the
- * room, so it stays in its light), and while the camera is with her a pool of light finds Mia at her table, the way the
- * film finds her face in the dark. Gone by the time the room turns into Lipton's.
+ * room, so it stays in its light), and while the camera is with her the house spot's pool finds Mia at her table, the
+ * way the film finds her face in the dark. Gone by the time the room turns into Lipton's.
  */
 function drawSpot(p: p5, k: number, t: number): void {
   const L = lightsAt(t, false)
-  const dark = 0.78 * (1 - L.house)
+  const her = onHer(t, false)
+  // While the camera is in her corner the dark there is a little less deep: the candles and her lamp are enough to see by.
+  const dark = 0.78 * (1 - L.house) * (1 - 0.3 * her)
   if (dark < 0.01) return
   const f = frame(p, k)
   const ctx = p.drawingContext as CanvasRenderingContext2D
@@ -769,15 +1250,21 @@ function drawSpot(p: p5, k: number, t: number): void {
   const g = ctx.createRadialGradient(cx * k, cy * k, 1.4 * k, cx * k, cy * k, 4.4 * k)
   g.addColorStop(0, rgba(M.lacquer, 0))
   g.addColorStop(1, rgba(M.lacquer, dark))
-  ctx.save()
-  ctx.fillStyle = g
-  ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
-  ctx.restore()
-  const her = smooth(t, 18.5, 21.5) * (1 - smooth(t, 32.5, 35.5))
-  if (her > 0.01) {
-    glow(p, k, TABLE.x, TABLE.top - 0.35, 1.35, M.candle, 0.3 * her * (dark / 0.78), 1.05, 1.2)
-    glow(p, k, TABLE.x, TABLE.top - 0.45, 0.6, M.ivory, 0.12 * her * (dark / 0.78), 1, 1.1)
-  }
+  darkWithPool(ctx, k, f, g, dark, her, mixHex(M.candle, M.ivory, 0.5), 0.07)
+}
+
+/**
+ * The dream's kiss, at the end: as they lean in over her table the room goes down round them to the same house spot's
+ * pool of its rose light on the two of them, the way it found her there at the start; it lets them go as he leaves her.
+ */
+function drawPool(p: p5, k: number, t: number): void {
+  const u = smooth(t, LEAN - 1.6, LEAN + 0.6) * (1 - smooth(t, LEAVE, LEAVE + 0.9))
+  if (u < 0.01) return
+  const L = lightsAt(t, true)
+  const f = frame(p, k)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const dark = 0.62 * u
+  darkWithPool(ctx, k, f, rgba(M.lacquer, dark), dark, Math.min(1, u * 1.2), mixHex(L.warm, M.ivory, 0.25), 0.1)
 }
 
 export const clubRoom = scenery<ClubRoom>({
@@ -785,6 +1272,8 @@ export const clubRoom = scenery<ClubRoom>({
   draw: (p, s, c) => {
     drawRoom(p, s, c.k, c.ink, c.bg, c.weight, c.t)
     if (!s.end && c.t < 40) drawSpot(p, c.k, c.t)
+    drawPeople(p, s, c.k, c.ink, c.weight, c.t)
+    if (s.end && c.t > LEAN - 1.6 && c.t < LEAVE + 0.9) drawPool(p, c.k, c.t)
   },
-  over: (p, s, c) => drawOver(p, s, c.k, c.ink, c.weight, c.t),
+  over: (p, _s, c) => drawOver(p, c.k, c.ink, c.weight, c.t),
 })

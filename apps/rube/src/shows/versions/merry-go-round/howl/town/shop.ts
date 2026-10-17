@@ -580,7 +580,6 @@ function drawStreetLamps(p: p5, c: Ctx, t: number): void {
     p.stroke(ink)
     p.fill(iron)
     p.triangle(X(x - 0.22), X(HEAD + 0.02), X(x + 0.22), X(HEAD + 0.02), X(x), X(HEAD - 0.17))
-    if (lit > 0.02) glow(p, k, x, HEAD + 0.22, 1.0, TOWN.glow, 0.42 * lit)
     // The snuffer: a long iron arm pivoted on the post under the lantern, a heavy counterweight on its short end, a
     // cone of a cap on its long one; up and back at rest, swinging down over the lantern on the note.
     const a = -1.2 + 1.2 * drop
@@ -716,11 +715,11 @@ function drawMusicBox(p: p5, c: Ctx, t: number, tone: Tone): void {
   p.rect(X(SPOOL[0] - 0.065), X(SPOOL[1] - SPOOL_R - 0.03), X(0.022), X(SPOOL_R * 2 + 0.06), X(0.01))
   p.rect(X(SPOOL[0] + 0.043), X(SPOOL[1] - SPOOL_R - 0.03), X(0.022), X(SPOOL_R * 2 + 0.06), X(0.01))
   // The carousel on the lid.
-  drawCarousel(p, c, t, tone, phi)
+  drawCarousel(p, c, tone, phi)
 }
 
 /** The carousel on the lid: a deck, a pole, a striped canopy, four little hats riding round and rising. */
-function drawCarousel(p: p5, c: Ctx, t: number, tone: Tone, phi: number): void {
+function drawCarousel(p: p5, c: Ctx, tone: Tone, phi: number): void {
   const { k, ink, weight: W } = c
   const X = (v: number) => v * k
   const cx = MB_CX
@@ -784,8 +783,6 @@ function drawCarousel(p: p5, c: Ctx, t: number, tone: Tone, phi: number): void {
   p.noStroke()
   p.fill(tone(TOWN.gold))
   p.circle(X(cx), X(canopy - 0.22), X(0.04))
-  // The first light catches the brass as the sun comes up.
-  if (t < 40) glow(p, k, cx + 0.12, canopy - 0.05, 0.28, TOWN.glow, 0.25 * smooth(t, 2.5, 7) * (1 - smooth(t, 14, 20)))
 }
 
 /* --------------------------------------------- the lift */

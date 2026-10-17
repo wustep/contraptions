@@ -33,6 +33,7 @@ import {
   type HotdogPlan,
   type LegPose,
 } from './fingers-plan'
+import { audience, music, wall } from './fingers-room'
 
 /**
  * Hot dog fingers: the world where people have hot dogs for fingers, so a piano is played with the feet.
@@ -100,25 +101,17 @@ function gloss(p: p5, k: number, pts: Pt[], r: number, from: number, to: number,
 const STOCKING = HOTDOG.lilac
 const STOCKING_DEEP = mixHex(HOTDOG.lilac, HOTDOG.piano, 0.28)
 const SKIN = mixHex(HOTDOG.bun, HOTDOG.sausage, 0.18)
-const WALL_STRIPE = mixHex('#F7D8D0', HOTDOG.ivory, 0.42)
-const WAINSCOT = mixHex('#F7D8D0', HOTDOG.sausage, 0.22)
 const KEY_SHADE = mixHex(HOTDOG.ivory, HOTDOG.piano, 0.14)
 
 /* ------------------------------------------------------------------ the room and the piano */
 
-function room(p: p5, c: Ctx): void {
+function room(p: p5, c: Ctx, t: number): void {
   const { k, ink, weight } = c
   const f = frame(p, k)
   const x0 = f.x0 - 1
   const x1 = f.x1 + 1
-  // The wallpaper's stripes, faint, and a dado rail with the deeper pink under it.
-  p.noStroke()
-  p.fill(WALL_STRIPE)
-  for (let x = Math.floor(x0 / 0.56) * 0.56; x < x1; x += 0.56) p.rect((x + 0.14) * k, ((f.y0 - 1 + 1.95) / 2) * k, 0.16 * k, (1.95 - (f.y0 - 1)) * k)
-  p.fill(WAINSCOT)
-  p.rect(((x0 + x1) / 2) * k, ((1.95 + FLOOR_Y) / 2) * k, (x1 - x0) * k, (FLOOR_Y - 1.95) * k)
-  solid(p, ink, weight * 0.6, mixHex(HOTDOG.sausageDeep, WAINSCOT, 0.35))
-  p.rect(((x0 + x1) / 2) * k, 1.95 * k, (x1 - x0) * k, 0.09 * k)
+  // The papered wall, its windows and the portrait, a little way behind the piano (`fingers-room.ts`).
+  wall(p, c, t)
   // The floor: warm boards.
   solid(p, ink, weight * 0.8, HOTDOG.bun)
   p.rect(((x0 + x1) / 2) * k, ((FLOOR_Y + Math.max(f.y1 + 1, FLOOR_Y + 0.1)) / 2) * k, (x1 - x0) * k, (Math.max(f.y1 + 1, FLOOR_Y + 0.1) - FLOOR_Y) * k)
@@ -173,6 +166,8 @@ function piano(p: p5, c: Ctx, plan: HotdogPlan, t: number): void {
   p.stroke(alpha(p, HOTDOG.lilac, 0.5))
   p.strokeWeight(weight * 0.6)
   p.line(X(-0.12), X(LID - 0.78), X(2.12), X(LID - 0.78))
+  // The music on it.
+  music(p, c, t)
   // Legs to the floor, with brass on their feet; the lyre and its pedals between.
   for (const lx of [KX0 - 0.02, KX1 + 0.02]) {
     solid(p, ink, weight, black)
@@ -534,7 +529,7 @@ export const fingers = part<HotdogState>(
     draw: (p, s, c) => {
       const t = c.t + s.begin
       p.push()
-      room(p, c)
+      room(p, c, t)
       piano(p, c, s.plan, t)
       drawBottle(p, c, t)
       // The pianist's legs: the stomping one behind, the kicking one in front.
@@ -557,6 +552,10 @@ export const fingers = part<HotdogState>(
         drawHandFront(p, c, h)
         p.pop()
       }
+      // The audience, nearest of all, along the frame's foot.
+      p.push()
+      audience(p, c, t)
+      p.pop()
     },
   },
   (slot) => {

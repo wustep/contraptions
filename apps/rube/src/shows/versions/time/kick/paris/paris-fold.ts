@@ -1,5 +1,5 @@
 import { mixHex, type Pt } from '../../../../../parts'
-import { beam, bloom } from '../cast'
+import { beam } from '../cast'
 import { frame, hash } from '../kit'
 import { PARIS } from '../worlds'
 import { crowd, figure, turned, type Figure } from './paris-crowd'
@@ -301,16 +301,6 @@ function leafContent(pen: Pen, t: number, f: Frame): void {
     shape(pen, [...top, [L + DECK_END - 0.2, BED_Y], [L + 0.8, BED_Y]], WATER, 0)
     vwash(pen, L + 0.8, L + DECK_END - 0.2, WATER_Y + 0.2, BED_Y, [[0, WATER, 0], [1, WATER_DEEP, 1]])
     poly(pen, top, mixHex(WATER, PARIS.mirror, 0.5), 0.9)
-    // The sun's glints on the water, drifting.
-    const glints: Pt[][] = []
-    for (let i = 0; i < 26; i++) {
-      const gx = L + 1 + ((i * 1.07 + t * 0.08 * (0.6 + hash(i, 91))) % (DECK_END - 1.4))
-      const gy = WATER_Y + 0.12 + 0.5 * hash(i, 92)
-      const gw = 0.12 + 0.25 * hash(i, 93)
-      const gl = 0.5 + 0.5 * Math.sin(t * 1.3 + i * 2.1)
-      if (gl > 0.25) glints.push([[gx - gw, gy], [gx + gw, gy], [gx + gw * 0.7, gy + 0.03], [gx - gw * 0.7, gy + 0.03]])
-    }
-    fillPaths(pen, glints, PARIS.mirror, 0.45)
     // The far bank is ground, not a pavement on a plank: earth under it down to the bed, and the bed and the cut under
     // it run on to the leaf's end (seen whole, its building stood on a hairline over open sky).
     rect(pen, L + DECK_END + 1.0, Y_S + 0.3, L + 46, BED_Y, mixHex(EARTH, PARIS.stoneShade, 0.25), 0)
@@ -512,7 +502,4 @@ export function drawFold(pen: Pen, t: number, f: Frame): void {
   pit(pen, t, f)
   lever(pen, t, f)
   curve(pen, t, f)
-  // The slam, seen from below: a flash of the sun off the latches.
-  const u = t - LOCK
-  if (u > 0 && u < 0.6) bloom(pen.p, pen.k, [C[0], C[1] - R], 1.8, PARIS.lamp, 0.4 * (1 - u / 0.6))
 }

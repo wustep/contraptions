@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { mixHex } from '../../../../../parts'
 import { alpha } from '../kit'
 import { drawFalls, FALLS } from '../props/falls'
-import { CHURCH, CLINIC, HOME, INK } from '../worlds'
+import { CARL, CARL_OLD as CARL_GREY, CHURCH, CLINIC, ELLIE, ELLIE_OLD as ELLIE_GREY, HOME, INK } from '../worlds'
 
 /**
  * The hall's furniture and machines (the ties builder's; `ties.ts` animates them): pure drawings of a state, in the
@@ -32,6 +32,12 @@ export const PAINTING = { x0: 6.62, y0: -2.42, w: 1.3, h: 0.94 }
 
 /** The front door: the middle of the wall it hangs in, and how wide its leaf is when it swings out onto the porch. */
 export const DOOR = { x: 8.4, w: 0.85, top: -2.2 }
+
+/**
+ * The hall's tall clock, standing under the stairs past the gramophone's horn: its middle, half its width, the top of
+ * its hood, and the pendulum's length from its pivot behind the dial.
+ */
+export const CLOCK = { x: 3.32, half: 0.155, top: -1.22, pend: 0.5 }
 
 const IRON = mixHex(INK, HOME.section, 0.45)
 const IRON_LIGHT = mixHex(IRON, CLINIC.steel, 0.35)
@@ -297,6 +303,85 @@ export function drawGramophone(p: p5, k: number, weight: number, s: GramState, a
   p.pop()
 }
 
+/* ------------------------------------------------------------------ the tall clock */
+
+/**
+ * The tall clock under the stairs, the house's time: a plinth, a trunk with a glass door on the pendulum, a hood with an
+ * arched top and a cream dial (its hours ticked, never numbered). `swing` is the pendulum's angle (radians), `hours`
+ * the time its hands show (0 to 12, fractional); the wood darkens with `age`.
+ */
+export function drawClock(p: p5, k: number, weight: number, swing: number, hours: number, age: number): void {
+  const { x, half, top, pend } = CLOCK
+  const wood = mixHex(mixHex(HOME.woodDark, HOME.wood, 0.4), '#6A5040', age * 0.7)
+  const dark = mixHex(wood, INK, 0.3)
+  const brass = mixHex(HOME.brass, '#B9A06A', age * 0.6)
+  const hood = top + 0.42
+  const plinth = FLOOR - 0.24
+  const pivot = top + 0.2
+  const win = { x0: x - 0.075, x1: x + 0.075, y0: hood + 0.08, y1: plinth - 0.07 }
+  p.push()
+  p.rectMode(p.CORNER)
+  // A soft shadow on the wainscot behind it, to the left (the evening comes from the door).
+  p.noStroke()
+  p.fill(alpha(p, INK, 0.08))
+  rect(p, k, x - half - 0.05, top + 0.05, x + half - 0.06, FLOOR, 0.02)
+  p.stroke(INK)
+  p.strokeWeight(weight * 0.8)
+  // The plinth, the trunk, the hood with its arch.
+  p.fill(dark)
+  rect(p, k, x - half - 0.02, plinth, x + half + 0.02, FLOOR, 0.01)
+  p.fill(wood)
+  rect(p, k, x - half + 0.03, hood, x + half - 0.03, plinth, 0.008)
+  p.beginShape()
+  p.vertex((x - half) * k, hood * k)
+  p.vertex((x - half) * k, (top + 0.05) * k)
+  p.bezierVertex((x - half) * k, (top - 0.06) * k, (x + half) * k, (top - 0.06) * k, (x + half) * k, (top + 0.05) * k)
+  p.vertex((x + half) * k, hood * k)
+  p.endShape(p.CLOSE)
+  rect(p, k, x - half - 0.02, hood - 0.02, x + half + 0.02, hood + 0.025, 0.008)
+  // The trunk's glass door, dark inside, and the pendulum swinging behind it.
+  p.fill(mixHex(HOME.woodDark, INK, 0.45))
+  rect(p, k, win.x0, win.y0, win.x1, win.y1, 0.03)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(win.x0 * k, win.y0 * k, (win.x1 - win.x0) * k, (win.y1 - win.y0) * k)
+  ctx.clip()
+  const bx = x + Math.sin(swing) * pend
+  const by = pivot + Math.cos(swing) * pend
+  p.stroke(brass)
+  p.strokeWeight(weight * 0.7)
+  p.line(x * k, pivot * k, bx * k, by * k)
+  p.stroke(INK)
+  p.strokeWeight(weight * 0.6)
+  p.fill(brass)
+  p.circle(bx * k, by * k, 0.085 * k)
+  ctx.restore()
+  // The dial: a cream face in a brass ring, its hours ticked; the two hands.
+  p.stroke(INK)
+  p.strokeWeight(weight * 0.6)
+  p.fill(brass)
+  p.circle(x * k, pivot * k, 0.25 * k)
+  p.fill(mixHex(HOME.trim, '#EADFC8', age))
+  p.circle(x * k, pivot * k, 0.2 * k)
+  p.strokeWeight(weight * 0.35)
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2
+    const r0 = i % 3 === 0 ? 0.07 : 0.08
+    p.line((x + Math.sin(a) * r0) * k, (pivot - Math.cos(a) * r0) * k, (x + Math.sin(a) * 0.092) * k, (pivot - Math.cos(a) * 0.092) * k)
+  }
+  const hand = (a: number, len: number, w: number) => {
+    p.strokeWeight(weight * w)
+    p.line(x * k, pivot * k, (x + Math.sin(a) * len) * k, (pivot - Math.cos(a) * len) * k)
+  }
+  hand(((hours % 12) / 12) * Math.PI * 2, 0.05, 0.7)
+  hand((hours % 1) * Math.PI * 2, 0.078, 0.5)
+  p.noStroke()
+  p.fill(INK)
+  p.circle(x * k, pivot * k, 0.02 * k)
+  p.pop()
+}
+
 /* ------------------------------------------------------------------ the desk, the ticket machine, the pedal */
 
 export interface DeskState {
@@ -490,10 +575,6 @@ export function drawDesk(p: p5, k: number, weight: number, s: DeskState, age: nu
     if (i < 0 || i > 3) continue
     reelPicture(p, k, weight, i, wx0, wy0 + (i - s.reel) * wh, ww, wh)
   }
-  // The glass's sheen.
-  p.noStroke()
-  p.fill(alpha(p, '#FFFFFF', 0.18))
-  p.quad((wx0 + 0.03) * k, (wy0 + wh) * k, (wx0 + 0.11) * k, wy0 * k, (wx0 + 0.16) * k, wy0 * k, (wx0 + 0.08) * k, (wy0 + wh) * k)
   ctx.restore()
   p.noFill()
   p.stroke(INK)
@@ -568,6 +649,125 @@ export function drawPainting(p: p5, k: number, weight: number, age: number): voi
   p.pop()
 }
 
+/**
+ * Their snapshots, on the wall under the stairs beside her painting: the life they had while the falls stayed a
+ * picture. One went up when they moved in (their house, new); one more each decade, on the mornings of the ties (the
+ * camera is on the wheel then, so they are seen only once all are up, beside the painting at the dance's end): the
+ * hill and its tree, the seaside, a winter, the car on the road. Each is the two of them as they were when it was taken,
+ * his blue and her coral greying from picture to picture, in a frame of its own. All of them clear of the stairs'
+ * underside, over the chair rail, and above the dance's close (whose top is about y -1.39), so the crest keeps its one
+ * picture, the wedding.
+ */
+export type Snapshot = 'house' | 'tree' | 'sea' | 'snow' | 'car'
+export const GALLERY: { kind: Snapshot; box: [number, number, number, number]; frame: 'gilt' | 'wood' | 'white'; age: number }[] = [
+  { kind: 'house', box: [4.05, -1.92, 4.5, -1.5], frame: 'white', age: 0 },
+  { kind: 'tree', box: [4.65, -2.42, 5.15, -1.6], frame: 'gilt', age: 0.18 },
+  { kind: 'sea', box: [5.3, -1.98, 6.2, -1.48], frame: 'wood', age: 0.38 },
+  { kind: 'snow', box: [5.4, -2.42, 5.85, -2.05], frame: 'white', age: 0.6 },
+  { kind: 'car', box: [5.98, -2.46, 6.38, -2.08], frame: 'gilt', age: 0.8 },
+]
+
+/** One snapshot in its frame; `shown` 0..1 (it fades up as it is hung), `age` the house's years (the prints fade). */
+export function drawSnapshot(p: p5, k: number, weight: number, n: number, shown: number, age: number): void {
+  if (shown <= 0.001) return
+  const g = GALLERY[n]
+  const [x0, y0, x1, y1] = g.box
+  const r = (a: number, b: number, c: number, d: number, rad = 0) => p.rect(a * k, b * k, (c - a) * k, (d - b) * k, rad * k)
+  const faded = (hex: string) => mixHex(hex, '#E8D6B4', 0.25 + 0.3 * age)
+  const frameC = g.frame === 'gilt' ? mixHex(HOME.brass, '#B9A06A', age * 0.6) : g.frame === 'wood' ? mixHex(HOME.woodDark, '#6A5040', age) : mixHex(HOME.trim, '#E6DAC2', age)
+  const carl = faded(mixHex(CARL, CARL_GREY, g.age))
+  const ellie = faded(mixHex(ELLIE, ELLIE_GREY, g.age))
+  p.push()
+  p.rectMode(p.CORNER)
+  p.drawingContext.globalAlpha = shown
+  // Its shadow on the paper, the frame, a cream mat.
+  p.noStroke()
+  p.fill(alpha(p, INK, 0.1))
+  r(x0 + 0.018, y0 + 0.022, x1 + 0.018, y1 + 0.022, 0.01)
+  p.stroke(INK)
+  p.strokeWeight(weight * 0.6)
+  p.fill(frameC)
+  r(x0, y0, x1, y1, 0.008)
+  p.noStroke()
+  const m = 0.045
+  p.fill(mixHex(HOME.trim, '#EADFC8', age))
+  r(x0 + m, y0 + m, x1 - m, y1 - m)
+  // The picture.
+  const [a0, b0, a1, b1] = [x0 + m + 0.03, y0 + m + 0.03, x1 - m - 0.03, y1 - m - 0.03]
+  const w = a1 - a0
+  const h = b1 - b0
+  const at = (u: number, v: number): [number, number] => [a0 + u * w, b0 + v * h]
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(a0 * k, b0 * k, w * k, h * k)
+  ctx.clip()
+  const sky = { house: HOME.sky, tree: HOME.sky, sea: '#CFE6EE', snow: '#D9DEE2', car: '#E8C9A8' }[g.kind]
+  p.fill(faded(sky))
+  r(a0, b0, a1, b1)
+  const ground = (v: number, hex: string) => {
+    p.fill(faded(hex))
+    r(a0, b0 + v * h, a1, b1)
+  }
+  const fig = Math.min(w, h) * 0.17
+  const two = (u: number, v: number) => {
+    const [cx, cy] = at(u, v)
+    p.fill(carl)
+    r(cx - fig * 1.05, cy - fig, cx - fig * 0.05, cy, fig * 0.2)
+    p.fill(ellie)
+    p.circle((cx + fig * 0.55) * k, (cy - fig * 0.5) * k, fig * k)
+  }
+  if (g.kind === 'house') {
+    ground(0.78, HOME.grass)
+    const [hx, hy] = at(0.62, 0.78)
+    p.fill(faded(HOME.siding))
+    r(hx - w * 0.2, hy - h * 0.34, hx + w * 0.2, hy)
+    p.fill(faded(HOME.roof))
+    p.triangle((hx - w * 0.26) * k, (hy - h * 0.34) * k, hx * k, (hy - h * 0.6) * k, (hx + w * 0.26) * k, (hy - h * 0.34) * k)
+    p.fill(faded(HOME.yellow))
+    r(hx - w * 0.04, hy - h * 0.18, hx + w * 0.04, hy)
+    two(0.24, 0.84)
+  } else if (g.kind === 'tree') {
+    p.fill(faded(HOME.grass))
+    p.ellipse(...at(0.5, 0.95).map((v) => v * k) as [number, number], w * 1.5 * k, h * 0.5 * k)
+    const [tx, ty] = at(0.62, 0.74)
+    p.fill(faded(HOME.bark))
+    r(tx - w * 0.04, ty - h * 0.26, tx + w * 0.04, ty)
+    p.fill(faded(HOME.leaf))
+    p.ellipse(tx * k, (ty - h * 0.36) * k, w * 0.62 * k, h * 0.3 * k)
+    two(0.3, 0.8)
+  } else if (g.kind === 'sea') {
+    ground(0.5, '#6FA3C2')
+    ground(0.74, '#E2CF9F')
+    p.fill(faded('#F2C866'))
+    p.circle(...at(0.8, 0.24).map((v) => v * k) as [number, number], h * 0.22 * k)
+    two(0.42, 0.9)
+  } else if (g.kind === 'snow') {
+    ground(0.7, '#F6F6F2')
+    const [tx, ty] = at(0.72, 0.72)
+    p.fill(faded('#4E6B5A'))
+    p.triangle((tx - w * 0.14) * k, ty * k, tx * k, (ty - h * 0.46) * k, (tx + w * 0.14) * k, ty * k)
+    two(0.32, 0.82)
+  } else {
+    ground(0.72, '#A79B8A')
+    const [cx, cy] = at(0.62, 0.72)
+    p.fill(faded(HOME.yellow))
+    p.rect((cx - w * 0.26) * k, (cy - h * 0.2) * k, w * 0.52 * k, h * 0.16 * k, h * 0.07 * k)
+    p.arc(cx * k, (cy - h * 0.19) * k, w * 0.3 * k, h * 0.3 * k, Math.PI, 0)
+    p.fill(faded('#3A3330'))
+    p.circle((cx - w * 0.15) * k, (cy - h * 0.03) * k, h * 0.11 * k)
+    p.circle((cx + w * 0.15) * k, (cy - h * 0.03) * k, h * 0.11 * k)
+    two(0.18, 0.86)
+  }
+  ctx.restore()
+  p.noFill()
+  p.stroke(alpha(p, INK, 0.45))
+  p.strokeWeight(weight * 0.4)
+  r(a0, b0, a1, b1)
+  p.drawingContext.globalAlpha = 1
+  p.pop()
+}
+
 /** The picture lamp lit (`lamp` 0..1): a warm wash down over the picture, and the hood's lit underside. Drawn after the dusk. */
 export function drawLampLight(p: p5, k: number, lamp: number): void {
   if (lamp <= 0.001) return
@@ -603,7 +803,7 @@ export function drawLampLight(p: p5, k: number, lamp: number): void {
  * screen door's way), its face widening as it turns towards us: `open` 0..1 is the swing (0 shut, 1 flat open), a
  * little over 1 on its bounce.
  */
-export function drawDoor(p: p5, k: number, weight: number, open: number, age: number): void {
+export function drawDoor(p: p5, k: number, weight: number, open: number, age: number, sky = HOME.glass): void {
   const pink = mixHex(HOME.pink, '#D6A7AC', age * 0.5)
   const trim = HOME.trim
   const { x, w, top } = DOOR
@@ -623,7 +823,21 @@ export function drawDoor(p: p5, k: number, weight: number, open: number, age: nu
     p.strokeWeight(weight * 0.5)
     p.fill(alpha(p, mixHex(pink, INK, 0.12), 1))
     rect(p, k, X(0.18), top + 1.25, X(0.82), FLOOR - 0.15, 0.01)
-    p.fill(HOME.glass)
+    // Through its glass, the evening outside: the sky, and the gardens' trees across the bottom of the panes.
+    p.fill(mixHex(HOME.glass, sky, 0.75))
+    rect(p, k, X(0.18), top + 0.2, X(0.82), top + 1.0, 0.01)
+    p.noStroke()
+    p.fill(mixHex(mixHex(HOME.leaf, '#7D8A86', 0.35), sky, 0.45))
+    p.beginShape()
+    p.vertex(X(0.18) * k, (top + 1.0) * k)
+    p.vertex(X(0.18) * k, (top + 0.84) * k)
+    p.bezierVertex(X(0.35) * k, (top + 0.74) * k, X(0.5) * k, (top + 0.86) * k, X(0.62) * k, (top + 0.8) * k)
+    p.bezierVertex(X(0.72) * k, (top + 0.76) * k, X(0.8) * k, (top + 0.82) * k, X(0.82) * k, (top + 0.83) * k)
+    p.vertex(X(0.82) * k, (top + 1.0) * k)
+    p.endShape(p.CLOSE)
+    p.noFill()
+    p.stroke(INK)
+    p.strokeWeight(weight * 0.5)
     rect(p, k, X(0.18), top + 0.2, X(0.82), top + 1.0, 0.01)
     p.stroke(trim)
     p.strokeWeight(weight * 0.9)
@@ -638,37 +852,6 @@ export function drawDoor(p: p5, k: number, weight: number, open: number, age: nu
 }
 
 /* ------------------------------------------------------------------ the evening */
-
-/**
- * The evening sun, low, coming in at the front door and lying along the hall's far wall in a long warm wedge: tall at
- * the door, reaching back down the hall to the floor they dance on. `a` 0..1 its strength; `reach` how far back it
- * lies (it shortens and fades as the sun goes down).
- */
-export function drawSunWedge(p: p5, k: number, a: number, reach: number): void {
-  if (a <= 0.001) return
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  const x1 = 8.2
-  const x0 = x1 - reach
-  // Four layers, each a little lower and shorter, for a soft edge: a penumbra, not a cut.
-  ctx.save()
-  for (let i = 0; i < 4; i++) {
-    const f = i / 3
-    const top = -2.05 + 0.35 * f
-    const left = x0 + reach * 0.12 * f
-    const g = ctx.createLinearGradient(x1 * k, 0, left * k, 0)
-    g.addColorStop(0, `rgba(255, 214, 150, ${0.1 * a})`)
-    g.addColorStop(0.55, `rgba(255, 214, 150, ${0.06 * a})`)
-    g.addColorStop(1, 'rgba(255, 214, 150, 0)')
-    ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.moveTo(x1 * k, top * k)
-    ctx.lineTo(left * k, FLOOR * k)
-    ctx.lineTo(x1 * k, FLOOR * k)
-    ctx.closePath()
-    ctx.fill()
-  }
-  ctx.restore()
-}
 
 /**
  * The hall darkening into evening, over everything in it (the two of them too: it is the light, not the paint),

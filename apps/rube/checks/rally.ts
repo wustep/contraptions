@@ -14,6 +14,7 @@ import type { RallyShow } from '../src/shows/versions/rule-the-world/rally/show'
 import type { Who } from '../src/shows/versions/rule-the-world/rally/kit'
 import { BABY_SCALE, MARTY } from '../src/shows/versions/rule-the-world/rally/worlds'
 import { WIDE } from '../src/shows/versions/rule-the-world/rally/wides'
+import { FINALE_WIDE } from '../src/shows/versions/rule-the-world/rally/finale'
 import { R } from '../src/parts'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -141,8 +142,13 @@ export function checkRally(perf: Performance, version: ShowVersion, check: Check
     if (small > smallest) { smallest = small; smallAt = t }
   }
   check('rally: he can be found: never under 5.5 px across for more than 1.5 s outside the wides', smallest <= 1.5, `${smallest.toFixed(2)} s to ${smallAt.toFixed(2)}`)
-  const wideTotal = WIDE.reduce((s, [a, b]) => s + (b - a), 0)
-  check('rally: the wides are few: under 12% of the show', wideTotal <= DURATION * 0.12, `${wideTotal.toFixed(1)} s`)
+  // Over the credits the camera cranes out to the whole machine (`finale.ts`): the one wide after them, and the show's
+  // last shot. Before them the wides are few.
+  const wideTotal = WIDE.reduce((s, [a, b]) => s + Math.max(0, Math.min(b, CREDITS_AT) - a), 0)
+  check('rally: the wides are few: under 12% of the show before the credits', wideTotal <= CREDITS_AT * 0.12, `${wideTotal.toFixed(1)} s`)
+  const crane = FINALE_WIDE[0]
+  check('rally: the one wide after the credits come is the crane out to the whole machine, to the end', FINALE_WIDE.length === 1 && crane[0] > CREDITS_AT && near(crane[1], DURATION) &&
+    WIDE.every(([a, b]) => b <= CREDITS_AT + 1e-6 || (a === crane[0] && b === crane[1])), `${crane[0].toFixed(2)} to ${crane[1].toFixed(2)} s`)
 
   // The ball is never out of sight for long.
   let hidden = 0

@@ -1,10 +1,11 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp } from '../../../../../../../../src/core/ease'
-import { R, type Pt, type Seg } from '../../../../../parts'
-import { alpha, box, carried, frame, hash, knock, lensedArc, part, smooth, type Ctx, type PartShot } from '../kit'
+import { mixHex, R, type Pt, type Seg } from '../../../../../parts'
+import { alpha, box, carried, farSide, frame, hash, knock, part, smooth, type Ctx, type PartShot } from '../kit'
 import { cue, UNDOCK } from '../music'
-import { BALL, DARK } from '../worlds'
+import { BALL, DARK, VOID } from '../worlds'
+import { drawFar } from './undock-far'
 
 /**
  * Undocking: the film's docking run backwards.
@@ -21,7 +22,7 @@ import { BALL, DARK } from '../worlds'
  *
  *   184  the port's red clamps spring open.
  *   185  the umbilical's plug fires out of the Ranger's flank; the cable whips back
- *   187  and seats in its socket on the hub (a spark).
+ *   187  and seats in its socket on the hub.
  *   186  the nose jets fire and the Ranger backs off the port, still turning with it.
  *   188–190  a pair of roll jets at the wingtips on each beat: the spin comes off
  *            in three equal steps and stops dead, level, on the loudest beat.
@@ -33,8 +34,14 @@ import { BALL, DARK } from '../worlds'
  *            on (the onsets' own strengths), out over Saturn's cloud tops and
  *            then over its rings. The way is marked: on each kick the ship goes
  *            over a sleeping beacon left by whoever went first, and it wakes,
- *            vanes out and lamp lit, so the lit line grows behind it.
- *   206–209  engine off; the nose jets brake, a beat at a time, down to a crawl.
+ *            vanes out and lamp lit, so the lit line grows behind it. On 197
+ *            the camera draws all the way back: Saturn rising out of the
+ *            bottom of the frame, banded, its rings across it and the globe's
+ *            shadow thrown back over them, and the ship small along its top,
+ *            lighting its beacons; then in again over the cloud tops on 200.
+ *   206–209  engine off; the nose jets brake, a beat at a time, down to a crawl,
+ *            and on each a last beacon wakes under it, the line running on to
+ *            the sphere's rim.
  *   210  the nose touches the wormhole and it ripples.
  *   211  the cockpit goes in: the ball's light wraps the rim; the ship sinks
  *        toward the centre as an image in the glass.
@@ -169,23 +176,35 @@ const sunk = (t: number): number => {
 /** Saturn: under the bend, the Ranger skimming its cloud tops. */
 const SAT: Pt = ARC_O
 const SAT_R = RHO - 3.2
+/** From the sphere toward Saturn: the side its image lies on in the glass. */
+const SAT_DIR = Math.atan2(SAT[1] - SPHERE[1], SAT[0] - SPHERE[0])
 /** The rings, open to us a little from above, rising to the right: the Ranger runs out over them. */
 const RING_TILT = -0.05
 const RING_FLAT = 0.3
 /** How far the pole leans toward us: what bends the bands. */
 const LEAN = Math.asin(RING_FLAT)
-/** The rings, in planet radii: the faint inner ring, the bright one, the gap, the outer. */
-const RINGS: [number, number, string, number][] = [
-  [1.24, 1.52, DARK.hull, 0.16],
-  [1.53, 1.72, DARK.hull, 0.62],
-  [1.72, 1.95, DARK.hull, 0.86],
-  [1.72, 1.95, DARK.gold, 0.22],
-  [2.03, 2.19, DARK.hull, 0.72],
-  [2.03, 2.19, DARK.gold, 0.12],
-  [2.21, 2.27, DARK.hull, 0.6],
-]
 /** Where the light comes from: high on the left. */
 const SUN: Pt = [-0.62, -0.78]
+/** Saturn's reveal: the frame's middle and height, the globe's top two thirds and the rings in it, the ship near its top. */
+const REVEAL: Pt = [SAT[0] - 4, SAT[1] - 10.5]
+const REVEAL_CELLS = 24
+/**
+ * The same light in the round (x right, y up, z toward us): high on the left and from our side, so the face we see is
+ * lit but for a dusk round its lower right. In the rings' plane it falls at a slant from above, which is what throws
+ * the globe's shadow back across them.
+ */
+const SUN3 = (() => {
+  const v = [-0.26, 0.33, 0.91]
+  const n = Math.hypot(v[0], v[1], v[2])
+  return v.map((x) => x / n)
+})()
+/** The light's height over the rings' plane (its sine), and, in the plane, the way away from it: x right, y toward us. */
+const SUN_UP = SUN3[1] * Math.cos(LEAN) + SUN3[2] * Math.sin(LEAN)
+const SHADOW_WAY = (() => {
+  const u = -SUN3[0]
+  const w = -(SUN3[1] * Math.sin(LEAN) - SUN3[2] * Math.cos(LEAN))
+  return Math.atan2(-w, u)
+})()
 
 /* ------------------------------------------------------------------ the pose */
 
@@ -223,14 +242,18 @@ function pose(t: number): Pose {
 /**
  * The way to the sphere is marked. Whoever went before left a line of small
  * beacons along it, asleep; each wakes as the Ranger burns over it, on the
- * beat of its burn: the lamp flashes (as hard as the kick) and settles to a
- * glow, and the two vanes swing open. Behind the ship the line stays lit.
+ * beat of its burn: a ring goes out from its lamp (as wide as the kick was
+ * hard), the lamp stays lit, and the two vanes swing open. Behind the ship
+ * the line stays lit. It runs on past the burn to the door: one under each
+ * of the four braking beats, closer and closer together as the ship slows,
+ * the last a ship's length short of the sphere, so the lit line reaches all the
+ * way to it.
  */
-const BEACONS = PULSES.map((when, i) => {
+const BEACONS = [...PULSES.map((when, i) => ({ when, s: PULSE_S[i] })), ...BRAKES.map((when) => ({ when, s: 0.3 }))].map(({ when, s }, i) => {
   const { p, h } = pathAt(flown(when))
   // Just under the ship's way (on Saturn's side), where the ship is on its beat.
   const n: Pt = [-Math.sin(h), Math.cos(h)]
-  return { when, s: PULSE_S[i], at: [p[0] + n[0] * 1.2, p[1] + n[1] * 1.2] as Pt, h, tilt: (hash(i, 31) - 0.5) * 0.5 }
+  return { when, s, at: [p[0] + n[0] * 1.2, p[1] + n[1] * 1.2] as Pt, h, tilt: (hash(i, 31) - 0.5) * 0.5 }
 })
 
 function drawBeacons(p: p5, c: Ctx, t: number, f: Frame): void {
@@ -264,18 +287,18 @@ function drawBeacons(p: p5, c: Ctx, t: number, f: Frame): void {
     p.stroke(ink)
     p.strokeWeight(Math.max(0.8, weight * 0.7))
     p.line(0, X(-0.1), 0, X(-0.26))
-    const lit = since < 0 ? 0 : 0.45 + 0.55 * Math.exp(-since / 0.25)
-    if (lit > 0) {
-      p.pop()
-      const lamp: Pt = [b.at[0] + Math.sin(b.h + b.tilt) * 0.28, b.at[1] - Math.cos(b.h + b.tilt) * 0.28]
-      glow(p, X(lamp[0]), X(lamp[1]), X(0.22 + 0.5 * b.s * Math.exp(-since / 0.2)), '240, 147, 64', lit)
-      p.push()
-      p.translate(X(lamp[0]), X(lamp[1]))
-    } else {
-      p.translate(0, X(-0.28))
+    const lit = since >= 0
+    p.translate(0, X(-0.28))
+    // Waking: a ring goes out from the lamp once, as wide as the kick was hard; then the lamp just stays lit.
+    if (lit && since < 0.5) {
+      const u = since / 0.5
+      p.noFill()
+      p.stroke(alpha(p, DARK.amber, (1 - u) ** 1.5 * Math.min(1, 0.4 + b.s)))
+      p.strokeWeight(Math.max(1, weight * 0.6))
+      p.circle(0, 0, X(0.16 + 0.7 * b.s * Math.sqrt(u)))
     }
-    solid(p, ink, weight * 0.6, lit > 0 ? DARK.amber : DARK.slate)
-    p.circle(0, 0, X(0.08))
+    solid(p, ink, weight * 0.6, lit ? DARK.amber : DARK.slate)
+    p.circle(0, 0, X(lit ? 0.1 : 0.08))
     p.pop()
   }
 }
@@ -406,7 +429,8 @@ export const undock = part<UndockState>(
       const t = c.t + s.begin
       const f = frame(p, c.k)
       const q = pose(t)
-      drawSaturn(p, c, f)
+      drawFar(p, c, t)
+      drawSaturn(p, c, t, f)
       drawSphere(p, c, t, f, q)
       drawBeacons(p, c, t, f)
       if (f.x0 < CAP + 3) {
@@ -465,12 +489,16 @@ export const undock = part<UndockState>(
       { t: cue(194.4), cells: 9.4, off: [ship(cue(194.4))[0] - 1.9 - ballAt(cue(194.4))[0], 0.5 - ballAt(cue(194.4))[1]], w: 0 },
       // Away: out wider as it goes, and Saturn's limb comes up on the right.
       { t: cue(195.5), cells: 8.6, off: [2.2, 0.8], w: 0 },
-      { t: cue(197.8), cells: 9.6, off: [3.0, 2.0], w: 0 },
-      // Over the cloud tops, close; then out over the rings.
-      { t: cue(200.6), cells: 7.8, off: [1.9, 0.8], w: 0 },
-      { t: cue(203.2), cells: 8.4, off: [2.1, 1.0], w: 0 },
+      // Then all the way out: Saturn coming up out of the bottom of the frame, its rings across it, and the ship
+      // small over it, lighting its line of beacons one a beat.
+      { t: cue(197.4), cells: REVEAL_CELLS, hold: REVEAL, w: 1 },
+      { t: cue(199.1), cells: REVEAL_CELLS * 1.06, hold: [REVEAL[0] + 0.8, REVEAL[1]], w: 1 },
+      // Back in over the cloud tops, close; then out wider over the rings as Saturn falls behind, so its limb and
+      // rings fill the low side of the frame and the sleeping beacons ahead mark the way across the dark.
+      { t: cue(200.8), cells: 7.8, off: [1.9, 0.8], w: 0 },
+      { t: cue(203.2), cells: 9.6, off: [2.6, 1.5], w: 0 },
       // Looking ahead as the engine stops: the sphere comes up on the right.
-      { t: cue(205.3), cells: 9, off: [2.8, 0.9], w: 0 },
+      { t: cue(205.3), cells: 11.2, off: [3.4, 1.6], w: 0 },
       // The two in one frame as it brakes, then in on the sphere.
       { t: cue(207), cells: 10.8, hold: [(near[0] + SPHERE[0]) / 2 - 0.25, (near[1] + SPHERE[1]) / 2 + 0.4], w: 0.9 },
       { t: cue(208.6), cells: 9.6, hold: [SPHERE[0] - DIR_IN[0] * 1.9, SPHERE[1] - DIR_IN[1] * 1.9], w: 0.9 },
@@ -486,27 +514,9 @@ export const undock = part<UndockState>(
 type Frame = ReturnType<typeof frame>
 
 const ICE_RGB = '143, 198, 230'
-const AMBER_RGB = '240, 147, 64'
-/** The ball's colour as r, g, b, for gradients. */
-const BALL_RGB = [1, 3, 5].map((i) => parseInt(BALL.slice(i, i + 2), 16)).join(', ')
 const GOLD_RGB = '217, 164, 65'
 /** The dark's ink, as light: a flame's core, a flash. */
 const BONE_RGB = '236, 229, 211'
-
-function glow(p: p5, x: number, y: number, r: number, rgb: string, a: number): void {
-  if (a <= 0.01 || r <= 0) return
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  const g = ctx.createRadialGradient(x, y, 0, x, y, r)
-  g.addColorStop(0, `rgba(${rgb}, ${Math.min(1, a)})`)
-  g.addColorStop(1, `rgba(${rgb}, 0)`)
-  // Saved and restored, so p5's own idea of the fill stays true.
-  ctx.save()
-  ctx.fillStyle = g
-  ctx.beginPath()
-  ctx.arc(x, y, r, 0, TAU)
-  ctx.fill()
-  ctx.restore()
-}
 
 /** A thick stroke with an ink edge: a clamp's arm, a cable. */
 function bar(p: p5, ink: string, weight: number, fill: string, w: number, pts: Pt[]): void {
@@ -545,13 +555,11 @@ function nearBand(a0: number, a1: number, r: number): [number, number][] {
 }
 
 /**
- * A jet's breath: a short tapered plume out of the nozzle for the first instant, and the vapour it leaves, blown on
- * along `dir`, spreading and thinning, gone in a little over half a second. Vapour, not a cloud: no ink.
+ * A jet's breath: a short tapered plume out of the nozzle for the first instant, then nothing. (It left a fan of
+ * vapour behind it, and the roll jets, firing both ways at once, drew a grey hourglass behind the ship with it.)
  */
 function jet(p: p5, c: Ctx, age: number, at: Pt, dir: Pt, size = 1): void {
-  if (age < 0 || age > 0.7) return
-  const u = age / 0.7
-  const go = 1 - (1 - u) ** 2
+  if (age < 0 || age >= 0.2) return
   const len = Math.hypot(dir[0], dir[1]) || 1
   const ux = dir[0] / len
   const uy = dir[1] / len
@@ -559,170 +567,308 @@ function jet(p: p5, c: Ctx, age: number, at: Pt, dir: Pt, size = 1): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
   ctx.save()
   // The plume: out to full length in a few hundredths, then back into the nozzle.
-  if (age < 0.2) {
-    const v = age / 0.2
-    const L = 0.5 * size * Math.sin(Math.PI * Math.min(1, v * 1.6 + 0.08)) * (1 - 0.3 * v)
-    const W = 0.07 * size
-    const g = ctx.createLinearGradient(at[0] * k, at[1] * k, (at[0] + ux * L) * k, (at[1] + uy * L) * k)
-    g.addColorStop(0, `rgba(${BONE_RGB}, ${0.95 * (1 - 0.5 * v)})`)
-    g.addColorStop(1, `rgba(${BONE_RGB}, 0)`)
-    ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.moveTo((at[0] - uy * W) * k, (at[1] + ux * W) * k)
-    ctx.lineTo((at[0] + ux * L) * k, (at[1] + uy * L) * k)
-    ctx.lineTo((at[0] + uy * W) * k, (at[1] - ux * W) * k)
-    ctx.closePath()
-    ctx.fill()
-  }
+  const v = age / 0.2
+  const L = 0.5 * size * Math.sin(Math.PI * Math.min(1, v * 1.6 + 0.08)) * (1 - 0.3 * v)
+  const W = 0.07 * size
+  const g = ctx.createLinearGradient(at[0] * k, at[1] * k, (at[0] + ux * L) * k, (at[1] + uy * L) * k)
+  g.addColorStop(0, `rgba(${BONE_RGB}, ${0.95 * (1 - 0.5 * v)})`)
+  g.addColorStop(1, `rgba(${BONE_RGB}, 0)`)
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.moveTo((at[0] - uy * W) * k, (at[1] + ux * W) * k)
+  ctx.lineTo((at[0] + ux * L) * k, (at[1] + uy * L) * k)
+  ctx.lineTo((at[0] + uy * W) * k, (at[1] - ux * W) * k)
+  ctx.closePath()
+  ctx.fill()
   ctx.restore()
-  if (age < 0.1) glow(p, at[0] * k, at[1] * k, k * 0.22 * size, BONE_RGB, 0.8 * (1 - age / 0.1))
-  // The vapour: carried on the way the jet blew, spreading and thinning out.
-  const x = at[0] + ux * 0.8 * size * go
-  const y = at[1] + uy * 0.8 * size * go
-  glow(p, x * k, y * k, k * (0.1 + 0.3 * Math.sqrt(u)) * size, BONE_RGB, 0.6 * (1 - u) ** 1.5)
 }
 
 /* ------------------------------------------------------------------ drawing: Saturn */
 
-function drawSaturn(p: p5, c: Ctx, f: Frame): void {
+const rgbOf = (hex: string): string => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(', ')
+const DEEP_RGB = rgbOf(DARK.deep)
+
+/** The globe's colours: butterscotch under it all, cream zones, ochre belts, and a blue-grey hood over the pole that leans to us. */
+const SAT_BASE = mixHex(DARK.gold, DARK.hull, 0.4)
+const ZONE = mixHex(DARK.hull, DARK.gold, 0.16)
+const BELT = mixHex(mixHex(DARK.gold, DARK.amber, 0.5), DARK.slate, 0.16)
+const BELT_GREY = mixHex(BELT, DARK.slate, 0.35)
+const HOOD = mixHex(mixHex(ZONE, DARK.ice, 0.4), DARK.slate, 0.12)
+/**
+ * Its cloud bands, north to south (degrees of latitude, colour, alpha). Each is soft-edged and a little wavy along
+ * its edges, so that skimming a few cells of the limb the Ranger goes over cloud tops, not painted stripes. The broad
+ * bright zone is the equator's. Then, south of it, the rings' own shadow: thin under the faint C ring, deep under the
+ * B ring, which the light (from above the rings' plane) lays across the whole far south.
+ */
+const BANDS: [number, number, string, number][] = [
+  [90, 76, HOOD, 0.22],
+  [90, 84, HOOD, 0.12],
+  [76, 72, BELT, 0.26],
+  [66, 61, BELT, 0.14],
+  [56, 52, BELT_GREY, 0.2],
+  [47, 41, BELT, 0.3],
+  [41, 35, ZONE, 0.26],
+  [33, 22, BELT, 0.55],
+  [29, 25, BELT_GREY, 0.2],
+  [22, -10, ZONE, 0.62],
+  [14, 6, ZONE, 0.3],
+  [-10, -18, BELT, 0.5],
+  [-18, -26, ZONE, 0.3],
+  [-32, -40, BELT_GREY, 0.32],
+  [-50, -90, BELT, 0.25],
+  [-10, -30, DARK.deep, 0.16],
+  [-30, -90, DARK.deep, 0.3],
+]
+/** How far a band's edge wanders (degrees), and its soft edge. */
+const WOBBLE = 0.3
+const FEATHER = 0.8
+/** How far round the clouds have gone (radians of longitude): set for each frame, so the bands' wavy edges drift. */
+let bandTurn = 0
+/** Storms riding the belts: latitude (degrees), longitude at 0 s, width (planet radii), and how fast each goes round. */
+const STORMS: [number, number, number, number][] = [
+  [41, -8.52, 0.07, 0.044],
+  [28, -4.75, 0.045, 0.031],
+  [-14, -6.8, 0.055, 0.038],
+  [58, -5.07, 0.04, 0.027],
+]
+
+/** A point of latitude `phi` at longitude `th` (π/2 faces us), on the unit globe as the picture sees it. */
+const latPt = (phi: number, th: number): Pt => [Math.cos(phi) * Math.cos(th), -Math.sin(phi) * Math.cos(LEAN) + Math.cos(phi) * Math.sin(th) * Math.sin(LEAN)]
+
+/**
+ * Into the path, the part of the unit globe north of latitude `deg`, its edge wavy by the latitude's own seed, closed
+ * round outside the limb (the globe's clip takes that away). Two of these filled even-odd are the band between them.
+ */
+function northOf(ctx: CanvasRenderingContext2D, deg: number, seed: number): void {
+  if (deg >= 89.9) return
+  const phi = (deg * Math.PI) / 180
+  const wob = (t0: number) => {
+    const th = t0 + bandTurn
+    return ((Math.abs(deg) > 85 ? 0 : WOBBLE) * (Math.sin(th * (22 + 7 * hash(seed, 1)) + 6 * hash(seed, 2)) + 0.4 * Math.sin(th * (53 + 12 * hash(seed, 3)) + 6 * hash(seed, 4))) * Math.PI) / 180
+  }
+  // What of the latitude's circle faces us: all of it near the leaning pole, none near the other.
+  const q = -Math.tan(phi) * Math.tan(LEAN)
+  if (q >= 1) {
+    ctx.rect(-2, -2, 4, 4)
+    return
+  }
+  const N = 120
+  if (q <= -1) {
+    for (let i = 0; i <= N; i++) {
+      const th = (TAU * i) / N
+      const [x, y] = latPt(phi + wob(th), th)
+      if (i === 0) ctx.moveTo(x, y)
+      else ctx.lineTo(x, y)
+    }
+    ctx.closePath()
+    return
+  }
+  const t0 = Math.asin(q)
+  const t1 = Math.PI - t0
+  for (let i = 0; i <= N; i++) {
+    const th = t0 + ((t1 - t0) * i) / N
+    const [x, y] = latPt(phi + wob(th) * Math.sin((Math.PI * i) / N), th)
+    if (i === 0) ctx.moveTo(x, y)
+    else ctx.lineTo(x, y)
+  }
+  // Out past the limb at the left end, over the top, and back in at the right end.
+  const [rx, ry] = latPt(phi, t0)
+  const [lx, ly] = latPt(phi, t1)
+  const a0 = Math.atan2(ly, lx)
+  let a1 = Math.atan2(ry, rx)
+  while (a1 <= a0) a1 += TAU
+  for (let a = a0; a < a1; a += 0.2) ctx.lineTo(1.6 * Math.cos(a), 1.6 * Math.sin(a))
+  ctx.lineTo(1.6 * Math.cos(a1), 1.6 * Math.sin(a1))
+  ctx.closePath()
+}
+
+/** The rings, by radius (planet radii), where they begin and end. */
+const RING_IN = 1.22
+const RING_OUT = 2.29
+const C_RING = mixHex(mixHex(DARK.hull, DARK.slate, 0.3), DARK.gold, 0.15)
+const B_RING = mixHex(DARK.hull, DARK.gold, 0.42)
+const A_RING = mixHex(DARK.hull, DARK.gold, 0.22)
+/**
+ * Their light at radius `r`, as a photograph shows them: the faint C ring, the bright B ring, densest in its middle,
+ * the dark Cassini division with its few faint ringlets, and the A ring with the Encke gap near its edge. Through all
+ * of it, ringlets: fine steps of light at two scales.
+ */
+function ringLight(r: number): [string, number] {
+  const fine = hash(Math.floor(r * 430), 7) - 0.5
+  const grain = hash(Math.floor(r * 95), 8) - 0.5
+  if (r < 1.24) return [C_RING, 0.04 * smooth(r, 1.22, 1.24)]
+  if (r < 1.525) return [C_RING, 0.15 + 0.1 * grain + 0.06 * fine + 0.08 * smooth(r, 1.44, 1.525)]
+  if (r < 1.95) return [B_RING, 0.6 + 0.3 * smooth(r, 1.525, 1.63) - 0.08 * smooth(r, 1.86, 1.95) + 0.12 * grain + 0.07 * fine]
+  if (r < 2.025) return [C_RING, 0.05 + 0.08 * Math.max(0, fine)]
+  if ((r > 2.211 && r < 2.221) || (r > 2.261 && r < 2.265)) return [A_RING, 0.04]
+  if (r < 2.27) return [A_RING, 0.68 - 0.16 * smooth(r, 2.06, 2.27) + 0.08 * grain + 0.05 * fine]
+  return [A_RING, 0]
+}
+
+/**
+ * What of Saturn is the same every frame, in planet radii (filled under a scale to the globe's size), so it is built
+ * once for each canvas: the rings' light across their whole width, and the globe's shading.
+ */
+const SAT_PAINT = new WeakMap<CanvasRenderingContext2D, { rings: CanvasGradient; limb: CanvasGradient; dusk: CanvasGradient }>()
+function satPaint(ctx: CanvasRenderingContext2D) {
+  let paint = SAT_PAINT.get(ctx)
+  if (paint) return paint
+  const rings = ctx.createRadialGradient(0, 0, RING_IN, 0, 0, RING_OUT)
+  const N = 430
+  for (let i = 0; i <= N; i++) {
+    const u = i / N
+    const [hex, a] = ringLight(RING_IN + (RING_OUT - RING_IN) * u)
+    rings.addColorStop(u, `rgba(${rgbOf(hex)}, ${clamp(a).toFixed(3)})`)
+  }
+  // The limb darkens a little (it is a ball of cloud, seen through more of its haze there).
+  const limb = ctx.createRadialGradient(0, 0, 0, 0, 0, 1)
+  limb.addColorStop(0, `rgba(${DEEP_RGB}, 0)`)
+  limb.addColorStop(0.8, `rgba(${DEEP_RGB}, 0)`)
+  limb.addColorStop(0.96, `rgba(${DEEP_RGB}, 0.06)`)
+  limb.addColorStop(1, `rgba(${DEEP_RGB}, 0.14)`)
+  // Night: the globe less a disc shifted toward the sun, its terminator a soft dusk a cell or two wide rather than a
+  // cut, and never quite as dark as the sky, so the night side still reads as the planet's.
+  const lx = SUN[0] * 0.42
+  const ly = SUN[1] * 0.42
+  const dusk = ctx.createRadialGradient(lx, ly, 0.9, lx, ly, 1.16)
+  dusk.addColorStop(0, `rgba(${DEEP_RGB}, 0)`)
+  dusk.addColorStop(0.45, `rgba(${DEEP_RGB}, 0.42)`)
+  dusk.addColorStop(1, `rgba(${DEEP_RGB}, 0.8)`)
+  paint = { rings, limb, dusk }
+  SAT_PAINT.set(ctx, paint)
+  return paint
+}
+
+function drawSaturn(p: p5, c: Ctx, t: number, f: Frame): void {
   const { k, ink, weight } = c
   const [sx, sy] = SAT
-  const reach = SAT_R * 2.3
+  const reach = SAT_R * 2.4
   if (f.x1 < sx - reach || f.x0 > sx + reach || f.y1 < sy - SAT_R - 2 || f.y0 > sy + SAT_R + 2) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const X = (v: number) => v * k
-  const rgba = (hex: string, a: number) => {
-    const col = p.color(hex)
-    col.setAlpha(a * 255)
-    return col.toString()
+  const paint = satPaint(ctx)
+  // In planet radii, about its middle, the rings' tilt on.
+  const unit = () => {
+    ctx.translate(X(sx), X(sy))
+    ctx.rotate(RING_TILT)
+    ctx.scale(X(SAT_R), X(SAT_R))
   }
   const rings = (front: boolean) => {
-    p.push()
+    ctx.save()
+    unit()
+    ctx.scale(1, RING_FLAT)
+    ctx.beginPath()
+    ctx.rect(-3, front ? 0 : -3, 6, 3)
+    ctx.clip()
+    ctx.beginPath()
+    ctx.arc(0, 0, RING_OUT, 0, TAU)
+    ctx.arc(0, 0, RING_IN, TAU, 0, true)
+    ctx.fillStyle = paint.rings
+    ctx.fill()
+    if (!front) {
+      // The globe's shadow, thrown back across the rings away from the light: half an ellipse, as wide as the globe
+      // and as long as the light is low over them. Its near part is hidden behind the globe; what shows is a dark
+      // wedge where the rings go behind it on the right.
+      ctx.beginPath()
+      ctx.arc(0, 0, RING_OUT + 0.02, 0, TAU)
+      ctx.arc(0, 0, RING_IN, TAU, 0, true)
+      ctx.clip()
+      for (const [grow, a] of [
+        [1.025, 0.3],
+        [1, 0.62],
+      ]) {
+        ctx.beginPath()
+        ctx.ellipse(0, 0, grow / SUN_UP, grow, SHADOW_WAY, -Math.PI / 2, Math.PI / 2)
+        ctx.closePath()
+        ctx.fillStyle = `rgba(${rgbOf(VOID.bg)}, ${a})`
+        ctx.fill()
+      }
+    }
+    ctx.restore()
+    // The edges in ink: the B ring's sharp outer edge, and the A ring's.
+    ctx.save()
     ctx.translate(X(sx), X(sy))
     ctx.rotate(RING_TILT)
     ctx.beginPath()
     ctx.rect(X(-reach - 1), front ? 0 : X(-reach), X(2 * reach + 2), X(reach))
     ctx.clip()
-    for (const [r0, r1, fill, a] of RINGS) {
-      ctx.beginPath()
-      ctx.ellipse(0, 0, X(SAT_R * r1), X(SAT_R * r1 * RING_FLAT), 0, 0, TAU)
-      ctx.ellipse(0, 0, X(SAT_R * r0), X(SAT_R * r0 * RING_FLAT), 0, TAU, 0, true)
-      ctx.fillStyle = rgba(fill, a)
-      ctx.fill('evenodd')
-    }
-    // Ringlets: fine dark lines through the bright ring, and the ink of its edges.
-    ctx.strokeStyle = rgba(DARK.deep, 0.3)
-    ctx.lineWidth = Math.max(1, weight * 0.4)
-    for (const r of [1.6, 1.66, 1.79, 1.86, 2.11]) {
+    for (const [r, a] of [
+      [1.95, 0.3],
+      [2.27, 0.45],
+    ]) {
+      ctx.strokeStyle = `rgba(${rgbOf(ink)}, ${a})`
+      ctx.lineWidth = Math.max(0.8, weight * 0.45)
       ctx.beginPath()
       ctx.ellipse(0, 0, X(SAT_R * r), X(SAT_R * r * RING_FLAT), 0, 0, TAU)
       ctx.stroke()
     }
-    ctx.strokeStyle = rgba(ink, 0.55)
-    ctx.lineWidth = Math.max(1, weight * 0.55)
-    for (const r of [1.95, 2.03, 2.27]) {
-      ctx.beginPath()
-      ctx.ellipse(0, 0, X(SAT_R * r), X(SAT_R * r * RING_FLAT), 0, 0, TAU)
-      ctx.stroke()
-    }
-    p.pop()
+    // The F ring: a thread of light just outside them.
+    ctx.strokeStyle = `rgba(${rgbOf(A_RING)}, 0.24)`
+    ctx.lineWidth = Math.max(0.8, X(0.03))
+    ctx.beginPath()
+    ctx.ellipse(0, 0, X(SAT_R * 2.33), X(SAT_R * 2.33 * RING_FLAT), 0, 0, TAU)
+    ctx.stroke()
+    ctx.restore()
   }
   rings(false)
-  // A thin haze of light round the limb: thinning outward, full on the day side and all but gone round the night
-  // side, so no gold rim runs on past the terminator into the dark.
+  // Its air: a thin flat band on the limb, on the day side, stepping down to nothing round toward the night (three
+  // arcs, each shorter and fainter than the last), so the edge stays crisp and no gold runs on into the dark.
   const toSun = Math.atan2(SUN[1], SUN[0])
-  // In rings fine enough not to step: each its own flat alpha, edge to edge.
-  const HAZE = 30
-  for (let i = 0; i < HAZE; i++) {
-    const a = 0.45 * (1 - i / HAZE) ** 2
-    const g = ctx.createConicGradient(toSun, X(sx), X(sy))
-    g.addColorStop(0, `rgba(${GOLD_RGB}, ${a})`)
-    g.addColorStop(0.25, `rgba(${GOLD_RGB}, ${a * 0.6})`)
-    g.addColorStop(0.5, `rgba(${GOLD_RGB}, ${a * 0.06})`)
-    g.addColorStop(0.75, `rgba(${GOLD_RGB}, ${a * 0.6})`)
-    g.addColorStop(1, `rgba(${GOLD_RGB}, ${a})`)
-    ctx.strokeStyle = g
-    ctx.lineWidth = X(0.031)
+  ctx.save()
+  ctx.lineCap = 'butt'
+  for (const [span, a] of [
+    [1.9, 0.16],
+    [1.45, 0.18],
+    [0.95, 0.2],
+  ]) {
+    ctx.strokeStyle = `rgba(${rgbOf(ZONE)}, ${a})`
+    ctx.lineWidth = Math.max(1, X(0.07))
     ctx.beginPath()
-    ctx.arc(X(sx), X(sy), X(SAT_R + 0.03 + i * 0.03), 0, TAU)
+    ctx.arc(X(sx), X(sy), X(SAT_R + 0.035), toSun - span, toSun + span)
     ctx.stroke()
   }
-  // The globe, and its bands: each a strip between two latitudes, bowed as the pole leans toward us.
-  solid(p, ink, weight, DARK.gold)
+  ctx.restore()
+  // The globe: the butterscotch under it, then its bands, each a soft-edged strip between two wavy latitudes, their
+  // edges drifting slowly round with the clouds.
+  solid(p, ink, weight, SAT_BASE)
   p.circle(X(sx), X(sy), X(SAT_R * 2))
-  p.push()
+  ctx.save()
+  unit()
   ctx.beginPath()
-  ctx.arc(X(sx), X(sy), X(SAT_R), 0, TAU)
+  ctx.arc(0, 0, 1, 0, TAU)
   ctx.clip()
-  ctx.translate(X(sx), X(sy))
-  ctx.rotate(RING_TILT)
-  const lat = (u: number, phi: number) => {
-    const a = SAT_R * Math.cos(phi)
-    const w = Math.max(0, 1 - (u / Math.max(a, 1e-6)) ** 2)
-    return -SAT_R * Math.sin(phi) * Math.cos(LEAN) + a * Math.sin(LEAN) * Math.sqrt(w)
+  bandTurn = -0.018 * t
+  for (const [n, s, hex, a] of BANDS) {
+    const rgb = rgbOf(hex)
+    for (const d of [FEATHER, -FEATHER]) {
+      ctx.beginPath()
+      northOf(ctx, s - d, Math.round(s * 10))
+      if (n < 89.9) northOf(ctx, n + d, Math.round(n * 10))
+      ctx.fillStyle = `rgba(${rgb}, ${a / 2})`
+      ctx.fill('evenodd')
+    }
   }
-  const deg = Math.PI / 180
-  const bands: [number, number, string, number][] = [
-    [90, 70, DARK.hull, 0.16],
-    [70, 66, DARK.amber, 0.3],
-    [62, 57, DARK.amber, 0.4],
-    [53, 50, DARK.hull, 0.3],
-    [46, 41, DARK.amber, 0.35],
-    [35, 29, DARK.hull, 0.3],
-    [25, 15, DARK.amber, 0.5],
-    [9, -6, DARK.hull, 0.25],
-    [-14, -24, DARK.amber, 0.45],
-    [-32, -38, DARK.amber, 0.3],
-    [-50, -90, DARK.hull, 0.16],
-  ]
-  for (const [p1, p2, fill, a] of bands) {
-    ctx.fillStyle = rgba(fill, a)
+  // Storms: pale ovals riding the belts round, each at its own pace, foreshortened toward the limb.
+  for (const [lat, lon, w, rate] of STORMS) {
+    const phi = (lat * Math.PI) / 180
+    const th = lon + rate * t
+    const depth = Math.sin(phi) * Math.sin(LEAN) + Math.cos(phi) * Math.sin(th) * Math.cos(LEAN)
+    if (depth < 0.12) continue
+    const [ox, oy] = latPt(phi, th)
+    ctx.fillStyle = `rgba(${rgbOf(ZONE)}, ${(0.32 * Math.min(1, (depth - 0.12) * 4)).toFixed(3)})`
     ctx.beginPath()
-    // Fine enough that the bands stay curves when the Ranger skims a few cells of the limb.
-    const n = 180
-    for (let i = 0; i <= n; i++) {
-      const u = -SAT_R + (2 * SAT_R * i) / n
-      if (i === 0) ctx.moveTo(X(u), X(lat(u, p1 * deg)))
-      else ctx.lineTo(X(u), X(lat(u, p1 * deg)))
-    }
-    for (let i = n; i >= 0; i--) {
-      const u = -SAT_R + (2 * SAT_R * i) / n
-      ctx.lineTo(X(u), X(lat(u, p2 * deg)))
-    }
-    ctx.closePath()
+    ctx.ellipse(ox, oy, w * Math.max(0.15, Math.abs(Math.sin(th))) * Math.cos(phi), w * 0.42 * depth, 0, 0, TAU)
+    ctx.fill()
+    ctx.fillStyle = `rgba(${rgbOf(BELT)}, ${(0.22 * Math.min(1, (depth - 0.12) * 4)).toFixed(3)})`
+    ctx.beginPath()
+    ctx.ellipse(ox, oy, w * 0.45 * Math.max(0.15, Math.abs(Math.sin(th))) * Math.cos(phi), w * 0.16 * depth, 0, 0, TAU)
     ctx.fill()
   }
-  // The rings' shadow, cast down across the southern bands.
-  ctx.fillStyle = 'rgba(11, 15, 29, 0.5)'
-  ctx.beginPath()
-  for (let i = 0; i <= 180; i++) {
-    const u = -SAT_R + (2 * SAT_R * i) / 180
-    const v = lat(u, -9 * deg)
-    if (i === 0) ctx.moveTo(X(u), X(v))
-    else ctx.lineTo(X(u), X(v))
-  }
-  for (let i = 180; i >= 0; i--) {
-    const u = -SAT_R + (2 * SAT_R * i) / 180
-    ctx.lineTo(X(u), X(lat(u, -12.5 * deg)))
-  }
-  ctx.closePath()
-  ctx.fill()
-  p.pop()
-  // Night: the globe less a disc shifted toward the sun, its terminator a soft dusk a cell or two wide rather than a
-  // cut, and never quite as dark as the sky, so the night side still reads as the planet's.
-  p.push()
-  ctx.beginPath()
-  ctx.arc(X(sx), X(sy), X(SAT_R), 0, TAU)
-  ctx.clip()
-  const lx = sx + SUN[0] * SAT_R * 0.42
-  const ly = sy + SUN[1] * SAT_R * 0.42
-  const dusk = ctx.createRadialGradient(X(lx), X(ly), X(SAT_R * 0.9), X(lx), X(ly), X(SAT_R * 1.16))
-  dusk.addColorStop(0, 'rgba(11, 15, 29, 0)')
-  dusk.addColorStop(0.45, 'rgba(11, 15, 29, 0.42)')
-  dusk.addColorStop(1, 'rgba(11, 15, 29, 0.8)')
-  ctx.fillStyle = dusk
-  ctx.fillRect(X(sx - SAT_R - 1), X(sy - SAT_R - 1), X(2 * SAT_R + 2), X(2 * SAT_R + 2))
-  p.pop()
+  ctx.fillStyle = paint.limb
+  ctx.fillRect(-1.1, -1.1, 2.2, 2.2)
+  ctx.fillStyle = paint.dusk
+  ctx.fillRect(-1.1, -1.1, 2.2, 2.2)
+  ctx.restore()
   outline(p, ink, weight)
   p.circle(X(sx), X(sy), X(SAT_R * 2))
   rings(true)
@@ -736,57 +882,40 @@ function drawSphere(p: p5, c: Ctx, t: number, f: Frame, q: Pose): void {
   if (f.x1 < sx - RS * 2 || f.x0 > sx + RS * 2 || f.y1 < sy - RS * 2 || f.y0 > sy + RS * 2) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const X = (v: number) => v * k
-  glow(p, X(sx), X(sy), X(RS * 1.8), ICE_RGB, 0.16)
-  // (Its edge is its own: no arcs of stars round it, which read as a dashed ring.)
-  p.noFill()
-  // Saturn, behind and to the left, bent into a thin gold arc on the rim that faces it.
-  const toSat = Math.atan2(SAT[1] - sy, SAT[0] - sx)
-  p.stroke(`rgba(${GOLD_RGB}, 0.55)`)
-  p.strokeWeight(X(0.05))
-  p.arc(X(sx), X(sy), X(RS * 2.08), X(RS * 2.08), toSat - 0.55, toSat + 0.55)
-  p.stroke(`rgba(${GOLD_RGB}, 0.3)`)
-  p.strokeWeight(X(0.03))
-  p.arc(X(sx), X(sy), X(RS * 2.16), X(RS * 2.16), toSat - 0.3, toSat + 0.35)
-
-  // Inside: the other side's sky, squeezed toward the rim and turning slowly.
+  // Inside: the other side's sky, turning slowly and sliding a little with the camera.
+  farSide(p, X(sx), X(sy), X(RS), 0.4 + t * 0.025 + (f.cy - sy) * 0.015, ((f.cx - sx) * -0.06) / RS, 81, 150, ink)
   p.push()
   ctx.beginPath()
   ctx.arc(X(sx), X(sy), X(RS), 0, TAU)
   ctx.clip()
-  p.noStroke()
-  p.fill(DARK.deep)
-  p.circle(X(sx), X(sy), X(RS * 2))
-  const shift = (f.cx - sx) * -0.06
-  const turn = t * 0.025 + (f.cy - sy) * 0.015
-  p.push()
-  ctx.translate(X(sx + shift * 0.5), X(sy))
-  ctx.rotate(0.4 + turn)
-  const band = ctx.createLinearGradient(0, X(-RS * 0.45), 0, X(RS * 0.45))
-  band.addColorStop(0, 'rgba(110, 99, 201, 0)')
-  band.addColorStop(0.5, 'rgba(110, 99, 201, 0.34)')
-  band.addColorStop(1, 'rgba(110, 99, 201, 0)')
-  ctx.fillStyle = band
-  ctx.fillRect(X(-RS * 1.3), X(-RS * 0.45), X(RS * 2.6), X(RS * 0.9))
-  p.pop()
-  for (let j = 0; j < 150; j++) {
-    const rho = hash(j, 81) ** 0.38
-    const a = hash(j, 82) * TAU + turn + shift * (1 - rho) * 0.6
-    const r = RS * rho * 0.98
-    const bright = 0.35 + 0.65 * hash(j, 83)
-    const len = 0.02 + 0.45 * rho ** 8
-    if (len < 0.06) {
-      p.noStroke()
-      p.fill(alpha(p, ink, bright * 0.85))
-      p.circle(X(sx + Math.cos(a) * r), X(sy + Math.sin(a) * r), Math.max(1.2, X(0.028) * (0.6 + bright)))
-    } else {
-      lensedArc(p, X(sx), X(sy), X(r), a, len, ink, bright * 0.8, Math.max(1, X(0.024)))
-    }
-  }
+  // Saturn, behind and to the left, bent into a thin gold crescent on the limb that faces it: the glass less a
+  // larger disc set off the other way, so it is thickest toward Saturn and runs out to nothing either side.
+  const ux = Math.cos(SAT_DIR), uy = Math.sin(SAT_DIR)
+  ctx.beginPath()
+  ctx.arc(X(sx), X(sy), X(RS), 0, TAU)
+  ctx.arc(X(sx - ux * RS * 0.22), X(sy - uy * RS * 0.22), X(RS * 1.15), 0, TAU, true)
+  ctx.fillStyle = `rgba(${GOLD_RGB}, 0.55)`
+  ctx.fill()
   // The touch: rings running out over its face from where the nose went in.
   const face = Math.atan2(-DIR_IN[1], -DIR_IN[0])
   const cp: Pt = [sx + Math.cos(face) * RS, sy + Math.sin(face) * RS]
   const touch = t - CONTACT
-  if (touch >= 0 && touch < 0.6) glow(p, X(cp[0]), X(cp[1]), X(1.1), ICE_RGB, 0.8 * (1 - touch / 0.6) ** 2)
+  if (touch >= 0 && touch < 0.9) {
+    // Three, one after another, each wider and fainter, bowed to the ball's curve as they go out.
+    p.noFill()
+    for (let j = 0; j < 3; j++) {
+      const u = (touch - j * 0.12) / 0.75
+      if (u <= 0 || u >= 1) continue
+      p.stroke(alpha(p, DARK.ice, 0.75 * (1 - u) ** 1.4 * (1 - j * 0.25)))
+      p.strokeWeight(Math.max(1, X(0.035 * (1 - 0.5 * u))))
+      const r = 0.15 + 1.6 * Math.sqrt(u)
+      p.push()
+      p.translate(X(cp[0]), X(cp[1]))
+      p.rotate(face)
+      p.ellipse(0, 0, X(2 * r * 0.55), X(2 * r))
+      p.pop()
+    }
+  }
   p.pop()
   // The rim.
   p.noFill()
@@ -824,7 +953,6 @@ function drawSphere(p: p5, c: Ctx, t: number, f: Frame, q: Pose): void {
     p.stroke(alpha(p, BALL, 0.9 * (1 - u) ** 1.5))
     p.strokeWeight(X(0.07 * (1 - 0.6 * u)))
     p.circle(X(sx), X(sy), X(RS * 2))
-    glow(p, X(sx), X(sy), X(RS * 1.2), BALL_RGB, 0.16 * (1 - u))
   }
 }
 
@@ -944,7 +1072,6 @@ function drawStation(p: p5, c: Ctx, t: number, f: Frame): void {
     const sn = Math.sin(a)
     if (sn <= 0) continue
     const y = -(ST_R - BEVEL - 0.25) * Math.cos(a)
-    glow(p, X(CAP + 0.06), X(y), X(0.18), AMBER_RGB, 0.55 * sn)
     p.fill(alpha(p, DARK.amber, 0.35 + 0.65 * sn))
     p.circle(X(CAP + 0.05), X(y), X(0.08))
   }
@@ -1010,9 +1137,6 @@ function drawDock(p: p5, c: Ctx, t: number, near: boolean): void {
       const y = -(COLLAR_R - 0.05) * Math.cos(a)
       p.line(X(x0 + 0.03), X(y), X(xf - 0.1), X(y))
     }
-    // The flash where it lets go.
-    const fl = t - CLAMPS
-    if (fl >= 0 && fl < 0.5) glow(p, X(xf + 0.1), 0, X(1.1), BONE_RGB, 0.7 * (1 - fl / 0.5) ** 2)
   }
   // The clamps: a hooked arm on a pivot at the collar's face, over the Ranger's flange; they swing out on 184, and fold flat as the collar goes home.
   // Out on the beat, with a heavy sway against their stops; folded flat as the collar goes home.
@@ -1109,26 +1233,12 @@ function drawUmbilical(p: p5, c: Ctx, t: number, near: boolean): void {
     p.rect(e[0], e[1], X(0.18), X(0.15), X(0.03))
   }
   if (!near) return
-  // The pyro that frees the plug, and the spark as it seats on the hub.
+  // The pyro that frees the plug. (It seats on the hub with its own knock, no spark.)
   const pyro = t - UMBILICAL
   if (pyro >= 0 && pyro < 0.7) {
     const a = PORT_A0 + stationTurn(UMBILICAL)
     const at = proj([PORT_X, PORT_R, a])
     jet(p, c, pyro, [at[0] / k, at[1] / k], [0.5, Math.cos(a) > 0 ? -0.6 : 0.6], 0.8)
-  }
-  const sp = t - SEAT
-  if (sp >= 0 && sp < 0.35) {
-    const s = proj([SOCKET[0] + 0.1, SOCKET[1], socket])
-    const u = sp / 0.35
-    glow(p, s[0], s[1], X(0.45), AMBER_RGB, 0.9 * (1 - u))
-    p.stroke(alpha(p, DARK.amber, 1 - u))
-    p.strokeWeight(Math.max(1, weight * 0.7))
-    for (let j = 0; j < 5; j++) {
-      const d = -1.2 + j * 0.6
-      const r0 = 0.08 + 0.25 * u
-      const r1 = r0 + 0.12
-      p.line(s[0] + X(Math.cos(d) * r0), s[1] + X(Math.sin(d) * r0), s[0] + X(Math.cos(d) * r1), s[1] + X(Math.sin(d) * r1))
-    }
   }
 }
 
@@ -1311,14 +1421,15 @@ function rangerBody(p: p5, c0: Ctx, t: number, q: Pose, image: boolean): void {
         p.circle(X(1.38 + shown), X(yp), X(0.14))
       }
     }
-    const home = t - PROBE - 0.14
-    if (home >= 0 && home < 0.3) glow(p, X(1.4), X(yp), X(0.35), BONE_RGB, 0.9 * (1 - home / 0.3))
 
     // The cockpit: its well dark under the dome, the lit panel, the red seat-back behind the ball.
     const dome = domeOutline(cs, sn)
     solid(p, ink, weight * 0.6, DARK.deep)
     poly(dome)
-    glow(p, 0, 0, X(0.42), AMBER_RGB, image ? 0.5 : 0.3)
+    // Lamplit: the well a flat warm wash, not a glow round the ball.
+    p.noStroke()
+    p.fill(alpha(p, DARK.amber, image ? 0.32 : 0.2))
+    poly(dome)
     {
       const ys = [0.1, -0.14].flatMap((y) => [Y(y, 0.13), Y(y, -0.13)])
       solid(p, ink, weight * 0.6, DARK.red)
@@ -1347,7 +1458,6 @@ function rangerBody(p: p5, c0: Ctx, t: number, q: Pose, image: boolean): void {
     // The wingtip lamp: a blink on every strike.
     const blink = knock(lastPulseOf(UNDOCK_HITS, t), 0.18)
     const tip: Pt = [-1.95, Y(0.7, near * 0.93)]
-    if (blink > 0.02) glow(p, X(tip[0]), X(tip[1]), X(0.28), '224, 83, 61', 0.8 * blink)
     solid(p, ink, weight * 0.5, blink > 0.3 ? DARK.amber : DARK.red)
     p.circle(X(tip[0]), X(tip[1]), X(0.075))
 
@@ -1463,20 +1573,13 @@ function drawPlume(p: p5, c: Ctx, t: number, cs: number): void {
     }
   }
   const mid = 0.19 * cs
-  // Each pulse: a flash at the bells and a ring blown off down the flames.
+  // Each pulse: a ring blown off down the flames.
   if (i >= 0 && ago < 0.5) {
     const u = ago / 0.5
-    glow(p, X(x0 - 0.1), X(mid), X((0.35 + 0.35 * s) / SHIP), ICE_RGB, 0.75 * (1 - u) * Math.min(1, s))
     p.noFill()
     p.stroke(`rgba(${BONE_RGB}, ${0.85 * (1 - u) ** 1.5})`)
     p.strokeWeight(Math.max(1, X(0.04)))
     p.ellipse(X(x0 - 0.15 - (1.6 * u * s) / SHIP), X(mid), X(0.14 + 0.24 * u), X(0.5 + 0.55 * u * s))
-  }
-  // Lighting up: a white flash at the bells.
-  const lit = t - IGNITE
-  if (lit >= 0 && lit < 0.7) {
-    const u = lit / 0.7
-    glow(p, X(x0), X(mid), X(1.05), BONE_RGB, 0.95 * (1 - u) ** 2)
   }
 }
 

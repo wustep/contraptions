@@ -481,11 +481,12 @@ export function nightOver(p: p5, c: Ctx, a: number): void {
     const n = parseInt(DARK.deep.slice(1), 16)
     return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${o * a})`
   }
-  // Centred on the ball in the bed, under the window: the night's light off the glass falls on the pillow.
-  const g = ctx.createRadialGradient(X(-0.5), 0, X(0.12), X(-0.5), 0, X(3.2))
-  g.addColorStop(0, deep(0.1))
-  g.addColorStop(0.25, deep(0.62))
-  g.addColorStop(1, deep(0.92))
+  // An even dusk over the room, a little less deep round the bed under the window, where the night's light off the
+  // glass falls: a room at night, not a spotlight on the pillow (a bright pocket round him read as a halo).
+  const g = ctx.createRadialGradient(X(-0.5), 0, X(0.4), X(-0.5), 0, X(4.2))
+  g.addColorStop(0, deep(0.5))
+  g.addColorStop(0.45, deep(0.68))
+  g.addColorStop(1, deep(0.88))
   ctx.save()
   ctx.fillStyle = g
   ctx.fillRect(X(f.x0 - 1), X(f.y0 - 1), X(f.x1 - f.x0 + 2), X(f.y1 - f.y0 + 2))

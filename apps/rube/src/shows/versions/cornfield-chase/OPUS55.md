@@ -30,15 +30,60 @@ A stock strike is a piece's `lane.fire`. The search may only place a machine whe
 | Chase off-beat eighths | 123 | 5 | 4% | 6.1 | 19.9 |
 | The last hit | 1 | 1 | 100% | 4.5 | 4.5 |
 
+## The field and the fair
+
+The machine is the score's, untouched: every piece, strike and ball is where the arrangement put it. What changed is where it stands (`music-sync/`, drawn as scenery behind and over the stock pieces by `DressedShow`).
+
+- **An afternoon in a cornfield.** The Forest runs in front of a field: a sky, a low sun, a farm on the horizon (house, barn and silos, a water tower, a windpump whose wheel turns), and rows of corn from the horizon to the foot of the frame, each paler, smaller and slower the farther off. The piano's accents (notes struck harder than the run of them) send gusts through the rows from the left, bending the tassels and leaves.
+- **A sky with weather in it** (`music-sync/sky.ts`). A little blue up high in the early afternoon, so the clouds stand white against it. Three layers of fair-weather cumulus on flat bases, the highest coming down into the top third of the frame, each going over at its own pace, drawn after the sun so they pass in front of it. The high ones' shadows cross the rows, soft and long, and fade as the sun gets low. Two hawks turn slow circles over the field; swallows skim the near rows in the piano's quiet.
+- **The farm at work** (`music-sync/farmwork.ts`), as in the film. Cooper's house stands out in the field: two storeys of white clapboard under a gable, a porch along the front, a cottonwood moving in the wind beside it, and the pickup parked in the yard. It drifts across the frame as the camera goes along the run. Two combines harvest the far rows in echelon, their reels turning and chaff blowing out behind them. A dust devil, born of the piano's hardest gust early on, turns over the far rows for a quarter of a minute. Each stands in the field at its depth, so the rows in front of it hide its feet.
+- **The corn at your feet** (`music-sync/near.ts`). A few plants up out of the foot of the frame, in front of the machine, by day and by night. They go past quicker than it does and bend with the same wind as the rows. They are low, so they never cover the ball the camera keeps in the middle, and stand in clumps with gaps, so the lower floors show through. At night they are dark against the rows the moon and the fair light, and they sink away as the camera draws back for the photograph.
+- **Sunset as the organ gathers, and the chase in the film.** From 29 s the sun goes down and the sky turns to apricot and mauve, the clouds rose over and apricot under; under the organ the wind rises, its onsets gust harder, and a haze comes up off the field. The drone comes in high from the west at 27 s. On the organ's first onsets a flock of crows goes up out of the corn and away toward the sun, and the pickup pulls out of the yard and comes on through the corn toward the camera after the drone, its dust hanging over the rows behind it.
+- **Nightfall is the door.** The iris from the field to the fair closes in the night's colour rather than the Forest's dark green, with the stage's own timing (`music-sync/nightfall.ts`; the stage's iris is off for that door only).
+- **A fair at night on the same field.** The Arcade stands over the same rows and the same farm, now dark with a lit window, under stars, a crescent moon and a few thin clouds, whose undersides take the midway's light as each ride comes on. The night has its own arc as the afternoon had the sun's: the moon climbs through the chase from just over the fair's floor, where the machine would pass over it.
+- **The wind at night is the chase's.** By day the piano's accents send the gusts; by night the pulse does. A gust crosses the field from the left on each bar's downbeat, harder on each phrase's, growing through the chase; a full one on the drop and on the full organ; on every half bar through the climax. The last is on beat 184; the air is still for the photograph.
+- **The midway** (`music-sync/midway.ts`). The rest of the fair stands on the horizon beyond the machine, a tenth of its pace past the camera: a small and a big Ferris wheel, two swing rides, a carousel, a drop tower and two pairs of big tops, with a wooden roller coaster behind them. Unlit, they are dark against the sky. They come on as the chase goes on. The small wheel's rim lights up as the night's door opens on the drop, then one ride on the downbeat of each of the chase's phrases (beats 84, 100, 116). On the full organ every bulb on the midway comes up in a wave across the horizon in half a beat. A swing ride stands still until it comes on, then gets up to speed over a bar and flings its chairs out. The carousel's horses go round and up and down. The drop tower's ring climbs through each phrase and falls on the next downbeat. The coaster's train is hauled up the lift through the last bars of each phrase from beat 100 on and goes over the top on the downbeat, so its first plunge is on beat 100 and its big one opens the full organ; it runs the camelbacks into the brake shed and is back in the station for the next. The fair's glow on the sky follows the midway's lights, a share at a time, and the tassels nearest the horizon catch it: the chase is blue-violet under the moon, the full organ rosier under the midway. A bulb is a dot of colour, with no halo.
+- **Balloons.** A child's balloon goes up through the chase; on the full organ a bunch is let go and rises on the wind through the last third, smaller as it goes.
+- **Fireworks on the landmarks**, on the measured pulse: the drop, the full organ (beats 132 and 132½, high and wide, to be seen over the floors of machines there) and the downbeat of each of its phrases (148, 164, and 180, the one the machine leaves to rest), and the last hit with the soft beats 192 and 193 after it. None between the drop and the full organ: the chase is the machine's, and the climax builds where it is spare. Nine shells, no more, and no flash at the burst: the sparks are the firework. Each burst lights the field for a beat: its colour on the tassels under it, dying over half a second (not on the sky's glow, which on the full organ is its own magenta cue). Each leaves its smoke where it burst: a soft cloud the size the burst opened, in the midway's light, which the wind draws out east and shears, the high side carried the farther, into a long thin slant over half a minute, at the midway's pace past the camera. Through the climax it gathers, one shell's on the last's, and the last of it hangs over the photograph in the blue hour.
+- **The full organ is a light cue.** On beat 132 the house lights come up: the follow spot lifts so every floor of the fair is lit at once, the midway comes all the way up and the glow on the horizon flares magenta; two beats later the spot eases back over two more, and the glow settles to the level it holds through the climax.
+- **A follow spot where the run doubles back.** From 55 to 59 s and 63 to 88 s other stretches of the run share the frame, three and four floors of machines as bright as the ball's. While they do, the night comes down over them and the ball's own floor stays lit. Worked out once from the score; it comes and goes over a second or more.
+- **The photograph, in the blue hour.** The booth's flash lights the frame on beat 188. From the last hit the night goes toward a deep dawn blue, the horizon paling under it, the stars thinning low down and the midway still lit in it, so the photograph has a light of its own and the fair stands in silhouette against the first of the day. Once the ball is through the last portal the camera draws back across the field until the fair's last stretch stands on the horizon in front of the big wheel, and the ball's run comes up through it as one clean line in the ball's colours, from where it left back toward where it came in: a long exposure of the chase. The fair is in the exposure too: from when it starts to come up, the bulbs on the rides that turn leave their trails, so each wheel's rim draws out into arcs that close into a ring and each swing's crown into an ellipse that wavers as it tilts, brighter the longer the shutter is open. As the camera draws back the corn comes up in front of the fair from the foot of the frame, so the fair stands beyond the field and the ticket's paper, which had hung in a white line to the bottom of the last frame, goes down into the rows.
+
+## The camera
+
+The stock follow, on the take's own lens (`music-sync/lens.ts`), which the scenery shares so the land moves with it:
+
+- **The opening** looks up into the sky and tilts down into the field over the piano's first notes. The machine comes up from under the frame first, then the horizon and the farm, then the corn. Zoom's closeness comes in only as the tilt comes down.
+- **The piano** is a push-in so slow it is felt rather than seen, 8.6 cells to 7.9 over the half-minute.
+- **The organ's entry** is a deliberate push to 6.6 over two seconds and a half, as the crows go up.
+- **The drop** pushes in from the gather's frame to the chase's 4.8 as the night's iris opens, landing on the downbeat.
+- **The full organ** draws back over two bars to 6.2. The climax shows more of the fair at once, with the midway lit behind it, than any frame before it.
+- **The photograph** eases to its 7.5 as the booth comes up, then onto the booth and the ticket, then draws back.
+
+## Restraint
+
+No bloom, glow or sparkle: the light is in the colours. The exposure is a clean line (it had a halo and a bright head), the bursts have no white flash, the moon has no halo and the sun's is small and faint, and a bulb is a dot. The midway's bulbs are where a fair has them, round a wheel's rim, a swing's crown and a carousel's eaves: not up the wheel's spokes or the tower's mast. The string lights that hung over the night's frame are gone (a border of bulbs is decoration; the night's foreground is the corn), and so is the afternoon's cirrus, which never moved. A gust bends the corn and no more: the pale arcs it swept along the rows' crests, a few seconds apart through the chase, took the eye off the machine. The booth's flash stays, as light on the whole frame for an instant, no hot core: it is the photograph being taken. The trails in the exposure are lines a little narrower than a bulb, with no halo; the drop tower's ring, which would only streak up its mast like a rail, leaves none.
+
+The share card is the sunset at 36.5 s. `checks/cornfield.ts` holds the shells to the pulse and the landmarks, the wind to the piano, the door to its one portal, the spot to its stretches, and the draw back to its timing and frame.
+
+Frame cost, Chrome on an Apple M5 Pro, each frame painted against the take before the world was added round it (the parent commit), alternately, at the same moments every half second:
+
+| Canvas | Before: median / most | Now: median / most |
+| --- | ---: | ---: |
+| 1920×1080, forced to flush and read back | 5.5 / 9.4 ms | 7.4 / 8.9 ms |
+| 2880×1800, forced to flush and read back | 10.0 / 15.7 ms | 11.9 / 15.2 ms |
+
+The world adds about two milliseconds a frame, most in the last third. The photograph is cheaper than it was, since the corn behind the fair is no longer drawn where the corn in front of it covers it. Live playback at 2880×1800 holds 60 fps throughout, with no frame over 20 ms.
+
 ## Sections
 
 | Section | Start | Camera before Zoom | World |
 | --- | ---: | --- | --- |
-| Piano over the field | 0.00 s | 8.6 cells | Forest |
-| The organ gathers | 33.13 s | 6.6 cells | Forest |
-| Cornfield chase | 42.48 s | 4.8 cells | Arcade |
-| Full organ | 82.51 s | 4.3 cells | Arcade |
-| The photograph | 117.02 s | 7.5 cells | Arcade |
+| Piano over the field | 0.00 s | Tilts down out of the sky by 4.6 s; 8.6 cells, pushing in to 7.9 | Forest |
+| The organ gathers | 33.13 s | Pushes in to 6.6 cells | Forest |
+| Cornfield chase | 42.48 s | Pushes in to 4.8 cells on the drop, as the night's iris opens | Arcade |
+| Full organ | 82.51 s | Draws back to 6.2 cells over two bars | Arcade |
+| The photograph | 117.02 s | 7.5 cells, drawn back to the fair's last stretch from 120.3 s | Arcade |
 
 ## Maps
 

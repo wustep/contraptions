@@ -49,7 +49,7 @@ export function drawJar(p: p5, k: number, weight: number, x: number, y: number, 
   p.fill(alpha(p, '#E4F1F2', 0.3 * light))
   body(p, k, w, h)
 
-  // The coins: a pile of flat discs, its top a little uneven, a few edges showing, a glint on the top.
+  // The coins: a pile of flat discs, its top a little uneven, a few edges showing.
   const level = Math.max(0, Math.min(1, s.fill)) * JAR.full * h
   if (level > 0.004) {
     const inner = w / 2 - 0.045
@@ -71,9 +71,6 @@ export function drawJar(p: p5, k: number, weight: number, x: number, y: number, 
       const xx = -inner + 0.03 + hash(r, 1, 3) * (2 * inner - 0.2)
       p.line(X(xx), X(yy), X(xx + 0.11), X(yy))
     }
-    p.noStroke()
-    p.fill(alpha(p, HOME.shine, 0.75 * light))
-    p.rect(X(-inner + 0.08), X(-level - 0.05), X(0.1), X(0.018), X(0.01))
   }
 
   // Ellie's painting on the front: a panel, not a band, so the brass shows round it.

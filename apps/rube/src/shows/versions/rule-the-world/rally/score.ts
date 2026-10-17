@@ -3,8 +3,13 @@ import type { Framing } from '../../../registry'
 import { director, follower, type Shot } from './camera'
 import { credits } from './credits'
 import { vignette } from './vignette'
+import { iris } from './iris'
+import { grade } from './fx'
+import { crane, finale, FINALE } from './finale'
+import { live } from './live'
 import { lay, standing, type Chain, type Link } from './kit'
-import { CRASH, DURATION, SEAM, WIN } from './music'
+import { BAR, CRASH, DURATION, SEAM, WIN } from './music'
+import { sway } from './depth'
 import { FIRST, SEAMS } from './seams'
 import { RallyShow, type Leg, type Riders, type Spans, type WorldSet } from './show'
 import { MARTY, type WorldKey } from './worlds'
@@ -56,16 +61,22 @@ const claim = (x0: number, y0: number, x1: number, y1: number): Pt[] => {
 }
 const AROUND = claim(-80, -60, 80, 40)
 const VIGNETTE = standing(vignette, 0, 0, AROUND, null, DURATION)
+/** What lies over every place: the irises at the seams (`iris.ts`), the grade (`fx.ts`), and the vignette. */
+const LIGHT = [iris, grade].map((piece) => standing(piece, 0, 0, AROUND, null, DURATION)).concat(VIGNETTE)
 
 /** Each place's standing scenery, and what is drawn over everything (the vignette, the credits' shade). */
 const SETS = (): Partial<Record<WorldKey, WorldSet>> => ({
-  store: { scenery: [standing(storeSet, 0, 0, STORE_CELLS, null, DURATION)], after: [VIGNETTE] },
-  london: { scenery: [standing(londonSet, 0, 0, LONDON_CELLS, null, DURATION)], after: [VIGNETTE] },
-  hotel: { scenery: [standing(hotelSet, 0, 0, HOTEL_CELLS, null, DURATION)], after: [VIGNETTE] },
-  alley: { scenery: [standing(alleySet, 0, 0, ALLEY_CELLS, null, DURATION)], after: [VIGNETTE] },
-  jersey: { scenery: [standing(jerseySet, 0, 0, JERSEY_CELLS, null, DURATION)], after: [VIGNETTE] },
-  tokyo: { scenery: [standing(tokyoSet, 0, 0, TOKYO_CELLS, null, DURATION)], after: [VIGNETTE] },
-  hospital: { scenery: [standing(hospitalSet, 0, 0, HOSPITAL_CELLS, null, DURATION)], after: [VIGNETTE, standing(credits, 0, 0, AROUND, null, DURATION)] },
+  store: { scenery: [standing(storeSet, 0, 0, STORE_CELLS, null, DURATION)], after: LIGHT },
+  london: { scenery: [standing(londonSet, 0, 0, LONDON_CELLS, null, DURATION)], after: LIGHT },
+  hotel: { scenery: [standing(hotelSet, 0, 0, HOTEL_CELLS, null, DURATION)], after: LIGHT },
+  alley: { scenery: [standing(alleySet, 0, 0, ALLEY_CELLS, null, DURATION)], after: LIGHT },
+  jersey: { scenery: [standing(jerseySet, 0, 0, JERSEY_CELLS, null, DURATION)], after: LIGHT },
+  tokyo: { scenery: [standing(tokyoSet, 0, 0, TOKYO_CELLS, null, DURATION)], after: LIGHT },
+  hospital: {
+    scenery: [standing(hospitalSet, 0, 0, HOSPITAL_CELLS, null, DURATION)],
+    // The finale's building round the ward (`finale.ts`) goes under the grade, with the credits' shade over all.
+    after: [LIGHT[0], standing(finale, 0, 0, claim(-130, -70, 110, 60), null, DURATION), ...LIGHT.slice(1), standing(credits, 0, 0, AROUND, null, DURATION)],
+  },
 })
 
 /**
@@ -84,6 +95,14 @@ export const PUNCHES: [number, number][] = ([
   ...TOKYO_PUNCHES,
   ...HOSPITAL_PUNCHES,
 ] as [number, number][]).sort((x, y) => x[0] - y[0])
+/** How far the lens leans in at a seam (a share of the frame), and over how long before it and after. */
+const LEAN = 0.1
+const LEAN_IN = BAR
+const LEAN_OUT = 1.6 * BAR
+const smoothstep = (u: number): number => {
+  const v = Math.max(0, Math.min(1, u))
+  return v * v * (3 - 2 * v)
+}
 const PUNCH_TAU = 1
 const PUNCH_FOR = 3.5
 function punch(t: number): number {
@@ -175,11 +194,46 @@ export function compose(): { show: RallyShow; camera: (t: number) => Framing } {
     const dir = director(where, keys, DURATION)
     cams.push(dir)
   })
+  // The lens over the authored camera. At every seam it leans in on him over the bar before the downbeat, as the place
+  // he is leaving closes in on him, and opens back out over the bars after, as the next place opens out of him
+  // (`iris.ts`): a push-in and a pull-back about where he is on the screen, so he holds still in the frame while the
+  // world goes in and out round him, and the match cut is kept exactly (both sides have the same lean at the seam).
+  const leans = legs.slice(1).map((leg, i) => {
+    const before = cams[i](leg.from - 1e-6)
+    const him = show.at(leg.from - 1e-6)
+    return { at: leg.from, o: [(him.x - before.x) / before.cells, (him.y - before.y) / before.cells] as Pt }
+  })
+  const lean = (t: number): { s: number; o: Pt } | null => {
+    for (const l of leans) {
+      if (t >= l.at - LEAN_IN && t < l.at) return { s: 1 - LEAN * smoothstep((t - (l.at - LEAN_IN)) / LEAN_IN), o: l.o }
+      if (t >= l.at && t < l.at + LEAN_OUT) return { s: 1 - LEAN * (1 - smoothstep((t - l.at) / LEAN_OUT)), o: l.o }
+    }
+    return null
+  }
+  // Over the credits the crane takes the camera from its last framing on the glass (`finale.ts`).
+  const last = cams[cams.length - 1]
+  const landing = last(FINALE)
   const camera = (t: number): Framing => {
     const owner = show.owner(t)
-    const f = cams[owner](t)
-    return { ...f, cells: f.cells * (1 - punch(t)) }
+    const f = t > FINALE ? crane(t, landing) : cams[owner](t)
+    let cells = f.cells * (1 - punch(t))
+    let { x, y } = f
+    const l = lean(t)
+    if (l) {
+      x += l.o[0] * cells * (1 - l.s)
+      y += l.o[1] * cells * (1 - l.s)
+      cells *= l.s
+    }
+    // And never quite still: the slow float of a camera on a crane, a few thousandths of the frame, from the first
+    // frame's hold outwards.
+    const b = smoothstep(t / 3)
+    x += cells * 0.006 * b * sway(t, 1, 11)
+    y += cells * 0.004 * b * sway(t, 2, 13.5)
+    cells *= 1 + 0.008 * b * sway(t, 3, 17)
+    return { ...f, x, y, cells }
   }
+  live.show = show
+  live.camera = camera
   return { show, camera }
 }
 

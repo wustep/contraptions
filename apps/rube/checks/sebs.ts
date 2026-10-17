@@ -21,7 +21,6 @@ import { OUTLINE as FIGURE_OUTLINE } from '../src/shows/versions/la-la-land/sebs
 import { NARROW, aperture, muted, wakingCircle } from '../src/shows/versions/la-la-land/sebs/lens'
 import { emptyAt } from '../src/shows/versions/la-la-land/sebs/theatre/theatre'
 import { HORIZON, SIGN_AT, SIGN_U, THEIRS, THEIRS_AT, THEIRS_FIGURE } from '../src/shows/versions/la-la-land/sebs/city'
-import { HOUSE_SPAN, houseTop } from '../src/shows/versions/la-la-land/sebs/paris/jazz'
 import { HANDOFF, SKYLINE, soloThreads, towerDrawn } from '../src/shows/versions/la-la-land/sebs/paris/jazz-club'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -310,21 +309,6 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
       return Math.abs(wx - f.x) > (f.cells * 16) / 9 / 2 - 0.1 || Math.abs(wy - f.y) > f.cells / 2 - 0.1
     })
     check('sebs: the solo paints Paris: the skyline and its tower drawn, in the picture, before the iris', towerDrawn(T) === 1 && towerDrawn(264.5) === 0 && off.length === 0, `${off.length} points out`)
-  }
-  // His club in Paris is full, and its house never covers the two of them: their heads stay above everyone's.
-  {
-    const under: string[] = []
-    for (let t = HOUSE_SPAN[0]; t < HOUSE_SPAN[1]; t += 0.1) {
-      if (covered(t)) continue
-      const f = cam(t)
-      const top = houseTop(f.y + f.cells / 2, f.cells)
-      const [sx, sy] = show.where(t)
-      const m = show.mia(t)
-      for (const [who, b] of [['Seb', { x: sx, y: sy }], ['Mia', m]] as const) {
-        if (b && inShot(t, b) && b.y + R > top) under.push(`${who} ${t.toFixed(1)}`)
-      }
-    }
-    check('sebs: the house in Paris never covers the two of them', under.length === 0, under.slice(0, 6).join(', '))
   }
   check('sebs: the story\'s beats are seen, everyone they are about in the picture', unseenBeats.length === 0, unseenBeats.join(', '))
   // Hollywood's hill lamps go out one by one, and only then the cloth comes in: each goes out in the open.

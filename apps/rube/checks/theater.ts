@@ -30,7 +30,7 @@ export function checkTheater(check: Check, works: Work[]): void {
   check('Theater is a mode, at /theater/', tab?.path === '/theater/' && tab.label === 'Theater')
   check('it is not a tab: the switch is the four, and it lights Shows', MODE_LINKS.every((m) => m.mode !== 'theater') && tabOf('theater') === 'shows' && tabOf('shows') === 'shows')
   check('its address is its mode, with or without the slash', modeFromPath('/theater/') === 'theater' && modeFromPath('/theater') === 'theater' && modeFromPath('/theater/index.html') === 'theater')
-  check('Shows\' own addresses are still Shows', modeFromPath('/shows/') === 'shows' && modeFromPath('/shows/clair-de-lune/') === 'shows' && modeFromPath('/shows/cornfield-chase/grok47/') === 'shows')
+  check('Shows\' own addresses are still Shows', modeFromPath('/shows/') === 'shows' && modeFromPath('/shows/clair-de-lune/') === 'shows' && modeFromPath('/shows/cornfield-chase/opus55/') === 'shows')
   const shell = readFileSync(join(process.cwd(), 'src/ui/shell.ts'), 'utf8')
   check('the switch is the four tabs, whatever has been visited', /const links = MODE_LINKS\.map\(makeLink\)/.test(shell) && !/sessionStorage\.setItem\(VISITED_STORE/.test(shell))
   const page = readFileSync(join(process.cwd(), 'theater/index.html'), 'utf8')

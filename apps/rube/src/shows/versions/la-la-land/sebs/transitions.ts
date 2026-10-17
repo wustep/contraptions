@@ -166,25 +166,18 @@ function drawCover(p: p5, k: number, c: Cover, f: number, t: number): void {
       const fh = (fw * 9) / 16
       const x = fr.cx + (c.spark.at[0] - 0.5) * fw
       const y = fr.cy + (c.spark.at[1] - 0.5) * fh
-      // It is there as the dark comes (a star the dark leaves), breathes while it holds, and is the lamp as it lifts.
-      const a = smooth(f, 0.25, 0.85) * (0.85 + 0.15 * Math.sin(t * 5.3))
-      const r = fh * 0.05
-      const g = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, r * k)
-      g.addColorStop(0, rgba('#FFFFFF', 0.95 * a))
-      g.addColorStop(0.12, rgba(c.spark.color, 0.8 * a))
-      g.addColorStop(0.4, rgba(c.spark.color, 0.2 * a))
-      g.addColorStop(1, rgba(c.spark.color, 0))
-      ctx.fillStyle = g
-      ctx.fillRect((x - r) * k, (y - r) * k, 2 * r * k, 2 * r * k)
-      // A star's four-point glint.
-      ctx.strokeStyle = rgba('#FFFFFF', 0.55 * a)
-      ctx.lineWidth = Math.max(1, fh * 0.002 * k)
+      // It is there as the dark comes (a star the dark leaves), holds, and is the lamp as it lifts: one steady point of
+      // light, its colour round a white core, and nothing round it.
+      const a = smooth(f, 0.25, 0.85)
+      const r = Math.max(1.5 / k, fh * 0.0075)
+      ctx.fillStyle = rgba(c.spark.color, a)
       ctx.beginPath()
-      ctx.moveTo((x - r * 0.7) * k, y * k)
-      ctx.lineTo((x + r * 0.7) * k, y * k)
-      ctx.moveTo(x * k, (y - r * 0.7) * k)
-      ctx.lineTo(x * k, (y + r * 0.7) * k)
-      ctx.stroke()
+      ctx.arc(x * k, y * k, r * k, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.fillStyle = rgba('#FFFFFF', 0.9 * a)
+      ctx.beginPath()
+      ctx.arc(x * k, y * k, r * 0.5 * k, 0, Math.PI * 2)
+      ctx.fill()
     }
   } else if (c.kind === 'cloth') {
     drawCloth(ctx, k, fr, pad, c, f, t)
@@ -197,8 +190,9 @@ function drawCover(p: p5, k: number, c: Cover, f: number, t: number): void {
     const least = closing ? c.r0 : c.r1
     let r = least + (1 - f) * Math.max(0, span - least)
     if (closing && c.snap !== undefined && t >= c.down[1]) r = c.r0 * (1 - smooth(t, c.snap, c.snap + SNAP_TIME))
-    // A soft lip a fifth of a cell wide (a stage light's edge), or less on a small opening.
-    const lip = Math.min(0.2, r * 0.3)
+    // The edge an iris, or a stage light, has: hard, softened over a few pixels only, however close the camera is (a
+    // fifth of a cell's lip read as a blur round the keys in the close shot).
+    const lip = Math.min(0.2, r * 0.3, 4 / k)
     const dark = c.color ?? '#000000'
     if (r * k < 0.5) {
       // Shut: all dark. (A gradient's hair of an edge would leave a speck of the world showing through.)

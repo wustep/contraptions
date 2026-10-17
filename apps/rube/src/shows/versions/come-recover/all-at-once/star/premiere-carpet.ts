@@ -22,7 +22,7 @@ import {
   carpetX,
   flightIn,
 } from './premiere-clock'
-import { FACADE, FACADE_DEEP, INK, NIGHT, PILASTER, SILVER, STREET, beam, flare, glint, glow, pool, rgba as rgbaHex, smear } from './premiere-light'
+import { FACADE, FACADE_DEEP, INK, NIGHT, PILASTER, SILVER, STREET, beam, glow, pool, rgba as rgbaHex, smear } from './premiere-light'
 
 /** The kerb the carpet is laid to: stone, a shade up from the wet street. */
 const KERB = mixHex(STREET, SILVER, 0.1)
@@ -357,12 +357,24 @@ function drawFacade(p: p5, c: Ctx, t: number, f: ReturnType<typeof frame>): void
   // The doorway's surround.
   solid(p, INK, weight, FACADE_DEEP)
   p.rect(X(dx), X(CARPET - DOORS.h / 2 - 0.15), X(dw + 0.5), X(DOORS.h + 0.3))
-  // The lobby behind: warm, a chandelier's glow high in it, the carpet going on in. Brighter where the doors stand open.
-  const lobby = mixHex(FACADE_DEEP, STAR.spot, 0.5)
+  // The lobby behind: gold-lit, a chandelier's glow high in it and sconces either side, the carpet going on in. Seen
+  // through the glass as she comes down the carpet, it is the warm light at the end of the rope line she is heading
+  // for; brighter again where the doors stand open.
+  const lobby = mixHex(STAR.gold, FACADE_DEEP, 0.42)
   p.noStroke()
   p.fill(lobby)
   p.rect(X(dx), X(CARPET - DOORS.h / 2), X(dw), X(DOORS.h))
-  glow(p, X(dx), X(dtop + 1.1), X(1.6), STAR.spot, 0.7)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(X(DOORS.x0), X(dtop), X(dw), X(DOORS.h))
+  ctx.clip()
+  glow(p, X(dx), X(dtop + 1.1), X(2.6), STAR.spot, 0.75)
+  for (const sx of [DOORS.x0 + 0.3, DOORS.x1 - 0.3]) glow(p, X(sx), X(CARPET - 2.3), X(0.9), STAR.spot, 0.55)
+  p.noStroke()
+  p.fill(STAR.carpet)
+  p.rect(X(dx), X(CARPET - 0.16), X(dw), X(0.32))
+  ctx.restore()
   // Two leaves of glass in brass, hinged at the jambs, swinging out toward us: each narrows as it opens, and where
   // it has swung away the lobby's light comes straight out.
   for (const side of [-1, 1] as const) {
@@ -372,7 +384,7 @@ function drawFacade(p: p5, c: Ctx, t: number, f: ReturnType<typeof frame>): void
     const lx = (hinge + free) / 2
     // The glass tints what is behind it, dimmer and cooler; its brass frame.
     p.noStroke()
-    p.fill(rgbaHex(FACADE_DEEP, 0.55))
+    p.fill(rgbaHex(FACADE_DEEP, 0.38))
     p.rect(X(lx), X(CARPET - DOORS.h / 2), X(Math.max(0.02, w)), X(DOORS.h))
     outline(p, STAR.brass, Math.max(1, X(0.07)))
     p.rect(X(lx), X(CARPET - DOORS.h / 2), X(Math.max(0.02, w)), X(DOORS.h))
@@ -411,6 +423,121 @@ function drawFacade(p: p5, c: Ctx, t: number, f: ReturnType<typeof frame>): void
   }
   // Its light on the doorway below.
   glow(p, X(dx), X(MARQUEE.y1 + 0.4), X(3.5), STAR.gold, 0.14)
+}
+
+/* ------------------------------------------------------------------ the step-and-repeat */
+
+/**
+ * Behind the press, the wall a red carpet is shot against: a step-and-repeat, an ivory board printed over and over
+ * with her picture's mark (the gold moon over two ridges, as on the poster cases) and a small brass star, lit from a
+ * truss of lamps along its top. It is what makes the press read: their dark shapes stand out against it shoulder to
+ * shoulder, each camera and hat its own, where against the theatre's dark front they were one mass of dark. Each gun
+ * that fires lights the board behind its shooter.
+ */
+const BOARD = { x0: PEN.x0 - 0.55, x1: PEN.x1 + 0.7, top: CARPET - 4.7 }
+/**
+ * The board's face as its lamps light it, and in the dark between them and at its foot. It is a backdrop lit in the
+ * dark, not a lit wall: the lamps' scallops are the light on it, so the spotlight's beam still shows across it and
+ * its pool, the flashes and she are the brightest things in the frame.
+ */
+const BOARD_LIT = mixHex(STAR.spot, STAR.cream, 0.45)
+const BOARD_DIM = mixHex(BOARD_LIT, STAR.velvet, 0.62)
+/** Its lamps along the truss. */
+const BOARD_LAMPS = (() => {
+  const n = Math.round((BOARD.x1 - BOARD.x0) / 2.3)
+  return Array.from({ length: n }, (_, i) => BOARD.x0 + ((i + 0.5) * (BOARD.x1 - BOARD.x0)) / n)
+})()
+const MARK_DX = 1.0
+const MARK_DY = 0.8
+
+function drawBoard(p: p5, c: Ctx, t: number, f: ReturnType<typeof frame>): void {
+  const { k, weight } = c
+  const X = (v: number) => v * k
+  const x0 = Math.max(BOARD.x0, f.x0 - 1)
+  const x1 = Math.min(BOARD.x1, f.x1 + 1)
+  if (x1 <= x0 || f.y1 < BOARD.top) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  // The face, dim; then each lamp's light down it, a scallop from the truss that fades toward the press's heads.
+  p.noStroke()
+  p.fill(BOARD_DIM)
+  p.rect(X((x0 + x1) / 2), X((BOARD.top + CARPET) / 2), X(x1 - x0), X(CARPET - BOARD.top))
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(X(BOARD.x0), X(BOARD.top), X(BOARD.x1 - BOARD.x0), X(CARPET - BOARD.top))
+  ctx.clip()
+  for (const lx of BOARD_LAMPS) {
+    if (lx < x0 - 2.5 || lx > x1 + 2.5) continue
+    pool(p, X(lx), X(BOARD.top + 1.1), X(1.45), X(2.1), BOARD_LIT, 0.8)
+    glow(p, X(lx), X(BOARD.top + 0.5), X(1.1), STAR.spot, 0.3)
+  }
+  // The marks, row on row, every other row half a step along: the moon-and-ridges, and the star between.
+  for (let row = 0; ; row++) {
+    const y = BOARD.top + 0.5 + row * MARK_DY
+    if (y > CARPET - 0.3) break
+    const shift = row % 2 ? MARK_DX / 2 : 0
+    for (let col = Math.floor((x0 - BOARD.x0) / MARK_DX) - 1; ; col++) {
+      const x = BOARD.x0 + 0.45 + shift + col * MARK_DX
+      if (x > x1 + 0.5) break
+      if (x < BOARD.x0 + 0.2 || x > BOARD.x1 - 0.2) continue
+      if ((row + col) % 2 === 0) {
+        p.noStroke()
+        p.fill(STAR.gold)
+        p.circle(X(x + 0.06), X(y - 0.08), X(0.15))
+        p.fill(STAR.carpet)
+        p.triangle(X(x - 0.19), X(y + 0.1), X(x - 0.05), X(y - 0.07), X(x + 0.09), X(y + 0.1))
+        p.fill(STAR.carpetDeep)
+        p.triangle(X(x - 0.03), X(y + 0.1), X(x + 0.08), X(y - 0.02), X(x + 0.19), X(y + 0.1))
+      } else {
+        // The star: a flat brass mark, printed, not a glint.
+        p.noStroke()
+        p.fill(STAR.brass)
+        p.beginShape()
+        for (let j = 0; j < 10; j++) {
+          const a = -Math.PI / 2 + (j * Math.PI) / 5
+          const r = j % 2 === 0 ? 0.11 : 0.045
+          p.vertex(X(x + r * Math.cos(a)), X(y + r * Math.sin(a)))
+        }
+        p.endShape(p.CLOSE)
+      }
+    }
+  }
+  // Each gun as it fires lights the board behind its shooter.
+  PRESS.forEach((s) => {
+    const [rx, ry] = reflectorOf(s)
+    if (rx < x0 - 2 || rx > x1 + 2) return
+    const hot = flashOf(s, t).pop
+    if (hot > 0.01) glow(p, X(rx), X(ry + 0.3), X(1.5), STAR.flash, 0.55 * hot, 0.3)
+  })
+  ctx.restore()
+  // The board's panels butted together, and its frame.
+  p.stroke(rgbaHex(NIGHT, 0.14))
+  p.strokeWeight(Math.max(1, X(0.012)))
+  for (let x = BOARD.x0 + 2.3; x < BOARD.x1 - 0.3; x += 2.3) if (x > x0 - 0.1 && x < x1 + 0.1) p.line(X(x), X(BOARD.top), X(x), X(CARPET))
+  outline(p, rgbaHex(NIGHT, 0.85), weight)
+  p.rect(X((BOARD.x0 + BOARD.x1) / 2), X((BOARD.top + CARPET) / 2), X(BOARD.x1 - BOARD.x0), X(CARPET - BOARD.top))
+  // Its two stands, black uprights at its ends on weighted feet, so it is a board set up for the night and not a wall.
+  for (const ex of [BOARD.x0, BOARD.x1]) {
+    if (ex < x0 - 0.5 || ex > x1 + 0.5) continue
+    solid(p, NIGHT, weight * 0.7, mixHex(NIGHT, SILVER, 0.16))
+    p.rect(X(ex), X((BOARD.top - 0.2 + CARPET) / 2), X(0.14), X(CARPET - BOARD.top + 0.2))
+    p.rect(X(ex), X(CARPET - 0.05), X(0.7), X(0.1), X(0.03))
+  }
+  // The truss over it, and its lamps, their lenses lit.
+  const ty = BOARD.top - 0.12
+  solid(p, NIGHT, weight * 0.8, mixHex(NIGHT, SILVER, 0.22))
+  p.rect(X((BOARD.x0 + BOARD.x1) / 2), X(ty), X(BOARD.x1 - BOARD.x0 + 0.5), X(0.16))
+  p.stroke(rgbaHex(SILVER, 0.35))
+  p.strokeWeight(Math.max(1, X(0.012)))
+  for (let x = BOARD.x0; x < BOARD.x1; x += 0.32) if (x > x0 - 0.4 && x < x1 + 0.4) p.line(X(x), X(ty - 0.07), X(x + 0.16), X(ty + 0.07))
+  for (const lx of BOARD_LAMPS) {
+    if (lx < x0 - 1 || lx > x1 + 1) continue
+    solid(p, NIGHT, weight * 0.7, mixHex(NIGHT, SILVER, 0.12))
+    p.quad(X(lx - 0.13), X(ty + 0.05), X(lx + 0.13), X(ty + 0.05), X(lx + 0.19), X(ty + 0.34), X(lx - 0.19), X(ty + 0.34))
+    p.noStroke()
+    p.fill(STAR.spot)
+    p.rect(X(lx), X(ty + 0.34), X(0.34), X(0.05))
+    glow(p, X(lx), X(ty + 0.38), X(0.55), STAR.spot, 0.6)
+  }
 }
 
 /* ------------------------------------------------------------------ the spotlight */
@@ -516,7 +643,7 @@ function drawPress(p: p5, c: Ctx, t: number, f: ReturnType<typeof frame>): void 
       if (!fill) p.line(X(rx), X(hy - 0.3), X(rx), X(hy - 0.06))
     }
   }
-  p.stroke(rgbaHex(INK, 0.55))
+  p.stroke(rgbaHex(NIGHT, 0.7))
   p.strokeWeight(weight * 1.6)
   p.fill(CROWD)
   shapes(false)
@@ -535,7 +662,7 @@ function drawPress(p: p5, c: Ctx, t: number, f: ReturnType<typeof frame>): void 
   outline(p, STAR.gold, Math.max(1, X(0.018)))
   p.line(X(PEN.x0), X(PEN.rail - 0.015), X(PEN.x1), X(PEN.rail - 0.015))
   // The reflectors: dull silver in the dark, white hot when they fire.
-  for (const s of PRESS) {
+  PRESS.forEach((s) => {
     const [rx, ry] = reflectorOf(s)
     const { pop, after } = flashOf(s, t)
     const r = 0.18
@@ -544,11 +671,8 @@ function drawPress(p: p5, c: Ctx, t: number, f: ReturnType<typeof frame>): void 
     p.noStroke()
     p.fill(mixHex(mixHex(SILVER, NIGHT, 0.25), STAR.flash, Math.max(pop, after)))
     p.circle(X(rx), X(ry), X(r * 0.75))
-    if (pop > 0.01 || after > 0.01) {
-      glow(p, X(rx), X(ry), X(1.8), STAR.flash, 0.95 * pop + 0.14 * after)
-      glint(p, X(rx), X(ry), X(1.0 * (0.55 + 0.45 * pop)), STAR.flash, pop)
-    }
-  }
+    if (pop > 0.01 || after > 0.01) glow(p, X(rx), X(ry), X(1.8), STAR.flash, 0.95 * pop + 0.14 * after)
+  })
 }
 
 /* ------------------------------------------------------------------ the carpet */
@@ -634,6 +758,7 @@ export function drawPremiere(p: p5, c: Ctx, t: number): void {
   const f = frame(p, c.k)
   if (f.x0 > EDGE_X + 1) return
   drawFacade(p, c, t, f)
+  drawBoard(p, c, t, f)
   drawSpotLamp(p, c, t)
   drawPress(p, c, t, f)
   drawCarpet(p, c, t, f)
@@ -646,20 +771,11 @@ export function premiereOver(p: p5, c: Ctx, t: number): void {
   const f = frame(p, c.k)
   if (f.x0 > EDGE_X + 2) return
   const X = (v: number) => v * c.k
-  // Each gun the press fires, as it pops: a shorter streak from its reflector.
-  for (const s of PRESS) {
-    const { pop } = flashOf(s, t)
-    if (pop <= 0.02) continue
-    const [rx, ry] = reflectorOf(s)
-    flare(p, X(rx), X(ry), X(3.2), X(0.05), 0.55 * pop)
-  }
   for (const fl of FLASHES) {
     const s = t - fl.t
     if (s < 0 || s > 0.8) continue
     const a = knock(s, 0.08)
     glow(p, X(fl.x), X(fl.y), X(4.5), STAR.flash, 0.4 * a, 0.2)
-    // The widescreen lens's flare: a streak across the frame from the gun.
-    flare(p, X(fl.x), X(fl.y), X(Math.max(6, (f.x1 - f.x0) * 0.75)), X(0.07), 0.7 * a)
     // The frame's flash: a wide wash of light falling off from the gun, not a flat sheet over the frame, so the
     // dark under the carpet stays dark and the room is lit from where the flash went off.
     glow(p, X(fl.x), X(fl.y), X(Math.max(f.x1 - f.x0, f.y1 - f.y0) * 0.9), '#FFFFFF', 0.2 * a, 0.45)

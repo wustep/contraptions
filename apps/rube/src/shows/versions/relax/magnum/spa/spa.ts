@@ -1,5 +1,4 @@
 import { mixHex, type Pt } from '../../../../../parts'
-import { glint } from '../cast'
 import { follower } from '../camera'
 import { box, frame, part, scenery, type Company, type PartShot } from '../kit'
 import { SEAMS } from '../seams'
@@ -176,9 +175,6 @@ export const spa = part<SpaState>(
       drawCabinet(pen, t, true)
       if (seen(f, P[0] - 3, P[0] + 1)) drawBalconyRail(pen)
       drawFog(pen, t, f)
-      // Mugatu's look, when the one he did not throw lands: his glee.
-      const m = mugatuAt(t)
-      if (m && t > LAND3 - 0.05 && t < LAND3 + 0.6) glint(p, c.k, [m[0] + 0.09, m[1] - 0.09], t - LAND3, 0.32)
       p.pop()
     },
   },

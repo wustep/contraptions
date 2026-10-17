@@ -444,9 +444,12 @@ export const LANTERNS: { x: number; cord: number; size: number }[] = [
 /** A lantern's swing (radians about its ceiling hook): a slow drift in the room's air; the arm's rush past stirs them. */
 export function lanternSway(i: number, t: number): number {
   const idle = 0.02 * Math.sin(t * 1.3 + i * 2.1)
+  // The great hit jolts the room as the eye lands on her: everything that hangs swings, and settles.
+  const g = t - JUMPS.eye - 0.04 * i
+  const jolt = g < 0 ? 0 : (0.1 - 0.02 * i) * Math.exp(-g / 0.8) * Math.sin(g * 5.2 + 0.4 * i)
   const u = t - B(132) - 0.1 * i
-  if (u < 0) return idle
-  return idle + (0.12 - 0.04 * i) * Math.exp(-u / 1.4) * Math.sin(u * 3.6)
+  if (u < 0) return idle + jolt
+  return idle + jolt + (0.12 - 0.04 * i) * Math.exp(-u / 1.4) * Math.sin(u * 3.6)
 }
 
 /* ------------------------------------------------------------------ the arm */
