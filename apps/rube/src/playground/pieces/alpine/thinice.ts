@@ -1,6 +1,5 @@
 import { outline, solid } from '../../../../../../src/core/draw'
 import { FLOOR, R, ROLL, definePiece, laneReach, rail, rankBy, roll, type Lane, type Pt } from '../../../parts'
-import { spurt } from './parts-c'
 import { iceBlue, snowAt, snowWhite } from './snow'
 
 /**
@@ -9,9 +8,10 @@ import { iceBlue, snowAt, snowWhite } from './snow'
  * track, which stops at the near bank. The ball rolls out onto the ice, and
  * the ice will not bear it: a crack opens across the sheet on the ball's
  * heels, and another, and another, the break keeping pace a hand's breadth
- * behind the ball all the way over; each piece let go tips, slops water up
- * at its edges, and bobs itself still as a floe. The ball stays ahead of the
- * break and makes the far bank. The tarn stays broken.
+ * behind the ball all the way over; each piece let go tips and bobs itself
+ * still as a floe. Ahead of the break the sheet is whole, one piece with no
+ * seam in it. The ball stays ahead of the break and makes the far bank. The
+ * tarn stays broken.
  *
  * A crack opens when the ball's back is a fixed way past it, read off the
  * lane, and a floe is loose once the cracks at both its ends have opened;
@@ -101,18 +101,24 @@ export const thinice = definePiece<ThinIceState>({
     rail(p, k, ink, weight, -0.5, x0 - 0.04)
     rail(p, k, ink, weight, x1 + 0.04, end)
 
-    // The sheet, floe by floe: whole until the cracks at both its ends have opened, and then afloat.
+    // The sheet: floe by floe behind the break, each afloat once the cracks at both its ends have opened, and one
+    // piece ahead of it. The floes come loose in order, so the whole of the sheet is the run from the first that is not.
+    const whole = opens.findIndex((at, i) => i > 0 && t <= at)
+    if (whole > 0) {
+      solid(p, ink, weight, s.ice)
+      p.rect(((edges[whole - 1] + x1) / 2) * k, (FLOOR + THICK / 2) * k, (x1 - edges[whole - 1]) * k, THICK * k, 0.008 * k)
+    }
     for (let i = 0; i + 1 < edges.length; i++) {
       const loose = t - opens[i + 1]
+      if (loose <= 0) break
       const a = edges[i]
       const b = edges[i + 1]
       const mid = (a + b) / 2
       // Let go, a floe dips at the end the ball left by and rocks back, less each time, and drifts a hair off its neighbours.
-      const sway = loose > 0 ? Math.exp(-1.7 * loose) * Math.sin(7.5 * loose) : 0
-      const tip = (i % 2 ? -0.16 : 0.2) * sway + (loose > 0 ? (i % 2 ? 0.025 : -0.03) * (1 - Math.exp(-3 * loose)) : 0)
-      const bob = loose > 0 ? 0.035 * Math.exp(-1.4 * loose) * Math.sin(9 * loose) + 0.012 * (1 - Math.exp(-4 * loose)) : 0
-      const gap = loose > 0 ? 0.014 * (1 - Math.exp(-5 * loose)) : 0
-      if (loose > 0) spurt(p, k, s.water, b, WATER - 0.02, loose / 0.32, 0.9)
+      const sway = Math.exp(-1.7 * loose) * Math.sin(7.5 * loose)
+      const tip = (i % 2 ? -0.16 : 0.2) * sway + (i % 2 ? 0.025 : -0.03) * (1 - Math.exp(-3 * loose))
+      const bob = 0.035 * Math.exp(-1.4 * loose) * Math.sin(9 * loose) + 0.012 * (1 - Math.exp(-4 * loose))
+      const gap = 0.014 * (1 - Math.exp(-5 * loose))
       p.push()
       p.translate(mid * k, (FLOOR + THICK / 2 + bob) * k)
       p.rotate(tip)
