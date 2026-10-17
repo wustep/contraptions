@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../src/core/draw'
-import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, fly, over, post, rail, ramp, trace, wait, type Lane, type Pt } from '../../../parts'
+import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, fly, over, rail, ramp, trace, wait, type Lane, type Pt } from '../../../parts'
 import { soil, tuft } from '../../../pieces/garden/green'
 
 /**
@@ -8,10 +8,10 @@ import { soil, tuft } from '../../../pieces/garden/green'
  * long grass in front of it, a mown stripe behind. The rail ends at the
  * lawn's edge; the ball rolls in through the long grass and up against the
  * reel, and stops. The reel turns over, catches, and spins up — the mower
- * shudders on its wheels, clippings fly back into the grass box — and a
- * blade takes the ball up over the top of the reel and throws it out the
- * back: up between the handles, over the grass box, and down onto the rail
- * at the far side of the lawn. The reel runs down on its own.
+ * shudders on its wheels — and a blade takes the ball up over the top of
+ * the reel and throws it out the back: up between the handles, over the
+ * grass box, and down onto the rail at the far side of the lawn. The reel
+ * runs down on its own.
  *
  * The ball leaves the reel along the reel's own tangent, at the pace the
  * blade had brought it to, so there is no kink where the throw begins.
@@ -99,21 +99,17 @@ export const mower = definePiece<{ color: string }>({
     const r = rate(since)
     const shake = r > 0.05 ? 0.006 * r * Math.sin(t * 95) : 0
 
-    // The rails either side, the ground, and the lawn between: a raised strip of turf.
+    // The rails either side, the ground, and the lawn between: a raised strip of turf, whose sides the rails end on.
     rail(p, k, ink, weight, -0.5, LAWN[0] - 0.02)
-    post(p, k, ink, weight, LAWN[0] - 0.03)
     rail(p, k, ink, weight, LAWN[1] + 0.02, 2.5)
-    post(p, k, ink, weight, LAWN[1] + 0.03)
     soil(p, k, ink, weight, -0.5, LAWN[0] - 0.03)
     soil(p, k, ink, weight, LAWN[1] + 0.03, 2.5)
     solid(p, ink, weight, bg)
     p.rect(((LAWN[0] + LAWN[1]) / 2) * k, ((FLOOR + 0.5) / 2) * k, (LAWN[1] - LAWN[0]) * k, (0.5 - FLOOR) * k)
-    // Long grass in front of the mower, behind the ball; the mown stripe behind the mower: stubble.
+    // Long grass in front of the mower, behind the ball; behind the mower the stripe it has mown is bare.
     tuft(p, k, ink, weight, -0.11, FLOOR, 0.1, -0.02)
     tuft(p, k, ink, weight, 0.0, FLOOR, 0.12, 0.02)
     tuft(p, k, ink, weight, 0.12, FLOOR, 0.09, 0.03)
-    outline(p, ink, weight * 0.8)
-    for (let x = 0.96; x < LAWN[1] - 0.03; x += 0.075) p.line(x * k, FLOOR * k, (x + 0.008) * k, (FLOOR - 0.028) * k)
 
     // The mower, shuddering as the reel runs: handles, grass box, wheel, side plate, roller.
     p.push()
@@ -147,35 +143,6 @@ export const mower = definePiece<{ color: string }>({
     p.circle(WHEEL[0] * k, WHEEL[1] * k, 0.09 * k)
     reel(p, k, ink, weight, bg, turned(since), r)
     p.pop()
-
-    // Clippings, thrown back off the top of the reel toward the box while it runs.
-    if (r > 0.15) {
-      p.push()
-      p.stroke(ink)
-      p.strokeWeight(weight)
-      for (let i = 0; i < 7; i++) {
-        const f = (((t * 2.6 + i / 7) % 1) + 1) % 1
-        const vx = 1.5 + 0.5 * ((i * 3) % 4)
-        const vy = -1.6 - 0.25 * ((i * 5) % 3)
-        const d = f * 0.42
-        const x = REEL[0] + 0.02 + vx * d
-        const y = REEL[1] - REEL_R - 0.03 + vy * d + (G / 2) * d * d
-        const a = i * 1.9 + f * 9
-        if (y < -0.04 || x < 0.9) p.line((x - Math.cos(a) * 0.02) * k, (y - Math.sin(a) * 0.02) * k, (x + Math.cos(a) * 0.02) * k, (y + Math.sin(a) * 0.02) * k)
-      }
-      p.pop()
-    }
-    // The throw: a flick of lines behind the ball where the blade let it go.
-    if (since > SWEEP && since < SWEEP + 0.16) {
-      const f = over(since, SWEEP, SWEEP + 0.16)
-      p.push()
-      p.stroke(s.color)
-      p.strokeWeight(weight)
-      for (const a of [LET_GO - 0.75, LET_GO - 0.35, LET_GO + 0.05]) {
-        p.line((REEL[0] + Math.cos(a) * (0.25 + 0.06 * f)) * k, (REEL[1] + Math.sin(a) * (0.25 + 0.06 * f)) * k, (REEL[0] + Math.cos(a) * (0.3 + 0.1 * f)) * k, (REEL[1] + Math.sin(a) * (0.3 + 0.1 * f)) * k)
-      }
-      p.pop()
-    }
   },
   over: (p, _s, { k, ink, weight }) => {
     // The long grass in front of the mower stands before the ball: it rolls in through it.
