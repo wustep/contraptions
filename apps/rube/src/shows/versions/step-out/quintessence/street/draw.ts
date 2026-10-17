@@ -6,14 +6,14 @@ import { LIFE_RED, WALTER_WARM } from '../worlds'
 import { contact, INK, knock, mix, ramp, rgba, rule, settle, slab } from '../negatives/hand'
 import { drawCrossers, drawPeople, drawPigeons, drawSale, drawTraffic, FLASH, peopleShadows, steam, WALK } from './city'
 import { AVENUE_FAR, drawFireEscape, drawFronts, drawGround, drawRoofs, skyShows } from './fronts'
-import { LANE, morning, S, shadeAt, shadeTint } from './light'
+import { LANE, morning, S, shadeEdge, shadeTint } from './light'
 import { CELLAR, cherylAt, CLANKS, CORNER, COVER, FLIPS, HAULS, IN, KERB, PAVE, SLOT_W, SLOTS, STAND, STOP, WALTER_STOP, walterAt } from './plan'
 import { drawAvenue, drawCity, drawSky } from './sky'
 
 /**
  * The street, drawn (the B1 builder's): the negatives room's hand in a New York morning. Flat values and the one
  * graphite line; the light is the soft thing, and the shade of the buildings behind the camera lies cool over the
- * street with the sun coming through it in bands. Nothing on it is red but the Life box on the one cover.
+ * road and the near side of the pavement, to one clean edge. Nothing on it is red but the Life box on the one cover.
  *
  * In order, back to front: the sky and the city behind (`sky.ts`, only where the fronts let it be seen), the fronts
  * (`fronts.ts`), the pavement and the road, the furniture and the stand, the people and the pigeons, the traffic and
@@ -512,65 +512,17 @@ function blob(path: Path2D, x: number, y: number, rx: number, ry: number, rot: n
 }
 
 /**
- * A tree's shadow from across the street (cells, about its bough): sprigs out from the bough, leaves along each, in
- * three groups that stir apart. Pure geometry, so each is made once and kept; `skip` leaves out what would fall where
- * it must not (the cover), judged where it hangs at rest.
- */
-const canopies = new Map<number, Path2D[]>()
-function canopy(seed: number, skip: (x: number, y: number) => boolean, at: Pt): Path2D[] {
-  const kept = canopies.get(seed)
-  if (kept) return kept
-  const groups = [new Path2D(), new Path2D(), new Path2D()]
-  for (let s = 0; s < 6; s++) {
-    const path = groups[s % 3]
-    const a = (s / 6) * Math.PI * 2 + hash(s, 1, seed)
-    const len = 0.9 + 0.8 * hash(s, 2, seed)
-    for (let i = 1; i <= 7; i++) {
-      const u = i / 7
-      const bend = 0.25 * u * u * (hash(s, 3, seed) - 0.5)
-      const x = Math.cos(a + bend) * len * u
-      const y = Math.sin(a + bend) * len * u * 0.7 + 0.25 * u
-      if (skip(at[0] + x, at[1] + y)) continue
-      for (const side of [-1, 1]) {
-        const r = 0.07 + 0.05 * hash(s * 9 + i, side + 5, seed)
-        const rot = a + side * 0.9 + 0.5 * (hash(s * 9 + i, side + 7, seed) - 0.5)
-        const lx = x + Math.cos(rot) * r
-        const ly = y + Math.sin(rot) * r
-        const ex = Math.cos(rot) * r
-        const ey = Math.sin(rot) * r
-        // Wound the same way as the shade's boxes, so where a leaf falls in the shade the two are one shade.
-        path.moveTo(lx - ex, ly - ey)
-        path.quadraticCurveTo(lx + ey * 0.6, ly - ex * 0.6, lx + ex, ly + ey)
-        path.quadraticCurveTo(lx - ey * 0.6, ly + ex * 0.6, lx - ex, ly - ey)
-        path.closePath()
-      }
-    }
-  }
-  canopies.set(seed, groups)
-  return groups
-}
-
-/** A tree's shadow added into `into` at `at`, its three groups each stirring on its own. */
-function leafShadow(into: Path2D, t: number, at: Pt, seed: number, skip: (x: number, y: number) => boolean): void {
-  canopy(seed, skip, at).forEach((g, i) => {
-    const dx = 0.05 * sway(t, 0.21 + 0.07 * i, seed + i)
-    const dy = 0.025 * sway(t, 0.33 + 0.05 * i, seed + i + 3)
-    const turn = 0.035 * sway(t, 0.27, seed + i * 5)
-    const c = Math.cos(turn)
-    const sn = Math.sin(turn)
-    into.addPath(g, new DOMMatrix([c, sn, -sn, c, at[0] + dx, at[1] + dy]))
-  })
-}
-
-/**
- * The shade over the street (see `light.ts`): the buildings behind the camera, and the shadows cast long to the left
- * by everything standing in the sun: the stand, the lamp post, the signal, the people, the two of them; the trees
- * across the street dappling the lit fronts. Laid on in two fills of a cool blue, lighter on the ground; every shape
- * in them is wound the same way, so where they overlap they are one shade, not two.
+ * The shade over the street (see `light.ts`): the buildings behind the camera over the road and the near side of the
+ * pavement, to one clean edge; and the shadows cast long to the left by what stands in the sun: the stand, the man at
+ * the stand, the two of them. Laid on in two fills of a cool blue, lighter on the ground; every shape in them is wound
+ * the same way, so where they overlap they are one shade, not two.
  */
 function drawShade(ctx: C2, v: View, t: number): void {
   const k = v.k
-  const { walls, ground } = shadeAt(t, v.x0, v.x1, v.y1 + 1)
+  const walls = new Path2D()
+  const ground = new Path2D()
+  const edge = shadeEdge(t)
+  ground.rect(v.x0 - 1, edge, v.x1 - v.x0 + 2, v.y1 + 1 - edge)
   // The stand's shadow on the front behind it and along the pavement.
   walls.rect(STAND.x0 - 0.42, STAND.eave + 0.25, 0.42, PAVE - STAND.eave - 0.25)
   ground.moveTo(STAND.x0 - 2.2, PAVE)
@@ -578,25 +530,9 @@ function drawShade(ctx: C2, v: View, t: number): void {
   ground.lineTo(STAND.x0 + 0.4, PAVE + 0.22)
   ground.lineTo(STAND.x0 - 1.9, PAVE + 0.22)
   ground.closePath()
-  // Poles: the lamp post's, the signal's, thin on the wall and the paving.
-  for (const [x, h] of [[2.9, 4.4], [CORNER.kerb - 0.16, 3.6]] as [number, number][]) {
-    walls.rect(x - 0.5, PAVE - h, 0.07, h)
-    ground.moveTo(x, PAVE + 0.26)
-    ground.lineTo(x - 0.5, PAVE)
-    ground.lineTo(x - 0.43, PAVE)
-    ground.lineTo(x + 0.07, PAVE + 0.26)
-    ground.closePath()
-  }
   // The two of them: their shadows long on the paving.
   if (t >= IN) for (const [x] of [walterAt(t), cherylAt(t)]) blob(ground, x - 0.42, PAVE + 0.05, 0.44, 0.05, 0)
   peopleShadows(ground, t)
-  // Leaves: the trees across the street, their shadows on the lit fronts (never on the cover).
-  const cover = { x0: COVER.x0 - 0.1, x1: COVER.x1 + 0.1, y0: COVER.y0 - 0.15, y1: COVER.y1 + 0.08 }
-  const off = (x: number, y: number) => x > cover.x0 && x < cover.x1 && y > cover.y0 && y < cover.y1
-  for (const [cx, cy, seed] of [[0.3, -2.1, 1], [5.3, -2.0, 2], [8.0, -2.2, 3], [13.5, -1.8, 4], [19.6, -2.7, 5], [24.4, -2.4, 6]] as [number, number, number][]) {
-    if (cx + 3 < v.x0 || cx - 3 > v.x1) continue
-    leafShadow(walls, t, [cx, cy], seed, off)
-  }
   ctx.save()
   ctx.scale(k, k)
   ctx.fillStyle = shadeTint(t)
