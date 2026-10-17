@@ -238,17 +238,23 @@ export const pins = definePiece<PinsState>({
     for (const [x, y] of BODY) p.vertex(x * k, y * k)
     p.endShape(p.CLOSE)
     // The pit at work: cleats on its floor running back to the lift, and the lift's running up the back wall and the post into the hood.
+    // They stand up out of the belts as it starts and fold back down as it stops, rather than blinking in and out.
     if (clearing) {
       const v = since - T_CLEAR
+      const out = Math.min(over(v, 0, 0.15), 1 - over(since, T_SET - 0.15, T_SET))
+      p.push()
       outline(p, ink, weight * 0.8)
+      // Square ends, so a cleat folded flat is not left as a dot.
+      p.strokeCap(p.SQUARE)
       for (let n = 0; n < 5; n++) {
         const x = BIN0 + WALL + 0.03 + ((n * 0.12 + v * V_BED) % 0.6)
-        p.line(x * k, BED * k, x * k, (BED - 0.025) * k)
+        p.line(x * k, BED * k, x * k, (BED - 0.035 * out) * k)
       }
       for (let n = 0; n < 6; n++) {
         const y = BED - 0.04 - ((n * 0.14 + v * V_LIFT) % 0.84)
-        p.line((BIN1 - WALL) * k, y * k, (BIN1 - WALL - 0.04) * k, y * k)
+        p.line((BIN1 - WALL) * k, y * k, (BIN1 - WALL - 0.05 * out) * k, y * k)
       }
+      p.pop()
     }
     // Whatever goes up into the hood, or comes down out of it, is cut off at the hood's top: it is inside.
     p.push()
