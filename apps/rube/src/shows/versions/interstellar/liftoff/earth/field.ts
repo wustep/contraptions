@@ -12,8 +12,8 @@ import { HEAD_BACK } from './yard'
  * under the corn at an even pace. Across the channel are four flap gates,
  * boards hung from a bar; the floating ball shoulders each one open on a note
  * of the piano, the board rides on his back as he goes under, and it slaps
- * shut behind him. At the end the channel spills over the edge of the bank,
- * where the truck is waiting below.
+ * shut behind him. At the end of the bank the truck is waiting below, backed
+ * up to it.
  */
 
 /** The gates, on the piano's notes as measured. The last is the strongest. */
@@ -131,17 +131,6 @@ export const cornrow = part<RowState>(
           for (const side of [-1, 1]) p.circle(X(g.x + side * (0.08 + shut * 0.4)), X(WATER - 0.04 - shut * 0.15 + shut * shut * 0.8), X(0.04))
         }
       }
-      // At the end of the bank the channel spills over, down past the truck.
-      const lip = s.length - 0.45
-      p.noFill()
-      p.stroke(alpha(p, DUST.teal, 0.8))
-      p.strokeWeight(Math.max(1.5, k * 0.05))
-      p.beginShape()
-      for (let i = 0; i <= 10; i++) {
-        const u = i / 10
-        p.vertex(X(lip + 0.25 * u), X(WATER + 1.05 * u * u))
-      }
-      p.endShape()
     },
     over: (p, s, c) => {
       // The water over the ball's lower half, and the channel's near wall, low so the ball shows above it.

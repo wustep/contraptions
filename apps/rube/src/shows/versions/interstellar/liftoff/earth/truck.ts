@@ -725,15 +725,8 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
     cornWall(p, k, ink, weight, { x0: Math.max(f.x0 - 1, s.b0 + 1.4), x1: wx1, foot: GROUND - 0.1, h: 1.25, t: t + 1, fill: DUST.sage, seed: 32, tassels: false, taper: [s.b0 + 1.4, s.edge - 0.1] })
   }
   drawFlush(p, s, c, t, f)
-  // The bank the corn track runs along, the same earth as the track's, sloping down to the road.
-  const toe = s.b0 + 0.25
-  solid(p, ink, weight, DUST.shade)
-  p.beginShape()
-  p.vertex(X(-0.5), X(FLOOR))
-  p.vertex(X(toe - 0.75), X(FLOOR))
-  p.quadraticVertex(X(toe - 0.35), X(FLOOR + 0.15), X(toe), X(GROUND))
-  p.vertex(X(-0.5), X(GROUND))
-  p.endShape()
+  // (The bank ends square at the flume's end, the channel's own face: the truck is backed up to it. A slope down to the
+  // road ran on under the tailgate and the back wheel.)
   // The road, with the irrigation ditch across it and the dirt lip before it.
   outline(p, ink, weight)
   const [dx0, dx1] = s.ditch
