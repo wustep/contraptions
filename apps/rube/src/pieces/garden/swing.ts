@@ -132,7 +132,8 @@ export const swing = definePiece<{ color: string }>({
     post(p, k, ink, weight, railEnd)
     rail(p, k, ink, weight, POST_X - 0.03, 1.5)
     soil(p, k, ink, weight, -0.5, 1.5)
-    tuft(p, k, ink, weight, 0.5, 0.5, 0.11, 0.02)
+    // A tall tuft out from under the swing: right under the bottom of its arc, the seat swept through it and hung in it.
+    tuft(p, k, ink, weight, 0.98, 0.5, 0.11, 0.02)
     // The bough out over the gap from the far post, and the stop on the post's near face.
     gallows(p, k, ink, weight, PIVOT[0] - RINGS - 0.1, POST_X + 0.02, POST_X, BOUGH)
     solid(p, ink, weight, bg)
