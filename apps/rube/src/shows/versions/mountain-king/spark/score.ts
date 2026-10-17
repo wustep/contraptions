@@ -13,13 +13,12 @@ import { hearth, HEARTH_CELLS } from './loft/hearth'
 import { sneak } from './loft/sneak'
 import { stove } from './loft/stove'
 import { home, HOME_AT } from './loft/home'
-import { glassworks, GLORY_AT } from './glass/glassworks'
+import { glassworks } from './glass/glassworks'
 import { SLAM } from './glass/glass-plan'
-import { balloons, BURNER_AT } from './regatta/balloons'
+import { balloons } from './regatta/balloons'
 import { night } from './railway/night'
 import { express } from './railway/express'
 import { fireworks } from './railway/fireworks'
-import { dashGlass, dashRegatta } from './dash'
 
 /**
  * The whole show, in order: which world has the spark from when to when, and who has it inside each world. Every
@@ -34,7 +33,7 @@ import { dashGlass, dashRegatta } from './dash'
  *   101.95   DOOR. Statement 3, fortissimo: out of the smokestack of the night express, which runs away
  *   124.01   the festival: thrown into the fireworks field; the fuses; the coda's 23 chords are the finale
  *   147.0    silence: smoke, and the spark all but out in the ash
- *   148.24   the roll: it flares, and dashes home back through three fires (148.33, 148.56, 148.82)
+ *   148.24   the roll: it flares, and darts into the crate's fire and home out of the loft stove's (148.33)
  *   149.515  onto its wick. 149.815: the stove door bangs, the cat wakes, looks, and sleeps. The credits, in silence.
  */
 
@@ -68,8 +67,6 @@ const PLAN = (): LegPlan[] => [
       { part: fireworks, end: DOORS.back[0] },
     ],
   },
-  { key: 'back-regatta', world: 'regatta', at: [BURNER_AT[0] + 0.5, BURNER_AT[1]], links: [{ part: dashRegatta, end: DOORS.back[1] }] },
-  { key: 'back-glass', world: 'glassworks', at: [GLORY_AT[0] + 0.5, GLORY_AT[1]], links: [{ part: dashGlass, end: DOORS.back[2] }] },
   { key: 'home', world: 'loft', at: HOME_AT, links: [{ part: home, end: DURATION }] },
 ]
 
