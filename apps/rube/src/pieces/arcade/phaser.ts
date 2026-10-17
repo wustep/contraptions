@@ -81,7 +81,7 @@ export const phaser = definePiece<{ color: string; courses: string[] }>({
       [GATE_IN, -1, T_IN],
       [GATE_OUT, 1, T_OUT],
     ] as [number, number, number][]) {
-      const lit = 0.5 + 0.5 * (t > at ? 1 - over(t, at + 0.15, at + 0.7) : 0)
+      const lit = t > at ? 1 - over(t, at + 0.15, at + 0.7) : 0
       const px = gate + side * 0.15
       outline(p, ink, weight)
       p.line(px * k, 0.5 * k, px * k, (HEAD_Y - 0.06) * k)
@@ -90,7 +90,7 @@ export const phaser = definePiece<{ color: string; courses: string[] }>({
       p.line(gate * k, (HEAD_Y - 0.06) * k, gate * k, HEAD_Y * k)
       solid(p, ink, weight, s.color)
       p.rect(gate * k, HEAD_Y * k, 0.17 * k, 0.08 * k, 0.015 * k)
-      lamp(p, k, ink, weight, s.color, bg, px, HEAD_Y - 0.06, 0.03, lit > 0.6 ? 1 : 0)
+      lamp(p, k, ink, weight, s.color, bg, px, HEAD_Y - 0.06, 0.03, lit)
       solid(p, ink, weight, s.color)
       p.rect(gate * k, (FLOOR + 0.025) * k, 0.17 * k, 0.05 * k, 0.01 * k)
     }
