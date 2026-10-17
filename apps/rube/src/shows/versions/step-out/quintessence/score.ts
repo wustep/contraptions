@@ -2,7 +2,6 @@ import type { BallState, Piece, Pt } from '../../../../parts'
 import type { Placed } from '../../../../plan'
 import type { Framing } from '../../../registry'
 import { director, follower, type Shot } from './camera'
-import { credits } from './credits'
 import { lay, scenery, smooth, standing, type Chain, type Link } from './kit'
 import { DURATION, PEAK, SEAM } from './music'
 import { FIRST, SEAMS } from './seams'
@@ -97,7 +96,7 @@ const ashCut = scenery<null>({
   },
 })
 
-/** A big, sparse claim of cells round a place, so its after-drawings (the ash, the credits' shade) are drawn wherever the camera is. */
+/** A big, sparse claim of cells round a place, so its after-drawings (the ash, the passages) are drawn wherever the camera is. */
 const claim = (x0: number, y0: number, x1: number, y1: number): Pt[] => {
   const out: Pt[] = []
   for (let x = x0; x <= x1; x += 3) for (let y = y0; y <= y1; y += 3) out.push([x, y])
@@ -107,7 +106,7 @@ const AROUND = claim(-80, -60, 80, 40)
 
 /**
  * Each place's standing scenery; what is drawn over its machine (its near plane, its air and its light, then the ash
- * or the credits' haze); and last, over everything, the passage that lays the next place over it (`passage.ts`).
+ * where it closes in); and last, over everything, the passage that lays the next place over it (`passage.ts`).
  */
 const SETS = (passage: Placed): Partial<Record<WorldKey, WorldSet>> => {
   const front = (piece: Piece<null>) => standing(piece, 0, 0, AROUND, null, DURATION)
@@ -121,7 +120,7 @@ const SETS = (passage: Placed): Partial<Record<WorldKey, WorldSet>> => {
     home: { scenery: [standing(homeSet, 0, 0, HOME_CELLS, null, DURATION)], after: [front(homeFront), standing(ashCut, 0, 0, AROUND, null, DURATION), passage] },
     himalaya: { scenery: [standing(himalayaSet, 0, 0, HIMALAYA_CELLS, null, DURATION)], after: [front(himalayaFront), passage] },
     press: { scenery: [standing(pressSet, 0, 0, PRESS_CELLS, null, DURATION)], after: [front(pressFront), passage] },
-    street: { scenery: [standing(streetSet, 0, 0, STREET_CELLS, null, DURATION)], after: [front(streetFront), standing(credits, 0, 0, AROUND, null, DURATION), passage] },
+    street: { scenery: [standing(streetSet, 0, 0, STREET_CELLS, null, DURATION)], after: [front(streetFront), passage] },
   }
 }
 
