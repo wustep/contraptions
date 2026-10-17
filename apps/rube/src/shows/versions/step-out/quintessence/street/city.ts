@@ -20,7 +20,7 @@ type C2 = CanvasRenderingContext2D
 
 /* ------------------------------------------------------------------ the traffic */
 
-type Kind = 'cab' | 'car' | 'bus' | 'truck' | 'bike'
+type Kind = 'cab' | 'car' | 'bus'
 interface Vehicle {
   kind: Kind
   lane: 'far' | 'near'
@@ -38,30 +38,21 @@ export const FLASH = 266.6
 /** Where each lane stops for the light: the far lane short of the corner, the near lane at the far side. */
 const STOP_LINE = { far: 13.35, near: AVENUE_FAR + 0.2 }
 
-const DIM: Record<Kind, [number, number]> = { cab: [3.0, 0.92], car: [3.1, 0.88], bus: [7.4, 1.78], truck: [4.6, 1.55], bike: [1.15, 1.12] }
+const DIM: Record<Kind, [number, number]> = { cab: [3.0, 0.92], car: [3.1, 0.88], bus: [7.4, 1.78] }
 
+/** One or two at a time, either way, and the one bus; then one in each lane caught by the light. */
 export const TRAFFIC: Vehicle[] = [
   { kind: 'cab', lane: 'far', at: 227.9, v: 7.6 },
   { kind: 'cab', lane: 'far', at: 237.0, v: 6.0 },
-  { kind: 'bus', lane: 'near', at: 238.9, v: 4.2 },
   { kind: 'car', lane: 'far', at: 240.3, v: 5.6, color: '#CFC8B6' },
   { kind: 'cab', lane: 'near', at: 242.1, v: 6.4 },
-  { kind: 'cab', lane: 'far', at: 243.2, v: 6.1 },
-  { kind: 'truck', lane: 'near', at: 245.2, v: 4.6, color: '#7E8C84' },
   { kind: 'car', lane: 'far', at: 246.0, v: 5.2, color: '#4F5F52' },
-  { kind: 'bike', lane: 'far', at: 249.6, v: 2.3 },
   { kind: 'cab', lane: 'near', at: 248.4, v: 6.0 },
   { kind: 'cab', lane: 'far', at: 252.6, v: 6.3 },
-  { kind: 'car', lane: 'near', at: 251.4, v: 5.5, color: '#A3A7A8' },
   { kind: 'bus', lane: 'near', at: 255.0, v: 4.1 },
-  { kind: 'cab', lane: 'far', at: 255.6, v: 5.8 },
-  { kind: 'car', lane: 'far', at: 258.1, v: 5.4, color: '#2F3438' },
-  { kind: 'cab', lane: 'near', at: 258.0, v: 6.0 },
   // Caught by the light.
   { kind: 'cab', lane: 'far', at: 261.0, v: 6.0 },
-  { kind: 'car', lane: 'far', at: 262.6, v: 5.6, color: '#6E7F95' },
-  { kind: 'cab', lane: 'near', at: 260.8, v: 6.2 },
-  { kind: 'truck', lane: 'near', at: 263.0, v: 4.8, color: '#A3927A' },
+  { kind: 'car', lane: 'near', at: 263.0, v: 5.5, color: '#6E7F95' },
 ]
 
 const smin = (a: number, b: number, s: number) => -s * Math.log(Math.exp(-a / s) + Math.exp(-b / s))
@@ -110,7 +101,7 @@ function wheel(ctx: C2, k: number, x: number, y: number, r: number, turn: number
 }
 
 /** A vehicle in side view, facing `dir`, its front at `x`, wheels on `y`. */
-function vehicle(ctx: C2, k: number, car: Vehicle, x: number, y: number, dir: number, t: number, glass: string): void {
+function vehicle(ctx: C2, k: number, car: Vehicle, x: number, y: number, dir: number, glass: string): void {
   const [len, h] = DIM[car.kind]
   const back = x - dir * len
   const a = Math.min(x, back)
@@ -118,69 +109,8 @@ function vehicle(ctx: C2, k: number, car: Vehicle, x: number, y: number, dir: nu
   const line = rgba(INK, 0.85)
   const turn = (x / 0.24) * dir
   ctx.lineWidth = 0.8
-  if (car.kind === 'bike') {
-    // A cyclist: two wheels, a frame, the rider's back bent over, legs turning the pedals. Drawn a little small, so
-    // the rider's head stays below the pavement's line, where the balls roll.
-    ctx.save()
-    ctx.translate(x * k, y * k)
-    ctx.scale(0.78, 0.78)
-    ctx.translate(-x * k, -y * k)
-    const r = 0.27
-    const w0 = a + r
-    const w1 = b - r
-    ctx.strokeStyle = '#2A2E31'
-    ctx.lineWidth = Math.max(1, 0.035 * k)
-    for (const wx of [w0, w1]) {
-      ctx.beginPath()
-      ctx.arc(wx * k, (y - r) * k, r * k, 0, Math.PI * 2)
-      ctx.stroke()
-    }
-    const crank: Pt = [(w0 + w1) / 2, y - r]
-    const seat: Pt = [crank[0] - dir * 0.12, y - r - 0.42]
-    const bar: Pt = [crank[0] + dir * 0.36, y - r - 0.48]
-    ctx.strokeStyle = '#3F6A63'
-    ctx.beginPath()
-    ctx.moveTo(w0 * k, (y - r) * k)
-    ctx.lineTo(crank[0] * k, crank[1] * k)
-    ctx.lineTo(seat[0] * k, seat[1] * k)
-    ctx.lineTo(bar[0] * k, bar[1] * k)
-    ctx.lineTo(w1 * k, (y - r) * k)
-    ctx.moveTo(crank[0] * k, crank[1] * k)
-    ctx.lineTo(bar[0] * k, bar[1] * k)
-    ctx.stroke()
-    const ph = t * 5.2
-    const hip: Pt = [seat[0], seat[1] - 0.04]
-    const sh: Pt = [hip[0] + dir * 0.3, hip[1] - 0.42]
-    ctx.strokeStyle = '#353B42'
-    ctx.lineCap = 'round'
-    ctx.lineWidth = Math.max(1.5, 0.09 * k)
-    for (const s of [0, Math.PI]) {
-      const fx = crank[0] + Math.cos(ph + s) * 0.13
-      const fy = crank[1] + Math.sin(ph + s) * 0.13
-      const kx = (hip[0] + fx) / 2 + dir * 0.16
-      const ky = (hip[1] + fy) / 2 - 0.05
-      ctx.beginPath()
-      ctx.moveTo(hip[0] * k, hip[1] * k)
-      ctx.lineTo(kx * k, ky * k)
-      ctx.lineTo(fx * k, fy * k)
-      ctx.stroke()
-    }
-    ctx.lineWidth = Math.max(2, 0.14 * k)
-    ctx.beginPath()
-    ctx.moveTo(hip[0] * k, hip[1] * k)
-    ctx.lineTo(sh[0] * k, sh[1] * k)
-    ctx.lineTo(bar[0] * k, (bar[1] - 0.02) * k)
-    ctx.stroke()
-    ctx.fillStyle = '#353B42'
-    ctx.beginPath()
-    ctx.arc((sh[0] + dir * 0.1) * k, (sh[1] - 0.12) * k, 0.1 * k, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.lineCap = 'butt'
-    ctx.restore()
-    return
-  }
-  const color = car.color ?? (car.kind === 'cab' ? '#DDA62F' : car.kind === 'bus' ? '#E8E5DC' : '#DCD3BF')
-  const r = car.kind === 'bus' || car.kind === 'truck' ? 0.3 : 0.24
+  const color = car.color ?? (car.kind === 'cab' ? '#DDA62F' : '#E8E5DC')
+  const r = car.kind === 'bus' ? 0.3 : 0.24
   const body0 = y - r * 0.9
   if (car.kind === 'bus') {
     ctx.fillStyle = color
@@ -195,34 +125,6 @@ function vehicle(ctx: C2, k: number, car: Vehicle, x: number, y: number, dir: nu
     ctx.fillRect(door * k, (y - h + 0.22) * k, 0.7 * k, (h - 0.5) * k)
     ctx.strokeStyle = line
     ctx.strokeRect(a * k, (y - h) * k, len * k, (h - r * 0.9) * k)
-  } else if (car.kind === 'truck') {
-    // A box truck: the box in its panels, its roof rail, rub rail and rear doors' post darker; the cab before it.
-    const cabW = 1.25
-    const bw = len - cabW - 0.05
-    const cab0 = dir > 0 ? b - cabW : a
-    const box0 = dir > 0 ? a : a + cabW + 0.05
-    const top = y - h
-    ctx.fillStyle = color
-    ctx.fillRect(box0 * k, top * k, bw * k, (body0 - top) * k)
-    ctx.fillStyle = mix(color, INK, 0.4)
-    ctx.fillRect(box0 * k, top * k, bw * k, 0.1 * k)
-    ctx.fillRect(box0 * k, (body0 - 0.18) * k, bw * k, 0.08 * k)
-    ctx.fillRect((dir > 0 ? box0 : box0 + bw - 0.12) * k, (top + 0.1) * k, 0.12 * k, (body0 - top - 0.28) * k)
-    ctx.strokeStyle = rgba(INK, 0.4)
-    ctx.beginPath()
-    for (let sx = box0 + 0.6; sx < box0 + bw - 0.3; sx += 0.6) {
-      ctx.moveTo(sx * k, (top + 0.1) * k)
-      ctx.lineTo(sx * k, (body0 - 0.18) * k)
-    }
-    ctx.stroke()
-    ctx.strokeStyle = line
-    ctx.strokeRect(box0 * k, top * k, bw * k, (body0 - top) * k)
-    ctx.fillStyle = '#53687A'
-    ctx.fillRect(cab0 * k, (y - h * 0.72) * k, cabW * k, (h * 0.72 - r * 0.9) * k)
-    ctx.fillStyle = glass
-    ctx.fillRect((cab0 + (dir > 0 ? 0.45 : 0.15)) * k, (y - h * 0.68) * k, 0.62 * k, 0.38 * k)
-    ctx.strokeStyle = line
-    ctx.strokeRect(cab0 * k, (y - h * 0.72) * k, cabW * k, (h * 0.72 - r * 0.9) * k)
   } else {
     // A car: its body, the cabin's glass, the pillars; a cab's roof light and checker band.
     const top = y - h
@@ -298,7 +200,7 @@ export function drawTraffic(ctx: C2, v: View, t: number, lane: 'far' | 'near'): 
     ctx.lineTo((a + len - 0.6) * k, (y - 0.12) * k)
     ctx.lineTo((a - 1.4) * k, (y - 0.12) * k)
     ctx.fill()
-    vehicle(ctx, k, car, x, y, dir, t, glass)
+    vehicle(ctx, k, car, x, y, dir, glass)
   })
 }
 
@@ -312,19 +214,11 @@ interface Walker {
   h: number
   coat: string
   hat?: boolean
-  /** Comes out of a door at the first stop, fading in from its dark. */
-  door?: boolean
 }
 
 export const WALKERS: Walker[] = [
   // The one who buys a paper: along from the left, up to the stand's side, a paper handed out, and away with it.
   { way: [[244.6, -1.5], [250.1, 4.55], [253.4, 4.55], [258.9, -1.3]], y: 0.3, h: 1.2, coat: '#5B5347', hat: true },
-  // Out of the café's door and away briskly along the street to the left, past the stand.
-  { way: [[252.0, 10.6], [252.6, 10.6], [260.8, -0.8]], y: 0.24, h: 1.12, coat: '#3D4650', door: true },
-  // Across the avenue: one going along, one coming to the far corner to wait for the light.
-  { way: [[237.5, AVENUE_FAR + 0.2], [250.0, AVENUE_FAR + 13]], y: 0.28, h: 1.16, coat: '#6C6A5C' },
-  { way: [[246.5, AVENUE_FAR + 12.5], [256.2, AVENUE_FAR + 0.7], [270, AVENUE_FAR + 0.7]], y: 0.32, h: 1.1, coat: '#40465A', hat: true },
-  { way: [[241.0, AVENUE_FAR + 13], [255.5, AVENUE_FAR + 1.6], [256.2, AVENUE_FAR + 1.6], [270, AVENUE_FAR + 1.6]], y: 0.2, h: 1.18, coat: '#7A6C58' },
 ]
 
 /** Where a walker is at `t`, which way they face, and how far into a stride (for the legs), or null. */
@@ -346,14 +240,13 @@ function walkerAt(w: Walker, t: number): { x: number; dir: number; stride: numbe
 }
 
 /** A figure walking: the coat, the head, a hat; legs and arms swinging with the stride. Seen against the light. */
-function figure(ctx: C2, k: number, x: number, foot: number, h: number, dir: number, stride: number, coat: string, hat: boolean, reach = 0, alpha = 1): void {
+function figure(ctx: C2, k: number, x: number, foot: number, h: number, dir: number, stride: number, coat: string, hat: boolean, reach = 0): void {
   const s = h / 1.2
   const swing = Math.sin(stride * Math.PI) * 0.17 * s
   const hip: Pt = [x, foot - 0.55 * s]
   const neck: Pt = [x + dir * 0.03 * s, foot - 1.0 * s]
-  const legs = rgba('#2C3035', alpha)
   ctx.lineCap = 'round'
-  ctx.strokeStyle = legs
+  ctx.strokeStyle = '#2C3035'
   ctx.lineWidth = Math.max(1.5, 0.085 * k * s)
   ctx.beginPath()
   ctx.moveTo(hip[0] * k, hip[1] * k)
@@ -362,7 +255,7 @@ function figure(ctx: C2, k: number, x: number, foot: number, h: number, dir: num
   ctx.lineTo((x - swing) * k, foot * k)
   ctx.stroke()
   // The coat, to the knee.
-  ctx.fillStyle = rgba(coat, alpha)
+  ctx.fillStyle = coat
   ctx.beginPath()
   ctx.moveTo((neck[0] - 0.13 * s) * k, (neck[1] + 0.04 * s) * k)
   ctx.lineTo((neck[0] + 0.13 * s) * k, (neck[1] + 0.04 * s) * k)
@@ -372,13 +265,13 @@ function figure(ctx: C2, k: number, x: number, foot: number, h: number, dir: num
   ctx.fill()
   // An arm: swinging, or reaching out for the paper.
   const arm = reach > 0 ? ([neck[0] + dir * (0.18 + 0.32 * reach) * s, neck[1] + (0.3 - 0.12 * reach) * s] as Pt) : ([neck[0] - swing * 0.9, neck[1] + 0.48 * s] as Pt)
-  ctx.strokeStyle = rgba(mix(coat, INK, 0.25), alpha)
+  ctx.strokeStyle = mix(coat, INK, 0.25)
   ctx.lineWidth = Math.max(1.5, 0.07 * k * s)
   ctx.beginPath()
   ctx.moveTo((neck[0] + dir * 0.04 * s) * k, (neck[1] + 0.08 * s) * k)
   ctx.lineTo(arm[0] * k, arm[1] * k)
   ctx.stroke()
-  ctx.fillStyle = rgba('#3A3632', alpha)
+  ctx.fillStyle = '#3A3632'
   ctx.beginPath()
   ctx.arc((neck[0] + dir * 0.02 * s) * k, (neck[1] - 0.11 * s) * k, 0.1 * s * k, 0, Math.PI * 2)
   ctx.fill()
@@ -395,14 +288,9 @@ export function drawPeople(ctx: C2, v: View, t: number): void {
   for (const [n, w] of WALKERS.entries()) {
     const at = walkerAt(w, t)
     if (!at || at.x < v.x0 - 1 || at.x > v.x1 + 1) continue
-    const far = at.x > AVENUE_FAR - 0.5
-    const coat = far ? mix(w.coat, '#D9D6CC', 0.2) : w.coat
-    let reach = 0
-    let alpha = 1
-    if (n === 0) reach = ramp(t, 250.4, 250.9) * (1 - ramp(t, 252.2, 252.7))
-    if (w.door) alpha = ramp(t, w.way[0][0], w.way[1][0] + 0.2)
+    const reach = n === 0 ? ramp(t, 250.4, 250.9) * (1 - ramp(t, 252.2, 252.7)) : 0
     const bob = at.still ? 0.01 * sway(t, 0.4, n) : 0
-    figure(ctx, k, at.x, PAVE + w.y + bob, w.h, at.dir, at.stride, coat, !!w.hat, reach, alpha)
+    figure(ctx, k, at.x, PAVE + w.y + bob, w.h, at.dir, at.stride, w.coat, !!w.hat, reach)
     // The paper: under the arm once it is bought.
     if (n === 0 && t > 252.3) {
       ctx.fillStyle = '#ECE8DD'
@@ -413,14 +301,13 @@ export function drawPeople(ctx: C2, v: View, t: number): void {
 }
 
 /**
- * On the walk sign, people cross this street at the corner, on the crossing beside the two of them: one who has come
- * down the avenue toward the camera as the light changed and waits at the kerb, then goes down off it and out of the
- * frame's foot; one coming up out of it to the corner. Seen from the front, a leg lifting at each step, small far up
- * the avenue and larger the nearer they come. Each way is [time, x, y] stops, walking between them.
+ * On the walk sign, a man crosses this street at the corner, on the crossing beside the two of them: he has come down
+ * the avenue toward the camera as the light changed and waits at the kerb, then goes down off it and out of the
+ * frame's foot. Seen from the front, a leg lifting at each step, small far up the avenue and larger the nearer he
+ * comes. His way is [time, x, y] stops, walking between them.
  */
 const CROSSERS: { way: [number, number, number][]; h: number; coat: string }[] = [
   { way: [[255.2, CORNER.kerb + 0.95, -0.35], [259.6, CORNER.kerb + 0.75, PAVE + 0.3], [WALK + 0.3, CORNER.kerb + 0.75, PAVE + 0.3], [WALK + 5.0, CORNER.kerb + 0.68, 4.2]], h: 1.14, coat: '#4B4F44' },
-  { way: [[WALK + 1.0, CORNER.kerb + 1.08, 4.2], [WALK + 6.2, CORNER.kerb + 1.02, PAVE + 0.34]], h: 1.1, coat: '#6E5E4E' },
 ]
 
 export function drawCrossers(ctx: C2, v: View, t: number): void {
