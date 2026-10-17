@@ -305,8 +305,10 @@ export function drawTrackFurniture(
     if (detailed)
       label(
         caption,
-        time >= runner.junction && time < runner.finish && outcome.incoming ? 6 : 0,
-        row + (outcome.incoming === 'dunk' && outcome.penalty ? 1.45 : 0.9),
+        time >= runner.junction && time < runner.finish && outcome.incoming
+          ? outcome.incoming === 'dunk' && outcome.penalty ? 8.2 : 6
+          : 0,
+        row + 0.9,
       )
     if (detailed && outcome.protected && time >= runner.junction && time < runner.finish) {
       p.fill('#636c5e')

@@ -47,3 +47,9 @@ Played a complete local derby with a 6–6 points tie: Miso won on 30.20 seconds
 `npm run check:derby` is included in the normal `npm test` / `npm run build` pipeline. It exhausts 300 route/card/heat combinations and 300 seeded complete house derbies. Browser play-tests cover complete solo and local sessions, all four cards, both routes, blocks, halved attacks, ties, the time tiebreak, replay, pause, rules, private handoff, rematch, and PNG downloads.
 
 The static route is emitted as `dist/games/dirty-little-derby/index.html`, so it uses the existing Vercel static directory routing. The new route is also handled by the development and preview server's trailing-slash redirect. No existing page, navigation registry, or show is changed.
+
+Final verification: the complete `npm run build` passed under Node 22.23.3, including lint, TypeScript, every pre-existing check suite, the new derby checks, and Vite's production build. The production preview served this route and the existing Machine, Playground, and Shows pages successfully. Its slashless game URL redirected with the query intact. A complete production derby and PNG export also worked with the browser network disabled after the initial load, with no console errors.
+
+## Screenshots
+
+Actual browser captures: [clubhouse](01-clubhouse.png), [secret plan](02-secret-plan.png), [pranks in motion](03-mischief.png), [finish photo](04-finish-photo.png), [trophy](05-tiny-trophy.png), and [phone podium](06-phone-podium.png).
