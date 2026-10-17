@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { FLOOR, R, ROLL, definePiece, flick, over, rail, ramp, rankBy, roll, type Lane, type Pt, type Seg } from '../../parts'
-import { lamp, score, tube } from './neon'
+import { lamp, litColor, score, tube } from './neon'
 
 /**
  * A neon zigzag. The lane runs out onto a ramp made of a lit tube; the
@@ -98,7 +98,7 @@ export const zigzag = definePiece<ZigzagState>({
       outline(p, ink, weight)
       p.line(side * POST * k, (by - 0.16) * k, side * POST * k, (by + 0.16) * k)
       const thick = PAD * (1 - 0.35 * hit)
-      solid(p, ink, weight, lit > 0.5 ? s.color : bg)
+      solid(p, ink, weight, litColor(bg, s.color, lit))
       p.rect(side * (POST - thick / 2) * k, by * k, thick * k, 0.22 * k, 0.015 * k)
       lamp(p, k, ink, weight, s.color, bg, side * POST, by - 0.19, 0.025, lit)
     }

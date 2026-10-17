@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { FAST, R, ROLL, definePiece, flick, over, rail, ramp, roll, type Lane } from '../../parts'
-import { flash, lamp, score } from './neon'
+import { flash, lamp, litColor, score } from './neon'
 
 /**
  * A pop bumper: a mushroom on a post beside the lane, its skirt out over
@@ -38,7 +38,7 @@ export const bumper = definePiece<{ color: string }>({
     p.line(0, 0.5 * k, 0, capY * k)
     p.line(-0.08 * k, 0.5 * k, 0.08 * k, 0.5 * k)
     // The skirt: a ring at the ball's height, in the colour when lit.
-    solid(p, ink, weight, lit > 0.5 ? s.color : bg)
+    solid(p, ink, weight, litColor(bg, s.color, lit))
     p.ellipse(0, -0.02 * k, SKIRT * 2 * k, 0.12 * k)
     // The lamp on the post under the cap.
     lamp(p, k, ink, weight, s.color, bg, 0, capY + 0.1, 0.05, lit)

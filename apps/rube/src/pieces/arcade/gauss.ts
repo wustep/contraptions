@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { FLOOR, R, ROLL, ball, definePiece, over, post, rail, ramp, roll, type BallChange, type Lane, type Pt } from '../../parts'
-import { display, flash, lamp } from './neon'
+import { display, flash, lamp, litColor } from './neon'
 
 /**
  * A Gauss gun: the desk toy. A magnet block is clamped across the lane
@@ -86,7 +86,7 @@ export const gauss = definePiece<{ color: string; next: string }>({
     for (const r of ARCS) {
       const a = Math.asin(ARC_H / r)
       const reached = since < 0 ? (pulled > 0 && front > MAG - HALF - r ? 1 : 0) : flare
-      p.stroke(reached > 0.5 ? s.color : ink)
+      p.stroke(litColor(ink, s.color, reached))
       p.strokeWeight(weight * 0.8)
       p.arc((MAG - HALF) * k, 0, r * 2 * k, r * 2 * k, Math.PI - a, Math.PI + a)
     }
