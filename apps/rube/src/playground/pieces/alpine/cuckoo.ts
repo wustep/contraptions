@@ -6,9 +6,9 @@ import { gearColor, snow, snowAt, snowWhite } from './snow'
 
 /**
  * A cuckoo clock as tall as a sentry box, on a post in the snow behind the
- * track: a chalet's roof under snow, its eaves out past the walls, a dial,
- * and a pair of shutters in its side wall at the height of the ball. The
- * track runs in front of the case. The ball rolls past the clock
+ * track: a low gable under snow, its eaves well out past both walls, a
+ * dial, and a pair of shutters in its side wall at the height of the ball.
+ * The track runs in front of the case. The ball rolls past the clock
  * onto a plate in the track, and the plate sinks under it, slowing it: the
  * hands jump to the hour, the shutters fly open, and the cuckoo shoots out
  * on a lazy-tongs and punches the ball in the back, which skips off down
@@ -19,16 +19,22 @@ import { gearColor, snow, snowAt, snowWhite } from './snow'
  * reaches the ball's back at the blow, neither before nor through it, and
  * the tongs are whatever that distance makes them.
  */
-/** The case: its walls, its foot (behind the track, a little under it) and its eaves; the roof's overhang and peak. */
-const WEST = -0.45
-const EAST = -0.17
-const FOOT = 0.22
-const EAVES = -0.5
-const OVERHANG = 0.05
-const PEAK = EAVES - (EAST - WEST) / 2 - OVERHANG - 0.02
+/**
+ * The case: its walls, its foot (behind the track, a little under it) and
+ * its eaves. The roof is a low gable, wider than the case by a generous
+ * overhang each side, the west eave on the cell's edge; its pitch, and so
+ * its peak.
+ */
+const WEST = -0.42
+const EAST = -0.12
+const FOOT = 0.2
+const EAVES = -0.4
+const OVERHANG = 0.08
+const PITCH = (37 * Math.PI) / 180
 const MID = (WEST + EAST) / 2
+const PEAK = EAVES - ((EAST - WEST) / 2 + OVERHANG) * Math.tan(PITCH)
 /** The dial. */
-const DIAL: Pt = [MID, -0.29]
+const DIAL: Pt = [MID, -0.25]
 const DIAL_R = 0.085
 /** The shutters' height, either side of the ball's line: clear of the track below, so the lower one never lies along the rail. */
 const HATCH = 0.085
