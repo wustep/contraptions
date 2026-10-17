@@ -271,10 +271,17 @@ function fillContour(p: p5, k: number, c: Contour, bottom: number, fill: string,
   p.pop()
 }
 
+/**
+ * How far past its own end a row's mass may reach (cells): its last head and shoulders whole. A person within this of
+ * an end sinks out of the row as they come to it (the front row slides past its ends with the camera), so the row
+ * never ends cut straight through someone, and no one pops in or out.
+ */
+const ROW_END = 0.5
+
 /** A row of the audience, with any press in it, across the part of it in the frame. */
 function drawRow(p: p5, k: number, f: Frame, t: number, tw: number, people: Person[], press: Shooter[], fill: string, rim: number, x0: number, x1: number, base: number, rimColor = RIM, shift = 0): void {
-  const a = Math.max(x0, f.x0 - 0.5)
-  const b = Math.min(x1, f.x1 + 0.5)
+  const a = Math.max(x0 - ROW_END, f.x0 - 0.5)
+  const b = Math.min(x1 + ROW_END, f.x1 + 0.5)
   if (b <= a) return
   const dx = Math.max(0.02, 1.2 / k)
   const c = new Contour(a, dx, Math.ceil((b - a) / dx) + 1, base)
@@ -284,7 +291,8 @@ function drawRow(p: p5, k: number, f: Frame, t: number, tw: number, people: Pers
     if (qx < a - 0.6 || qx > b + 0.6) continue
     const heave = 0.05 * lv * (0.5 + 0.5 * Math.sin(tw * (1.7 + 0.6 * hash(q.seed, 4)) + q.seed))
     const settle = 0.04 * (1 - smooth(t, B0, B0 + 3)) * Math.sin(tw * 3 + q.seed)
-    figure(c, qx, q.head - heave + settle, q.r, q.hat, q.seed)
+    const sink = 0.8 * smooth(Math.max(x0 - qx, qx - x1), -ROW_END, 0)
+    figure(c, qx, q.head - heave + settle + sink, q.r, q.hat, q.seed)
   }
   for (const s of press) {
     if (s.x < a - 0.8 || s.x > b + 0.8) continue
@@ -299,6 +307,13 @@ function drawRow(p: p5, k: number, f: Frame, t: number, tw: number, people: Pers
       c.rect(rx - 0.08, rx + 0.08, ry - 0.045)
     }
   }
+  // At its ends the mass ends with its last shoulders.
+  let i0 = 0
+  let i1 = c.xs.length - 1
+  while (i0 < i1 && c.ys[i0] >= base - 1e-6 && c.xs[i0] < x0 + ROW_END) i0++
+  while (i1 > i0 && c.ys[i1] >= base - 1e-6 && c.xs[i1] > x1 - ROW_END) i1--
+  c.xs = c.xs.slice(i0, i1 + 1)
+  c.ys = c.ys.slice(i0, i1 + 1)
   fillContour(p, k, c, f.y1 + 1, fill, rim, rimColor)
 }
 

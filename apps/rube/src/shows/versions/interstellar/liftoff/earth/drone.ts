@@ -34,8 +34,10 @@ const CHORD = 0.17
  * The drone at `at` (cells, in whatever frame the caller draws in), banked by
  * `bank`, `seen` its opacity, with its shadow on `ground` if given, and
  * `glint` (0..1) for the sun catching the near wing, and `shade` (0..1) for how much of its shadow there is.
+ * `level` (0..1) is how nearly level the eye is with it: down on a roof (1) its wings lie flatter, so the near one
+ * stays over the roof rather than reaching down through it.
  */
-export function drawDrone(p: p5, k: number, ink: string, weight: number, at: Pt, bank: number, seen = 1, ground: number | null = null, glint = 0, shade = 1): void {
+export function drawDrone(p: p5, k: number, ink: string, weight: number, at: Pt, bank: number, seen = 1, ground: number | null = null, glint = 0, shade = 1, level = 0): void {
   const X = (x: number) => x * k
   if (ground !== null) {
     p.noStroke()
@@ -48,7 +50,8 @@ export function drawDrone(p: p5, k: number, ink: string, weight: number, at: Pt,
   p.drawingContext.globalAlpha = seen
   const w = weight * 1.1
   // The far wing, behind the pod: up and back.
-  wing(p, k, ink, w, [-0.02, -0.02], [-0.5, -FAR * 0.42], FAR, 0)
+  const lift = 1 - (2 / 3) * level
+  wing(p, k, ink, w, [-0.02, -0.02], [-0.5, -FAR * 0.42 * lift], FAR, 0)
   // Booms and the tail.
   solid(p, ink, w * 0.8, DUST.bone)
   p.quad(X(-0.1), X(-0.03), X(-0.78), X(-0.02), X(-0.78), X(0.03), X(-0.1), X(0.04))
@@ -68,7 +71,7 @@ export function drawDrone(p: p5, k: number, ink: string, weight: number, at: Pt,
   p.strokeWeight(w * 0.7)
   p.ellipse(X(-0.2), 0, X(0.05), X(0.26))
   // The near wing, over the pod: down and toward us.
-  wing(p, k, ink, w, [0.04, 0.02], [0.55, NEAR * 0.3], NEAR, glint)
+  wing(p, k, ink, w, [0.04, 0.02], [0.55, NEAR * 0.3 * lift], NEAR, glint)
   p.pop()
 }
 

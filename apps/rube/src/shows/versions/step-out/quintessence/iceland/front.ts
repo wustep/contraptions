@@ -106,9 +106,8 @@ export const icelandFront = scenery<null>({
     const v = view(p, c.k)
 
     // The ash in the air: the haze it makes, going grey-mauve and thickening to the cut (the director's cover then
-    // takes the frame), and the flakes coming down through it on the wind: grey and few at first, then more, and paler
-    // as the fall thickens.
-    const haze = 0.24 * sm(t, ERUPT + 5, T1)
+    // takes the frame), and a few flakes coming down through it on the wind.
+    const haze = 0.3 * sm(t, ERUPT + 5, T1)
     if (haze > 0.003) {
       ctx.save()
       ctx.fillStyle = rgbaOf(ICE.ashHaze, haze)
@@ -119,13 +118,9 @@ export const icelandFront = scenery<null>({
     if (ash > 0) {
       ctx.save()
       ctx.globalAlpha = ash
-      motes(ctx, v, t, { n: 70, seed: 621, tile: [5, 3.5], r: [0.009, 0.018], v: [0.12, 0.22], spread: 0.4, sway: [0.08, 0.3], color: ICE.ashDark })
+      motes(ctx, v, t, { n: 30, seed: 621, tile: [5, 3.5], r: [0.009, 0.018], v: [0.12, 0.22], spread: 0.4, sway: [0.08, 0.3], color: ICE.ashDark })
       ctx.globalAlpha = sm(t, HUSH + 2, T1 - 3)
-      motes(ctx, v, t, { n: 140, seed: 622, tile: [5, 3.5], r: [0.008, 0.016], v: [0.1, 0.2], spread: 0.4, sway: [0.06, 0.25], color: ICE.ashDeep })
-      ctx.globalAlpha = sm(t, HUSH + 5, T1 - 2)
-      motes(ctx, v, t, { n: 220, seed: 623, tile: [5, 3.5], r: [0.007, 0.015], v: [0.09, 0.18], spread: 0.4, sway: [0.06, 0.2], color: ICE.ash })
-      ctx.globalAlpha = sm(t, HUSH + 7, T1 - 1)
-      motes(ctx, v, t, { n: 420, seed: 624, tile: [5, 3.5], r: [0.006, 0.013], v: [0.08, 0.16], spread: 0.4, sway: [0.05, 0.2], color: ICE.ashDeep, square: true })
+      motes(ctx, v, t, { n: 40, seed: 622, tile: [5, 3.5], r: [0.008, 0.016], v: [0.1, 0.2], spread: 0.4, sway: [0.06, 0.25], color: ICE.ashDeep })
       ctx.restore()
     }
 

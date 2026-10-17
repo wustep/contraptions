@@ -5,8 +5,13 @@ import { frame, hash, smooth, softLayer } from '../kit'
 import { FOG } from '../worlds'
 import {
   ABBOTT,
+  ABBOTT_WORD,
+  ABBOTT_WORD_R,
   abbottFog,
   abbottSink,
+  abbottSlump,
+  abbottWordFade,
+  abbottWordU,
   costelloAt,
   costelloReach,
   GREAT,
@@ -133,15 +138,24 @@ function abbott(p: p5, k: number, f: Frame, t: number): void {
   const fog = abbottFog(t)
   if (fog >= 0.985) return
   const at = seen(f, ABBOTT.depth, ABBOTT.at[0], ABBOTT.at[1] + sink / ABBOTT.depth)
+  const lean = -0.06 * sink - 0.35 * abbottSlump(t)
   drawHeptapod(p, k * ABBOTT.depth, at[0] / ABBOTT.depth, at[1] / ABBOTT.depth, ABBOTT.s, {
     t,
     fog,
     fogColor: FLOOR,
     seed: ABBOTT.seed,
     color: FOG.heptapod,
-    lean: -0.06 * sink,
+    lean,
     face: 1,
   })
+  // His last word round his body, in his depth: written out of him, then coming undone from both ends.
+  const u = abbottWordU(t)
+  if (u > 0.002) {
+    const s = ABBOTT.s
+    const bx = at[0] / ABBOTT.depth + (lean + 0.035 * Math.sin(t * 0.6 + ABBOTT.seed)) * s * 0.1
+    const by = at[1] / ABBOTT.depth - s * 0.72
+    drawInk(p, k * ABBOTT.depth, bx, by, s * ABBOTT_WORD_R, ABBOTT_WORD, u, { color: mix(FOG.ink, FLOOR, 0.35 * fog), fade: abbottWordFade(t) })
+  }
   feetFog(p.drawingContext as Ctx, k, f, at[1], ABBOTT.s * ABBOTT.depth)
 }
 

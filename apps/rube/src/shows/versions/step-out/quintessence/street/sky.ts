@@ -1,5 +1,5 @@
 import type { Pt } from '../../../../../parts'
-import { layer, sway, type View } from '../depth'
+import { layer, type View } from '../depth'
 import { hash } from '../kit'
 import { mix, rgba } from '../negatives/hand'
 import { FRONTS } from './fronts'
@@ -7,9 +7,10 @@ import { goldAt, morning, S, skyAt, sunAt, whiteAt } from './light'
 
 /**
  * The sky over the street and the city behind it (the street's own): three planes of towers going back into the haze
- * down the avenue, the low sun in the avenue's gap between them, a plane drawing its contrail across the top, gulls
- * far off. Everything far is pale: the credits are set over this sky, so nothing behind them is dark or quick. The
- * planes are composed for the long view at the end (`ANCHOR`, `REF`) and slide under the camera at their own depths.
+ * down the avenue, flat silhouettes each paler for its distance, the low sun in the avenue's gap between them, a plane
+ * drawing its contrail across the top. Everything far is pale: the credits are set over this sky, so nothing behind
+ * them is dark or quick. The planes are composed for the long view at the end (`ANCHOR`, `REF`) and slide under the
+ * camera at their own depths.
  */
 
 type C2 = CanvasRenderingContext2D
@@ -58,8 +59,8 @@ const FAR = towers(31, -6, 30, 0.7, [5.6, 10.5], [0.9, 1.8])
 const MID = towers(47, -6, 30, 1.0, [4.2, 7.4], [1.2, 2.4])
 const NEAR = towers(53, -6, 32, 1.45, [4.4, 6.4], [1.6, 3.2])
 
-/** One tower: its tiers stepping in toward the top, its crown, the sun on its right edge; windows when `panes` is given. */
-function tower(ctx: C2, k: number, w: Tower, ground: number, body: string, lit: string, panes: Path2D | null): void {
+/** One tower: its tiers stepping in toward the top, its crown, the sun on its right edge. */
+function tower(ctx: C2, k: number, w: Tower, ground: number, body: string, lit: string): void {
   const { x0, x1, top, tiers } = w
   // The tiers from the lowest setback up, each stepping further in.
   const n = tiers.length
@@ -111,19 +112,6 @@ function tower(ctx: C2, k: number, w: Tower, ground: number, body: string, lit: 
     ctx.fill()
     ctx.fillRect((tx - 0.18) * k, (top - 0.16) * k, 0.04 * k, 0.16 * k)
     ctx.fillRect((tx + 0.14) * k, (top - 0.16) * k, 0.04 * k, 0.16 * k)
-  }
-  if (!panes) return
-  // Windows: rows of faint panes.
-  const cols = Math.max(2, Math.round((x1 - x0) / 0.32))
-  const cw = (x1 - x0) / cols
-  for (let y = top + 0.35; y < ground - 0.4; y += 0.42) {
-    let ins = 0
-    for (let j = 0; j < n; j++) if (y < level(j)) ins = inset(j)
-    for (let i = 0; i < cols; i++) {
-      const wx = x0 + i * cw + cw * 0.3
-      if (wx < x0 + ins || wx + cw * 0.4 > x1 - ins) continue
-      panes.rect(wx * k, y * k, cw * 0.4 * k, 0.2 * k)
-    }
   }
 }
 
@@ -247,7 +235,7 @@ function contrail(ctx: C2, k: number, t: number, high: string): void {
   ctx.fillRect((px - 0.015) * k, (py - 0.05) * k, 0.03 * k, 0.1 * k)
 }
 
-/** The city behind the street, on three planes, each paler for its distance; and gulls wheeling far off. */
+/** The city behind the street, on three planes, each paler for its distance. */
 export function drawCity(ctx: C2, v: View, t: number): void {
   const k = v.k
   const sky = skyAt(t)
@@ -257,26 +245,16 @@ export function drawCity(ctx: C2, v: View, t: number): void {
   layer(ctx, v, 0.15, ANCHOR, REF, () => {
     const body = mix(mix(S.far, haze, 0.52), '#F6F3EC', w * 0.2)
     const lit = mix(body, sky.sun, 0.6)
-    const rib = mix(body, '#8E979D', 0.22)
     const g = ctx.createLinearGradient(0, -4.5 * k, 0, -0.4 * k)
     g.addColorStop(0, rgba(haze, 0))
     g.addColorStop(1, rgba(haze, 0.85))
     inOpen(ctx, k, openSky(v, 0.15), ([x0, , x1]) => {
-      const ribs = new Path2D()
-      for (const tw of FAR) {
-        if (tw.x1 <= x0 || tw.x0 >= x1) continue
-        tower(ctx, k, tw, -0.6, body, lit, null)
-        // Its piers, faint, up the narrowest of its tiers.
-        const ins = tw.tiers.length ? tw.tiers[tw.tiers.length - 1][0] : 0
-        for (let x = tw.x0 + ins + 0.12; x < tw.x1 - ins - 0.1; x += 0.3) ribs.rect(x * k, (tw.top + 0.25) * k, 0.05 * k, (-0.6 - tw.top - 0.25) * k)
-      }
-      ctx.fillStyle = rib
-      ctx.fill(ribs)
+      for (const tw of FAR) if (tw.x1 > x0 && tw.x0 < x1) tower(ctx, k, tw, -0.6, body, lit)
       ctx.fillStyle = g
       ctx.fillRect((x0 - 1) * k, -4.5 * k, (x1 - x0 + 2) * k, 4.2 * k)
     })
   })
-  // Middle: the next towers, their windows in rows; gulls wheeling low in the avenue's gap, across the sun.
+  // Middle: the next towers.
   layer(ctx, v, 0.35, ANCHOR, REF, () => {
     const body = mix(mix('#BABDBB', haze, 0.42), '#F3F0E8', w * 0.2)
     const lit = mix(mix('#E9D6B4', sky.sun, 0.3), '#FFFFFF', w * 0.3)
@@ -284,119 +262,22 @@ export function drawCity(ctx: C2, v: View, t: number): void {
     g.addColorStop(0, rgba(haze, 0))
     g.addColorStop(1, rgba(haze, 0.7))
     inOpen(ctx, k, openSky(v, 0.35), ([x0, , x1]) => {
-      const panes = new Path2D()
-      for (const tw of MID) if (tw.x1 > x0 && tw.x0 < x1) tower(ctx, k, tw, -0.3, body, lit, panes)
-      ctx.fillStyle = rgba(mix(body, '#7F8C96', 0.35), 0.55)
-      ctx.fill(panes)
+      for (const tw of MID) if (tw.x1 > x0 && tw.x0 < x1) tower(ctx, k, tw, -0.3, body, lit)
       ctx.fillStyle = g
       ctx.fillRect((x0 - 1) * k, -3.2 * k, (x1 - x0 + 2) * k, 3.1 * k)
     })
-    const gulls = new Path2D()
-    for (let i = 0; i < 7; i++) {
-      const a = t * 0.3 + i * 0.55
-      const cx = AVENUE + 0.6 + 1.5 * Math.cos(a) + 0.4 * sway(t, 0.07, i)
-      const cy = -2.9 + 0.45 * Math.sin(a * 1.3) + 0.03 * i
-      const flap = Math.sin(t * 7.5 + i * 1.9)
-      const s = 0.09
-      gulls.moveTo((cx - s) * k, (cy - flap * s * 0.6) * k)
-      gulls.lineTo(cx * k, cy * k)
-      gulls.lineTo((cx + s) * k, (cy - flap * s * 0.6) * k)
-    }
-    ctx.strokeStyle = rgba(mix('#4A5258', haze, 0.35), 0.8)
-    ctx.lineWidth = Math.max(1, 0.022 * k)
-    ctx.stroke(gulls)
   })
-  // Near: the next block's roofs over the low fronts, and down the avenue its corners, the traffic crossing there.
+  // Near: the next block's roofs over the low fronts, and down the avenue its corners.
   layer(ctx, v, 0.6, ANCHOR, REF, () => {
     const body = mix(mix('#C7B8A3', haze, 0.2), '#F1EDE4', w * 0.3)
     const lit = mix('#F0DDBC', sky.sun, 0.25 + 0.5 * w)
     const g = ctx.createLinearGradient(0, -2.2 * k, 0, 0.2 * k)
     g.addColorStop(0, rgba(haze, 0))
     g.addColorStop(1, rgba(haze, 0.45))
-    inOpen(ctx, k, openSky(v, 0.6), ([x0, , x1, y1]) => {
-      // Far down the avenue, a cross street: its traffic passing behind the corners.
-      if (y1 > -0.5) farTraffic(ctx, k, t, haze)
-      const panes = new Path2D()
-      for (const tw of NEAR) if (tw.x1 > x0 && tw.x0 < x1) tower(ctx, k, tw, 0.05, body, lit, panes)
-      ctx.fillStyle = rgba(mix(body, '#6E7C86', 0.45), 0.6)
-      ctx.fill(panes)
+    inOpen(ctx, k, openSky(v, 0.6), ([x0, , x1]) => {
+      for (const tw of NEAR) if (tw.x1 > x0 && tw.x0 < x1) tower(ctx, k, tw, 0.05, body, lit)
       ctx.fillStyle = g
       ctx.fillRect((x0 - 1) * k, -2.2 * k, (x1 - x0 + 2) * k, 2.4 * k)
     })
   })
-}
-
-/**
- * Down the avenue's gap, at their own depths, its furniture against the sun: a signal mast reaching out over it with
- * its head hung (seen against the light, unlit), and a lamp post on either kerb further down, each smaller and paler
- * the further it is, each sliding at its own pace as the camera goes along. Drawn far to near; `side` is the kerb.
- */
-const FURNITURE: { z: number; side: number; mast: boolean }[] = [
-  { z: 0.36, side: 1, mast: false },
-  { z: 0.6, side: -1, mast: false },
-  { z: 0.86, side: 1, mast: true },
-]
-export function drawAvenue(ctx: C2, v: View, t: number): void {
-  const k = v.k
-  const sky = skyAt(t)
-  for (const { z, side, mast } of FURNITURE) {
-    const size = 0.25 + 0.75 * z
-    const ground = -0.75 + 0.85 * z
-    layer(ctx, v, z, ANCHOR, REF, () => {
-      inOpen(ctx, k, openSky(v, z), () => {
-        ctx.fillStyle = mix('#3A3E40', sky.low, 0.75 - 0.55 * z)
-        if (mast) {
-          // The mast, its arm out over the avenue, the head hung from it.
-          const px = AVENUE + side * 1.25 * size
-          const top = ground - 3.1 * size
-          ctx.fillRect((px - 0.04 * size) * k, top * k, 0.08 * size * k, (ground - top) * k)
-          const arm = px - side * 1.5 * size
-          ctx.fillRect(Math.min(px, arm) * k, top * k, Math.abs(px - arm) * k, 0.05 * size * k)
-          const hx = px - side * 1.1 * size
-          ctx.fillRect((hx - 0.1 * size) * k, (top + 0.05 * size) * k, 0.2 * size * k, 0.52 * size * k)
-          return
-        }
-        // A lamp post, its arm and its lamp out toward the avenue's middle.
-        const lx = AVENUE + side * 1.35 * size
-        const top = ground - 2.6 * size
-        ctx.fillRect((lx - 0.03 * size) * k, top * k, 0.06 * size * k, 2.6 * size * k)
-        ctx.fillRect(Math.min(lx, lx - side * 0.4 * size) * k, top * k, 0.4 * size * k, 0.05 * size * k)
-        ctx.fillRect((lx - side * 0.3 * size - 0.08 * size) * k, top * k, 0.16 * size * k, 0.07 * size * k)
-      })
-    })
-  }
-}
-
-/** Down the avenue, far off: cabs and a bus crossing the far cross street, and people on its corners, small and hazed. */
-function farTraffic(ctx: C2, k: number, t: number, haze: string): void {
-  const y = 0.05
-  ctx.fillStyle = mix('#4A4F55', haze, 0.45)
-  for (let i = 0; i < 5; i++) {
-    const dir = i % 2 ? -1 : 1
-    const span = 5.5
-    const ph = (((t * (0.32 + 0.1 * hash(i, 3, 79)) + hash(i, 4, 79) * span) % span) + span) % span
-    const x = AVENUE + dir * (ph - span / 2)
-    const step = Math.sin(t * 6 + i) * 0.025
-    ctx.fillRect((x - 0.035) * k, (y - 0.38) * k, 0.07 * k, 0.24 * k)
-    ctx.fillRect((x - 0.03 + step) * k, (y - 0.15) * k, 0.025 * k, 0.15 * k)
-    ctx.fillRect((x + 0.005 - step) * k, (y - 0.15) * k, 0.025 * k, 0.15 * k)
-    ctx.beginPath()
-    ctx.arc(x * k, (y - 0.43) * k, 0.04 * k, 0, Math.PI * 2)
-    ctx.fill()
-  }
-  const span = 9
-  for (let i = 0; i < 6; i++) {
-    const dir = i % 2 ? -1 : 1
-    const speed = 2.2 + hash(i, 1, 77) * 1.4
-    const len = i === 3 ? 1.5 : 0.62
-    const h = i === 3 ? 0.42 : 0.22
-    const ph = (((t * speed + hash(i, 2, 77) * span * 3) % (span * 1.6)) + span * 1.6) % (span * 1.6)
-    const x = dir > 0 ? AVENUE - span / 2 + ph - len : AVENUE + span / 2 - ph
-    const c = i === 3 ? '#E4E1D8' : i % 3 === 0 ? '#D9A93A' : i % 3 === 1 ? '#7C8694' : '#D9A93A'
-    ctx.fillStyle = mix(c, haze, 0.45)
-    ctx.fillRect(x * k, (y - h) * k, len * k, h * k)
-    ctx.fillStyle = mix('#3A3E40', haze, 0.5)
-    ctx.fillRect((x + len * 0.15) * k, (y - 0.04) * k, 0.08 * k, 0.05 * k)
-    ctx.fillRect((x + len * 0.75) * k, (y - 0.04) * k, 0.08 * k, 0.05 * k)
-  }
 }

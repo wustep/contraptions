@@ -1,6 +1,6 @@
 import type { Pt } from '../../../../../parts'
 import { smooth } from '../kit'
-import { SEAM, beats, chords } from '../music'
+import { SEAM, beats, chord, chords } from '../music'
 
 /**
  * The gala, years on, as a plan (gala world cells, y down; the floor's top at y = R, so a ball on it has y = 0).
@@ -24,16 +24,20 @@ const easeInOut = (u: number) => smooth(u, 0, 1)
 
 /* ------------------------------------------------------------------ the clock */
 
-export const T_IN = SEAM.gala
+/**
+ * The gala's own clock begins on chord 71, where the show used to cut in; it cuts in now on chord 72 (SEAM.gala), after
+ * the lecture hall years on, and finds her already on the pedal and the tower filling.
+ */
+export const T_IN = chord(71)
 export const T_OUT = SEAM.call
 /** The pedal, then the five tiers brimming, one on each beat. */
-export const [T_PEDAL, T_T1, T_T2, T_T3, T_T4, T_T5] = beats(SEAM.gala + 0.5, SEAM.gala + 5.9)
+export const [T_PEDAL, T_T1, T_T2, T_T3, T_T4, T_T5] = beats(T_IN + 0.5, T_IN + 5.9)
 /** The chords Shang comes on: he sets off; he comes on to her as she goes to him. */
-export const [T_SHANG, T_TOAST] = chords(SEAM.gala + 1, SEAM.call - 1)
+export const [T_SHANG, T_TOAST] = chords(T_IN + 1, SEAM.call - 1)
 /** The whisper: he leans in and they touch. */
 export const T_TOUCH = beats(274.6, 275)[0]
 
-export const GALA_STRIKES: number[] = [T_PEDAL, T_T1, T_T2, T_T3, T_T4, T_T5, T_TOAST, T_TOUCH]
+export const GALA_STRIKES: number[] = [T_PEDAL, T_T1, T_T2, T_T3, T_T4, T_T5, T_TOAST, T_TOUCH].filter((t) => t >= SEAM.gala - 1e-6)
 
 /* ------------------------------------------------------------------ the tower and its stand */
 
@@ -138,8 +142,9 @@ export interface WorldShot {
   hold: Pt
 }
 export const GALA_SHOTS: WorldShot[] = [
+  // (From the lecture hall's framing at the cut, out to the tower and the room as the last tiers brim.)
   { t: T_PEDAL + 0.25, cells: 5.0, hold: [-1.3, -1.35] },
-  { t: T_T3 + 0.4, cells: 6.5, hold: [0.2, -1.75] },
+  { t: T_T4 + 0.3, cells: 6.3, hold: [0.2, -1.75] },
   { t: T_TOAST + 0.25, cells: 5.4, hold: [-0.4, -1.3] },
   // The whisper: in close on the two of them touching, the tower's light behind them, and out again to the seam.
   { t: T_TOUCH + 1.2, cells: 3.0, hold: [HER_END[0] - 0.08, HER_END[1] - 0.32] },

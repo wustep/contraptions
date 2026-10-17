@@ -149,11 +149,17 @@ export function inFrame(p: p5, k: number, n: number, t: number, fn: (side: -1 | 
   for (const side of halves) {
     const f = fall(n, side, t)
     p.push()
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    // The ruins come down on the ground and behind the drum, which stands: none of them under the ground or across
+    // its shell (the mast's foot and the lift's foot, which hang under the lowest floors, would reach into both).
+    ctx.beginPath()
+    ctx.rect(-1000 * k, -1000 * k, 2000 * k, 1000 * k)
+    ctx.rect((-DRUM.w / 2 - 0.04) * k, (DRUM.head - 0.02) * k, (DRUM.w + 0.08) * k, (0.02 - DRUM.head - DRUM.foot) * k)
+    ctx.clip('evenodd')
     p.translate(f.dx * k, f.dy * k)
     p.translate(f.c0[0] * k, f.c0[1] * k)
     p.rotate(f.a)
     p.translate(-f.c0[0] * k, -f.c0[1] * k)
-    const ctx = p.drawingContext as CanvasRenderingContext2D
     // Down, the ruins go quiet, so the drum and the ball stand out of them.
     ctx.globalAlpha *= 1 - 0.55 * smooth(f.down, 0.4, 2.6)
     ctx.beginPath()

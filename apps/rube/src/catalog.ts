@@ -29,6 +29,8 @@ import { WORLDS, builtWorlds, worldByName, type World } from './worlds'
 export interface Catalog {
   /** How far down the sheet is scrolled, so it can be opened there again. */
   scroll(): number
+  /** The world whose band the eye is on: the one under the pointer, or else the first still half on screen. */
+  world(): string | null
   /** The sheet as it stands as a PNG, supersampled by `scale`. */
   savePng(filename: string, scale: number): void
   exportSize(scale: number): [number, number]
@@ -92,8 +94,9 @@ interface Band {
   /** Sheet coordinates. */
   y0: number
   y1: number
-  /** Where the world's name goes. */
+  /** Where the world's name goes: down the sheet, and in from the left, the same margin for every band. */
   title: number
+  left: number
   slots: Slot[]
 }
 
@@ -203,18 +206,21 @@ function layout(W: number, H: number, groups: Group[]): Sheet {
     const rows = Math.ceil(n / cols)
     const y0 = y
     const slots: Slot[] = []
-    for (let i = 0; i < n; i++) {
-      const row = Math.floor(i / cols)
-      const inRow = Math.min(cols, n - row * cols)
-      // A short last row sits centred.
-      const x = area.x + ((cols - inRow) * cw) / 2 + (i - row * cols) * cw
-      const sy = y0 + title + row * ch
-      const box = { x: x + gap, y: sy + gap, w: cw - 2 * gap, h: ch - 2 * gap - band }
-      const shelf = box.y + box.h
-      slots.push({ x, y: sy, w: cw, h: ch, box, shelf, label: shelf + font * 0.7 })
+    // The band's pieces shared out evenly over its rows, the longer rows
+    // first: nineteen in nine columns is seven, six and six, not nine, nine
+    // and one left on its own. A row with room to spare sits centred.
+    for (let row = 0; row < rows; row++) {
+      const inRow = Math.floor(n / rows) + (row < n % rows ? 1 : 0)
+      for (let k = 0; k < inRow; k++) {
+        const x = area.x + ((cols - inRow) * cw) / 2 + k * cw
+        const sy = y0 + title + row * ch
+        const box = { x: x + gap, y: sy + gap, w: cw - 2 * gap, h: ch - 2 * gap - band }
+        const shelf = box.y + box.h
+        slots.push({ x, y: sy, w: cw, h: ch, box, shelf, label: shelf + font * 0.7 })
+      }
     }
     y = y0 + title + rows * ch
-    bands.push({ group, y0, y1: y, title: y0 + title * 0.42, slots })
+    bands.push({ group, y0, y1: y, title: y0 + title * 0.42, left: area.x + 6, slots })
   }
   return { bands, font, header, footer, top, bottom, height: y }
 }
@@ -234,6 +240,8 @@ export function createCatalog(
   const scope = options.scope ?? [stock === WORLDS.length ? 'FOUR WORLDS' : stock ? `${stock} WORLDS` : '', built ? `${built} ${built === 1 ? 'BUILD' : 'BUILDS'}` : ''].filter(Boolean).join(' · ')
   let sheet: Sheet | null = null
   let hover: Cell | null = null
+  /** Where the pointer is over the canvas, down from its top. */
+  let pointerY: number | null = null
   let scroll = options.scroll ?? 0
   let instance: p5 | null = null
   let release = () => {}
@@ -261,10 +269,12 @@ export function createCatalog(
       // The canvas takes the clicks, not the window: the panel sits beside it.
       c.elt.addEventListener('mousemove', (e: MouseEvent) => {
         hover = hit(e.offsetX, e.offsetY)
+        pointerY = e.offsetY
         c.elt.style.cursor = hover ? 'pointer' : 'default'
       })
       c.elt.addEventListener('mouseleave', () => {
         hover = null
+        pointerY = null
       })
       c.elt.addEventListener('click', (e: MouseEvent) => {
         const cell = hit(e.offsetX, e.offsetY)
@@ -322,6 +332,13 @@ export function createCatalog(
 
   return {
     scroll: () => scroll,
+    world() {
+      if (!sheet) return null
+      const { bands, top, bottom } = sheet
+      const y = pointerY !== null && pointerY >= top && pointerY <= bottom ? pointerY - top + scroll : null
+      const band = (y !== null ? bands.find((b) => y >= b.y0 && y < b.y1) : undefined) ?? bands.find((b) => (b.y0 + b.y1) / 2 >= scroll)
+      return band?.group.world.name ?? null
+    },
     savePng(filename, scale) {
       if (instance) savePng(instance, filename, exportScale(instance, scale))
     },
@@ -491,7 +508,7 @@ function drawBandCaptions(p: p5, band: Band, shift: number, hover: Cell | null):
   p.textAlign(p.LEFT, p.CENTER)
   p.textSize(font * 0.95)
   ctx.letterSpacing = '0.14em'
-  const x = band.slots.length ? Math.min(...band.slots.map((s) => s.x)) + 6 : 20
+  const x = band.left
   const order = WORLDS.indexOf(world)
   // As much of the caption as the band is wide enough for: the name first.
   const clauses = [world.label, `${cells.length} ${cells.length === 1 ? 'piece' : 'pieces'}`, order >= 0 ? `${ORDINAL[order]} in the loop` : world.staged ?? 'a build, beside the loop', world.note]

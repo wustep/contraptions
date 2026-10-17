@@ -50,18 +50,13 @@ export function homeLeapAt(u: number): Pt {
     v ** 3 * a[1] + 3 * v * v * s * b[1] + 3 * v * s * s * c[1] + s ** 3 * d[1],
   ]
 }
-/** The leap's time, from the last return door to the first last chord. */
-export const HOME_LEAP_T = LAST[0] - DOORS.back[2]
-/** The leap's velocity out of the firebox door: what the dash home keeps to (cells a second, y down). */
+/** The leap's time, from the door home to the first last chord. */
+export const HOME_LEAP_T = LAST[0] - DOORS.back[0]
+/** The leap's velocity out of the firebox door: what the dart into the crate's fire keeps to (cells a second, y down). */
 export const HOME_LEAP: Pt = [
   (3 * (HOME_CURVE[1][0] - HOME_CURVE[0][0]) * HOME_OUT) / HOME_LEAP_T,
   (3 * (HOME_CURVE[1][1] - HOME_CURVE[0][1]) * HOME_OUT) / HOME_LEAP_T,
 ]
-/**
- * How fast the spark goes through the fires on the way home: the leap's way, but slower, so the burner and the glory
- * hole stay in the frame while it comes out of them instead of sliding past in a blur.
- */
-export const DASH_V: Pt = [HOME_LEAP[0] * 0.42, HOME_LEAP[1] * 0.42]
 
 export const SEAMS = {
   /** Inside the loft: LOFT-A hands the spark to LOFT-B. Not a door: one room, one camera. */
@@ -86,15 +81,8 @@ export const SEAMS = {
   },
   /** Inside the railway: EXPRESS hands the spark to FIREWORKS as the train brakes at the festival. */
   festival: { t: FESTIVAL, v: [4.5, -2.5], cells: 6, what: 'flung forward off the braking engine\'s front, up and to the right, into the festival\'s fireworks field' },
-  /**
-   * The dash home on the roll, back through three fires, right to left (going back) and up: out of each fire and into
-   * the next, on the roll's strokes. The festival's dart into the crate's fire is at the leap's speed (`HOME_LEAP`);
-   * through the burner and the glory hole it goes the same way slower (`DASH_V`), so each is seen for a quarter of a
-   * second, while the camera draws back a little at each door (2.4, 3.6, 4.4 cells) toward the leap's framing.
-   */
-  back1: { t: DOORS.back[0], v: DASH_V, cells: 2.4, what: 'darting up and left out of the ash into the fire of a burning crate; through a balloon burner\'s flame, the same way' },
-  back2: { t: DOORS.back[1], v: DASH_V, cells: 3.6, what: 'up and left through the burner; through the glory hole, the same way' },
-  back3: { t: DOORS.back[2], v: DASH_V, cells: 4.4, what: 'up and left through the glory hole; out of the loft stove\'s firebox door, on a leap that lands on the wick on the first last chord' },
+  /** Home on the roll, up and left: the festival's dart into the crate's fire is at the leap's speed (`HOME_LEAP`). */
+  back: { t: DOORS.back[0], v: HOME_LEAP, cells: 2.4, what: 'darting up and left out of the ash into the fire of a burning crate; out of the loft stove\'s firebox door, on a leap that lands on the wick on the first last chord' },
 } satisfies Record<string, Seam>
 
 export type SeamKey = keyof typeof SEAMS

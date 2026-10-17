@@ -1,9 +1,9 @@
-import { layer, motes, rgbaOf, view, type View } from '../depth'
-import { hash, scenery, smooth } from '../kit'
+import { layer, rgbaOf, view, type View } from '../depth'
+import { scenery, smooth } from '../kit'
 import { edgeDark } from './grade'
 import { mix } from '../dream/pen'
 import { CEIL, DOOR_IN, FLOOR, WALL_OUT } from './geo'
-import { BAR_AT, BAR_REF, daylight, flood } from './harbour'
+import { BAR_AT, BAR_REF, flood } from './harbour'
 import { ASH } from './room'
 
 /**
@@ -11,11 +11,10 @@ import { ASH } from './room'
  * air, the grade. Drawn after the set and the parts and before Walter (`depth.ts`), so nothing here hides him or
  * changes his colour. It is handed show time as `t`.
  *
- * Inside: the cigarette's smoke going up from the ashtray, and a little dust. Outside the doors, sleet going by on the
- * wind. Nearest the camera, at the frame's foot: the
- * end of the near counter with its beer tap, and out on the quay its near edge, a stack of fish boxes and a coil of
- * rope. Over it all the tungsten warmth of the room closing in at the frame's edges; and when he bangs the back door
- * open the grey daylight cools the room.
+ * Inside: the cigarette's smoke going up from the ashtray. Nearest the camera, at the frame's foot: the end of the
+ * near counter with its beer tap, and out on the quay its near edge, a stack of fish boxes and a coil of rope. Over it
+ * all the tungsten warmth of the room closing in at the frame's edges; and when he bangs the back door open the grey
+ * daylight cools the room. (The sleet outside is the harbour's, behind the room.)
  */
 export const nuukFront = scenery<null>({
   name: 'nuuk-front',
@@ -23,73 +22,41 @@ export const nuukFront = scenery<null>({
     const g = p.drawingContext as CanvasRenderingContext2D
     const v = view(p, c.k)
     const t = c.t
-    drawAir(g, v, t)
-    drawSleet(g, v, t)
+    drawSmoke(g, v, t)
     drawDaylight(g, v, t)
-    drawNear(g, v, t)
+    drawNear(g, v)
     // The room's warm dark at the edges; outside on the quay, a cold grey one.
     const out = smooth(v.cx, WALL_OUT[1] + 0.5, WALL_OUT[1] + 3.5)
     edgeDark(g, v, mix('#140C08', '#3C474D', out), 0.6 - 0.25 * out, 0.6, 0.05 * (1 - out))
   },
 })
 
-/** The room's inside, where the smoke and the dust are: from wall to wall, ceiling to floor. */
+/** The room's inside: from wall to wall, ceiling to floor. */
 const ROOM = { x0: DOOR_IN[1], x1: WALL_OUT[0], y0: CEIL, y1: FLOOR }
 
-/** The air in the room: the cigarette's smoke, and a little dust. */
-function drawAir(g: CanvasRenderingContext2D, v: View, t: number): void {
+/** The cigarette's smoke going up from the ashtray in one thin ribbon, wavering, drifting toward the lamp, fading. */
+function drawSmoke(g: CanvasRenderingContext2D, v: View, t: number): void {
   const k = v.k
-  if (v.x0 > ROOM.x1 || v.x1 < ROOM.x0) return
-  g.save()
-  g.beginPath()
-  g.rect(ROOM.x0 * k, ROOM.y0 * k, (ROOM.x1 - ROOM.x0) * k, (ROOM.y1 - ROOM.y0) * k)
-  g.clip()
-  // The cigarette's smoke going up from the ashtray in a few thin ribbons, wavering, drifting toward the lamp and
-  // thinning as it rises.
+  const [ax, ay] = ASH
+  if (v.x0 > ax + 1 || v.x1 < ax) return
   const low = new Path2D()
   const high = new Path2D()
-  const [ax, ay] = ASH
-  for (let j = 0; j < 3; j++) {
-    let x = ax + 0.105
-    let y = ay - 0.02
-    for (let i = 1; i <= 14; i++) {
-      const u = i / 14
-      const path = i <= 7 ? low : high
-      path.moveTo(x * k, y * k)
-      const drift = 0.32 * u * u + 0.05 * j * u
-      const wave = (0.03 + 0.09 * u) * Math.sin(t * (1.3 + 0.2 * j) - u * 7 + j * 2.1)
-      x = ax + 0.105 + drift + wave
-      y = ay - 0.02 - 1.35 * u
-      path.lineTo(x * k, y * k)
-    }
+  let x = ax + 0.105
+  let y = ay - 0.02
+  for (let i = 1; i <= 14; i++) {
+    const u = i / 14
+    const path = i <= 7 ? low : high
+    path.moveTo(x * k, y * k)
+    const wave = (0.03 + 0.09 * u) * Math.sin(t * 1.3 - u * 7)
+    x = ax + 0.105 + 0.32 * u * u + wave
+    y = ay - 0.02 - 1.35 * u
+    path.lineTo(x * k, y * k)
   }
   g.lineWidth = Math.max(0.7, 0.012 * k)
   g.strokeStyle = rgbaOf('#C9BBA5', 0.24)
   g.stroke(low)
   g.strokeStyle = rgbaOf('#C9BBA5', 0.11)
   g.stroke(high)
-  // A little dust in the room's air, drifting slowly.
-  motes(g, v, t, { n: 10, seed: 27, tile: [2.2, 1.6], r: [0.005, 0.009], v: [0.03, -0.02], spread: 0.6, sway: [0.06, 0.15], color: rgbaOf('#D9B98A', 0.3), within: ROOM })
-  g.restore()
-}
-
-/** Sleet going by on the wind outside the doors: only out there, never in the room. */
-function drawSleet(g: CanvasRenderingContext2D, v: View, t: number): void {
-  const k = v.k
-  g.save()
-  g.beginPath()
-  if (v.x0 < DOOR_IN[1]) g.rect((v.x0 - 1) * k, (v.y0 - 1) * k, (DOOR_IN[1] - v.x0 + 1) * k, (FLOOR - v.y0 + 1) * k)
-  if (v.x1 > WALL_OUT[0]) g.rect(WALL_OUT[0] * k, (v.y0 - 1) * k, (v.x1 - WALL_OUT[0] + 1) * k, (FLOOR - v.y0 + 1) * k)
-  // Over the top of the cut walls the room has no roof drawn, so the sleet stays out of the doorways' height.
-  g.rect(DOOR_IN[1] * k, (v.y0 - 1) * k, 0, 0)
-  g.clip()
-  layer(g, v, 0.85, BAR_AT, BAR_REF, (inner) => {
-    motes(g, inner, t, { n: 40, seed: 41, tile: [2.2, 1.8], r: [0.0025, 0.004], v: [-1.6, 3.2], spread: 0.3, color: rgbaOf('#E8EDEC', 0.4 * daylight(t)), streak: 0.045 })
-  })
-  layer(g, v, 1.3, BAR_AT, BAR_REF, (inner) => {
-    motes(g, inner, t, { n: 9, seed: 43, tile: [2.4, 2], r: [0.004, 0.0055], v: [-2.2, 4.2], spread: 0.3, color: rgbaOf('#F0F3F2', 0.45), streak: 0.04 })
-  })
-  g.restore()
 }
 
 /** When he bangs the back door open, a cool lift over the whole room, the tungsten no longer alone. */
@@ -105,31 +72,23 @@ function drawDaylight(g: CanvasRenderingContext2D, v: View, t: number): void {
  * The near plane, at the frame's foot only: the end of the near counter with its beer tap inside; out on the quay,
  * the near edge of its deck, a stack of fish boxes and a coil of rope. They go by faster than the room as the camera moves.
  */
-function drawNear(g: CanvasRenderingContext2D, v: View, t: number): void {
+function drawNear(g: CanvasRenderingContext2D, v: View): void {
   layer(g, v, 1.38, BAR_AT, BAR_REF, (inner) => {
     const k = inner.k
     const top = 0.66
-    if (inner.y1 < top) return
+    // Nothing here stands higher than the tap's handles, 0.62 over the counter's top.
+    if (inner.y1 < top - 0.65) return
     // The near counter's end: its top edge lit by the lamps, its dark front; the tap on it.
     const c0 = -4
     const c1 = -0.55
     if (c1 > inner.x0 && c0 < inner.x1) {
       g.fillStyle = '#2A1D16'
       g.fillRect(c0 * k, (top + 0.05) * k, (c1 - c0) * k, (inner.y1 - top + 1) * k)
-      // Its boards and their grain.
-      const boards = new Path2D()
-      for (let x = c0 + 0.05; x < c1; x += 0.07) {
-        boards.moveTo(x * k, (top + 0.08) * k)
-        boards.quadraticCurveTo((x + 0.012 * Math.sin(x * 11)) * k, (top + 0.5) * k, (x - 0.006) * k, (inner.y1 + 0.2) * k)
-      }
-      g.lineWidth = Math.max(0.6, 0.008 * k)
-      g.strokeStyle = rgbaOf('#4A3426', 0.7)
-      g.stroke(boards)
       g.fillStyle = '#6A4A33'
       g.fillRect(c0 * k, top * k, (c1 - c0 + 0.06) * k, 0.07 * k)
       g.fillStyle = rgbaOf('#F2C879', 0.35)
       g.fillRect(c0 * k, top * k, (c1 - c0 + 0.06) * k, 0.012 * k)
-      // The beer tap: a brass column, a cross-bar, two handles, a drop now and then.
+      // The beer tap: a brass column, a cross-bar, two handles.
       const tx = -0.95
       g.fillStyle = '#9C7A45'
       g.fillRect((tx - 0.035) * k, (top - 0.42) * k, 0.07 * k, 0.42 * k)
@@ -139,16 +98,9 @@ function drawNear(g: CanvasRenderingContext2D, v: View, t: number): void {
       g.fillRect((tx + 0.09) * k, (top - 0.6) * k, 0.04 * k, 0.16 * k)
       g.fillStyle = '#C4A267'
       g.fillRect((tx - 0.035) * k, (top - 0.41) * k, 0.025 * k, 0.38 * k)
-      const drip = ((t * 0.7) % 1 + 1) % 1
-      if (drip < 0.35) {
-        g.fillStyle = rgbaOf('#E0B060', 0.8)
-        g.beginPath()
-        g.arc((tx + 0.11) * k, (top - 0.38 + drip * 0.9) * k, 0.012 * k, 0, Math.PI * 2)
-        g.fill()
-      }
     }
-    // Out on the quay: the near edge of its deck, wet, the rain ringing in its puddles; fish boxes stacked on it, and
-    // a coil of rope.
+    // Out on the quay: the near edge of its deck, wet, two puddles on it holding the sky; fish boxes stacked on it,
+    // and a coil of rope.
     const d0 = 7.4
     if (inner.x1 > d0) {
       const x0 = Math.max(d0, inner.x0 - 1)
@@ -177,25 +129,12 @@ function drawNear(g: CanvasRenderingContext2D, v: View, t: number): void {
       g.fillStyle = '#4A4744'
       g.fillRect((d0 + 0.02) * k, (top - 0.3) * k, 0.16 * k, 0.03 * k)
       const pools = new Path2D()
-      const rings = new Path2D()
-      for (let i = 0; i < 6; i++) {
-        const px = d0 + 0.8 + i * 1.7 + 0.5 * hash(i, 91)
-        const py = top + 0.25 + 0.3 * hash(i, 92)
-        const pw = 0.25 + 0.25 * hash(i, 93)
+      for (const [px, py, pw] of [[d0 + 1.3, top + 0.42, 0.45], [d0 + 4.6, top + 0.3, 0.35]]) {
         pools.moveTo((px + pw) * k, py * k)
         pools.ellipse(px * k, py * k, pw * k, pw * 0.18 * k, 0, 0, Math.PI * 2)
-        for (let j = 0; j < 2; j++) {
-          const u = (((t * 1.4 + j * 0.5 + hash(i, j, 94)) % 1) + 1) % 1
-          const r = 0.03 + u * pw * 0.8
-          rings.moveTo((px + (hash(i, j, 95) - 0.5) * pw * 0.6 + r) * k, py * k)
-          rings.ellipse((px + (hash(i, j, 95) - 0.5) * pw * 0.6) * k, py * k, r * k, r * 0.18 * k, 0, 0, Math.PI * 2)
-        }
       }
       g.fillStyle = rgbaOf('#9AA6AA', 0.55)
       g.fill(pools)
-      g.lineWidth = Math.max(0.6, 0.008 * k)
-      g.strokeStyle = rgbaOf('#D8DFE0', 0.5)
-      g.stroke(rings)
     }
     const bx = 9.4
     if (bx + 2.2 > inner.x0 && bx - 0.6 < inner.x1) {

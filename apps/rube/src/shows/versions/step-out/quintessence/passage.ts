@@ -2,479 +2,163 @@ import type p5 from 'p5'
 import { R, ball, type Piece, type PieceCtx, type Pt } from '../../../../parts'
 import type { Placed } from '../../../../plan'
 import type { Universe } from '../../../../universe'
-import { frame, hash, scenery } from './kit'
+import { NEG_C, NEG_H, NEG_W } from './home/home-draw'
+import { frame, scenery } from './kit'
 import { SEAM } from './music'
+import { GAP_X, LIP, STRIP } from './negatives/plan'
 import type { QuintessenceShow } from './show'
 
 /**
- * The passages: every change of place is something that happens in the picture, never a cut.
+ * The passages: for a second or so round each change of place, both places are on the screen at once.
  *
  * The cuts stay where they were, on Walter (`score.ts`): on the screen he holds still while the place changes round
- * him. What changes is that for a second or so either side of each one, both places are on the screen at once. The
- * place he is going to is drawn whole into a second canvas, by the camera carried across the cut, and laid over the
- * place he is in through a shape that grows out of something already in the picture: the blank frame he stares into
- * opens into the daydream and closes on it again, the projector's light, the bar's door thrown open, the sea's skin
- * coming up past the lens, Sean's notes on the wrapper unfolding into the road, the last negative opening on the
- * snow, Sean's shutter, and the loading door's strip curtain. After the cut it is the other way about: the place he
- * has left is laid over the one he is in, through what is left of the shape.
+ * him. The place he is going to is drawn whole into a second canvas, by the camera carried across the cut, and laid
+ * over the place he is in, in one of two plain ways:
  *
- * The ash (`score.ts`) is the one passage under a cover, and stays its own.
+ * - through a shape that is already in the picture and grows to the frame's edges: the blank frame he stares into
+ *   opens into the daydream, the sea's surface comes up past the lens, the last negative opens on the snow. After the
+ *   cut it is the other way about: the place he has left is laid over the one he is in, outside the shape;
+ * - or as a dissolve, the one place fading through the other: out of the daydream, through the ship's picture into the
+ *   bar, out of the bar's door, off the boat into Iceland, out of the press onto the street.
  *
- * Walter is drawn by the place he is in. Where the shape lays the other place over him, he is drawn again on top,
- * as he is: nothing here changes his colour.
+ * Sean's shutter closes on the mountain and opens on Ted's table, over both. The ash (`score.ts`) is the one passage
+ * under a cover, and stays its own. Every edge is plain: no borders, foam, sprockets, char, flare or glow.
+ *
+ * Walter is drawn by the place he is in. Wherever the other place is laid over him, he is drawn again on top, as he
+ * is: nothing here changes his colour. Cheryl and the rest go with their places.
  */
 
 type C2 = CanvasRenderingContext2D
 
-/** How a passage shapes the place he is going to, at `u` (0 to 1 across its window), in device pixels. */
-interface Shape {
-  /** The region where the new place is seen. Undefined: none of it (the shutter, which covers both). */
-  region?(u: number, W: number, H: number, him: Pt, s: number): Path2D
-  /** The region is a ring (the frame less a hole), filled even-odd. */
-  evenodd?: boolean
-  /** What is drawn on the seam: the opening's edge, the blades, the foam. Over everything, under Walter. */
-  deco?(ctx: C2, u: number, W: number, H: number, him: Pt, s: number, t: number): void
+/** Where things are on the screen at a moment of a passage. */
+interface Scene {
+  /** How far through the passage (0 to 1, eased). */
+  u: number
+  /** The frame, in device pixels. */
+  W: number
+  H: number
+  /** Walter on the screen, and a cell's size there. */
+  him: Pt
+  s: number
+  /** A point of the place he is leaving, in its cells, on the screen now. */
+  leaving(x: number, y: number): Pt
 }
 
-interface Passage extends Shape {
+interface Passage {
   /** The cut's show time. */
   at: number
   /** Seconds before and after the cut it runs. */
   before: number
   after: number
-  /** How `u` goes: the shape's own pace. */
-  ease?: (x: number) => number
+  /** How `u` goes across the window. */
+  ease: (x: number) => number
+  /** The region where the place he is going to is seen. Undefined: a dissolve (or, with `cover`, nothing). */
+  region?(sc: Scene): Path2D
+  /** Seconds over which the place he is going to comes up in the region when it first opens. */
+  fade?: number
+  /** A line along the region's edge: the sea's surface. */
+  edge?(ctx: C2, sc: Scene): void
+  /** A shape over both places: the shutter. */
+  cover?(ctx: C2, sc: Scene): void
 }
 
 const clamp = (x: number) => Math.max(0, Math.min(1, x))
 const smooth = (x: number) => { const u = clamp(x); return u * u * (3 - 2 * u) }
-const easeIn = (x: number) => { const u = clamp(x); return u * u * u }
-const easeOut = (x: number) => { const u = clamp(x); return 1 - Math.pow(1 - u, 3) }
-/** Out of the dark slowly, then all at once, settling: a reveal that bursts on the cut. */
-const burst = (x: number) => { const u = clamp(x); return u < 0.35 ? 0.12 * (u / 0.35) ** 2 : 0.12 + 0.88 * easeOut((u - 0.35) / 0.65) }
+const linear = (x: number) => clamp(x)
+/** Slowly, then all at once, settling: an opening that bursts just after the cut. */
+const burst = (x: number) => { const u = clamp(x); return u < 0.35 ? 0.12 * (u / 0.35) ** 2 : 0.12 + 0.88 * (1 - Math.pow(1 - (u - 0.35) / 0.65, 3)) }
 
-/** A rectangle round `him`, half-sizes `hw`, `hh`, with its corners rounded by `r`. */
-function rounded(cx: number, cy: number, hw: number, hh: number, r: number): Path2D {
+/**
+ * A rectangle of the place he is leaving, `[x0, y0, x1, y1]` in its cells, opening out at `e` (0 to 1) till it is past
+ * the frame's edges on every side: it grows about its own middle, so the way it sits in the frame is kept.
+ */
+function opening(sc: Scene, box: [number, number, number, number], e: number): Path2D {
+  const [ax, ay] = sc.leaving(box[0], box[1])
+  const [bx, by] = sc.leaving(box[2], box[3])
+  const pad = 0.1 * sc.s
+  const x0 = ax + (-pad - ax) * e
+  const y0 = ay + (-pad - ay) * e
+  const x1 = bx + (sc.W + pad - bx) * e
+  const y1 = by + (sc.H + pad - by) * e
   const path = new Path2D()
-  const rr = Math.max(0, Math.min(r, hw, hh))
-  path.roundRect(cx - hw, cy - hh, 2 * hw, 2 * hh, rr)
+  path.rect(x0, y0, x1 - x0, y1 - y0)
   return path
-}
-
-/** The distance from `him` to the frame's farthest corner: how big a shape round him has to grow to fill it. */
-const reach = (W: number, H: number, him: Pt) => Math.max(Math.hypot(him[0], him[1]), Math.hypot(W - him[0], him[1]), Math.hypot(him[0], H - him[1]), Math.hypot(W - him[0], H - him[1]))
-
-/** An opening's edge: a band of `color` `width` wide along the path, with a hairline of `line` down its middle. */
-function edge(ctx: C2, path: Path2D, color: string, width: number, line: string, a: number): void {
-  if (a <= 0.01) return
-  ctx.save()
-  ctx.globalAlpha = a
-  ctx.lineJoin = 'round'
-  ctx.strokeStyle = color
-  ctx.lineWidth = width
-  ctx.stroke(path)
-  ctx.strokeStyle = line
-  ctx.lineWidth = Math.max(1, width * 0.22)
-  ctx.stroke(path)
-  ctx.restore()
 }
 
 /* ------------------------------------------------------------------ the shapes */
 
-/** The blank frame he stares into opens, and the daydream pours out of it, the film's dark edge going with it. */
-const frameOut: Shape = {
-  region(u, W, H, him, s) {
-    const r = reach(W, H, him)
-    const hw = 0.5 * s + (r * 1.2 - 0.5 * s) * u
-    const hh = 0.38 * s + (r * 1.2 - 0.38 * s) * u
-    return rounded(him[0], him[1] - 0.12 * s * (1 - u), hw, hh, 0.05 * s)
-  },
-  deco(ctx, u, W, H, him, s) {
-    edge(ctx, this.region!(u, W, H, him, s), '#20262B', 0.07 * s, '#C9CFCC', Math.sin(Math.PI * clamp(u * 1.15)))
-  },
-}
+/** The blank frame he stares into, where frame 25 should be: it opens, and the daydream is in it. */
+const BLANK: [number, number, number, number] = [GAP_X - 0.5, STRIP.top, GAP_X + 0.5, LIP]
+/** The last negative, hung over the piano's curve, face on as he stops it: it opens on the snow. */
+const LAST_NEGATIVE: [number, number, number, number] = [NEG_C[0] - NEG_W / 2, NEG_C[1] - NEG_H / 2, NEG_C[0] + NEG_W / 2, NEG_C[1] + NEG_H / 2]
 
-/** …and closes again on the daydream, drained grey, back into the blank frame. */
-const frameIn: Shape = {
-  evenodd: true,
-  region(u, W, H, him, s) {
-    // The office is everything but the shrinking frame the daydream is still in.
-    const r = reach(W, H, him)
-    const v = 1 - u
-    const hw = Math.max(0, 0.5 * s * smooth(v * 3) + (r * 1.2 - 0.5 * s) * easeIn(v))
-    const hh = Math.max(0, 0.38 * s * smooth(v * 3) + (r * 1.2 - 0.38 * s) * easeIn(v))
-    const path = new Path2D()
-    path.rect(-10, -10, W + 20, H + 20)
-    path.addPath(rounded(him[0], him[1] - 0.12 * s * u, hw, hh, 0.05 * s))
-    return path
-  },
-  deco(ctx, u, W, H, him, s) {
-    const r = reach(W, H, him)
-    const v = 1 - u
-    const hw = Math.max(0, 0.5 * s * smooth(v * 3) + (r * 1.2 - 0.5 * s) * easeIn(v))
-    const hh = Math.max(0, 0.38 * s * smooth(v * 3) + (r * 1.2 - 0.38 * s) * easeIn(v))
-    if (hw < 1) return
-    edge(ctx, rounded(him[0], him[1] - 0.12 * s * u, hw, hh, 0.05 * s), '#20262B', 0.07 * s, '#B8BEBC', Math.sin(Math.PI * clamp(u)))
-  },
+/** The sea's surface: its line comes up past the lens as he goes in, gently waved. */
+const waterAt = (u: number, H: number, s: number, x: number) => H * 1.15 - H * 1.35 * smooth(u) + 0.08 * s * Math.sin(x / (1.3 * s) + u * 6)
+function waterline(sc: Scene): Path2D {
+  const { u, W, H, s } = sc
+  const path = new Path2D()
+  path.moveTo(-10, H + 20)
+  for (let x = -10; x <= W + 10; x += Math.max(6, W / 60)) path.lineTo(x, waterAt(u, H, s, x))
+  path.lineTo(W + 10, waterAt(u, H, s, W + 10))
+  path.lineTo(W + 10, H + 20)
+  path.closePath()
+  return path
+}
+/** The surface itself, where the two meet: a plain light line. */
+function surface(ctx: C2, sc: Scene): void {
+  const { u, W, H, s } = sc
+  if (u <= 0 || u >= 1) return
+  ctx.beginPath()
+  for (let x = -10; x <= W + 10; x += Math.max(6, W / 60)) {
+    const y = waterAt(u, H, s, x)
+    if (x === -10) ctx.moveTo(x, y)
+    else ctx.lineTo(x, y)
+  }
+  ctx.strokeStyle = 'rgba(226, 238, 238, 0.75)'
+  ctx.lineWidth = Math.max(1, 0.035 * s)
+  ctx.lineJoin = 'round'
+  ctx.stroke()
 }
 
 /**
- * The projector's light: film burning in the gate. The hole starts in the ship's picture just up and ahead of him, its
- * rim charred, and spreads till it takes him and then the frame.
+ * Sean's shutter: a plain dark iris that closes on the mountain to a ring round him on the cut, a little turned, and
+ * opens on Ted's table: a photograph taken on the peak.
  */
-const burnAt = (u: number, W: number, H: number, him: Pt, s: number) => {
-  const e = smooth(u * 4)
-  return { cx: him[0] + 1.2 * s * (1 - e), cy: him[1] - 0.6 * s * (1 - e), r: reach(W, H, him) * 1.08 * u }
-}
-const projector: Shape = {
-  region(u, W, H, him, s) {
-    const { cx, cy, r } = burnAt(u, W, H, him, s)
-    const path = new Path2D()
-    // A circle that wavers a little, as a burn does.
-    const n = 48
-    for (let i = 0; i <= n; i++) {
-      const a = (i / n) * Math.PI * 2
-      const w = 1 + 0.06 * Math.sin(a * 5 + u * 9) + 0.04 * Math.sin(a * 9 - u * 13)
-      const x = cx + Math.cos(a) * r * w
-      const y = cy + Math.sin(a) * r * w
-      if (i === 0) path.moveTo(x, y)
-      else path.lineTo(x, y)
-    }
-    path.closePath()
-    return path
-  },
-  deco(ctx, u, W, H, him, s) {
-    if (u <= 0 || u >= 1) return
-    const { r } = burnAt(u, W, H, him, s)
-    edge(ctx, this.region!(u, W, H, him, s), '#3B2617', Math.min(0.14 * s, 0.4 * r), '#D9914A', Math.sin(Math.PI * u))
-  },
-}
-
-/** The bar's doors thrown open on the daylight: the day comes in as a slab from him, too bright at first, and opens to both sides. */
-const doorAt = (u: number, W: number, him: Pt) => ({
-  left: him[0] - (him[0] + 40) * easeIn(u * 1.05) - 4,
-  right: him[0] + (W - him[0] + 40) * easeOut(u) + 4,
-})
-const door: Shape = {
-  region(u, W, H, him) {
-    const { left, right } = doorAt(u, W, him)
-    const path = new Path2D()
-    path.rect(left, -10, right - left, H + 20)
-    return path
-  },
-  deco(ctx, u, W, H, him, s) {
-    const { left, right } = doorAt(u, W, him)
-    const a = Math.sin(Math.PI * clamp(u * 1.1))
-    if (a <= 0.01) return
-    ctx.save()
-    // The bar goes darker beside the doorway: the eye stopping down for the day outside.
-    ctx.fillStyle = `rgba(14, 10, 8, ${0.45 * a})`
-    ctx.fillRect(-10, -10, Math.max(0, left + 10), H + 20)
-    ctx.fillRect(right, -10, W + 10 - right, H + 20)
-    // The day, pale at first, clearing to the pad as the eye adjusts.
-    ctx.fillStyle = `rgba(240, 243, 245, ${0.4 * a * (1 - smooth(u / 0.65))})`
-    ctx.fillRect(left, -10, right - left, H + 20)
-    // The doors' dark edges, either side of the day.
-    ctx.fillStyle = `rgba(40, 29, 21, ${a})`
-    const jamb = 0.14 * s
-    ctx.fillRect(left - jamb, -10, jamb, H + 20)
-    ctx.fillRect(right, -10, jamb, H + 20)
-    ctx.restore()
-  },
-}
-
-/** The sea's skin: the line of the water comes up past the lens as he goes in, foam on it, bubbles under it. */
-const waterAt = (u: number, H: number, s: number, x: number) => {
-  const base = H * 1.15 - (H * 1.35) * smooth(u)
-  return base + 0.12 * s * Math.sin(x / (1.3 * s) + u * 7) + 0.06 * s * Math.sin(x / (0.47 * s) - u * 11)
-}
-const waterline: Shape = {
-  region(u, W, H, _him, s) {
-    const path = new Path2D()
-    path.moveTo(-10, H + 20)
-    for (let x = -10; x <= W + 10; x += Math.max(6, W / 60)) path.lineTo(x, waterAt(u, H, s, x))
-    path.lineTo(W + 10, waterAt(u, H, s, W + 10))
-    path.lineTo(W + 10, H + 20)
-    path.closePath()
-    return path
-  },
-  deco(ctx, u, W, H, _him, s, t) {
-    if (u <= 0 || u >= 1) return
-    const line = new Path2D()
-    for (let x = -10; x <= W + 10; x += Math.max(6, W / 60)) {
-      const y = waterAt(u, H, s, x)
-      if (x === -10) line.moveTo(x, y)
-      else line.lineTo(x, y)
-    }
-    ctx.save()
-    ctx.lineJoin = 'round'
-    ctx.strokeStyle = 'rgba(236, 244, 244, 0.85)'
-    ctx.lineWidth = 0.07 * s
-    ctx.stroke(line)
-    ctx.strokeStyle = 'rgba(236, 244, 244, 0.3)'
-    ctx.lineWidth = 0.22 * s
-    ctx.stroke(line)
-    // Bubbles carried down under the skin, and spray thrown up over it.
-    const bubbles = new Path2D()
-    const spray = new Path2D()
-    for (let i = 0; i < 36; i++) {
-      const x = hash(i, 1, 31) * W
-      const y0 = waterAt(u, H, s, x)
-      const d = (hash(i, 2, 31) * 1.6 + 0.1) * s
-      const r = (0.025 + hash(i, 3, 31) * 0.06) * s
-      const by = y0 + d + Math.sin(t * 9 + i) * 0.03 * s
-      bubbles.moveTo(x + r, by)
-      bubbles.arc(x, by, r, 0, Math.PI * 2)
-      if (i < 20) {
-        const sy = y0 - (hash(i, 4, 31) * 0.9) * s * Math.sin(Math.PI * u)
-        spray.moveTo(x + r * 0.7, sy)
-        spray.arc(x, sy, r * 0.7, 0, Math.PI * 2)
-      }
-    }
-    ctx.strokeStyle = 'rgba(220, 238, 242, 0.7)'
-    ctx.lineWidth = Math.max(1, 0.012 * s)
-    ctx.stroke(bubbles)
-    ctx.fillStyle = 'rgba(240, 246, 246, 0.8)'
-    ctx.fill(spray)
-    ctx.restore()
-  },
-}
-
-/** Sean's notes on the wrapper, unfolding: a fold of paper sweeps across, and Iceland is on the other side of it. */
-const foldAt = (u: number, W: number, H: number, s: number) => {
-  // The fold's line: from off the right, across to off the left, leaning.
-  const x = W + 2 * s - (W + 4 * s + H * 0.4) * smooth(u)
-  return { x0: x + H * 0.4, x1: x }
-}
-const paper: Shape = {
-  region(u, W, H, _him, s) {
-    const { x0, x1 } = foldAt(u, W, H, s)
-    const path = new Path2D()
-    path.moveTo(x0, -10)
-    path.lineTo(W + 10, -10)
-    path.lineTo(W + 10, H + 10)
-    path.lineTo(x1, H + 10)
-    path.closePath()
-    return path
-  },
-  deco(ctx, u, W, H, _him, s) {
-    if (u <= 0 || u >= 1) return
-    const { x0, x1 } = foldAt(u, W, H, s)
-    // The paper's back, folding over: a band behind the edge, lit along the crease, with the notes' scribble on it.
-    const band = 0.55 * s * Math.sin(Math.PI * u)
-    const path = new Path2D()
-    path.moveTo(x0, -10)
-    path.lineTo(x1, H + 10)
-    path.lineTo(x1 - band, H + 10)
-    path.lineTo(x0 - band, -10)
-    path.closePath()
-    ctx.save()
-    ctx.fillStyle = '#EFE6D2'
-    ctx.fill(path)
-    ctx.clip(path)
-    ctx.strokeStyle = 'rgba(70, 64, 58, 0.45)'
-    ctx.lineWidth = Math.max(1, 0.02 * s)
-    ctx.beginPath()
-    for (let i = 0; i < 9; i++) {
-      const y = (i + 0.5) * (H / 9)
-      const xx = x0 + (x1 - x0) * (y / H) - band * 0.85
-      ctx.moveTo(xx, y)
-      for (let j = 1; j <= 6; j++) ctx.lineTo(xx + (j / 6) * band * 0.7, y + Math.sin(j * 2.1 + i) * 0.04 * s)
-    }
-    ctx.stroke()
-    ctx.restore()
-    ctx.save()
-    ctx.strokeStyle = 'rgba(60, 50, 40, 0.35)'
-    ctx.lineWidth = Math.max(1, 0.03 * s)
-    ctx.beginPath()
-    ctx.moveTo(x0, -10)
-    ctx.lineTo(x1, H + 10)
-    ctx.stroke()
-    // The shadow the fold throws on the road.
-    const g = ctx.createLinearGradient(x1, 0, x1 + 0.6 * s, 0)
-    g.addColorStop(0, 'rgba(30, 30, 30, 0.25)')
-    g.addColorStop(1, 'rgba(30, 30, 30, 0)')
-    ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.moveTo(x0, -10)
-    ctx.lineTo(x1, H + 10)
-    ctx.lineTo(x1 + 0.6 * s, H + 10)
-    ctx.lineTo(x0 + 0.6 * s, -10)
-    ctx.closePath()
-    ctx.fill()
-    ctx.restore()
-  },
-}
-
-/** The last negative, held up to the light: its frame opens on the snow, sprockets and all, and a gust comes through. */
-const negativeRect = (u: number, W: number, H: number, him: Pt, s: number) => {
-  const r = reach(W, H, him)
-  const e = burst(u)
-  return { cx: him[0] + 0.3 * s * (1 - e), cy: him[1] - 0.3 * s * (1 - e), hw: 0.62 * s + (r * 1.25 - 0.62 * s) * e, hh: 0.42 * s + (r * 1.25 - 0.42 * s) * e }
-}
-const negative: Shape = {
-  region(u, W, H, him, s) {
-    const { cx, cy, hw, hh } = negativeRect(u, W, H, him, s)
-    return rounded(cx, cy, hw, hh, 0.03 * s)
-  },
-  deco(ctx, u, W, H, him, s, t) {
-    if (u <= 0 || u >= 1) return
-    const { cx, cy, hw, hh } = negativeRect(u, W, H, him, s)
-    const a = Math.sin(Math.PI * u)
-    // The film's edge round the opening: a dark band with its sprocket holes, above and below.
-    const band = Math.max(0.16 * s, hh * 0.2)
-    ctx.save()
-    ctx.globalAlpha = Math.min(1, a * 1.4)
-    ctx.fillStyle = '#20262B'
-    for (const sgn of [-1, 1]) {
-      const y = cy + sgn * (hh + band / 2)
-      ctx.fillRect(cx - hw - band, y - band / 2, 2 * (hw + band), band)
-      ctx.fillStyle = 'rgba(232, 238, 240, 0.85)'
-      const step = band * 1.1
-      const off = ((t * 2.5 * s) % step + step) % step
-      for (let x = cx - hw - band + off; x < cx + hw + band; x += step) ctx.fillRect(x, y - band * 0.22, band * 0.42, band * 0.44)
-      ctx.fillStyle = '#20262B'
-    }
-    ctx.fillRect(cx - hw - band, cy - hh - band, band, 2 * (hh + band))
-    ctx.fillRect(cx + hw, cy - hh - band, band, 2 * (hh + band))
-    ctx.restore()
-    const opening = rounded(cx, cy, hw, hh, 0.03 * s)
-    // The gust: snow driven across the opening in streaks, only where the mountain is.
-    ctx.save()
-    ctx.clip(opening)
-    ctx.strokeStyle = `rgba(250, 252, 255, ${0.7 * a})`
-    ctx.lineCap = 'round'
-    ctx.lineWidth = Math.max(1, 0.025 * s)
-    ctx.beginPath()
-    for (let i = 0; i < 70; i++) {
-      const x = ((hash(i, 1, 77) * W * 1.4 + u * W * 1.6) % (W * 1.4)) - W * 0.2
-      const y = hash(i, 2, 77) * H + Math.sin(i + u * 6) * 0.2 * s
-      const len = (0.12 + hash(i, 3, 77) * 0.22) * s
-      ctx.moveTo(x - len, y + 0.04 * len)
-      ctx.lineTo(x, y)
-    }
-    ctx.stroke()
-    ctx.restore()
-  },
-}
-
-/** Sean's shutter: the blades close on the mountain and open on Ted's table, a photograph taken on the peak. */
-const apertureAt = (u: number, W: number, H: number, him: Pt, s: number) => {
-  const r = reach(W, H, him) * 1.05
-  // Closed at the cut (u = 0.5), never shut on him: a ring a cell and a half across.
-  const shut = 1 - Math.abs(u - 0.5) * 2
-  const e = Math.pow(clamp(shut), 1.6)
-  return r - (r - 0.95 * s) * e
-}
-const shutter: Shape = {
-  deco(ctx, u, W, H, him, s) {
-    if (u <= 0 || u >= 1) return
-    const r = apertureAt(u, W, H, him, s)
-    const R2 = reach(W, H, him) * 1.6
-    const blades = 7
-    const turn = (1 - Math.abs(u - 0.5) * 2) * 0.9
-    ctx.save()
-    // The blades: each a wide plate whose inner edge is one side of the opening.
-    for (let i = 0; i < blades; i++) {
-      const a0 = (i / blades) * Math.PI * 2 + turn
-      const a1 = ((i + 1) / blades) * Math.PI * 2 + turn
-      const p0: Pt = [him[0] + Math.cos(a0) * r, him[1] + Math.sin(a0) * r]
-      const p1: Pt = [him[0] + Math.cos(a1) * r, him[1] + Math.sin(a1) * r]
-      const ext = (q: Pt, a: number): Pt => [q[0] + Math.cos(a + 1.2) * R2, q[1] + Math.sin(a + 1.2) * R2]
-      ctx.beginPath()
-      ctx.moveTo(p0[0], p0[1])
-      ctx.lineTo(p1[0], p1[1])
-      const e1 = ext(p1, a1)
-      const e0 = ext(p0, a0)
-      ctx.lineTo(e1[0], e1[1])
-      ctx.lineTo(e0[0], e0[1])
-      ctx.closePath()
-      const g = ctx.createLinearGradient(p0[0], p0[1], e0[0], e0[1])
-      g.addColorStop(0, i % 2 ? '#3A3D42' : '#33363B')
-      g.addColorStop(0.05, '#24262A')
-      g.addColorStop(0.4, '#1A1C1F')
-      g.addColorStop(1, '#111214')
-      ctx.fillStyle = g
-      ctx.fill()
-      ctx.strokeStyle = 'rgba(150, 156, 162, 0.55)'
-      ctx.lineWidth = Math.max(1, 0.018 * s)
-      ctx.beginPath()
-      ctx.moveTo(p0[0], p0[1])
-      ctx.lineTo(p1[0], p1[1])
-      ctx.stroke()
-    }
-    // The blades' shadow falling inward on the picture, so the opening has depth.
-    const sh = ctx.createRadialGradient(him[0], him[1], r * 0.7, him[0], him[1], r * 1.02)
-    sh.addColorStop(0, 'rgba(10, 11, 13, 0)')
-    sh.addColorStop(1, `rgba(10, 11, 13, ${0.55 * Math.min(1, (1 - Math.abs(u - 0.5) * 2) * 2)})`)
-    ctx.fillStyle = sh
-    ctx.beginPath()
-    ctx.arc(him[0], him[1], r * 1.02, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.restore()
-  },
-}
-
-/**
- * The loading door's strip curtain: he goes through it on the cut, and the morning is on the other side. The curtain's
- * plane sweeps across the frame from the right, passing him on the cut; ahead of it is the street, behind it the hall.
- * Its strips hang in front, clear plastic catching the light, pushed aside where he goes through.
- */
-const CUT_U = 0.3 / 1.15
-const curtainX = (u: number, W: number, him: Pt) => him[0] + (CUT_U - u) * W * 1.7
-const strips: Shape = {
-  region(u, W, H, him) {
-    const x = curtainX(u, W, him)
-    const path = new Path2D()
-    path.rect(x, -10, W + 10 - x + Math.max(0, -x), H + 20)
-    return path
-  },
-  deco(ctx, u, W, H, him, s, t) {
-    if (u <= 0 || u >= 1) return
-    const x = curtainX(u, W, him)
-    const fade = 1 - smooth((u - 0.75) / 0.25)
-    ctx.save()
-    // The strips: a curtain a cell and a half deep about the plane, each swinging, parted round him.
-    const w = 0.42 * s
-    for (let i = -5; i <= 5; i++) {
-      const cx = x + i * w * 0.86
-      const near = Math.max(0, 1 - Math.abs(cx - him[0]) / (1.1 * s))
-      const push = (cx < him[0] ? -1 : 1) * near * 0.5 * s * Math.sin(Math.PI * clamp((u - CUT_U + 0.2) / 0.5))
-      const swing = 0.08 * s * Math.sin(t * 5 + i * 1.7)
-      const foot = cx + push + swing
-      const a = 0.22 * fade * (1 - Math.abs(i) / 6)
-      if (a <= 0.01) continue
-      ctx.fillStyle = `rgba(214, 226, 230, ${a})`
-      ctx.beginPath()
-      ctx.moveTo(cx - w / 2, -10)
-      ctx.lineTo(cx + w / 2, -10)
-      ctx.quadraticCurveTo(cx + w / 2 + push * 0.3, H * 0.6, foot + w / 2, H + 10)
-      ctx.lineTo(foot - w / 2, H + 10)
-      ctx.quadraticCurveTo(cx - w / 2 + push * 0.3, H * 0.6, cx - w / 2, -10)
-      ctx.fill()
-      ctx.strokeStyle = `rgba(236, 244, 246, ${a * 1.3})`
-      ctx.lineWidth = Math.max(1, 0.015 * s)
-      ctx.beginPath()
-      ctx.moveTo(cx + w / 2, -10)
-      ctx.quadraticCurveTo(cx + w / 2 + push * 0.3, H * 0.6, foot + w / 2, H + 10)
-      ctx.stroke()
-    }
-    ctx.restore()
-  },
+function shutter(ctx: C2, sc: Scene): void {
+  const { u, W, H, him, s } = sc
+  if (u <= 0 || u >= 1) return
+  const shut = Math.pow(clamp(1 - Math.abs(u - 0.5) * 2), 1.6)
+  const far = Math.max(Math.hypot(him[0], him[1]), Math.hypot(W - him[0], him[1]), Math.hypot(him[0], H - him[1]), Math.hypot(W - him[0], H - him[1])) * 1.05 / Math.cos(Math.PI / 7)
+  const r = far - (far - 0.95 * s) * shut
+  const turn = 0.9 * shut
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(-10, -10, W + 20, H + 20)
+  for (let i = 0; i <= 7; i++) {
+    const a = (i / 7) * Math.PI * 2 + turn
+    const x = him[0] + Math.cos(a) * r
+    const y = him[1] + Math.sin(a) * r
+    if (i === 0) ctx.moveTo(x, y)
+    else ctx.lineTo(x, y)
+  }
+  ctx.closePath()
+  ctx.fillStyle = '#17181B'
+  ctx.fill('evenodd')
+  ctx.restore()
 }
 
 /* ------------------------------------------------------------------ the passages, in order */
 
 export const PASSAGES: Passage[] = [
-  { at: SEAM.dream, before: 0.32, after: 0.7, ...frameOut, ease: burst },
-  { at: SEAM.office, before: 0.3, after: 0.75, ...frameIn, ease: smooth },
-  { at: SEAM.nuuk, before: 0.35, after: 0.85, ...projector, ease: (x) => easeIn(x) * 0.25 + smooth(x) * 0.75 },
-  { at: SEAM.sky, before: 0.3, after: 0.6, ...door, ease: smooth },
-  { at: SEAM.sea, before: 0.4, after: 0.5, ...waterline, ease: (x) => x },
-  { at: SEAM.iceland, before: 0.35, after: 0.95, ...paper, ease: (x) => x },
-  { at: SEAM.himalaya, before: 0.3, after: 1.0, ...negative, ease: (x) => x },
-  { at: SEAM.press, before: 0.42, after: 0.55, ...shutter, ease: (x) => x },
-  { at: SEAM.street, before: 0.3, after: 0.85, ...strips, ease: (x) => x },
+  { at: SEAM.dream, before: 0.32, after: 0.7, ease: burst, region: (sc) => opening(sc, BLANK, sc.u), fade: 0.15 },
+  { at: SEAM.office, before: 0.2, after: 0.45, ease: smooth },
+  { at: SEAM.nuuk, before: 0.3, after: 0.6, ease: smooth },
+  { at: SEAM.sky, before: 0.25, after: 0.5, ease: smooth },
+  { at: SEAM.sea, before: 0.4, after: 0.5, ease: linear, region: waterline, edge: surface },
+  { at: SEAM.iceland, before: 0.3, after: 0.6, ease: smooth },
+  { at: SEAM.himalaya, before: 0.3, after: 1.0, ease: burst, region: (sc) => opening(sc, LAST_NEGATIVE, sc.u), fade: 0.12 },
+  { at: SEAM.press, before: 0.42, after: 0.55, ease: linear, cover: shutter },
+  { at: SEAM.street, before: 0.3, after: 0.6, ease: smooth },
 ]
 
 /** The passage running at `t`, and how far through it is. */
@@ -482,11 +166,7 @@ export function passageAt(t: number): { passage: Passage; u: number } | null {
   for (const passage of PASSAGES) {
     const a = passage.at - passage.before
     const b = passage.at + passage.after
-    if (t > a && t < b) {
-      // `u` crosses the cut where the shape says it is: the share of the window before it.
-      const x = (t - a) / (b - a)
-      return { passage, u: clamp((passage.ease ?? smooth)(x)) }
-    }
+    if (t > a && t < b) return { passage, u: clamp(passage.ease((t - a) / (b - a))) }
   }
   return null
 }
@@ -566,8 +246,8 @@ function paintPlace(g: p5, u: Universe, t: number, x: number, y: number, k: numb
 let drawingOther = false
 
 /**
- * The piece that lays the other place over this one through the passage's shape. It stands in every place, last of
- * what is drawn over it, and is handed the show once it is made (`bind`).
+ * The piece that lays the other place over this one. It stands in every place, last of what is drawn over it, and is
+ * handed the show once it is made (`bind`).
  */
 export function passages(): { piece: Piece<null>; bind(show: QuintessenceShow): void } {
   let show: QuintessenceShow | null = null
@@ -591,60 +271,76 @@ export function passages(): { piece: Piece<null>; bind(show: QuintessenceShow): 
       const H = p.height * d
       const here = show.at(t)
       const m = ctx.getTransform()
-      const him: Pt = [m.a * here.x * k + m.c * here.y * k + m.e, m.b * here.x * k + m.d * here.y * k + m.f]
-      const s = Math.hypot(m.a, m.b) * k
+      const toScreen = (x: number, y: number): Pt => [m.a * x * k + m.c * y * k + m.e, m.b * x * k + m.d * y * k + m.f]
+      const [dx, dy] = show.shift(main, other)
+      const sc: Scene = {
+        u,
+        W,
+        H,
+        him: toScreen(here.x, here.y),
+        s: Math.hypot(m.a, m.b) * k,
+        // Before the cut he is in the place he is leaving; after it, that place is the other one.
+        leaving: (x, y) => (before ? toScreen(x, y) : toScreen(x - dx, y - dy)),
+      }
 
-      let clip: Path2D | null = null
-      let rule: CanvasFillRule = 'nonzero'
-      if (passage.region) {
-        const region = passage.region(u, W, H, him, s)
-        if (before) {
-          clip = region
-          if (passage.evenodd) rule = 'evenodd'
-        } else {
-          // What is not yet the new place: the frame less the region (a ring less a hole is the hole, even-odd).
-          clip = new Path2D()
-          clip.rect(-20, -20, W + 40, H + 40)
-          clip.addPath(region)
-          rule = 'evenodd'
-        }
+      let over = false
+      if (!passage.cover) {
         // The other place, by this camera carried across the cut.
         const f = frame(p, k)
-        const [dx, dy] = show.shift(main, other)
-        const world = show.legs[other].world
-        const universe = show.universeOf(world)
-        if (universe) {
-          const g = spareFor(p)
-          drawingOther = true
-          try {
-            paintPlace(g as unknown as p5, universe, t, f.cx + dx, f.cy + dy, k)
-          } finally {
-            drawingOther = false
+        const universe = show.universeOf(show.legs[other].world)
+        if (!universe) return
+        const g = spareFor(p)
+        drawingOther = true
+        try {
+          paintPlace(g as unknown as p5, universe, t, f.cx + dx, f.cy + dy, k)
+        } finally {
+          drawingOther = false
+        }
+        ctx.save()
+        ctx.setTransform(1, 0, 0, 1, 0, 0)
+        if (passage.region) {
+          // Before the cut the new place is seen inside the shape; after it, the old one is seen outside it.
+          const region = passage.region(sc)
+          let clip = region
+          let rule: CanvasFillRule = 'nonzero'
+          if (!before) {
+            clip = new Path2D()
+            clip.rect(-20, -20, W + 40, H + 40)
+            clip.addPath(region)
+            rule = 'evenodd'
           }
+          ctx.clip(clip, rule)
+          if (before && passage.fade) ctx.globalAlpha = smooth((t - (passage.at - passage.before)) / passage.fade)
+          over = ctx.isPointInPath(clip, sc.him[0], sc.him[1], rule)
+        } else {
+          // A dissolve: the new place comes up through the old one.
+          ctx.globalAlpha = before ? u : 1 - u
+          over = true
+        }
+        ctx.drawImage(g.elt as HTMLCanvasElement, 0, 0, W, H)
+        ctx.restore()
+        if (passage.edge) {
           ctx.save()
           ctx.setTransform(1, 0, 0, 1, 0, 0)
-          ctx.clip(clip, rule)
-          ctx.drawImage(g.elt as HTMLCanvasElement, 0, 0, W, H)
+          passage.edge(ctx, sc)
           ctx.restore()
         }
+      } else {
+        ctx.save()
+        ctx.setTransform(1, 0, 0, 1, 0, 0)
+        passage.cover(ctx, sc)
+        ctx.restore()
+        over = true
       }
-      ctx.save()
-      ctx.setTransform(1, 0, 0, 1, 0, 0)
-      passage.deco?.(ctx, u, W, H, him, s, t)
-      ctx.restore()
 
-      // Walter, again, wherever the other place or the seam was laid over him: as he is, his own colour.
-      const over = clip ? ctx.isPointInPath(clip, him[0], him[1], rule) : false
-      if ((over || passage.deco) && !here.hidden && here.scale > 0.02) {
-        const u0 = here.universe
-        const spin = (here.x - u0.pieces[0].col) / R
-        const angle = Math.atan2(Math.sin(here.angle), here.placed.mirror * Math.cos(here.angle))
-        const balls = here.balls ?? [{ id: here.ball.id, x: here.x, y: here.y, color: here.ball.color, ghost: here.ball.ghost, scale: here.scale, stretch: here.stretch, angle }]
-        for (const b of balls) {
-          if ((b.scale ?? 1) <= 0.02) continue
-          ball(p, k, c.ink, c.weight, b.color, b.x * k, b.y * k, b.id === here.ball.id ? spin : (b.x - u0.pieces[0].col) / R, b.scale ?? 1, b.stretch ?? 1, b.angle ?? 0, b.ghost ?? false)
-        }
-      }
+      // Walter, again, wherever the other place or the shutter was laid over him: as he is, his own colour.
+      if (!over || here.hidden || here.scale <= 0.02) return
+      const u0 = here.universe
+      const spin = (here.x - u0.pieces[0].col) / R
+      const angle = Math.atan2(Math.sin(here.angle), here.placed.mirror * Math.cos(here.angle))
+      const him = here.balls?.find((b) => b.id === here.ball.id)
+      const b = him ?? { x: here.x, y: here.y, color: here.ball.color, ghost: here.ball.ghost, scale: here.scale, stretch: here.stretch, angle }
+      ball(p, k, c.ink, c.weight, b.color, b.x * k, b.y * k, spin, b.scale ?? 1, b.stretch ?? 1, b.angle ?? 0, b.ghost ?? false)
     },
   })
   return { piece, bind: (s) => { show = s } }

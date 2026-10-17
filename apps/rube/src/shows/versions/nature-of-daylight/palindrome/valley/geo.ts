@@ -95,7 +95,7 @@ export const A = {
   surge3: 125.643,
   /** The deck at the top of its travel. */
   top: 128.551,
-  end: SEAM.contact,
+  end: SEAM.shaft,
 } as const
 
 /** The going (311.293 → 334.031). */

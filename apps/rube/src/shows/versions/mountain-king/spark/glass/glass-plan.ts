@@ -10,7 +10,7 @@ import { SEAMS } from '../seams'
  * The part's frame is the glassworks' world cells (the leg is laid at [0, 0]): the spark comes out of the glory
  * hole's mouth at (-0.5, 0). West to east:
  *
- *   the glory hole     a round mouth in a brick oven, always roaring (the dash home goes back through it)
+ *   the glory hole     a round mouth in a brick oven, always roaring
  *   the blowing cart   a little iron cart on a gently sloping rail, the blowpipe in its yokes, a bellows on its bed
  *                      pumped by a crank on its front wheel: as it rolls east the pipe turns and the bellows blows,
  *                      a puff a strong note

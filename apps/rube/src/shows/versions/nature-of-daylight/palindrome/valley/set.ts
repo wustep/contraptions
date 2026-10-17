@@ -5,7 +5,7 @@ import { frame, hash, smooth } from '../kit'
 import { SHELL, VALLEY } from '../worlds'
 import { A, CLOUD_HIGH, CLOUD_LOW, daylight, deckAt, G, hingeAt, LIFT, MEADOW, pedalAt, PEDAL, rampFrame, SHELL_X, shellAt, shellSeen, slotAt, SLOT_W, TENTS } from './geo'
 import { drawHeli, heliAt, washAt } from './heli'
-import { drawAir, drawBreak, drawBreakSky, drawFarShafts, drawHaze, drawRays, drawShadows, drawSunlight, drawSunWash, drawValleyShade, sunAt } from './light'
+import { drawAir, drawBreak, drawBreakSky, drawFarShafts, drawHaze, drawMeeting, drawRays, drawShadows, drawSunlight, drawSunWash, drawValleyShade, sunAt } from './light'
 import { herArrive, herSuited, HER_IN, HER_OUT, ianArrive, IAN_EXIT } from './paths'
 import { drawSuit } from '../chamber/set'
 
@@ -917,6 +917,7 @@ export function drawValley(p: p5, k: number, t: number): void {
   drawShadows(ctx, k, t)
   drawFloorMist(ctx, k, f, t)
   drawRays(ctx, k, t, smooth(f.y1 - f.y0, 6, 30))
+  drawMeeting(ctx, k, t)
   ctx.restore()
 }
 

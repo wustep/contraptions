@@ -7,7 +7,8 @@ import measured from '../../../scripts/shows/plans/relax-onsets.json'
 import { STRIKES } from '../src/shows/versions/relax/magnum/hits'
 import { BACK, BEATS, BREAK, CREDITS_AT, DRUMS, DURATION, END, HALVES, ONSETS, RECORDING, ROCK, SEAM, SPLASH, STOP, WASH, CALL } from '../src/shows/versions/relax/magnum/music'
 import { CARDS, CREDITS_OK, creditsAt } from '../src/shows/versions/relax/magnum/credits'
-import { FLASHED, PUNCHES, flashCutAt } from '../src/shows/versions/relax/magnum/score'
+import { PUNCHES } from '../src/shows/versions/relax/magnum/score'
+import { DISSOLVES, dissolveAt } from '../src/shows/versions/relax/magnum/dissolve'
 import { FIRST } from '../src/shows/versions/relax/magnum/seams'
 import type { MagnumShow } from '../src/shows/versions/relax/magnum/show'
 import type { Who } from '../src/shows/versions/relax/magnum/kit'
@@ -124,10 +125,16 @@ export function checkMagnum(perf: Performance, version: ShowVersion, check: Chec
   check('magnum: the camera\'s biggest push is Magnum\'s', PUNCHES.every(([at, s]) => at === SPLASH || s < PUNCHES.find(([a]) => a === SPLASH)![1]))
   check('magnum: the show opens on its first frame', near(cam(0).cells, FIRST.cells, 1e-6))
 
-  // The flash cuts are white at their cuts, and nothing else is.
-  check('magnum: three cuts in a press camera\'s flash, white at their cuts and only there',
-    FLASHED.length === 3 && FLASHED.every((t) => flashCutAt(t) > 0.99) && [5, 60, 100, 150, 186.5, 240].every((t) => flashCutAt(t) === 0) &&
-    [SEAM.spa, SEAM.club, SEAM.center].every((t) => FLASHED.some((f) => near(f, t))))
+  // Every change of place dissolves, as do the Center's two cuts of the camera, each half and half at most at its cut;
+  // nothing is laid over the frame anywhere else.
+  const places = DISSOLVES.filter((d) => !d.framing).map((d) => d.at)
+  const framings = DISSOLVES.filter((d) => d.framing).map((d) => d.at)
+  check('magnum: every change of place dissolves, and the Center\'s two cuts of the camera, and nothing else is laid over the frame',
+    places.length === 4 && cuts.every((c) => places.some((t) => near(t, c, 1e-6))) &&
+    framings.length === 2 && framings.every((t) => cameraCuts.some((c) => near(c, t, 1e-6))) &&
+    DISSOLVES.every((d) => d.before > 0.1 && d.after > 0.1 && d.before + d.after >= 0.4 && (dissolveAt(d.at - 1e-4)?.a ?? 0) <= 0.85 && Math.abs((dissolveAt(d.at - 1e-4)?.a ?? 0) + (dissolveAt(d.at + 1e-4)?.a ?? 0) - 1) < 1e-3) &&
+    DISSOLVES.every((d, i) => i === 0 || DISSOLVES[i - 1].at + DISSOLVES[i - 1].after < d.at - d.before) &&
+    [5, 60, 100, 150, 186.5, 210, 240].every((t) => dissolveAt(t) === null))
 
   // Under Zoom (half as close again as the show's camera) the ball stays in the frame wherever it is to be seen.
   const outOfZoom: string[] = []

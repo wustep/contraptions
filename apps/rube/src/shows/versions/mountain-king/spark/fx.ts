@@ -452,9 +452,8 @@ export interface VeilState {
 
 /**
  * How long before and after a door its fire is in the frame. The three doors out are an opening the camera flies
- * through with the spark (`DOORWAY`, below). The dash home is three doors in a sixth of a second, on the roll's
- * strokes: each is a flash of fire and no more, so the worlds it goes back through are seen, a few frames each (a
- * burner, the glory hole), before the loft.
+ * through with the spark (`DOORWAY`, below). The door home, on the roll's first stroke, is a flash of fire and no
+ * more: out of the crate's fire, out of the loft stove's.
  */
 const FLASH = { before: 0.022, after: 0.028 }
 
@@ -813,7 +812,7 @@ export const veil = () =>
       const band = flash ? 0.5 : 2.0 - 3.0 * q
       const cover = (sv: number) => (flash ? smooth(d, -span.before, -span.before * 0.3) * (1 - smooth(d, span.after * 0.3, span.after)) : 1 - smooth(Math.abs(sv - band), 0.62, 1.0))
       // Which fire a point is in. The band comes in as the old world's fire and goes out as the new one's: behind its
-      // middle it is the new fire, ahead of it the old, and where they meet it is white-hot. A flash (the dash home) is
+      // middle it is the new fire, ahead of it the old, and where they meet it is white-hot. A flash (the door home) is
       // the old fire up to the cut and the new one after it.
       const sideOf = (sv: number): number => (flash ? (d < 0 ? -1 : 1) : sv - band)
       const seam = (side: number): number => (flash ? 0 : Math.exp(-((side / 0.11) ** 2)))

@@ -4,8 +4,8 @@ import { MUSIC_END, TRACKS, barTime } from './music'
 /**
  * The words over the stage, set by the page (a show's canvas sets no type). The title over the first intro; each
  * track's name, small and brief, as it begins, as a radio says what it is playing; and the credits over the last
- * track's outro, while the ball sleeps in the cup. The title and the credits come over the room's widest frame, so they
- * stand on the dark wall right of the window, clear of its frame.
+ * track's outro, while the ball sleeps in the cup. All of them stand on the dark wall right of the window, clear of its
+ * frame, the fairy lights and the moon.
  */
 
 export interface Card {
@@ -37,9 +37,10 @@ export const CARDS: Card[] = [
   ...TRACKS.map((tr): Card => ({
     at: tr.n === 0 ? 11.2 : tr.from + 1.2,
     hold: 3.4,
-    // As a stream's now-playing line: the track and its artists on one baseline, the artists in gold.
+    // As a stream's now-playing line: the track and its artists on one baseline, the artists in gold. Where the title
+    // stood: off the window and the lights strung over it.
     names: [[tr.title, tr.artists]],
-    pos: [0.5, 0.06],
+    pos: [0.745, 0.15],
     scale: 0.95,
   })),
   { at: creditsFrom, hold: 3.6, role: 'Directed by', names: ['Stephen Wu', 'Claude Opus 5.5'], notes: ['drawn with p5.js'], pos: CREDITS_AT },

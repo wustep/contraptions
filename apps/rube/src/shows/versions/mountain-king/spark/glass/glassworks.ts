@@ -12,7 +12,6 @@ import {
   END_X,
   FLOOR_Y,
   FURNACE,
-  GLORY,
   HISS,
   HOP_OFF,
   MOULD_X,
@@ -66,11 +65,6 @@ export const GLASS_HITS: number[] = [TINK, PLOP, ...PUFFS, STOP, CLAP, ...HISS, 
   .filter((t, i, all) => all.indexOf(t) === i)
   .sort((a, b) => a - b)
 
-/**
- * Where the glory hole's mouth is, in the glassworks' world cells: the spark streaks back through it on the way home
- * (`DOORS.back[1]` to `DOORS.back[2]`, up and to the left). It is always roaring, and it flares as the spark goes by.
- */
-export const GLORY_AT: Pt = [GLORY.x, GLORY.y]
 
 interface GlassState {
   begin: number

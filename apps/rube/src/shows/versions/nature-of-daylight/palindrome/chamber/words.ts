@@ -48,11 +48,18 @@ export function cardOf(l: Logo, t: number): { x: number; swing: number; show: nu
 
 /** The rail, its catch and the cord from the plate, the cards, and the words on their way in. */
 export function drawRail(p: p5, ctx: Ctx, k: number, t: number): void {
+  // Not there at first contact: the chamber is bare when they come in, the glass and the white all there is, and the
+  // machine is up from the cut to the first word, the work begun. (Up from the start, a rail and a cord hung over the
+  // awe of the first minute, a machine nothing had used.) A third of a second in, so a camera with no cut there sees it
+  // come rather than pop.
+  const built = smooth(t, T.first, T.first + 0.3)
+  if (built <= 0) return
   const bomb = t > T.bomb - 1
   const lit = (x: number) => 0.3 + 0.7 * Math.sqrt(lightAt(x, t))
   const press = plateAt(t)
   const catchAt: Pt = [GX - 0.12, railY(GX - 0.12)]
   ctx.save()
+  ctx.globalAlpha *= built
   ctx.lineCap = 'round'
   // The cord from the plate straight up the wall to the rail, where a crank turns the pull along it to the catch:
   // slack at rest, pulled taut when she stands on the plate.

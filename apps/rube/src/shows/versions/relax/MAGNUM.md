@@ -77,11 +77,14 @@ ball moves into the next place's cells and the camera moves by exactly the same 
 screen he holds still while everything round him becomes somewhere else: a match cut on Derek. `seams.ts` says his
 velocity, the camera's distance and where Hansel and Mugatu are at every seam.
 
-- **Three cuts in a press camera's flash** (`score.ts`, `FLASHES`): into the spa (27.394), into the club (83.552) and
-  into the Center (202.095), each on a downbeat: the fashion world's own punctuation. White up in a tenth of a second,
-  down over two thirds; the place changes where nothing can be seen.
-- **One hard cut**, on the break's downbeat (116.820), the count-in: from the walk-off into the dark of Derelicte's
-  wings.
+- **Every cut dissolves** (`dissolve.ts`): into the spa (27.394), into the club (83.552), into Derelicte's wings on
+  the count-in (116.820) and into the Center (202.095), each on a downbeat. For 0.9 s round the cut both places are
+  on the screen, the one fading through the other, and Derek holds still in them. Whoever is at his side on both
+  sides (Mugatu into the spa, Hansel into the Center) holds; Hansel, leaving the club, goes with it. No flash, no edge.
+  (Until October 2026 three of them were inside a full-frame white flash, and the count-in was a hard cut.)
+- **Two dissolves of the camera inside the Center** (`dissolve.ts`): the lawn wide into the model alone as the sheet
+  goes up (204.174), and the pump close out to the whole lawn on the second stomp (221.322), where it once cut twice
+  in half a second.
 - **The punches** (`PUNCHES` in `score.ts`): the camera pushes in at once and eases back over seconds on Blue Steel
   (5.126), the surge's wash (132.941), the plug (182.817) and, biggest of all, Magnum (186.474).
 
@@ -96,19 +99,19 @@ Times are show seconds; bar *n* is `bar(n)`, beat *k* is `beat(k)`.
 | 5.2 → 9.35 | the second call (8.679) | | The house comes up for him bank by bank (a spot, the trophy's lamp, the bulb walls). He goes back up the runway and up the podium's steps to the trophy, sure it is his. |
 | 10.246 → 12.824 | the pickup; **the drums (10.746)** | | The truss lurches on the pickup; on the drums every spot swings off him to the far wings, the bulb wall goes dark behind him, the photographers' cameras turn over their heads to Hansel and fire as he rolls into the light; the trophy is flown across on its trolley and set down beside Hansel. Derek alone on the dark podium. |
 | 12.8 → 25.3 | the groove | | Hansel's parade down the runway under the flown trophy, a flash on the downbeats; Derek backs down the steps into the dark of the wings. Mugatu glides out of the dark to him (25.310), and he startles. |
-| **27.394** | the hook, round one | the day spa | *A photographer in the wings fires: a flash cut.* Mugatu shows him onto the line. |
+| **27.394** | the hook, round one | the day spa | *A photographer in the wings fires; the wings dissolve into the spa.* Mugatu shows him onto the line. |
 | 28.4 → 52.4 | the hook's lines | | **A car wash for models**, a treatment a line under brass arches: the towel rollers, a trough of mud (he goes mud-brown), the teal rinse (back to steel blue), a slicer and two cucumber slices landing on him as eyes, the steam cabinet, a hot-towel turban, the dryer hood. The steam over the room drifts and thins as the vents open. |
 | 52.356 → 64.8 | the hook, round two | | **The conditioning.** Into the recliner; Mugatu at his console pushes his lever over and the chair flings him across the room into a crimson target (the Prime Minister's colour) on the hook's line; he rolls back down the chute; again (53.395, 57.551, 61.713), each nearer the middle. |
 | 65.342 → 66.648 | the fourth line | | Mugatu's hand comes off the lever and stays away; the chair stays latched; on the line Derek gathers and **springs by himself**, straight and exact, and hits. Mugatu watches it. |
 | **71.071** | the sung call, a crash | | A stiff ratchet of a wind-up on the fill, and dead centre: the target is knocked flat. Conditioned. |
 | 73.7 → 83.552 | the breaks | | The big dryer comes down out of the ceiling and blows him down the robes, through the towel strips and out through the door into the night. |
-| **83.552** | the verse | the walk-off | *A photographer outside fires: a flash cut.* Underground: concrete, smoke, a crowd, lasers. Hansel waits in the judge's lamp. |
+| **83.552** | the verse | the walk-off | *A photographer outside fires; the spa dissolves into the walk-off.* Underground: concrete, smoke, a crowd, lasers. Hansel waits in the judge's lamp. |
 | 85.6 → 95.5 | the verse | | **They trade moves**, each a mechanism of the floor: the pop plates (Hansel a double somersault), the laser gates (Hansel over two beams with a flip), the strut. |
 | 96.0 → 101.7 | the call and answer | | Derek's move on each line, Hansel's higher echo on each answer; on the last line every laser swings down between them. |
 | 102.267 | the bridge | | A grid of lasers drops from the ceiling onto Derek's nose: a spark, and he is thrown back. |
 | 103.0 → 106.4 | | | **Hansel's move that cannot be done**: he rolls into the closed grid, stops dead in its middle with a look, and rolls out the far side with every beam whole. The lamp settles on him; the press fire. |
 | 110.6 → 116.8 | | | Hansel comes to Derek, and they touch: friends. |
-| **116.820** | the break: the count-in | Derelicte | *A hard match cut.* The dark of the wings at the runway's head; the needle drops on the record in the DJ's booth; the runway's banks come up on the break's beats. |
+| **116.820** | the break: the count-in | Derelicte | *A match cut, in a dissolve: Hansel goes with the club.* The dark of the wings at the runway's head; the needle drops on the record in the DJ's booth; the runway's banks come up on the break's beats. |
 | 121.499 | the title said | | **Triggered.** Mugatu's lamp snaps onto him; the curtain of bin bags hoists; he marches out, a stiff step a beat, sharp starts and stops (the one undamped motion in the show). A hitch on "don't do it". |
 | 132.941 → 139.1 | the wash, the surge | | The march becomes a stride down the runway, a beat a stride. |
 | 139.1 → 156.3 | the ride | | A sequence cut on the downbeats: the whole hall (the runway's length, the Prime Minister at its end, the tower); **Hansel** at the tower's foot, seeing him (141.253); Derek close, travelling, a press camera flashing in his face on the downbeats; **Mugatu** on his perch, shimmying with delight, his lamp on Derek; Derek; **the Prime Minister** in the front row, oblivious, applauding; Derek to the runway's end, where he does not turn back. |
@@ -120,7 +123,7 @@ Times are show seconds; bar *n* is `bar(n)`, beat *k* is `beat(k)`.
 | 186.997 → 187.525 | the band back in | | The house lights clank on, flat and cold: the show is over. The star drops and sticks in the boards. |
 | 188.1 → 197.9 | the outro | | The press turn on Mugatu; he backs into the canopy's upright, its hitch slips, and the net of bin bags he hung over his own show comes down on him: a lump. The Prime Minister rises and cheers. Hansel rides the gin wheel's bucket down from the booth. |
 | 197.933 → 202.095 | | | Derek and Hansel side by side for the press, each turned to the cameras. |
-| **202.095** | the finale | the Center | *A photographer fires: a flash cut.* A bright morning, a lawn, and the sheeted model. |
+| **202.095** | the finale | the Center | *A photographer fires; Derelicte dissolves into the Center.* A bright morning, a lawn, and the sheeted model. |
 | 204.174 | | | Derek bumps a bell-pull; the sheet goes up into a tree: a building, stately, in the morning. Then he comes up beside it (208.330): **it is smaller than he is.** A center for ants. |
 | 215.1 → 220.3 | | | He follows the hose to a foot pump and tests it; hops on every hit of the drum fill; a leap. |
 | **220.811, 221.322, 221.850** | three quick calls | | **Three times bigger, three times**: a stomp on each, and the building jumps each time, up and then out, the roofs unfolding, the lantern last, the trees popping. |
@@ -153,8 +156,8 @@ card the Center holds to the end, 263 s.
 `apps/rube/checks/magnum.ts`:
 - the recording whole from zero, its credit, the label's upload, and the credits after it;
 - the places in order, every cut on a downbeat, no portal;
-- the ball never jumps in a place, and every cut is a match cut (three of them in a flash, white at the cut and only
-  there);
+- the ball never jumps in a place, and every cut is a match cut, each inside a dissolve, and nothing laid over the
+  frame elsewhere;
 - every strike on a beat or an off-beat (±30 ms) or a measured onset (±40 ms), and every part strikes;
 - the song's landmarks struck (the drums, the call, the count-in, the wash, the plug, Magnum, the band back, the last
   hit), and three in four of the rock's beats;
@@ -170,7 +173,7 @@ card the Center holds to the end, 263 s.
 - **The version file:** `apps/rube/src/shows/versions/relax/opus55.show.ts`. Everything with weight is behind `load()`.
 - **The show:** `.../relax/magnum/`, on Logogram's kit (after Liftoff's, All at Once's and Merry-Go-Round's): `kit.ts`
   (the part contract: each part is handed a slot and builds its lane from timed waypoints, so its strikes land where
-  the music is by construction), `show.ts` (the legs), `score.ts` (the order, the cuts, the flash cuts, the punches),
+  the music is by construction), `show.ts` (the legs), `score.ts` (the order, the cuts, the punches), `dissolve.ts`,
   `camera.ts` (authored keys through a monotone cubic), `music.ts`, `seams.ts`, `hits.ts`, `credits.ts`.
 - **The canonical drawings** (`cast.ts`): **the look** (`glint`: a cartoon "ting" of eight tapering rays on the rim of
   whoever gives it, the one sparkle the show allows, given three times only: 0.35 for Blue Steel, 0.45 for Hansel in

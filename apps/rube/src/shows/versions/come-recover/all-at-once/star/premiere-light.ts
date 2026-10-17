@@ -28,9 +28,10 @@ export const WET = mixHex(NIGHT, STAR.wet, 0.55)
 export const BODY = mixHex(NIGHT, INK, 0.1)
 export const SILVER = mixHex(STAR.rain, INK, 0.45)
 
+/** Alpha is written fixed-point: a tiny one printed as `5e-7` is no colour to p5, which paints it white. */
 export function rgba(hex: string, a: number): string {
   const n = parseInt(hex.slice(1), 16)
-  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${Math.max(0, Math.min(1, a))})`
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${Math.max(0, Math.min(1, a)).toFixed(3)})`
 }
 
 const ctxOf = (p: p5): CanvasRenderingContext2D => p.drawingContext as CanvasRenderingContext2D

@@ -93,13 +93,13 @@ function lightOf(card: Card, t: number): { light: number; rise: number } {
 /**
  * The film's three chapters, which are the show's three parts, each named as it begins: Everything over the
  * storefront's dark glass in the opening's wide shot, as the tubes come on; Everywhere in the premiere's lower
- * widescreen bar, as a film sets a title in its letterbox; All at Once in the dark she breaks through into, before the
- * laundromat comes up round her. Set by the page as the credits are, in its own face.
+ * widescreen bar, as a film sets a title in its letterbox; All at Once in the dark she breaks through into, gone
+ * before the laundromat's tubes come on round her. Set by the page as the credits are, in its own face.
  */
 export const CHAPTERS: (Card & { pos: [number, number]; scale: number })[] = [
   { at: 0.6, hold: 3.6, role: 'Part one', names: ['Everything'], pos: [0.122, 0.5], scale: 0.66 },
   { at: JUMPS.premiere + 0.5, hold: 2.6, role: 'Part two', names: ['Everywhere'], pos: [0.5, 0.878], scale: 0.62 },
-  { at: JUMPS.mosaic + 0.35, hold: 2.4, role: 'Part three', names: ['All at Once'], pos: [0.5, 0.6], scale: 0.85 },
+  { at: JUMPS.mosaic + 0.35, hold: 1.5, role: 'Part three', names: ['All at Once'], pos: [0.5, 0.6], scale: 0.85 },
 ]
 
 /** The cards up at `t`, for the page to set (`Performance.titles`): the chapters as they begin, and the credits. */

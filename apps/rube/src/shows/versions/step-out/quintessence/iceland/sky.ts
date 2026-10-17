@@ -5,8 +5,8 @@ import { ICE } from './theme'
 
 /**
  * Iceland's sky: a cold clear blue going gold at the horizon, a low sun on the left, and weather going by on the
- * wind from the left (the way the plume leans): mares' tails high up, going by fast, and under them cumulus lit gold
- * from underneath by the low sun, great heaps overhead and smaller, flatter ones far off down to the horizon, with
+ * wind from the left (the way the plume leans): a few strokes of cirrus high up, going by fast, and under them a few
+ * great heaps of cumulus lit gold from underneath by the low sun, and a few flat ones far off over the ranges, with
  * open sky between. After the eruption the ash spreads over all of it and the light goes grey-mauve (`dim`).
  *
  * The clouds are painted once into bands (`bake`), one for the high cloud and one for the cumulus, and laid on moving
@@ -34,67 +34,36 @@ function oval(path: Path2D, x: number, y: number, rx: number, ry: number): void 
   }
 }
 
-/** The high cloud: mares' tails and cirrus, long fine streaks combed out along the wind, lit on top and shaded under. */
+/** The high cloud: a few long strokes of cirrus combed out along the wind, rising a little as they go. */
 const paintHigh: Paint = (ctx) => {
   const lit = new Path2D()
-  const shade = new Path2D()
-  const bands = 11
-  for (let r = 0; r < bands; r++) {
-    const x0 = (r + hash(r, 1, 431)) * (SPAN / bands)
-    const y0 = -0.5 + 0.24 * hash(r, 2, 431)
-    // Nearer the horizon they are finer, as the sky goes away.
-    const s = 1 - 0.45 * ((y0 + 0.5) / 0.24)
-    const len = (0.18 + 0.2 * hash(r, 3, 431)) * s
-    const curl = (hash(r, 4, 431) - 0.5) * 0.06
-    const n = 26 + Math.round(20 * hash(r, 5, 431))
-    for (let i = 0; i < n; i++) {
-      const u = hash(i, r, 432)
-      const x = x0 + u * len
-      // The band curves, and its streaks fan out from its head.
-      const y = y0 + curl * Math.sin(u * Math.PI) + (hash(i, r, 433) - 0.5) * 0.03 * s * (0.4 + u)
-      const rx = (0.02 + 0.05 * hash(i, r, 434)) * s
-      const ry = (0.0018 + 0.0022 * hash(i, r, 435)) * s
-      oval(shade, x + rx * 0.1, y + ry * 1.3, rx, ry)
-      oval(lit, x, y, rx * 0.92, ry * 0.85)
+  const strokes = 5
+  for (let r = 0; r < strokes; r++) {
+    const x0 = (r + hash(r, 1, 441)) * (SPAN / strokes)
+    const y0 = -0.56 + 0.22 * hash(r, 2, 441)
+    const len = 0.35 + 0.3 * hash(r, 3, 441)
+    const rise = -0.03 - 0.03 * hash(r, 4, 441)
+    // Each stroke is a few long thin rounds laid end to end, thinning toward its tail.
+    for (let i = 0; i < 4; i++) {
+      const u = (i + 0.5) / 4
+      oval(lit, x0 + u * len, y0 + rise * u, len * 0.22, 0.004 * (1 - 0.5 * u))
     }
   }
-  // Higher still, cirrus combed out long and thin across the top of the sky, each band rising a little along the
-  // wind and fraying at its tail.
-  const high = 20
-  for (let r = 0; r < high; r++) {
-    const x0 = (r + hash(r, 1, 441)) * (SPAN / high)
-    const y0 = -0.56 + 0.2 * hash(r, 2, 441)
-    const len = 0.3 + 0.3 * hash(r, 3, 441)
-    const rise = -0.04 - 0.05 * hash(r, 4, 441)
-    const n = 40 + Math.round(30 * hash(r, 5, 441))
-    for (let i = 0; i < n; i++) {
-      const u = hash(i, r, 442)
-      const x = x0 + u * len
-      const y = y0 + rise * u + (hash(i, r, 443) - 0.5) * 0.036 * (0.3 + u)
-      const rx = (0.025 + 0.06 * hash(i, r, 444)) * (1 - 0.4 * u)
-      const ry = 0.0014 + 0.0018 * hash(i, r, 445)
-      oval(shade, x + rx * 0.1, y + ry * 1.3, rx, ry)
-      oval(lit, x, y, rx * 0.92, ry * 0.85)
-    }
-  }
-  ctx.globalAlpha = 0.22
-  ctx.fillStyle = ICE.cloudShade
-  ctx.fill(shade)
-  ctx.globalAlpha = 0.5
+  ctx.globalAlpha = 0.4
   ctx.fillStyle = ICE.cloudLit
   ctx.fill(lit)
   ctx.globalAlpha = 1
 }
 
 /**
- * A row of cumulus across the band: each a heap of rounds on a flat base, shaded below, lit on top, lit gold where the
- * sun gets under it, and the greatest built up into a tower, a narrower heap on top of the first. `width` gives each
+ * A row of cumulus across the band: each a heap of a few rounds on a flat base, shaded below, lit on top, gold where
+ * the sun gets under it, and the greatest built up into a tower, a narrower heap on top of the first. `width` gives each
  * heap's breadth (none where it is 0); `sy` flattens them (the far ones are seen more edge on); `a` is how much of them
  * shows through the haze.
  */
 function heaps(ctx: CanvasRenderingContext2D, n: number, seed: number, base0: number, baseSpread: number, width: (c: number) => number, sy: number, a: number): void {
-  // Shade, body, lit tops, gold underneath, the shade beside the gold, and the billows' own shading inside the body.
-  const layers = [new Path2D(), new Path2D(), new Path2D(), new Path2D(), new Path2D(), new Path2D()]
+  // Shade, body, lit tops, and the gold underneath.
+  const layers = [new Path2D(), new Path2D(), new Path2D(), new Path2D()]
   for (let c = 0; c < n; c++) {
     const xc = (c + 0.2 + 0.6 * hash(c, 1, seed)) * (SPAN / n)
     const base = base0 - baseSpread * hash(c, 2, seed)
@@ -106,36 +75,24 @@ function heaps(ctx: CanvasRenderingContext2D, n: number, seed: number, base0: nu
       const xk = xc + 0.05 * k * w
       const bk = base - 0.17 * k * w * sy
       const ck = c + 53 * k
-      const puffs = 10 + Math.round(wk * 40)
+      const puffs = 5 + Math.round(wk * 12)
       for (let j = 0; j < puffs; j++) {
         const u = (j + 0.5) / puffs
         const dome = Math.pow(Math.sin(Math.PI * u), 0.8)
-        const r = wk * (0.07 + 0.15 * dome * (0.7 + 0.6 * hash(ck, j, seed + 1)))
-        const x = xk + (u - 0.5) * wk + (hash(ck, j, seed + 2) - 0.5) * 0.02
-        const y = bk - (r * 0.7 + dome * wk * 0.14 * hash(ck, j, seed + 3)) * sy
-        // A round of this billow, placed and sized in its own radius.
-        const put = (layer: number, dx: number, dy: number, rx: number, ry: number) => oval(layers[layer], x + dx * r, y + dy * r * sy, rx * r, ry * r * sy)
-        put(0, 0, 0, 1, 0.9)
-        put(1, -0.14, -0.2, 0.86, 0.78)
-        if (dome > 0.3) put(5, 0.3, 0.18, 0.5, 0.4)
-        // Cauliflower: small heads along each billow's top, shaded on their undersides.
-        for (let b = 0; b < 3; b++) {
-          const q = -2.4 + 1.5 * (b / 2) + (hash(ck * 31 + j, b, seed + 5) - 0.5) * 0.4
-          put(5, Math.cos(q) * 0.62 + 0.05, Math.sin(q) * 0.55 + 0.08, 0.26, 0.2)
-          put(2, Math.cos(q) * 0.62 - 0.04, Math.sin(q) * 0.55 - 0.04, 0.2, 0.16)
-        }
-        if (dome > 0.4) put(2, -0.28, -0.36, 0.56, 0.48)
-        // The billows' own small heads, catching the light.
-        if (dome > 0.6 && hash(ck, j, seed + 4) > 0.4) put(2, -0.1, -0.7, 0.3, 0.26)
+        const r = wk * (0.1 + 0.16 * dome * (0.8 + 0.4 * hash(ck, j, seed + 1)))
+        const x = xk + (u - 0.5) * wk
+        const y = bk - (r * 0.7 + dome * wk * 0.12 * hash(ck, j, seed + 3)) * sy
+        oval(layers[0], x, y, r, r * 0.9 * sy)
+        oval(layers[1], x - 0.14 * r, y - 0.2 * r * sy, 0.86 * r, 0.78 * r * sy)
+        if (dome > 0.4) oval(layers[2], x - 0.28 * r, y - 0.36 * r * sy, 0.56 * r, 0.48 * r * sy)
       }
     }
     oval(layers[0], xc, base - 0.008 * sy, w * 0.56, 0.02 * sy)
-    oval(layers[3], xc - w * 0.12, base - 0.002 * sy, w * 0.42, 0.0055 * sy)
-    oval(layers[4], xc + w * 0.18, base - 0.004 * sy, w * 0.3, 0.007 * sy)
+    oval(layers[3], xc - w * 0.08, base - 0.006 * sy, w * 0.4, 0.007 * sy)
   }
-  const colours = [ICE.cloudShade, ICE.cloudBody, ICE.cloudLit, ICE.cloudGold, ICE.cloudShade, ICE.cloudMid]
-  const alphas = [1, 1, 1, 0.85, 0.5, 0.6]
-  for (const i of [0, 1, 5, 2, 3, 4]) {
+  const colours = [ICE.cloudShade, ICE.cloudBody, ICE.cloudLit, ICE.cloudGold]
+  const alphas = [1, 1, 1, 0.7]
+  for (let i = 0; i < layers.length; i++) {
     ctx.globalAlpha = alphas[i] * a
     ctx.fillStyle = colours[i]
     ctx.fill(layers[i])
@@ -145,10 +102,10 @@ function heaps(ctx: CanvasRenderingContext2D, n: number, seed: number, base0: nu
 
 /** The cumulus: the same weather near and far, smaller and flatter and paler toward the horizon. */
 const paintCumulus: Paint = (ctx) => {
-  // Far off, over the ranges, down to the horizon.
-  heaps(ctx, 16, 417, -0.008, 0.042, (c) => (hash(c, 4, 417) < 0.4 ? 0 : 0.04 + 0.13 * hash(c, 3, 417)), 0.55, 0.75)
-  // Nearer: great heaps, and here and there a small fair-weather one between them.
-  heaps(ctx, 11, 411, -0.06, 0.13, (c) => (c % 3 !== 1 ? 0.2 + 0.3 * hash(c, 3, 411) : hash(c, 4, 411) < 0.5 ? 0 : 0.06 + 0.07 * hash(c, 3, 411)), 1, 1)
+  // Far off, over the ranges: a few low, flat ones.
+  heaps(ctx, 16, 417, -0.008, 0.03, (c) => (hash(c, 4, 417) < 0.7 ? 0 : 0.08 + 0.1 * hash(c, 3, 417)), 0.5, 0.6)
+  // Nearer: a few great heaps with open sky between them.
+  heaps(ctx, 11, 411, -0.06, 0.13, (c) => (c % 3 === 0 ? 0.24 + 0.26 * hash(c, 3, 411) : 0), 1, 1)
 }
 
 /** The sky, the sun and the clouds: drawn first. `dim` is how far the ash has taken the light (0 to 0.55). */

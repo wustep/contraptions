@@ -1,17 +1,17 @@
 import type { Pt } from '../../../../../parts'
 import { hash } from '../kit'
-import { layer, onLayer, rgbaOf, sway, type View } from '../depth'
+import { layer, onLayer, rgbaOf, type View } from '../depth'
 import { cityThrough } from './city'
-import { DOOR_X, FLOOR, TREADLE } from './press-plan'
+import { DOOR_X, FLOOR, T0 } from './press-plan'
 import { lampsOn, runOf } from './pulse'
 
 /**
- * The press hall in depth (the PRESS builder's): everything behind the machine's own line. The far wall with its
- * gallery of tall windows and the city at dawn through them; three more press lines receding into the dark, each
- * printing, each under its own lamps and the pools of light they lay on its floor, with catwalks over them and men
- * on the catwalks; an overhead conveyor carrying
- * bundles; the paper itself, in ribbons, running up to the roof and across it; and the roof's trusses and the hall's
- * columns on the machine's own plane. The floor runs back under all of it to the far wall.
+ * The press hall in depth (the PRESS builder's): everything behind the machine's own line, kept dark and low in
+ * contrast so the machine and its web stand in front of it. The far wall with its gallery of tall windows and the city
+ * at dawn through them; three more press lines receding into the dark, each printing, each under a few lamps and the
+ * pools of light they lay on its floor, with a catwalk over the middle one and men on it; the paper itself, in a
+ * ribbon, running up to the roof and across it; and the roof's trusses and the hall's columns on the machine's own
+ * plane. The floor runs back under all of it to the far wall.
  *
  * It is drawn as planes (`depth.ts`), and placed as a perspective would place them: a plane at depth `z` stands on
  * its floor `floorOf(z)`, which rises toward the eye the further back it is, and everything on it is `z` times its
@@ -30,7 +30,6 @@ export const floorOf = (z: number): number => EYE + z * (FLOOR - EYE)
 
 export const HP = {
   wall: '#11181C',
-  brick: '#1B252B',
   reveal: '#34495A',
   mullion: '#0B1013',
   floorFar: '#121A1E',
@@ -38,14 +37,12 @@ export const HP = {
   floorLine: '#1A2328',
   lamp: '#F4B85E',
   bulb: '#FFE6B0',
-  paper: '#ECE6D6',
   paperFar: '#9FA7A5',
   ink: '#0B0E10',
   truss: '#1A2328',
   column: '#161E22',
   columnHi: '#35505C',
-  dawn: '#F2C88E',
-  skylight: '#8FB0BA',
+  skylight: '#3A4C54',
 }
 
 /* ------------------------------------------------------------------ the far wall and its windows */
@@ -131,35 +128,17 @@ function farWall(ctx: C2, v: View): void {
     ctx.setTransform(world)
     cityThrough(ctx, v, farWindows(v))
     ctx.restore()
-    // Its brick, course by course, between and round the windows: thin filled rules (cheaper to raster than strokes).
-    const brick = new Path2D()
-    const course = 0.13
-    const m = 0.012
-    const piers = xs.map((wx): [number, number] => [wx - FW.pitch + FW.w, wx])
-    for (let y = Math.ceil(s.y0 / course) * course; y < fy; y += course) {
-      const inBand = y > FW.top - FW.w / 2 && y < FW.sill
-      const runs: [number, number][] = inBand ? piers.map(([a, b]) => [Math.max(a, s.x0), Math.min(b, s.x1)]) : [[s.x0, s.x1]]
-      const row = Math.round(y / course)
-      for (const [a, b] of runs) {
-        if (b <= a) continue
-        brick.rect(a, y, b - a, m)
-        for (let x = Math.floor(a / 0.44) * 0.44 + (row % 2) * 0.22; x < b; x += 0.44) if (x > a) brick.rect(x, y, m, course)
-      }
-    }
-    ctx.fillStyle = HP.brick
-    ctx.fill(brick)
-    // The windows: dawn on their reveals, their glazing bars, the haze on old glass.
+    // The windows: the hall's dark laid over old glass, so the far wall sits back; a bar up the middle and one across
+    // at the arch's spring; the sill; dawn on their reveals.
     const bars = new Path2D()
     const reveal = new Path2D()
     for (const wx of xs) {
-      for (let m = 1; m < 3; m++) {
-        bars.rect(wx + (FW.w * m) / 3 - 0.008, FW.top - FW.w * 0.48, 0.016, FW.sill - FW.top + FW.w * 0.48)
-      }
-      for (let y = FW.top + 0.3; y < FW.sill; y += 0.3) bars.rect(wx, y - 0.008, FW.w, 0.016)
+      bars.rect(wx + FW.w / 2 - 0.012, FW.top - FW.w / 2, 0.024, FW.sill - FW.top + FW.w / 2)
+      bars.rect(wx, FW.top - 0.012, FW.w, 0.024)
       bars.rect(wx - 0.03, FW.sill, FW.w + 0.06, 0.05)
       reveal.rect(wx - 0.035, FW.top, 0.035, FW.sill - FW.top)
     }
-    ctx.fillStyle = 'rgba(170, 200, 210, 0.1)'
+    ctx.fillStyle = rgbaOf(HP.wall, 0.42)
     ctx.fill(windowPath(xs))
     ctx.fillStyle = HP.mullion
     ctx.fill(bars)
@@ -181,16 +160,16 @@ interface Line {
   body: string
   steel: string
   web: string
-  /** Its catwalk's height over its floor, and the men on it: their speed, cells a second, and where they set off. */
+  /** Its lamps hang over every `lamps`th unit. */
+  lamps: number
+  /** Its catwalk's height over its floor, and the men on it: their speed, cells a second, and where they are as the place opens. */
   walk?: { up: number; men: [number, number][] }
-  /** Stacks of finished copies standing between its units, rising a copy a beat. */
-  stacks?: boolean
 }
 
 const LINES: Line[] = [
-  { i: 3, z: 0.32, pitch: 1.12, h: 1.3, body: '#1D2A31', steel: '#2B3D45', web: '#7E8685', walk: { up: 1.65, men: [[0.18, 3.0], [-0.12, 19.0]] } },
-  { i: 2, z: 0.48, pitch: 1.7, h: 1.85, body: '#141D22', steel: '#1E2B32', web: '#A29F96', walk: { up: 2.5, men: [[-0.2, 17.5], [0.14, 9.0]] }, stacks: true },
-  { i: 1, z: 0.66, pitch: 2.4, h: 2.4, body: '#0D1316', steel: '#141D21', web: '#B9B4A8' },
+  { i: 3, z: 0.32, pitch: 1.12, h: 1.3, body: '#1A252B', steel: '#22313A', web: '#3E4446', lamps: 4 },
+  { i: 2, z: 0.48, pitch: 1.7, h: 1.85, body: '#141D22', steel: '#1C2830', web: '#4A4B4B', lamps: 3, walk: { up: 2.5, men: [[-0.2, 17.5], [0.14, 6.0]] } },
+  { i: 1, z: 0.66, pitch: 2.4, h: 2.4, body: '#0D1316', steel: '#141D21', web: '#555652', lamps: 2 },
 ]
 
 function pressLine(ctx: C2, v: View, t: number, L: Line): void {
@@ -210,13 +189,11 @@ function pressLine(ctx: C2, v: View, t: number, L: Line): void {
     const shade = new Path2D()
     const bulb = new Path2D()
     const pool = new Path2D()
-    const paper = new Path2D()
     const top = new Path2D()
-    const rims = new Path2D()
     const webY = fy - 0.51 * h
     for (let i = i0; i <= i1; i++) {
       const x = i * L.pitch + (hash(i, 1, L.i) - 0.5) * 0.12 * L.pitch
-      // The side frame: two posts, a beam over them, a bearing plate, braces, a foot.
+      // The side frame: two posts, a beam over them, a foot.
       frame.rect(x - 0.42 * h, fy - 0.05 * h, 0.84 * h, 0.05 * h)
       frame.moveTo(x - 0.4 * h, fy)
       frame.lineTo(x - 0.31 * h, fy - 0.84 * h)
@@ -229,20 +206,12 @@ function pressLine(ctx: C2, v: View, t: number, L: Line): void {
       frame.lineTo(x + 0.31 * h, fy)
       frame.closePath()
       frame.rect(x - 0.34 * h, fy - 0.89 * h, 0.68 * h, 0.06 * h)
-      frame.roundRect(x - 0.24 * h, fy - 0.74 * h, 0.48 * h, 0.44 * h, 0.04 * h)
-      rims.moveTo(x - 0.2 * h, fy - 0.715 * h)
-      rims.lineTo(x + 0.215 * h, fy - 0.715 * h)
-      rims.lineTo(x + 0.215 * h, fy - 0.36 * h)
-      for (let b = 0; b < 4; b++) rims.rect(x - 0.17 * h + b * 0.11 * h, fy - 0.2 * h, 0.012 * h, 0.012 * h)
-      frame.rect(x - 0.13 * h, fy - 1.04 * h, 0.26 * h, 0.16 * h)
-      frame.rect(x - 0.33 * h, fy - 0.24 * h, 0.66 * h, 0.03 * h)
       top.rect(x - 0.34 * h, fy - 0.89 * h, 0.68 * h, 0.012 * h)
-      // Its two cylinders, turning with the line, the web between them.
+      // Its two cylinders, turning with the line (the spokes only on the nearest line), the web between them.
       for (const [cy, r, dir] of [[fy - 0.63 * h, 0.11 * h, -1], [fy - 0.39 * h, 0.13 * h, 1]] as const) {
         steel.moveTo(x + r, cy)
         steel.arc(x, cy, r, 0, Math.PI * 2)
-        rims.moveTo(x + Math.cos(-2.6) * r * 0.88, cy + Math.sin(-2.6) * r * 0.88)
-        rims.arc(x, cy, r * 0.88, -2.6, -1.6)
+        if (L.i !== 1) continue
         const a = (dir * run) / r + i
         for (let n = 0; n < 3; n++) {
           const b = a + (n * Math.PI * 2) / 3
@@ -250,9 +219,9 @@ function pressLine(ctx: C2, v: View, t: number, L: Line): void {
           spokes.lineTo(x + Math.cos(b) * r * 0.85, cy + Math.sin(b) * r * 0.85)
         }
       }
-      // Its lamp, on a long cord, the shade's mouth lit, and the pool of light it lays on the floor: over every unit
-      // of the near line, every other one further back.
-      if (L.i === 1 || i % 2 === 0) {
+      // Its lamp, on a long cord, the shade's mouth lit, and the pool of light it lays on the floor: over every other
+      // unit of the near line, fewer further back.
+      if (i % L.lamps === 0) {
         const ly = fy - 1.3 * h
         shade.moveTo(x - 0.11 * h, ly + 0.05 * h)
         shade.lineTo(x + 0.11 * h, ly + 0.05 * h)
@@ -265,13 +234,6 @@ function pressLine(ctx: C2, v: View, t: number, L: Line): void {
         pool.moveTo(x + 0.42 * h, fy)
         pool.ellipse(x, fy, 0.42 * h, 0.05 * h, 0, 0, Math.PI * 2)
       }
-      // Stacks of finished copies, rising a copy a beat from when the line came up.
-      if (L.stacks && i % 2 === 0) {
-        const sx = x + 0.5 * L.pitch
-        const n = Math.max(0, Math.floor((t - TREADLE) / 0.42)) + Math.floor(hash(i, 9, L.i) * 30)
-        const sh = Math.min(0.62 * h, 0.06 * h + n * 0.011 * h)
-        paper.rect(sx - 0.17 * h, fy - sh, 0.34 * h, sh)
-      }
     }
     // The lamps' light on the floor first, so the frames stand in it.
     ctx.fillStyle = rgbaOf(HP.lamp, 0.1 * lit)
@@ -282,16 +244,10 @@ function pressLine(ctx: C2, v: View, t: number, L: Line): void {
     ctx.fill(top)
     ctx.fillStyle = L.steel
     ctx.fill(steel)
-    // The plates' edges and the cylinders' rims, catching what light there is.
-    ctx.strokeStyle = rgbaOf(L.i === 1 ? '#5D7A84' : '#4E6872', 0.55 + 0.25 * lit)
-    ctx.lineWidth = 0.012 * h
-    ctx.stroke(rims)
-    if (L.i < 3) {
-      ctx.strokeStyle = L.body
-      ctx.lineWidth = 0.022 * h
-      ctx.stroke(spokes)
-    }
-    // The web, the whole length of the line, racing; its printed marks going by.
+    ctx.strokeStyle = L.body
+    ctx.lineWidth = 0.022 * h
+    ctx.stroke(spokes)
+    // The web, the whole length of the line, racing; its printed marks going by, far apart.
     ctx.strokeStyle = L.web
     ctx.lineWidth = 0.035 * h
     ctx.beginPath()
@@ -299,29 +255,10 @@ function pressLine(ctx: C2, v: View, t: number, L: Line): void {
     ctx.lineTo(s.x1 + 0.5, webY)
     ctx.stroke()
     const marks = new Path2D()
-    const gap = 0.32 * h
-    for (let x = Math.floor((s.x0 - run) / gap) * gap + run; x < s.x1 + gap; x += gap) marks.rect(x, webY - 0.012 * h, 0.1 * h, 0.024 * h)
-    ctx.fillStyle = rgbaOf('#6F7478', 0.8)
+    const gap = 1.1 * h
+    for (let x = Math.floor((s.x0 - run) / gap) * gap + run; x < s.x1 + gap; x += gap) marks.rect(x, webY - 0.012 * h, 0.14 * h, 0.024 * h)
+    ctx.fillStyle = L.steel
     ctx.fill(marks)
-    ctx.fillStyle = rgbaOf(L.web, 0.45)
-    ctx.fill(paper)
-    if (L.stacks) {
-      // Each copy's edge on the stacks.
-      ctx.strokeStyle = rgbaOf('#7E7B72', 0.6)
-      ctx.lineWidth = 0.006 * h
-      ctx.beginPath()
-      for (let i = i0; i <= i1; i++) {
-        if (i % 2) continue
-        const x = i * L.pitch + (hash(i, 1, L.i) - 0.5) * 0.12 * L.pitch + 0.5 * L.pitch
-        const n = Math.max(0, Math.floor((t - TREADLE) / 0.42)) + Math.floor(hash(i, 9, L.i) * 30)
-        const sh = Math.min(0.62 * h, 0.06 * h + n * 0.011 * h)
-        for (let y = fy - 0.022 * h; y > fy - sh; y -= 0.022 * h) {
-          ctx.moveTo(x - 0.17 * h, y)
-          ctx.lineTo(x + 0.17 * h, y)
-        }
-      }
-      ctx.stroke()
-    }
     ctx.fillStyle = HP.ink
     ctx.fill(shade)
     ctx.fillStyle = rgbaOf(HP.bulb, (0.12 + 0.8 * lit) * (L.i === 1 ? 1 : L.i === 2 ? 0.6 : 0.35))
@@ -332,15 +269,13 @@ function pressLine(ctx: C2, v: View, t: number, L: Line): void {
       const rail = new Path2D()
       rail.rect(s.x0 - 0.5, dy, s.w + 1, 0.05 * h)
       rail.rect(s.x0 - 0.5, dy - 0.36 * h, s.w + 1, 0.016 * h)
-      rail.rect(s.x0 - 0.5, dy - 0.18 * h, s.w + 1, 0.01 * h)
-      for (let x = Math.floor(s.x0 / (0.22 * h)) * 0.22 * h; x < s.x1 + 0.5; x += 0.22 * h) rail.rect(x, dy - 0.36 * h, 0.012 * h, 0.36 * h)
+      for (let x = Math.floor(s.x0 / (0.8 * h)) * 0.8 * h; x < s.x1 + 0.5; x += 0.8 * h) rail.rect(x, dy - 0.36 * h, 0.014 * h, 0.36 * h)
       // Its hangers, up into the roof.
       for (let x = Math.floor(s.x0 / (1.6 * h)) * 1.6 * h; x < s.x1 + 0.5; x += 1.6 * h) rail.rect(x, s.y0 - 0.2, 0.014 * h, dy - s.y0 + 0.2)
       const men = new Path2D()
       const tall = 0.6 * h
       for (const [vx, x0] of L.walk.men) {
-        const span = 26 * L.z + 6
-        const x = (((x0 + vx * t - s.x0) % span) + span) % span + s.x0 - 1
+        const x = x0 + vx * (t - T0)
         if (x < s.x0 - 1 || x > s.x1 + 1) continue
         const stride = Math.sin(t * 5.2 + x0)
         figure(men, x, dy, tall, stride, vx < 0 ? -1 : 1)
@@ -386,60 +321,11 @@ export function figure(p: Path2D, x: number, y: number, tall: number, stride: nu
 
 /* ------------------------------------------------------------------ overhead */
 
-/** The overhead conveyor: a rail high over the middle line, hooks on its chain, a bundle on each, going toward the door. */
-function conveyor(ctx: C2, v: View, t: number): void {
-  const z = 0.6
-  const k = v.k
-  layer(ctx, v, z, ANCHOR, REF, (s) => {
-    ctx.save()
-    ctx.scale(k, k)
-    const ry = floorOf(z) - 6.6 * z
-    const p = new Path2D()
-    p.rect(s.x0 - 0.5, ry - 0.06, s.w + 1, 0.06)
-    for (let x = Math.floor(s.x0 / 2.4) * 2.4; x < s.x1 + 0.5; x += 2.4) p.rect(x, s.y0 - 0.2, 0.03, ry - s.y0 + 0.2)
-    const bundles = new Path2D()
-    const straps = new Path2D()
-    const pitch = 1.15
-    const go = 0.42 * t
-    for (let x = Math.floor((s.x0 - go) / pitch) * pitch + go; x < s.x1 + 1; x += pitch) {
-      const i = Math.round((x - go) / pitch)
-      const lean = 0.12 * sway(t, 0.37, i)
-      const hx = x + lean * 0.35
-      p.moveTo(x - 0.01, ry)
-      p.lineTo(hx - 0.012, ry + 0.34)
-      p.lineTo(hx + 0.012, ry + 0.34)
-      p.lineTo(x + 0.01, ry)
-      p.closePath()
-      if (hash(i, 4) < 0.25) {
-        // An empty hook.
-        p.rect(hx - 0.04, ry + 0.33, 0.08, 0.025)
-        continue
-      }
-      bundles.rect(hx - 0.2, ry + 0.36, 0.4, 0.32)
-      straps.rect(hx - 0.012, ry + 0.36, 0.024, 0.32)
-      straps.rect(hx - 0.2, ry + 0.5, 0.4, 0.018)
-    }
-    ctx.fillStyle = '#0E1417'
-    ctx.fill(p)
-    ctx.fillStyle = '#6E6C66'
-    ctx.fill(bundles)
-    ctx.fillStyle = '#1A2328'
-    ctx.fill(straps)
-    ctx.restore()
-  })
-}
-
 /**
- * The paper in the roof: webs taken up off the lines over turning bars and run across under the roof to the
- * folders, racing, white in the dark. Each is a run of straight legs through rollers, in a plane just behind the
- * machine's.
+ * The paper in the roof: a web taken up off a line over turning bars and run across under the roof to a folder,
+ * racing, pale in the dark. It is a run of straight legs through rollers, in a plane just behind the machine's.
  */
-const RIBBONS: { z: number; pts: Pt[]; v: number }[] = [
-  { z: 0.62, pts: [[7.4, -5], [9.4, -1.3], [31, -1.3], [33, -5]], v: 1.9 },
-  { z: 0.55, pts: [[25.5, -5], [23.6, -0.9], [-2, -0.9], [-4, -5]], v: 2.3 },
-  { z: 0.7, pts: [[11.8, -6], [13.6, -2.0], [40, -2.0]], v: 1.6 },
-  { z: 0.48, pts: [[3.0, -5], [4.6, -0.2], [17.5, -0.2], [19.2, -5]], v: 2.0 },
-]
+const RIBBONS: { z: number; pts: Pt[]; v: number }[] = [{ z: 0.62, pts: [[7.4, -5], [9.4, -1.3], [31, -1.3], [33, -5]], v: 1.9 }]
 
 function ribbons(ctx: C2, v: View, t: number): void {
   const k = v.k
@@ -455,10 +341,10 @@ function ribbons(ctx: C2, v: View, t: number): void {
       path.moveTo(R.pts[0][0], R.pts[0][1])
       for (const q of R.pts.slice(1)) path.lineTo(q[0], q[1])
       ctx.lineJoin = 'round'
-      ctx.strokeStyle = rgbaOf(HP.paper, 0.85)
+      ctx.strokeStyle = HP.paperFar
       ctx.lineWidth = 0.045
       ctx.stroke(path)
-      // Marks going by: the grain of the paper running.
+      // Marks going by, far apart: the paper running.
       const ticks = new Path2D()
       let d0 = 0
       for (let j = 1; j < R.pts.length; j++) {
@@ -467,17 +353,17 @@ function ribbons(ctx: C2, v: View, t: number): void {
         const len = Math.hypot(bx - ax, by - ay)
         const ux = (bx - ax) / len
         const uy = (by - ay) / len
-        const gap = 0.36
+        const gap = 1.5
         for (let d = (((run - d0) % gap) + gap) % gap; d < len; d += gap) {
           const x = ax + ux * d
           const y = ay + uy * d
           if (x < s.x0 - 0.2 || x > s.x1 + 0.2 || y < s.y0 - 0.2 || y > s.y1 + 0.2) continue
           ticks.moveTo(x, y)
-          ticks.lineTo(x + ux * 0.1, y + uy * 0.1)
+          ticks.lineTo(x + ux * 0.2, y + uy * 0.2)
         }
         d0 += len
       }
-      ctx.strokeStyle = rgbaOf('#7C7F80', 0.75)
+      ctx.strokeStyle = '#4F5658'
       ctx.lineWidth = 0.03
       ctx.stroke(ticks)
       // The rollers it turns over.
@@ -529,11 +415,11 @@ function roof(ctx: C2, v: View): void {
     ctx.fill(frame)
     ctx.fillStyle = '#141B1F'
     ctx.fillRect(x0, ROOF, x1 - x0, 0.18)
-    // The truss: chords and its zigzag.
+    // The truss: chords and its zigzag, a bay to each north light.
     const tr = new Path2D()
     tr.rect(x0, TRUSS.top, x1 - x0, 0.09)
     tr.rect(x0, TRUSS.bottom - 0.09, x1 - x0, 0.09)
-    const bay = 0.8
+    const bay = 2.2
     for (let x = Math.floor(x0 / bay) * bay; x < x1; x += bay) {
       tr.moveTo(x, TRUSS.bottom)
       tr.lineTo(x + bay / 2, TRUSS.top)
@@ -570,11 +456,6 @@ function roof(ctx: C2, v: View): void {
     col.lineTo(cx + 0.14, TRUSS.bottom + 0.7)
     col.closePath()
     hi.rect(cx + 0.11, TRUSS.top, 0.025, FLOOR - TRUSS.top)
-    hi.rect(cx - 0.135, TRUSS.top, 0.012, FLOOR - TRUSS.top)
-    for (let y = TRUSS.bottom + 0.4; y < FLOOR - 0.2; y += 0.35) {
-      hi.rect(cx - 0.1, y, 0.03, 0.03)
-      hi.rect(cx + 0.06, y, 0.03, 0.03)
-    }
   }
   ctx.fillStyle = HP.column
   ctx.fill(col)
@@ -601,15 +482,15 @@ function floorLines(ctx: C2, v: View, z0: number, z1: number, color: string): vo
   ctx.fillRect(v.x0 - 0.5, ya, v.w + 1, yb - ya + 0.01)
   const p = new Path2D()
   // Seams across, at even steps of depth.
-  for (let z = 0.2; z < 12; z *= 1.14) {
+  for (let z = 0.2; z < 12; z *= 1.3) {
     const y = floorAt(v, z)
     if (y < ya || y > yb) continue
     p.moveTo(v.x0 - 0.5, y)
     p.lineTo(v.x1 + 0.5, y)
   }
-  // Lines running back toward the eye, through every 0.6 of the machine's floor: only where the floor is seen
+  // Lines running back toward the eye, through every 1.2 of the machine's floor: only where the floor is seen
   // (behind the middle line it is all but hidden).
-  const step = z1 < 0.6 ? Infinity : 0.6
+  const step = z1 < 0.6 ? Infinity : 1.2
   const fa = (ya - ey) / drop
   const fb = (yb - ey) / drop
   const xa = v.cx + (v.x0 - 1 - v.cx) / Math.max(0.05, fa)
@@ -629,7 +510,7 @@ function floorLines(ctx: C2, v: View, z0: number, z1: number, color: string): vo
 
 /* ------------------------------------------------------------------ the whole */
 
-/** The hall behind the machine, back to front: the far wall, the lines, the overhead, the roof and columns, the floor. */
+/** The hall behind the machine, back to front: the far wall, the lines, the paper overhead, the roof and columns, the floor. */
 export function drawHall(ctx: C2, v: View, t: number): void {
   farWall(ctx, v)
   let zPrev = FW.z
@@ -637,7 +518,6 @@ export function drawHall(ctx: C2, v: View, t: number): void {
     floorLines(ctx, v, zPrev, L.z, HP.floorFar)
     pressLine(ctx, v, t, L)
     zPrev = L.z
-    if (L.i === 2) conveyor(ctx, v, t)
   }
   ribbons(ctx, v, t)
   floorLines(ctx, v, zPrev, 1, HP.floorFar)
@@ -646,60 +526,15 @@ export function drawHall(ctx: C2, v: View, t: number): void {
   walkway(ctx, v)
 }
 
-/**
- * On the near floor: the walkway's painted edges, amber, dashed, running the length of the hall in front of the
- * machine; and spoiled copies lying where the folder throws them.
- */
+/** On the near floor: the walkway's painted edge, amber, one line running the length of the hall in front of the machine. */
 function walkway(ctx: C2, v: View): void {
   const drop = FLOOR - v.cy
   if (drop <= 0.05 || v.y1 < FLOOR) return
-  const k = v.k
+  const z = 1.12
+  const y = floorAt(v, z)
   const x1 = Math.min(v.x1 + 0.5, DOOR_X)
-  if (x1 <= v.x0) return
-  ctx.save()
-  ctx.scale(k, k)
-  const paint = new Path2D()
-  for (const z of [1.12, 1.55]) {
-    const y = floorAt(v, z)
-    if (y > v.y1 + 0.1) continue
-    const w = 0.03 * z
-    // Dashes a cell long in the floor's own measure, so they spread as they come nearer.
-    const step = 0.9 * z
-    const off = (v.cx * (z - 1)) % step
-    for (let x = Math.floor((v.x0 - 1) / step) * step - off; x < x1; x += step) paint.rect(x, y, Math.min(0.55 * z, x1 - x), w)
-  }
-  ctx.fillStyle = rgbaOf('#C98F3E', 0.38)
-  ctx.fill(paint)
-  // Spoiled copies by the folder, flat on the floor, foreshortened, their print a grey block: only once the camera is
-  // close enough for them to read as sheets, coming up as it nears.
-  const show = Math.max(0, Math.min(1, (9 - v.h) / 2))
-  if (show > 0) {
-    const sheets = new Path2D()
-    const print = new Path2D()
-    for (let i = 0; i < 5; i++) {
-      const z = 1.05 + 0.4 * hash(i, 1, 99)
-      const y = floorAt(v, z)
-      if (y > v.y1 + 0.1) continue
-      const x = v.cx + (16.4 + 3.6 * hash(i, 2, 99) - v.cx) * z
-      if (x > x1 - 0.4) continue
-      const w = 0.3 * z
-      const d = 0.07 * z
-      const sk = (hash(i, 3, 99) - 0.5) * 0.14 * z
-      sheets.moveTo(x, y)
-      sheets.lineTo(x + w, y + sk * 0.3)
-      sheets.lineTo(x + w + sk, y + d + sk * 0.3)
-      sheets.lineTo(x + sk, y + d)
-      sheets.closePath()
-      print.moveTo(x + 0.15 * w + 0.2 * sk, y + 0.2 * d + 0.05 * sk)
-      print.lineTo(x + 0.6 * w + 0.2 * sk, y + 0.2 * d + 0.2 * sk)
-      print.lineTo(x + 0.6 * w + 0.8 * sk, y + 0.8 * d + 0.2 * sk)
-      print.lineTo(x + 0.15 * w + 0.8 * sk, y + 0.8 * d + 0.05 * sk)
-      print.closePath()
-    }
-    ctx.fillStyle = rgbaOf(HP.paper, 0.6 * show)
-    ctx.fill(sheets)
-    ctx.fillStyle = rgbaOf('#7A7D7E', 0.5 * show)
-    ctx.fill(print)
-  }
-  ctx.restore()
+  if (y > v.y1 + 0.1 || x1 <= v.x0) return
+  const k = v.k
+  ctx.fillStyle = rgbaOf('#C98F3E', 0.3)
+  ctx.fillRect((v.x0 - 1) * k, y * k, (x1 - v.x0 + 1) * k, 0.03 * z * k)
 }

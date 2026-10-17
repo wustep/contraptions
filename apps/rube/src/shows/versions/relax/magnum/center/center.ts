@@ -56,9 +56,9 @@ import { drawSet } from './center-set'
  * end, a little press, and the air runs down the hose and the model puffs and hops. Not enough. Back down, he
  * gathers himself on the drum break (a bounce on every hit of the fill, creeping in) and leaps on it on bar 106's first call:
  * the pedal goes down, the air runs down the hose, and the building jumps to three times its size, up first, then
- * out, its roofs unfolding and its lantern lifting after. The second call: three times again, and the camera cuts
- * back to hold it. The third: three times again, and there it is, whole. On the shout a fourth stomp, and the air
- * blows its brass doors open.
+ * out, its roofs unfolding and its lantern lifting after. The second call: three times again, and the picture
+ * dissolves out to the whole lawn. The third: three times again, and there it is, whole. On the shout a fourth
+ * stomp, and the air blows its brass doors open.
  *
  * In the loudest bars the kids come along the path from the right, a run of little bouncing balls, and up the
  * stair and in; Derek and Hansel at the door either side of them. The last of them in, the two close in to the
@@ -204,7 +204,7 @@ function shots(begin: number): PartShot[] {
   return [
     // The two of them on the path (the score opens on the carried framing); drifting with him to the bell-pull.
     on(begin + 1.3, 3.8, -1.2, -0.82),
-    // Cut on the bump to the model alone, a building in the morning as the sheet goes up; a slow push in.
+    // On the bump, a dissolve to the model alone, a building in the morning as the sheet goes up; a slow push in.
     on(BUMP, 0.78, -2.9, -0.04, true),
     on(BESIDE - 1.45, 0.72, -2.92, -0.03),
     // He comes up beside it: easing back to take him in.
@@ -218,11 +218,12 @@ function shots(begin: number): PartShot[] {
     on(TAP, 1.98, -4.02, -0.36),
     on(BOUNCES[0] - 1.1, 1.9, -3.95, -0.3),
     on(BOUNCES[0], 2.15, -4.0, -0.42),
-    on(BOUNCES[BOUNCES.length - 1], 3.1, -4.35, -0.95),
-    // The first call in this frame; the second and third each cut back to hold it.
-    on(STOMPS[0], 3.25, -4.25, -0.9),
-    on(STOMPS[1], 7.5, -1.5, -2.0, true),
-    on(STOMPS[2], 15.5, 3.55, -5.2, true),
+    // Low enough that the old tree's crown, whose trunk stands just past the right edge, stays above the frame.
+    on(BOUNCES[BOUNCES.length - 1], 3.1, -4.35, -0.8),
+    // The first call in this frame; on the second it dissolves out to the whole lawn (`dissolve.ts`), and the third
+    // fills it.
+    on(STOMPS[0], 3.25, -4.25, -0.75),
+    on(STOMPS[1], 15.5, 3.55, -5.2, true),
     on(OFF + 0.1, 15.4, 3.5, -5.1),
     // In to the door as the kids come.
     on(225.2, 9.5, 3.3, -2.9),
@@ -239,7 +240,7 @@ function shots(begin: number): PartShot[] {
 
 /** Every strike, in show seconds, exact. */
 export const CENTER_HITS: number[] = [
-  // The bell-pull: the sheet up (and the camera's cut to the model).
+  // The bell-pull: the sheet up (and the dissolve to the model).
   BUMP,
   // Beside it; the start back; over it, and down.
   BESIDE,

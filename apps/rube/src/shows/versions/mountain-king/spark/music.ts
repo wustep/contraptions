@@ -190,11 +190,8 @@ export const DOORS = {
   regatta: phrase(9),
   /** Up into the last balloon's burner flame; out of the locomotive's smokestack. Statement 3's first note. */
   railway: phrase(12),
-  /**
-   * The dash home, back through the fires it came by: a balloon burner, the glory hole, the loft stove. On the roll's
-   * strokes, spaced so each world holds about a quarter of a second (14 and 15 frames), long enough to be seen.
-   */
-  back: [148.33, 148.561, 148.817] as const,
+  /** The door home: out of the festival's crate fire, out of the loft stove's. On the roll's first stroke. */
+  back: [148.33] as const,
 } as const
 
 /** Where the train brakes at the festival and throws the spark into the fireworks: phrase 16, the last A A. */

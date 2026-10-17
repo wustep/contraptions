@@ -58,8 +58,9 @@ export const T_BACK = SEAM.fog2
 /** The small ring's strokes: on the chord she comes back on, and on the two strongest beats after it. */
 export const SMALL_STEPS = [SEAM.fog2, beats(259.3, 259.6)[0], beats(260.3, 260.6)[0]]
 /** It closes; and the vision lets her go. */
-export const [T_KNOW, T_DOWN] = chords(SEAM.fog2 + 1, SEAM.gala - 1)
-export const T_GALA = SEAM.gala
+export const [T_KNOW, T_DOWN] = chords(SEAM.fog2 + 1, SEAM.future - 1)
+/** The cut out of the fog (to the lecture hall, years on; the gala after it). */
+export const T_GALA = SEAM.future
 
 /** The hard beat between the first two chords: a stroke of its own. */
 export const T_B1 = nearestBeat(235.9)
@@ -239,24 +240,26 @@ export function smallU(t: number): number {
   return 1
 }
 /** Before she knows: from the second stroke the white round them goes to a grey dusk as its ends come round to her;
- * the flood on the chord takes it away. */
-export const gathering = (t: number): number => 0.68 * smooth(t, SMALL_STEPS[1], T_KNOW - 0.05) * (1 - smooth(t, T_KNOW + 0.05, T_KNOW + 0.3))
-/** She knows: on the chord the white floods out from the ring over everything but it and her, holds for a beat, and
- * settles. `a` its strength, `r` how far out it has come (a share of the frame). */
+ * the flood on the chord takes it away, as it comes. (In a quarter of a second, with the flood in a tenth, the frame
+ * went from the dusk to white at once: a flash.) */
+export const gathering = (t: number): number => 0.68 * smooth(t, SMALL_STEPS[1], T_KNOW - 0.05) * (1 - smooth(t, T_KNOW, T_KNOW + 0.85))
+/** She knows: from the chord the white floods out from the ring over everything but it and her, swelling over most of
+ * a second, holds for a beat, and settles. `a` its strength, `r` how far out it has come (a share of the frame). */
 export function flood(t: number): { a: number; r: number } {
   if (t <= T_KNOW) return { a: 0, r: 0 }
   const s = t - T_KNOW
-  const a = 0.95 * smooth(s, 0, 0.12) * (1 - 0.72 * smooth(t, T_KNOW + 0.94, T_DOWN + 0.4)) * (1 - 0.6 * smooth(t, T_DOWN + 0.4, T_GALA))
-  return { a, r: easeOut(s / 0.45) }
+  const a = 0.95 * smooth(s, 0, 0.8) * (1 - 0.72 * smooth(t, T_KNOW + 0.94, T_DOWN + 0.4)) * (1 - 0.6 * smooth(t, T_DOWN + 0.4, T_GALA))
+  return { a, r: easeOut(s / 1.1) }
 }
 
 /* ------------------------------------------------------------------ her */
 
 /** Drawn to it: from the second stroke she floats to it and touches it as its ends meet. */
 const toward = (t: number): number => smooth(t, SMALL_STEPS[1], T_KNOW)
-/** The vision letting her go: she comes down out of it, easing to rest. */
-const DOWN = 0.42
-const down = (t: number): number => DOWN * easeOut((t - T_DOWN) / (T_GALA - 0.2 - T_DOWN))
+/** The vision letting her go: she comes down out of it, easing to rest a second before the cut, which dissolves. */
+const DOWN = 0.34
+const SETTLED = 1.05
+const down = (t: number): number => DOWN * easeOut((t - T_DOWN) / (T_GALA - SETTLED - T_DOWN))
 
 /** Louise, beyond the glass, at show time `t` (fog world cells). */
 export function herAt(t: number): Pt {
@@ -339,8 +342,24 @@ export const ABBOTT = { at: [WIDE_C[0] - 3.4 / ABBOTT_D, WIDE_C[1] + 2.5 / ABBOT
 // as a second heptapod standing off, not as Abbott dying.
 // Out of the blast as dark as it was at the glass, so it reads as Abbott: coming up out of the white first, it read as a
 // new, smaller heptapod rising into view.
-export const abbottFog = (t: number): number => 0.5 + 0.5 * smooth(t, T_S2 - 0.5, T_LAND - 3.2)
-export const abbottSink = (t: number): number => 4.2 * smooth(t, T_S2 - 2, T_OUT + 1)
+/**
+ * Abbott dies ("Abbott is death process"), on the strokes her ring is written on: on the hard beat he slumps and starts
+ * to sink; on the next chord his last word comes out of him whole, a ring round him; from the chord after, it comes
+ * undone from both ends back to where it began, as hers is written round her from both ends, and he is gone into the
+ * white as hers closes. One ring written, one unwritten. (Paling far back on his own, he read as a second heptapod
+ * standing off; nobody saw a death.)
+ */
+export const abbottFog = (t: number): number => 0.5 + 0.16 * smooth(t, T_B1, T_S2) + 0.34 * smooth(t, T_S3 - 0.2, T_CLOSE + 0.15)
+export const abbottSink = (t: number): number => 0.9 * smooth(t, T_B1, T_CLOSE) + 3.3 * smooth(t, T_CLOSE, T_OUT + 1)
+export const abbottSlump = (t: number): number => smooth(t, T_B1, T_S2 + 0.8)
+/** His last word: a ring round his body, written out of him at once, then unwritten. */
+export const ABBOTT_WORD: Ring = inkRing(271)
+export const ABBOTT_WORD_R = 0.31
+export function abbottWordU(t: number): number {
+  if (t < T_S2) return 0
+  return easeOut((t - T_S2) / 0.45) * (1 - smooth(t, T_S3, T_CLOSE))
+}
+export const abbottWordFade = (t: number): number => 0.25 * smooth(t, T_S2, T_S3) + 0.75 * smooth(t, T_S3, T_CLOSE + 0.2)
 
 /* ------------------------------------------------------------------ the camera, in world cells */
 
@@ -362,14 +381,20 @@ export const FOG1_SHOTS: WorldShot[] = [
   { t: T_CLOSE, cells: 5.4, hold: WIDE(-0.05, -0.1) },
   { t: T_RELEASE, cells: 5.3, hold: WIDE(-0.1, -0.15) },
   { t: T_LAND, cells: 5.0, hold: her(T_OUT, [0.8, -0.95]) },
+  // Settled before the cut, which the vision dissolves across.
+  { t: T_OUT - 0.6, cells: 4.6, hold: her(T_OUT, [1.05, -0.95]) },
   { t: T_OUT, cells: 4.6, hold: her(T_OUT, [1.05, -0.95]) },
 ]
 /** When she knows: the ring and her, the whole of the frame. */
 const KNOW_MID: Pt = [0.4 * TOUCH_AT[0] + 0.6 * smallC(T_KNOW)[0], 0.4 * TOUCH_AT[1] + 0.6 * smallC(T_KNOW)[1] - 0.05]
 export const FOG2_SHOTS: WorldShot[] = [
+  // Held as the cut left it while the last of the vision closes into the ring.
+  { t: T_BACK + 0.6, cells: 4.6, hold: her(T_OUT, [1.05, -0.95]) },
   { t: T_BACK + 1.8, cells: 4.35, hold: [(her(T_OUT, [1.05, -0.95])[0] + KNOW_MID[0]) / 2, (her(T_OUT, [1.05, -0.95])[1] + KNOW_MID[1]) / 2] },
   { t: T_KNOW, cells: 4.25, hold: KNOW_MID },
   { t: T_KNOW + 0.94, cells: 4.1, hold: KNOW_MID },
   { t: T_DOWN, cells: 4.2, hold: [KNOW_MID[0] - 0.05, KNOW_MID[1] - 0.1] },
+  // At rest a second before the cut, held through the dissolve into the hall.
+  { t: T_GALA - SETTLED, cells: 4.4, hold: her(T_GALA, [0.8, -0.8]) },
   { t: T_GALA, cells: 4.4, hold: her(T_GALA, [0.8, -0.8]) },
 ]

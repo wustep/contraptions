@@ -171,10 +171,11 @@ export const hoops = definePiece<{ color: string }>({
     const a = swung(t)
     const made = since > 0 ? 1 - over(since, 1.6, 2.6) : 0
 
-    // The rail to the cup, the return ramp and the rail on; the backboard's post behind them.
+    // The rail to the cup, the return ramp and the rail on; the backboard's post behind them, standing on the ramp, so
+    // it never runs on down into the floor below as one pole with whatever stands there.
     rail(p, k, ink, weight, -0.5, SEAT[0] - R - 0.04)
     post(p, k, ink, weight, SEAT[0] - R - 0.08, FLOOR, 0.5)
-    post(p, k, ink, weight, 1.3, -1.12, 0.5)
+    post(p, k, ink, weight, 1.3, -1.12, FLOOR)
     rail(p, k, ink, weight, RAMP_FOOT[0], 1.5)
     solid(p, ink, weight, s.color)
     p.triangle(RAMP_TOP[0] * k, RAMP_TOP[1] * k, RAMP_FOOT[0] * k, RAMP_FOOT[1] * k, RAMP_TOP[0] * k, RAMP_FOOT[1] * k)

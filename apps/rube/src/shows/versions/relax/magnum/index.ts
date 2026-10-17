@@ -14,7 +14,7 @@ export const performance: Performance = {
   show,
   duration: DURATION,
   camera,
-  // No portal anywhere: every change of place is a match cut on Derek, three of them inside a press camera's flash.
+  // No portal anywhere: every change of place is a match cut on Derek, inside a dissolve.
   cuts: () => false,
   // The end credits' words, which the page sets over the Center's sky.
   titles: creditsAt,

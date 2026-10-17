@@ -12,8 +12,8 @@ import { HEAD_BACK } from './yard'
  * under the corn at an even pace. Across the channel are four flap gates,
  * boards hung from a bar; the floating ball shoulders each one open on a note
  * of the piano, the board rides on his back as he goes under, and it slaps
- * shut behind him. At the end the channel spills over the edge of the bank,
- * where the truck is waiting below.
+ * shut behind him. At the end of the bank the truck is waiting below, backed
+ * up to it.
  */
 
 /** The gates, on the piano's notes as measured. The last is the strongest. */
@@ -94,10 +94,12 @@ export const cornrow = part<RowState>(
         if (x > s.length) break
         stalk(p, k, ink, weight, { x, foot: FLOOR - 0.12, h: 1.9 + hash(i, 4) * 0.5, seed: 40 + i, sway: 0.12 + Math.sin(t * 0.9 + i) * 0.03, plain: i % 2 === 1 })
       }
-      // The bank's face down to the field road: one clean face, its foot exactly on the road's line.
+      // The bank's face down to the field road: one clean face, its foot exactly on the road's line. At the head the
+      // ground falls away from the yard's level to the road's, so the face starts there and grows under that slope,
+      // never down into the yard's soil.
       solid(p, ink, weight, DUST.shade)
       p.beginShape()
-      p.vertex((HEAD - 0.4) * k, (1 + FLOOR) * k)
+      p.vertex((HEAD + 0.4) * k, (1 + FLOOR) * k)
       p.vertex(HEAD * k, FLOOR * k)
       p.vertex((s.length + 0.5) * k, FLOOR * k)
       p.vertex((s.length + 0.5) * k, (1 + FLOOR) * k)
@@ -131,17 +133,6 @@ export const cornrow = part<RowState>(
           for (const side of [-1, 1]) p.circle(X(g.x + side * (0.08 + shut * 0.4)), X(WATER - 0.04 - shut * 0.15 + shut * shut * 0.8), X(0.04))
         }
       }
-      // At the end of the bank the channel spills over, down past the truck.
-      const lip = s.length - 0.45
-      p.noFill()
-      p.stroke(alpha(p, DUST.teal, 0.8))
-      p.strokeWeight(Math.max(1.5, k * 0.05))
-      p.beginShape()
-      for (let i = 0; i <= 10; i++) {
-        const u = i / 10
-        p.vertex(X(lip + 0.25 * u), X(WATER + 1.05 * u * u))
-      }
-      p.endShape()
     },
     over: (p, s, c) => {
       // The water over the ball's lower half, and the channel's near wall, low so the ball shows above it.

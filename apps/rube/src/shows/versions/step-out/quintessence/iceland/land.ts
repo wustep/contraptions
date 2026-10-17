@@ -72,8 +72,8 @@ const FALL_FOOT = PINS[0].cy + RY + 0.2
 /* ------------------------------------------------------------------ the moss */
 
 /**
- * The moss is a tile painted once and laid over the hill as a pattern: dark hollows, sunlit tussocks, pale lichen,
- * stones with their lit tops, tufts of grass. Two grains: a fine one close to, and a coarse one (each tussock twice
+ * The moss is a tile painted once and laid over the hill as a pattern: big soft swells of darker moss, a few
+ * tussocks darker and lighter, and a few stones. Two grains: a fine one close to, and a coarse one (each tussock twice
  * the size) for the wide, so on the screen the grain is about the same.
  */
 const TILE = 4
@@ -111,34 +111,24 @@ function mossCanvas(lod: number): HTMLCanvasElement | null {
     g.fillStyle = colour
     g.fill(path)
   }
-  // Big soft swells of darker and lighter moss, then the tussocks on them, then their sunlit tops, then lichen.
+  // Big soft swells of darker moss, then a few tussocks on them, darker and lighter, then a few stones.
   fill(ICE.mossDeep, 0.35, (path) => each(26, 5, (x, y, m) => {
     const r = (0.25 + 0.35 * hash(m, 7, seed)) * s
     path.moveTo(x + r, y)
     path.ellipse(x, y, r, r * 0.5, 0, 0, Math.PI * 2)
   }))
-  fill(ICE.mossDark, 0.6, (path) => each(520, 10, (x, y, m) => {
-    const r = (0.03 + 0.06 * hash(m, 12, seed)) * s
+  fill(ICE.mossDark, 0.28, (path) => each(60, 10, (x, y, m) => {
+    const r = (0.06 + 0.08 * hash(m, 12, seed)) * s
     path.moveTo(x + r, y)
     path.ellipse(x, y, r, r * 0.55, 0, 0, Math.PI * 2)
   }))
-  fill(ICE.mossLight, 0.5, (path) => each(420, 20, (x, y, m) => {
-    const r = (0.022 + 0.045 * hash(m, 22, seed)) * s
+  fill(ICE.mossLight, 0.2, (path) => each(40, 20, (x, y, m) => {
+    const r = (0.05 + 0.07 * hash(m, 22, seed)) * s
     path.moveTo(x + r, y)
     path.ellipse(x, y, r, r * 0.6, 0, 0, Math.PI * 2)
   }))
-  fill(ICE.mossSun, 0.55, (path) => each(300, 25, (x, y, m) => {
-    const r = (0.012 + 0.022 * hash(m, 27, seed)) * s
-    path.moveTo(x + r, y - r * 0.2)
-    path.ellipse(x, y - r * 0.2, r, r * 0.5, 0, 0, Math.PI * 2)
-  }))
-  fill(ICE.lichen, 0.85, (path) => each(160, 30, (x, y, m) => {
-    const r = (0.008 + 0.012 * hash(m, 32, seed)) * s
-    path.rect(x - r, y - r * 0.7, 2 * r, 1.4 * r)
-  }))
-  const lit = new Path2D()
-  fill(ICE.basaltLight, 1, (path) => each(16, 40, (x, y, m) => {
-    const r = (0.04 + 0.08 * hash(m, 42, seed)) * s
+  fill(ICE.basaltLight, 1, (path) => each(6, 40, (x, y, m) => {
+    const r = (0.05 + 0.07 * hash(m, 42, seed)) * s
     const pts: Pt[] = []
     for (let q = 0; q < 7; q++) {
       const a = (q / 7) * Math.PI * 2
@@ -146,28 +136,7 @@ function mossCanvas(lod: number): HTMLCanvasElement | null {
       pts.push([x + Math.cos(a) * rr, y + Math.sin(a) * rr * 0.6])
     }
     outline(pts, path)
-    polyline([pts[4], pts[5], pts[6]], lit)
   }))
-  g.globalAlpha = 0.85
-  g.strokeStyle = ICE.rockLit
-  g.lineWidth = 0.014 * s
-  g.lineCap = 'round'
-  g.stroke(lit)
-  const grass = new Path2D()
-  each(320, 50, (x, y, m) => {
-    const h = (0.05 + 0.05 * hash(m, 52, seed)) * s
-    const lean = (hash(m, 53, seed) - 0.5) * 0.04 * s
-    grass.moveTo(x - 0.02 * s, y)
-    grass.lineTo(x - 0.03 * s + lean, y - h * 0.8)
-    grass.moveTo(x, y)
-    grass.lineTo(x + lean, y - h)
-    grass.moveTo(x + 0.02 * s, y)
-    grass.lineTo(x + 0.035 * s + lean, y - h * 0.75)
-  })
-  g.globalAlpha = 0.75
-  g.strokeStyle = ICE.grass
-  g.lineWidth = 0.011 * s
-  g.stroke(grass)
   mossCanvases.set(lod, canvas)
   return canvas
 }

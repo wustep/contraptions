@@ -402,7 +402,7 @@ the spark and its flame. The accelerando from 104 to 198 bpm has no steady comb,
 `apps/rube/src/shows/versions/mountain-king/SPARK.md`.
 
 
-`heptapod-b/opus55` (in the picker, **Logogram**, one take, **Opus 5.5**) is Jóhann Jóhannsson's *Heptapod B* from
+`heptapod-b/opus55` (hidden from the picker for now, Oct 14: its file is `opus55.ts`, not `opus55.show.ts`; was **Logogram**, one take, **Opus 5.5**) is Jóhann Jóhannsson's *Heptapod B* from
 *Arrival*, whole, demo only (`apps/rube/src/shows/versions/heptapod-b/ATTRIBUTION.txt`), and then the end credits in
 the quiet after it. Every piece is new. It follows the film's spine as a circle: it opens in the lake house by the long
 window, Louise (the orange ball) and her daughter Hannah (the little peach one), which the film lets us take for the
@@ -455,14 +455,17 @@ Daylight*, the *Blue Notebooks* recording that *Arrival* opens and closes on, wh
 (`apps/rube/src/shows/versions/nature-of-daylight/ATTRIBUTION.txt`), and then the end credits in the quiet after it.
 Every piece is new. It tells the whole film in order, and ends on its own first frame: the lake house at dawn, Louise
 (the gold ball) and baby Hannah (the rose ball, who grows); the swing by the lake; the bed by the window, where Hannah
-goes on the lament's swell; the television at night, whose picture of a shell becomes the real one over Montana on the
-double bass (a match cut on the shell); the camp, the chamber and the glass, the heptapods, contact and the language;
-the world's twelve links falling like dominoes when the bass drops out; the bomb; the fog beyond the glass, where she is
-shown Hannah grown; the gala years on, where General Shang (the red ball) tells her what to say; the call, on the
-loudest bars, when the dominoes stand again in the order they fell, backwards; the shell going up the way it came
-down; daylight; Ian (the blue ball); and home. The code is `nature-of-daylight/palindrome/`, on the same kit as Logogram
-(parts built to timed slots, an authored camera, match cuts between six places, a white-out, the end credits from
-`Performance.titles`). The playing is free (a beat is 0.87 to 1.1 s), so `scripts/shows/nature-of-daylight-onsets.py`
+goes on the lament's swell; her lecture hall the day they came, the phones lighting, the news on the screen, whose
+picture of a shell becomes the real one over Montana on the double bass (a match cut on the shell); the helicopter
+coming for her at the lake house that night; the camp; the
+shaft up into the shell, where gravity turns and the camera with it; the chamber and the glass, the heptapods, contact
+and the language, with a flash of Hannah drawing at the window and the world's twelve sites sharing a word round their
+ring; that ring falling like dominoes when the bass drops out; the bomb; the fog beyond the glass, where she is
+shown Hannah grown as Abbott dies; the same hall years on, where she teaches their writing; the gala, where General Shang (the red ball) tells her what to say; the
+call, on the loudest bars, Ian holding the soldiers off at the door, when the dominoes stand again in the order they
+fell, backwards, and the shells leave every screen; the shell going up the way it came down; daylight; Ian (the blue ball); and home. The code is `nature-of-daylight/palindrome/`, on the same kit as Logogram
+(parts built to timed slots, an authored camera with a roll, match and scale cuts between eight places, a white-out,
+the end credits from `Performance.titles`). The playing is free (a beat is 0.87 to 1.1 s), so `scripts/shows/nature-of-daylight-onsets.py`
 tracks the beats one by one and finds every change of chord from the harmony itself, into
 `scripts/shows/plans/nature-of-daylight-onsets.json`; `check:shows` holds every strike to it, nearly every change of
 chord to a strike, and the palindromes to their mirror (`apps/rube/checks/palindrome.ts`). The report is

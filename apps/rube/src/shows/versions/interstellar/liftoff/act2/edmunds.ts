@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInQuad, easeOutCubic } from '../../../../../../../../src/core/ease'
 import { laneAt, mixHex, puff, R, type Lane, type Pt, type Seg } from '../../../../../parts'
-import { alpha, box, carried, frame, glassLimb, hash, knock, lastOf, lensedArc, part, route, smooth, type Companion, type Ctx, type PartShot, type Way } from '../kit'
+import { alpha, box, carried, frame, glassLimb, hash, knock, lastOf, lensedArc, part, route, smooth, type Companion, type Ctx, type PartShot, type Riders, type Way } from '../kit'
 import { cue, DURATION, FINAL, MIX_END, PEAK } from '../music'
 import { G_EARTH, hop } from '../physics'
 import { BRAND, DARK, VOID } from '../worlds'
@@ -51,8 +51,9 @@ const TAU = Math.PI * 2
 /* ------------------------------------------------------------------ the clock (show seconds) */
 
 const BEGIN = cue(212)
-/** Out of the far mouth. */
+/** Out of the far mouth; how long before it its image starts up through the mouth's glass. */
 const OUT = cue(213)
+const THROUGH = 0.55
 /** The mouth rings behind the Ranger; the wave goes past it. */
 const RING = cue(214)
 /** Thrusters: a pitch-up started, and stopped on the and. */
@@ -487,11 +488,20 @@ export const edmunds = part<EdmundsState>(
       ]),
     )
     const lane: Lane = { segs, fire: at(OUT) }
+    // Before it is out he is in the seat of its image coming up through the mouth, at the image's scale: the lane
+    // keeps its hidden way through, which is what the camera follows in the whip.
+    const riders: Riders = (T, hero) => {
+      if (T >= OUT || T < OUT - THROUGH) return null
+      const sc = imageScale(T)
+      const [x, y] = seatAt(T)
+      return [{ ...hero, x: MOUTH[0] + (x - MOUTH[0]) * sc, y: MOUTH[1] + (y - MOUTH[1]) * sc, scale: sc }]
+    }
     return {
       cells: box(-4, -5, CAIRN_X + 6, G + 3, 2),
       exit: [MEET_H[0] + 0.5, MEET_H[1]],
       lane,
       state: { begin: slot.begin, lane },
+      riders,
       // Brand, at her camp, from while the camera is still at the wormhole (the camp far out of the frame) to the end.
       company: [{ from: BEGIN, to: DURATION + 1, who: 'brand', at: (T) => ({ ...brandAt(T), color: BRAND }) }],
       // What comes through the wormhole is the ball itself, whatever the station made of it.
@@ -630,10 +640,9 @@ function drawAll(p: p5, s: EdmundsState, c: Ctx): void {
   drawChute(p, c, T)
   drawCamp(p, c, v, T)
   drawDust(p, c, T, 0)
-  drawRanger(p, c, T)
+  throughMouth(p, c, T, () => drawRanger(p, c, T))
   drawRamp(p, c, T)
   drawDust(p, c, T, 1)
-  drawMouthGlass(p, c, T)
   drawBallShadow(p, s, c, T)
   ctx.restore()
   if (opening) {
@@ -655,7 +664,9 @@ function drawOver(p: p5, s: EdmundsState, c: Ctx): void {
   const T = s.begin + c.t
   const f = frame(p, c.k)
   const v = viewOf(f, T)
-  drawCanopy(p, c, T)
+  throughMouth(p, c, T, () => drawCanopy(p, c, T))
+  // Over him too, so what is still in the mouth is all behind its glass.
+  drawMouthGlass(p, c, T)
   drawPlateLip(p, c, T)
   drawLampLight(p, c, v, T)
 }
@@ -1010,26 +1021,6 @@ function drawMouth(p: p5, c: Ctx, T: number): void {
   p.strokeWeight(Math.max(1, X(0.035)))
   p.arc(0, 0, X(1.05), X(0.24), 0, Math.PI)
   p.pop()
-  // The Ranger's image coming up through the glass before it is out.
-  const img = smooth(T, OUT - 0.55, OUT)
-  if (img > 0 && T < OUT + 0.05) {
-    const q = poseAt(T)
-    const sc = 0.18 + 0.82 * img * img
-    const cx = mx + (q.x - mx) * sc
-    const cy = my + (q.y - my) * sc
-    p.push()
-    p.translate(X(cx), X(cy))
-    p.scale(sc)
-    // Its silhouette, all of it: the hull, the wing under it, the bubble on its back.
-    inHub(p, c, (h) => {
-      p.noStroke()
-      p.fill(mixHex(DARK.deep, DARK.hull, 0.7 * img))
-      poly(p, h.k, HULL)
-      poly(p, h.k, WING)
-      bubble(p, h.k)
-    })
-    p.pop()
-  }
   // A bright crescent on the side toward the dawn, the band bent round its foot.
   p.noFill()
   p.stroke(alpha(p, DARK.gold, 0.55))
@@ -1047,9 +1038,10 @@ function drawMouth(p: p5, c: Ctx, T: number): void {
   void ink
 }
 
-/** While the Ranger's tail is still in the mouth, the glass over it. */
+/** While the Ranger, or its image, is still in the mouth, the glass over it: coming up with the image, gone as the tail clears. */
 function drawMouthGlass(p: p5, c: Ctx, T: number): void {
-  if (T < OUT - 0.02 || T > OUT + 0.6) return
+  const a = smooth(T, OUT - THROUGH, OUT - 0.2) * (1 - smooth(T, OUT + 0.35, OUT + 0.6))
+  if (a <= 0) return
   const { k } = c
   const X = (x: number) => x * k
   const ctx = p.drawingContext as CanvasRenderingContext2D
@@ -1058,15 +1050,40 @@ function drawMouthGlass(p: p5, c: Ctx, T: number): void {
   ctx.arc(X(MOUTH[0]), X(MOUTH[1]), X(RM), 0, TAU)
   ctx.clip()
   p.noStroke()
-  p.fill(alpha(p, DARK.deep, 0.62))
+  p.fill(alpha(p, DARK.deep, 0.62 * a))
   p.circle(X(MOUTH[0]), X(MOUTH[1]), X(2 * RM))
   ctx.restore()
+}
+
+/**
+ * Before it is out, the Ranger as its image coming up through the mouth: `draw` scaled about the mouth's middle, from
+ * a point there to the ship itself at OUT, where the ship goes on without a change. Its nose comes out through the rim
+ * on its way, under the glass until it is clear.
+ */
+function throughMouth(p: p5, c: Ctx, T: number, draw: () => void): void {
+  const sc = imageScale(T)
+  if (sc >= 1) return draw()
+  if (sc <= 0) return
+  const [mx, my] = MOUTH
+  p.push()
+  p.translate(c.k * mx, c.k * my)
+  p.scale(sc)
+  p.translate(-c.k * mx, -c.k * my)
+  draw()
+  p.pop()
+}
+
+/** The Ranger's image's scale about the mouth's middle at `T`: from nothing to 1 at OUT. */
+function imageScale(T: number): number {
+  if (T >= OUT) return 1
+  const img = smooth(T, OUT - THROUGH, OUT)
+  return img * img
 }
 
 /* ------------------------------------------------------------------ the Ranger */
 
 function drawRanger(p: p5, c: Ctx, T: number): void {
-  if (T < OUT - 0.02) return
+  if (T < OUT - THROUGH) return
   const { k, ink, weight } = c
   const X = (x: number) => x * k
   const q = poseAt(T)
@@ -1429,7 +1446,7 @@ function canopyOpen(T: number): number {
 
 /** The hood's glass over the ball, its windscreen frame, a glint (hub units, over the ball). */
 function drawCanopy(p: p5, c0: Ctx, T: number): void {
-  if (T < OUT - 0.02) return
+  if (T < OUT - THROUGH) return
   const q = poseAt(T)
   const open = canopyOpen(T)
   p.push()

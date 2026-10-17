@@ -9,10 +9,8 @@ import {
   ANAT,
   AT,
   B,
-  BACK,
   BAGS,
   BLASTS,
-  BURNER_POINT,
   climbInt,
   EXIT,
   GROUND,
@@ -425,11 +423,6 @@ function drawTop(p: p5, look: Look, t: number): void {
   drawSacks(p, look, n, t, BAGS.b4)
 }
 
-/**
- * Where a lit burner is on the way home (148.330 to 148.404): the highest balloon's, which the spark went into, its
- * flame alight again then. World cells: the middle of its jet.
- */
-export const BURNER_AT: Pt = add(BURNER_POINT, up4(BACK[0]))
 /** Where the spark leaves, with the top balloon's steps. */
 const EXIT4: Pt = add(EXIT, up4(T1))
 

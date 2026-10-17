@@ -4,19 +4,18 @@ import { layer, view, type View } from '../depth'
 import { BEATS } from '../music'
 import { drawAir, fireT, heat } from './draw'
 import { BED, BX, BX1, DECK, drained, FENCE, LIP, STREET, T0, T1, toneAt } from './geo'
-import { ctxOf, ease, rgba, type Pen } from './pen'
+import { ctxOf, rgba, type Pen } from './pen'
 
 /**
  * What stands between the camera and the machine in this place, and the light over all of it: the near plane, the
  * air, the grade. Drawn after the set and the parts and before Walter (`depth.ts`), so nothing here hides him or
  * changes his colour. It is handed show time as `t`.
  *
- * The air round the fire (`drawAir`): embers going up off it, the heat in the room, the smoke in the shop. The fire's
- * light on what is near it, a plain warm wash along the pavement in front of the building and across the tracks on
- * the platform's edge, flickering with the flames and lifting on every downbeat. Nearest, out of focus, the platform
- * the camera stands on: a pillar, a bench's end, a lamp hanging on its rod. Over all of it, a magenta haze high up
- * and the night closing in at the top. Every colour goes through the daydream's tone, so all of it drains with the
- * rest.
+ * The heat in the burning room's air (`drawAir`). The fire's light on what is near it, a plain warm wash along the
+ * pavement in front of the building and across the tracks on the platform's edge, flickering with the flames and
+ * lifting on every downbeat. Nearest, out of focus, the platform the camera stands on: a pillar and a bench. Over all
+ * of it, a magenta haze high up and the night closing in at the top. Every colour goes through the daydream's tone,
+ * so all of it drains with the rest.
  */
 
 type C2 = CanvasRenderingContext2D
@@ -40,7 +39,7 @@ function flareAt(t: number): number {
 function fireLight(t: number): number {
   const ft = fireT(t)
   const flick = 0.85 + 0.15 * Math.sin(ft * 11.3) * Math.sin(ft * 4.7 + 1.3)
-  const h = Math.max(heat(t, 0), heat(t, 1)) * flick
+  const h = heat(t) * flick
   return h * (1 + 0.3 * flareAt(t) * (1 - drained(t)))
 }
 
@@ -79,10 +78,9 @@ function fireOnThings(ctx: C2, pen: Pen, k: number, t: number): void {
 
 /* ------------------------------------------------------------------ the near plane */
 
-/** The near platform's pillar, a bench and a lamp, in the near plane's cells: each where the camera passes it at an edge. */
+/** The near platform's pillar and a bench, in the near plane's cells: each where the camera passes it at an edge. */
 const PILLAR = -3.6
 const BENCHES = [-2.5]
-const LAMP: Pt = [-2.6, -1.0]
 
 function nearPlane(ctx: C2, pen: Pen, v: View, t: number): void {
   const f = fireLight(t)
@@ -90,7 +88,6 @@ function nearPlane(ctx: C2, pen: Pen, v: View, t: number): void {
     const k = inner.k
     const near = rgba(pen, '#0C0818', 0.96)
     const rim = rgba(pen, '#FF9A3C', Math.min(0.6, 0.18 + 0.3 * f))
-    const cold = rgba(pen, '#9FB6C8', 0.16)
     for (const bx of BENCHES) {
       if (bx < inner.x0 - 2 || bx > inner.x1 + 2) continue
       // A bench: the slats of its back on their two posts, its seat, its iron arm; the fire along their tops.
@@ -108,48 +105,13 @@ function nearPlane(ctx: C2, pen: Pen, v: View, t: number): void {
       ctx.fillRect((bx - 1.08) * k, seat * k, 2.16 * k, 0.02 * k)
     }
     if (PILLAR > inner.x0 - 1 && PILLAR < inner.x1 + 1) {
-      // A riveted column, the fire's light down its far side.
+      // A steel column, the fire's light down its far side.
       const w = 0.42
       const x0 = PILLAR - w / 2
       ctx.fillStyle = near
       ctx.fillRect(x0 * k, (inner.y0 - 0.2) * k, w * k, (inner.h + 0.4) * k)
       ctx.fillStyle = rim
       ctx.fillRect((x0 + w - 0.06) * k, (inner.y0 - 0.2) * k, 0.035 * k, (inner.h + 0.4) * k)
-      ctx.fillStyle = cold
-      ctx.fillRect((x0 + 0.04) * k, (inner.y0 - 0.2) * k, 0.02 * k, (inner.h + 0.4) * k)
-      const rivets = new Path2D()
-      for (let y = Math.floor(inner.y0 / 0.3) * 0.3; y < inner.y1; y += 0.3) {
-        rivets.moveTo((x0 + w - 0.1 + 0.018) * k, y * k)
-        rivets.arc((x0 + w - 0.1) * k, y * k, 0.018 * k, 0, Math.PI * 2)
-      }
-      ctx.fillStyle = rgba(pen, '#7A5236', 0.5 * (0.5 + 0.5 * f))
-      ctx.fill(rivets)
-    }
-    const [lx, ly] = LAMP
-    // The lamp is the camera's only while it is close: in the pull-back it would be a sliver at the frame's edge.
-    const close = 1 - ease((v.h - 6) / 1.5)
-    if (close > 0 && lx > inner.x0 - 1 && lx < inner.x1 + 1) {
-      // A lamp hanging on its rod from the platform's roof: an enamel shade, lit under its rim, swinging a little.
-      ctx.globalAlpha = close
-      const sw = 0.03 * Math.sin(t * 1.3) + 0.015 * Math.sin(t * 3.1 + 1)
-      const bx = lx + sw * (ly - inner.y0)
-      ctx.strokeStyle = near
-      ctx.lineWidth = 0.035 * k
-      ctx.beginPath()
-      ctx.moveTo(lx * k, (inner.y0 - 0.5) * k)
-      ctx.lineTo(bx * k, (ly - 0.18) * k)
-      ctx.stroke()
-      ctx.fillStyle = near
-      ctx.beginPath()
-      ctx.moveTo((bx - 0.1) * k, (ly - 0.2) * k)
-      ctx.lineTo((bx + 0.1) * k, (ly - 0.2) * k)
-      ctx.lineTo((bx + 0.32) * k, ly * k)
-      ctx.lineTo((bx - 0.32) * k, ly * k)
-      ctx.closePath()
-      ctx.fill()
-      ctx.fillStyle = rgba(pen, '#D9F0E0', 0.9)
-      ctx.fillRect((bx - 0.28) * k, ly * k, 0.56 * k, 0.03 * k)
-      ctx.globalAlpha = 1
     }
   })
 }

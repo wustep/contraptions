@@ -755,8 +755,9 @@ function drone(d: Draw, s: GateState, f: { x0: number; x1: number; y0: number })
   if (dr && dr.p[0] > f.x0 - 2 && dr.p[0] < f.x1 + 2 && dr.p[1] > f.y0 - 1) {
     const over = dr.p[0] > s.bunker[0] - 0.3 && dr.p[0] < s.bunker[1] + 0.1
     gear(d, dr.p, dr.pitch, dr.gear, dr.squash)
-    // (Its shadow comes up on the ground as it comes down to fly level, rather than all at once as this part takes it.)
-    drawDrone(p, k, ink, weight, dr.p, dr.pitch, 1, over ? ROOF : FLOOR, 0, smooth(t, LEVEL, LEVEL + 1.2))
+    // (Its shadow comes up on the ground as it comes down to fly level, rather than all at once as this part takes it.
+    // Its wings lie flatter as it glides down level with the eye onto the roof.)
+    drawDrone(p, k, ink, weight, dr.p, dr.pitch, 1, over ? ROOF : FLOOR, 0, smooth(t, LEVEL, LEVEL + 1.2), smooth(t, FINAL, TOUCH))
     if (t >= TOUCH && t < TOUCH + 0.8) {
       const age = t - TOUCH
       p.push()

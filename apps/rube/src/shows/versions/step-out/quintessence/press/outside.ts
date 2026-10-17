@@ -1,7 +1,7 @@
 import { hash } from '../kit'
 import { layer, rgbaOf, type View } from '../depth'
 import { ANCHOR, figure, floorAt, floorOf, REF } from './hall'
-import { DOOR_X, FLOOR, WALL } from './press-plan'
+import { DOOR_X, FLOOR, T0, WALL } from './press-plan'
 import { steam } from './steam'
 
 /**
@@ -22,6 +22,16 @@ const SKY: [number, string][] = [
   [1, '#F6CF92'],
 ]
 const STONE = ['#DCD2C1', '#C8B79F', '#D7C7AC', '#BCA88E']
+/** The fronts across the road, side by side from a fixed corner, in their plane's cells: each its left edge, width and height. */
+const FRONTS: { i: number; x: number; w: number; h: number }[] = (() => {
+  const out: { i: number; x: number; w: number; h: number }[] = []
+  for (let i = 0, x = 4; x < 40; i++) {
+    const w = 1.5 + 0.8 * hash(i, 1, 93)
+    out.push({ i, x, w, h: 2.6 + 2.4 * hash(i, 2, 93) })
+    x += w
+  }
+  return out
+})()
 
 export function drawOutside(ctx: C2, v: View, t: number): void {
   if (v.x1 < DOOR_X) return
@@ -76,20 +86,18 @@ export function drawOutside(ctx: C2, v: View, t: number): void {
     const gold = new Path2D()
     const iron = new Path2D()
     const awning = new Path2D()
-    let x = Math.floor(s.x0 / 1.9) * 1.9 - 1.9
-    for (let i = Math.floor(s.x0 / 1.9) - 1; x < s.x1 + 0.5; i++) {
-      const w = 1.5 + 0.8 * hash(i, 1, 93)
-      const h = 2.6 + 2.4 * hash(i, 2, 93)
+    for (const { i, x, w, h } of FRONTS) {
+      if (x > s.x1 + 0.5 || x + w < s.x0 - 0.5) continue
       ctx.fillStyle = STONE[Math.floor(hash(i, 3, 93) * STONE.length)]
       ctx.fillRect(x, base - h, w - 0.02, h)
       // Its cornice catching the sun; the cool shadow down its returns.
       sunlit.rect(x - 0.03, base - h - 0.06, w + 0.04, 0.08)
       shade.rect(x + w - 0.16, base - h, 0.14, h)
       shade.rect(x - 0.03, base - h + 0.02, w + 0.04, 0.05)
-      // Windows: rows of them, some catching the low sun.
+      // Windows: rows of them, a few catching the low sun.
       for (let y = base - h + 0.32; y < base - 0.8; y += 0.42) {
         for (let wx = x + 0.18; wx < x + w - 0.3; wx += 0.3) {
-          const lit = hash(Math.round(wx * 10), Math.round(y * 10), 94) > 0.82
+          const lit = hash(Math.round(wx * 10), Math.round(y * 10), 94) > 0.93
           ;(lit ? gold : glass).rect(wx, y, 0.16, 0.24)
         }
       }
@@ -113,26 +121,25 @@ export function drawOutside(ctx: C2, v: View, t: number): void {
       awning.lineTo(x + w - 0.02, base - 0.58)
       awning.lineTo(x, base - 0.58)
       awning.closePath()
-      x += w
     }
     ctx.fillStyle = rgbaOf('#F7D9A2', 0.55)
     ctx.fill(sunlit)
     ctx.fillStyle = rgbaOf('#6D7F90', 0.35)
     ctx.fill(shade)
-    ctx.fillStyle = '#7D878C'
+    ctx.fillStyle = '#9A9C98'
     ctx.fill(glass)
     ctx.fillStyle = '#F4D49C'
     ctx.fill(gold)
-    ctx.fillStyle = rgbaOf('#3A4247', 0.8)
+    ctx.fillStyle = rgbaOf('#3A4247', 0.5)
     ctx.fill(iron)
     ctx.fillStyle = '#4F6A58'
     ctx.fill(awning)
-    // People on the far pavement, walking to work.
+    // People on the far pavement, walking to work, each on their own way through the morning.
     const men = new Path2D()
     for (let j = 0; j < 4; j++) {
       const vx = (hash(j, 1, 95) < 0.5 ? -1 : 1) * (0.18 + 0.1 * hash(j, 2, 95))
-      const span = 9
-      const px = (((hash(j, 3, 95) * span + vx * t - s.x0) % span) + span) % span + s.x0 - 0.5
+      const px = 15 + 10 * hash(j, 3, 95) + vx * (t - T0)
+      if (px < s.x0 - 0.5 || px > s.x1 + 0.5) continue
       figure(men, px, base + 0.02 - 0.012 * Math.abs(Math.sin(t * 5 + j)), 0.5, Math.sin(t * 5 + j), vx)
     }
     ctx.fillStyle = rgbaOf('#4A4440', 0.85)
@@ -228,40 +235,6 @@ export function drawOutside(ctx: C2, v: View, t: number): void {
   }
   ctx.fillStyle = rgbaOf('#857A6B', 0.6)
   ctx.fill(joints)
-  // The slabs, each its own stone: some a little lighter, some darker.
-  if (drop > 0.05) {
-    const light = new Path2D()
-    const dark = new Path2D()
-    const rows: number[] = [kerb]
-    for (let z = 0.9; z < 12; z *= 1.32) {
-      const y = floorAt(v, z)
-      if (y > kerb && y < v.y1 + 0.2) rows.push(y)
-    }
-    rows.push(v.y1 + 0.2)
-    for (let j = 0; j + 1 < rows.length; j++) {
-      const fa = (rows[j] - v.cy) / drop
-      const fb = (rows[j + 1] - v.cy) / drop
-      for (let x = Math.floor((x0 - 8) / 0.9) * 0.9; x < v.x1 + 8; x += 0.9) {
-        const h = hash(Math.round(x / 0.9), j, 97)
-        if (h > 0.25 && h < 0.75) continue
-        const a0 = v.cx + (x - v.cx) * fa
-        const a1 = v.cx + (x + 0.9 - v.cx) * fa
-        const b0 = v.cx + (x - v.cx) * fb
-        const b1 = v.cx + (x + 0.9 - v.cx) * fb
-        if (Math.max(a1, b1) < x0 || Math.min(a0, b0) > v.x1 + 0.5) continue
-        const p = h < 0.25 ? dark : light
-        p.moveTo(a0, rows[j])
-        p.lineTo(a1, rows[j])
-        p.lineTo(b1, rows[j + 1])
-        p.lineTo(b0, rows[j + 1])
-        p.closePath()
-      }
-    }
-    ctx.fillStyle = rgbaOf('#7B705F', 0.14)
-    ctx.fill(dark)
-    ctx.fillStyle = rgbaOf('#F2E6D0', 0.12)
-    ctx.fill(light)
-  }
   ctx.restore()
   // A lamppost at the kerb, and its long morning shadow raking across the pavement.
   layer(ctx, v, 0.93, ANCHOR, REF, (s) => {
