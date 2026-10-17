@@ -62,7 +62,7 @@ app.innerHTML = `
           <div class="control-row">${COLOR_NAMES.map((name, i) => `<button class="paint-button" data-paint="${i}" style="--parcel:${COLORS[i]}"><span>${dot(i, true)} ${name}</span><kbd id="paint-key-${i}">${paintKeys()[i]}</kbd></button>`).join('')}</div>
           <div class="station-bottom"><button class="small-button" id="hold" aria-pressed="false">${key('F')} Hold feed</button><div class="buffer" id="intake" aria-label="Paint queue"><span class="buffer-empty">Queue is clear</span></div></div>
         </div>
-        <div class="workstation dispatch-station"><div class="station-heading"><h2><span>02</span> The dispatcher</h2><span class="role" id="send-role">RIGHT HAND</span></div><div class="station-status"><span id="send-status">Send the oldest parcel to its address</span><span id="ready-count">0 / 3 ready</span></div>
+        <div class="workstation dispatch-station"><div class="station-heading"><h2><span>02</span> The dispatcher</h2><span class="role" id="send-role">RIGHT HAND</span></div><div class="station-status"><span id="send-status">Send the oldest parcel to its address</span><span id="ready-count">0 / 3 ready</span></div><div class="reload-track" aria-hidden="true"><span id="reload-track"></span></div>
           <div class="control-row">${ADDRESSES.map((name, i) => `<button class="route-button" data-send="${i}"><span><small>0${i + 1}</small> ${name}</span><kbd id="send-key-${i}">${routeKeys()[i]}</kbd></button>`).join('')}</div>
           <div class="station-bottom"><button class="small-button" id="park">${key('H')} Park / swap</button><div class="buffer" id="ready" aria-label="Dispatch queue"><span class="buffer-empty">Waiting for paint</span></div><span id="parked"></span></div>
         </div>
@@ -82,8 +82,8 @@ wireGame()
 function chooseCrew(next: Crew): void {
   crew = next; best = readBest()
   document.querySelectorAll<HTMLButtonElement>('[data-crew]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.crew === crew)))
-  element('paint-role').textContent = crew === 'solo' ? 'LEFT HAND' : 'PLAYER 1'
-  element('send-role').textContent = crew === 'solo' ? 'RIGHT HAND' : 'PLAYER 2'
+  element('paint-role').textContent = crew === 'solo' ? (swapped ? 'RIGHT HAND' : 'LEFT HAND') : (swapped ? 'PLAYER 2' : 'PLAYER 1')
+  element('send-role').textContent = crew === 'solo' ? (swapped ? 'LEFT HAND' : 'RIGHT HAND') : (swapped ? 'PLAYER 1' : 'PLAYER 2')
   element('crew-hint').textContent = crew === 'solo' ? 'One player · left hand paints, right hand dispatches.' : 'Two players · one paints, one dispatches. Talk to each other.'
   element('record').textContent = `BEST ${String(best).padStart(4, '0')}`
 }
@@ -102,6 +102,7 @@ function start(practice: boolean): void {
   document.body.classList.add('working')
   document.querySelectorAll<HTMLButtonElement>('.workstations button').forEach((b) => { b.disabled = false })
   element('skip').textContent = 'Start 90-second shift →'
+  element('replay').textContent = 'Replay a delivery ↶'
   update()
 }
 function pause(next: boolean): void {
@@ -118,6 +119,7 @@ bind('swap', () => {
   for (let i = 0; i < 3; i++) { element(`paint-key-${i}`).textContent = paintKeys()[i]; element(`send-key-${i}`).textContent = routeKeys()[i] }
   element('hold').innerHTML = `${key(swapped ? 'H' : 'F')} Hold feed`
   element('park').innerHTML = `${key(swapped ? 'F' : 'H')} Park / swap`
+  chooseCrew(crew)
   start(false)
 })
 bind('sound', () => { audio.muted = !audio.muted; element('sound').textContent = audio.muted ? 'Sound off' : 'Sound on'; element('sound').setAttribute('aria-pressed', String(audio.muted)) })
@@ -175,6 +177,16 @@ function update(): void {
     element('lesson').textContent = tutorialStep === 2 ? 'Signed, sealed, delivered. You’re ready for the real shift.' : tutorialStep === 1 ? `Send the front parcel to an address requesting its color. ${routeKeys().join(' / ')} choose the address.` : game.painting ? 'The paint is on. Watch it ride up the conveyor…' : `Press ${paintKeys()[0]} (or tap Red) to paint your first parcel.`
     element('skip').classList.toggle('primary', tutorialStep === 2)
   }
+  const reloading = game.time < game.cannonFree
+  element('reload-track').style.width = `${reloading ? Math.min(100, (1 - (game.cannonFree - game.time) / 2.1) * 100) : 100}%`
+  element('ready-count').textContent = reloading ? `Reloading · ${(game.cannonFree - game.time).toFixed(1)}s` : `${game.ready.length} / 3 ready`
+  document.querySelectorAll<HTMLButtonElement>('[data-send]').forEach((b, i) => {
+    b.disabled = screen === 'result' || (active && (!game.ready.length || reloading || game.orders[i].reserved || game.phase !== 'open'))
+    b.classList.toggle('matching', active && !reloading && !!game.ready.length && game.ready[0].color === game.orders[i].color && !game.orders[i].reserved)
+  })
+  document.querySelectorAll<HTMLButtonElement>('[data-paint]').forEach((b) => {
+    b.disabled = screen === 'result' || (active && (game.intake.length >= 3 || (!game.rework.length && game.activeCount >= 8) || game.phase !== 'open'))
+  })
   if (lastRevision === game.revision) return
   lastRevision = game.revision
   element('delivered').textContent = String(game.delivered).padStart(2, '0')
@@ -185,8 +197,7 @@ function update(): void {
   element('notice').dataset.kind = game.noticeKind
   element('paint-status').textContent = game.feedHeld ? 'Feed held — press again to release' : game.rework.length ? `↶ ${game.rework.length} returned — next color repaints one` : game.load >= 3 ? 'Shelf filling — queue the next colors' : 'Pick a color to paint & queue'
   element('send-status').innerHTML = game.ready.length ? `Next to send: ${dot(game.ready[0].color, true)} <strong>${COLOR_NAMES[game.ready[0].color]}</strong>` : game.painting ? 'Parcel on the belt…' : 'Send the oldest parcel to its address'
-  element('intake-count').textContent = `${game.intake.length} / 3 queued`
-  element('ready-count').textContent = `${game.ready.length} / 3 ready`
+  element('intake-count').textContent = `${game.intake.length} queued · ${game.painting} on belt`
   element('intake').innerHTML = game.intake.length ? game.intake.map((p) => dot(p.color, true)).join('') : '<span class="buffer-empty">Queue is clear</span>'
   element('ready').innerHTML = game.ready.length ? game.ready.map((p, i) => `<span class="${i ? '' : 'front-parcel'}">${dot(p.color, true)}</span>`).join('') : '<span class="buffer-empty">Waiting for paint</span>'
   element('parked').innerHTML = game.parked ? `<span class="parked-label">PARKED</span> ${dot(game.parked.color, true)}` : ''

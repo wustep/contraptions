@@ -67,8 +67,8 @@ export function createDepotScene(host: HTMLElement, game: () => Depot, time: () 
     p.draw = () => {
       const t = time()
       const g = game()
-      const k = Math.min(p.width / 13.3, p.height / 4.95)
-      const cam = { x: 6.5, y: 2.15 }
+      const k = Math.min(p.width / 13.3, p.height / 5.5)
+      const cam = { x: 6.5, y: 2.1 }
       show.pose(t)
       drawWorld(p, show, t, show.at(t), cam, k, { x: 0, y: 0, w: p.width, h: p.height }, false)
       const sx = (x: number) => p.width / 2 + (x - cam.x) * k
