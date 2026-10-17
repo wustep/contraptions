@@ -191,15 +191,9 @@ export function drawTraffic(ctx: C2, v: View, t: number, lane: 'far' | 'near'): 
     const x = frontAt(car, i, t)
     const len = DIM[car.kind][0]
     if (Math.max(x, x - dir * len) < v.x0 - 0.5 || Math.min(x, x - dir * len) > v.x1 + 0.5) return
-    // Its shadow on the road, long to the left in the low sun.
+    // Where it meets the road, in the shade: a plain band under it.
     ctx.fillStyle = rgba('#34405A', 0.18)
-    const a = Math.min(x, x - dir * len)
-    ctx.beginPath()
-    ctx.moveTo((a - 0.2) * k, (y + 0.02) * k)
-    ctx.lineTo((a + len) * k, (y + 0.02) * k)
-    ctx.lineTo((a + len - 0.6) * k, (y - 0.12) * k)
-    ctx.lineTo((a - 1.4) * k, (y - 0.12) * k)
-    ctx.fill()
+    ctx.fillRect((Math.min(x, x - dir * len) + 0.1) * k, (y - 0.06) * k, (len - 0.2) * k, 0.08 * k)
     vehicle(ctx, k, car, x, y, dir, glass)
   })
 }
