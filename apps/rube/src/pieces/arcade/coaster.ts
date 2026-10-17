@@ -238,15 +238,17 @@ export const coaster = definePiece<{ color: string }>({
         p.circle(wx * k, (UNDER - 0.042) * k, 0.025 * k)
       }
     })
-    // The sparks off the fins, thrown back from under the car while the brakes bite.
+    // The sparks off the fins, thrown back from under the car while the
+    // brakes bite: the car is stopped in a tenth of a second, so a few, gone
+    // in two; a fan of them hanging on after it had stopped read as a twinkle.
     const braking = t - T_BRAKE
-    if (braking > 0 && braking < 0.4) {
-      const f = braking / 0.4
+    if (braking > 0 && braking < 0.2) {
+      const f = braking / 0.2
       p.push()
       p.stroke(s.color)
       p.strokeWeight(weight * (1.1 - 0.6 * f))
-      for (let i = 0; i < 6; i++) {
-        const a = Math.PI + 0.25 + i * 0.22
+      for (let i = 0; i < 4; i++) {
+        const a = Math.PI + 0.3 + i * 0.3
         const r0 = 0.05 + (0.2 + 0.05 * (i % 3)) * f
         const sx = Math.min(x, X_STOP) - 0.13 - 0.04 * (i % 2)
         const sy = 1 + UNDER - 0.03 + 0.5 * f * f * 0.2
