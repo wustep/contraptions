@@ -359,27 +359,6 @@ function drawTed(g: C2, k: number, t: number): void {
   g.quadraticCurveTo(-0.05 * k, -2.58 * k, -0.07 * k, -2.66 * k)
   g.closePath()
   g.fill()
-  // The window behind him, catching his edges: the back of his head, his shoulder, his arm; less on the side
-  // toward the room.
-  g.strokeStyle = hexA('#E9D2A6', 0.5)
-  g.lineWidth = 0.02 * k
-  g.lineCap = 'round'
-  g.beginPath()
-  g.ellipse(0, -2.88 * k, 0.15 * k, 0.19 * k, 0, Math.PI * 0.62, Math.PI * 1.32)
-  g.moveTo(-0.37 * k, -2.0 * k)
-  g.lineTo(-0.38 * k, -2.32 * k)
-  g.quadraticCurveTo(-0.36 * k, -2.5 * k, -0.18 * k, -2.52 * k)
-  g.moveTo(-0.47 * k, -2.3 * k)
-  g.lineTo(-0.47 * k, -1.45 * k)
-  g.stroke()
-  g.strokeStyle = hexA('#9FC0CB', 0.3)
-  g.lineWidth = 0.014 * k
-  g.beginPath()
-  g.moveTo(0.47 * k, -2.3 * k)
-  g.lineTo(0.47 * k, -1.45 * k)
-  g.moveTo(0.18 * k, -2.52 * k)
-  g.quadraticCurveTo(0.36 * k, -2.5 * k, 0.38 * k, -2.32 * k)
-  g.stroke()
   g.restore()
 }
 

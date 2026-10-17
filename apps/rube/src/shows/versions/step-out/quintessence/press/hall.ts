@@ -167,9 +167,9 @@ interface Line {
 }
 
 const LINES: Line[] = [
-  { i: 3, z: 0.32, pitch: 1.12, h: 1.3, body: '#1A252B', steel: '#22313A', web: '#4A5052', lamps: 4 },
-  { i: 2, z: 0.48, pitch: 1.7, h: 1.85, body: '#141D22', steel: '#1C2830', web: '#59595A', lamps: 3, walk: { up: 2.5, men: [[-0.2, 17.5], [0.14, 6.0]] } },
-  { i: 1, z: 0.66, pitch: 2.4, h: 2.4, body: '#0D1316', steel: '#141D21', web: '#6B6A66', lamps: 2 },
+  { i: 3, z: 0.32, pitch: 1.12, h: 1.3, body: '#1A252B', steel: '#22313A', web: '#3E4446', lamps: 4 },
+  { i: 2, z: 0.48, pitch: 1.7, h: 1.85, body: '#141D22', steel: '#1C2830', web: '#4A4B4B', lamps: 3, walk: { up: 2.5, men: [[-0.2, 17.5], [0.14, 6.0]] } },
+  { i: 1, z: 0.66, pitch: 2.4, h: 2.4, body: '#0D1316', steel: '#141D21', web: '#555652', lamps: 2 },
 ]
 
 function pressLine(ctx: C2, v: View, t: number, L: Line): void {
