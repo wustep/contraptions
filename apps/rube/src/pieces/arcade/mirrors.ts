@@ -159,9 +159,10 @@ export const mirrors = definePiece<{ color: string }>({
       ctx.lineWidth = weight * 0.6
       ctx.stroke()
       p.pop()
-      // Lit while the ball is before the glass, and a moment dying after it has gone.
+      // Lit while the ball is before the glass, and a moment dying after it has gone. It is let into the frame, which is
+      // the colour, so it lights in the ink: lit in the colour it was a ring on the frame, and dark the brighter of the two.
       const gone = FRONT[i] + HALF / ROLL
-      lamp(p, k, ink, weight, s.color, bg, i, LAMP_Y, LAMP, near > 0.5 ? 1 : t > gone ? 1 - over(t, gone, gone + 0.35) : 0)
+      lamp(p, k, ink, weight, ink, bg, i, LAMP_Y, LAMP, near > 0.5 ? 1 : t > gone ? 1 - over(t, gone, gone + 0.35) : 0)
     })
     rail(p, k, ink, weight, -0.5, 2.5)
   },
