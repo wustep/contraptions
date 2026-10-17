@@ -163,16 +163,18 @@ export const ticket = definePiece<TicketState>({
     p.pop()
     // The tickets: one strip out of the slot, a perforation every ticket, growing without a floor cap so a long
     // payout piles up and spills off the bottom of the frame while the ball rolls into the portal.
-    if (tickets > 0) {
+    // The paper feeds out steadily, the perforations riding down with it, while the count goes a ticket at a time.
+    const h = fed * s.tickets * PITCH
+    if (h > 0.005) {
       const x = -turn * 0.12
       const y0 = floors + 0.1
-      const h = tickets * PITCH
       solid(p, ink, weight * 0.7, bg)
       p.rect(x * k, (y0 + h / 2) * k, 0.14 * k, h * k, 0.005 * k)
       outline(p, ink, weight * 0.7)
       // Perforations for the visible span (cap the loop so a long spill stays cheap to draw).
       const yMax = y0 + Math.min(h, 8) - 0.02
-      for (let y = y0 + PITCH; y < yMax; y += PITCH) {
+      for (let y = y0 + (h % PITCH || PITCH); y < yMax; y += PITCH) {
+        if (y < y0 + 0.01) continue
         p.line((x - 0.05) * k, y * k, (x - 0.02) * k, y * k)
         p.line((x + 0.02) * k, y * k, (x + 0.05) * k, y * k)
       }
@@ -224,7 +226,9 @@ export const ticket = definePiece<TicketState>({
     p.fill(ink)
     p.noStroke()
     p.rect(turn * CHUTE_X * k, (floors + CHUTE_BOTTOM - 0.035) * k, (CHUTE_W - 0.06) * k, 0.05 * k)
-    // A lamp on the hood that comes on as the ball drops.
+    // A lamp on the hood that comes on as the ball drops, in a dark socket: lit in the hood's own colour on the bare hood, it was lost.
+    p.fill(bg)
+    p.circle(turn * CHUTE_X * k, (floors + CHUTE_TOP + 0.08) * k, 0.1 * k)
     lamp(p, k, ink, weight, s.color, bg, turn * CHUTE_X, floors + CHUTE_TOP + 0.08, 0.03, since > 0 && since < 0.6 ? 1 - over(since, 0.3, 0.6) : 0)
     p.pop()
   },
