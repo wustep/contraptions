@@ -116,8 +116,8 @@ export const gauss = definePiece<{ color: string; next: string }>({
     lamp(p, k, ink, weight, s.next, bg, GATE2, TRAP_Y, 0.035, clocked ? 1 - over(since, T_GATE2 + 0.25, T_GATE2 + 0.9) : 0)
     display(p, k, ink, weight, bg, (GATE1 + GATE2) / 2, TRAP_Y, 0.22, 0.15, shown > 0 ? CLOCKED : '00', s.next, shown > 0.5)
 
-    // The clack on the near face, and the shot off the far ball.
-    flash(p, k, s.color, weight, MAG - HALF, 0, since, 0.2, 0.06, 0.2)
+    // The shot off the far ball. The clack itself is the stop and the shiver: a ring off the near face too was a
+    // second mark for the one event, drawn across the ball that had just come to rest there.
     flash(p, k, s.next, weight, B2, 0, since, 0.18, 0.13, 0.26)
   },
 })
