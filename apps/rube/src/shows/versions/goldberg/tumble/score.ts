@@ -105,14 +105,16 @@ step('red', 'N', at(48, 2.5), 'step', 0.5)
 struck('green', 'N', at(48, 3))
 
 /* B2, bars 49–64: the clock's pocket turns up; the striker walks home over the others, a step on each second beat
-   (the clock has the first); then the board swings zig to zag and back, a plank a beat; on the last bar's downbeat
-   all five come flush together, and on the last note the clock steps into the last pocket. */
+   (the clock has the first); then the board swings zig to zag and back, each plank going as the one before it
+   lands, a beat each, like dominoes; on the last bar's downbeat all five come flush together, and on the last note
+   the clock steps into the last pocket. */
 flip(4, at(49), at(50))
 route('red', 'NNWWSSS', [at(50, 2), at(51, 2), at(52, 2), at(53, 2), at(54, 2), at(55, 2), at(56, 1)])
-// The swing goes over the board as a ripple, a beat a plank: back to front, then front to back; then all at once.
+// The swing goes over the board plank by plank, each set off as the one before it lands: back to front from the
+// third phrase's downbeat, front to back from the fourth's; then all five at once.
 const ZIG = [2, 0, 2, 0, 2]
-for (let r = 0; r < 5; r++) slide(r, 2 - ZIG[r], at(56, 2) + r, at(57) + r)
-for (let r = 4; r >= 0; r--) slide(r, ZIG[r], at(60, 2) + (4 - r), at(61) + (4 - r))
+for (let r = 0; r < 5; r++) slide(r, 2 - ZIG[r], at(57) + r, at(57) + r + 1)
+for (let r = 4; r >= 0; r--) slide(r, ZIG[r], at(61) + (4 - r), at(61) + (4 - r) + 1)
 for (let r = 0; r < 5; r++) slide(r, 1, at(63), at(64))
 step('black', 'N', at(64, 3), 'step', 0.55)
 
