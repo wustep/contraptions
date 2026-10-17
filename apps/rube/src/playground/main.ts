@@ -123,6 +123,7 @@ function writeUrl(how: Write): void {
 interface View {
   setOverview?(on: boolean): void
   scroll?(): number
+  world?(): string | null
   savePng(filename: string, scale: number): void
   saveLoop?(filename: string, progress?: (done: number) => void): Promise<void>
   exportSize(scale: number): [number, number]
@@ -146,7 +147,7 @@ function mountNow(): void {
       scroll: sheetScroll,
       focus,
       scope: 'THE PLAYGROUND · STAGED, NOT YET IN MACHINE',
-      hints: ['click a piece to watch it alone · scroll for the other shelves · W runs a shelf as a world', 'click a piece to watch it alone'],
+      hints: ['click a piece to watch it alone · scroll for the other shelves · W runs this shelf as a world', 'click a piece to watch it alone'],
     })
     return
   }
@@ -498,7 +499,8 @@ function tick(): void {
     const [head, tail] = text.split('\n')
     readout.replaceChildren(el('b', {}, [head]), ...(tail ? [el('br'), tail] : []))
   }
-  const clock = u && here ? `${here.local.toFixed(1)} / ${u.journey.toFixed(0)}s` : `${t.toFixed(1)}s`
+  // A piece alone goes round in two or three seconds: its length to the tenth, as the time is, or the time runs past it.
+  const clock = u && here ? `${here.local.toFixed(1)} / ${u.journey.toFixed(1)}s` : `${t.toFixed(1)}s`
   if (clock !== lastTime) {
     lastTime = clock
     time.textContent = clock
@@ -529,15 +531,16 @@ raf = requestAnimationFrame(tick)
 
 /* ------------------------------------------------------------------ keys */
 
-/** Keys that turn something on or off, which a held key must not keep doing (`onKey`). */
-const HELD_ONCE = new Set([' ', 'o', 'c', 'p'])
+/** Keys that turn something on or off, or go somewhere, which a held key must not keep doing (`onKey`). */
+const HELD_ONCE = new Set([' ', 'o', 'c', 'p', 'w'])
 const onKey = (e: KeyboardEvent) => {
   if (!alive) return
   if (e.metaKey || e.ctrlKey || e.altKey) return
   const t = e.target
   if (t instanceof HTMLInputElement || t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement) return
   if (t instanceof HTMLButtonElement && (e.key === ' ' || e.key === 'Enter')) return
-  // A held toggle is one press: play, Overview, the catalog and the panel do not strobe. Steps (R, N, the arrows) repeat.
+  // A held toggle is one press: play, Overview, the catalog and the panel do not strobe, and a held W does not start
+  // its world over and over. Steps (R, N, the arrows) repeat.
   if (e.repeat && HELD_ONCE.has(e.key.toLowerCase())) {
     if (e.key === ' ') e.preventDefault()
     return
@@ -561,8 +564,8 @@ const onKey = (e: KeyboardEvent) => {
       reroll()
       break
     case 'w':
-      // The shelf in hand as a world: the piece's own shelf, or the first.
-      run(world ?? SHELVES[0].name)
+      // The shelf in hand as a world: the piece's own, or on the sheet the band under the pointer, or the one in view.
+      run(world ?? view?.world?.() ?? SHELVES[0].name)
       break
     case 'n':
       if (viewName() === 'world') nextWorldNow()
