@@ -537,8 +537,10 @@ export function drawSea(pen: Pen, t: number, f: Frame): void {
   const top: Pt[] = []
   for (let x = xa; x <= xb + 1e-9; x += step) top.push([x, surface(x, t)])
   const body: Pt[] = [...top, [xb, BOTTOM], [xa, BOTTOM]]
+  // A breaker's water stands up out of the sea into its own shade, darker toward its crest: in the far sea's tone, as
+  // it was, it was lost against the water behind it and only its skin showed, a hairline with a hook in it.
   gradFill(pen, body, SEA - 0.7, SEA + 7, [
-    [0, mixHex(NEAR_SEA, LIMBO.sky, 0.15), 1],
+    [0, mixHex(NEAR_SEA, LIMBO.seaDeep, 0.6), 1],
     [0.1, NEAR_SEA, 1],
     [0.45, mixHex(NEAR_SEA, LIMBO.seaDeep, 0.7), 1],
     [1, LIMBO.seaDeep, 1],
@@ -550,17 +552,7 @@ export function drawSea(pen: Pen, t: number, f: Frame): void {
     [0.6, LIMBO.sky, 0.45],
     [1, LIMBO.sky, 0.3],
   ])
-  const glint: Pt[] = [...top, ...top.slice().reverse().map(([x, y]): Pt => [x, y + 0.035])]
-  wash(pen, glint, LIMBO.foam, 0.45)
   drawWreckage(pen, t, xa, xb)
-  // Foam on the breakers' crests as they rise to break.
-  for (const tk of WAVES) {
-    const ahead = tk - t
-    if (ahead > 1.4 || ahead < 0) continue
-    const xc = BREAK_X - CREST_V * ahead
-    const y = surface(xc + 0.08, t)
-    soft(pen, xc + 0.1, y + 0.03, 0.3 + 0.4 * crestH(tk), 0.1, LIMBO.foam, 0.75 * sm(1 - ahead / 1.4))
-  }
 }
 
 /** The ground: the seabed under the sea, the shore, and the earth down to the level's bottom. */
@@ -589,8 +581,9 @@ export function drawGround(pen: Pen, f: Frame): void {
     wash(pen, [...pts, ...pts.slice().reverse().map(([x, y]): Pt => [x, y + th])], col, a)
   }
   // The seabed's skin and the sand's cross-fade under the water's edge, so the shore runs down into the sea and is
-  // not cut off square at the waterline (the sea over it is clear enough to show a square end).
-  const M = 0.35
+  // not cut off square at the waterline (the sea over it is clear enough to show a square end); over a cell either side
+  // of it, as over a third of one the change from the dark seabed to the pale sand read as a seam down the beach.
+  const M = 1
   const fade = (x0: number, x1: number, col: string, th: number, a0: number, a1: number) => {
     const lo = Math.max(xa, x0)
     const hi = Math.min(xb, x1)
@@ -603,11 +596,13 @@ export function drawGround(pen: Pen, f: Frame): void {
       [1, col, a1],
     ])
   }
-  band(-200, WATERLINE - M + 0.06, SEABED_TOP, 1, 0.45)
-  fade(WATERLINE - M, WATERLINE + M, SEABED_TOP, 0.45, 1, 0)
-  band(WATERLINE + M - 0.06, 200, LIMBO.sand, 1, 0.34)
-  fade(WATERLINE - M, WATERLINE + M, LIMBO.sand, 0.34, 0, 1)
-  fade(WATERLINE - M - 0.1, WATERLINE - 0.1, LIMBO.sandWet, 0.36, 0, 0.9)
+  // One depth for all three, so no strip of one is left showing under another (a dark band under the beach).
+  const TH = 0.36
+  band(-200, WATERLINE - M + 0.06, SEABED_TOP, 1, TH)
+  fade(WATERLINE - M, WATERLINE + M, SEABED_TOP, TH, 1, 0)
+  band(WATERLINE + M - 0.06, 200, LIMBO.sand, 1, TH)
+  fade(WATERLINE - M, WATERLINE + M, LIMBO.sand, TH, 0, 1)
+  fade(WATERLINE - M - 0.1, WATERLINE - 0.1, LIMBO.sandWet, TH, 0, 0.9)
   {
     const lo = Math.max(xa, WATERLINE - 0.1)
     const hi = Math.min(xb, -3.6)
@@ -615,27 +610,31 @@ export function drawGround(pen: Pen, f: Frame): void {
       const pts: Pt[] = []
       for (let x = lo; x <= hi + 1e-9; x += step) pts.push([x, sandY(x)])
       pts.push([hi, sandY(hi)])
-      hgradFill(pen, [...pts, ...pts.slice().reverse().map(([x, y]): Pt => [x, y + 0.36])], WATERLINE - 0.1, -3.6, [
+      hgradFill(pen, [...pts, ...pts.slice().reverse().map(([x, y]): Pt => [x, y + TH])], WATERLINE - 0.1, -3.6, [
         [0, LIMBO.sandWet, 0.9],
         [0.45, LIMBO.sandWet, 0.6],
         [1, LIMBO.sandWet, 0],
       ])
     }
   }
-  // The wet sand holds the sky: a faint shine, and far off the warmth of the lit window high up.
-  {
-    const pts: Pt[] = []
-    for (let x = Math.max(xa, WATERLINE); x <= Math.min(xb, -4.2); x += step) pts.push([x, sandY(x)])
-    if (pts.length > 1)
-      hgradFill(pen, [...pts, ...pts.slice().reverse().map(([x, y]): Pt => [x, y + 0.05])], WATERLINE, -4.2, [
-        [0, LIMBO.sky, 0.35],
-        [1, LIMBO.sky, 0],
-      ])
-  }
-  soft(pen, -5.0, sandY(-5.0) + 0.02, 0.9, 0.05, LIMBO.lamp, 0.28)
   // The shore's edge, lightly inked above the water.
   const edge = top.filter(([x]) => x > WATERLINE - 0.05)
   if (edge.length > 1) polyline(pen, edge, mixHex(pen.ink, LIMBO.sand, 0.5), 0.5)
+}
+
+/**
+ * The breakers' foam as they collapse, under the balls: drawn over them, it laid a white haze over him in the surf and
+ * he went pale in it.
+ */
+export function drawSurf(pen: Pen, t: number, f: Frame): void {
+  if (f.x0 > SHORE_END + 3 || f.y0 > BOTTOM || f.y1 < SEA - 2) return
+  for (const tk of WAVES) {
+    const u = t - tk
+    if (u < 0 || u >= 1.6) continue
+    const grow = sm(u / 0.5)
+    const a = 0.75 * Math.exp(-u / 0.55) * (0.6 + crestH(tk))
+    soft(pen, BREAK_X + 0.25 + 0.55 * grow, SEA - 0.1 - 0.22 * sm(u / 0.25) * (1 - sm((u - 0.25) / 0.9)), 0.45 + 0.75 * grow, 0.2 + 0.14 * grow, LIMBO.foam, a)
+  }
 }
 
 /** Drawn over the balls: the sea's body (so what is under the water is seen through it), the wash, the foam. */
@@ -659,26 +658,10 @@ export function drawSeaOver(pen: Pen, t: number, f: Frame): void {
       [1, LIMBO.seaDeep, 0.72],
     ])
   }
-  // A haze of spray hangs in the air over the surf.
-  const lv = roughness(t)
-  soft(pen, BREAK_X + 0.9, SEA - 0.45, 2.6, 0.75, LIMBO.foam, 0.07 + 0.1 * lv)
-  // The breakers' foam as they collapse, and the wash running up the sand.
+  // The wash running up the sand.
   for (const tk of WAVES) {
     const u = t - tk
     if (u < 0 || u > UPRUSH + BACKWASH) continue
-    const r = crestH(tk)
-    if (u < 1.6) {
-      const grow = sm(u / 0.5)
-      const a = 0.75 * Math.exp(-u / 0.55) * (0.6 + r)
-      soft(pen, BREAK_X + 0.25 + 0.55 * grow, SEA - 0.1 - 0.22 * sm(u / 0.25) * (1 - sm((u - 0.25) / 0.9)), 0.45 + 0.75 * grow, 0.2 + 0.14 * grow, LIMBO.foam, a)
-      for (let j = 0; j < 3; j++) {
-        const v = u / 0.9
-        if (v > 1) break
-        const sx = BREAK_X + 0.3 + (0.4 + 0.3 * j) * v
-        const sy = SEA - 0.2 - (0.25 + 0.12 * j) * Math.sin(Math.PI * v) * (0.5 + r)
-        soft(pen, sx, sy, 0.12 + 0.05 * j, 0.08, LIMBO.foam, 0.5 * (1 - v))
-      }
-    }
     const front = washFront(tk, t)
     if (front === null) continue
     const x0 = Math.max(BREAK_X, WATERLINE - 0.35)
@@ -698,9 +681,7 @@ export function drawSeaOver(pen: Pen, t: number, f: Frame): void {
       bottom.push([x, sandY(x) + 0.01])
     }
     wash(pen, [...pts, ...bottom], LIMBO.sea, up ? 0.55 : 0.4)
-    // The lace of foam on it, and at its running edge.
-    const lace: Pt[] = [...pts, ...pts.slice().reverse().map(([x, y]): Pt => [x, y + 0.035])]
-    wash(pen, lace, LIMBO.foam, up ? 0.5 : 0.25)
+    // The foam at its running edge (a lace of it along the top read as a pale ribbon floating over the sand).
     soft(pen, front - 0.1, sandY(front) - 0.035, 0.28, 0.055, LIMBO.foam, up ? 0.7 : 0.3)
   }
 }
