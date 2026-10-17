@@ -54,7 +54,7 @@ export function checkComposure(perf: Performance, version: ShowVersion, check: C
   check('composure: every shot is fired on the beat before it lands (or, across a pause, a quarter before), and flies under a second and a half',
     unfired.length === 0, unfired.map((s) => `${s.i} ${s.launch.toFixed(3)}→${s.at.toFixed(3)}`).join(', '))
   check('composure: the surprise is the first shot, the hardest, in the middle gap; nothing lands before it, and the last chord lands there too',
-    near(SHOTS[0].at, SURPRISE) && SHOTS[0].s === 1 && SHOTS.every((s, i) => i === 0 || s.s < SHOTS[0].s) && SHOTS[0].target.join() === MIDDLE.join() &&
+    near(SHOTS[0].at, SURPRISE) && SHOTS[0].s === 1 && SHOTS.every((s, i) => i === 0 || (s.s < SHOTS[0].s && s.s * s.push < SHOTS[0].s * SHOTS[0].push)) && SHOTS[0].target.join() === MIDDLE.join() &&
     SHOTS.every((s, i) => i === 0 || s.at > SURPRISE) && near(SHOTS[SHOTS.length - 1].at, LAST) && SHOTS[SHOTS.length - 1].target.join() === MIDDLE.join())
   check('composure: every shot lands in a gap of the board, between four pegs', SHOTS.every((s) =>
     Number.isInteger(s.target[0]) && Number.isInteger(s.target[1]) && s.target[0] >= GAPS.x0 && s.target[0] <= GAPS.x1 && s.target[1] >= GAPS.y0 && s.target[1] <= GAPS.y1))

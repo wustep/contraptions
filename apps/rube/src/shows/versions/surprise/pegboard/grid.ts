@@ -63,7 +63,7 @@ function burstOf(i: number): Burst {
   const R = reach(s)
   const shape = lobes(i + 11)
   // The front slows as it goes: it is at 1 - e^(-u/tau) of its reach after u seconds.
-  const tau = 0.32 + 0.3 * s
+  const tau = (0.32 + 0.3 * s) * shot.pace
   const touches: Touch[] = []
   let until = shot.at
   PEGS.forEach(([px, py], peg) => {
@@ -85,7 +85,7 @@ function burstOf(i: number): Burst {
     // Not all one colour: some pegs take a lighter shade of it.
     const shade = 0.55 * hash(peg, i, 6) ** 2
     // Pushed hardest near the middle, falling off with distance, and nothing at the edge of its reach.
-    const amp = (0.06 + 0.26 * s) / (1 + (d / (1.4 + 1.2 * s)) ** 2) * (1 - smooth(f, 0.6, 0.97))
+    const amp = ((0.06 + 0.26 * s) * shot.push) / (1 + (d / (1.4 + 1.2 * s)) ** 2) * (1 - smooth(f, 0.6, 0.97))
     // Out from the middle, give or take a little.
     const turn = (hash(peg, i, 9) - 0.5) * 0.4
     const ux = Math.cos(a + turn)

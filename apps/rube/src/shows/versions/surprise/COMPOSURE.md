@@ -36,6 +36,11 @@ pianissimo and the stroke (44 dB in a quarter of a second), and Universal's uplo
   after, every peg is black and in its place.
 - **The mirror**: every strain of the movement is played twice, and on the repeat every shot lands in the mirror image
   of where it landed the first time. The surprise lands in the board's middle gap, and so does the last chord.
+- **The variations' characters**: the board answers each variation as it is played. The C minor's bursts push the pegs
+  harder and go out faster; the oboe's, and the coda's, push gently and go out slowly. The surprise pushes hardest of
+  all, and no shot after it is as strong.
+- **Where they land**: in the board's middle, clear of the bursts just gone and with the board round them. In a quick
+  run the next shot is a short swing from the last, so the bursts step along the board rather than crossing it.
 
 | Show s | Bars (as played) | Music | Picture |
 | ---: | --- | --- | --- |

@@ -36,6 +36,8 @@ interface Spec {
   mirrors?: string
   /** Lands here. */
   at?: Pt
+  /** Pushes the pegs this much harder than its variation's bursts do. */
+  push?: number
 }
 
 /** Played bar `n` of a strain (1 is its first bar). */
@@ -45,7 +47,8 @@ const V4 = [RED, YELLOW, BLUE, GREEN]
 
 const SPECS: Spec[] = [
   // The theme.
-  { bar: 16, beat: 2, s: 1, color: RED, at: MIDDLE },
+  // The surprise: the hardest shot, and the hardest push, of the piece.
+  { bar: 16, beat: 2, s: 1, color: RED, at: MIDDLE, push: 1.5 },
   { bar: of('theme-b', 6), s: 0.3, color: RED, key: 'b' },
   { bar: of('theme-b2', 6), s: 0.3, color: RED, mirrors: 'b' },
   // Variation 1: the forte chords, and the second strains' forte.
@@ -121,6 +124,19 @@ export interface Shot {
   pull: [number, number] | null
   /** The shot whose mirror image this one lands in, on a strain's repeat, or null. */
   mirrors: number | null
+  /** How hard its burst pushes the pegs, and how slowly its front goes out, against the usual: its variation's
+   * character (the storm of the C minor, the oboe's quiet, the coda's). */
+  push: number
+  pace: number
+}
+
+/** A variation's character, by played bar: how hard its bursts push the pegs, and how slowly their fronts go. */
+function character(bar: number | null, at: number): { push: number; pace: number } {
+  const b = bar ?? (at > PHRASES.find((p) => p.key === 'coda')!.t ? 181 : 0)
+  if (b >= strain('var2-a') && b < strain('var3-a')) return { push: 1.35, pace: 0.85 }
+  if (b >= strain('var3-a') && b < strain('var4-a')) return { push: 0.7, pace: 1.35 }
+  if (b >= strain('coda')) return { push: 0.75, pace: 1.4 }
+  return { push: 1, pace: 1 }
 }
 
 /** How far back a shot of strength `s` draws the spring, of the whole way: the harder the accent, the further. */
@@ -234,7 +250,9 @@ function compose(): Shot[] {
       steps,
       pull,
       mirrors: mirrored ? mirrored.i : null,
+      ...character(spec.onset !== undefined ? null : spec.bar!, at),
     }
+    if (spec.push) shot.push = spec.push
     shots.push(shot)
     if (spec.key) named.set(spec.key, shot)
     angle = aim

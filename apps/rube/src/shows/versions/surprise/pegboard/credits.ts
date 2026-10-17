@@ -49,7 +49,7 @@ export const LAST_GONE = (() => {
 export const DURATION = Math.ceil(Math.max(RECORDING, LAST_GONE) + 1.0 - 1e-6)
 
 /** Where a card's top middle sits, as shares of the 16:9 frame: under the board, left of the launcher. */
-const AT: [number, number] = [0.25, 0.715]
+const AT: [number, number] = [0.25, 0.73]
 
 function lightOf(card: Card, t: number): { light: number; rise: number } {
   const up = clamp((t - card.at) / UP)
@@ -63,7 +63,7 @@ export function creditsAt(t: number): TitleCard[] {
   CARDS.forEach((card, i) => {
     const { light, rise } = lightOf(card, t)
     if (light <= 0) return
-    out.push({ key: `composure-${i}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: AT, scale: 0.62, least: 9, dark: true })
+    out.push({ key: `composure-${i}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: AT, scale: 0.56, least: 9, dark: true })
   })
   return out
 }
