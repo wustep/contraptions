@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInQuad } from '../../../../../src/core/ease'
-import { FLOOR, ROLL, burst, definePiece, fly, over, rail, ramp, roll, trace, type Lane, type Pt } from '../../parts'
+import { FLOOR, ROLL, definePiece, fly, over, rail, ramp, roll, trace, type Lane, type Pt } from '../../parts'
 import { WATER, bodyColor, piling, seabed, water } from './sea'
 
 /**
@@ -132,14 +132,21 @@ export const barrel = definePiece<{ color: string }>({
     rail(p, k, ink, weight, 0.5, 1.5, DECK)
     piling(p, k, ink, weight, 0.62, DECK, 1.5)
     piling(p, k, ink, weight, 1.36, DECK, 1.5)
-    // The thump as the head's rim meets the deck.
+    // The thump as the head's rim meets the deck: two ticks off it on the open side, over the deck. A ring of
+    // four put one down through the planks and two behind the cask.
     const hit = t - T_DOWN
     if (hit > 0 && hit < 0.2) {
       const f = hit / 0.2
+      const r0 = 0.05 + 0.08 * f
+      const r1 = 0.09 + 0.12 * f
       p.push()
       p.stroke(ink)
       p.strokeWeight(weight * (1 - f))
-      burst(p, (RIM_X - 0.04) * k, (DECK - 0.05) * k, (0.05 + 0.08 * f) * k, (0.09 + 0.12 * f) * k, 4, 3.5)
+      for (const a of [3.4, 4.1]) {
+        const x = RIM_X - 0.04
+        const y = DECK - 0.05
+        p.line((x + Math.cos(a) * r0) * k, (y + Math.sin(a) * r0) * k, (x + Math.cos(a) * r1) * k, (y + Math.sin(a) * r1) * k)
+      }
       p.pop()
     }
   },

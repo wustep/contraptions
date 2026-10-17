@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
-import { clamp } from '../../../../../src/core/ease'
+import { clamp, easeOutQuad } from '../../../../../src/core/ease'
 import type { Theme } from '../../../../../src/core/themes'
 import { FLOOR, ROLL, definePiece, fly, mixHex, rail, ramp, rankBy, roll, trace, type Lane, type Pt } from '../../parts'
 import { WATER, bodyColor, luminance, piling, seabed, water } from './sea'
@@ -210,8 +210,9 @@ export const sail = definePiece<SailState>({
     if (since < 0) {
       p.line(GASKET_X * k, head * k, GASKET_X * k, (mid + r) * k)
     } else {
+      // Its end whips up off the roll over a few frames, behind it, instead of leaving it all at once.
       const a = 0.55 * Math.exp(-since * 2.2) * Math.sin(since * 8)
-      const len = 0.4
+      const len = 0.4 + (FLOOR + SAG + 2 * R0 - YARD_Y - 0.4) * (1 - easeOutQuad(clamp(since / 0.08)))
       p.noFill()
       p.beginShape()
       p.vertex(GASKET_X * k, head * k)

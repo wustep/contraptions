@@ -83,8 +83,6 @@ export const buoy = definePiece<{ color: string }>({
   },
   draw: (p, s, { k, t, since, ink, bg, weight, theme }) => {
     const tilt = tiltAt(t)
-    // The clang's rings: gone within a third of a second, before the ball is.
-    const clang = since < CLANG_AT ? 0 : 1 - over(since, CLANG_AT, CLANG_AT + 0.35)
 
     // The pier either side, on pilings, and the water in the gap.
     water(p, k, ink, bg, weight, -0.5, 0.5)
@@ -128,15 +126,9 @@ export const buoy = definePiece<{ color: string }>({
     p.pop()
     p.pop()
 
-    // The clang: two rings off the bell, thinning as they go, and a ripple where the far side dipped.
-    if (clang > 0.02) {
-      p.push()
-      p.noFill()
-      p.stroke(s.color)
-      p.strokeWeight(weight * clang)
-      for (let i = 1; i <= 2; i++) p.circle(0, (CAGE_H + 0.1) * k, (0.2 + i * 0.12 + (1 - clang) * 0.2) * k)
-      p.pop()
-    }
+    // The clang is the bell knocking its cage; the water shows it, a splash
+    // where the far side dipped. Two rings round the bell in the float's
+    // colour stood round it like a halo and cut its cage posts in pieces.
     splash(p, k, seaWater(theme), weight, 0.2, CY + 0.06, over(since, CLANG_AT, CLANG_AT + 0.45), 0.6)
   },
 })

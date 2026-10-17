@@ -113,6 +113,11 @@ export function seabed(p: p5, k: number, ink: string, weight: number, x0: number
  * `f` from 0 (the instant) to 1 (gone). In the colour, so it reads as water.
  * With `ring`, a ring spreads on the water where it went in; a splash off
  * the head of a jet, up in the air, has no water to ring.
+ *
+ * The drops and the ring come up out of the water small and thin and are
+ * full size a few frames later: at full size from the instant, the four
+ * drops and a fat ring lay on top of one another at the water, a blob of
+ * the colour over whatever was behind it.
  */
 export function splash(p: p5, k: number, color: string, weight: number, x: number, y: number, f: number, size = 1, ring = true): void {
   if (f <= 0 || f >= 1) return
@@ -127,7 +132,7 @@ export function splash(p: p5, k: number, color: string, weight: number, x: numbe
   ]) {
     const px = x + dx * size * (0.6 + 0.6 * f)
     const py = y - h * size * 4 * f * (1 - f)
-    p.circle(px * k, py * k, r * 2 * k * (1 - f * 0.5))
+    p.circle(px * k, py * k, r * 2 * k * Math.min(1, 0.3 + f * 7) * (1 - f * 0.5))
   }
   p.pop()
   if (!ring) return
@@ -135,21 +140,36 @@ export function splash(p: p5, k: number, color: string, weight: number, x: numbe
   p.push()
   p.noFill()
   p.stroke(color)
-  p.strokeWeight(weight * (1 - f))
+  p.strokeWeight(weight * (1 - f) * Math.min(1, 0.3 + f * 7))
   p.ellipse(x * k, y * k, (0.1 + 0.36 * f) * size * k, (0.03 + 0.1 * f) * size * k)
   p.pop()
 }
 
-/** Bubbles rising from (x, y): `n` of them, spaced up the column, drifting a little, over `t` seconds. */
-export function bubbles(p: p5, k: number, ink: string, weight: number, bg: string, x: number, y: number, top: number, t: number, n = 4): void {
+/** How long a bubble takes from (x, y) to the top, in seconds. */
+export const BUBBLE_RISE = 1 / 0.9
+
+/**
+ * Bubbles rising from (x, y): `n` of them, let go one after another and
+ * spaced up the column, drifting a little, `t` seconds after the first.
+ * Each swells out of the source and shrinks away at the top, and none is
+ * let go after `until`; the ones already rising go on to the top, so keep
+ * calling this for BUBBLE_RISE after `until`. A column that appeared
+ * whole, bubbles already half way up, and vanished whole when the caller
+ * stopped, blinked in and out.
+ */
+export function bubbles(p: p5, k: number, ink: string, weight: number, bg: string, x: number, y: number, top: number, t: number, n = 4, until = Infinity): void {
   if (t < 0) return
   solid(p, ink, weight * 0.8, bg)
   for (let i = 0; i < n; i++) {
-    const phase = ((t * 0.9 + i / n) % 1 + 1) % 1
+    const age = t / BUBBLE_RISE - i / n
+    if (age < 0) continue
+    const cycle = Math.floor(age)
+    if ((cycle + i / n) * BUBBLE_RISE > until) continue
+    const phase = age - cycle
     const by = y + (top - y) * phase
     const bx = x + 0.05 * Math.sin(phase * 7 + i)
-    const r = 0.018 + 0.014 * ((i * 7) % 3)
-    p.circle(bx * k, by * k, r * 2 * k)
+    const r = (0.018 + 0.014 * ((i * 7) % 3)) * Math.min(1, phase / 0.1, (1 - phase) / 0.12)
+    if (r > 0.003) p.circle(bx * k, by * k, r * 2 * k)
   }
 }
 

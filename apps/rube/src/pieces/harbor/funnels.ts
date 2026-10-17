@@ -109,12 +109,14 @@ export const funnels = definePiece<{ color: string }>({
     p.endShape(p.CLOSE)
     water(p, k, ink, bg, weight, -0.5, 1.5)
 
-    // Each toot: a puff out of the rim under the ball that pops it off, swelling as it drifts away.
+    // Each toot: a puff out of the rim under the ball that pops it off, swelling as it drifts away and thinning to
+    // nothing; it ended a dot that hung in the air and went out.
     STACKS.forEach((f, i) => {
       const u = over(t, HITS[i], HITS[i] + 0.55)
       if (u <= 0 || u >= 1) return
       const rise = 1 - Math.pow(1 - u, 2)
-      puff(p, k, ink, weight * 0.8, bg, f.x + 0.1 * u, f.top - 0.03 - 0.2 * rise, 0.02 + 0.075 * Math.sin(Math.PI * Math.pow(u, 0.6)))
+      const r = 0.02 * (1 - u) + 0.075 * Math.sin(Math.PI * Math.pow(u, 0.6))
+      if (r > 0.012) puff(p, k, ink, weight * 0.8, bg, f.x + 0.1 * u, f.top - 0.03 - 0.2 * rise, r)
     })
   },
 })

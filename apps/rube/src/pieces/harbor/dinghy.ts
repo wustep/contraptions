@@ -207,7 +207,8 @@ export const dinghy = definePiece<{ color: string }>({
     p.circle(0.0, (SHEER + 0.085) * k, 0.035 * k)
     p.pop()
 
-    // The water in front of her, the curl at her stem and the wake astern while she has way on.
+    // The water in front of her, the curl at her stem and the wake astern while she has way on: water, so in
+    // the sea's colour and not hers, or it read as green paint trailing off the hull.
     water(p, k, ink, bg, weight, -0.5, 2.5)
     const way = since < 0 || t > T_BUMP ? 0 : Math.sin(Math.PI * Math.pow(over(t, FIRE, T_BUMP), 0.8))
     if (way > 0.05) {
@@ -215,7 +216,7 @@ export const dinghy = definePiece<{ color: string }>({
       const stern = afloat([0, WATER], t)
       p.push()
       p.noFill()
-      p.stroke(s.color)
+      p.stroke(seaWater(theme))
       p.strokeWeight(weight * 1.2)
       p.arc((bow[0] + 0.03) * k, WATER * k, 0.1 * way * k, 0.12 * way * k, Math.PI * 1.05, Math.PI * 1.75)
       p.strokeWeight(weight * 0.9)

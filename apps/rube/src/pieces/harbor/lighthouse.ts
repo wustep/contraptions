@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine } from '../../../../../src/core/ease'
-import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, over, rail, ramp, rankBy, wait, type Lane, type Pt } from '../../parts'
+import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, mixHex, over, rail, ramp, rankBy, wait, type Lane, type Pt } from '../../parts'
 import { piling, water } from './sea'
 
 /**
@@ -46,6 +46,11 @@ const TOP_WAIT = 0.22
 const ROOM = 0.15
 const ROOM_H = 0.34
 const climbTime = (floors: number) => 0.35 + 0.45 * floors
+/** How lit the lamp is: on over a tenth of a second at the fire, and down again after three. */
+const litAt = (since: number) => (since > 0 ? over(since, 0, 0.1) * (1 - over(since, 3.2, 4)) : 0)
+/** The beam: how far it reaches from the lamp when it points straight across, and how fast it turns. */
+const BEAM = 0.85
+const TURN = 1.4
 
 /**
  * The tower's one opening shape: straight jambs under a round head, as a
@@ -92,7 +97,7 @@ export const lighthouse = definePiece<LighthouseState>({
     }
     return null
   },
-  draw: (p, s, { k, ink, bg, weight }) => {
+  draw: (p, s, { k, since, ink, bg, weight }) => {
     const { floors, turn } = s
     const gallery = -floors + FLOOR
     const ctx = p.drawingContext as CanvasRenderingContext2D
@@ -113,6 +118,25 @@ export const lighthouse = definePiece<LighthouseState>({
     ctx.fill()
     p.pop()
 
+    // The beam, turning about the tower, seen from the side: it reaches out
+    // across the harbor one way, swings in toward us till it is only the
+    // lamp, and out the other way. Behind the lantern room, the tower and the
+    // ball, which it lights from behind: a beam drawn over them turned in the
+    // picture's own plane, a propeller that shone down through the tower and
+    // straight up into the sky.
+    const lit = litAt(since)
+    if (lit > 0.02) {
+      const beam = p.color(s.color)
+      beam.setAlpha(42 * lit)
+      const reach = BEAM * Math.cos(since * TURN)
+      const lampY = gallery - 0.06 - ROOM_H / 2
+      p.push()
+      p.noStroke()
+      p.fill(beam)
+      p.triangle(0, lampY * k, reach * k, (lampY - 0.11) * k, reach * k, (lampY + 0.11) * k)
+      p.pop()
+    }
+
     // The gallery: a platform with a railing behind the ball, and the rail out.
     solid(p, ink, weight, ink)
     p.rect(0, (gallery + 0.03) * k, 0.68 * k, 0.06 * k)
@@ -132,8 +156,9 @@ export const lighthouse = definePiece<LighthouseState>({
     const up = t < startClimb ? -0.15 : t < startClimb + climb ? -0.15 + (top + 0.15) * easeInOutSine(over(t, startClimb, startClimb + climb)) : top
     // The door swings in as the ball comes, and shuts once it is inside.
     const doorOpen = t < ARRIVE ? over(t, ARRIVE - 0.3, ARRIVE - 0.1) : 1 - over(t, startClimb + 0.1, startClimb + 0.4)
-    const lit = since > 0 ? 1 - over(since, 3.2, 4) : 0
-    const galleryDoor = since > TOP_WAIT - 0.1 && since < TOP_WAIT + 0.5 ? 1 : 0
+    const lit = litAt(since)
+    // The gallery door: open just before the ball comes out of it, shut behind it.
+    const galleryDoor = over(since, TOP_WAIT - 0.16, TOP_WAIT - 0.08) * (1 - over(since, TOP_WAIT + 0.42, TOP_WAIT + 0.54))
 
     // The tower, in front of the ball: a tapering shaft with bands, from
     // the ground to the gallery, with the doorway cut out of it.
@@ -194,11 +219,11 @@ export const lighthouse = definePiece<LighthouseState>({
     p.noStroke()
     p.circle((DOOR_W - 0.06) * k, (FLOOR - DOOR_H / 2 + 0.05) * k, 0.03 * k)
     p.pop()
-    // A window a floor, lit as the ball climbs past.
+    // A window a floor, lit as the ball climbs past, and dark again behind it.
     for (let i = 0; i < floors; i++) {
       const wy = -i - 0.45
       const near = Math.max(0, 1 - Math.abs(up - (wy + 0.15)) / 0.4)
-      solid(p, ink, weight, near > 0.3 ? s.color : bg)
+      solid(p, ink, weight, mixHex(bg, s.color, over(near, 0.15, 0.45)))
       ctx.beginPath()
       arched(ctx, k, 0.02 - WIN_W / 2, wy + 0.045, WIN_W, WIN_H)
       ctx.fill()
@@ -216,30 +241,14 @@ export const lighthouse = definePiece<LighthouseState>({
     p.arc(0, (gallery - 0.06 - ROOM_H) * k, (ROOM * 2 + 0.06) * k, 0.22 * k, Math.PI, Math.PI * 2, p.CHORD)
     p.line(0, (gallery - 0.17 - ROOM_H) * k, 0, (gallery - 0.24 - ROOM_H) * k)
     // The gallery door the ball comes out of, in the room's far wall: as tall as the ball.
-    solid(p, ink, weight, galleryDoor ? ink : s.color)
+    solid(p, ink, weight, mixHex(s.color, ink, galleryDoor))
     p.rect(turn * (ROOM - 0.03) * k, (gallery - 0.06 - ROOM_H / 2) * k, 0.06 * k, (ROOM_H - 0.04) * k)
-    // The lamp, and its beam turning: slow, faint, and about a cell long, so
-    // it lights its own stretch of the harbor. A beam a cell and a half out at
-    // twice the alpha swept the next machines along for four seconds and was
-    // the biggest shape in the frame after the ball had gone.
-    const lampY = gallery - 0.06 - ROOM_H / 2
-    if (lit > 0.02) {
-      const beam = p.color(s.color)
-      beam.setAlpha(42 * lit)
-      p.push()
-      p.translate(0, lampY * k)
-      p.rotate(since * 1.4)
-      p.noStroke()
-      p.fill(beam)
-      for (const side of [0, Math.PI]) {
-        p.push()
-        p.rotate(side)
-        p.triangle(0, 0, 1.05 * k, -0.13 * k, 1.05 * k, 0.13 * k)
-        p.pop()
-      }
-      p.pop()
-    }
-    solid(p, ink, weight, lit > 0.5 ? s.color : ink)
-    p.circle(0, lampY * k, 0.1 * k)
+    // The lamp, dark until the ball is up, and its beam (under `draw`):
+    // slow, faint and short of a cell, so it lights its own stretch of the
+    // harbor. A beam a cell and a half out at twice the alpha swept the next
+    // machines along for four seconds and was the biggest shape in the frame
+    // after the ball had gone.
+    solid(p, ink, weight, mixHex(ink, s.color, lit))
+    p.circle(0, (gallery - 0.06 - ROOM_H / 2) * k, 0.1 * k)
   },
 })

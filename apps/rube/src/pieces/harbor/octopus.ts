@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { clamp } from '../../../../../src/core/ease'
-import { FLOOR, ROLL, burst, definePiece, laneReach, over, rail, roll, type BallChange, type Lane } from '../../parts'
+import { FLOOR, ROLL, definePiece, laneReach, over, rail, roll, type BallChange, type Lane } from '../../parts'
 import { water } from './sea'
 
 /**
@@ -64,7 +64,8 @@ export const octopus = definePiece<{ color: string; paint: string }>({
     // The head, the eyes following the ball, and the siphon.
     solid(p, ink, weight, s.color)
     p.ellipse(0, HEAD_Y * k, 0.3 * k, 0.26 * k)
-    const squint = since > -0.1 && since < 0.25 ? 0.5 : 1
+    // It screws its eyes up for the squirt, and opens them again: over a few frames, not a blink.
+    const squint = 1 - 0.5 * over(since, -0.14, -0.1) * (1 - over(since, 0.25, 0.29))
     for (const dx of [-0.06, 0.06]) {
       solid(p, ink, weight, bg)
       p.ellipse(dx * k, (HEAD_Y - 0.03) * k, 0.07 * k, 0.07 * squint * k)
@@ -98,14 +99,13 @@ export const octopus = definePiece<{ color: string; paint: string }>({
       p.pop()
     }
     // The splat: the ink hits the ball's underside and goes everywhere —
-    // spokes off the ball, and drops flung out and up round it that fall
-    // away — in the new colour, so the change is seen to happen.
+    // drops flung out and up round it that fall away — in the new colour,
+    // so the change is seen to happen. A ring of eight spokes with them
+    // stayed where the hit was and spread to most of a cell across for
+    // nearly half a second after the ball had rolled on: a starburst.
     if (since > -0.02 && since < 0.4) {
       const f = over(since, 0, 0.4)
       p.push()
-      p.stroke(s.paint)
-      p.strokeWeight(weight * 1.4 * (1 - f * 0.5))
-      burst(p, 0, 0, (0.15 + 0.18 * f) * k, (0.22 + 0.26 * f) * k, 8, 0.4 + f * 0.6)
       p.noStroke()
       p.fill(s.paint)
       for (let j = 0; j < 7; j++) {

@@ -330,6 +330,18 @@ function heapShape(p: import('p5'), k: number, x0: number, w: number, h: number,
   p.endShape(p.CLOSE)
 }
 
+/**
+ * Cut what is drawn from here to the matching `p.pop()` off at the ground. What is gathered back into the bank
+ * sinks into it — the cap that landed whole, the lumps — and below the ground its outline showed through the
+ * bank's face. Call inside a `p.push()`.
+ */
+function aboveGround(p: import('p5'), k: number): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.beginPath()
+  ctx.rect(-0.6 * k, -1.5 * k, 1.2 * k, (FLOOR + 1.5) * k)
+  ctx.clip()
+}
+
 /** A block about its own middle: `w` by `h`, a merlon `m` high at either top corner it still has, slumped by `c` into a rounder, lower lump. */
 function blockShape(p: import('p5'), k: number, w: number, h: number, near: number, far: number, c: number): void {
   const mw = TW * 0.28
@@ -440,6 +452,8 @@ export const sandcastle = definePiece<{ color: string }>({
     }
     const capSits = since >= CAP_LANDS && since < REBUILD + 0.4
     const sand = () => {
+      p.push()
+      aboveGround(p, k)
       part(NEAR.x0, NEAR.w, NEAR.h, cN, RISES[0], true, COURSE)
       part(WALL.x0, WALL.w, WALL.h, cW, RISES[1], false, WALL_COURSE)
       part(FAR.x0, FAR.w, FAR.h, cF, RISES[2], true, COURSE)
@@ -468,6 +482,7 @@ export const sandcastle = definePiece<{ color: string }>({
         blockShape(p, k, CAP.w, CAP.h, MERLON * (1 - crumble), MERLON * (1 - over(crumble, 0.25, 1)), c)
         p.pop()
       }
+      p.pop()
     }
     solid(p, ink, weight, s.color)
     sand()
@@ -515,6 +530,8 @@ export const sandcastle = definePiece<{ color: string }>({
 
     // The lumps: through the air, a hop where they land, and then lying there, sagging, until they are gathered up.
     const settle = easeOutCubic(over(since, SETTLE[0], SETTLE[1]))
+    p.push()
+    aboveGround(p, k)
     p.strokeWeight(weight * 0.75)
     for (let i = 0; i < LUMPS.length; i++) {
       const l = LUMPS[i]
@@ -536,6 +553,7 @@ export const sandcastle = definePiece<{ color: string }>({
       p.rect(0, 0, l.r * 2 * (1 + 0.25 * lying) * left * k, l.r * 1.7 * (1 - 0.3 * lying) * left * k, l.r * 0.55 * k)
       p.pop()
     }
+    p.pop()
 
     // The spray, grain by grain; each is gone where it comes down.
     p.strokeWeight(weight * 0.4)
