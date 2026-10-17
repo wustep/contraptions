@@ -24,15 +24,22 @@ function next(t: number): number {
   return SHOTS.length
 }
 
+/** A swing of the turntable, 0 to 1: away slowly, and a hair past where it is going before it settles there. */
+function swing(u: number): number {
+  const x = clamp(u)
+  const c = 0.55 * 1.525
+  return x < 0.5 ? (Math.pow(2 * x, 2) * ((c + 1) * 2 * x - c)) / 2 : (Math.pow(2 * x - 2, 2) * ((c + 1) * (x * 2 - 2) + c) + 2) / 2
+}
+
 /** Where the launcher points at `t`. */
 export function angleAt(t: number): number {
   let a = HOME
   for (const s of SHOTS) {
     if (t <= s.aim[0]) return a
-    if (t < s.aim[1]) return lerp(a, s.angle, easeInOut((t - s.aim[0]) / (s.aim[1] - s.aim[0])))
+    if (t < s.aim[1]) return lerp(a, s.angle, swing((t - s.aim[0]) / (s.aim[1] - s.aim[0])))
     a = s.angle
   }
-  return lerp(a, HOME, easeInOut((t - HOMEWARD[0]) / (HOMEWARD[1] - HOMEWARD[0])))
+  return lerp(a, HOME, swing((t - HOMEWARD[0]) / (HOMEWARD[1] - HOMEWARD[0])))
 }
 
 /** A click of the ratchet: quick, a hair past, and back. */
@@ -100,7 +107,7 @@ export function pelletOf(s: Shot, t: number): Pellet | null {
     const run = ((t - s.launch) / (s.at - s.launch)) * (TROUGH.muzzle + air)
     if (run < TROUGH.muzzle) return { where: 'trough', u: run }
     const w = (run - TROUGH.muzzle) / air
-    const top = 0.35 + 0.14 * air
+    const top = 0.5 + 0.2 * air
     return { where: 'air', x: lerp(m[0], s.target[0], w), y: lerp(m[1], s.target[1], w), h: top * 4 * w * (1 - w) }
   }
   if (t < s.at + 0.12) return { where: 'in', f: (t - s.at) / 0.12, x: s.target[0], y: s.target[1] }
@@ -168,12 +175,12 @@ export function drawLauncher(b: Brush, t: number): void {
   // The spring, from the trough's back wall to the block: the same coils whatever its length, so drawn back it closes up.
   const front = blockAt(t)
   const tail = front - BLOCK.length
-  const coils = 7
+  const coils = 5
   g.beginPath()
   g.moveTo(TROUGH.cap, 0)
   for (let k = 0; k <= coils * 2; k++) {
     const u = TROUGH.cap + ((tail - TROUGH.cap) * (k + 0.5)) / (coils * 2 + 1)
-    g.lineTo(u, k % 2 === 0 ? -c * 0.72 : c * 0.72)
+    g.lineTo(u, k % 2 === 0 ? -c * 0.78 : c * 0.78)
   }
   g.lineTo(tail, 0)
   g.lineWidth = Math.max(b.px, 0.045)

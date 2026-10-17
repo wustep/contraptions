@@ -39,7 +39,7 @@ export const TROUGH = {
   channel: 0.78,
 }
 export const PELLET_R = 0.32
-export const BLOCK = { length: 0.42, width: 0.66, rest: -0.38, cocked: -1.28, fired: 0.16 }
+export const BLOCK = { length: 0.42, width: 0.66, rest: -0.38, cocked: -1.12, fired: 0.16 }
 export const TURNTABLE_R = 1.58
 export const PLINTH = 1.86
 

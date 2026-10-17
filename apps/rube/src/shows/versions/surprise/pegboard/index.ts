@@ -28,7 +28,7 @@ export const performance: Performance = {
   show,
   duration: DURATION,
   // One frame, held: the board and the launcher, the whole show.
-  camera: () => ({ ...FRAME, zoomDrop: 0.3 }),
+  camera: () => ({ ...FRAME, zoomDrop: 0.45 }),
   overview: () => bounds,
   // One place and nothing to cut.
   cuts: () => false,

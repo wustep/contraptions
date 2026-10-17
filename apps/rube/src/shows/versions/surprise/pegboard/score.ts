@@ -54,13 +54,13 @@ const SPECS: Spec[] = [
   { bar: of('var1-b', 6), s: 0.3, color: YELLOW, key: 'v1b' },
   { bar: of('var1-b2', 6), s: 0.3, color: YELLOW, mirrors: 'v1b' },
   // Variation 2: C minor.
-  { bar: of('var2-a', 1), s: 0.9, color: BLUE, key: 'v2a1' },
+  { bar: of('var2-a', 1), s: 0.86, color: BLUE, key: 'v2a1' },
   { bar: of('var2-a', 2), s: 0.46, color: BLUE, key: 'v2a2' },
   { bar: of('var2-a', 4), s: 0.44, color: BLUE, key: 'v2a4' },
-  { bar: of('var2-a2', 1), s: 0.9, color: BLUE, mirrors: 'v2a1' },
+  { bar: of('var2-a2', 1), s: 0.86, color: BLUE, mirrors: 'v2a1' },
   { bar: of('var2-a2', 2), s: 0.5, color: BLUE, mirrors: 'v2a2' },
   { bar: of('var2-a2', 4), s: 0.44, color: BLUE, mirrors: 'v2a4' },
-  { bar: of('var2-b', 1), s: 0.9, color: BLUE, key: 'v2b1' },
+  { bar: of('var2-b', 1), s: 0.86, color: BLUE, key: 'v2b1' },
   { bar: of('var2-b', 3), s: 0.46, color: BLUE, key: 'v2b3' },
   { bar: of('var2-b', 5), s: 0.46, color: BLUE, key: 'v2b5' },
   { bar: of('var2-b', 7), s: 0.46, color: BLUE, key: 'v2b7' },
@@ -73,13 +73,13 @@ const SPECS: Spec[] = [
   { bar: of('var3-b', 7), s: 0.27, color: GREEN, key: 'v3b' },
   { bar: of('var3-b2', 7), beat: 2, s: 0.27, color: GREEN, mirrors: 'v3b' },
   // Variation 4: all four colours.
-  { bar: of('var4-a', 1), s: 1, color: V4[0], key: 'v4a1' },
+  { bar: of('var4-a', 1), s: 0.92, color: V4[0], key: 'v4a1' },
   { bar: of('var4-a', 3), s: 0.56, color: V4[1], key: 'v4a2' },
   { bar: of('var4-a', 4), s: 0.52, color: V4[2], key: 'v4a4' },
   { bar: of('var4-a', 6), s: 0.52, color: V4[3], key: 'v4a6' },
   { bar: of('var4-a', 8), s: 0.5, color: V4[0], key: 'v4a8' },
   { bar: of('var4-a2', 7), s: 0.3, color: V4[1] },
-  { bar: of('var4-b2', 1), s: 1, color: V4[2], mirrors: 'v4a1' },
+  { bar: of('var4-b2', 1), s: 0.92, color: V4[2], mirrors: 'v4a1' },
   { bar: of('var4-b2', 2), s: 0.56, color: V4[3], mirrors: 'v4a2' },
   { bar: of('var4-b2', 3), beat: 2, s: 0.56, color: V4[0], mirrors: 'v4a4' },
   { bar: of('var4-b2', 5), s: 0.52, color: V4[1], mirrors: 'v4a6' },
@@ -204,7 +204,7 @@ function compose(): Shot[] {
     const reload: [number, number] = Number.isFinite(lastLaunch) ? [lastLaunch + 0.1, lastLaunch + 0.4] : [beat(1, 1), beat(1, 1) + 0.5]
     const turn = Math.abs(aim - angle)
     const aimFor = turn < 1e-3 ? 0 : clamp(0.22 + 0.45 * turn, 0.22, 1.0)
-    const big = spec.s >= 0.85
+    const big = spec.s >= 0.8
     const most = i === 0 ? 7 : big ? 4 : 3
     const free = BEATS.filter((b) => b.t > reload[1] + aimFor + 0.1 && b.t < launch - 0.12 && (!big || b.beat === 1)).map((b) => b.t)
     const steps = free.slice(-most)
