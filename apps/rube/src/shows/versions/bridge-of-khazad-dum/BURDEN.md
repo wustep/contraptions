@@ -77,3 +77,13 @@ stair hinge, and gave Gandalf a small pin perch. Replaced angular foliage
 and hills with curved silhouettes; refined door joints and masonry.
 
 Suggested tweet: **Burden · after The Fellowship of the Ring**
+
+### Round 2
+
+The consecutive frames showed the skiff slightly above the water. Lowered
+its waterline, put the ring on the same sloping supports as the cast, and
+made the bucket-to-pawl connection explicit. Removed the stair's misleading
+centre axle and the columns behind the chasm. Held the wide frame through
+Gandalf's fall before following the survivors. Re-rendered all 11,490 frames;
+zero browser errors, no canvas text, identical reverse-scrub pixels, both
+speed settings and the export credit painter passed again.

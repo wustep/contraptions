@@ -139,6 +139,7 @@ export const landscape = piece('burden-landscape', (g, t) => {
   rect(g, 62.5, -45, 75, 100, '#252D2E')
   for (let i = 0; i < 10; i++) {
     const x = 63 + i * 7.7
+    if (x > 105 && x < 131) continue
     shape(g, [[x - 0.6, -35], [x + 0.6, -35], [x + 0.46, 24], [x - 0.46, 24]], '#303A3B')
     for (let y = -28; y < 25; y += 4) line(g, [[x - 0.45, y], [x + 0.45, y]], '#414B48', 0.035)
   }
@@ -165,7 +166,7 @@ export const landscape = piece('burden-landscape', (g, t) => {
   line(g, [[149.5, 10.94], [155, 10.94]], '#C2BC99', 0.1)
 
   // The river has no specular reflection: cut horizontal lines in a matte sheet.
-  rect(g, 145, 11.5, 100, 50, mixHex('#8D9F93', '#566F65', smooth(t, 325, 353)))
+  rect(g, 145, 11.2, 100, 50, mixHex('#8D9F93', '#566F65', smooth(t, 325, 353)))
   for (let i = 0; i < 85; i++) {
     const x = 145 + hash(i, 70) * 60 - (t * 0.018 % 2), y = 11.6 + hash(i, 74) * 18
     line(g, [[x, y], [x + 0.45 + hash(i, 80) * 2.2, y]], '#9DAA92', 0.025)
@@ -276,13 +277,21 @@ export const westDoor = piece('burden-stone-door', (g, t) => {
 
 export const stair = piece('burden-bucket-stair', (g, t) => {
   const drop = smooth(t, 187.2, 194), bucketY = -0.7 + 9 * drop
-  line(g, [[77.1, bucketY], [76.8, -2.5], [82.7, -2.5], [85, 4.4]], '#7C8A7B', 0.032)
+  line(g, [[77.1, bucketY], [76.8, -2.5], [82.7, -2.5], [78.4, 2.36]], '#7C8A7B', 0.032)
   pulley(g, 76.8, -2.5, 0.35, drop * 15, '#A0A78D')
   pulley(g, 82.7, -2.5, 0.35, drop * 15, '#A0A78D')
   g.save(); g.translate(77.1, bucketY); g.rotate(settle(t, 187.2, 0.22, 4, 3))
   shape(g, [[-0.34, 0], [0.34, 0], [0.25, 0.65], [-0.25, 0.65]], '#7C8775', INK, 0.04)
   arc(g, 0, 0, 0.3, Math.PI, Math.PI * 2, '#A7AB91', 0.045)
   line(g, [[-0.3, 0.2], [0.3, 0.2]], INK, 0.035)
+  g.restore()
+  // The ring nudges a short trigger. The falling bucket withdraws this pawl;
+  // the stair's own weight then lowers it, so the rope is not an impossible lift.
+  g.save(); g.translate(77.5, 2.22); g.rotate(0.85 * smooth(t, 186.7, 187.5))
+  line(g, [[-0.23, 0], [0, -0.23], [0.25, -0.23]], BRASS, 0.065)
+  g.restore()
+  g.save(); g.translate(78, 2.215); g.rotate(-0.7 * smooth(t, 187.2, 188.5))
+  shape(g, [[0, 0], [0.55, 0.04], [0.62, 0.4], [0.46, 0.4], [0.4, 0.18], [0, 0.16]], '#A9AA8A', INK, 0.04)
   g.restore()
   // The whole stair rocks onto its far abutment. Riders read this identical angle.
   g.save(); g.translate(78, 2 + RADIUS); g.rotate(stairAngle(t)); g.translate(7, 0)
@@ -294,8 +303,9 @@ export const stair = piece('burden-bucket-stair', (g, t) => {
     line(g, [[x + 0.1, 0.2], [x + 0.43, 0.2]], '#8F9985', 0.025)
   }
   g.restore()
-  disk(g, 85, 4.38, 0.33, '#ACAC8C', INK, 0.06)
-  shape(g, [[84.6, 4.7], [85.4, 4.7], [86, 32], [84, 32]], '#3D4B44')
+  disk(g, 78, 2.215, 0.2, '#ACAC8C', INK, 0.05)
+  // A single left hinge, visibly tied into the rock. The centre has no false axle.
+  shape(g, [[77.7, 2.45], [78.25, 2.45], [78.15, 4.7], [77.4, 5]], '#3D4B44')
 })
 
 export const bridge = piece('burden-sacrificial-bridge', (g, t) => {
@@ -376,7 +386,7 @@ export const river = piece('burden-river-skiff', (g, t) => {
   const wake = smooth(t, 320, 325)
   for (let i = 0; i < 4; i++) {
     const x = q[0] - 1.4 - i * 0.45
-    line(g, [[x - 0.55 * wake, 11.37 + i * 0.08], [x, 11.37 + i * 0.08]], '#C0C2A5', 0.027)
+    line(g, [[x - 0.55 * wake, 11.24 + i * 0.08], [x, 11.24 + i * 0.08]], '#C0C2A5', 0.027)
   }
 }, (g, t) => {
   // The gunwale is the only foreground occluder; it stays below both riders' centres.

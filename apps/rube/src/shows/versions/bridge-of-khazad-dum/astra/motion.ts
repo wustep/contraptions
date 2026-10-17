@@ -128,10 +128,14 @@ export function gandalfAt(t: number): Pt | null {
 
 /** The ring is a prop, not another cast member. No ball is spawned or recoloured. */
 export function ringAt(t: number): Pt {
-  if (t < 7.6) return [mix(-4.25, -2.48, smooth(t, 0, 7.6)), mix(-1.4, 0.03, smooth(t, 0, 7.6))]
+  if (t < 7.6) return [mix(-4.25, -2.48, smooth(t, 0, 7.6)), mix(-1.4, 0.045, smooth(t, 0, 7.6))]
   const p = frodoAt(t)
+  const ground = t < 319 ? traveller(t, -0.48) : (() => {
+    const q = rotate(-0.48, 0, boatAngle(t))
+    return [p[0] + q[0], p[1] + q[1]] as Pt
+  })()
   const temptation = smooth(t, 311, 315) * (1 - smooth(t, 317, 320))
-  return [p[0] - 0.48 + 1.12 * temptation, p[1] + 0.03 - 0.26 * temptation]
+  return [ground[0] + 1.12 * temptation, ground[1] + 0.045 - 0.26 * temptation]
 }
 
 export function castAt(t: number): ShowBall[] {
