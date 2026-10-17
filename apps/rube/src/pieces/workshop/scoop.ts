@@ -55,11 +55,11 @@ const angleAt = (since: number): number => {
   if (since < 0) return 0
   if (since < LOADED) return OUT * loaded(since / LOADED)
   if (since < TURN) return OUT + (Math.PI - OUT) * easeOutQuad((since - LOADED) / COAST)
-  // The pawl's catch: a wobble that dies, and then is done. Left to decay
-  // for ever, its last millionths of a radian flicked the cups' outlines
-  // between two renderings each time it crossed square.
+  // The pawl's catch: a wobble that dies, and then is done, at a swing
+  // through square. Left to decay for ever, its last millionths of a radian
+  // flicked the cups' outlines between two renderings each time it crossed.
   const s = since - TURN
-  if (s > 1) return Math.PI
+  if (s > (5 * Math.PI) / 28) return Math.PI
   return Math.PI + 0.05 * Math.exp(-s * 5) * Math.sin(s * 28)
 }
 
