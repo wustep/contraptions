@@ -105,6 +105,12 @@ export class Motion {
     const p = this.phase(t)
     return p.at(Math.max(p.t0, Math.min(p.t1, t)))
   }
+  /** When his last stretch on skis ends (he steps out of them, or lies down in them by the gate). */
+  get skisOff(): number {
+    let end = this.t0
+    for (const p of this.phases) if (p.ski && p.ski((p.t0 + p.t1) / 2) !== null) end = p.t1
+    return end
+  }
   /** The skis' tilt at `t`, or null when he is off them. */
   ski(t: number): number | null {
     const p = this.phase(t)

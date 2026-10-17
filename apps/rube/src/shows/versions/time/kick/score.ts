@@ -6,9 +6,14 @@ import { box, frame, lay, scenery, standing, type Chain, type Link } from './kit
 import { DURATION, KICK, PEAK, SEAM, bar } from './music'
 import { FIRST, SEAMS } from './seams'
 import { beacon, sleep, sparkInWides, SLEEP_CELLS } from './sleep'
+import type { MarkPlan } from './marks'
 import { KickShow, type Leg, type Riders, type Spans, type WorldSet } from './show'
-import { ORIGIN } from './stack'
-import { COBB, type WorldKey } from './worlds'
+import { ORIGIN, UP } from './stack'
+import { ARIADNE_ID, COBB, FISCHER_ID, type WorldKey } from './worlds'
+import { Q } from './limbo/limbo-geo'
+import { SEATED, T_TAXI_DOOR } from './rain/rain-geo'
+import { drumMark, T as HOTEL_T, type Who } from './hotel/hotel-geo'
+import { ARIADNE_SNOW, COBB as COBB_SNOW, FISCHER_SNOW } from './snow/snow-geo'
 import { limboSet, LIMBO_CELLS, SHORE_AT, shore, limbo } from './limbo/limbo'
 import { parisSet, PARIS_CELLS, PARIS_AT, paris, parisRoll } from './paris/paris'
 import { planeSet, PLANE_CELLS, PLANE_AT, WAKE_AT, boarding, waking } from './plane/plane'
@@ -131,6 +136,33 @@ const SETS = (): Partial<Record<WorldKey, WorldSet>> => ({
 })
 
 /**
+ * What turns each ball's mark (`marks.ts`), where it is not the ground under it: the van they ride (and Fischer's taxi
+ * before it), the hotel's drum as it turns with them in it, weightless and on down to the snow and the run on skis,
+ * afloat in limbo's swell, and from the river's bed up into the hanging van and under the water to the surface.
+ */
+const MARKS = (legs: Leg[]): MarkPlan => {
+  const all = [0, ARIADNE_ID, FISCHER_ID]
+  const ids: Record<Who, number> = { cobb: 0, ariadne: ARIADNE_ID, fischer: FISCHER_ID }
+  const paris = legs.find((l) => l.world === 'paris')
+  return {
+    held: [
+      { ids: [FISCHER_ID], from: SEAM.rain, to: T_TAXI_DOOR },
+      { ids: [0], from: SEATED.cobb, to: HOTEL_T.go },
+      { ids: [ARIADNE_ID], from: SEATED.ariadne, to: HOTEL_T.go },
+      { ids: [FISCHER_ID], from: SEATED.fischer, to: HOTEL_T.go },
+      { ids: [0], from: HOTEL_T.off, to: COBB_SNOW.skisOff },
+      { ids: [ARIADNE_ID], from: HOTEL_T.off, to: ARIADNE_SNOW.skisOff },
+      { ids: [FISCHER_ID], from: HOTEL_T.off, to: FISCHER_SNOW.skisOff },
+      { ids: [0, ARIADNE_ID], from: Q.lift, to: Q.circle },
+      { ids: all, from: UP.rain.t, to: SEAM.wake },
+    ],
+    turned: (['cobb', 'ariadne', 'fischer'] as Who[]).map((who) => ({ id: ids[who], from: HOTEL_T.turn, to: HOTEL_T.off, at: (t: number) => drumMark(who, t) })),
+    covered: COVERED,
+    own: paris ? [[paris.from, paris.to]] : [],
+  }
+}
+
+/**
  * The kicks, in the body: on each the camera pushes in at once (18 ms) and eases back slowly (τ 1 s, gone by 3.5 s):
  * the hit is sharp, the recovery long and damped. The river's is the biggest: the van into the water, the last kick.
  */
@@ -224,6 +256,7 @@ export function compose(): { show: KickShow; camera: (t: number) => Framing } {
   })
 
   const show = new KickShow(legs, SETS(), DURATION, riders, company.sort((a, b) => a.from - b.from))
+  show.markPlan = MARKS(legs)
   sparkInWides(
     (t) => show.where(t),
     STACK_WIDES.map((w) => [w.from, w.to]),

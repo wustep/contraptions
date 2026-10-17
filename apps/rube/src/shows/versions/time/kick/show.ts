@@ -3,6 +3,7 @@ import type { Box, Placed } from '../../../../plan'
 import { Show, type ShowBall, type ShowPoint } from '../../../../show'
 import type { Universe } from '../../../../universe'
 import type { Company, Riders as PartRiders, Who } from './kit'
+import { marks, type MarkPlan, type Marks } from './marks'
 import { ARIADNE, ARIADNE_ID, COBB, FISCHER, FISCHER_ID, MAL, MAL_ID, WORLDS, type WorldKey } from './worlds'
 
 /**
@@ -65,6 +66,9 @@ export class KickShow extends Show {
   cameraCuts: number[] = []
   /** A fast fall is one tapered streak, not a string of discs that read as other balls. */
   override readonly trail = 'smear' as const
+  /** How every ball's mark turns (`marks.ts`): the score's plan, rolled out the first time a moment is asked for. */
+  markPlan: MarkPlan | null = null
+  private marks: Marks | null = null
 
   constructor(
     readonly legs: Leg[],
@@ -160,6 +164,19 @@ export class KickShow extends Show {
   }
 
   override at(t: number): ShowPoint {
+    const here = this.point(t)
+    if (this.markPlan) {
+      this.marks ??= marks(this.markPlan, this.duration, (s) => {
+        const p = this.point(s)
+        return { leg: this.owner(s), origin: p.universe.pieces[0].col, balls: p.balls ?? [] }
+      })
+      this.marks(this.clamp(t), here.balls ?? [])
+    }
+    return here
+  }
+
+  /** The moment at `t` as the parts have it, every ball in `balls` (Cobb's too), each mark as its part sets it. */
+  private point(t: number): ShowPoint {
     const time = this.clamp(t)
     const owner = this.owner(time)
     const universe = this.worlds[this.keys.indexOf(this.legs[owner].world)]
@@ -180,20 +197,19 @@ export class KickShow extends Show {
     const ride = this.riders.find((r) => r.leg === owner && time >= r.from && time < r.to)
     const world = this.legs[owner].world
     const company = WHO.map((who) => this.companion(time, who, world)).filter((b): b is ShowBall => !!b)
-    if (ride || company.length) {
-      const hero: ShowBall = {
-        id: ball.id,
-        x: here.x,
-        y: here.y,
-        color: ball.color,
-        ghost: ball.ghost,
-        scale: point.hidden ? 0 : point.scale,
-        stretch: here.stretch,
-        angle: here.angle,
-      }
-      const balls = ride ? ride.fn(time, hero) : null
-      here.balls = company.length ? [...(balls ?? [hero]), ...company] : balls ?? undefined
+    const hero: ShowBall = {
+      id: ball.id,
+      x: here.x,
+      y: here.y,
+      color: ball.color,
+      ghost: ball.ghost,
+      scale: point.hidden ? 0 : point.scale,
+      stretch: here.stretch,
+      angle: here.angle,
     }
+    const balls = ride ? ride.fn(time, hero) : null
+    // Cobb is always one of the balls, so his mark is rolled with the others'.
+    here.balls = [...(balls ?? [hero]), ...company]
     return here
   }
 

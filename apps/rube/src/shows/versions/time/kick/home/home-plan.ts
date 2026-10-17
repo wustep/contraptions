@@ -190,8 +190,13 @@ export const swingAngle = (t: number): number => 0.06 * Math.sin((2 * Math.PI * 
 
 export const KR = R * KID_SCALE
 const KID_Y = FLOOR - KR
-/** Where they play on the lawn by the swing, their backs to the house. */
-export const KIDS_AT = [8.84, 9.36] as const
+/** The embrace: they close the space, to here. */
+const HUG_X = [STOP_X + R + KR + 0.002, STOP_X + R + 3 * KR + 0.004]
+/**
+ * Where they play on the lawn by the swing, their backs to the house: whole turns of a roll from where they embrace
+ * him, so each rolls to him (its face turning with it) and comes to rest with its face to him as it turned to him.
+ */
+export const KIDS_AT = [HUG_X[0] + 2 * (2 * Math.PI * KR), HUG_X[1] + 3 * (2 * Math.PI * KR)] as const
 /** How long each takes to turn round (the light coming round onto them), and how much after the first the second turns. */
 const TURN_FOR = 1.15
 const TURN_LAG = [0, 0.32]
@@ -199,9 +204,7 @@ const TURN_LAG = [0, 0.32]
 const RUN_AT = [TURN + 1.25, TURN + 1.5]
 const GAP = [0.1, 0.075]
 const MEET_X = [STOP_X + R + KR + GAP[0], STOP_X + R + KR + GAP[0] + 2 * KR + GAP[1]]
-/** The embrace: they close the space. */
 const HUG_FROM = HOLD - 0.75
-const HUG_X = [STOP_X + R + KR + 0.002, STOP_X + R + 3 * KR + 0.004]
 
 /**
  * A child's run, as a share of the way at a share of the time: easing from rest over its first 45%, running, and
