@@ -34,7 +34,6 @@ const PULL = 6
 /** The rail's end, and where on the lid the ball comes onto it, measured from the hinge. */
 const RAIL_END = -0.06
 const S0 = L - 0.03
-const T_EDGE = (RAIL_END + 0.5) / ROLL + 0.06
 
 /** The lid's angle, `t` seconds after the ball came onto it. */
 function angle(t: number): number {
@@ -45,6 +44,10 @@ function angle(t: number): number {
 }
 /** A ball's centre on the lid's top, `s` from the hinge, with the lid at angle `a`. */
 const seatOn = (s: number, a: number): Pt => [HX - s * Math.cos(a) + R * Math.sin(a), HY - s * Math.sin(a) - R * Math.cos(a)]
+/** Off the rail the ball rolls on level until it is over the open lid's corner, and settles from there onto its seat, so it never cuts the corner. */
+const OVER: Pt = [HX - L * Math.cos(OPEN), HY - L * Math.sin(OPEN) - R]
+const SEAT = seatOn(S0, OPEN)
+const T_EDGE = (OVER[0] + 0.5) / ROLL + Math.hypot(SEAT[0] - OVER[0], SEAT[1] - OVER[1]) / ROLL
 
 /** How far from the hinge the ball is, and how fast, every 1/480 s from the moment it comes onto the lid. */
 const RUN: { s: number; v: number }[] = (() => {
@@ -67,8 +70,8 @@ function ballOn(t: number): Pt {
 
 const LANE: Lane = {
   segs: [
-    roll([-0.5, 0], [RAIL_END, 0], ROLL),
-    roll([RAIL_END, 0], seatOn(S0, OPEN), ROLL),
+    roll([-0.5, 0], OVER, ROLL),
+    roll(OVER, SEAT, ROLL),
     ...trace(ballOn, 0, SLAM + BOUNCE, 36),
     ramp(seatOn(END.s, 0), [1.5, 1], END.v, ROLL),
   ],
