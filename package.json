@@ -15,7 +15,7 @@
     "preview": "vite preview",
     "lint": "oxlint src apps scripts vite.config.ts --deny-warnings",
     "typecheck": "tsc --noEmit",
-    "test": "npm run check && npm run check:rube && npm run check:builder && npm run check:playground && npm run check:shows && npm run check:premiere && npm run check:clair",
+    "test": "npm run check && npm run check:rube && npm run check:builder && npm run check:playground && npm run check:shows && npm run check:premiere && npm run check:clair && npm run check:delivery",
     "new": "node scripts/new-contraption.mjs",
     "check": "esbuild scripts/check.ts --bundle --platform=node --format=cjs --external:p5 --log-level=error --outfile=node_modules/.cache/contraptions-check.cjs && node node_modules/.cache/contraptions-check.cjs",
     "check:rube": "esbuild apps/rube/checks/machine.ts --bundle --platform=node --format=cjs --external:p5 --log-level=error --outfile=node_modules/.cache/rube-check.cjs && node node_modules/.cache/rube-check.cjs",
@@ -32,7 +32,8 @@
     "generate:cornfield": "esbuild scripts/shows/arrange-cornfield.ts --bundle --platform=node --format=esm --external:p5 --log-level=error --outfile=node_modules/.cache/arrange-cornfield.mjs && node node_modules/.cache/arrange-cornfield.mjs",
     "generate:cornfield:opus55": "esbuild scripts/shows/arrange-cornfield-opus55.ts --bundle --platform=node --format=esm --external:p5 --log-level=error --outfile=node_modules/.cache/arrange-cornfield-opus55.mjs && node node_modules/.cache/arrange-cornfield-opus55.mjs",
     "check:clair:b": "esbuild scripts/shows/check-stock-shows.ts --bundle --platform=node --format=esm --log-level=error --outfile=node_modules/.cache/check-stock-shows.mjs && node node_modules/.cache/check-stock-shows.mjs clair-b",
-    "cards": "node scripts/shows/show-cards.mjs"
+    "cards": "node scripts/shows/show-cards.mjs",
+    "check:delivery": "esbuild apps/rube/checks/delivery.ts --bundle --platform=node --format=cjs --external:p5 --log-level=error --outfile=node_modules/.cache/delivery-check.cjs && node node_modules/.cache/delivery-check.cjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.126.0",

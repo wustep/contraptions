@@ -43,6 +43,7 @@ export class Depot {
   cannonFree = 0
   frogFree = 0
   painting = 0
+  production: Parcel[] = []
   inFlight = 0
   revision = 0
   private nextId = 1
@@ -125,11 +126,11 @@ export class Depot {
       { station: 'conveyor', start: beltStart, color: COLORS[p.color] })
     this.painterFree = beltStart
     this.conveyorFree = beltStart + MACHINES.conveyor.duration
-    this.painting++
+    this.painting++; this.production.push(p)
     this.intake.forEach((q, i) => this.move(q, inputAt(i)))
     this.schedule(this.painterFree, () => this.pump())
     this.schedule(this.time + segTime(segs), () => {
-      this.painting--; this.ready.push(p)
+      this.painting--; this.production = this.production.filter((q) => q !== p); this.ready.push(p)
       this.move(p, readyAt(this.ready.length - 1))
       this.revision++; this.pump()
     })
@@ -208,7 +209,7 @@ export class Depot {
     const drop = fly(mailboxAt(address), [10.9, 3.8], 0.55, 0.4)
     const frogStart = Math.max(this.time + drop.dur, this.frogFree)
     const frog = worldLane('frog')
-    const segs = [drop, wait([10.9, 3.8], frogStart - this.time - drop.dur), ...frog.segs,
+    const segs = [drop, wait([10.9, 3.8], Math.max(0, frogStart - this.time - drop.dur)), ...frog.segs,
       fly([10.9, 2.8], returnAt(this.rework.length), 1.05, -1.1)]
     this.motion(p, segs)
     this.activations.push({ station: 'frog', start: frogStart, color: COLORS[p.color] })
