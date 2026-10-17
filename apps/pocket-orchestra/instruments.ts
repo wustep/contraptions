@@ -1,81 +1,51 @@
-import { makeRng } from '../../src/core/rng'
-import type { Theme } from '../../src/core/themes'
-import { laneAt, laneReach, laneTime, type Piece, type Placement } from '../rube/src/parts'
-import { Show, type ShowPoint } from '../rube/src/show'
-import type { Universe } from '../rube/src/universe'
-import { musicbox } from '../rube/src/playground/pieces/orchestra/musicbox'
-import { triangle } from '../rube/src/playground/pieces/orchestra/triangle'
-import { harp } from '../rube/src/playground/pieces/orchestra/harp'
-import { timpani } from '../rube/src/playground/pieces/orchestra/timpani'
-import { keys } from '../rube/src/playground/pieces/orchestra/keys'
-import { xylophone } from '../rube/src/playground/pieces/orchestra/xylophone'
-import { COLORS, STEP, type Take, type Voice } from './model'
+import { beatX, mod, STEP, trackY, type Take, type Note, type Voice } from './model'
 
-export const PAPER = '#f7f3ea'
-const theme: Theme = { name: 'pocket', label: 'Pocket', bg: PAPER, ink: '#303a35', colors: ['#c99b44', '#b9533e', '#56817b', '#7c6282', '#f8f7ee'], note: 'a small orchestra on paper' }
-const pieces: Record<Voice, Piece<any>> = { musicbox, triangle, harp, timpani, keys, xylophone }
-export interface Contact { at: number; degree: number; strength: number }
-export interface Instrument { show: Miniature; placement: Placement<unknown>; contacts: Contact[]; lead: number; span: number; frame: { x: number; y: number; w: number; h: number } }
-
-/** These are the actual contact clocks of the stock drawings, not a second beat grid.
- * The music box's comb releases, harp's string releases, and drum's first touch are
- * distinct from lane.fire. Keep their formulas beside the adapters and check them. */
-function contacts(kind: Voice, p: Placement<unknown>): Contact[] {
-  const event = (at: number, degree = 0, strength = 1): Contact => ({ at, degree, strength })
-  if (kind === 'harp') return Array.from({ length: 9 }, (_, i) => event(laneReach(p.lane, -.15 + .14 * i + .075 - .13 * .9), i - 2, .53))
-  if (kind === 'keys') return Array.from({ length: 8 }, (_, i) => event((-.36 + .215 * (i + .5) + .5) / 2.6, i - 2, .64))
-  if (kind === 'xylophone') return (p.state as { hits: number[] }).hits.slice(0, 4).map((at, i) => event(at, 3 - i, .85))
-  if (kind === 'timpani') return [event(p.lane.segs[0].dur + p.lane.segs[1].dur)]
-  if (kind === 'musicbox') {
-    const pace = 1.25, up = .3, past = .09
-    const top = up + (Math.PI / 2 - pace * up / 2) / pace
-    const stop = 2 * past / pace
-    const turned = (t: number) => t < up ? pace * t * t / (2 * up) : t < top ? pace * up / 2 + pace * (t - up) : Math.PI / 2 + past * (2 * Math.min(1, (t - top) / stop) - Math.min(1, (t - top) / stop) ** 2)
-    return Array.from({ length: 11 }, (_, i) => Math.PI + Math.asin(.13) - (i + 1) * Math.PI / 6 - 42 * Math.PI / 180)
-      .filter(a => a > 0 && a <= Math.PI / 2 + past).sort((a, b) => a - b).map((a, i) => {
-        let lo = 0, hi = top + stop
-        for (let j = 0; j < 40; j++) { const mid = (lo + hi) / 2; if (turned(mid) < a) lo = mid; else hi = mid }
-        return event(p.lane.fire + hi, [0, 2, 4][i % 3], .8)
-      })
-  }
-  // Triangle is struck on initial contact, before swinging free at lane.fire.
-  return [event(p.lane.segs[0].dur)]
-}
-
-export class Miniature extends Show {
-  readonly world: Universe
-  constructor(piece: Piece<any>, placement: Placement<unknown>) {
-    super('pocket-orchestra')
-    const placed = { piece, ...placement, col: 0, row: 0, mirror: 1 as const, start: 0, span: laneTime(placement.lane), ballIn: { color: '#b9533e', ghost: false, id: 0 }, changes: [], points: 0 }
-    const world = { name: 'pocket', label: 'Pocket Orchestra', note: '', themes: [theme], pieces: [piece], backdrops: ['plain' as const], tastes: { even: {} } }
-    const bounds = { x0: -1, y0: -2, x1: 3, y1: 2 }
-    this.world = { index: 0, seed: 'pocket', world, theme, taste: 'even', ballColor: '#b9533e', backdrop: 'plain', pieces: [placed], box: bounds, bounds, journey: placed.span }
-  }
-  override trailOff(): boolean { return true }
-  override at(t: number): ShowPoint {
-    const placed = this.world.pieces[0]
-    const point = laneAt(placed.lane, t)
-    const fade = Math.max(0, Math.min(1, t / .075, (placed.span - t) / .075))
-    return { ...point, scale: fade, hidden: t < 0 || t > placed.span, placed, ball: placed.ballIn, universe: this.world, local: t, begin: 0 }
-  }
-}
-
-const frames: Record<Voice, Instrument['frame']> = {
-  triangle: { x: 0, y: -.1, w: 1.45, h: 1.45 }, musicbox: { x: .5, y: -.35, w: 2.4, h: 2.15 }, harp: { x: .5, y: -.45, w: 2.5, h: 2.3 },
-  timpani: { x: .5, y: .46, w: 2.5, h: 2.55 }, keys: { x: .5, y: .12, w: 2.4, h: 1.8 }, xylophone: { x: .5, y: .5, w: 2.5, h: 2.4 },
-}
-export const instruments = Object.fromEntries(Object.entries(pieces).map(([name, piece], i) => {
-  const kind = name as Voice
-  const placement = piece.place({ rng: makeRng('pocket'), color: COLORS[i], theme, ball: { color: '#b9533e', ghost: false, id: 0 }, earned: 0, taste: { weights: {} }, fits: (_cells, exit) => kind !== 'timpani' || exit[1] === 0 })!
-  const hits = contacts(kind, placement)
-  return [name, { show: new Miniature(piece, placement), placement, contacts: hits, lead: hits[0].at, span: laneTime(placement.lane), frame: frames[kind] }]
-})) as Record<Voice, Instrument>
-
-export interface ScoreEvent { at: number; voice: Voice; degree: number; strength: number; slot: number }
+export interface Point { x: number; y: number }
+export interface Knot extends Point { beat: number; note?: Note }
+export interface Segment { a: Knot; b: Knot; c1: Point; c2: Point; lift: boolean; returning: boolean }
+export interface Route { track: string; segments: Segment[]; home: Point }
+export interface ScoreEvent { at: number; voice: Voice; degree: number; strength: number; slot: number; id: string }
 export function scoreFor(take: Take): ScoreEvent[] {
-  return take.slots.flatMap((note, slot) => {
-    if (!note || note.kind === 'rest') return []
-    const instrument = instruments[note.kind]
-    return instrument.contacts.map(c => ({ at: slot * STEP + c.at - instrument.lead, voice: note.kind as Voice, degree: note.pitch + c.degree, strength: c.strength, slot }))
+  return take.notes.flatMap(n => {
+    const slot = take.tracks.findIndex(t => t.id === n.track), track = take.tracks[slot]
+    return track.muted || !track.volume ? [] : [{ at: n.beat * STEP, voice: n.kind, degree: n.pitch, strength: track.volume, slot, id: n.id }]
   }).sort((a, b) => a.at - b.at)
+}
+/** One geometric path owns both the drawn rail and the marble's position.
+ * Notes are exact knots, so contact and sound share the same score time. */
+export function routesFor(take: Take): Route[] {
+  return take.tracks.map((track, index) => {
+    const y = trackY(index), home = { x: 64, y }, end = beatX(take.length - .6)
+    const notes = take.notes.filter(n => n.track === track.id).sort((a, b) => a.beat - b.beat || a.id.localeCompare(b.id))
+    const knots: Knot[] = [{ ...home, beat: 0 }, ...notes.map(n => ({ x: beatX(n.beat), y: n.y, beat: n.beat, note: n })),
+      { x: end, y, beat: take.length - 1.4 }, { x: end, y: y + 82, beat: take.length - 1.15 },
+      { x: 36, y: y + 82, beat: take.length - .3 }, { x: 36, y, beat: take.length - .08 }, { ...home, beat: take.length }]
+    const segments: Segment[] = []
+    for (let i = 1; i < knots.length; i++) {
+      const a = knots[i - 1], b = knots[i], vertical = a.x === b.x, dx = (b.x - a.x) * .5
+      segments.push({ a, b, c1: vertical ? { x: a.x, y: a.y + (b.y - a.y) * .4 } : { x: a.x + dx, y: a.y }, c2: vertical ? { x: b.x, y: b.y - (b.y - a.y) * .4 } : { x: b.x - dx, y: b.y }, lift: b.y < a.y - 12, returning: i > notes.length + 1 })
+    }
+    return { track: track.id, segments, home }
+  })
+}
+export function onSegment(s: Segment, u: number): Point {
+  const v = 1 - u
+  return { x: v ** 3 * s.a.x + 3 * v * v * u * s.c1.x + 3 * v * u * u * s.c2.x + u ** 3 * s.b.x, y: v ** 3 * s.a.y + 3 * v * v * u * s.c1.y + 3 * v * u * u * s.c2.y + u ** 3 * s.b.y }
+}
+export function routeAt(route: Route, beat: number, length: number): Point {
+  const t = mod(beat, length)
+  const segment = route.segments.find(s => t >= s.a.beat && t < s.b.beat) || route.segments[0]
+  return onSegment(segment, (t - segment.a.beat) / Math.max(.00001, segment.b.beat - segment.a.beat))
+}
+export function segmentPath(s: Segment): string { return `M${s.a.x} ${s.a.y}C${s.c1.x} ${s.c1.y} ${s.c2.x} ${s.c2.y} ${s.b.x} ${s.b.y}` }
+
+/** Compact purpose-built musical mechanisms. All six have a contact surface
+ * at y=8, exactly one marble radius below their route knot. */
+export function mechanism(kind: Voice): string {
+  if (kind === 'timpani') return '<path class="wood" d="M-34 14Q-32 57 0 57Q32 57 34 14Z"/><path d="m-21 50-7 18m49-18 7 18M-33 68h12m9 0h12m20 0h12"/><ellipse class="paper" cx="0" cy="16" rx="34" ry="8"/><path class="react" d="M-26 16Q0 9 26 16"/><path class="fine" d="m-25 30 8 13m42-13-8 13"/>'
+  if (kind === 'triangle') return '<path d="M-31 68V-17h38m-7 0v31"/><circle class="paper" cx="0" cy="17" r="4"/><path class="paper react" d="m0 21-24 39h49L6 28"/><path class="wood" d="M-17 8h34v7h-34z"/><path d="M0 15v18m-7 0h14M-39 68h17"/>'
+  if (kind === 'harp') return '<path class="wood" d="M-35 66V18Q-8 39 33 17L25 66Z"/><path class="paper" d="M-27 58V31Q-8 42 23 29L18 58Z"/><path class="strings fine" d="M-18 36v20m9-17v17m9-17v17m9-19v19"/><path d="M-39 68h68M-14 8h28M0 8v32"/><circle class="wood react" cy="42" r="4"/>'
+  if (kind === 'keys') return '<path class="wood" d="M-39 10h78v46h-78z"/><path class="paper" d="M-34 13h68v34h-68z"/><path class="fine" d="M-20 14v32m13-32v32m14-32v32m13-32v32"/><path stroke-width="6" d="M-20 14v15m13-15v15m26-15v15"/><path class="paper react" d="M-6 8H6v38H-6z"/><path d="M-30 56v12m60-12v12M-37 68h14m0-14h44m2 14h14"/>'
+  if (kind === 'xylophone') return '<path d="M-36 39h72m-65-14v42m58-42v42M-35 67h12m46 0h12"/><g class="wood"><rect x="-35" y="19" width="12" height="34" rx="2"/><rect x="-20" y="14" width="12" height="36" rx="2"/><rect class="react" x="-5" y="8" width="12" height="39" rx="2"/><rect x="10" y="14" width="12" height="30" rx="2"/><rect x="25" y="19" width="12" height="22" rx="2"/></g><path class="fine" d="M-29 27v10m15-15v10m15-15v10m15-5v10m15-5v8"/>'
+  return '<path class="wood" d="M-35 46h70v19h-70z"/><path d="M-28 65v5m56-5v5m7-15h12V41"/><circle class="wood" cx="47" cy="38" r="4"/><circle class="paper" cy="32" r="24"/><g class="wheel"><path class="wood" d="M-8 10h16l3 10 10 3v16l-10 3-3 10H-8l-3-10-10-3V23l10-3z"/><circle class="paper" cy="32" r="10"/><path class="fine" d="M0 18v5m0 18v5m-14-14h5m18 0h5"/></g><circle class="ink" cy="32" r="3"/><path class="react" d="M-29 8H8m-32 0v10m7-10v9m7-9v7"/>'
 }

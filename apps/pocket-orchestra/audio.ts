@@ -1,5 +1,5 @@
-import { frequency, STEP, type Note, type Take, type Voice } from './model'
-import { instruments, scoreFor, type ScoreEvent } from './instruments'
+import { frequency, STEP, type Take, type Voice } from './model'
+import { scoreFor, type ScoreEvent } from './instruments'
 
 /** Dry, small acoustic voices. No oscillator is left running between strikes. */
 export function voiceSamples(voice: Voice, degree: number, sampleRate: number): Float32Array {
@@ -162,8 +162,8 @@ export class OrchestraAudio {
     const until = current + .12 * this.rate
     // A throttled tab skips missed strikes rather than firing a burst on return.
     const from = Math.max(this.scheduled, current - .015 * this.rate)
-    for (const event of eventsBetween(this.events, this.take.slots.length * STEP, from, until)) {
-      this.strike(event, this.anchor + (event.absolute - this.position) / this.rate, this.take.slots.length)
+    for (const event of eventsBetween(this.events, this.take.length * STEP, from, until)) {
+      this.strike(event, this.anchor + (event.absolute - this.position) / this.rate, this.take.tracks.length)
     }
     this.scheduled = Math.max(this.scheduled, until)
   }
@@ -182,19 +182,6 @@ export class OrchestraAudio {
     for (const source of sources) { try { source.stop(ctx.currentTime + .035) } catch { /* already ended */ } }
     window.setTimeout(release, 100)
     this.newBus()
-  }
-
-  /** Preview a whole mechanism, with its own visual origin returned to the stage. */
-  preview(note: Note): { at: number; local: number } | null {
-    if (!this.context || this.playing || note.kind === 'rest') return null
-    this.silence()
-    const inst = instruments[note.kind]
-    for (const c of inst.contacts) this.buffer(note.kind, note.pitch + c.degree)
-    const when = this.context.currentTime + .045
-    const leadIn = Math.min(.24, inst.lead)
-    for (const c of inst.contacts) this.strike({ at: 0, voice: note.kind, degree: note.pitch + c.degree, strength: c.strength, slot: 0 }, when + leadIn + c.at - inst.lead, 1)
-    const latency = this.context.outputLatency || this.context.baseLatency || 0
-    return { at: performance.now() + (latency + .045) * 1000, local: inst.lead - leadIn }
   }
 
   setVolume(volume: number): void {

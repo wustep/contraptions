@@ -125,20 +125,11 @@ Example: a blue ball rang the final bell, and another blue ball remains in a cra
 
 **Pitch:** Build a tiny musical machine whose tune comes from the moments its ball strikes, plucks, and releases things.
 
-**Core loop:** Pick a short phrase prompt or open a blank stage; arrange a few musical mechanisms; assign pitches from a small scale; listen; change the order or the spacing between them; keep a satisfying take. Prompts supply game structure: repeat a three-note motif, leave a breath before the last note, or finish on a specified accent using a limited set of pieces. Free composition is the companion mode.
+**Implemented experiment:** [Pocket Orchestra](pocket-orchestra.md) now uses an open workbench. Drag acoustic mechanisms freely, reshape their connected rails, tune notes across four octaves, stretch the loop, and layer up to four synchronized tracks. Each track carries one marble through its instruments and back along a visible return belt and lift. Empty rail creates a rest.
 
-Each mechanism retains its own motion. Rails provide spacing; slow mechanisms provide rests; a xylophone contributes a small cascade of notes. The musical challenge is choosing a machine that produces the desired phrase. The editor makes transit times audible and easy to preview.
+The first implementation's isolated grid and phrasebook have been replaced. The machine itself teaches the interaction: placement determines contact timing, vertical movement bends the rails, and every sound lands at a visible contact. Compact controls provide pitch, width, beat, track, tempo, mute, undo, saves and listening links.
 
-**Concrete reuse:**
-
-- [apps/rube/src/playground/staging.ts](../apps/rube/src/playground/staging.ts) and [pieces/orchestra/index.ts](../apps/rube/src/playground/pieces/orchestra/index.ts): the staged Music world and its palettes.
-- [keys.ts](../apps/rube/src/playground/pieces/orchestra/keys.ts), [xylophone.ts](../apps/rube/src/playground/pieces/orchestra/xylophone.ts), [harp.ts](../apps/rube/src/playground/pieces/orchestra/harp.ts), and [metronome.ts](../apps/rube/src/playground/pieces/orchestra/metronome.ts): instrument drawings and contact timings; xylophone state already retains its hit times.
-- [apps/rube/src/shows/ticks.ts](../apps/rube/src/shows/ticks.ts) and [soundtrack.ts](../apps/rube/src/shows/soundtrack.ts): render an arranged sequence of notes and play it on the same clock as the picture.
-- [apps/rube/src/catalog.ts](../apps/rube/src/catalog.ts), [shows/record.ts](../apps/rube/src/shows/record.ts), and [builder/spec.ts](../apps/rube/src/builder/spec.ts): inspection, recording, and a precedent for a portable, validated document format.
-
-**Why it would be fun:** Every edit changes both the tune and the miniature performance. Even a short successful phrase is an artifact worth keeping. The existing Music world has enough visual character to make a small collection feel complete.
-
-**Scope: medium for one melodic voice and a curated shelf.** New work is an arrangement editor, note-event extraction, pitch assignment, phrase validation, persistence, and a clean looping boundary. `lane.fire` supplies only one primary event per piece; instruments with several contacts need explicit note maps. `renderWav` provides one struck-bar sound, so convincing instrument-specific timbres and live audition would be additional audio work. The Builder's current JSON does not store an arrangement or score; borrow its validation approach rather than assuming it already does.
+The experiment is isolated in `apps/pocket-orchestra`; existing shows, Theater, Machine, Playground and their tests remain unchanged. Its deterministic route and contact clock follow the same sampled choreography principle as Machine. See the [implementation and browser pass notes](pocket-orchestra.md).
 
 ## Craft direction shared by the concepts
 

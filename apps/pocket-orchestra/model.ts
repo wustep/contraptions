@@ -1,60 +1,89 @@
 export const VOICES = ['musicbox', 'triangle', 'harp', 'timpani', 'keys', 'xylophone'] as const
 export type Voice = (typeof VOICES)[number]
-export type Kind = Voice | 'rest'
-export interface Note { kind: Kind; pitch: number }
-export interface Take { slots: (Note | null)[]; tempo: number; title: string }
-export const STEP = 120 / 84
-export const NOTES = ['C', 'D', 'E', 'G', 'A', 'C↑']
-export const COLORS = ['#ba583f', '#d4a348', '#4c7d79', '#66784c', '#8e6c83', '#b46a47']
-export const NAMES: Record<Kind, string> = { musicbox: 'Music box', triangle: 'Triangle', harp: 'Harp', timpani: 'Kettledrum', keys: 'Piano', xylophone: 'Xylophone', rest: 'A little rest' }
-export const DESCRIPTIONS: Record<Kind, string> = { musicbox: 'three little chimes', triangle: 'one silver note', harp: 'a sweep of strings', timpani: 'a warm, low thump', keys: 'an ivory ripple', xylophone: 'four wooden steps', rest: 'let the room listen' }
-export const copy = (t: Take): Take => ({ ...t, slots: t.slots.map(n => n && { ...n }) })
-const n = (kind: Kind, pitch = 0): Note => ({ kind, pitch })
-export interface Phrase { title: string; line: string; hint: string; start: Take; rules: { label: string; test: (s: Take['slots']) => boolean }[]; praise: string }
-const full = (s: Take['slots']) => s.every(Boolean)
-const played = (s: Take['slots']) => s.filter((v): v is Note => !!v && v.kind !== 'rest')
-export const PHRASES: Phrase[] = [
-  { title: 'A small hello.', line: 'The music box has a hello. Give it an answer.', hint: 'The triangle is ready. Tap step 2, then press Play.', start: { title: 'A small hello', tempo: 84, slots: [n('musicbox'), null] },
-    rules: [{ label: 'A triangle on step 2', test: s => s[1]?.kind === 'triangle' }, { label: 'Hear your whole phrase', test: full }], praise: 'And just like that, a little duet.' },
-  { title: 'Up the stairs.', line: 'Three notes, each a little higher than the last.', hint: 'Select a step. Choose its note below the instruments.', start: { title: 'Up the stairs', tempo: 88, slots: [n('triangle'), n('triangle'), n('triangle')] },
-    rules: [{ label: 'Fill all three steps', test: full }, { label: 'Each note higher than the last', test: s => full(s) && s.every((v, i) => !!v && v.kind !== 'rest' && (!i || v.pitch > s[i - 1]!.pitch)) }], praise: 'A staircase you can hear.' },
-  { title: 'Room to breathe.', line: 'Sometimes the loveliest note is the one you leave out.', hint: 'Put a rest on step 3. Let the last note come home to C.', start: { title: 'Room to breathe', tempo: 80, slots: [n('harp', 1), n('triangle', 3), n('timpani'), n('triangle', 2)] },
-    rules: [{ label: 'A rest on step 3', test: s => s[2]?.kind === 'rest' }, { label: 'Finish with a C', test: s => !!s[3] && s[3].kind !== 'rest' && s[3].pitch === 0 }], praise: 'That breath made all the difference.' },
-  { title: 'Call & answer.', line: 'Let the first two voices return at the end.', hint: 'Make steps 5 and 6 echo steps 1 and 2: same voices, same notes.', start: { title: 'Call & answer', tempo: 92, slots: [n('triangle'), n('harp', 2), n('timpani'), n('rest'), null, null] },
-    rules: [{ label: 'Fill all six steps', test: full }, { label: 'Repeat the opening pair at the end', test: s => [0, 1].every(i => !!s[i] && s[i]!.kind !== 'rest' && s[i]?.kind === s[i + 4]?.kind && s[i]?.pitch === s[i + 4]?.pitch) }], praise: 'A familiar voice, coming back.' },
-  { title: 'Your little ensemble.', line: 'A few different voices. A breath. An ending of your own.', hint: 'Use three instruments, leave one rest, and finish on C.', start: { title: 'My little ensemble', tempo: 84, slots: Array(6).fill(null) },
-    rules: [{ label: 'Fill the six steps', test: full }, { label: 'At least three different instruments', test: s => new Set(played(s).map(v => v.kind)).size >= 3 }, { label: 'One rest, then an ending on C', test: s => s.filter(v => v?.kind === 'rest').length === 1 && !!s[5] && s[5].kind !== 'rest' && s[5].pitch === 0 }], praise: 'Six small machines. Entirely your own.' },
-]
-export const PRESETS: Take[] = [
-  { title: 'Sunday morning', tempo: 78, slots: [n('musicbox'), n('harp', 2), n('triangle', 4), n('rest'), n('keys', 1), n('triangle')] },
-  { title: 'Rain on the roof', tempo: 96, slots: [n('xylophone', 3), n('timpani'), n('triangle', 2), n('rest'), n('xylophone', 1), n('harp')] },
-  { title: 'The clockmaker', tempo: 104, slots: [n('timpani'), n('musicbox', 1), n('triangle', 3), n('timpani'), n('musicbox', 2), n('triangle')] },
-]
+export const NAMES: Record<Voice, string> = { musicbox: 'Music box', triangle: 'Triangle', harp: 'Harp', timpani: 'Drum', keys: 'Piano', xylophone: 'Xylophone' }
+export const COLORS = ['#c49540', '#508780', '#bd654d', '#827596']
+export const NOTES = ['C', 'D', 'E', 'G', 'A']
+export const STEP = 60 / 84
+export const MAX_NOTES = 48
+export interface Note { id: string; kind: Voice; pitch: number; beat: number; y: number; size: number; track: string }
+export interface Track { id: string; color: string; muted: boolean; volume: number }
+export interface Take { title: string; tempo: number; length: number; tracks: Track[]; notes: Note[] }
+export const copy = (t: Take): Take => ({ ...t, tracks: t.tracks.map(v => ({ ...v })), notes: t.notes.map(v => ({ ...v })) })
+export const clamp = (n: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, n))
+export const mod = (n: number, d: number): number => ((n % d) + d) % d
+export const trackY = (i: number): number => 85 + i * 160
+export const boardHeight = (take: Take): number => 100 + take.tracks.length * 160
+export const beatX = (beat: number): number => 84 + beat * 86
+export const boardWidth = (take: Take): number => beatX(take.length) + 38
+export function pitchName(degree: number): string { return NOTES[mod(degree, 5)] + (4 + Math.floor(degree / 5)) }
 export function frequency(degree: number): number {
-  const scale = [0, 2, 4, 7, 9]
-  const midi = 60 + Math.floor(degree / 5) * 12 + scale[((degree % 5) + 5) % 5]
+  const midi = 60 + Math.floor(degree / 5) * 12 + [0, 2, 4, 7, 9][mod(degree, 5)]
   return 440 * 2 ** ((midi - 69) / 12)
+}
+const tracks = (count: number): Track[] => Array.from({ length: count }, (_, i) => ({ id: `t${i}`, color: COLORS[i], muted: false, volume: .8 }))
+const score = (title: string, tempo: number, rows: [Voice, number, number, number][][]): Take => ({
+  title, tempo, length: 12, tracks: tracks(rows.length),
+  notes: rows.flatMap((row, i) => row.map(([kind, beat, pitch, offset], j) => ({ id: `n${i}-${j}`, kind, beat, pitch, y: trackY(i) + offset, size: 1, track: `t${i}` }))),
+})
+export const PRESETS = [
+  score('Clockwork picnic', 92, [
+    [['musicbox', 1, 5, -4], ['harp', 3, 7, 22], ['triangle', 5, 9, -14], ['keys', 7, 6, 20], ['musicbox', 9, 5, 0]],
+    [['xylophone', 1, 0, 14], ['keys', 4, 2, -16], ['harp', 7, 3, 20], ['triangle', 9, 0, -6]],
+    [['timpani', 1, -5, 0], ['timpani', 5, -5, 20], ['xylophone', 8, -2, -12]],
+  ]),
+  score('Raindrop waltz', 76, [
+    [['harp', 1, 5, -15], ['harp', 2.5, 7, 12], ['triangle', 4, 9, -8], ['harp', 5.5, 8, 22], ['keys', 7, 7, -12], ['triangle', 9, 5, 15]],
+    [['musicbox', 1, 0, 10], ['keys', 4, 2, -14], ['musicbox', 7, 3, 8]],
+  ]),
+  score('Tin-can parade', 112, [
+    [['xylophone', 1, 0, 0], ['triangle', 2.5, 3, 24], ['xylophone', 4, 2, -10], ['keys', 5.5, 4, 22], ['xylophone', 7, 3, -10], ['musicbox', 9, 0, 10]],
+    [['timpani', 1, -5, 10], ['timpani', 3, -5, -12], ['timpani', 5, -3, 10], ['timpani', 7, -5, -12], ['triangle', 9, 0, 10]],
+  ]),
+]
+export function blankTake(): Take { return { title: 'Untitled machine', tempo: 92, length: 12, tracks: tracks(1), notes: [] } }
+export function resizeTake(take: Take, length: number): void {
+  const next = clamp(length, 8, 24)
+  for (const note of take.notes) note.beat = .5 + (note.beat - .5) * (next - 2.5) / (take.length - 2.5)
+  take.length = next
 }
 export function validTake(value: unknown): Take | null {
   if (!value || typeof value !== 'object') return null
-  const t = value as Partial<Take>
-  if (!Array.isArray(t.slots) || t.slots.length < 2 || t.slots.length > 6 || !Number.isFinite(t.tempo)) return null
-  const slots: Take['slots'] = []
-  for (const item of t.slots) {
-    if (item === null) { slots.push(null); continue }
-    if (!item || ![...VOICES, 'rest'].includes(item.kind) || !Number.isInteger(item.pitch) || item.pitch < 0 || item.pitch > 5) return null
-    slots.push({ kind: item.kind, pitch: item.pitch })
+  const t = value as Take
+  if (!Number.isFinite(t.tempo) || !Number.isInteger(t.length) || t.length < 8 || t.length > 24 || !Array.isArray(t.tracks) || t.tracks.length < 1 || t.tracks.length > 4 || !Array.isArray(t.notes) || t.notes.length > MAX_NOTES) return null
+  const ids = new Set<string>(), noteIds = new Set<string>()
+  const safeTracks: Track[] = []
+  for (const [i, track] of t.tracks.entries()) {
+    if (!track || typeof track.id !== 'string' || !/^[\w-]{1,40}$/.test(track.id) || ids.has(track.id) || !Number.isFinite(track.volume)) return null
+    ids.add(track.id); safeTracks.push({ id: track.id, color: COLORS[i], volume: clamp(track.volume, 0, 1), muted: !!track.muted })
   }
-  return { slots, tempo: Math.max(60, Math.min(112, Math.round(t.tempo!))), title: typeof t.title === 'string' ? t.title.slice(0, 48) : 'A little machine' }
+  const notes: Note[] = []
+  for (const n of t.notes) {
+    if (!n || typeof n.id !== 'string' || !/^[\w-]{1,40}$/.test(n.id) || noteIds.has(n.id) || !VOICES.includes(n.kind) || !ids.has(n.track) || !Number.isInteger(n.pitch) || n.pitch < -5 || n.pitch > 14 || !Number.isFinite(n.beat) || !Number.isFinite(n.y) || !Number.isFinite(n.size)) return null
+    noteIds.add(n.id)
+    notes.push({ id: n.id, kind: n.kind, pitch: n.pitch, beat: clamp(n.beat, .5, t.length - 2), y: clamp(n.y, 40, boardHeight(t) - 80), size: clamp(n.size, .65, 1.5), track: n.track })
+  }
+  return { title: typeof t.title === 'string' ? t.title.slice(0, 48) : 'Untitled machine', tempo: clamp(Math.round(t.tempo), 48, 160), length: t.length, tracks: safeTracks, notes }
+}
+function legacy(value: unknown): Take | null {
+  const t = value as { slots?: { kind: Voice | 'rest'; pitch: number }[]; title?: string; tempo?: number } | null
+  if (!t || !Array.isArray(t.slots) || t.slots.length < 2 || t.slots.length > 6 || !Number.isFinite(t.tempo)) return null
+  const next = blankTake(); next.title = typeof t.title === 'string' ? t.title.slice(0, 48) : next.title; next.tempo = clamp(t.tempo!, 48, 160)
+  for (const [i, n] of t.slots.entries()) {
+    if (!n || n.kind === 'rest') continue
+    if (!VOICES.includes(n.kind) || !Number.isInteger(n.pitch) || n.pitch < 0 || n.pitch > 5) return null
+    next.notes.push({ id: `n${i}`, kind: n.kind, pitch: n.pitch, beat: 1 + i * 1.5, y: 85 + i % 2 * 20, size: 1, track: 't0' })
+  }
+  return next
 }
 export function encodeTake(take: Take): string {
-  return 'v1.' + btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(take)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+  return 'v2.' + btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(take)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 export function decodeTake(hash: string): Take | null {
   try {
     const value = hash.replace(/^#/, '')
-    if (!value.startsWith('v1.') || value.length > 2000) return null
+    if (!/^v[12]\./.test(value) || value.length > 24000) return null
     const bytes = Uint8Array.from(atob(value.slice(3).replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0))
-    return validTake(JSON.parse(new TextDecoder().decode(bytes)))
+    const data: unknown = JSON.parse(new TextDecoder().decode(bytes))
+    return value.startsWith('v2.') ? validTake(data) : legacy(data)
   } catch { return null }
 }
