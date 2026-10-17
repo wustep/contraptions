@@ -259,9 +259,10 @@ export function kids(t: number): ShowBall[] {
     // them now) and their faces (a ball's mark) come round over the top to him, looking up a little (he is taller).
     const r = Math.min(1, e / 0.5)
     const f = Math.max(0, Math.min(1, (e - 0.42) / 0.58))
-    // The face is there from the turn's first moment, the ink in the dark ball, and comes up with their colours (it
-    // came on whole in a frame, half way round).
-    const face = e <= 0 ? null : -Math.PI / 2 - (Math.PI / 2 - 0.32) * (f * f * (3 - 2 * f))
+    // The face is drawn in the rim's colour, which goes from the sun's to ink as the ball comes up from dark into its
+    // own: it comes on where the two are as light as each other, unseen, and darkens as the ball brightens (half way
+    // round, it came on whole in a frame; at the turn's start, a pale dot on the dark ball).
+    const face = e < 0.33 ? null : -Math.PI / 2 - (Math.PI / 2 - 0.32) * (f * f * (3 - 2 * f))
     return {
       id: KID_ID + i,
       x: kidX(i, t),
