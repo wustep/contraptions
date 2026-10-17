@@ -34,6 +34,8 @@ const HOME = R - WIRE
 
 /** The three places it stands: two treads and the ground at the stairs' foot. The ball rests this far under the rail in the cup; the last stack's top is this far under the rail out, and the nod brings its mouth up level with it, this far on. */
 const STAND = [-0.06, 0.5, 1.04]
+/** The stairs' back wall, far enough behind the top stack for the rail's post to stand on the tread clear of both. */
+const BACK = -0.44
 const STACK = WIRE + (N - 1) * PITCH
 const CUP_Y = 0.1
 const DIP = 0.5 - STACK
@@ -151,12 +153,23 @@ function planFor(floors: Floors): Plan {
 
 const PLANS: Record<Floors, Plan> = { 1: planFor(1), 2: planFor(2) }
 
-/** The coils' lines across the band, from coil 0 to coil `n - 1`. */
+/**
+ * The coils' lines across the band, from coil 0 to coil `n - 1`. Packed in a stack, every coil drawn would make it a
+ * block of ink: there every other line is left out, and each one between grows back from the band's middle as the
+ * coils on either side of it draw apart.
+ */
 function coils(p: p5, k: number, plan: Plan, t: number, n = N): void {
   for (let i = 0; i < n; i++) {
+    let half = WIDE / 2
+    if (i % 2) {
+      const [ax, ay] = coilAt(plan, i - 1, t)
+      const [bx, by] = coilAt(plan, Math.min(N - 1, i + 1), t)
+      half *= clamp((Math.hypot(bx - ax, by - ay) / 2 - 0.04) / 0.04)
+      if (half <= 0) continue
+    }
     const [x, y] = coilAt(plan, i, t)
     const [ax, ay] = alongAt(plan, i, t)
-    p.line((x - (ay * WIDE) / 2) * k, (y + (ax * WIDE) / 2) * k, (x + (ay * WIDE) / 2) * k, (y - (ax * WIDE) / 2) * k)
+    p.line((x - ay * half) * k, (y + ax * half) * k, (x + ay * half) * k, (y - ax * half) * k)
   }
 }
 
@@ -179,17 +192,17 @@ export const slinky = definePiece<{ color: string; floors: Floors }>({
     const risers = [STAND[0] + 0.28, STAND[1] + 0.28]
     solid(p, ink, weight, bg)
     p.beginShape()
-    p.vertex(-0.32 * k, tread[0] * k)
+    p.vertex(BACK * k, tread[0] * k)
     p.vertex(risers[0] * k, tread[0] * k)
     p.vertex(risers[0] * k, tread[1] * k)
     p.vertex(risers[1] * k, tread[1] * k)
     p.vertex(risers[1] * k, tread[2] * k)
-    p.vertex(-0.32 * k, tread[2] * k)
+    p.vertex(BACK * k, tread[2] * k)
     p.endShape(p.CLOSE)
     outline(p, ink, weight)
     p.line(risers[1] * k, tread[2] * k, (STAND[2] + 0.22) * k, tread[2] * k)
     rail(p, k, ink, weight, -0.5, LIP)
-    post(p, k, ink, weight, -0.28, FLOOR, tread[0])
+    post(p, k, ink, weight, BACK + 0.1, FLOOR, tread[0])
     rail(p, k, ink, weight, MOUTH + WIRE, 1.5, floors + FLOOR)
     post(p, k, ink, weight, 1.43, floors + FLOOR, floors + 0.5)
 
