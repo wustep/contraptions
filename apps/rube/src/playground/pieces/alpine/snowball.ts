@@ -1,18 +1,18 @@
 import { clamp } from '../../../../../../src/core/ease'
 import { outline, solid } from '../../../../../../src/core/draw'
-import { FLOOR, R, ROLL, definePiece, fly, rail, ramp, roll, trace, type Lane, type Pt } from '../../../parts'
+import { FLOOR, R, ROLL, definePiece, fly, mixHex, rail, ramp, roll, trace, type Lane, type Pt } from '../../../parts'
 import { body, ride, rounded, trackOf } from './parts-b'
-import { gearColor, snowWhite } from './snow'
+import { gearColor, powder, snowWhite } from './snow'
 
 /**
  * A snowball. The rail runs out onto the crown of a slope, and the ball
- * goes over the brink and down it gathering snow: a white ball grows round
- * it as it rolls, the ball its coloured heart, slow over the brink and
- * faster all the way, as big as half a cell by the foot. There a stump
- * stands in the run-out with the lower rail's end on it. The snowball
- * breaks on the stump, the snow bursts off in lumps, and the ball, bare
- * again, hops onto the stump's top and rolls on a floor down. The lumps
- * lie where they fell.
+ * goes over the brink and down it gathering snow: the first of it coats
+ * the ball white, and a snowball grows round it as it rolls, slow over the
+ * brink and faster all the way, as big as half a cell by the foot. There a
+ * stump stands in the run-out with the lower rail's end on it. The
+ * snowball breaks on the stump in a burst of powder, and the ball, bare
+ * again and its own colour, hops onto the stump's top and rolls on a floor
+ * down. What was the snowball lies in a drift against the stump.
  *
  * The slope is one line and the ball's centre is the snowball's: a
  * snowball's radius off that line, which grows with how far it has rolled.
@@ -68,13 +68,9 @@ const LANE: Lane = {
   fire: T_BURST,
 }
 
-/** The lumps the snowball breaks into: how far back of the stump each comes to rest, how high it goes, how big it is. */
-const LUMPS: [rest: number, up: number, r: number][] = [
-  [0.08, 0.16, 0.085],
-  [-0.27, 0.42, 0.06],
-  [0.25, 0.34, 0.065],
-  [0.4, 0.22, 0.045],
-]
+/** The drift the snowball leaves against the stump's near face: how far back of it it runs, and how high it stands. */
+const DRIFT = 0.3
+const DRIFT_H = 0.09
 
 export const snowball = definePiece<{ color: string; white: string }>({
   name: 'snowball',
@@ -89,9 +85,9 @@ export const snowball = definePiece<{ color: string; white: string }>({
     if (!fits(cells, [2, 1])) return null
     return { cells, exit: { at: [2, 1], dir: 1 }, lane: LANE, state: { color: gearColor(theme, color, ball.color), white: snowWhite(theme) } }
   },
-  draw: (p, s, { k, t, since, ink, weight }) => {
+  draw: (p, s, { k, since, ink, weight }) => {
     // The hill, the rail onto its crown, and the snow's line on from its foot.
-    body(p, k, ink, weight, s.white, HILL, 1.5, 0.95)
+    body(p, k, ink, weight, s.white, HILL, HILL[HILL.length - 1][1])
     rail(p, k, ink, weight, -0.5, CROWN + 0.02)
     // The stump in the run-out, the lower rail's end on its top.
     solid(p, ink, weight, s.color)
@@ -105,28 +101,35 @@ export const snowball = definePiece<{ color: string; white: string }>({
     p.endShape(p.CLOSE)
     rail(p, k, ink, weight, STUMP[0], 1.5, STUMP_TOP)
 
-    if (since < 0) {
-      // The snowball, under the ball: its coloured heart is the show's. Two creases turn with it.
-      const at = ballAt(Math.max(T_ON, t))
-      const r = radius(RIDE.s(t - T_ON))
-      if (t > T_ON && r > R + 0.03) {
-        solid(p, ink, weight, s.white)
-        p.circle(at[0] * k, at[1] * k, r * 2 * k)
-        const turn = RIDE.s(t - T_ON) / ((r + R) / 2)
-        outline(p, ink, weight * 0.7)
-        for (const a of [turn, turn + 2.3]) p.arc(at[0] * k, at[1] * k, r * 1.45 * k, r * 1.45 * k, a, a + 0.7)
+    // What the snowball was, heaped against the stump's near face once it has broken there.
+    const heap = clamp(since / 0.2)
+    if (heap > 0) {
+      const n = 16
+      const ground = (x: number) => TRACK.at(TRACK.reach(x)).at[1]
+      solid(p, ink, weight, s.white)
+      p.beginShape()
+      for (let i = 0; i <= n; i++) {
+        const x = STUMP[0] - DRIFT + (DRIFT * i) / n
+        p.vertex(x * k, (ground(x) - DRIFT_H * heap * Math.sin(((Math.PI / 2) * i) / n) ** 1.5) * k)
       }
-      return
+      p.vertex(STUMP[0] * k, ground(STUMP[0]) * k)
+      p.endShape(p.CLOSE)
     }
-    // Broken on the stump: the lumps go up and back off it and lie where they land.
-    const white = s.white
-    solid(p, ink, weight * 0.8, white)
-    for (const [rest, up, r] of LUMPS) {
-      const f = clamp(since / (0.3 + up * 0.5))
-      const x = BURST[0] + RF * 0.5 + (STUMP[0] - rest - BURST[0] - RF * 0.5) * f
-      const ground = TRACK.at(TRACK.reach(STUMP[0] - rest)).at[1] - r * 0.8
-      const y = BURST[1] + (ground - BURST[1]) * f - up * 4 * f * (1 - f)
-      p.circle(x * k, y * k, r * 2 * k)
+  },
+  over: (p, s, { k, t, since, ink, weight, color }) => {
+    // The snowball, over the ball it was gathered round: the first snow coats it its own colour going white.
+    if (since < 0 && t > T_ON) {
+      const rolled = RIDE.s(t - T_ON)
+      const r = radius(rolled)
+      const at = ballAt(t)
+      solid(p, ink, weight, mixHex(color, s.white, clamp((r - R) / 0.03)))
+      p.circle(at[0] * k, at[1] * k, r * 2 * k)
+      // One crease, turning with it.
+      const turn = rolled / r
+      outline(p, ink, weight * 0.7)
+      p.arc(at[0] * k, at[1] * k, r * 1.3 * k, r * 1.3 * k, turn, turn + 0.9)
     }
+    // Broken on the stump, in one burst of powder.
+    powder(p, k, ink, weight, s.white, STUMP[0] - 0.12, TRACK.at(TRACK.reach(STUMP[0] - 0.12)).at[1], since / 0.5, 2)
   },
 })
