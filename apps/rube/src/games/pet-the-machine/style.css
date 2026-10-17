@@ -181,3 +181,23 @@ form input { width: 100%; padding: 12px; border: 1px solid #b0bda2; border-radiu
   .toy svg { width: 42px; height: 42px; }
 }
 .replay-button:disabled { opacity: .5; }
+/* On a phone, the same toy controls move beside the scene. Nothing is duplicated. */
+.phone-garden .garden-panel { scroll-margin-top: 12px; }
+.phone-garden .resident-targets { display: none; }
+.phone-garden .garden-panel > .toy-section { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px 16px; border-top: 1px solid var(--line); padding: 14px 16px; }
+.phone-garden .garden-panel > .toy-section .toy-heading { grid-column: 1 / 3; margin: 0 0 3px; }
+.phone-garden .garden-panel > .toy-section .toy-heading h3 { font-size: 11px; }
+.phone-garden .garden-panel > .toy-section .toys { grid-column: 1; grid-row: 2 / 4; }
+.phone-garden .garden-panel > .toy-section .toy-note { display: none; }
+.phone-garden .garden-panel > .toy-section .offer { grid-column: 2; grid-row: 2; font-size: 11px; min-height: 44px; }
+.phone-garden .garden-panel > .toy-section .pat-button { grid-column: 2; grid-row: 3; font-size: 10px; padding: 2px 0 4px; }
+.phone-garden .garden-panel > .toy-section .toy { justify-content: center; min-height: 78px; }
+.phone-garden .garden-panel > .toy-section .toy > span:last-child { font-size: 8px; }
+.phone-garden .field-note { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 16px; }
+.phone-garden .field-note .note-heading { grid-column: 1 / 3; grid-row: 1; }
+.phone-garden .field-note .identity { grid-column: 1; grid-row: 2; }
+.phone-garden .field-note .trait { grid-column: 2; grid-row: 2; align-self: center; margin-bottom: 0; }
+.phone-garden .field-note .mood { grid-column: 1 / 3; grid-row: 3; margin-top: 13px; font-size: 10px; }
+.phone-garden .field-note #resident-found { flex-basis: auto; margin-left: auto; font-size: 9px; }
+.phone-garden .field-note .observation { grid-column: 1 / 3; grid-row: 4; }
+.phone-garden #stage { height: 230px; }

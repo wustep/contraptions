@@ -64,6 +64,15 @@ app.innerHTML = `
 const el = <T extends HTMLElement = HTMLElement>(selector: string): T => document.querySelector<T>(selector)!
 const caption = (text: string) => { if (el('#caption').textContent !== text) el('#caption').textContent = text }
 const anyDialog = () => !!document.querySelector('dialog[open]')
+const phone = window.matchMedia('(max-width: 520px)')
+const toySection = el('.toy-section')
+function arrangeControls(): void {
+  document.body.classList.toggle('phone-garden', phone.matches)
+  if (phone.matches) el('.garden-panel').insertBefore(toySection, el('.caption-row'))
+  else el('.field-note').insertBefore(toySection, el('#observation'))
+}
+arrangeControls()
+phone.addEventListener('change', () => { arrangeControls(); refresh() })
 function persist(): void {
   el('#save-status').textContent = saveMemory(memory) ? 'Your garden remembers you. Saved on this device.' : 'Storage is unavailable. Your garden will last for this visit.'
 }
@@ -103,6 +112,8 @@ function refresh(): void {
   el('#offer-text').textContent = !ready ? 'Opening the garden…' : busy ? 'A little moment…' : `Offer the ${toys[toy].short}`
   el('#offer').classList.toggle('playing', busy)
   el('#toy-note').textContent = toys[toy].note
+  el('.toy-heading h3').textContent = phone.matches ? `A little something for ${memory.names[id]}` : 'Leave a little something'
+  el('.scene-note').textContent = phone.matches ? `${memory.names[id]}’s little corner` : 'a place for small peculiarities'
   el('#pause').setAttribute('aria-pressed', String(paused))
   el('#pause span').textContent = paused ? 'Resume' : 'Pause'
   el('.pause-overlay').hidden = !paused
@@ -149,6 +160,7 @@ function run(decision: Decision, replay = false): void {
   el('#observation-line').textContent = 'They have their own ideas about these things.'
   el('#postcard').hidden = true
   caption(`A ${toys[toy].short} for ${memory.names[state.selected]}.`)
+  if (phone.matches) el('.garden-panel').scrollIntoView({ block: 'start', behavior: 'instant' })
   refresh()
 }
 

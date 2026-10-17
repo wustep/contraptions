@@ -226,6 +226,9 @@ export function createGarden(host: HTMLElement, state: GardenState, cast: Cast, 
   let release = () => {}
   let last = performance.now()
   let exporting = false
+  let cameraX = 0
+  let cameraY = 0.1
+  let firstFrame = true
   const instance = new p5((p) => {
     p.setup = () => {
       release = setupCanvas(p, host).release
@@ -237,8 +240,18 @@ export function createGarden(host: HTMLElement, state: GardenState, cast: Cast, 
       const dt = Math.min((now - last) / 1000, 0.05)
       last = now
       if (!exporting && !document.hidden) tick(dt)
-      const k = Math.min(p.width / sceneWidth, p.height / 4.95)
-      drawWorld(p, show, state.time, show.at(state.time), { x: 0, y: 0.1 }, k, { x: 0, y: 0, w: p.width, h: p.height }, false)
+      const phone = window.matchMedia('(max-width: 520px)').matches && !exporting
+      const duet = state.performance?.decision.behavior === 'neighbors'
+      const perches = state.performance?.decision.perches ?? state.memory.perches
+      const [x] = position(state.selected, perches)
+      const aimX = phone ? duet ? -1.0 : x + (state.selected === 'frog' ? 0 : state.selected === 'snail' ? 0.25 : 0.95) : 0
+      const aimY = phone && state.selected !== 'frog' && !duet ? 0.45 : 0.1
+      const approach = state.reducedMotion || exporting || firstFrame ? 1 : 1 - Math.exp(-dt * 12)
+      firstFrame = false
+      cameraX += (aimX - cameraX) * approach
+      cameraY += (aimY - cameraY) * approach
+      const k = phone ? duet ? Math.min(p.width / 8.6, p.height / 4.95) : Math.min(p.width / 5.6, p.height / 3.9) : Math.min(p.width / sceneWidth, p.height / 4.95)
+      drawWorld(p, show, state.time, show.at(state.time), { x: cameraX, y: cameraY }, k, { x: 0, y: 0, w: p.width, h: p.height }, false)
     }
   })
 
