@@ -39,6 +39,7 @@ import {
   TAP_BACK,
   TAP_OFF,
   TAP_UP,
+  WINDOW_LIGHTS,
 } from './center-plan'
 import { drawSet } from './center-set'
 
@@ -55,16 +56,16 @@ import { drawSet } from './center-set'
  * end, a little press, and the air runs down the hose and the model puffs and hops. Not enough. Back down, he
  * gathers himself on the drum break (a bounce on every hit of the fill, creeping in) and leaps on it on bar 106's first call:
  * the pedal goes down, the air runs down the hose, and the building jumps to three times its size, up first, then
- * out, its roofs unfolding and its lantern lifting after. The second call: three times again, and the camera cuts
- * back to hold it. The third: three times again, and there it is, whole. On the shout a fourth stomp, and the air
- * blows its brass doors open.
+ * out, its roofs unfolding and its lantern lifting after. The second call: three times again, and the picture
+ * dissolves out to the whole lawn. The third: three times again, and there it is, whole. On the shout a fourth
+ * stomp, and the air blows its brass doors open.
  *
  * In the loudest bars the kids come along the path from the right, a run of little bouncing balls, and up the
  * stair and in; Derek and Hansel at the door either side of them. The last of them in, the two close in to the
  * doorway, the press bring their cameras up, and on the last hit they fire and the two of them give the look: the
  * last photograph, and two more, smaller, as it fades. The press lower their cameras and hurry off, and the day goes:
  * as the camera draws back to the whole Center the sky deepens to dusk over a warm horizon, its windows light one by
- * one with the kids at them, and it holds, drifting, the two of them small at its door, for the credits.
+ * one with the kids at them, and it goes on drawing back, slowly, the two of them small at its door, for the credits.
  */
 
 /** The part's origin in the Center's cells: the set and the part share one frame. */
@@ -155,18 +156,25 @@ export const center = part<null>(
       riders: (t: number, hero: ShowBall) => {
         const out: ShowBall[] = [{ ...hero, spin: DEREK_LOOKS(t) }]
         if (t < KIDS_FROM) return out
-        // The kids at the lit windows, coming out of the light as each lamp comes on.
+        // The kids at the lit windows, coming out of the light as each lamp comes on, and then never quite still:
+        // each drifts along its sill on its own slow clock, looking the way it goes, within its own pane (half of
+        // it, where two share one).
         for (const q of WINDOW_KIDS) {
           const lit = litAt(q.window, t)
           if (lit <= 0) continue
+          const shared = WINDOW_KIDS.filter((o) => o.window === q.window).length > 1
+          const w = 0.23 + 0.11 * ((q.kid * 0.618) % 1)
+          const ph = q.kid * 2.3 + q.window
+          const settle = Math.min(1, Math.max(0, (t - WINDOW_LIGHTS[q.window] - 1.5) / 3))
+          const drift = settle * (shared ? 0.04 : 0.16) * Math.sin(t * w + ph)
           out.push({
             id: KID_ID + q.kid,
-            x: MODEL.x0 + D.windows[q.window] + q.dx,
+            x: MODEL.x0 + D.windows[q.window] + q.dx + drift,
             y: GROUND - D.window.y0 - KID_R,
             color: mixHex(LIT, KIDS[q.kid % KIDS.length], lit),
             rim: mixHex(LIT, CENTER_THEME.ink, lit),
             scale: KID_SCALE,
-            spin: Math.PI / 2 + q.dx * 3,
+            spin: Math.PI / 2 + q.dx * 3 - settle * 0.5 * Math.cos(t * w + ph),
           })
         }
         for (let i = 0; i < KID_COUNT; i++) {
@@ -196,7 +204,7 @@ function shots(begin: number): PartShot[] {
   return [
     // The two of them on the path (the score opens on the carried framing); drifting with him to the bell-pull.
     on(begin + 1.3, 3.8, -1.2, -0.82),
-    // Cut on the bump to the model alone, a building in the morning as the sheet goes up; a slow push in.
+    // On the bump, a dissolve to the model alone, a building in the morning as the sheet goes up; a slow push in.
     on(BUMP, 0.78, -2.9, -0.04, true),
     on(BESIDE - 1.45, 0.72, -2.92, -0.03),
     // He comes up beside it: easing back to take him in.
@@ -210,30 +218,29 @@ function shots(begin: number): PartShot[] {
     on(TAP, 1.98, -4.02, -0.36),
     on(BOUNCES[0] - 1.1, 1.9, -3.95, -0.3),
     on(BOUNCES[0], 2.15, -4.0, -0.42),
-    on(BOUNCES[BOUNCES.length - 1], 3.1, -4.35, -0.95),
-    // The first call in this frame; the second and third each cut back to hold it.
-    on(STOMPS[0], 3.25, -4.25, -0.9),
-    on(STOMPS[1], 7.5, -1.5, -2.0, true),
-    on(STOMPS[2], 15.5, 3.55, -5.2, true),
+    // Low enough that the old tree's crown, whose trunk stands just past the right edge, stays above the frame.
+    on(BOUNCES[BOUNCES.length - 1], 3.1, -4.35, -0.8),
+    // The first call in this frame; on the second it dissolves out to the whole lawn (`dissolve.ts`), and the third
+    // fills it.
+    on(STOMPS[0], 3.25, -4.25, -0.75),
+    on(STOMPS[1], 15.5, 3.55, -5.2, true),
     on(OFF + 0.1, 15.4, 3.5, -5.1),
     // In to the door as the kids come.
     on(225.2, 9.5, 3.3, -2.9),
     on(227.4, 4.6, 3.85, -0.98),
     on(PHOTO, 4.2, 3.85, -0.9),
     on(PHOTO + 0.15, 4.22, 3.85, -0.91),
-    // And back, slowly, to the whole Center under the sky; a drift for the credits.
+    // And back, slowly, to the whole Center under the sky.
     on(232.8, 15.3, 3.6, -5.3),
-    // Under the credits the evening comes on (stars, lamps, the last lights) and the camera wanders, slowly.
-    on(240.2, 15.8, 4.5, -5.5),
-    on(248.2, 15.5, 3.7, -5.46),
-    on(256.0, 16.1, 2.9, -5.6),
-    on(DURATION, 16.4, 3.4, -5.7),
+    // Under the credits the evening comes on (stars, lamps, the last lights), and the camera keeps on drawing back
+    // and up, square on the door, so the lamps furthest down the lawn come into the frame as they light.
+    on(DURATION, 16.3, 3.55, -5.75),
   ]
 }
 
 /** Every strike, in show seconds, exact. */
 export const CENTER_HITS: number[] = [
-  // The bell-pull: the sheet up (and the camera's cut to the model).
+  // The bell-pull: the sheet up (and the dissolve to the model).
   BUMP,
   // Beside it; the start back; over it, and down.
   BESIDE,

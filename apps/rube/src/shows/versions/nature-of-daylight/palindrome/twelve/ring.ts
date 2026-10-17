@@ -1,8 +1,10 @@
 import type p5 from 'p5'
 import type { Pt } from '../../../../../parts'
-import { drawScreen, inkRing, mix, PLACES, rgba } from '../cast'
+import { drawInk, drawScreen, inkRing, mix, PLACES, rgba } from '../cast'
+import { heavy } from '../chamber/ink'
+import { LOGOS } from '../chamber/plan'
 import { SHANG, TENT } from '../worlds'
-import { closeFlare, linkDrop, linkLit, linkSpan, panelAngle, redCast, screenFlash, screenOn } from './timeline'
+import { closeFlare, leaving, linkDrop, linkLit, linkSpan, panelAngle, redCast, screenFlash, screenOn, shareAt, shareFlare, sharePulse, sharing } from './timeline'
 
 /**
  * The ring: twelve screens on one circular rig like a clock face, each showing a shell over its own place, each
@@ -181,7 +183,26 @@ function drawLink(ctx: CanvasRenderingContext2D, k: number, j: number, t: number
       }
     }
   }
+  // The shared word going along it: a bright head, its light trailing behind it.
+  const word = sharePulse(j, t)
+  if (word && lit) {
+    const n = 9
+    for (let m = 0; m < n; m++) {
+      const a = word.u - word.dir * m * 0.03
+      const b = a - word.dir * 0.03
+      const u0 = Math.max(0, Math.min(a, b))
+      const u1 = Math.min(1, Math.max(a, b))
+      if (u1 <= u0) continue
+      fillCable(ctx, k, c, u0, u1, 0.9, rgba('#FFFFFF', 0.95 * (1 - m / n) ** 1.3))
+    }
+  }
 }
+
+/**
+ * The word she sends round the world, which each screen takes up as it reaches it: the one seen written on the glass
+ * as their answer to her touch, and run down the rail onto its card (the chamber's second).
+ */
+const WORD = heavy(LOGOS[1].seed)
 
 /** A fallen screen's tilt from its angle in the clock (0 upright, π/2 fallen): its turn on its corner hinge. */
 const tilt = (th: number) => (th / (Math.PI / 2)) * STOP
@@ -205,7 +226,7 @@ function drawPanel(p: p5, k: number, i: number, t: number, th: number, on: numbe
   ctx.rotate(tilt(th))
   ctx.fillStyle = TENT.frame
   ctx.fillRect(0, -PH * k, PW * k, PH * k)
-  drawScreen(p, k, FR, -PH + FR, GW, GH, { on, place: PLACES[i], t, glow: 0, bezel: TENT.frame })
+  drawScreen(p, k, FR, -PH + FR, GW, GH, { on, place: PLACES[i], t, glow: 0, bezel: TENT.frame, away: leaving(i, t) })
   if (on < 0.99) {
     // Dead, it is still a screen: dull glass with the room in it, and a sheen across it.
     const dead = 1 - on
@@ -247,6 +268,10 @@ function drawPanel(p: p5, k: number, i: number, t: number, th: number, on: numbe
     ctx.strokeStyle = rgba(SHANG, 0.9 * red)
     ctx.lineWidth = Math.max(1.5, 0.04 * k)
     ctx.strokeRect(FR * k, (-PH + FR) * k, GW * k, GH * k)
+  }
+  // The shared word on its glass, written in as it arrives.
+  if (sharing(t) && t >= shareAt(i) && on > 0.5) {
+    drawInk(p, k, FR + GW / 2, -PH + FR + GH / 2, GH * 0.3, WORD, (t - shareAt(i)) / 0.35, { color: TENT.phone })
   }
   const flash = screenFlash(i, t)
   if (flash > 0.01) {
@@ -306,8 +331,9 @@ export function drawRing(p: p5, k: number, t: number): void {
   const th = Array.from({ length: 12 }, (_, i) => panelAngle(i, t))
   const on = Array.from({ length: 12 }, (_, i) => screenOn(i, t))
   for (let i = 0; i < 12; i++) drawGlow(ctx, k, i, t, th[i], on[i])
-  const flare = closeFlare(t)
-  // The flare as it closes: a soft light all round the ring, wider than it, dying away.
+  const flare = Math.max(closeFlare(t), 0.8 * shareFlare(t))
+  // The flare as it closes (and as the shared word's halves meet): a soft light all round the ring, wider than it,
+  // dying away.
   if (flare > 0.01) {
     const r0 = (RM - 1.8) * k
     const r1 = (RM + 1.8) * k

@@ -5,8 +5,8 @@ import { homeLeapAt } from '../seams'
 import { FIRE_MOUTH, WICK } from './layout'
 
 /**
- * The director's: home. The spark bursts out of the loft stove's firebox door at the last return door
- * (`DOORS.back[2]`) and leaps up and left over the bench's end, settling onto its wick on the first last chord
+ * The director's: home. The spark bursts out of the loft stove's firebox door at the door home
+ * (`DOORS.back[0]`) and leaps up and left over the bench's end, settling onto its wick on the first last chord
  * (`LAST[0]`): quick out of the fire, slow onto the wick (`homeLeapAt` in `seams.ts`). On the second
  * (`LAST[1]`) the firebox door bangs shut behind it (`hearth.ts`) and the cat wakes. Then it burns on its wick, a
  * candle's flame, through the credits. The leg is laid with its entry (-0.5, 0) at `FIRE_MOUTH`.
@@ -52,12 +52,14 @@ export const home = part<null>(
     // Home's frame is the loft's cells less `HOME_AT`: `w(x, y)` is a point of the loft.
     const w = (x: number, y: number): Pt => [x - HOME_AT[0], y - HOME_AT[1]]
     return [
-      // One move, over the leap: from the dash's close frame (carried across the door, 4.4 cells) out to the two-shot,
-      // the zoom quickest while the spark is in the air (about 2.3 log/s, even on both sides of the crest), so the eye
-      // rides the spark and not the lens. The frame flies with it: up and left over the arc's top (this key is the arc's crest; the pull keeps going
-      // through it), then down and out as it comes down onto the wick, so the spark sits near the same place on the
-      // screen, about a third across and a fifth down, all the way (Zoom keeps it, 0.96 of its half-frame at most).
+      // One move, over the leap: from the door's close frame (carried across it, 2.4 cells) out to the two-shot, the
+      // zoom quickest as the spark bursts out, so the eye rides the spark and not the lens. The frame flies with it: up
+      // and left over the arc's top (the first key; the pull keeps going through it), then down and out as it comes
+      // down onto the wick, so the spark sits near the same place on the screen, about two-fifths across and a fifth
+      // down by the landing (Zoom keeps it, 0.99 of its half-frame at most). The second key keeps the pull going into
+      // the landing, so the first last chord's jolt throws it further back.
       { t: slot.begin + 0.39, cells: 9.0, hold: w(4.2, 2.0), w: 1 },
+      { t: LAST[0] - 0.3, cells: 12.0, hold: w(2.9, 3.5), w: 1 },
       // The move arrives and settles ON the first last chord, as the spark lands: a two-shot, wide and low enough that
       // both halves of the punchline are whole: the candle on the left with its flame well clear of the top (about 13%
       // down), the open firebox door in the middle, and the sleeping cat's head and shoulders on the floor below it (its

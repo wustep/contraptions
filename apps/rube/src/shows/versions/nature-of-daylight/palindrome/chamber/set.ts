@@ -852,6 +852,16 @@ export function drawSuit(p: p5, k: number, x: number, y: number, light = 1): voi
   suitAt(ctx, k, 0.5 + 0.5 * clamp01(light))
   ctx.restore()
 }
+/** The same suit with its foot turned `turn` radians from straight down toward +x: where gravity has turned (the shaft). */
+export function drawSuitTurned(p: p5, k: number, x: number, y: number, light: number, turn: number): void {
+  const ctx = ctxOf(p)
+  ctx.save()
+  ctx.translate(x * k, y * k)
+  ctx.rotate(-turn)
+  ctx.translate(0, FLOOR * k)
+  suitAt(ctx, k, 0.5 + 0.5 * clamp01(light))
+  ctx.restore()
+}
 function suitAt(ctx: Ctx, k: number, light: number, empty = false): void {
   if (empty) {
     // Empty, its window is glass with nothing behind it: pale, a glint on it. (Open onto the dark wall behind, the window

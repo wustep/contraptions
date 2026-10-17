@@ -1,6 +1,9 @@
 import type { Pt } from '../../../../../parts'
 import { hash } from '../kit'
-import { blob, ctxOf, ellipse, flash, glint, glow, line, path, rect, rgba, ring, shape, vgrad, type Pen } from '../dream/pen'
+import type { View } from '../depth'
+import { drawHarbour } from './harbour'
+import { drawDoorDetail, drawSkirt, drawUnderFloor, drawWallThings, lampAt, WIN } from './room'
+import { blob, ctxOf, ellipse, flash, line, mix, path, rect, rgba, ring, shape, type Pen } from '../dream/pen'
 import {
   BELL,
   CEIL,
@@ -27,7 +30,6 @@ import {
   THUMB,
   WALL_OUT,
   cherylAt,
-  CHERYL_AT,
 } from './geo'
 
 /**
@@ -63,7 +65,7 @@ const C = {
   h3: '#6E8F6A',
   h4: '#A8B4B6',
   pilot: '#0F0A08',
-  rim: '#8E9BA1',
+  coat: '#2A1E17',
   ring: '#F5D27A',
   stage: '#3A2820',
   stageTop: '#5E4330',
@@ -84,98 +86,67 @@ const C = {
 /* ------------------------------------------------------------------ the room */
 
 export function drawRoom(pen: Pen, t: number, f: { x0: number; y0: number; x1: number; y1: number }): void {
-  // Outside both doors: the harbour's grey day, and the water.
-  vgrad(pen, f.x0 - 1, f.y0 - 1, f.x1 + 1, f.y1 + 1, [
-    [0, C.sky, 1],
-    [0.6, C.grey, 1],
-    [1, C.greyDark, 1],
-  ])
-  outside(pen, -12, DOOR_IN[0], t)
-  outside(pen, WALL_OUT[1], EXIT_X + 12, t)
-  // The back wall: vertical boards.
+  const g = ctxOf(pen.p)
+  const k = pen.k
+  const v: View = { ...f, cx: (f.x0 + f.x1) / 2, cy: (f.y0 + f.y1) / 2, w: f.x1 - f.x0, h: f.y1 - f.y0, k }
   const x0 = DOOR_IN[1]
   const x1 = WALL_OUT[0]
-  rect(pen, x0, CEIL, x1, FLOOR, C.wall)
+  // Outside both doors: the harbour (`harbour.ts`), on its own planes behind the room.
+  g.save()
+  g.beginPath()
+  g.rect((f.x0 - 1) * k, (f.y0 - 1) * k, (x0 - f.x0 + 1) * k, (f.y1 - f.y0 + 2) * k)
+  g.rect(x1 * k, (f.y0 - 1) * k, (f.x1 - x1 + 1) * k, (f.y1 - f.y0 + 2) * k)
+  g.clip()
+  drawHarbour(g, v, t)
+  g.restore()
+  quay(pen, v, t, -12, DOOR_IN[0])
+  quay(pen, v, t, WALL_OUT[1], EXIT_X + 12)
+  // The back wall: vertical boards.
+  g.fillStyle = C.wall
+  g.fillRect(x0 * k, CEIL * k, (x1 - x0) * k, (FLOOR - CEIL) * k)
+  const seams = new Path2D()
+  const planks = new Path2D()
   for (let x = x0 + 0.05; x < x1; x += 0.34) {
-    rect(pen, x, CEIL, x + 0.03, FLOOR, C.seam)
-    if (hash(Math.round(x * 10), 1) > 0.6) rect(pen, x + 0.03, CEIL, x + 0.31, FLOOR, C.plank)
+    seams.rect(x * k, CEIL * k, 0.03 * k, (FLOOR - CEIL) * k)
+    if (hash(Math.round(x * 10), 1) > 0.6) planks.rect((x + 0.03) * k, CEIL * k, 0.28 * k, (FLOOR - CEIL) * k)
   }
-  // The window on the water, behind the stage.
-  const wx0 = 2.95
-  const wx1 = 4.55
-  const wy0 = -2.75
-  const wy1 = -1.55
+  g.fillStyle = C.plank
+  g.fill(planks)
+  g.fillStyle = C.seam
+  g.fill(seams)
+  // The window on the water, behind the stage: the harbour through it, its frame.
+  const { x0: wx0, x1: wx1, y0: wy0, y1: wy1 } = WIN
   rect(pen, wx0 - 0.08, wy0 - 0.08, wx1 + 0.08, wy1 + 0.1, C.beam)
-  vgrad(pen, wx0, wy0, wx1, wy1, [
-    [0, C.sky, 1],
-    [0.5, C.grey, 1],
-    [0.52, C.sea, 1],
-    [1, C.seaDark, 1],
-  ])
-  // The far shore, low, and a berg.
-  shape(pen, [[wx0, wy0 + 0.62], [wx0 + 0.4, wy0 + 0.5], [wx0 + 0.9, wy0 + 0.56], [wx1, wy0 + 0.48], [wx1, wy0 + 0.62]], C.shore)
-  shape(pen, [[wx0 + 1.0, wy0 + 0.66], [wx0 + 1.12, wy0 + 0.55], [wx0 + 1.3, wy0 + 0.57], [wx0 + 1.38, wy0 + 0.66]], C.sky)
-  for (let i = 0; i < 3; i++) {
-    const y = wy0 + 0.75 + i * 0.13
-    const dx = Math.sin(t * 0.7 + i) * 0.08
-    line(pen, [wx0 + 0.15 + dx + i * 0.2, y], [wx0 + 0.6 + dx + i * 0.2, y], C.grey, 0.5)
-  }
+  g.save()
+  g.beginPath()
+  g.rect(wx0 * k, wy0 * k, (wx1 - wx0) * k, (wy1 - wy0) * k)
+  g.clip()
+  drawHarbour(g, v, t)
+  g.restore()
   rect(pen, (wx0 + wx1) / 2 - 0.03, wy0, (wx0 + wx1) / 2 + 0.03, wy1, C.beam)
   rect(pen, wx0, (wy0 + wy1) / 2 - 0.03, wx1, (wy0 + wy1) / 2 + 0.03, C.beam)
-  // The cold daylight off the window on the boards.
-  glow(pen, [(wx0 + wx1) / 2, wy1 + 0.4], 1.6, C.grey, 0.12)
+  drawWallThings(g, k, t)
   // The ceiling and its beams.
   rect(pen, x0, CEIL - 3, x1, CEIL, C.beam)
   for (let x = x0 + 0.4; x < x1; x += 1.3) rect(pen, x, CEIL, x + 0.18, CEIL + 0.22, C.beam)
-  // The floor.
-  rect(pen, DOOR_IN[0] - 0.05, FLOOR, x1 + 0.3, FLOOR + 3, C.floorCut)
+  // The floor, and the piles and the water under it.
+  drawUnderFloor(g, v, t, DOOR_IN[0] - 0.05, x1 + 0.3)
   rect(pen, DOOR_IN[0] - 0.05, FLOOR, x1 + 0.3, FLOOR + 0.12, C.floor)
-  for (let x = DOOR_IN[0] + 0.4; x < x1; x += 1.1) rect(pen, x, FLOOR + 0.12, x + 0.12, FLOOR + 3, C.beam)
   line(pen, [DOOR_IN[0], FLOOR], [x1 + 0.3, FLOOR], C.counterEdge, 0.6)
   // The walls either side, cut, with their doors.
   wallWithDoor(pen, DOOR_IN[0], DOOR_IN[1])
   wallWithDoor(pen, WALL_OUT[0], WALL_OUT[1])
-  // The lamps over the counter: low, amber.
-  for (const lx of [1.1, 2.6]) {
-    line(pen, [lx, CEIL], [lx, -2.35], C.iron, 0.7)
-    shape(pen, [[lx - 0.17, -2.15], [lx + 0.17, -2.15], [lx + 0.08, -2.35], [lx - 0.08, -2.35]], C.counter)
-    glow(pen, [lx, -2.05], 1.5, C.lamp, 0.26)
-    rect(pen, lx - 0.13, -2.17, lx + 0.13, -2.14, C.lamp)
-  }
 }
 
-function outside(pen: Pen, x0: number, x1: number, t: number): void {
-  // Across the water: the mountain over the town, in the haze, and the town's painted houses along the shore.
-  for (let m = Math.floor(x0 / 7) * 7; m < x1; m += 7) {
-    shape(pen, [[m - 1, -1.0], [m + 1.2, -2.3], [m + 2.0, -2.0], [m + 2.9, -3.1], [m + 3.6, -2.6], [m + 5.2, -1.6], [m + 6.5, -1.0]], C.haze)
-  }
-  rect(pen, x0, -1.12, x1, -0.98, C.shore)
-  const HOUSES = [C.h1, C.h2, C.h3, C.h4]
-  for (let i = Math.floor(x0 / 0.55); i * 0.55 < x1; i++) {
-    if (hash(i, 31) > 0.55) continue
-    const hx = i * 0.55 + hash(i, 32) * 0.2
-    const hy = -1.1 - 0.12 * hash(i, 33)
-    rect(pen, hx, hy - 0.11, hx + 0.16, hy, HOUSES[Math.floor(hash(i, 34) * 4)])
-    shape(pen, [[hx - 0.02, hy - 0.11], [hx + 0.08, hy - 0.17], [hx + 0.18, hy - 0.11]], C.shore)
-  }
-  // The harbour: water below the quay's edge.
-  rect(pen, x0, -1.0, x1, FLOOR + 3, C.sea)
-  rect(pen, x0, -1.0, x1, -0.97, C.grey)
-  for (let i = 0; i < 5; i++) {
-    const y = -0.8 + i * 0.18
-    const dx = Math.sin(t * 0.6 + i * 1.3) * 0.2
-    for (let x = Math.ceil(x0); x < x1; x += 1.7) line(pen, [x + dx + i * 0.3, y], [x + dx + i * 0.3 + 0.5, y], C.grey, 0.5)
-  }
-  // The quay: a deck of planks on piles over the water, level with the bar's floor.
-  vgrad(pen, x0, FLOOR + 0.14, x1, FLOOR + 3, [
-    [0, C.pile, 1],
-    [0.25, C.seaDark, 1],
-    [1, C.seaDeep, 1],
-  ])
-  for (let x = Math.ceil(x0 / 1.8) * 1.8; x < x1; x += 1.8) rect(pen, x - 0.04, FLOOR + 0.1, x + 0.04, FLOOR + 1.2, C.pile)
-  rect(pen, x0, FLOOR, x1, FLOOR + 0.14, C.quay)
-  rect(pen, x0, FLOOR + 0.1, x1, FLOOR + 0.14, C.quayDark)
-  for (let x = Math.ceil(x0 * 2) / 2; x < x1; x += 0.5) line(pen, [x, FLOOR], [x, FLOOR + 0.1], C.quayDark, 0.5)
+/** The quay past either door: a deck of planks on piles over the water, level with the bar's floor. */
+function quay(pen: Pen, v: View, t: number, x0: number, x1: number): void {
+  const a = Math.max(x0, v.x0 - 1)
+  const b = Math.min(x1, v.x1 + 1)
+  if (b <= a) return
+  drawUnderFloor(ctxOf(pen.p), v, t, a, b, 1)
+  rect(pen, a, FLOOR, b, FLOOR + 0.14, C.quay)
+  rect(pen, a, FLOOR + 0.1, b, FLOOR + 0.14, C.quayDark)
+  for (let x = Math.ceil(a * 2) / 2; x < b; x += 0.5) line(pen, [x, FLOOR], [x, FLOOR + 0.1], C.quayDark, 0.5)
 }
 
 function wallWithDoor(pen: Pen, x0: number, x1: number): void {
@@ -193,6 +164,7 @@ export function drawDoorIn(pen: Pen, t: number): void {
   shape(pen, [[x, HEAD + 0.05], [x + w, HEAD + 0.12], [x + w, FLOOR - 0.06], [x, FLOOR]], C.door, 0.5, C.doorDark)
   rect(pen, x + w * 0.2, HEAD + 0.35, x + w * 0.8, -1.2, C.sky)
   rect(pen, x + w * 0.2, -0.9, x + w * 0.8, -0.2, C.doorDark)
+  drawDoorDetail(ctxOf(pen.p), pen.k, x, w)
   // The bell on its bracket.
   const b: Pt = [DOOR_IN[1] + 0.1, HEAD + 0.02]
   const swing = 0.5 * ring(t - BELL, 3, 0.5)
@@ -201,28 +173,25 @@ export function drawDoorIn(pen: Pen, t: number): void {
   const by = b[1] + 0.12
   blob(pen, [[bx, by - 0.08], [bx + 0.05, by - 0.05], [bx + 0.065, by + 0.04], [bx + 0.09, by + 0.08], [bx - 0.09, by + 0.08], [bx - 0.065, by + 0.04], [bx - 0.05, by - 0.05]], C.amber)
   line(pen, [b[0], b[1] + 0.02], [bx, by - 0.07], C.iron, 0.8)
-  glint(pen, [bx, by + 0.02], 0.08, C.lamp, 0.8 * flash(t - BELL, 0.3))
 }
 
 /** The back door: ajar, banged open as he runs out, slammed shut behind him. Shut it is seen edge on; open, face on. */
-export function drawDoorOut(pen: Pen, t: number): number {
+export function drawDoorOut(pen: Pen, t: number): void {
   const x = WALL_OUT[1]
   let open = 0.4
   if (t >= OUT) open = 1 - 0.06 * Math.abs(ring(t - OUT, 1.2, 0.3))
   if (t >= SLAM - 0.35) open = Math.max(0, (SLAM - t) / 0.35)
   if (t >= SLAM) open = 0.03 * Math.abs(ring(t - SLAM, 4, 0.12))
   const w = 0.9 * Math.sin((open * Math.PI) / 2)
-  // The daylight through it.
   if (w > 0.05) {
     shape(pen, [[x, HEAD + 0.05], [x + w, HEAD + 0.12], [x + w, FLOOR - 0.06], [x, FLOOR]], C.door, 0.5, C.doorDark)
     rect(pen, x + w * 0.2, HEAD + 0.35, x + w * 0.8, -1.2, C.doorDark)
   } else rect(pen, WALL_OUT[0] + 0.08, HEAD, WALL_OUT[0] + 0.18, FLOOR, C.door)
-  return w
 }
 
 /* ------------------------------------------------------------------ counter, pilot, stage */
 
-export function drawCounter(pen: Pen, t: number): void {
+export function drawCounter(pen: Pen): void {
   const [x0, x1] = COUNTER
   // The back bar: a shelf of bottles against the boards.
   rect(pen, x0 + 0.1, -2.05, x1 - 0.1, -1.98, C.shelf)
@@ -233,19 +202,17 @@ export function drawCounter(pen: Pen, t: number): void {
     rect(pen, x - 0.05, -2.05 - h, x + 0.05, -2.05, col)
     rect(pen, x - 0.02, -2.05 - h - 0.1, x + 0.02, -2.05 - h, col)
   }
-  glow(pen, [(x0 + x1) / 2, -2.2], 1.4, C.amber, 0.12)
   // The counter itself.
   rect(pen, x0, COUNTER_TOP, x1, FLOOR, C.counter)
   for (let x = x0 + 0.3; x < x1; x += 0.5) rect(pen, x, COUNTER_TOP + 0.15, x + 0.03, FLOOR - 0.1, C.seam)
   rect(pen, x0 - 0.08, COUNTER_TOP - 0.06, x1 + 0.08, COUNTER_TOP + 0.04, C.counterTop)
   line(pen, [x0 - 0.08, COUNTER_TOP - 0.06], [x1 + 0.08, COUNTER_TOP - 0.06], C.counterEdge, 0.6)
   rect(pen, x0, FLOOR - 0.12, x1, FLOOR, C.seam)
-  void t
 }
 
 /**
- * The pilot: a big man hunched over his glass on a stool, a hard dark shape with a cold rim of the window's light.
- * His right hand on the counter, its thumb out; on the thumb the ring that catches the light on THUMB.
+ * The pilot: a big man hunched over his glass on a stool, a hard dark shape against the boards.
+ * His right hand on the counter, its thumb out; on the thumb the ring, which the lamp lights as the hand comes up.
  */
 export function drawPilot(pen: Pen, t: number): void {
   const { p, k } = pen
@@ -282,16 +249,22 @@ function pilot(pen: Pen, t: number): void {
   // The head, low between the shoulders, a heavy beard.
   ellipse(pen, head, 0.2, 0.21, C.pilot)
   blob(pen, [[head[0] - 0.05, head[1] + 0.05], [head[0] + 0.2, head[1] + 0.02], [head[0] + 0.18, head[1] + 0.26], [head[0] - 0.02, head[1] + 0.24]], C.pilot)
-  // A cold rim of daylight on his back, from the window.
+  // His coat, a shade off black: the collar turned up to his ears, the seam down his back, a pocket, the hem.
+  shape(pen, [[sh[0] - 0.12, sh[1] - 0.06], [sh[0] + 0.02, sh[1] - 0.24], [sh[0] + 0.12, sh[1] - 0.2], [sh[0] + 0.08, sh[1] + 0.02]], C.coat)
+  path(pen, [[sh[0] - 0.2, sh[1] + 0.02], [sh[0] - 0.3, sh[1] + 0.45], [hip[0] - 0.22, hip[1] - 0.2], [hip[0] - 0.2, hip[1] + 0.02]], C.coat, 0.9)
+  path(pen, [[hip[0] - 0.02, hip[1] - 0.35], [hip[0] + 0.2, hip[1] - 0.38], [hip[0] + 0.2, hip[1] - 0.22]], C.coat, 0.8)
+  path(pen, [[hip[0] - 0.26, hip[1] + 0.06], [hip[0] + 0.05, hip[1] + 0.02], [hip[0] + 0.32, hip[1] - 0.06]], C.coat, 0.9)
+  // The lamp hanging over him catching the top of his head, more as it swings over: inside its edge, thin.
   const ctx = ctxOf(pen.p)
+  const lamp = lampAt(1, t).p
+  const warm = 0.12 + 0.3 * Math.max(0, 1 - Math.abs(lamp[0] - head[0]) / 0.5)
   ctx.save()
-  ctx.strokeStyle = rgba(pen, C.rim, 0.35)
-  ctx.lineWidth = pen.w * 1.1
+  ctx.strokeStyle = rgba(pen, C.lamp, warm)
+  ctx.lineWidth = pen.w * 0.8
   ctx.beginPath()
-  ctx.arc(head[0] * pen.k, head[1] * pen.k, 0.205 * pen.k, -Math.PI * 0.95, -Math.PI * 0.45)
+  ctx.arc(head[0] * pen.k, head[1] * pen.k, 0.18 * pen.k, -Math.PI * 0.7, -Math.PI * 0.3)
   ctx.stroke()
   ctx.restore()
-  path(pen, [[sh[0] - 0.33, sh[1] + 0.08], [sh[0] - 0.05, sh[1] - 0.17]], C.rim, 0.5)
   // The arm: shoulder to the elbow on the counter, the forearm to the hand by the glass.
   const gx = END_L - 0.06
   const handRest: Pt = [gx - 0.22, TOP_L - 0.1]
@@ -305,16 +278,13 @@ function pilot(pen: Pen, t: number): void {
   // The thumb up off the fist, and its ring.
   const thumbTip: Pt = [hand[0] + 0.02, hand[1] - 0.2]
   line(pen, [hand[0] + 0.01, hand[1] - 0.05], thumbTip, C.pilot, 3.6)
+  // The ring: dull brass down on the counter, lit gold as the hand comes up into the lamp's light.
   const ringAt: Pt = [hand[0] + 0.015, hand[1] - 0.11]
-  rect(pen, ringAt[0] - 0.035, ringAt[1] - 0.012, ringAt[0] + 0.035, ringAt[1] + 0.012, C.ring)
-  // It catches the light: hard on the thumb, softer on each tap.
-  let g = 1.0 * flash(t - THUMB, 0.45)
-  for (const tap of TAPS) g = Math.max(g, 0.55 * flash(t - tap, 0.22))
-  glint(pen, [ringAt[0] + 0.02, ringAt[1] - 0.01], 0.07 + 0.12 * g, C.lamp, 0.25 + 0.75 * g)
-  // His glass.
+  rect(pen, ringAt[0] - 0.04, ringAt[1] - 0.015, ringAt[0] + 0.04, ringAt[1] + 0.015, mix(C.amber, C.ring, 0.3 + 0.7 * lift))
+  // His glass, the drink in it rocking after he sets it down hard.
   rect(pen, gx - 0.06, TOP_L - 0.2, gx + 0.06, TOP_L - 0.06, C.bottle)
-  rect(pen, gx - 0.05, TOP_L - 0.13, gx + 0.05, TOP_L - 0.07, C.amber)
-  if (t >= GLASS && t < GLASS + 0.4) glow(pen, [gx, TOP_L - 0.06], 0.3, C.lamp, 0.4 * flash(t - GLASS, 0.12))
+  const slosh = 0.022 * ring(t - GLASS, 2.4, 0.35)
+  shape(pen, [[gx - 0.05, TOP_L - 0.13 + slosh], [gx + 0.05, TOP_L - 0.13 - slosh], [gx + 0.05, TOP_L - 0.07], [gx - 0.05, TOP_L - 0.07]], C.amber)
 }
 
 /** How high the pilot's hand is off the counter, 0..1: the glass set down hard, the thumb up, the drunk taps. */
@@ -337,8 +307,8 @@ function handLift(t: number): number {
 export function drawStage(pen: Pen, t: number): void {
   const [x0, x1] = STAGE
   rect(pen, x0, STAGE_TOP, x1, FLOOR, C.stage)
+  drawSkirt(ctxOf(pen.p), pen.k, t, x0, x1, STAGE_TOP + 0.04, FLOOR, spotOn(t))
   rect(pen, x0 - 0.04, STAGE_TOP - 0.05, x1 + 0.04, STAGE_TOP + 0.04, C.stageTop)
-  for (let x = x0 + 0.35; x < x1; x += 0.35) rect(pen, x, STAGE_TOP + 0.08, x + 0.025, FLOOR, C.seam)
   // The mic stand: a base, a pole, a boom to the mic.
   const m = MIC_X
   const wob = 0.02 * ring(t - SPOT_OFF, 3, 0.4)
@@ -350,62 +320,49 @@ export function drawStage(pen: Pen, t: number): void {
   rect(pen, SPOT[0] - 0.25, CEIL, SPOT[0] + 0.25, CEIL + 0.12, C.beam)
   const on = spotOn(t)
   shape(pen, [[SPOT[0] - 0.1, SPOT[1] - 0.1], [SPOT[0] + 0.1, SPOT[1] - 0.12], [SPOT[0] + 0.2, SPOT[1] + 0.12], [SPOT[0] - 0.02, SPOT[1] + 0.16]], C.iron)
-  if (on > 0.01) glow(pen, [SPOT[0] + 0.12, SPOT[1] + 0.12], 0.25, C.spot, on)
+  // Its lens, lit while it is on.
+  if (on > 0.01) shape(pen, [[SPOT[0] - 0.01, SPOT[1] + 0.12], [SPOT[0] + 0.18, SPOT[1] + 0.085], [SPOT[0] + 0.2, SPOT[1] + 0.12], [SPOT[0] - 0.02, SPOT[1] + 0.16]], mix(C.iron, C.spot, on))
 }
 
-/** The spotlight, 0..1: on at the hinge with a little flare, off as she lands outside. */
+/** The spotlight, 0..1: on at the hinge, off as she lands outside. */
 export function spotOn(t: number): number {
   if (t < HINGE) return 0
-  if (t < SPOT_OFF) return 1 + 0.35 * flash(t - HINGE, 0.15)
-  return Math.max(0, 1 - (t - SPOT_OFF) / 0.12) * 0.9
+  if (t < SPOT_OFF) return 1
+  return Math.max(0, 1 - (t - SPOT_OFF) / 0.15)
 }
 
-/** The spotlight's cone on the stage, warm, with dust in it: drawn behind her. */
+/**
+ * The spotlight's light where it falls: warm on the stage's boards and down the front of its skirt, and her shadow
+ * thrown on the boards away from the lamp. Drawn under her.
+ */
 export function drawSpot(pen: Pen, t: number): void {
   const on = spotOn(t)
   if (on <= 0.01) return
   const ctx = ctxOf(pen.p)
   const k = pen.k
-  const src: Pt = [SPOT[0] + 0.12, SPOT[1] + 0.12]
-  const target: Pt = [CHERYL_AT[0], STAGE_TOP]
-  const g = ctx.createLinearGradient(src[0] * k, src[1] * k, target[0] * k, target[1] * k)
-  g.addColorStop(0, rgba(pen, C.spot, 0.45 * on))
-  g.addColorStop(1, rgba(pen, C.spot, 0.16 * on))
-  ctx.save()
-  ctx.beginPath()
-  ctx.moveTo((src[0] - 0.06) * k, src[1] * k)
-  ctx.lineTo((src[0] + 0.08) * k, src[1] * k)
-  ctx.lineTo((target[0] + 0.62) * k, target[1] * k)
-  ctx.lineTo((target[0] - 0.62) * k, target[1] * k)
-  ctx.closePath()
-  ctx.fillStyle = g
-  ctx.fill()
-  ctx.restore()
-  // Its pool on the boards of the stage.
-  ctx.save()
-  ctx.translate(target[0] * k, target[1] * k)
-  ctx.scale(1, 0.16)
-  const pool = ctx.createRadialGradient(0, 0, 0, 0, 0, 0.8 * k)
-  pool.addColorStop(0, rgba(pen, C.spot, 0.7 * on))
-  pool.addColorStop(1, rgba(pen, C.spot, 0))
-  ctx.fillStyle = pool
-  ctx.fillRect(-0.8 * k, -0.8 * k, 1.6 * k, 1.6 * k)
-  ctx.restore()
-  glow(pen, [target[0], target[1] - 0.35], 0.9, C.spot, 0.3 * on)
-  // Dust turning in it.
-  for (let i = 0; i < 14; i++) {
-    const u = (hash(i, 1) + t * 0.03 * (0.5 + hash(i, 2))) % 1
-    const x = src[0] + (target[0] - src[0]) * u + (hash(i, 3) - 0.5) * 1.0 * u + Math.sin(t * 0.8 + i) * 0.05
-    const y = src[1] + (target[1] - src[1]) * u
-    ellipse(pen, [x, y], 0.012, 0.012, C.spot)
+  const [x0, x1] = STAGE
+  ctx.fillStyle = rgba(pen, C.spot, 0.55 * on)
+  ctx.fillRect((x0 - 0.04) * k, (STAGE_TOP - 0.05) * k, (x1 - x0 + 0.08) * k, 0.09 * k)
+  const fall = ctx.createLinearGradient(0, (STAGE_TOP + 0.04) * k, 0, FLOOR * k)
+  fall.addColorStop(0, rgba(pen, C.spot, 0.3 * on))
+  fall.addColorStop(1, rgba(pen, C.spot, 0))
+  ctx.fillStyle = fall
+  ctx.fillRect(x0 * k, (STAGE_TOP + 0.04) * k, (x1 - x0) * k, (FLOOR - STAGE_TOP - 0.04) * k)
+  // Her shadow, while she stands on the stage.
+  const c = cherylAt(t)
+  if (c && t >= HINGE && c[0] < x1 - 0.1) {
+    ctx.fillStyle = rgba(pen, C.iron, 0.45 * on)
+    ctx.beginPath()
+    ctx.ellipse((c[0] + 0.14) * k, (STAGE_TOP - 0.005) * k, 0.17 * k, 0.028 * k, 0, 0, Math.PI * 2)
+    ctx.fill()
   }
 }
 
 /** Her guitar, held across her as she stands in the light: it goes with her when she goes. */
 export function drawGuitar(pen: Pen, t: number): void {
+  // From the hinge's cut: before it she waits out of shot, and the guitar's neck would reach into the frame alone.
   const c = cherylAt(t)
-  if (!c) return
-  const on = Math.max(0.35, Math.min(1, spotOn(t)))
+  if (!c || t < HINGE) return
   const [x, y] = c
   // Body low at her right, neck up across her to the left.
   const body: Pt = [x + 0.17, y + 0.07]
@@ -417,12 +374,18 @@ export function drawGuitar(pen: Pen, t: number): void {
   ellipse(pen, body, 0.115, 0.085, C.guitar)
   ellipse(pen, [body[0] + 0.06, body[1] + 0.01], 0.075, 0.068, C.guitar)
   ellipse(pen, [body[0] - 0.01, body[1] - 0.005], 0.028, 0.028, C.guitarDark)
-  // The strings, shimmering on each strum.
+  // The strings, bowed out by each strum and settling back.
   let s = 0
-  for (const at of STRUMS) s = Math.max(s, flash(t - at, 0.2))
-  const shimmer = 0.012 * s * Math.sin(t * 90)
-  line(pen, [body[0] + 0.08, body[1] + shimmer], [neckEnd[0], neckEnd[1] + shimmer], C.spot, 0.5 + 0.8 * s)
-  if (s > 0.05) glow(pen, [body[0] - 0.02, body[1]], 0.3, C.spot, 0.45 * s * on)
+  for (const at of STRUMS) s = Math.max(s, flash(t - at, 0.15))
+  const ctx = ctxOf(pen.p)
+  const k = pen.k
+  const a: Pt = [body[0] + 0.08, body[1]]
+  ctx.strokeStyle = rgba(pen, C.spot, 1)
+  ctx.lineWidth = pen.w * 0.6
+  ctx.beginPath()
+  ctx.moveTo(a[0] * k, a[1] * k)
+  ctx.quadraticCurveTo(((a[0] + neckEnd[0]) / 2 + 0.012 * s) * k, ((a[1] + neckEnd[1]) / 2 + 0.016 * s) * k, neckEnd[0] * k, neckEnd[1] * k)
+  ctx.stroke()
 }
 
 /* ------------------------------------------------------------------ outside */
@@ -430,19 +393,11 @@ export function drawGuitar(pen: Pen, t: number): void {
 /** The quay past the back door: a loose plank that knocks under him, a bollard, a gull. */
 export function drawQuay(pen: Pen, t: number, plankX: number): void {
   // The plank that knocks.
-  const k = flash(t - PLANK, 0.1)
   const tip = 0.04 * ring(t - PLANK, 5, 0.18)
   shape(pen, [[plankX - 0.35, FLOOR + tip], [plankX + 0.35, FLOOR - tip], [plankX + 0.35, FLOOR + 0.1 - tip], [plankX - 0.35, FLOOR + 0.1 + tip]], C.quay, 0.5, C.quayDark)
-  if (k > 0.05) glow(pen, [plankX, FLOOR], 0.35, C.sky, 0.4 * k)
   // Bollards along the edge.
   for (const bx of [DOOR_X + 2.6, DOOR_X + 6.2]) {
     rect(pen, bx - 0.12, FLOOR - 0.32, bx + 0.12, FLOOR, C.bollard)
     rect(pen, bx - 0.17, FLOOR - 0.38, bx + 0.17, FLOOR - 0.3, C.bollard)
   }
-}
-
-/** Over the balls: the haze of the spotlight on her, and the dark of the room's near edge. */
-export function drawOver(pen: Pen, t: number): void {
-  void pen
-  void t
 }

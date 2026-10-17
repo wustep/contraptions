@@ -7,6 +7,9 @@ import type { Pt } from '../../../../parts'
  * it from here, so a look is one look and a flash is one flash everywhere. If one needs something it does not do, say
  * so in your report; do not draw your own.
  *
+ * Light here is light that falls on something (a beam through the haze, its pool on the boards). There is no glow:
+ * no halo round a lamp, a lens, a flame or a ball. A lamp is lit by its lens being pale; what it lights shows it.
+ *
  * Every function draws in pixels from cells (`k` pixels a cell; points are in the caller's cells, the caller having
  * translated to its own origin, or not) and leaves p5's and the canvas's state as it found it. None of them draws
  * text, dashed lines or hairline rings. None is inked: light is light.
@@ -23,8 +26,8 @@ export function rgba(hex: string, a: number): string {
 
 /* ------------------------------------------------------------------ light */
 
-/** A soft round light at `at` (cells), `r` cells to nothing, `a` at its middle: a glow, never a disc. */
-export function bloom(p: p5, k: number, at: Pt, r: number, color: string, a: number): void {
+/** A soft round of air at `at` (cells), `r` cells to nothing, `a` at its middle: smoke, dust, a breath of steam. Never light. */
+export function puff(p: p5, k: number, at: Pt, r: number, color: string, a: number): void {
   if (a <= 0.003 || r <= 0) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const x = at[0] * k
@@ -113,7 +116,8 @@ export function glintAt(u: number): number {
  * a hot white point, turned a little off square, swelling in 50 ms and gone in half a second (`u`, seconds since the
  * look). `size` is the long rays' reach in cells (0.35 for Blue Steel; Magnum is the only one bigger than 0.6). Put it
  * on the rim up and toward the camera's light, e.g. the ball's centre + [0.09, -0.09]. A sharp cartoon "ting", never
- * a ring, never a disc: the one thing in the show that is allowed to look like a sparkle.
+ * a ring, never a disc, never a bed of light under it: the one thing in the show that is allowed to look like a
+ * sparkle, and so it is given three times only: Blue Steel, Hansel's move that cannot be done, and Magnum.
  */
 export function glint(p: p5, k: number, at: Pt, u: number, size = 0.35, color = '#FFFFFF'): void {
   const s = glintAt(u)
@@ -125,12 +129,6 @@ export function glint(p: p5, k: number, at: Pt, u: number, size = 0.35, color = 
   ctx.save()
   ctx.translate(x, y)
   ctx.rotate(0.26 + 0.2 * (1 - s))
-  // A soft bed of light under the rays.
-  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, reach * 0.55)
-  g.addColorStop(0, rgba(color, 0.55 * s))
-  g.addColorStop(1, rgba(color, 0))
-  ctx.fillStyle = g
-  ctx.fillRect(-reach, -reach, 2 * reach, 2 * reach)
   ctx.fillStyle = rgba(color, Math.min(1, 1.1 * s))
   for (let i = 0; i < 8; i++) {
     const long = i % 2 === 0
@@ -174,14 +172,24 @@ export function since(times: readonly number[], t: number): number {
 }
 
 /**
- * A press camera's flash firing at `at` (cells): a white-hot point, a short glint and a big soft bloom that lights the
- * air round it (`reach` cells), for `u` seconds since it fired. Draw it over the camera it comes from. What the press
- * do on a look, and what the director's flash cuts are made of.
+ * A press camera's flash firing at `at` (cells), `u` seconds since it fired: its tube white-hot for a frame or two
+ * and cooling in its reflector to a warm ember, a flat disc `reach` / 17 cells in radius. No bloom and no rays: what
+ * the flash lights is the work of the place it fires in. What the press do on a look, and what the director's flash
+ * cuts are made of.
  */
 export function flashBurst(p: p5, k: number, at: Pt, u: number, reach = 1.6, color = '#FFFDF6'): void {
   const { pop, after } = flashAt(u)
-  if (pop < 0.003 && after < 0.003) return
-  bloom(p, k, at, reach, color, 0.85 * pop + 0.12 * after)
-  bloom(p, k, at, reach * 0.3, color, Math.min(1, pop * 1.2 + after * 0.4))
-  if (pop > 0.05) glint(p, k, at, 0.05 + (1 - pop) * 0.12, reach * 0.3, color)
+  // The ember is quick: gone in a third of a second, never a dull disc hanging in the dark.
+  const a = Math.min(1, pop + 0.5 * after * Math.exp(-u / 0.15))
+  if (a < 0.02) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const r = (reach / 17) * k * (0.7 + 0.3 * pop)
+  ctx.save()
+  ctx.fillStyle = rgba(pop > 0.5 ? color : EMBER, a)
+  ctx.beginPath()
+  ctx.ellipse(at[0] * k, at[1] * k, Math.max(1, r), Math.max(1, r * 0.8), 0, 0, TAU)
+  ctx.fill()
+  ctx.restore()
 }
+/** A flash tube's ember as it cools. */
+const EMBER = '#F4D9A6'

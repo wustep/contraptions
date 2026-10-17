@@ -1,0 +1,154 @@
+import type { Pt } from '../../../../../parts'
+import { layer, motes, rgbaOf, sway, view, type View } from '../depth'
+import { hash, scenery } from '../kit'
+import { fireLight } from './erupt'
+import { ERUPT, FINAL, HUSH, T1 } from './geo'
+import { ICE } from './theme'
+import { edges } from './vignette'
+
+/**
+ * What stands between the camera and the machine in this place, and the light over all of it: the near plane, the
+ * air, the grade. Drawn after the set and the parts and before Walter (`depth.ts`), so nothing here hides him or
+ * changes his colour. It is handed show time as `t`.
+ *
+ * Near: tufts of grass at the frame's foot, bent by the wind; now and then a reflector post going by close, faster
+ * than the road, while he rides; grit on the wind. The fire's warm light over the land from the burst on. Then the
+ * hush: the ash in the air, the light going grey-mauve, the flakes falling.
+ */
+
+const sm = (t: number, a: number, b: number): number => {
+  const u = Math.max(0, Math.min(1, (t - a) / (b - a)))
+  return u * u * (3 - 2 * u)
+}
+
+/** Where the near plane is true: the camera's resting place, at the frame's usual height. */
+const ANCHOR: Pt = [FINAL[0], FINAL[1] - 0.6]
+const REF = 5
+
+/** The wide (110.4 to 115.5): the camera is off the ground, so nothing is near it. */
+const inWide = (t: number): number => sm(t, 109.9, 110.9) * (1 - sm(t, 115.0, 116.0))
+/**
+ * The near posts stand along the ridge and the top of the face, so they are there until the camera rises for the wide;
+ * after it the fjord is under the frame's foot, and there are none.
+ */
+const postsOn = (t: number): number => (t < 111 ? 1 - inWide(t) : 0)
+
+/** The tufts at the foot of the frame: clumps of blades on the near plane, swaying on the wind. */
+function tufts(ctx: CanvasRenderingContext2D, inner: View, t: number, a: number): void {
+  const k = inner.k
+  const step = 0.9
+  const i0 = Math.floor(inner.x0 / step) - 1
+  const i1 = Math.ceil(inner.x1 / step) + 1
+  const dark = new Path2D()
+  const lit = new Path2D()
+  const foot = inner.y1 + 0.08
+  for (let i = i0; i <= i1; i++) {
+    // Clumps here and there along the foot, more at the corners than in the middle.
+    const x = i * step + (hash(i, 1, 601) - 0.5) * step * 0.8
+    const mid = Math.abs((x - inner.cx) / (inner.w / 2))
+    if (hash(i, 2, 601) > 0.25 + 0.65 * mid * mid) continue
+    const h = (0.35 + 0.55 * hash(i, 3, 601)) * (0.55 + 0.45 * mid)
+    const blades = 5 + Math.floor(5 * hash(i, 4, 601))
+    const bend = 0.16 * sway(t, 0.35, i) + 0.1
+    for (let b = 0; b < blades; b++) {
+      const bx = x + (b / blades - 0.5) * 0.28
+      const bh = h * (0.55 + 0.45 * hash(i, 10 + b, 601))
+      const lean = (b / blades - 0.5) * 0.25 + bend * (0.7 + 0.6 * hash(i, 20 + b, 601))
+      const tip: Pt = [bx + lean * bh, foot - bh]
+      const path = b % 3 === 0 ? lit : dark
+      path.moveTo((bx - 0.025) * k, foot * k)
+      path.quadraticCurveTo((bx + lean * bh * 0.3) * k, (foot - bh * 0.6) * k, tip[0] * k, tip[1] * k)
+      path.quadraticCurveTo((bx + lean * bh * 0.3 + 0.02) * k, (foot - bh * 0.6) * k, (bx + 0.025) * k, foot * k)
+      path.closePath()
+    }
+  }
+  ctx.save()
+  ctx.globalAlpha = a
+  ctx.fillStyle = ICE.nearGrass
+  ctx.fill(dark)
+  ctx.fillStyle = ICE.nearGrassLit
+  ctx.fill(lit)
+  ctx.restore()
+}
+
+/** A reflector post on the near plane: close, against the low sun, so dark but for its band and its reflector. */
+function posts(ctx: CanvasRenderingContext2D, inner: View, a: number): void {
+  const k = inner.k
+  const step = 13
+  const i0 = Math.floor(inner.x0 / step) - 1
+  const i1 = Math.ceil(inner.x1 / step) + 1
+  for (let i = i0; i <= i1; i++) {
+    const x = i * step + hash(i, 1, 611) * 4
+    if (x < inner.x0 - 0.3 || x > inner.x1 + 0.3) continue
+    // Only its top in the frame, low down, so it never crosses the road or him.
+    const top = inner.y1 - inner.h * (0.13 + 0.05 * hash(i, 2, 611))
+    const w = 0.1
+    ctx.save()
+    ctx.globalAlpha = a
+    ctx.fillStyle = ICE.nearPost
+    ctx.fillRect((x - w / 2) * k, top * k, w * k, (inner.y1 - top + 0.2) * k)
+    ctx.fillStyle = ICE.postBand
+    ctx.fillRect((x - w / 2) * k, (top + 0.05) * k, w * k, 0.12 * k)
+    ctx.fillStyle = ICE.reflector
+    ctx.fillRect((x - w * 0.3) * k, (top + 0.22) * k, w * 0.6 * k, 0.07 * k)
+    ctx.fillStyle = ICE.nearGrassLit
+    ctx.fillRect((x - w / 2) * k, top * k, w * 0.22 * k, (inner.y1 - top + 0.2) * k)
+    ctx.restore()
+  }
+}
+
+export const icelandFront = scenery<null>({
+  name: 'iceland-front',
+  draw: (p, _s, c) => {
+    const t = c.t
+    if (t < 95 || t > 134) return
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const v = view(p, c.k)
+
+    // The ash in the air: the haze it makes, going grey-mauve and thickening to the cut (the director's cover then
+    // takes the frame), and a few flakes coming down through it on the wind.
+    const haze = 0.3 * sm(t, ERUPT + 5, T1)
+    if (haze > 0.003) {
+      ctx.save()
+      ctx.fillStyle = rgbaOf(ICE.ashHaze, haze)
+      ctx.fillRect((v.x0 - 0.5) * c.k, (v.y0 - 0.5) * c.k, (v.w + 1) * c.k, (v.h + 1) * c.k)
+      ctx.restore()
+    }
+    const ash = sm(t, HUSH + 0.4, HUSH + 3)
+    if (ash > 0) {
+      ctx.save()
+      ctx.globalAlpha = ash
+      motes(ctx, v, t, { n: 30, seed: 621, tile: [5, 3.5], r: [0.009, 0.018], v: [0.12, 0.22], spread: 0.4, sway: [0.08, 0.3], color: ICE.ashDark })
+      ctx.globalAlpha = sm(t, HUSH + 2, T1 - 3)
+      motes(ctx, v, t, { n: 40, seed: 622, tile: [5, 3.5], r: [0.008, 0.016], v: [0.1, 0.2], spread: 0.4, sway: [0.06, 0.25], color: ICE.ashDeep })
+      ctx.restore()
+    }
+
+    // The near plane.
+    const near = 1 - inWide(t)
+    if (near > 0.01) {
+      layer(ctx, v, 1.45, ANCHOR, REF, (inner) => {
+        const pa = postsOn(t)
+        if (pa > 0.01) posts(ctx, inner, pa)
+        tufts(ctx, inner, t, near)
+        // Grit on the wind, low over the ground: faster while he is riding.
+        const gust = 0.6 + 0.4 * Math.sin(t * 0.7)
+        ctx.save()
+        ctx.globalAlpha = 0.55 * near * (1 - sm(t, HUSH, HUSH + 2))
+        motes(ctx, inner, t, { n: 7, seed: 631, tile: [4, 2.5], r: [0.01, 0.02], v: [2.6 * gust, 0.25], spread: 0.5, sway: [0.15, 0.8], color: ICE.grit, streak: 0.035, within: { x0: -1e9, x1: 1e9, y0: inner.y1 - inner.h * 0.3, y1: inner.y1 } })
+        ctx.restore()
+      })
+    }
+
+    // The fire's light: a plain warm wash over the land that comes up with the burst and fades as the ash takes the
+    // light.
+    const warm = 0.12 * fireLight(t) * (1 - sm(t, ERUPT + 5, ERUPT + 9))
+    if (warm > 0.004) {
+      ctx.fillStyle = rgbaOf(ICE.fire, warm)
+      ctx.fillRect((v.x0 - 0.5) * c.k, (v.y0 - 0.5) * c.k, (v.w + 1) * c.k, (v.h + 1) * c.k)
+    }
+
+    // The frame's corners fall away a little, more as the ash closes in.
+    edges(ctx, 0.12 + 0.22 * sm(t, HUSH, T1))
+  },
+})

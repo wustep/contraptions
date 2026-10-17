@@ -5,7 +5,8 @@ import { mix, rgba } from '../cast'
 import { frame, hash } from '../kit'
 import { SHANG, TENT } from '../worlds'
 import { CENTRE, drawRing, MONTANA } from './ring'
-import { alarm, cablePulses, CALL_KEY, NUMBER, PRESSES, roomLight, voiceFlash, WAKE } from './timeline'
+import { alarm, cablePulses, CALL_KEY, NUMBER, PRESSES, roomLight, SHARE_KEY, sharing, voiceFlash, WAKE } from './timeline'
+import { drawSoldiers } from './door'
 
 /**
  * The command tent at the camp, at night: canvas walls on a frame of poles, the ring on its rig, and before it a long
@@ -47,8 +48,11 @@ const HANDSET: [number, number] = [2.7, 3.68]
 // air in half the frames, a bubble loose over the keyboard to two fresh readers.
 export const hopFor = (n: number): number => (n >= PRESSES.length ? 0.4 : 0.26 + (0.08 * n) / (PRESSES.length - 1))
 
+/** The key she sends the shared word round the world with, in the share (`timeline.ts`), long before the call. */
+export const SHARE_ON = 0
 /** Which key (0..5 a digit, 6 the call key) Louise is on at show time t, or -1. */
 export function keyUnder(t: number): number {
+  if (sharing(t)) return t >= SHARE_KEY ? SHARE_ON : -1
   if (t >= CALL_KEY) return 6
   for (let n = 0; n < PRESSES.length; n++) {
     const off = n + 1 < PRESSES.length ? PRESSES[n + 1] - hopFor(n + 1) : CALL_KEY - hopFor(PRESSES.length)
@@ -59,7 +63,7 @@ export function keyUnder(t: number): number {
 /** How recently a key was struck: 1 at the press, decaying. */
 function struck(t: number): number {
   let last = -Infinity
-  for (const at of [...PRESSES, CALL_KEY]) if (at <= t) last = at
+  for (const at of [SHARE_KEY, ...PRESSES, CALL_KEY]) if (at <= t) last = at
   return Math.exp(-(t - last) / 0.3)
 }
 
@@ -120,7 +124,8 @@ export function drawHandset(ctx: CanvasRenderingContext2D, k: number, fill: stri
 }
 
 function drawPhone(ctx: CanvasRenderingContext2D, k: number, t: number): void {
-  const awake = t < WAKE ? 0 : Math.min(1, (t - WAKE) / 0.35)
+  // Awake for the share (she wakes it as she comes to it), and from the call's chord on.
+  const awake = sharing(t) ? Math.max(0, Math.min(1, (t - (SHARE_KEY - 0.7)) / 0.35)) : t < WAKE ? 0 : Math.min(1, (t - WAKE) / 0.35)
   const calling = t < CALL_KEY ? 0 : Math.min(1, (t - CALL_KEY) / 0.2)
   // The cable, live once the call is through, and the call and her words going up it.
   ctx.strokeStyle = TENT.cable
@@ -348,6 +353,7 @@ function drawTent(p: p5, k: number, t: number): void {
   ctx.fillStyle = rgba(TENT.cable, 0.6)
   ctx.fillRect((f.x0 - 1) * k, FLOOR * k, (f.x1 - f.x0 + 2) * k, 0.05 * k)
   drawAlarm(ctx, k, t, f)
+  drawSoldiers(ctx, k, t)
   ctx.restore()
 
   drawRing(p, k, t)

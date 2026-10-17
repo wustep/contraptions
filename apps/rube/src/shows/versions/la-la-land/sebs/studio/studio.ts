@@ -51,22 +51,19 @@ const DOOR_L = DOOR_X - DOOR_W / 2
 /* ------------------------------------------------------------------ the cloth */
 
 /**
- * The painted cloth: its bottom batten hangs at CLOTH_UP in the flies, falls
- * from DROP to land on the burst, and bounces once on the floor. Everything
- * painted on it moves with it: `clothDrop(t)` is how far above its landing it
- * is, and the Hollywood part lights the sign with the same offset.
+ * The painted cloth: its bottom batten hangs at CLOTH_UP in the flies, and
+ * flies in from DROP, slowing as it comes, to land on the burst, as the dark
+ * cloth flies in after the number (`transitions.ts`). Everything painted on
+ * it moves with it: `clothDrop(t)` is how far above its landing it is, and the
+ * Hollywood part lights the sign with the same offset.
  */
 const CLOTH_UP = -11
-const DROP = BURST - 0.46
+const DROP = BURST - 0.8
 export function clothDrop(t: number): number {
   if (t < DROP) return Y_CLOTH - CLOTH_UP
-  if (t < BURST) {
-    const u = (t - DROP) / (BURST - DROP)
-    return (Y_CLOTH - CLOTH_UP) * (1 - u * u)
-  }
-  const s = t - BURST
-  // The batten's bounce: up off the floor and down again, twice, dying.
-  return 0.16 * Math.exp(-s / 0.11) * Math.abs(Math.sin((Math.PI * s) / 0.13))
+  if (t >= BURST) return 0
+  const u = (t - DROP) / (BURST - DROP)
+  return (Y_CLOTH - CLOTH_UP) * (1 - u) ** 2.2
 }
 /** The cloth's extent, in this frame (landed). */
 const CLOTH_X0 = -9
@@ -82,11 +79,146 @@ const MOUNTAIN: Pt[] = [
 const RIDGE: Pt[] = [
   [-10, -5.2], [-6, -6.8], [-2, -7.6], [2, -8.8], [6, -9.3], [9, -8.6], [24, -8.2], [28, -9.6], [32, -10.3], [36, -9.1], [40, -8.2], [44, -7.4],
 ].map(([x, y]) => [H(x), y])
+/** The mountain's skyline at x (this frame, landed). */
+function mountainTop(x: number): number {
+  for (let j = 0; j + 1 < MOUNTAIN.length; j++) {
+    const [ax, ay] = MOUNTAIN[j]
+    const [bx, by] = MOUNTAIN[j + 1]
+    if (x >= ax && x <= bx) return ay + ((by - ay) * (x - ax)) / (bx - ax)
+  }
+  return MOUNTAIN[x < MOUNTAIN[0][0] ? 0 : MOUNTAIN.length - 1][1]
+}
+/** How far down the face the scenic painter's brushwork goes (landed): to the palms' feet. */
+const FACE_FOOT = -1.9
+/**
+ * The mountain's face as a scenic painter lays it in, in this frame, landed: the spurs running down from the crest and
+ * fanning out over the flanks, each with a gully of darker brush down its shaded side and its edge toward the low sun
+ * lit; the chaparral as low mounds of dabs, dark in the gullies and rose where the sun finds it along the spurs,
+ * thicker toward the foot; and the rock along the crest. Built once, as paths in cells.
+ */
+let FACE: { gully: Path2D; lit: Path2D; scrub: Path2D; sunlit: Path2D; rock: Path2D; rockLit: Path2D } | null = null
+function face(): NonNullable<typeof FACE> {
+  if (FACE) return FACE
+  const gully = new Path2D()
+  const lit = new Path2D()
+  const scrub = new Path2D()
+  const sunlit = new Path2D()
+  const rock = new Path2D()
+  const rockLit = new Path2D()
+  const summit = H(14.6)
+  const N = 12
+  // A clump of brush: a low mound of small dabs heaped on the slope, flat along its foot and bumpy along its top, as the
+  // hill's own hedge is.
+  const clump = (into: Path2D, x: number, y: number, s: number, seed: number) => {
+    const n = 4 + Math.floor(hash(seed, 224) * 4)
+    const span = (0.08 + 0.07 * hash(seed, 225)) * s
+    for (let j = 0; j < n; j++) {
+      const u = j / (n - 1) - 0.5
+      const r = (0.06 + 0.045 * hash(seed, 250 + j)) * s * (1 - 0.55 * Math.abs(u))
+      const cx = x + 2 * span * u + 0.02 * s * (hash(seed, 230 + j) - 0.5)
+      into.moveTo(cx + r, y - r * 0.5)
+      into.ellipse(cx, y - r * 0.5, r, r * 0.85, 0, 0, Math.PI * 2)
+    }
+  }
+  // The spurs: from just under the skyline down to the foot, swinging out over the flanks away from the summit.
+  const tops = [-7, -2.5, 1.5, 5, 8.2, 11.2, 13.6, 16.4, 19, 22, 25.5, 29.5, 34, 39]
+  for (const [i, hx] of tops.entries()) {
+    const x0 = H(hx)
+    const y0 = mountainTop(x0) + 0.35
+    const x1 = x0 + (x0 - summit) * 0.7 + 1.2 * (hash(i, 211) - 0.5)
+    const line = Array.from({ length: N + 1 }, (_, j): Pt => {
+      const u = j / N
+      return [x0 + (x1 - x0) * (0.4 * u + 0.6 * u * u), y0 + (FACE_FOOT - y0) * u]
+    })
+    // The gully down its shaded side: narrow under the crest, opening toward the foot, its far edge ragged.
+    const wide = 0.45 + 0.35 * hash(i, 213)
+    gully.moveTo(line[0][0], line[0][1])
+    for (const [x, y] of line) gully.lineTo(x, y)
+    for (let j = N; j >= 0; j--) {
+      const u = j / N
+      const w = (0.04 + wide * Math.pow(u, 1.1)) * (1 + 0.3 * Math.sin(j * 2.3 + i * 1.7))
+      gully.lineTo(line[j][0] - w, line[j][1] + 0.06 * u)
+    }
+    gully.closePath()
+    // Its lit edge, the low sun along it, thinning out toward the foot.
+    lit.moveTo(line[0][0], line[0][1])
+    for (const [x, y] of line.slice(0, 9)) lit.lineTo(x, y)
+    for (let j = 8; j >= 0; j--) {
+      const u = j / N
+      lit.lineTo(line[j][0] + 0.025 + 0.09 * Math.sin(Math.PI * u * 1.4), line[j][1])
+    }
+    lit.closePath()
+    // Brush gathered in the gully, more and bigger toward the foot; and lighter, sunlit brush along the spur's crest.
+    for (let j = 0; j < 12; j++) {
+      const u = 0.15 + 0.85 * ((j + hash(i * 12 + j, 214)) / 12)
+      const q = u * N
+      const a = line[Math.floor(q)]
+      const b = line[Math.min(N, Math.floor(q) + 1)]
+      const f = q - Math.floor(q)
+      const w = 0.04 + wide * Math.pow(u, 1.1)
+      const x = a[0] + (b[0] - a[0]) * f
+      const y = a[1] + (b[1] - a[1]) * f
+      clump(scrub, x - w * (0.2 + 0.6 * hash(i * 12 + j, 215)), y, 0.9 + 0.9 * u, i * 12 + j)
+      if (j % 2 === 0) clump(sunlit, x + 0.12 + 0.25 * hash(i * 12 + j, 216), y + 0.15, 0.7 + 0.7 * u, 300 + i * 12 + j)
+    }
+  }
+  // And scattered over the open slope, thin high up and thicker low down.
+  for (let i = 0, n = 0; i < 500 && n < 90; i++) {
+    const x = H(-9 + 52 * hash(i, 221))
+    const top = mountainTop(x) + 0.7
+    if (top >= FACE_FOOT - 0.3) continue
+    const v = Math.sqrt(hash(i, 222))
+    if (hash(i, 223) > 0.2 + 0.7 * v) continue
+    n++
+    clump(hash(i, 226) < 0.3 ? sunlit : scrub, x, top + (FACE_FOOT - 0.15 - top) * v, 0.8 + 0.9 * v, 500 + i)
+  }
+  // Rock along the crest, either side of the summit: low angular outcrops just under the skyline, the face to the sun lit.
+  for (const [i, hx] of [7.2, 10.4, 12.6, 16.2, 18.9, 22.4].entries()) {
+    const x = H(hx)
+    const y = mountainTop(x) + 0.4 + 0.2 * hash(i, 261)
+    const w = 0.3 + 0.25 * hash(i, 262)
+    const h = 0.12 + 0.08 * hash(i, 263)
+    const peak = x + w * (0.1 + 0.25 * hash(i, 264))
+    rock.moveTo(x - w / 2, y)
+    rock.lineTo(x - w * 0.25, y - h * 0.65)
+    rock.lineTo(peak, y - h)
+    rock.lineTo(x + w / 2, y - h * 0.25)
+    rock.lineTo(x + w / 2 + 0.04, y)
+    rock.closePath()
+    rockLit.moveTo(peak, y - h)
+    rockLit.lineTo(x + w / 2, y - h * 0.25)
+    rockLit.lineTo(x + w / 2 + 0.04, y)
+    rockLit.lineTo(peak + 0.03, y)
+    rockLit.closePath()
+  }
+  FACE = { gully, lit, scrub, sunlit, rock, rockLit }
+  return FACE
+}
+/** The face's brushwork on the cloth: paths in cells, so drawn scaled and dropped with the cloth. */
+function drawFace(ctx: CanvasRenderingContext2D, k: number, dy: number): void {
+  const f = face()
+  ctx.save()
+  ctx.translate(0, dy * k)
+  ctx.scale(k, k)
+  ctx.fillStyle = rgba(M.hillDeep, 0.14)
+  ctx.fill(f.gully)
+  ctx.fillStyle = rgba(M.skyCoral, 0.12)
+  ctx.fill(f.lit)
+  ctx.fillStyle = rgba(M.hillDeep, 0.22)
+  ctx.fill(f.scrub)
+  ctx.fillStyle = rgba(M.ridge, 0.2)
+  ctx.fill(f.sunlit)
+  ctx.fillStyle = rgba(M.hillDeep, 0.3)
+  ctx.fill(f.rock)
+  ctx.fillStyle = rgba(M.horizon, 0.25)
+  ctx.fill(f.rockLit)
+  ctx.restore()
+}
 /** Palms along the foot of the painted mountain (Hollywood frame): where each stands, how tall, its lean. */
 const PALMS = Array.from({ length: 22 }, (_, i) => ({ x: -9 + i * 2.45 + 0.9 * (hash(i, 55) - 0.5), h: 1.6 + 1.1 * hash(i, 56), lean: (hash(i, 57) - 0.5) * 0.25 }))
-/** A palm painted flat: a thin curving trunk and a burst of fronds. */
-function paintedPalm(p: p5, k: number, x: number, foot: number, h: number, lean: number, fill: string): void {
-  const tx = x + lean * h
+/** A palm painted flat: a thin curving trunk and a burst of fronds, stirring by `stir` (radians) in the evening air. */
+function paintedPalm(p: p5, k: number, x: number, foot: number, h: number, lean: number, fill: string, stir = 0): void {
+  const tx = x + lean * h + stir * 0.12 * h
   const ty = foot - h
   p.noFill()
   p.stroke(fill)
@@ -97,7 +229,7 @@ function paintedPalm(p: p5, k: number, x: number, foot: number, h: number, lean:
   p.endShape()
   p.strokeWeight(Math.max(1, X(k, 0.05)))
   for (let j = 0; j < 7; j++) {
-    const a = -Math.PI / 2 + (j - 3) * 0.48
+    const a = -Math.PI / 2 + (j - 3) * 0.48 + stir * (1 + 0.25 * Math.abs(j - 3))
     const L = 0.55 + 0.12 * Math.cos(j * 1.3)
     const ex = tx + Math.cos(a) * L
     const ey = ty + Math.sin(a) * L * 0.6 + 0.2 * Math.abs(j - 3) * 0.12
@@ -116,6 +248,16 @@ const CLOUDS: { x: number; y: number; fill: string; lobes: [number, number, numb
   { x: 34, y: -11.2, fill: mixHex(M.skyLow, M.flat, 0.3), lobes: [[0, 0, 2.2, 0.26], [1.3, -0.2, 1.2, 0.22]] },
   { x: 8, y: -11.7, fill: mixHex(M.skyLow, M.skyTop, 0.35), lobes: [[0, 0, 1.8, 0.2], [-1, -0.14, 0.9, 0.17]] },
 ]
+
+/** The wisps of the marine layer (Hollywood frame, landed): where each is, its half-width and height, its two paints. */
+const WISPS: { x: number; y: number; w: number; h: number; body: string; top: string }[] = [
+  [-4, -6.2, 2.6, 0.32], [5.5, -5.1, 3.4, 0.36], [12, -7.3, 2.2, 0.26], [19.5, -4.6, 3.0, 0.34], [27, -6.6, 2.8, 0.3], [34.5, -5.4, 3.2, 0.34],
+  [2, -13.2, 3.6, 0.36], [16, -13.8, 3.2, 0.3], [30, -12.9, 3.8, 0.38],
+].map(([x, y, w, h]) => ({
+  x, y, w, h: h * 1.5,
+  body: y < -10 ? mixHex(M.skyTop, M.skyMid, 0.4) : mixHex(M.mountain, M.skyMid, 0.38),
+  top: y < -10 ? mixHex(M.skyMid, M.skyCoral, 0.45) : mixHex(M.skyMid, M.skyCoral, 0.3),
+}))
 
 /**
  * The sign: nine white blocks along the mountain's face, never letters. Widths vary the way a word's letters do;
@@ -316,13 +458,10 @@ function drawCloth(p: p5, c: Ctx, t: number): void {
   ctx.fillStyle = g
   ctx.fillRect(X(k, x0), X(k, y0), X(k, x1 - x0), X(k, bottom - y0))
   ctx.restore()
-  // The painted sun, going down behind the far ridge: a flat disc of pale gold, the hour the film is named for.
-  glow(p, k, H(21.8), -9.4 + dy, 7.5, M.horizon, 0.45)
+  // The painted sun, going down behind the far ridge: one flat disc of gold, the hour the film is named for.
   p.noStroke()
-  p.fill(mixHex(M.bush, M.skyCoral, 0.35))
-  p.circle(X(k, H(21.8)), X(k, -9.4 + dy), X(k, 4.4))
-  p.fill(mixHex(M.bush, M.flat, 0.45))
-  p.circle(X(k, H(21.8)), X(k, -9.4 + dy), X(k, 3.3))
+  p.fill(mixHex(mixHex(M.bush, M.skyCoral, 0.3), M.flat, 0.22))
+  p.circle(X(k, H(21.8)), X(k, -9.4 + dy), X(k, 4.0))
   // Painted clouds: long flat banks of rose and lavender, the brush's own shapes, no ink.
   for (const cl of CLOUDS) {
     p.fill(cl.fill)
@@ -352,13 +491,23 @@ function drawCloth(p: p5, c: Ctx, t: number): void {
   for (const [x, y] of MOUNTAIN) p.vertex(X(k, x), X(k, y + dy))
   p.vertex(X(k, MOUNTAIN[MOUNTAIN.length - 1][0]), X(k, bottom))
   p.endShape(p.CLOSE)
-  p.noFill()
-  for (const [down, a] of [[1.1, 0.22], [2.6, 0.16], [4.4, 0.12]] as const) {
-    p.stroke(rgba(M.skyMid, a))
-    p.strokeWeight(X(k, 0.09))
+  // Its face, brushed in: the spurs and their shade, the chaparral, the rock along the crest.
+  drawFace(ctx, k, dy)
+  // The evening coming on: as the number nears its end the cloth's light goes from the mountain's foot up, its face
+  // going into shade a little at a time, so the hour passes while they climb (the lamps go out into the dark).
+  const shade = smooth(t, BURST + 8, 171.2)
+  if (shade > 0.01) {
+    const edge = -3.2 - 7.4 * shade + dy
+    const sg = ctx.createLinearGradient(0, X(k, edge - 1.8), 0, X(k, edge + 0.6))
+    sg.addColorStop(0, rgba(M.hillDeep, 0))
+    sg.addColorStop(1, rgba(M.hillDeep, 0.34 * shade))
+    p.fill(M.hillDeep)
+    ctx.fillStyle = sg
     p.beginShape()
-    for (const [x, y] of MOUNTAIN) p.curveVertex(X(k, x), X(k, Math.min(bottom - 0.4, y + dy + down * (1 + 0.15 * Math.sin(x * 0.7)))))
-    p.endShape()
+    p.vertex(X(k, MOUNTAIN[0][0]), X(k, bottom))
+    for (const [x, y] of MOUNTAIN) p.vertex(X(k, x), X(k, y + dy))
+    p.vertex(X(k, MOUNTAIN[MOUNTAIN.length - 1][0]), X(k, bottom))
+    p.endShape(p.CLOSE)
   }
   // The observatory on the far ridge, catching the last of the sun: a long low building, a dome at each end and the
   // great one in the middle. Painted flat, a shade darker than the ridge, its domes rimmed with the sunset.
@@ -387,7 +536,46 @@ function drawCloth(p: p5, c: Ctx, t: number): void {
     }
   }
   // A row of palms at the mountain's foot, painted dark against the glow: the city the number is in.
-  for (const pm of PALMS) paintedPalm(p, k, H(pm.x), -1.55 + dy, pm.h, pm.lean, mixHex(M.hillDeep, M.mountain, 0.35))
+  for (const [i, pm] of PALMS.entries()) {
+    // A breeze along the row: each palm stirs a moment after the one before it.
+    const stir = 0.045 * Math.sin(t * 0.9 - pm.x * 0.35) + 0.02 * Math.sin(t * 2.3 + i * 1.9)
+    paintedPalm(p, k, H(pm.x), -1.55 + dy, pm.h, pm.lean, mixHex(M.hillDeep, M.mountain, 0.35), stir)
+  }
+  // The marine layer coming in at dusk: long cut-out wisps hung on wires in front of the cloth, drifting slowly along
+  // the mountain's flank and high in the sky, their undersides in the mountain's shade and their tops in the sunset.
+  for (const w of WISPS) {
+    let wx = H(w.x) - 0.11 * (t - BURST)
+    wx = wx - 56 * Math.floor((wx - H(-12)) / 56)
+    if (wx - w.w > x1 + 1 || wx + w.w < x0 - 1) continue
+    const wy = w.y + dy + 0.04 * Math.sin(t * 0.6 + w.x)
+    p.stroke(rgba(M.flat, 0.12))
+    p.strokeWeight(Math.max(1, X(k, 0.012)))
+    p.line(X(k, wx), X(k, wy - w.h), X(k, wx), X(k, f.y0 - 1))
+    p.noStroke()
+    p.fill(w.body)
+    p.beginShape()
+    p.vertex(X(k, wx - w.w), X(k, wy))
+    for (let j = 0; j <= 10; j++) {
+      const u = j / 10
+      const bump = Math.sin(Math.PI * u) * (0.7 + 0.3 * Math.sin(u * 9 + w.x))
+      p.vertex(X(k, wx - w.w + 2 * w.w * u), X(k, wy - w.h * bump))
+    }
+    p.vertex(X(k, wx + w.w), X(k, wy))
+    p.endShape(p.CLOSE)
+    p.fill(w.top)
+    p.beginShape()
+    for (let j = 1; j <= 9; j++) {
+      const u = j / 10
+      const bump = Math.sin(Math.PI * u) * (0.7 + 0.3 * Math.sin(u * 9 + w.x))
+      p.vertex(X(k, wx - w.w + 2 * w.w * u), X(k, wy - w.h * bump))
+    }
+    for (let j = 9; j >= 1; j--) {
+      const u = j / 10
+      const bump = Math.sin(Math.PI * u) * (0.7 + 0.3 * Math.sin(u * 9 + w.x))
+      p.vertex(X(k, wx - w.w + 2 * w.w * u), X(k, wy - w.h * bump * 0.55))
+    }
+    p.endShape(p.CLOSE)
+  }
   // A soft band of rose light low on the cloth, behind the set: the painted sunset.
   ctx.save()
   const band = ctx.createLinearGradient(0, X(k, -3.4 + dy), 0, X(k, bottom))
@@ -483,7 +671,8 @@ function drawFloor(p: p5, c: Ctx, t: number): void {
     for (let x = Math.ceil((x0 + 0.2) / step) * step; x < x1 - 0.2; x += step) {
       const on = smooth(reach - Math.abs(x - DOOR_X), 0.6, 2.2)
       if (on <= 0.01) continue
-      glow(p, k, x, front + 0.08, 0.75, M.lamp, 0.22 * on, 1.1, 1.0)
+      // Its light falls down the dark face under it: on the face, not round the lamp.
+      glow(p, k, x, front + 0.32, 0.5, M.lamp, 0.16 * on, 1.0, 0.75)
       solid(p, ink, weight * 0.45, mixHex(M.skyTop, ink, 0.4))
       p.arc(X(k, x), X(k, front + 0.02), X(k, 0.3), X(k, 0.22), Math.PI, Math.PI * 2, p.CHORD)
       p.noStroke()
@@ -503,32 +692,29 @@ function drawGrid(p: p5, c: Ctx, t: number): void {
   p.line(X(k, -6), X(k, y), X(k, 9.2), X(k, y))
   for (const x of [-4.2, -0.6, 3.1, 6.6]) {
     p.line(X(k, x), X(k, y), X(k, x), X(k, y - 3))
-    // A work light hanging off the pipe, and the pale cone it throws down the flats.
+    // A work light hanging off the pipe: the stage is lit white by them, and they hang in it as lamps, no cone.
     solid(p, ink, weight * 0.6, M.shadow)
     p.rect(X(k, x + 0.55), X(k, y + 0.04), X(k, 0.26), X(k, 0.2), X(k, 0.04))
-    beam(p, k, x + 0.68, y + 0.24, x + 0.95, Y_BACK - 0.4, 0.2, 1.5, M.flat, 0.35)
   }
-  // The specials: a lamp on the pipe over each cut-out, dark until its cut-out stands, then struck on with a flash and
-  // left burning warm on it. The set is lit as it builds.
+  // The specials: a lamp on the pipe over each cut-out, dark until its cut-out stands, then switched on and left
+  // burning: its lens lit, and its light a warm pool on the floor at the cut-out's foot. The set is lit as it builds.
   for (const cut of CUTS) {
     const lx = cut.x + 0.25
     const since = t - cut.at
-    const on = since < 0 ? 0 : 0.75 + 0.25 * Math.exp(-since / 0.35)
-    const flash = since < 0 ? 0 : Math.exp(-since / 0.12)
+    const on = since < 0 ? 0 : smooth(since, 0, 0.08)
     p.stroke(mixHex(M.shadow, ink, 0.5))
     p.strokeWeight(Math.max(1, weight * 0.6))
     p.line(X(k, lx), X(k, y), X(k, lx), X(k, y + 0.16))
-    if (on > 0) beam(p, k, lx, y + 0.38, cut.x, HINGE - 0.1, 0.16, 1.9, M.lamp, 0.2 * on + 0.25 * flash)
+    if (on > 0) glow(p, k, cut.x, FLOOR + 0.04, 0.85, M.lamp, 0.2 * on, 1.3, 0.3)
     p.push()
     p.translate(X(k, lx), X(k, y + 0.24))
     p.rotate(Math.atan2(HINGE - y, cut.x - lx) - Math.PI / 2)
     solid(p, ink, weight * 0.6, mixHex(M.shadow, ink, 0.55))
     p.rect(X(k, -0.12), X(k, -0.1), X(k, 0.24), X(k, 0.24), X(k, 0.05))
     p.noStroke()
-    p.fill(on > 0 ? mixHex(M.lamp, M.flat, 0.5 * flash) : mixHex(M.shadow, ink, 0.3))
+    p.fill(on > 0 ? M.lamp : mixHex(M.shadow, ink, 0.3))
     p.ellipse(0, X(k, 0.15), X(k, 0.2), X(k, 0.06))
     p.pop()
-    if (flash > 0.02) glow(p, k, lx, y + 0.4, 0.6, M.lamp, 0.5 * flash)
   }
 }
 
@@ -581,13 +767,183 @@ function drawCamera(p: p5, c: Ctx, t: number): void {
   }
   p.pop()
   // Its red light, on while it runs.
-  const tally = run * (0.85 + 0.15 * Math.sin(t * 5))
+  const tally = run
   if (tally > 0.01) {
-    glow(p, k, cx + 0.02, head - 0.33, 0.28, M.door, 0.55 * tally)
     p.noStroke()
     p.fill(mixHex(mixHex(M.shadow, ink, 0.4), M.door, tally))
     p.circle(X(k, cx + 0.02), X(k, head - 0.33), X(k, 0.08))
   }
+}
+
+/* ------------------------------------------------------------------ the working stage */
+
+/*
+ * The sound stage round the white set, at work, every piece of it in the studio's own greys so the white stays white:
+ * upstage, a far rank of taller flats, and one of them being walked across behind the set by a grip, its top going by
+ * over the near flats a step at a time; the work lights' cables looping off the pipe; a cable along the floor from the
+ * camera; a stepladder against the first flat with a can of paint on it; a boom mic in from the top of the frame,
+ * following them, flown out before the cloth comes down; and in front of the stage, nearest us, the director's chair,
+ * empty, which slides by faster than the set as the camera goes along.
+ */
+const FAR_Q = 0.8
+const FAR: [number, number, number][] = [
+  [-8.4, -5.9, 4.5], [-5.8, -3.2, 4.85], [-3.1, -0.9, 4.4], [-0.8, 1.9, 4.9], [2.0, 4.3, 4.45], [4.4, 6.9, 4.8], [7.0, 9.6, 4.5], [9.7, 12.2, 4.9],
+]
+/** The flat being carried across, upstage: where its middle is at show time `t`. */
+const carriedX = (t: number): number => 6.8 - 0.62 * (t - BEGIN)
+const LADDER_X = -3.95
+const CHAIR_X = -2.4
+const CHAIR_Q = 1.45
+
+function drawUpstage(p: p5, c: Ctx, t: number): void {
+  if (t > BURST + 0.05) return
+  const { k, ink, weight } = c
+  const f = frame(p, k)
+  const shift = f.cx * (1 - FAR_Q)
+  const far = mixHex(M.paper, M.shadow, 0.75)
+  for (const [x0, x1, h] of FAR) {
+    const a = x0 + shift
+    const b = x1 + shift
+    if (b < f.x0 - 1 || a > f.x1 + 1) continue
+    solid(p, rgba(ink, 0.35), weight * 0.45, far)
+    p.rect(X(k, a), X(k, Y_BACK - h), X(k, b - a), X(k, h))
+    p.noStroke()
+    p.fill(rgba(ink, 0.06))
+    p.rect(X(k, a + 0.02), X(k, Y_BACK - h + 0.02), X(k, 0.06), X(k, h - 0.04))
+    // A stencilled batten across its top: the back of a flat, framed.
+    p.stroke(rgba(ink, 0.18))
+    p.strokeWeight(Math.max(1, weight * 0.4))
+    p.line(X(k, a + 0.08), X(k, Y_BACK - h + 0.28), X(k, b - 0.08), X(k, Y_BACK - h + 0.28))
+  }
+  // The one being walked across: a step at a time, its top bobbing with the grip's stride, leaning a little.
+  const cx = carriedX(t) + f.cx * (1 - 0.9)
+  const bob = 0.05 * Math.abs(Math.sin(Math.PI * 1.7 * (t - BEGIN)))
+  const top = Y_BACK - 3.95 - bob
+  p.push()
+  p.translate(X(k, cx), X(k, Y_BACK))
+  p.rotate(-0.025)
+  solid(p, rgba(ink, 0.5), weight * 0.5, mixHex(M.flat, M.shadow, 0.65))
+  p.rect(X(k, -0.95), X(k, top - Y_BACK), X(k, 1.9), X(k, 3.95))
+  p.stroke(rgba(ink, 0.25))
+  p.strokeWeight(Math.max(1, weight * 0.4))
+  p.line(X(k, -0.95), X(k, top - Y_BACK + 0.22), X(k, 0.95), X(k, top - Y_BACK + 0.22))
+  p.pop()
+}
+
+/** The work lights' cables, looping from each lamp along the pipe, swaying a little in the air off the flats. */
+function drawCables(p: p5, c: Ctx, t: number): void {
+  if (t > BURST + 0.05) return
+  const { k, ink, weight } = c
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const y = -4.35
+  ctx.strokeStyle = rgba(ink, 0.45)
+  ctx.lineWidth = Math.max(1, weight * 0.5)
+  ctx.beginPath()
+  for (const [i, x] of [-4.2, -0.6, 3.1, 6.6].entries()) {
+    const sag = 0.55 + 0.04 * Math.sin(t * 0.9 + i * 1.3)
+    ctx.moveTo(X(k, x + 0.62), X(k, y + 0.2))
+    ctx.bezierCurveTo(X(k, x + 0.7), X(k, y + 0.2 + sag), X(k, x + 1.5), X(k, y + sag), X(k, x + 1.75), X(k, y))
+  }
+  // Along the floor's back from the camera's base, round the brace's sandbag, under the door's flat.
+  ctx.moveTo(X(k, CAM[0] - 0.4), X(k, Y_BACK - 0.05))
+  ctx.bezierCurveTo(X(k, CAM[0] - 0.9), X(k, Y_BACK + 0.12), X(k, 8.9), X(k, Y_BACK - 0.02), X(k, 8.4), X(k, Y_BACK + 0.06))
+  ctx.bezierCurveTo(X(k, 8.0), X(k, Y_BACK + 0.12), X(k, 7.9), X(k, Y_BACK + 0.02), X(k, 7.6), X(k, Y_BACK + 0.02))
+  ctx.stroke()
+}
+
+/** A stepladder against the first flats, a can of paint and its brush on the top step. */
+function drawLadder(p: p5, c: Ctx, t: number): void {
+  if (t > BURST + 0.05) return
+  const { k, ink, weight } = c
+  const x = LADDER_X
+  const top = Y_BACK - 1.95
+  const wood = mixHex(M.shadow, ink, 0.3)
+  outline(p, ink, weight * 0.6)
+  p.stroke(rgba(ink, 0.7))
+  p.strokeWeight(Math.max(1, X(k, 0.05)))
+  p.line(X(k, x - 0.05), X(k, top), X(k, x - 0.45), X(k, Y_BACK))
+  p.line(X(k, x + 0.05), X(k, top), X(k, x + 0.45), X(k, Y_BACK))
+  p.stroke(rgba(ink, 0.55))
+  p.strokeWeight(Math.max(1, X(k, 0.035)))
+  for (let i = 1; i <= 4; i++) {
+    const u = i / 5
+    p.line(X(k, x - 0.05 - 0.4 * u), X(k, top + u * 1.95), X(k, x - 0.05 - 0.4 * u + 0.2), X(k, top + u * 1.95))
+  }
+  solid(p, ink, weight * 0.6, wood)
+  p.rect(X(k, x - 0.2), X(k, top - 0.06), X(k, 0.4), X(k, 0.07), X(k, 0.02))
+  solid(p, ink, weight * 0.6, mixHex(M.flat, M.purple, 0.25))
+  p.rect(X(k, x - 0.12), X(k, top - 0.3), X(k, 0.22), X(k, 0.24), X(k, 0.03))
+  p.stroke(rgba(ink, 0.6))
+  p.line(X(k, x + 0.06), X(k, top - 0.3), X(k, x + 0.18), X(k, top - 0.52))
+}
+
+/** The boom: a mic on a long pole in from the top right, held by someone out of shot, following him with a lag. */
+function drawBoom(p: p5, c: Ctx, t: number): void {
+  const out = smooth(t, DOOR_AT - 0.2, BURST - 0.5)
+  const into = smooth(t, BEGIN + 0.4, BEGIN + 1.6)
+  if (out >= 1 || into <= 0) return
+  const { k, ink, weight } = c
+  const f = frame(p, k)
+  const dip = POP_AT.reduce((a, at) => a + 0.1 * Math.max(0, ring(t - at + 0.1, 0.9, 0.45)), 0)
+  const mx = sebX(t - 0.55) + 0.2
+  const my = -3.5 + dip - 3.2 * out - 3 * (1 - into) + 0.04 * Math.sin(t * 1.1)
+  const anchor: Pt = [f.x1 + 1.6, f.y0 - 1.2]
+  const dx = anchor[0] - mx
+  const dy = anchor[1] - my
+  const L = Math.hypot(dx, dy)
+  const ux = dx / L
+  const uy = dy / L
+  const grey = mixHex(M.shadow, ink, 0.62)
+  // The pole, and the cable taped along it.
+  p.stroke(rgba(ink, 0.8))
+  p.strokeWeight(Math.max(1, X(k, 0.05)))
+  p.line(X(k, mx - ux * 0.25), X(k, my - uy * 0.25), X(k, anchor[0]), X(k, anchor[1]))
+  p.stroke(rgba(ink, 0.45))
+  p.strokeWeight(Math.max(1, X(k, 0.02)))
+  p.noFill()
+  p.beginShape()
+  for (let i = 0; i <= 10; i++) {
+    const u = i / 10
+    const sag = 0.06 * Math.sin(Math.PI * u * 5)
+    p.vertex(X(k, mx + ux * L * u - uy * sag), X(k, my + uy * L * u + ux * sag + 0.04))
+  }
+  p.endShape()
+  // The mic in its windshield, hung under the pole's end, aimed down at them.
+  p.push()
+  p.translate(X(k, mx - ux * 0.25), X(k, my - uy * 0.25 + 0.1))
+  p.rotate(-0.22 + 0.06 * (sebX(t) - mx))
+  p.stroke(rgba(ink, 0.8))
+  p.strokeWeight(Math.max(1, X(k, 0.02)))
+  p.line(0, X(k, -0.1), 0, 0)
+  solid(p, ink, weight * 0.6, grey)
+  p.rect(X(k, -0.32), X(k, -0.02), X(k, 0.64), X(k, 0.15), X(k, 0.075))
+  p.stroke(rgba(ink, 0.35))
+  p.strokeWeight(Math.max(1, X(k, 0.012)))
+  for (let i = 1; i < 6; i++) p.line(X(k, -0.32 + i * 0.107), X(k, -0.01), X(k, -0.32 + i * 0.107), X(k, 0.12))
+  p.pop()
+}
+
+/** The director's chair in front of the stage, empty, its back to us: the nearest thing, it moves the most. */
+function drawChair(p: p5, c: Ctx, t: number): void {
+  if (t > BURST + 0.05) return
+  const { k, ink, weight } = c
+  const f = frame(p, k)
+  const x = CHAIR_X - (CHAIR_Q - 1) * (f.cx - 0.4)
+  if (x > f.x1 + 1.2 || x < f.x0 - 1.2) return
+  const foot = FLOOR + 1.9
+  const wood = mixHex(M.shadow, ink, 0.5)
+  const canvas = mixHex(M.shadow, ink, 0.32)
+  // The legs crossed under the seat, the arms, the two back posts and the canvas slung between them.
+  p.stroke(wood)
+  p.strokeWeight(Math.max(1, X(k, 0.08)))
+  p.line(X(k, x - 0.52), X(k, foot), X(k, x + 0.5), X(k, foot - 0.75))
+  p.line(X(k, x + 0.52), X(k, foot), X(k, x - 0.5), X(k, foot - 0.75))
+  for (const s of [-1, 1]) p.line(X(k, x + s * 0.5), X(k, foot - 0.75), X(k, x + s * 0.5), X(k, foot - 1.85))
+  solid(p, ink, weight * 0.6, wood)
+  for (const s of [-1, 1]) p.rect(X(k, x + s * 0.5 - (s > 0 ? 0.04 : 0.32)), X(k, foot - 1.2), X(k, 0.36), X(k, 0.07), X(k, 0.03))
+  solid(p, ink, weight * 0.6, canvas)
+  p.rect(X(k, x - 0.5), X(k, foot - 0.82), X(k, 1.0), X(k, 0.12))
+  p.rect(X(k, x - 0.54), X(k, foot - 1.82), X(k, 1.08), X(k, 0.42), X(k, 0.03))
 }
 
 /* ------------------------------------------------------------------ the cut-outs */
@@ -609,12 +965,11 @@ function stand(at: number, t: number): { up: number; knock: number } {
  * A cut-out, drawn about its hinge with its heights squashed by `sy`: lying back on the floor it is a sliver
  * (the floor seen from a little above), standing it is itself. `paint` is how much colour the flood has put on it.
  */
-function drawCut(p: p5, c: Ctx, kind: Kind, x: number, sy: number, paint: number, lit: number, shade?: string): void {
+function drawCut(p: p5, c: Ctx, kind: Kind, x: number, sy: number, paint: number, shade?: string): void {
   const { k, weight } = c
-  // As a shadow: every shape in one flat colour, no line, no light.
+  // As a shadow: every shape in one flat colour, no line.
   const ink = shade ?? c.ink
   const P = (a: string) => shade ?? mixHex(M.flat, a, paint)
-  if (shade) lit = 0
   const V = (px: number, py: number): [number, number] => [X(k, x + px), X(k, HINGE + py * sy)]
   const poly = (pts: [number, number][], fill: string, w = weight * 0.8) => {
     solid(p, ink, w, fill)
@@ -684,7 +1039,6 @@ function drawCut(p: p5, c: Ctx, kind: Kind, x: number, sy: number, paint: number
       }
       solid(p, ink, weight * 0.6, P(M.door))
       p.circle(...V(mx, -h - 0.06), X(k, 0.12))
-      if (lit > 0) glow(p, k, x + mx, HINGE + (-h - 0.06) * sy, 0.35, M.door, 0.5 * lit)
     }
   } else if (kind === 'tower') {
     // The round tower: a drum of stacked floors, each with its sunshade, a spire, a light on the spire.
@@ -705,7 +1059,6 @@ function drawCut(p: p5, c: Ctx, kind: Kind, x: number, sy: number, paint: number
     line(0, -h, 0, -h - 0.62, weight * 0.8)
     solid(p, ink, weight * 0.5, P(M.door))
     p.circle(...V(0, -h - 0.64), X(k, 0.1))
-    if (lit > 0) glow(p, k, x, HINGE + (-h - 0.64) * sy, 0.3, M.door, 0.55 * lit)
   } else {
     // A streetlamp: a fluted post on a plinth, a lantern on a curled bracket.
     poly([[-0.14, 0], [-0.1, -0.2], [0.1, -0.2], [0.14, 0]], P(mixHex(M.purple, ink, 0.4)))
@@ -713,7 +1066,6 @@ function drawCut(p: p5, c: Ctx, kind: Kind, x: number, sy: number, paint: number
     poly([[-0.2, -1.78], [-0.13, -2.08], [0.13, -2.08], [0.2, -1.78]], P(M.lamp))
     poly([[-0.22, -1.72], [0.22, -1.72], [0.16, -1.8], [-0.16, -1.8]], P(mixHex(M.purple, ink, 0.4)), weight * 0.6)
     poly([[-0.16, -2.08], [0, -2.2], [0.16, -2.08]], P(mixHex(M.purple, ink, 0.4)), weight * 0.6)
-    if (lit > 0) glow(p, k, x, HINGE - 1.94 * sy, 0.9, M.lamp, 0.55 * lit)
   }
 }
 
@@ -733,10 +1085,10 @@ function drawCuts(p: p5, c: Ctx, t: number): void {
       p.push()
       p.drawingContext.globalCompositeOperation = 'darken'
       p.translate(X(k, 0.12), X(k, -0.05))
-      drawCut(p, c, cut.kind, cut.x, sy, 0, 0, mixHex(M.flat, mixHex(M.shadow, M.purple, 0.35), 0.28 * smooth(up, 0.6, 1)))
+      drawCut(p, c, cut.kind, cut.x, sy, 0, mixHex(M.flat, mixHex(M.shadow, M.purple, 0.35), 0.28 * smooth(up, 0.6, 1)))
       p.pop()
     }
-    drawCut(p, c, cut.kind, cut.x, sy, paint, paint)
+    drawCut(p, c, cut.kind, cut.x, sy, paint)
   }
 }
 
@@ -744,13 +1096,18 @@ function drawStudio(p: p5, s: StudioState, c: Ctx): void {
   const t = c.t + s.begin
   p.rectMode(p.CORNER)
   p.ellipseMode(p.CENTER)
+  drawUpstage(p, c, t)
   drawGrid(p, c, t)
+  drawCables(p, c, t)
   drawFlats(p, c, t)
+  drawLadder(p, c, t)
   drawCamera(p, c, t)
   drawCloth(p, c, t)
   drawFloor(p, c, t)
   drawSpill(p, c, t)
   drawCuts(p, c, t)
+  drawBoom(p, c, t)
+  drawChair(p, c, t)
 }
 
 export const studio = part<StudioState>(

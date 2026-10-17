@@ -1,11 +1,11 @@
 import type p5 from 'p5'
 import { solid } from '../../../../../../../../src/core/draw'
 import { mixHex, type Pt } from '../../../../../parts'
-import { beam, bloom, pool, rgba } from '../cast'
+import { beam, pool, puff, rgba } from '../cast'
 import { hash, smooth, type frame } from '../kit'
 import { level } from '../music'
 import { DERELICTE } from '../worlds'
-import { FLOOR_Y, PM_SEAT, RUNWAY } from './geo'
+import { FLOOR_Y, PM_SEAT, RUNWAY, TOWER } from './geo'
 import { AIR, bankAt, derekAt, FOLLOW_ON, followAt, houseAt, powerAt, TRIGGER, worksAt } from './runway-clock'
 
 /**
@@ -79,10 +79,6 @@ const DRUM_H = 1.05
 /** A drum's flame at world-clock `tw`: tongues of fire, soft (air, not ink). */
 function drawFire(p: p5, k: number, x: number, y: number, tw: number, seed: number, a = 1): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  // The glow on the wall and the air round it.
-  const flick = 0.85 + 0.15 * Math.sin(tw * 11 + seed) * Math.sin(tw * 7.3 + seed * 2)
-  bloom(p, k, [x, y - 0.9], 3.0, DERELICTE.fire, 0.13 * flick * a)
-  bloom(p, k, [x, y - 0.3], 0.9, DERELICTE.fireCore, 0.16 * flick * a)
   ctx.save()
   for (let i = 0; i < 4; i++) {
     const ph = tw * (2.6 + i * 0.55) + seed * 3 + i * 1.9
@@ -115,7 +111,7 @@ function drawSmoke(p: p5, k: number, x: number, y: number, tw: number, seed: num
     const py = y - 0.6 - 5.2 * u
     const r = 0.4 + 1.3 * u
     const a = 0.07 * Math.sin(Math.PI * u)
-    bloom(p, k, [px, py], r, DERELICTE.paperShade, a)
+    puff(p, k, [px, py], r, DERELICTE.paperShade, a)
   }
 }
 
@@ -186,6 +182,7 @@ function drawWall(p: p5, k: number, f: Frame, t: number): void {
     }
     drawWindow(p, k, cx + 3, f)
   }
+  drawDressing(p, k, x0, x1, y0, y1, t)
   // The roof's dark comes down over the top of the wall.
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const g = ctx.createLinearGradient(0, X(-13), 0, X(-5.5))
@@ -195,16 +192,159 @@ function drawWall(p: p5, k: number, f: Frame, t: number): void {
   ctx.fillStyle = g
   ctx.fillRect(X(x0), X(Math.max(y0, -13)), X(x1 - x0), X(Math.max(0, Math.min(y1, -5.5) - Math.max(y0, -13))))
   p.pop()
-  // The runway's light thrown back on the brick behind it, bank by bank; and the follow spot's.
+  // The runway's light thrown back on the brick behind it, bank by bank, low along the wall over the deck.
   BANK_X.forEach((bx, i) => {
     const on = Math.min(1, bankAt(i, t))
-    if (on > 0 && bx + 5 > x0 && bx - 5 < x1) bloom(p, k, [bx, -0.9], 3.6, DERELICTE.spot, 0.075 * on)
+    if (on > 0 && bx + 5 > x0 && bx - 5 < x1) pool(p, k, [bx, -0.35], 3.4, 1.0, DERELICTE.spot, 0.055 * on)
   })
-  const fo = followAt(t)
-  if (fo.on > 0) bloom(p, k, [fo.at[0], fo.at[1] - 0.9], 1.9, DERELICTE.spot, 0.1 * Math.min(1.3, fo.on))
   // The house's light on the wall (the audience's wash), dimming on the needle.
   const house = houseAt(t)
-  if (house > 0.3) for (let x = Math.floor(x0 / 7) * 7; x < x1 + 7; x += 7) bloom(p, k, [x + 3.5, -1.2], 5, DERELICTE.spot, 0.05 * house)
+  if (house > 0.3) for (let x = Math.floor(x0 / 7) * 7; x < x1 + 7; x += 7) pool(p, k, [x + 3.5, -0.8], 5, 1.6, DERELICTE.spot, 0.045 * house)
+}
+
+/** How much of the show's light reaches the wall at `x`: the nearest bank's, the house's, the work lamps' after. */
+function wallLight(x: number, t: number): number {
+  let v = 0.25 * houseAt(t) + 0.3 * Math.min(1, worksAt(t))
+  BANK_X.forEach((bx, i) => {
+    v = Math.max(v, Math.min(1, bankAt(i, t)) * Math.max(0, 1 - Math.abs(x - bx) / 4.5))
+  })
+  return Math.min(1, v)
+}
+
+/** The bay with the loading door in it: the one behind the runway's far half. */
+const DOOR_BAY = { x0: 13.45, x1: 18.55, top: -3.0 }
+/** The pipe along the wall under the windows, and its downpipes beside the piers. */
+const PIPE_Y = -3.3
+
+/**
+ * The wall at eye level (what the close shots on the runway are seen against): a pipe run along it under the
+ * windows with a downpipe beside each pier; in one bay a steel roller door, shut; in the others the street's
+ * fly-posters, rows of the same sheet pasted up and torn, Derelicte's own among them. Paper in the dark, and pale
+ * where the runway's light reaches it, so the banks find them as they come up.
+ */
+function drawDressing(p: p5, k: number, x0: number, x1: number, y0: number, y1: number, t: number): void {
+  const X = (v: number) => v * k
+  if (y0 > FLOOR_Y || y1 < PIPE_Y - 0.2) return
+  p.push()
+  p.rectMode(p.CORNER)
+  // The roller door.
+  if (DOOR_BAY.x1 > x0 && DOOR_BAY.x0 < x1) {
+    const { x0: d0, x1: d1, top } = DOOR_BAY
+    const lit = wallLight((d0 + d1) / 2, t)
+    p.noStroke()
+    p.fill(mixHex(mixHex(DERELICTE.corrugated, DERELICTE.roof, 0.84), DERELICTE.corrugated, 0.12 * lit))
+    p.rect(X(d0), X(top), X(d1 - d0), X(FLOOR_Y - top))
+    // Its slats, a rib every eighth of a cell, catching the light along their top edges.
+    const rib = 0.125
+    if (rib * k > 3) {
+      p.stroke(rgba(DERELICTE.roof, 0.55))
+      p.strokeWeight(Math.max(1, X(0.02)))
+      for (let y = top + rib; y < Math.min(FLOOR_Y, y1 + 0.2); y += rib) if (y > y0 - 0.2) p.line(X(d0), X(y), X(d1), X(y))
+      p.stroke(rgba(DERELICTE.chain, 0.05 + 0.09 * lit))
+      for (let y = top + rib + 0.03; y < Math.min(FLOOR_Y, y1 + 0.2); y += rib) if (y > y0 - 0.2) p.line(X(d0), X(y), X(d1), X(y))
+    }
+    // Its guides either side and the drum's box over it.
+    p.noStroke()
+    p.fill(mixHex(DERELICTE.steelDark, DERELICTE.roof, 0.55))
+    p.rect(X(d0 - 0.12), X(top - 0.05), X(0.12), X(FLOOR_Y - top + 0.05))
+    p.rect(X(d1), X(top - 0.05), X(0.12), X(FLOOR_Y - top + 0.05))
+    p.rect(X(d0 - 0.18), X(top - 0.42), X(d1 - d0 + 0.36), X(0.4))
+    p.fill(rgba(DERELICTE.chain, 0.1 + 0.12 * lit))
+    p.rect(X(d0 - 0.18), X(top - 0.42), X(d1 - d0 + 0.36), X(0.035))
+  }
+  // The fly-posters, bay by bay.
+  for (let i = Math.floor((x0 - 1) / 6); i <= Math.ceil((x1 - 1) / 6); i++) {
+    const b0 = i * 6 + 1 + 0.5
+    const b1 = b0 + 5
+    // None in the door's bay, behind the tower's scaffold, or in every bay: a street's worth, not a wallpaper.
+    if (b0 < RUNWAY.head + 0.5 || b1 > HALL.x1 - 1 || (b0 < DOOR_BAY.x1 && b1 > DOOR_BAY.x0)) continue
+    if (b0 < TOWER.x1 + 1 && b1 > TOWER.x0 - 1) continue
+    if (hash(i, 30) < 0.25) continue
+    if (b1 < x0 || b0 > x1) continue
+    // Behind the runway they are pasted above its deck; past its end, at head height off the floor.
+    const behind = b1 < RUNWAY.end + 0.5
+    const top = behind ? -2.45 : -1.6
+    const rows = behind ? 2 : 2
+    const n = 2 + Math.floor(hash(i, 31) * 3)
+    const w = 0.5
+    const h = 0.7
+    const gap = 0.04
+    const start = b0 + 0.3 + hash(i, 32) * (5 - 0.6 - n * (w + gap))
+    const lit = wallLight((b0 + b1) / 2, t)
+    for (let r = 0; r < rows; r++) {
+      const kind = Math.floor(hash(i, 33 + r) * 3)
+      const ry = top + r * (h + gap) + 0.04 * (hash(i, 40 + r) - 0.5)
+      const shift = r === rows - 1 && hash(i, 45) > 0.5 ? (w + gap) * 0.5 : 0
+      for (let j = 0; j < n - (r === rows - 1 ? Math.floor(hash(i, 46) * 2) : 0); j++) {
+        // Pasted by hand: none quite square with the next.
+        const px = start + shift + j * (w + gap) + 0.03 * (hash(i * 7 + j, 60 + r) - 0.5)
+        const py = ry + 0.05 * (hash(i * 7 + j, 70 + r) - 0.5)
+        const torn = hash(i * 7 + j, 50 + r)
+        drawPoster(p, k, px, py, w * (0.96 + 0.06 * hash(i * 7 + j, 80 + r)), h, kind, torn, lit)
+      }
+    }
+  }
+  // The pipe and its brackets; a downpipe beside each pier.
+  if (y0 < PIPE_Y + 0.2) {
+    p.noStroke()
+    p.fill(mixHex(mixHex(DERELICTE.steelDark, DERELICTE.roof, 0.62), WALL, 0.35))
+    p.rect(X(x0), X(PIPE_Y - 0.08), X(x1 - x0), X(0.16))
+    p.fill(rgba(DERELICTE.chain, 0.09))
+    p.rect(X(x0), X(PIPE_Y - 0.08), X(x1 - x0), X(0.025))
+    p.fill(mixHex(DERELICTE.steelDark, DERELICTE.roof, 0.55))
+    for (let x = Math.floor(x0 / 1.5) * 1.5; x < x1; x += 1.5) p.rect(X(x - 0.04), X(PIPE_Y - 0.13), X(0.08), X(0.26))
+  }
+  for (let i = Math.floor(x0 / 6) - 1; i <= Math.ceil(x1 / 6) + 1; i++) {
+    const x = i * 6 + 1 + 0.6
+    if (x < x0 - 0.2 || x > x1 + 0.2 || x < HALL.x0 || x > HALL.x1) continue
+    p.fill(mixHex(mixHex(DERELICTE.steelDark, DERELICTE.roof, 0.66), WALL, 0.35))
+    p.rect(X(x - 0.05), X(PIPE_Y), X(0.1), X(FLOOR_Y - PIPE_Y))
+    p.fill(mixHex(DERELICTE.steelDark, DERELICTE.roof, 0.5))
+    for (let y = PIPE_Y + 1.2; y < FLOOR_Y; y += 1.4) p.rect(X(x - 0.1), X(y), X(0.2), X(0.06))
+  }
+  p.pop()
+}
+
+/** One fly-poster, `w` by `h` from its top left: one of three sheets, a corner torn away, as pale as the light on it. */
+function drawPoster(p: p5, k: number, x: number, y: number, w: number, h: number, kind: number, torn: number, lit: number): void {
+  const X = (v: number) => v * k
+  const paper = mixHex(mixHex(DERELICTE.paperShade, WALL, 0.86), mixHex(DERELICTE.paper, WALL, 0.62), lit)
+  const ink = mixHex(WALL, paper, 0.3)
+  // A torn corner: the bottom right, or the top left, or none.
+  const tear = torn > 0.7 ? 0.22 + 0.2 * (torn - 0.7) / 0.3 : 0
+  p.noStroke()
+  p.fill(paper)
+  p.beginShape()
+  if (tear > 0 && torn > 0.85) {
+    p.vertex(X(x + w * tear), X(y))
+    p.vertex(X(x + w), X(y))
+    p.vertex(X(x + w), X(y + h))
+    p.vertex(X(x), X(y + h))
+    p.vertex(X(x), X(y + h * tear * 1.2))
+  } else {
+    p.vertex(X(x), X(y))
+    p.vertex(X(x + w), X(y))
+    if (tear > 0) {
+      p.vertex(X(x + w), X(y + h * (1 - tear)))
+      p.vertex(X(x + w * (1 - tear * 0.8)), X(y + h))
+    } else p.vertex(X(x + w), X(y + h))
+    p.vertex(X(x), X(y + h))
+  }
+  p.endShape(p.CLOSE)
+  if (k * w < 10) return
+  p.fill(ink)
+  if (kind === 0) {
+    // A black block (a photograph) over three lines.
+    p.rect(X(x + w * 0.12), X(y + h * 0.1), X(w * 0.76), X(h * 0.46))
+    for (const f of [0.66, 0.74, 0.82]) p.rect(X(x + w * 0.12), X(y + h * f), X(w * (f === 0.82 ? 0.45 : 0.76)), X(h * 0.035))
+  } else if (kind === 1) {
+    // Derelicte's: a heavy black band, and a bag's round silhouette under it.
+    p.rect(X(x), X(y + h * 0.08), X(w * (tear > 0 && torn <= 0.85 ? 0.8 : 1)), X(h * 0.16))
+    p.ellipse(X(x + w * 0.5), X(y + h * 0.62), X(w * 0.5), X(h * 0.42))
+  } else {
+    // Newsprint: columns of lines.
+    for (let c = 0; c < 3; c++) for (let l = 0; l < 7; l++) p.rect(X(x + w * (0.1 + c * 0.28)), X(y + h * (0.12 + l * 0.11)), X(w * 0.22), X(h * 0.03))
+  }
 }
 
 /** A tall industrial window, arched, its panes dark with a little sheen. */
@@ -236,7 +376,8 @@ function drawWindow(p: p5, k: number, cx: number, f: Frame): void {
 
 /** A little night through the high windows: faint cold shafts, felt only when the show's lights are out. */
 export function drawWindowSpill(p: p5, k: number, f: Frame, t: number): void {
-  const a = 0.035 + 0.05 * (1 - powerAt(t)) * (1 - 0.6 * Math.min(1, worksAt(t)))
+  const a = 0.075 * (1 - powerAt(t)) * (1 - 0.6 * Math.min(1, worksAt(t)))
+  if (a < 0.004) return
   for (let i = Math.floor(f.x0 / 6) - 2; i <= Math.ceil(f.x1 / 6) + 1; i++) {
     const cx = i * 6 + 4
     if (cx < HALL.x0 || cx > HALL.x1) continue
@@ -260,7 +401,6 @@ export function drawWorks(p: p5, k: number, f: Frame, t: number, ink: Ink): void
     p.rect(X(x), X(TRUSS.low + 0.47), X(0.96), X(0.06))
     p.pop()
     if (on > 0.01) {
-      bloom(p, k, [x, TRUSS.low + 0.5], 1.2, DERELICTE.star, 0.4 * on)
       beam(p, k, [x, TRUSS.low + 0.5], [x, FLOOR_Y], 1.0, 7.5, DERELICTE.star, 0.08 * on)
       // Flat cold light on the runway's deck and the floor under it.
       pool(p, k, [x + 0.5, 0.15], 3.6, 0.2, DERELICTE.star, 0.18 * on)
@@ -339,18 +479,14 @@ export function drawLight(p: p5, k: number, f: Frame, t: number): void {
     beam(p, k, [lx, ly], aim, big || near ? 0.2 : 0.18, big ? 0.8 : near ? 0.55 : 0.85, DERELICTE.spot, (big ? 0.3 : near ? 0.3 : 0.095) * Math.min(1.6, on))
     pool(p, k, aim, big ? 0.62 : near ? 0.45 : 1.0, big ? 0.16 : 0.12, DERELICTE.spot, (big ? 0.5 : near ? 0.55 : 0.28) * Math.min(1.6, on))
     // The follow spot's own pool: a hard bright core round him, big enough to find him in a wide.
-    if (big) {
-      pool(p, k, aim, 0.42, 0.1, DERELICTE.spot, 0.75 * Math.min(1.3, on))
-      bloom(p, k, [aim[0], aim[1] - 0.3], 0.95, DERELICTE.spot, 0.2 * Math.min(1.3, on))
-    }
-    bloom(p, k, [lx, ly], 0.35, DERELICTE.spot, 0.35 * Math.min(1.4, on))
+    if (big) pool(p, k, aim, 0.42, 0.1, DERELICTE.spot, 0.75 * Math.min(1.3, on))
   }
 }
 
 export function drawHall(p: p5, k: number, f: Frame, t: number, ink: Ink): void {
   const tw = AIR(t)
   drawWall(p, k, f, t)
-  // The fires' glow on the brick first, then the drums and the flames.
+  // The fires' smoke first, then the trusses, then the drums and the flames.
   for (const [i, d] of DRUMS.entries()) {
     if (d.x < f.x0 - 3 || d.x > f.x1 + 3) continue
     drawSmoke(p, k, d.x, d.base - DRUM_H, tw, i)
@@ -371,7 +507,9 @@ export function drawFireGlow(p: p5, k: number, f: Frame, t: number, a: number): 
     if (d.x < f.x0 - 4 || d.x > f.x1 + 4) continue
     const top = d.base - DRUM_H
     const flick = 0.85 + 0.15 * Math.sin(tw * 11 + i + 1) * Math.sin(tw * 7.3 + (i + 1) * 2)
-    bloom(p, k, [d.x, top - 0.9], 3.4, DERELICTE.fire, 0.12 * a * flick)
+    // Its light thrown up the brick in a fan, and down round the drum on the concrete.
+    beam(p, k, [d.x, top + 0.1], [d.x, top - 3.4], 0.9, 3.0, DERELICTE.fire, 0.16 * a * flick)
+    if (d.base > FLOOR_Y - 0.1) pool(p, k, [d.x, FLOOR_Y + 0.02], 1.8, 0.16, DERELICTE.fire, 0.3 * a * flick)
     drawFire(p, k, d.x, top, tw, i + 1, a)
   }
 }

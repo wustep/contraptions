@@ -1,11 +1,13 @@
 import { R, type Pt, type Seg } from '../../../../../parts'
 import { mix } from '../cast'
 import { box, part, scenery, type Company, type Part, type PartShot, type Slot } from '../kit'
-import { HALF, LAST, PLAGAL, SEAM, SWELL, TONIC } from '../music'
-import type { ShellSpot } from '../seams'
+import { LAST, PLAGAL, SEAM, SWELL, TONIC } from '../music'
 import { HANNAH, HANNAH_AGE, HOUSE, HOUSE_THEME, IAN, LOUISE } from '../worlds'
-import { CLOCK_HULL, CRADLE_HULL, BED_HULL, TV_HULL, drawBed, drawBedOver, drawClock, drawCradle, drawCradleOver, drawTV, drawTVGlow, tvShell } from './props'
+import { CLOCK_HULL, CRADLE_HULL, BED_HULL, LAMP_HULL, TV_HULL, drawBed, drawBedOver, drawClock, drawCradle, drawCradleOver, drawLamp, drawTV, drawTVGlow } from './props'
 import { drawBallMirror, drawFloorLight, drawMirror, drawRoom, drawVignette } from './room'
+import { F, FLASH_HITS, FLASH_X, STOOL_HULL, drawSheet, drawStool, flashX, hannahFlashAt, hannahFlashLook } from './flash'
+import { RC, RECRUIT_HITS, drawRecruit, drawRecruitOver, recruitX } from './recruit'
+import { TEEN_GONE, TEEN_HITS, TEEN_SHOTS, TEEN_STOOL_HULL, TEEN_X, TN, drawTeenStool, hannahTeenAt, hannahTeenDown, hannahTeenLook, teenX } from './teen'
 import {
   EMPTY_DX,
   NEAR,
@@ -26,7 +28,6 @@ import {
   ianX,
   NEWS_X,
   PATIENT,
-  TV,
   babyAt,
   bedX,
   cradleTheta,
@@ -40,11 +41,14 @@ import {
 
 /**
  * The lake house, inside (the HOUSE builder's): one long room of dark concrete and pale oak whose whole side is a
- * window over the grey lake. The same room at four times of her life, which we take for the past and which is the
- * future: the cradle at dawn (the show's first frame), the bed by the window on a grey day, the television at night,
- * and at the end the morning after the shells, Ian, the empty cradle, and the first frame again.
+ * window over the grey lake. The same room at six times of her life, which we take for the past and which is the
+ * future: the cradle at dawn (the show's first frame), Hannah a teenager at the window turning on her mother and going
+ * (`teen.ts`), the bed by the window over the days of her illness, the night
+ * the shells came (the television on, a helicopter's searchlight: `recruit.ts`), an afternoon in the sun when Hannah
+ * draws at the window (the flash, in the middle of the language: `flash.ts`), and at the end the morning after the
+ * shells, Ian, the empty cradle, and the first frame again. (The news itself is the lecture hall's: `hall/hall.ts`.)
  *
- * The room is one standing drawing that changes by show time (`houseSet`); the parts (`dawn`, `bed`, `news`, `home`)
+ * The room is one standing drawing that changes by show time (`houseSet`); the parts (`dawn`, `teen`, `bed`, `recruit`, `flash`, `home`)
  * give Louise her lane, Hannah and Ian their places, and the camera its keys. Everything that moves is a function of
  * show time in `time.ts`, read by both.
  */
@@ -59,10 +63,14 @@ function louiseX(T: number): number | null {
   switch (eraOf(T)) {
     case 'dawn':
       return dawnX(T)
+    case 'teen':
+      return teenX(T)
     case 'bed':
       return bedX(T)
-    case 'news':
-      return NEWS_X
+    case 'recruit':
+      return recruitX(T)
+    case 'flash':
+      return flashX(T)
     case 'home':
       return homeX(T)
     default:
@@ -87,8 +95,10 @@ export const houseSet = scenery<null>({
     // The cradle at its dawn place throughout, empty until Hannah comes into it.
     const dx = era === 'home' && T < BEGIN ? EMPTY_DX : 0
     if (era === 'dawn' || era === 'home') shadows.push(CRADLE_HULL.map((q) => pose(theta, q)).map(([x, y]) => [x + dx, y] as Pt))
-    if (era === 'bed') shadows.push(BED_HULL, CLOCK_HULL)
-    if (era === 'news') shadows.push(TV_HULL)
+    if (era === 'bed') shadows.push(BED_HULL, CLOCK_HULL, LAMP_HULL)
+    if (era === 'recruit') shadows.push(TV_HULL)
+    if (era === 'flash') shadows.push(STOOL_HULL)
+    if (era === 'teen') shadows.push(TEEN_STOOL_HULL)
     if (era === 'home' && T < BEGIN) balls.push([ianX(T), 0])
     if (era === 'home' && T >= BEGIN && T < IAN_GONE) balls.push([ianAfter(T), 0])
     drawRoom(p, k, T)
@@ -99,20 +109,31 @@ export const houseSet = scenery<null>({
       p.pop()
     }
     if (era === 'bed') {
+      drawLamp(p, k, T, L)
       drawBed(p, k, T, L)
       drawClock(p, k, T, L)
     }
-    if (era === 'news') drawTV(p, k, T, L)
+    if (era === 'recruit') drawTV(p, k, T, L)
+    if (era === 'recruit') drawRecruit(p, k, T)
+    if (era === 'flash') {
+      drawSheet(p, k, T, L)
+      drawStool(p, k, T, L)
+    }
+    if (era === 'teen') drawTeenStool(p, k, T, L)
     drawMirror(p, k, T)
-    // Louise first, then Ian when he is here: the same order `balls` has them in.
-    drawBallMirror(p, k, T, balls.map((b, i) => [b, i === 0 ? LOUISE : IAN] as [Pt, string]))
-    drawFloorLight(p, k, T, shadows, balls)
-    if (era === 'news') drawTVGlow(p, k, T)
+    // Louise first, then Ian when he is here: the same order `balls` has them in; and Hannah when she is on the floor.
+    const mirrored = balls.map((b, i) => [b, i === 0 ? LOUISE : IAN] as [Pt, string])
+    const down = era === 'teen' && hannahTeenDown(T) ? hannahTeenAt(T) : null
+    if (down) mirrored.push([down, HANNAH])
+    drawBallMirror(p, k, T, mirrored)
+    drawFloorLight(p, k, T, shadows, down ? [...balls, down] : balls)
+    if (era === 'recruit') drawTVGlow(p, k, T)
     drawVignette(p, k, T)
   },
   over: (p, _s, c) => {
     const T = c.t
     const era = eraOf(T)
+    if (era === 'recruit') drawRecruitOver(p, c.k, T)
     if (era === 'bed') drawBedOver(p, c.k, T, lightAt(T))
     if (era === 'dawn' || era === 'home') {
       p.push()
@@ -126,15 +147,15 @@ export const houseSet = scenery<null>({
 /* ------------------------------------------------------------------ where each time starts */
 
 /** Where each of the room's legs starts (the ball comes in at (-0.5, 0) from it), in the house's world cells. Dawn and
- * the bed are the same place on the floor (the bed stands where the cradle stood); the news is where she ends at the
- * bed; home starts by the window across the room and ends where dawn began. */
+ * the bed are the same place on the floor (the bed stands where the cradle stood); the night they come for her is where
+ * she ends at the bed; home starts by the window across the room and ends where dawn began. */
 export const DAWN_AT: Pt = [0.5, 0]
+export const TEEN_AT: Pt = [TEEN_X + 0.5, 0]
 export const BED_AT: Pt = [0.5, 0]
-export const NEWS_AT: Pt = [NEWS_X + 0.5, 0]
+export const RECRUIT_AT: Pt = [NEWS_X + 0.5, 0]
+export const FLASH_AT: Pt = [FLASH_X + 0.5, 0]
 export const HOME_AT: Pt = [HOME_X + 0.5, 0]
 
-/** The shell on the television at the cut (house world cells): its centre and height. */
-export const TV_SHELL: ShellSpot = tvShell(SEAM.arrival)
 
 /** When Hannah goes, on the swell: her ball fades out of the bed between these show times. */
 export const GONE: [number, number] = GONE_AT
@@ -215,6 +236,32 @@ export const dawn: Part<HouseState> = part<HouseState>(
   },
 )
 
+/* ------------------------------------------------------------------ years on, at the window */
+
+export const teen: Part<HouseState> = part<HouseState>(
+  { name: 'house-teen', draw: nothing },
+  (slot) => {
+    const o = TEEN_AT
+    const { segs, end } = floorLane(teenX, slot, o, [TN.touch, TN.off, TN.again])
+    const company: Company[] = [
+      {
+        who: 'hannah',
+        from: slot.begin,
+        to: TEEN_GONE,
+        at: (t) => {
+          const h = hannahTeenAt(t)
+          return h ? { x: h[0] - o[0], y: h[1] - o[1], scale: HANNAH_AGE.teen, spin: hannahTeenLook(t) } : null
+        },
+      },
+    ]
+    return { cells: partCells(o), exit: [end[0] + 0.5, end[1]], lane: { segs, fire: TN.touch - slot.begin }, state: { begin: slot.begin }, company }
+  },
+  () => {
+    const o = TEEN_AT
+    return TEEN_SHOTS.map(([t, cells, x, y, cut]) => ({ t, cells, hold: [x - o[0], y - o[1]] as Pt, w: 1, ...(cut ? { cut } : {}) }))
+  },
+)
+
 /* ------------------------------------------------------------------ the bed */
 
 export const bed: Part<HouseState> = part<HouseState>(
@@ -253,13 +300,21 @@ export const bed: Part<HouseState> = part<HouseState>(
     const o = BED_AT
     const w = (x: number, y: number): Pt => [x - o[0], y - o[1]]
     return [
-      // In on the two of them by the pillow, the clock's pendulum at the frame's edge; on the swell close on Hannah as
-      // she goes; then the empty pillow and Louise beside it, and back to the room.
-      { t: 76.185, cells: 3.7, hold: w(1.2, -0.72) },
-      { t: 80.376, cells: 3.2, hold: w(1.26, -0.56) },
-      { t: 85.31, cells: 3.05, hold: w(1.3, -0.55) },
-      // The clock whole beside the bed while it runs down: its last notch and its pendulum settling on the swell.
-      { t: 89.281, cells: 3.55, hold: w(1.95, -0.92) },
+      // The days of her illness (`DAYS`), each its own shot, cut in on the clock's strike that begins it: the grey
+      // afternoon, the room and the clock;
+      { t: 75.9, cells: 3.9, hold: w(1.15, -0.75) },
+      // night, close on the two of them under the lamp;
+      { t: 76.185, cells: 2.55, hold: w(0.62, -0.56), cut: true },
+      { t: 80.25, cells: 2.5, hold: w(0.66, -0.55) },
+      // a pale morning, her coming to the bed's side;
+      { t: 80.376, cells: 3.25, hold: w(1.28, -0.6), cut: true },
+      { t: 85.2, cells: 3.1, hold: w(1.3, -0.57) },
+      // another grey day, the clock whole beside the bed, running down;
+      { t: 85.31, cells: 3.6, hold: w(1.95, -0.92), cut: true },
+      { t: 89.18, cells: 3.5, hold: w(1.95, -0.9) },
+      // and the last evening, the lamp lit again, going to the blue hour: the clock's last notch and its pendulum
+      // settling on the swell; then close on Hannah as she goes, and the empty pillow and Louise beside it.
+      { t: 89.281, cells: 3.35, hold: w(1.55, -0.8), cut: true },
       { t: SWELL, cells: 3.45, hold: w(1.92, -0.9) },
       // Then in on her as she goes, close while she pales into the pillow, and held on it empty. (The push came after
       // she had gone: she went in the wide, small under the clock, and the close-up found an empty bed.)
@@ -272,38 +327,84 @@ export const bed: Part<HouseState> = part<HouseState>(
   },
 )
 
-/* ------------------------------------------------------------------ the news */
+/* ------------------------------------------------------------------ they come for her */
 
-export const news: Part<HouseState> = part<HouseState>(
-  { name: 'house-news', draw: nothing },
+export const recruit: Part<HouseState> = part<HouseState>(
+  { name: 'house-recruit', draw: nothing },
   (slot) => {
-    const o = NEWS_AT
-    const dur = slot.end - slot.begin
-    return { cells: partCells(o), exit: [0, 0], lane: { segs: [{ from: [-0.5, 0], to: [-0.5, 0], dur }], fire: 0 }, state: { begin: slot.begin } }
+    const o = RECRUIT_AT
+    const { segs, end } = floorLane(recruitX, slot, o, [RC.go])
+    return { cells: partCells(o), exit: [end[0] + 0.5, end[1]], lane: { segs, fire: RC.go - slot.begin }, state: { begin: slot.begin } }
   },
   (slot) => {
-    const o = NEWS_AT
-    const c: Pt = [TV.x + TV.w / 2 - o[0], TV.y + TV.h / 2 - o[1]]
-    // Into the screen until its picture fills the frame.
+    const o = RECRUIT_AT
+    // Her on the screen: [right, down], a share of the frame's height from its middle.
+    const on = (t: number, cells: number, s: Pt): PartShot => ({ t, cells, hold: [recruitX(t) - s[0] * cells - o[0], -s[1] * cells - o[1]], w: 1 })
     return [
-      { t: slot.begin + 1.9, cells: 2.35, hold: [c[0] - 0.42, c[1] + 0.02] },
-      { t: slot.end, cells: TV.h / 0.85, hold: c },
+      // From the scale cut, the room at night round her, the television on her right and the long window over them,
+      // as the light comes up over the lake;
+      on(slot.begin + 0.9, 4.3, [0.2, 0.16]),
+      // held as it sweeps in and finds her;
+      on(RC.found, 4.2, [0.12, 0.16]),
+      // and after her as she goes, so at the cut (a scale cut out to the camp in Montana) she is where the camp's wide
+      // has her as she lands on the meadow.
+      on(RC.go + 0.3, 4.2, [0.09, 0.15]),
+      on(slot.end, 4.2, [0.043, 0.145]),
+    ]
+  },
+)
+
+/* ------------------------------------------------------------------ the flash */
+
+export const flash: Part<HouseState> = part<HouseState>(
+  { name: 'house-flash', draw: nothing },
+  (slot) => {
+    const o = FLASH_AT
+    const { segs, end } = floorLane(flashX, slot, o, [F.touch])
+    const company: Company[] = [
+      {
+        who: 'hannah',
+        from: slot.begin,
+        to: slot.end,
+        at: (t) => {
+          const [x, y] = hannahFlashAt(t)
+          return { x: x - o[0], y: y - o[1], scale: HANNAH_AGE.child, spin: hannahFlashLook(t) }
+        },
+      },
+    ]
+    return { cells: partCells(o), exit: [end[0] + 0.5, end[1]], lane: { segs, fire: F.touch - slot.begin }, state: { begin: slot.begin }, company }
+  },
+  (slot) => {
+    const o = FLASH_AT
+    const w = (x: number, y: number): Pt => [x - o[0], y - o[1]]
+    return [
+      // From the chamber's framing in to the two of them and her sheet on the glass, and held while she draws, her ring
+      // last; then the scale cut out to the world's ring of twelve (the share), her place on the screen held.
+      { t: slot.begin + 2.0, cells: 2.25, hold: w(FLASH_X + 0.66, -0.55) },
+      { t: F.daddy, cells: 2.2, hold: w(FLASH_X + 0.64, -0.56) },
+      { t: slot.end, cells: 2.45, hold: w(FLASH_X + 0.62, -0.68) },
     ]
   },
 )
 
 /* ------------------------------------------------------------------ home */
 
+/**
+ * Home: two legs either side of the run remembered (`lawn.ts`, `recall`), one part. It comes in where she is on the floor
+ * at its slot's start: by the window (HOME_AT), and a step nearer the cradle (CRADLE_AT).
+ */
+const homeAt = (t: number): Pt => [homeX(t) + 0.5, 0]
+export const CRADLE_AT: Pt = homeAt(SEAM.cradle)
 export const home: Part<HouseState> = part<HouseState>(
   { name: 'house-home', draw: nothing },
   (slot) => {
-    const o = HOME_AT
+    const o = homeAt(slot.begin)
     const { segs, end } = floorLane(homeX, slot, o, [337.85, TURN, NEAR, ...HOME_PUSHES.map((q) => q.t)])
-    const company: Company[] = [
+    const all: Company[] = [
       {
         who: 'ian',
         from: slot.begin,
-        to: BEGIN,
+        to: Math.min(BEGIN, slot.end),
         at: (t) => ({ x: ianX(t) - o[0], y: -o[1], spin: ianLook(t) }),
       },
       {
@@ -334,10 +435,13 @@ export const home: Part<HouseState> = part<HouseState>(
         },
       },
     ]
-    return { cells: partCells(o), exit: [end[0] + 0.5, end[1]], lane: { segs, fire: BEGIN - slot.begin }, state: { begin: slot.begin }, company }
+    // Before the cut away, only Ian by the window; after it, all of it.
+    const company = all.filter((c) => c.from < slot.end)
+    const fire = (slot.end > BEGIN ? BEGIN : HUG_T) - slot.begin
+    return { cells: partCells(o), exit: [end[0] + 0.5, end[1]], lane: { segs, fire }, state: { begin: slot.begin }, company }
   },
   (slot) => {
-    const o = HOME_AT
+    const o = homeAt(slot.begin)
     const w = (x: number, y: number): Pt => [x - o[0], y - o[1]]
     const first = w(1.05, -0.95)
     const keys: PartShot[] = [
@@ -355,7 +459,7 @@ export const home: Part<HouseState> = part<HouseState>(
       { t: PLAGAL, cells: 2.6, hold: w(0.7, -0.4) },
       { t: TONIC, cells: 2.7, hold: w(0.69, -0.41) },
       { t: LAST, cells: 4.6, hold: first },
-      { t: slot.end, cells: 4.6, hold: first },
+      ...(slot.end > LAST ? [{ t: slot.end, cells: 4.6, hold: first }] : []),
     ]
     return keys
   },
@@ -367,10 +471,14 @@ export const home: Part<HouseState> = part<HouseState>(
 export const HOUSE_HITS: number[] = [
   // Dawn: she rocks the cradle on every chord.
   ...DAWN_PUSHES.map((q) => q.t),
+  // Years on at the window: the room, her touch on the stool, Hannah rounding on her and going, the empty stool.
+  ...TEEN_HITS,
   // The bed: the clock strikes on the chords, and on the swell it has run down.
   ...CLOCK_STRIKES,
-  // The news: the television comes on on the half cadence.
-  HALF,
+  // They come for her: the light over the lake, the beam finding her, her going.
+  ...RECRUIT_HITS,
+  // The flash: Hannah's strokes on the beats, and her mother's touch on the stool on the chord.
+  ...FLASH_HITS,
   // Home: the sun through the glass, the touch, the turn to the empty cradle, the step toward it, and the cradle again.
   SEAM.home,
   337.85,

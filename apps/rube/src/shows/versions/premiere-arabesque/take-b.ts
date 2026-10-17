@@ -8,6 +8,8 @@ export const score = data as unknown as StockScore
 export const show = new StockShow(score)
 export const performance: Performance = {
   show, duration: score.duration, camera: (t) => show.camera(t),
+  // There is no next world after the last portal. Let the recording's resonance keep its picture.
+  cuts: (t) => t < score.maps.at(-1)!.pieces.at(-1)!.begin,
   soundtrack: {
     src: recording, offset: score.audioOffset,
     credit: 'Performed by Patrizia Prati · CC BY-SA 4.0',

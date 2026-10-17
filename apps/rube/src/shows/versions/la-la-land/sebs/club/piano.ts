@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { easeInQuad, easeOutQuad } from '../../../../../../../../src/core/ease'
 import { mixHex, type Pt } from '../../../../../parts'
-import { glow, rgba, type Way } from '../kit'
+import { rgba, type Way } from '../kit'
 import { G, hop } from '../physics'
 import { SEBS_MAT } from '../worlds'
 import { fold, isBlack, keyRest, keyX, PIANO } from './geometry'
@@ -71,6 +71,19 @@ const PROP0: Pt = [4.56, RIM]
 const PROP1: Pt = [4.66, -2.56]
 /** The music desk. */
 const DESK: [number, number, number, number] = [1.44, -1.82, 3.84, RIM]
+
+/**
+ * The piano's outline as a light from the house would cast it on what is behind: the raised lid, the case, the prop
+ * between them and the legs. Polygons in the piano's frame.
+ */
+export const PIANO_SHADOW: Pt[][] = [
+  [HINGE, LID_TIP, [LID_TIP[0] + 0.05, LID_TIP[1] + 0.08], LID_FAR, [CX0 + 0.4, RIM - 0.05]],
+  [[PROP0[0] - 0.03, PROP0[1]], [PROP1[0] - 0.03, PROP1[1]], [PROP1[0] + 0.03, PROP1[1]], [PROP0[0] + 0.03, PROP0[1]]],
+  [
+    [CX0, RIM], [CX1, RIM], [CX1, CASE_FOOT], [CX1 - 0.16, CASE_FOOT], [CX1 - 0.22, STAGE], [CX1 - 0.42, STAGE], [CX1 - 0.46, CASE_FOOT],
+    [CX0 + 0.46, CASE_FOOT], [CX0 + 0.42, STAGE], [CX0 + 0.22, STAGE], [CX0 + 0.16, CASE_FOOT], [CX0, CASE_FOOT],
+  ],
+]
 
 /** The keyboard's middle and the piano's, for lights and cameras. */
 export const KEYS_MID = KX1 / 2
@@ -388,7 +401,6 @@ export function drawPiano(p: p5, k: number, ink: string, weight: number, t: numb
     p.vertex(X(x - 0.2), X(STRING))
     p.quadraticVertex(X(x), X(STRING + wob * 2), X(x + 0.2), X(STRING))
     p.endShape()
-    glow(p, k, x, STRING, 0.16, m < 60 ? M.brass : M.ivory, 0.3 * s, 1.4, 0.5)
   }
   // The dampers on the strings, each lifted on its wire while its key is down.
   const wood = mixHex(M.brass, M.deep, 0.45)
@@ -499,9 +511,6 @@ export function drawPiano(p: p5, k: number, ink: string, weight: number, t: numb
   rect(lx - 0.36, 2.28, lx + 0.36, 2.42, 0.03)
   solid(p, ink, weight * 0.45, M.brass)
   for (const dx of [-0.21, 0, 0.21]) rect(lx + dx - 0.05, 2.4, lx + dx + 0.05, 2.47, 0.02)
-
-  // The light on it: a soft pool over the keys and the fallboard.
-  glow(p, k, KEYS_MID + 0.3, -0.25, 3.4, L, 0.1 * lit, 1.3, 0.55)
 }
 
 /** The i-th white key from the lowest, as MIDI. */

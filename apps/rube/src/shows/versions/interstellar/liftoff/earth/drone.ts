@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { solid } from '../../../../../../../../src/core/draw'
-import type { Pt } from '../../../../../parts'
+import { mixHex, type Pt } from '../../../../../parts'
 import { alpha, scenery } from '../kit'
 import { DUST } from '../worlds'
 
@@ -34,8 +34,10 @@ const CHORD = 0.17
  * The drone at `at` (cells, in whatever frame the caller draws in), banked by
  * `bank`, `seen` its opacity, with its shadow on `ground` if given, and
  * `glint` (0..1) for the sun catching the near wing, and `shade` (0..1) for how much of its shadow there is.
+ * `level` (0..1) is how nearly level the eye is with it: down on a roof (1) its wings lie flatter, so the near one
+ * stays over the roof rather than reaching down through it.
  */
-export function drawDrone(p: p5, k: number, ink: string, weight: number, at: Pt, bank: number, seen = 1, ground: number | null = null, glint = 0, shade = 1): void {
+export function drawDrone(p: p5, k: number, ink: string, weight: number, at: Pt, bank: number, seen = 1, ground: number | null = null, glint = 0, shade = 1, level = 0): void {
   const X = (x: number) => x * k
   if (ground !== null) {
     p.noStroke()
@@ -48,7 +50,8 @@ export function drawDrone(p: p5, k: number, ink: string, weight: number, at: Pt,
   p.drawingContext.globalAlpha = seen
   const w = weight * 1.1
   // The far wing, behind the pod: up and back.
-  wing(p, k, ink, w, [-0.02, -0.02], [-0.5, -FAR * 0.42], FAR, 0)
+  const lift = 1 - (2 / 3) * level
+  wing(p, k, ink, w, [-0.02, -0.02], [-0.5, -FAR * 0.42 * lift], FAR, 0)
   // Booms and the tail.
   solid(p, ink, w * 0.8, DUST.bone)
   p.quad(X(-0.1), X(-0.03), X(-0.78), X(-0.02), X(-0.78), X(0.03), X(-0.1), X(0.04))
@@ -68,11 +71,11 @@ export function drawDrone(p: p5, k: number, ink: string, weight: number, at: Pt,
   p.strokeWeight(w * 0.7)
   p.ellipse(X(-0.2), 0, X(0.05), X(0.26))
   // The near wing, over the pod: down and toward us.
-  wing(p, k, ink, w, [0.04, 0.02], [0.55, NEAR * 0.3], NEAR, glint)
+  wing(p, k, ink, w, [0.04, 0.02], [0.55, NEAR * 0.3 * lift], NEAR, glint)
   p.pop()
 }
 
-/** One wing from `root` out to `tip` (a direction scaled by `span`), a dark panel of cells, tapering; `glint` a flash of sun along it. */
+/** One wing from `root` out to `tip` (a direction scaled by `span`), a dark panel of cells, tapering; `glint` the sun on its panel, as a tone. */
 function wing(p: p5, k: number, ink: string, weight: number, root: Pt, dir: Pt, span: number, glint: number): void {
   const X = (x: number) => x * k
   const len = Math.hypot(dir[0], dir[1])
@@ -88,7 +91,9 @@ function wing(p: p5, k: number, ink: string, weight: number, root: Pt, dir: Pt, 
     [tip[0] - c1 * 0.5, tip[1] + 0.012],
     [root[0] - c0 * 0.45, root[1] + 0.02],
   ]
-  solid(p, ink, weight, DUST.denim)
+  // On the downbeat the near wing tips into the sun: its panel goes a shade lighter for a moment, a change of tone and
+  // not a flash.
+  solid(p, ink, weight, glint > 0.02 ? mixHex(DUST.denim, DUST.sky, 0.3 * glint) : DUST.denim)
   p.beginShape()
   for (const [x, y] of pts) p.vertex(X(x), X(y))
   p.endShape(p.CLOSE)
@@ -100,13 +105,5 @@ function wing(p: p5, k: number, ink: string, weight: number, root: Pt, dir: Pt, 
     const a: Pt = [pts[0][0] + (pts[1][0] - pts[0][0]) * u, pts[0][1] + (pts[1][1] - pts[0][1]) * u]
     const b: Pt = [pts[3][0] + (pts[2][0] - pts[3][0]) * u, pts[3][1] + (pts[2][1] - pts[3][1]) * u]
     p.line(X(a[0]), X(a[1]), X(b[0]), X(b[1]))
-  }
-  // The sun, running out along the wing on the downbeat.
-  if (glint > 0.02) {
-    const u = 1 - glint
-    const a: Pt = [pts[0][0] + (pts[1][0] - pts[0][0]) * (0.1 + 0.7 * u), pts[0][1] + (pts[1][1] - pts[0][1]) * (0.1 + 0.7 * u)]
-    p.stroke(alpha(p, '#FFFBEA', glint))
-    p.strokeWeight(weight * 1.6)
-    p.line(X(a[0] - ux * 0.12), X(a[1] - uy * 0.12 + 0.01), X(a[0] + ux * 0.12), X(a[1] + uy * 0.12 + 0.01))
   }
 }

@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
-import { beam, bloom, pool, rgba } from '../cast'
+import { beam, pool, rgba } from '../cast'
 import { frame, type Ctx } from '../kit'
 import { AWARDS as A } from '../worlds'
 import {
@@ -212,7 +212,6 @@ function drawLamp(p: p5, c: Ctx, pivot: Pt, aim: Pt, b: number): Pt {
   p.vertex((lens[0] - n[0] * w * 0.85 + d[0] * 0.03) * k, (lens[1] - n[1] * w * 0.85 + d[1] * 0.03) * k)
   p.vertex((lens[0] - n[0] * w * 0.85) * k, (lens[1] - n[1] * w * 0.85) * k)
   p.endShape(p.CLOSE)
-  if (b > 0.01) bloom(p, k, [lens[0] + d[0] * 0.05, lens[1] + d[1] * 0.05], 0.34, A.spot, 0.5 * clamp01(b))
   return [lens[0] + d[0] * 0.03, lens[1] + d[1] * 0.03]
 }
 
@@ -222,7 +221,7 @@ function drawLight(p: p5, c: Ctx, t: number): void {
   // The follow spot: a long narrow shaft from the back of the house.
   const fb = FOLLOW_SPOT.bright(t)
   const fa = aimOf(FOLLOW_SPOT, 9, t)
-  beam(p, k, FOLLOW, fa, 0.3, 0.66, A.spot, 0.42 * fb)
+  beam(p, k, FOLLOW, fa, 0.3, 0.66, A.spot, 0.3 * fb)
   pool(p, k, [fa[0], fa[1] + 0.04], 0.52, 0.085, A.warm, 0.62 * fb)
   pool(p, k, [fa[0], fa[1] + 0.03], 0.26, 0.05, A.spot, 0.5 * fb)
   LAMPS.forEach((l, i) => {
@@ -235,7 +234,7 @@ function drawLight(p: p5, c: Ctx, t: number): void {
     const L = Math.hypot(dx, dy) || 1
     const lens: Pt = [pivot[0] + (dx / L) * 0.33, pivot[1] + (dy / L) * 0.33]
     const far = l.pools(t) ? aim : [aim[0] + (dx / L) * 0.6, aim[1] + (dy / L) * 0.6] as Pt
-    beam(p, k, lens, far, 0.16, 0.95, A.spot, 0.22 * b)
+    beam(p, k, lens, far, 0.16, 0.95, A.spot, 0.14 * b)
     if (l.pools(t)) {
       pool(p, k, [aim[0], aim[1] + 0.04], 0.62, 0.09, A.warm, 0.42 * b)
       pool(p, k, [aim[0], aim[1] + 0.03], 0.3, 0.05, A.spot, 0.34 * b)
@@ -361,10 +360,8 @@ function drawTrophyRig(p: p5, c: Ctx, f: Frame, t: number): void {
   p.stroke(rgba(c.ink, 0.45))
   p.strokeWeight(Math.max(1, 0.016 * k))
   p.line(q.tx * k, (yb + 0.17) * k, ring[0] * k, ring[1] * k)
-  // Its glow in its own lamp.
+  // Lit by its own lamp: the gold is brighter, not haloed.
   const lit = clamp01(LAMPS[2].bright(t))
-  const mid: Pt = [(q.foot[0] + q.crown[0]) / 2, (q.foot[1] + q.crown[1]) / 2]
-  if (lit > 0.01) bloom(p, k, mid, 0.85, A.warm, 0.2 * lit)
   drawTrophy(p, c, q.foot, q.tilt, lit, 0.55 * (1 - lit))
   void TROPHY_H
 }

@@ -2,12 +2,12 @@ import type { Pt } from '../../../../../parts'
 import { box, part, scenery, type PartShot } from '../kit'
 import { DURATION } from '../music'
 import { drawStreet } from './draw'
-import { cherylAt, COVER_X, FINAL, IN, MEET, ON, STOP, STREET_STRIKES, WALTER_LANE, walterAt } from './plan'
+import { cherylAt, COVER_X, DRIFT, FINAL, IN, MEET, ON, STOP, STREET_STRIKES, WALTER_LANE, walterAt } from './plan'
 
 /**
  * The street (the B1 builder's): bar 131 to the end.
  *
- * A New York street on a pale morning. Walter rolls in out of the Life building's doors at the pace he left them,
+ * A New York street in the morning, the low sun gold down the avenue. Walter rolls in out of the Life building's doors at the pace he left them,
  * over a pair of cellar doors (two clanks, as the band begins to fall away), and slows: Cheryl is coming to him along
  * the pavement from the right, and on the strong beat of bar 132 they stop, touching. They go on together toward the
  * newsstand, which is opening: its shutter goes up in two hauls, and the man inside puts the morning's issues out on
@@ -16,8 +16,13 @@ import { cherylAt, COVER_X, FINAL, IN, MEET, ON, STOP, STREET_STRIKES, WALTER_LA
  * before it, he right under himself.
  *
  * They look a while. Then they go on up the street together, close, and the camera lets them go, drawing back to
- * the whole street and holding: the stand, the fronts, the pale sky over the low building in the middle (where the
- * credits come), and the two of them small at the corner, waiting to cross. Then it is still.
+ * the whole street: the stand, the fronts, the pale sky over the low buildings in the middle (where the credits come),
+ * the avenue's gap with the sun in it, and the two of them small at the corner, waiting to cross. Through the credits
+ * it does not stop: it goes on along toward the avenue, slowly, and the city goes on round them, the traffic, the
+ * people, the pigeons, the steam, the light climbing, until the walk sign comes on.
+ *
+ * The city is drawn in `draw.ts` (the set), `sky.ts` (the planes behind), `fronts.ts` (the buildings along the
+ * street), `city.ts` (what moves in it), `light.ts` (the morning's clock) and `front.ts` (the near plane and the light).
  */
 
 export const STREET_AT: Pt = [0, 0]
@@ -61,13 +66,14 @@ export const newsstand = part<null>(
       { t: IN + 0.8, cells: 4.1, off: [0.8, -0.5], w: 0 },
       on(MEET, 3.7, mx + 0.75, -0.78),
       on(MEET + 1.7, 3.6, mx + 1.9, -0.84),
-      // On to the cover with them; closer on the chord, and a breath closer while they look.
+      // On to the cover with them; closer on the chord, and a breath closer, easing along, while they look.
       on(STOP, 3.1, COVER_X + 0.05, -0.86),
-      on(ON, 2.95, COVER_X + 0.05, -0.86),
+      on(ON, 2.95, COVER_X + 0.22, -0.9),
       // They go; the camera draws back to the whole street and holds.
       on(ON + 1.4, 3.5, COVER_X + 1.0, -0.95),
       on(241.8, FINAL.cells, FINAL.x, FINAL.y),
-      on(DURATION, FINAL.cells, FINAL.x, FINAL.y),
+      // Through the credits it does not stop: it goes on drawing back and along, slowly, toward the avenue.
+      ...DRIFT.map((d) => on(d.t, d.cells, d.x, d.y)),
     ]
   },
 )

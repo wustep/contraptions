@@ -1,7 +1,7 @@
 import type p5 from 'p5'
-import type { Pt } from '../../../../parts'
+import { mixHex, type Pt } from '../../../../parts'
 import { frame, glow, hash, knock, rgba, scenery, smooth } from './kit'
-import { AT, END_AT, level } from './music'
+import { END_AT, level } from './music'
 import { MIA, NIGHT_MAT, SEBS_MAT } from './worlds'
 import { picture } from './lens'
 import { insideRoom } from './club/room'
@@ -14,13 +14,18 @@ import { DIP, POLE, skyAngle } from './night/painted-waltz'
  * and draws back into at the end. It is drawn in the piano's frame (the
  * club's room stands on the same origin and draws the building and the
  * street in front of it); everything here is beyond the club and further
- * off the higher it stands: the night sky, the stars, the searchlights, the
- * hills with the observatory on the ridge, the basin full of lights, the
- * towers downtown, and the palms and lamps of the street either side of the
- * building. Far things slide against the camera, so a push-in feels deep.
+ * off the higher it stands: the night sky, the stars, the hills with the
+ * observatory on the ridge, the basin full of lights and the towers
+ * downtown. (The block the club stands on, its houses and the palms along its
+ * pavement, are `street.ts`'s.) Far things slide against the camera, so a
+ * push-in feels deep. Nothing hangs in the sky but the stars: no beams.
  *
- * At the end (`end`) the searchlights come up with the band (478.05) and
- * cross on The End's last chord.
+ * It is a city that is going somewhere: cars along the boulevards and the
+ * cross streets of the basin, white coming and red going, a freeway sweeping
+ * through it, a train, planes coming down in a line, cars on the road up the
+ * hills and the lights of the homes on them. At the start it is late and
+ * quiet, a few cars; at the end it fills as The End's orchestra swells, until
+ * the whole basin is moving under the stars.
  */
 export interface CityState {
   end: boolean
@@ -44,14 +49,14 @@ const LIGHT = '#F2C46B'
 const LIGHT_COOL = '#DCE6FF'
 const PALM = '#0C0A18'
 
-/** The stars: positions in a tile of sky a hundred cells wide, sizes and twinkle phases. Fixed, so nothing shimmers by chance. */
+/** The stars: positions in a tile of sky a hundred cells wide, sizes, and the slow phases they breathe on. Fixed. */
 const STARS = Array.from({ length: 900 }, (_, i) => ({
   x: hash(i, 1, 7) * 140 - 70,
   y: -44 + hash(i, 2, 7) * 42,
   r: 0.02 + Math.pow(hash(i, 3, 7), 6) * 0.07,
   ph: hash(i, 4, 7) * Math.PI * 2,
   sp: 0.4 + hash(i, 5, 7) * 1.1,
-  /** One in fifteen or so is a bright one, with a halo and a glint: the city of stars has stars that read as stars. */
+  /** One in fifteen or so is a bright one, a larger point: the city of stars has stars that read as stars. */
   bright: hash(i, 6, 7) > 0.935,
 }))
 
@@ -115,8 +120,8 @@ const TOWERS = [
   { x: 36.1, w: 1.3, h: 7.7 },
 ]
 
-/** Palms along the street either side of the club: x and height. */
-const PALMS = [
+/** Palms along the street either side of the club: x and height. (`street.ts` stands them in front of the houses.) */
+export const PALMS = [
   { x: -23, h: 9.5, lean: -0.05 },
   { x: -19.5, h: 11.2, lean: 0.03 },
   { x: 18.5, h: 10.4, lean: 0.04 },
@@ -133,13 +138,11 @@ const ridge = (x: number, far: boolean): number => {
 
 /** The observatory's ridge: the near hills, left of the club. */
 const OBSERVATORY = -28
-/** Where the searchlights cross on the last chord: across from the beams' bases, and this high above them. */
-const CROSS: Pt = [-4, 20]
-const easeInOut = (u: number): number => u * u * (3 - 2 * u)
 
 /**
- * The End's orchestra arriving (its one clear onset), and the swell it climbs to. On the arrival the searchlights
- * flare; through the swell the city's lights and the beams grow with the music, and the observatory on its ridge, where the planetarium is, lights up.
+ * The End's orchestra arriving (its one clear onset), and the swell it climbs to: through the swell the city's lights
+ * grow with the music, the traffic fills the basin, and the observatory on its ridge, where the planetarium is, lights
+ * up.
  */
 export const SWELL = END_AT + 32.268
 /** The End's last chord, which the piano in the stars plays (the credits' own reckoning of it). */
@@ -151,7 +154,7 @@ export const CITY_HITS = [SWELL]
  * a few dozen fills, not a thousand.
  */
 const LEVELS = 8
-function batch() {
+export function lightBatch() {
   const paths = new Map<string, Path2D[]>()
   return {
     dot(color: string, a: number, x: number, y: number, r: number) {
@@ -162,8 +165,12 @@ function batch() {
         paths.set(color, ps)
       }
       const lv = Math.max(0, Math.min(LEVELS - 1, Math.floor(Math.min(1, a) * LEVELS)))
-      ps[lv].moveTo(x + r, y)
-      ps[lv].arc(x, y, r, 0, Math.PI * 2)
+      // Under two pixels, a dot is a square: the same on the screen, and much cheaper to fill by the thousand.
+      if (r < 2) ps[lv].rect(x - r, y - r, 2 * r, 2 * r)
+      else {
+        ps[lv].moveTo(x + r, y)
+        ps[lv].arc(x, y, r, 0, Math.PI * 2)
+      }
     },
     rect(color: string, a: number, x: number, y: number, w: number, h: number) {
       if (a <= 0.01) return
@@ -198,6 +205,7 @@ function drawSign(p: p5, k: number, t: number, end: boolean, ox: number, oy: num
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const [u0, u1] = SIGN_U
   const step = (u1 - u0) / SIGN_BLOCKS
+  // Lit, the blocks are the light: nothing round them, and at this distance nothing seen on the hill under them.
   for (let i = 0; i < SIGN_BLOCKS; i++) {
     const u = u0 + step * (i + 0.5)
     // Level along the hill's face, a little under the crest, the blocks set a hair up and down as the real ones are.
@@ -214,7 +222,6 @@ function drawSign(p: p5, k: number, t: number, end: boolean, ox: number, oy: num
     ctx.fillStyle = rgba('#C9C2D6', 0.32 * (1 - on))
     ctx.fillRect(x * k, top * k, w * k, h * k)
     if (on > 0.01) {
-      glow(p, k, x + w / 2, top + h / 2, 1.5, MIA, 0.32 * on)
       ctx.fillStyle = rgba(MIA, 0.95 * on)
       ctx.fillRect(x * k, top * k, w * k, h * k)
       ctx.fillStyle = rgba('#FFF4C8', 0.5 * on)
@@ -253,59 +260,30 @@ export const city = scenery<CityState>({
     // A star's size is in cells, so in the widest shots it would shrink below a pixel: it keeps a floor, in pixels of a
     // 540-line frame, so the sky is as starry wide as it is close.
     const px = ((fr.y1 - fr.y0) * k) / 540
-    const starDots = batch()
+    const starDots = lightBatch()
     for (const st of STARS) {
       const x = st.x + sx
       const y = st.y + sy
       if (x < fr.x0 - 1 || x > fr.x1 + 1 || y < fr.y0 - 1 || y > fr.y1 + 1 || y > HORIZON - 3) continue
-      const tw = 0.55 + 0.45 * Math.sin(t * st.sp + st.ph)
-      const r = Math.max(0.75 * px, st.r * k, st.bright ? 1.25 * px : 0)
-      if (st.bright) {
-        const halo = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, r * 5)
-        halo.addColorStop(0, rgba(LIGHT_COOL, 0.32 * tw))
-        halo.addColorStop(1, rgba(LIGHT_COOL, 0))
-        ctx.fillStyle = halo
-        ctx.fillRect(x * k - r * 5, y * k - r * 5, r * 10, r * 10)
-        ctx.strokeStyle = rgba(LIGHT_COOL, 0.45 * tw)
-        ctx.lineWidth = Math.max(0.5, 0.45 * px)
-        const g = r * (3 + 1.5 * tw)
-        ctx.beginPath()
-        ctx.moveTo(x * k - g, y * k)
-        ctx.lineTo(x * k + g, y * k)
-        ctx.moveTo(x * k, y * k - g)
-        ctx.lineTo(x * k, y * k + g)
-        ctx.stroke()
-      }
-      starDots.dot(LIGHT_COOL, 0.35 + 0.55 * tw, x * k, y * k, r)
+      // Steady points, breathing a little in their own time; the bright ones larger, not haloed.
+      const tw = 0.82 + 0.18 * Math.sin(t * st.sp * 0.6 + st.ph)
+      const r = Math.max(0.75 * px, st.r * k, st.bright ? 1.5 * px : 0)
+      starDots.dot(LIGHT_COOL, (st.bright ? 0.95 : 0.6) * tw, x * k, y * k, r)
     }
     starDots.fill(ctx)
     if (s.end && t > THEIRS_AT[0] - 0.1) {
-      // Theirs, coming out over the city: each star with a flare as it comes; then the piano drawn round them.
+      // Theirs, coming out over the city, each a crisp point in the night's gold that comes out a size larger and
+      // settles to its own; on the last chord, which the piano round them plays, they step up and hold.
       const at = (i: number): Pt => [THEIRS[i].x + sx, THEIRS[i].y + sy]
-      ctx.lineCap = 'round'
+      const chord = smooth(t, FINAL_CHORD - 0.05, FINAL_CHORD + 0.35)
       THEIRS.forEach((q, i) => {
         const since = t - THEIRS_AT[i]
         if (since < 0) return
         const [x, y] = at(i)
         const on = smooth(since, 0, 0.12)
-        const flare = Math.max(knock(since, 0.5), 0.8 * knock(t - FINAL_CHORD, 1.0))
-        const tw = 0.85 + 0.15 * Math.sin(t * 1.3 + i * 2.1)
-        const r = Math.max(1.6 * px, 0.06 * k) * (0.75 + 0.25 * (q.size / 0.036)) * (1 + 0.8 * flare)
-        const halo = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, r * 6)
-        halo.addColorStop(0, rgba(NIGHT_MAT.star, (0.4 + 0.35 * flare) * on * tw))
-        halo.addColorStop(1, rgba(NIGHT_MAT.star, 0))
-        ctx.fillStyle = halo
-        ctx.fillRect(x * k - r * 6, y * k - r * 6, r * 12, r * 12)
-        ctx.strokeStyle = rgba(NIGHT_MAT.star, 0.55 * on * tw)
-        ctx.lineWidth = Math.max(0.6, 0.55 * px)
-        const g = r * (3.2 + 2 * flare)
-        ctx.beginPath()
-        ctx.moveTo(x * k - g, y * k)
-        ctx.lineTo(x * k + g, y * k)
-        ctx.moveTo(x * k, y * k - g)
-        ctx.lineTo(x * k, y * k + g)
-        ctx.stroke()
-        ctx.fillStyle = rgba('#FFF6DA', on)
+        const come = 1 - smooth(since, 0.1, 0.7)
+        const r = Math.max(1.8 * px, 0.065 * k) * (0.75 + 0.25 * (q.size / 0.036)) * (1 + 0.35 * come + 0.3 * chord)
+        ctx.fillStyle = rgba('#FFF2CC', on)
         ctx.beginPath()
         ctx.arc(x * k, y * k, r, 0, Math.PI * 2)
         ctx.fill()
@@ -319,47 +297,15 @@ export const city = scenery<CityState>({
     }
     ctx.restore()
 
-    // Searchlights: two beams from behind the hills, leaning and slowly sweeping; at the end they come up with the
-    // band and cross on The End's last chord.
-    const band = s.end ? smooth(t, AT.band - 0.2, AT.band + 2.5) : 0.55
-    const last = END_AT + 39.4
-    const flare = s.end ? knock(t - SWELL, 0.5) : 0
-    const beams: [number, number][] = [[0, 30], [1, -12]]
-    for (const [i, base] of beams) {
-      const side = i % 2 === 0 ? -1 : 1
-      const sweep = s.end
-        ? 0.32 * Math.sin((t - AT.band) * 0.23 + i * 2.2) * (1 - smooth(t, last - 5, last)) + side * 0.16 * smooth(t, last - 5, last)
-        : 0.3 * Math.sin(t * 0.21 + i * 2.2)
-      const free = side * 0.22 + sweep
-      const bx = base + slide(0.3)
-      const by = HORIZON + 1 + lift(0.3)
-      // On The End's last chord every beam swings onto one point in the sky over the city, and they cross there and hold.
-      const cross = s.end ? easeInOut(smooth(t, last - 5, last)) : 0
-      const lean = cross > 0 ? free + (Math.atan2(CROSS[0] + slide(0.3) - bx, CROSS[1]) - free) * cross : free
-      const len = 60
-      const tipX = bx + Math.sin(lean) * len
-      const tipY = by - Math.cos(lean) * len
-      const a = 0.09 * band * (0.7 + 0.3 * level(t)) * (1 + 1.2 * flare)
-      const grad = ctx.createLinearGradient(bx * k, by * k, tipX * k, tipY * k)
-      grad.addColorStop(0, rgba('#F4EAD0', a * 1.6))
-      grad.addColorStop(1, rgba('#F4EAD0', 0))
-      ctx.fillStyle = grad
-      const nx = Math.cos(lean)
-      const ny = Math.sin(lean)
-      ctx.beginPath()
-      ctx.moveTo((bx - nx * 0.25) * k, (by - ny * 0.25) * k)
-      ctx.lineTo((tipX - nx * 3.2) * k, (tipY - ny * 3.2) * k)
-      ctx.lineTo((tipX + nx * 3.2) * k, (tipY + ny * 3.2) * k)
-      ctx.lineTo((bx + nx * 0.25) * k, (by + ny * 0.25) * k)
-      ctx.closePath()
-      ctx.fill()
-    }
-
     // The far hills, then the towers downtown, then the near hills with the observatory on the ridge.
     const hills = (far: boolean, color: string, d: number) => {
       const ox = slide(d)
       const oy = lift(d)
-      ctx.fillStyle = color
+      // Lit from below by the city: a little warmer and lighter toward their foot, dark at the crest against the sky.
+      const hg = ctx.createLinearGradient(0, (HORIZON + oy - 9) * k, 0, (HORIZON + oy) * k)
+      hg.addColorStop(0, color)
+      hg.addColorStop(1, mixHex(color, '#4A2A55', 0.35))
+      ctx.fillStyle = hg
       ctx.beginPath()
       ctx.moveTo((fr.x0 - 1) * k, (HORIZON + 2 + oy) * k)
       for (let x = fr.x0 - 1; x <= fr.x1 + 1; x += 0.5) ctx.lineTo(x * k, (HORIZON + oy - ridge(x - ox, far)) * k)
@@ -368,11 +314,12 @@ export const city = scenery<CityState>({
       ctx.fill()
     }
     hills(true, HILL_FAR, 0.2)
+    hillLife(p, k, t, s.end, fr, slide(0.2), lift(0.2), px)
     drawSign(p, k, t, s.end, slide(0.2), lift(0.2))
 
     const tx = slide(0.35)
     const ty = lift(0.35)
-    const windows = batch()
+    const windows = lightBatch()
     for (const [i, tw] of TOWERS.entries()) {
       const x = tw.x + tx
       if (x + tw.w < fr.x0 - 1 || x > fr.x1 + 1) continue
@@ -387,10 +334,14 @@ export const city = scenery<CityState>({
           windows.rect(LIGHT, 0.35 + 0.4 * (lit - 0.8) * 5, (x + 0.12 + q * 0.3) * k, (y0 + 0.3 + r * 0.45) * k, 0.1 * k, 0.16 * k)
         }
       }
-      // A red lamp on the tallest.
-      if (tw.h > 12) glow(p, k, x + tw.w / 2, y0 - 0.15, 0.35, '#E0533D', 0.5 + 0.5 * Math.sin(t * 2.4))
+      // A red lamp for the planes on the tallest, a point, on and off.
+      if (tw.h > 12) {
+        ctx.fillStyle = rgba('#E0533D', Math.sin(t * 2.4) > 0.3 ? 0.95 : 0.25)
+        ctx.fillRect((x + tw.w / 2) * k - 1.2 * px, (y0 - 0.15) * k - 1.2 * px, 2.4 * px, 2.4 * px)
+      }
     }
     windows.fill(ctx)
+    planes(ctx, k, t, s.end, fr, slide(0.12), lift(0.12), px)
 
     // The near hills: a spur on the left that the observatory stands on, falling away before the club.
     {
@@ -428,13 +379,26 @@ export const city = scenery<CityState>({
       ctx.arc((ox + 1.45) * k, (oy - 0.45) * k, 0.32 * k, Math.PI, 0)
       ctx.fill()
       const lit = s.end ? smooth(t, SWELL, SWELL + 3) : 0
-      glow(p, k, ox, oy - 0.3, 1.6, LIGHT, 0.12 + 0.3 * lit)
-      if (lit > 0.01) {
-        // Its windows, and the big dome catching the light.
-        ctx.fillStyle = rgba(LIGHT, 0.8 * lit)
-        for (let w = -3; w <= 3; w++) ctx.fillRect((ox + w * 0.4 - 0.06) * k, (oy - 0.35) * k, 0.12 * k, 0.16 * k)
-        glow(p, k, ox, oy - 0.8, 0.8, LIGHT_COOL, 0.35 * lit * (0.8 + 0.2 * level(t)))
-      }
+      // Floodlit from its terrace, as it is every night: its walls and domes pale against the hill, more so as it lights.
+      const stone = mixHex('#3A3152', '#D9CDB5', 0.25 + 0.5 * lit)
+      ctx.fillStyle = stone
+      ctx.fillRect((ox - 1.6) * k, (oy - 0.45) * k, 3.2 * k, 0.42 * k)
+      ctx.beginPath()
+      ctx.arc(ox * k, (oy - 0.45) * k, 0.56 * k, Math.PI, 0)
+      ctx.arc((ox - 1.45) * k, (oy - 0.45) * k, 0.27 * k, Math.PI, 0)
+      ctx.arc((ox + 1.45) * k, (oy - 0.45) * k, 0.27 * k, Math.PI, 0)
+      ctx.fill()
+      // The domes' shade on their right, away from the floods.
+      ctx.fillStyle = rgba(HILL_NEAR, 0.45)
+      ctx.beginPath()
+      ctx.arc(ox * k, (oy - 0.45) * k, 0.56 * k, -Math.PI / 2, 0)
+      ctx.lineTo(ox * k, (oy - 0.45) * k)
+      ctx.fill()
+      // Its windows, and the floods' light on the terrace below it: a band of pale paving under the walls.
+      ctx.fillStyle = rgba(LIGHT, 0.35 + 0.55 * lit)
+      for (let w = -3; w <= 3; w++) ctx.fillRect((ox + w * 0.4 - 0.06) * k, (oy - 0.32) * k, 0.12 * k, 0.16 * k)
+      ctx.fillStyle = rgba(mixHex('#3A3152', '#D9CDB5', 0.2 + 0.35 * lit), 0.9)
+      ctx.fillRect((ox - 1.9) * k, (oy - 0.03) * k, 3.8 * k, 0.07 * k)
     }
 
     // The basin: dark ground from the hills' foot to the street, and on it the lights of the city.
@@ -448,9 +412,11 @@ export const city = scenery<CityState>({
     // seconds of silence are the city as it was.
     const swell = s.end ? smooth(t, SWELL - 6, SWELL + 1) * level(t) : 0
     const swellLight = 1 + 0.7 * swell
+    // The scattered lights of the basin hold back a little as its streets fill with cars, so its grid shows.
+    const scatter = 0.85 - 0.2 * smooth(busy(t, s.end), 0.4, 1)
     // The city's own glow on the air over it.
     glow(p, k, VANISH + slide(0.25), HORIZON + 0.8 + lift(0.25), 26, '#C9795E', 0.16 + 0.26 * swell, 1.6, 0.28 + 0.08 * swell)
-    const lamps = batch()
+    const lamps = lightBatch()
     for (const b of BOULEVARDS) {
       for (let j = 1; j <= b.n; j++) {
         // Lamps evenly spaced along the ground, so closer together on the screen the further off they are.
@@ -477,23 +443,304 @@ export const city = scenery<CityState>({
       // Sized in cells, as the stars are, but the lights are miles off: close by the club's door they would swell into
       // discs, so they keep a ceiling in pixels of a 540-line frame, as the stars keep a floor.
       const r = (l.big ? 0.06 : 0.032) * (0.55 + 1.4 * near)
-      lamps.dot(l.warm ? LIGHT : LIGHT_COOL, (0.3 + 0.5 * tw) * (0.75 + 0.25 * near) * swellLight, x * k, y * k, Math.max(0.5, Math.min(r * k, (l.big ? 3 : 1.8) * px)))
+      lamps.dot(l.warm ? LIGHT : LIGHT_COOL, (0.3 + 0.5 * tw) * (0.75 + 0.25 * near) * swellLight * scatter, x * k, y * k, Math.max(0.5, Math.min(r * k, (l.big ? 3 : 1.8) * px)))
     }
     lamps.fill(ctx)
+    traffic(ctx, k, t, s.end, fr, slide, lift, px)
 
     // The near ground, from the street to the front of the frame.
     ctx.fillStyle = SEBS_MAT.deep
     ctx.fillRect((fr.x0 - 1) * k, (STREET - 0.2) * k, (fr.x1 - fr.x0 + 2) * k, (Math.max(fr.y1, STREET + 6) - STREET + 1) * k)
 
-    // Palms along the street, in silhouette against the lit sky.
-    for (const pm of PALMS) {
-      if (pm.x < fr.x0 - 4 || pm.x > fr.x1 + 4) continue
-      drawPalm(ctx, k, pm.x, STREET, pm.h, pm.lean + 0.012 * Math.sin(t * 0.5 + pm.x))
-    }
   },
 })
 
-function drawPalm(ctx: CanvasRenderingContext2D, k: number, x: number, ground: number, h: number, lean: number): void {
+
+/* ------------------------------------------------------------------ the city going somewhere */
+
+/**
+ * How busy the city is: late and quiet at the start, a few cars; at the end it fills from the band on and is at its
+ * fullest as The End's orchestra climbs (490 to 503). Each car, plane and home is out only while the city is busier than
+ * its own number, so the city fills by more of everything coming out, never by anything jumping.
+ */
+function busy(t: number, end: boolean): number {
+  return end ? 0.4 + 0.6 * smooth(t, 486, 500) : 0.2
+}
+/** How much of one thing whose number is `h` (0..1) is out when the city is `b` busy. */
+const out = (b: number, h: number): number => smooth(b, h * 0.92, h * 0.92 + 0.08)
+
+const HEAD = '#FFF1D6'
+const TAIL = '#FF5A45'
+type Slide = (d: number) => number
+/**
+ * A point of the basin's ground, `gx` across (cells at the street's depth) and `near` 0 at the horizon to 1 at the
+ * street, into `BX`, `BY`: thousands a frame, so no array for each.
+ */
+let BX = 0
+let BY = 0
+function basinAt(gx: number, near: number, slide: Slide, lift: Slide): void {
+  const dd = 0.2 + 0.6 * near
+  BX = gx * (0.45 + 0.55 * near) + slide(dd)
+  BY = HORIZON + (STREET - 0.6 - HORIZON) * Math.pow(near, 1.6) + lift(dd)
+}
+/** A car's lamp at depth `near`: a little larger near, never more than a lamp's few pixels. */
+const lampR = (near: number, k: number, px: number) => Math.max(0.55, Math.min(0.03 * (0.55 + 1.4 * near) * k, 1.7 * px))
+/** Fading out where the basin's lights do, before the street, so nothing big drives past the club's door. */
+const nearFade = (near: number) => 1 - smooth(near, 0.66, 0.86)
+
+/** The cross streets: their depths, and their cars, each with its place on the street, its way and its number. */
+const CROSS_NEAR = [0.1, 0.17, 0.25, 0.34, 0.45, 0.57, 0.68]
+const CROSS_CARS = CROSS_NEAR.map((_, j) => Array.from({ length: 90 }, (_, i) => ({ g: hash(i, j, 21) * 150, dir: i % 2 ? 1 : -1, v: 1.6 + 1.2 * hash(i, j, 22), h: hash(i, j, 23) })))
+/** The boulevards' cars: where along it (0 at the horizon, 1 at the street), coming or going, and their number. */
+const BLVD_CARS = Array.from({ length: 8 }, (_, b) => Array.from({ length: 26 }, (_, i) => ({ u: hash(i, b, 31), dir: i % 2 ? 1 : -1, v: 0.012 + 0.01 * hash(i, b, 32), h: hash(i, b, 33) })))
+
+/** The freeway sweeping through the basin, from near on the left round into downtown on the right: its line on the ground. */
+const FREEWAY: Pt[] = (() => {
+  const ctrl: Pt[] = [[-100, 0.62], [-60, 0.55], [-28, 0.46], [2, 0.42], [24, 0.37], [38, 0.27], [48, 0.15], [56, 0.05], [60, 0]]
+  const pts: Pt[] = []
+  for (let i = 0; i < ctrl.length - 1; i++) {
+    const a = ctrl[Math.max(0, i - 1)]
+    const b = ctrl[i]
+    const c = ctrl[i + 1]
+    const d = ctrl[Math.min(ctrl.length - 1, i + 2)]
+    for (let j = 0; j < 24; j++) {
+      const u = j / 24
+      const u2 = u * u
+      const u3 = u2 * u
+      const cr = (p0: number, p1: number, p2: number, p3: number) => 0.5 * (2 * p1 + (-p0 + p2) * u + (2 * p0 - 5 * p1 + 4 * p2 - p3) * u2 + (-p0 + 3 * p1 - 3 * p2 + p3) * u3)
+      pts.push([cr(a[0], b[0], c[0], d[0]), cr(a[1], b[1], c[1], d[1])])
+    }
+  }
+  pts.push(ctrl[ctrl.length - 1])
+  return pts
+})()
+/** Its length along the ground (depth weighed as the basin's depth in cells), point by point. */
+const FREEWAY_LEN = (() => {
+  const out = [0]
+  for (let i = 1; i < FREEWAY.length; i++) out.push(out[i - 1] + Math.hypot(FREEWAY[i][0] - FREEWAY[i - 1][0], (FREEWAY[i][1] - FREEWAY[i - 1][1]) * 90))
+  return out
+})()
+const FREEWAY_CARS = Array.from({ length: 560 }, (_, i) => ({ d: hash(i, 41) * FREEWAY_LEN[FREEWAY_LEN.length - 1], dir: i % 2 ? 1 : -1, v: 7 + 3 * hash(i, 42), h: hash(i, 43) }))
+let FG = 0
+let FN = 0
+/** Where `d` along the freeway is on the ground, into `FG`, `FN`. */
+function freewayAt(d: number): void {
+  const L = FREEWAY_LEN[FREEWAY_LEN.length - 1]
+  const x = ((d % L) + L) % L
+  let lo = 0
+  let hi = FREEWAY_LEN.length - 1
+  while (hi - lo > 1) {
+    const mid = (lo + hi) >> 1
+    if (FREEWAY_LEN[mid] <= x) lo = mid
+    else hi = mid
+  }
+  const f = (x - FREEWAY_LEN[lo]) / Math.max(1e-6, FREEWAY_LEN[hi] - FREEWAY_LEN[lo])
+  FG = FREEWAY[lo][0] + (FREEWAY[hi][0] - FREEWAY[lo][0]) * f
+  FN = FREEWAY[lo][1] + (FREEWAY[hi][1] - FREEWAY[lo][1]) * f
+}
+
+/** The Metro across the basin on its viaduct, at this depth; its trains, each a run of lit windows. */
+const RAIL_NEAR = 0.4
+const TRAINS = [
+  { at: -2, g: 40, v: -4.2 },
+  { at: 486, g: -110, v: 5.2 },
+  { at: 497, g: 105, v: -4.6 },
+]
+
+/** The cars of the basin: the cross streets, the boulevards and the freeway, and the train. */
+function traffic(ctx: CanvasRenderingContext2D, k: number, t: number, end: boolean, fr: { x0: number; x1: number; y0: number; y1: number }, slide: Slide, lift: Slide, px: number): void {
+  const b = busy(t, end)
+  const cars = lightBatch()
+  const seen = (x: number, y: number) => x >= fr.x0 - 0.5 && x <= fr.x1 + 0.5 && y >= fr.y0 - 0.5 && y <= fr.y1 + 0.5
+  // The freeway: its road a ribbon lit by its own lamps, wider as it comes nearer; the lamps along it, a dotted line of
+  // sodium; and the river of lights on it, white coming and red going.
+  ctx.lineCap = 'round'
+  for (let i = 0; i + 1 < FREEWAY.length; i += 12) {
+    const near = FREEWAY[Math.min(FREEWAY.length - 1, i + 6)][1]
+    ctx.strokeStyle = rgba('#3B2A46', 0.85 * nearFade(near))
+    ctx.lineWidth = Math.max(1.5, 0.16 * (0.45 + 0.55 * near) * k)
+    ctx.beginPath()
+    for (let j = i; j <= Math.min(FREEWAY.length - 1, i + 12); j++) {
+      basinAt(FREEWAY[j][0], FREEWAY[j][1], slide, lift)
+      if (j === i) ctx.moveTo(BX * k, BY * k)
+      else ctx.lineTo(BX * k, BY * k)
+    }
+    ctx.stroke()
+  }
+  for (let i = 0; i < FREEWAY.length; i += 2) {
+    const near = FREEWAY[i][1]
+    basinAt(FREEWAY[i][0], near, slide, lift)
+    if (!seen(BX, BY)) continue
+    cars.dot('#F2B65A', 0.45 * nearFade(near), BX * k, (BY - 0.06 * (0.5 + near)) * k, lampR(near, k, px) * 0.8)
+  }
+  for (const c of FREEWAY_CARS) {
+    const a = out(b, c.h)
+    if (a <= 0.01) continue
+    freewayAt(c.d + c.dir * c.v * t)
+    const near = FN
+    basinAt(FG, near, slide, lift)
+    const y = BY + c.dir * 0.03 * (0.5 + near)
+    if (!seen(BX, y)) continue
+    cars.dot(c.dir > 0 ? TAIL : HEAD, 0.95 * a * nearFade(near) * smooth(near, 0.01, 0.06), BX * k, y * k, lampR(near, k, px) * 1.15)
+  }
+  // The cross streets: a line of lamps along each, and cars going each way along them.
+  CROSS_NEAR.forEach((near, j) => {
+    const f = nearFade(near)
+    for (let g = -75 + (j % 2) * 1.1; g < 75; g += 2.2) {
+      basinAt(g, near, slide, lift)
+      if (!seen(BX, BY)) continue
+      cars.dot('#F7C779', 0.38 * f, BX * k, (BY - 0.03 * (0.5 + near)) * k, lampR(near, k, px) * 0.75)
+    }
+    for (const c of CROSS_CARS[j]) {
+      const a = out(b, c.h) * f
+      if (a <= 0.01) continue
+      const g = ((((c.g + c.dir * c.v * t) % 150) + 150) % 150) - 75
+      basinAt(g, near, slide, lift)
+      const y = BY + c.dir * 0.02 * (0.5 + near)
+      if (!seen(BX, y)) continue
+      cars.dot(c.dir > 0 ? TAIL : HEAD, 0.85 * a, BX * k, y * k, lampR(near, k, px))
+    }
+  })
+  // The boulevards, from the street to the horizon: headlamps coming down them toward us, tail lights going away.
+  BOULEVARDS.forEach((bl, i) => {
+    for (const c of BLVD_CARS[i]) {
+      const a0 = out(b, c.h)
+      if (a0 <= 0.01) continue
+      const u = (((c.u + c.dir * c.v * t) % 1) + 1) % 1
+      const near = Math.pow(u, 1.25)
+      const a = a0 * nearFade(near) * smooth(near, 0.02, 0.08)
+      if (a <= 0.01) continue
+      const dd = 0.2 + 0.6 * near
+      const x = bl.xFar + (bl.xNear - bl.xFar) * near + slide(dd) + c.dir * 0.05 * (0.5 + 1.5 * near)
+      const y = HORIZON + (STREET - 0.6 - HORIZON) * Math.pow(near, 1.6) + lift(dd)
+      if (!seen(x, y)) continue
+      cars.dot(c.dir > 0 ? HEAD : TAIL, 0.9 * a, x * k, y * k, lampR(near, k, px))
+    }
+  })
+  cars.fill(ctx)
+  // The Metro: a train across the basin now and then, a run of lit windows.
+  const f = nearFade(RAIL_NEAR)
+  basinAt(0, RAIL_NEAR, slide, lift)
+  const ry = BY
+  if (ry > fr.y0 - 1 && ry < fr.y1 + 1) {
+    const scale = 0.45 + 0.55 * RAIL_NEAR
+    for (const tr of TRAINS) {
+      const head = tr.g + tr.v * (t - tr.at)
+      if (head < -90 || head > 90) continue
+      const dir = Math.sign(tr.v)
+      const len = 13
+      for (let w = 0; w < 40; w++) {
+        const g = head - dir * w * (len / 40)
+        if (Math.abs(g) > 75) continue
+        basinAt(g, RAIL_NEAR, slide, lift)
+        const x = BX
+        if (x < fr.x0 - 0.5 || x > fr.x1 + 0.5) continue
+        ctx.fillStyle = w === 0 ? rgba(HEAD, f) : w === 39 ? rgba(TAIL, f) : rgba('#FBEACB', 0.95 * f)
+        ctx.fillRect(x * k - 0.6 * px, (ry - 0.05 * scale) * k, Math.max(1, 0.18 * scale * k), Math.max(1, 0.035 * k * scale))
+      }
+    }
+  }
+}
+
+/** The planes: a line of them coming down over the basin, a landing light each and its wingtips. */
+const PLANE_A: Pt = [-62, -31]
+const PLANE_B: Pt = [58, -9]
+const PLANE_EVERY = 10
+const PLANE_RUN = 110
+function planes(ctx: CanvasRenderingContext2D, k: number, t: number, end: boolean, fr: { x0: number; x1: number; y0: number; y1: number }, ox: number, oy: number, px: number): void {
+  const b = busy(t, end)
+  const n = Math.ceil(PLANE_RUN / PLANE_EVERY)
+  for (let i = 0; i < n; i++) {
+    const a = out(b, hash(i, 51) * 0.8)
+    if (a <= 0.01) continue
+    const u = (t + i * PLANE_EVERY) / PLANE_RUN
+    const f = u - Math.floor(u)
+    // Out of the dark at the top of its line and into the haze at its foot.
+    const fade = a * smooth(f, 0, 0.05) * (1 - smooth(f, 0.9, 1))
+    const x = PLANE_A[0] + (PLANE_B[0] - PLANE_A[0]) * f + ox
+    const y = PLANE_A[1] + (PLANE_B[1] - PLANE_A[1]) * f + oy
+    if (x < fr.x0 - 0.5 || x > fr.x1 + 0.5 || y < fr.y0 - 0.5 || y > fr.y1 + 0.5 || fade <= 0.01) continue
+    const r = Math.max(1.2 * px, 0.05 * k) * (0.8 + 0.4 * f)
+    ctx.fillStyle = rgba('#FFF4DC', 0.95 * fade)
+    ctx.beginPath()
+    ctx.arc(x * k, y * k, r, 0, Math.PI * 2)
+    ctx.fill()
+    const sp = Math.max(4 * px, 0.25 * k) * (0.8 + 0.4 * f)
+    ctx.fillStyle = rgba('#E0533D', 0.8 * fade)
+    ctx.fillRect(x * k - sp - px, y * k - 1.6 * px, 1.6 * px, 1.6 * px)
+    ctx.fillStyle = rgba('#5BD08A', 0.8 * fade)
+    ctx.fillRect(x * k + sp - px, y * k - 1.6 * px, 1.6 * px, 1.6 * px)
+  }
+}
+
+/**
+ * Life on the far hills: the lights of the homes on their lower slopes, thinning toward the crest, more of them lit as
+ * the city fills; and the road that climbs them to the ridge, a few cars on its bends, red going up and white coming
+ * down. All of it on the hills' own slow layer.
+ */
+const HOMES = Array.from({ length: 520 }, (_, i) => {
+  const x = hash(i, 61) * 150 - 75
+  const top = ridge(x, true)
+  return { x, hgt: 0.25 + Math.pow(hash(i, 62), 1.8) * top * 0.72, warm: hash(i, 63) < 0.85, h: hash(i, 64) }
+})
+/** The road up the hill, its bends in the hills' frame (across, and height above the horizon). */
+const HILL_ROAD: Pt[] = [[-4, 0.4], [7.5, 1.3], [0.5, 2.2], [9, 3.05], [3, 3.95], [10, 4.75], [6.5, 5.3]]
+const HILL_ROAD_X0 = Math.min(...HILL_ROAD.map((q) => q[0]))
+const HILL_ROAD_X1 = Math.max(...HILL_ROAD.map((q) => q[0]))
+const HILL_ROAD_LEN = HILL_ROAD.slice(1).reduce((n, q, i) => n + Math.hypot(q[0] - HILL_ROAD[i][0], q[1] - HILL_ROAD[i][1]), 0)
+function onHillRoad(d: number): Pt {
+  let rest = ((d % HILL_ROAD_LEN) + HILL_ROAD_LEN) % HILL_ROAD_LEN
+  for (let i = 1; i < HILL_ROAD.length; i++) {
+    const a = HILL_ROAD[i - 1]
+    const b = HILL_ROAD[i]
+    const L = Math.hypot(b[0] - a[0], b[1] - a[1])
+    if (rest <= L) return [a[0] + ((b[0] - a[0]) * rest) / L, a[1] + ((b[1] - a[1]) * rest) / L]
+    rest -= L
+  }
+  return HILL_ROAD[HILL_ROAD.length - 1]
+}
+const HILL_CARS = Array.from({ length: 7 }, (_, i) => ({ d: (i / 7) * HILL_ROAD_LEN + 2 * hash(i, 71), dir: i % 2 ? 1 : -1, v: 0.9 + 0.4 * hash(i, 72), h: hash(i, 73) }))
+function hillLife(p: p5, k: number, t: number, end: boolean, fr: { x0: number; x1: number; y0: number; y1: number }, ox: number, oy: number, px: number): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const b = busy(t, end)
+  const dots = lightBatch()
+  const base = HORIZON + oy
+  for (const hm of HOMES) {
+    const x = hm.x + ox
+    const y = base - hm.hgt
+    if (x < fr.x0 - 0.5 || x > fr.x1 + 0.5 || y < fr.y0 - 0.5 || y > fr.y1 + 0.5) continue
+    // A few homes are lit at any hour; more as the city fills.
+    const a = out(Math.min(1, b + 0.25), hm.h)
+    if (a <= 0.01) continue
+    dots.dot(hm.warm ? LIGHT : LIGHT_COOL, (0.35 + 0.25 * (1 - hm.hgt / 7)) * a, x * k, y * k, Math.max(0.6, Math.min(0.03 * k, 1.2 * px)))
+  }
+  // The road: only its few lamps along the bends, and the cars on it.
+  if (HILL_ROAD_X1 + ox > fr.x0 - 1 && HILL_ROAD_X0 + ox < fr.x1 + 1) {
+    for (let d = 0.6; d < HILL_ROAD_LEN; d += 2.6) {
+      const [x, h] = onHillRoad(d)
+      dots.dot('#F2B65A', 0.4, (x + ox) * k, (base - h - 0.05) * k, Math.max(0.6, 0.9 * px))
+    }
+    for (const c of HILL_CARS) {
+      const a = out(Math.min(1, b + 0.3), c.h)
+      if (a <= 0.01) continue
+      const [x, h] = onHillRoad(c.d + c.dir * c.v * t)
+      dots.dot(c.dir > 0 ? TAIL : HEAD, 0.95 * a, (x + ox) * k, (base - h) * k, Math.max(0.8, Math.min(0.045 * k, 1.6 * px)))
+    }
+  }
+  dots.fill(ctx)
+  // The crest catches the last of the sky's light: a fine line along it.
+  ctx.strokeStyle = rgba(SKY_LOW, 0.55)
+  ctx.lineWidth = Math.max(0.8, 0.03 * k)
+  ctx.beginPath()
+  for (let x = fr.x0 - 1; x <= fr.x1 + 1; x += 0.5) {
+    const y = base - ridge(x - ox, true)
+    if (x === fr.x0 - 1) ctx.moveTo(x * k, y * k)
+    else ctx.lineTo(x * k, y * k)
+  }
+  ctx.stroke()
+}
+
+export function drawPalm(ctx: CanvasRenderingContext2D, k: number, x: number, ground: number, h: number, lean: number): void {
   const topX = x + lean * h
   const topY = ground - h
   ctx.strokeStyle = PALM

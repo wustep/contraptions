@@ -1,5 +1,5 @@
 import { mixHex, type Pt } from '../../../../../parts'
-import { bloom, pool, top } from '../cast'
+import { pool, top } from '../cast'
 import { frame } from '../kit'
 import { LIMBO, SLEEP } from '../worlds'
 import {
@@ -186,7 +186,7 @@ function drawRoom(pen: Pen, t: number, glow: number): void {
     line(pen, [mx, WINDOW.y0], [mx, WINDOW.y1], pen.ink, 0.55)
   }
   box(pen, WINDOW.x0 - 0.05, WINDOW.y1, WINDOW.x1 + 0.05, WINDOW.y1 + 0.06, wallCol, 0.6)
-  // The glass: a faint cool sheen over the view, and the lamp's glow in it.
+  // The glass: a faint cool tint over the view.
   vwash(pen, WINDOW.x0, WINDOW.x1, WINDOW.y0, WINDOW.y1, [
     [0, LIMBO.glass, 0.12],
     [1, LIMBO.glass, 0.04],
@@ -254,7 +254,6 @@ function drawRoom(pen: Pen, t: number, glow: number): void {
   } else {
     top(pen.p, pen.k, TOP_AT, tp.phase, 0.03, t * 1.2 * Math.PI * 2, pen.ink, 1, 0.6)
   }
-  bloom(pen.p, pen.k, [TABLE.x, lampY + 0.12], 1.1, LIMBO.lamp, 0.28 * glow)
 }
 
 /* ------------------------------------------------------------------ the lift and the weight */
@@ -484,6 +483,4 @@ export function drawTowerFront(pen: Pen, t: number, f: Frame): void {
     drawFrontUpper(pen, Math.min(1, lamp(t)))
     drawFrontAnnex(pen)
   })
-  // The lit window's glow into the dusk, seen from outside.
-  if (cut < 0.999) bloom(pen.p, pen.k, [(WINDOW.x0 + WINDOW.x1) / 2 - 0.2, (WINDOW.y0 + WINDOW.y1) / 2], 2.6, LIMBO.lamp, 0.22 * (1 - cut) * lamp(t))
 }

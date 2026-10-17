@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import type { Pt } from '../../../../../parts'
-import { alpha, glow, hash } from '../kit'
+import { alpha, hash } from '../kit'
 import { MOVIE_MAT as M } from '../worlds'
 import { box2, seg, shape, vgrad } from './movie-kit'
 
@@ -279,7 +279,7 @@ export function butterflies(p: p5, k: number, ink: string, w: number, t: number,
  * wall the pictures of the dream's life: the two of them on their wedding day, her show's poster (her window and its
  * red curtains, a gold star), the two of them by the tower in Paris. A rug before the couch; a plant by the lamp.
  */
-export function homeWall(p: p5, k: number, ink: string, w: number, floor: number, lampOn: number): void {
+export function homeWall(p: p5, k: number, ink: string, w: number, floor: number): void {
   const wood = '#7A5238'
   const woodDeep = '#55382A'
   // The piano.
@@ -357,8 +357,6 @@ export function homeWall(p: p5, k: number, ink: string, w: number, floor: number
     const L = 0.45 + 0.1 * hash(i, 31)
     shape(p, k, [[px, floor - 0.32], [px + Math.cos(a) * L * 0.6 + 0.06, floor - 0.32 + Math.sin(a) * L * 0.6], [px + Math.cos(a) * L, floor - 0.32 + Math.sin(a) * L], [px + Math.cos(a) * L * 0.6 - 0.06, floor - 0.32 + Math.sin(a) * L * 0.6]], M.grass, ink, w * 0.5)
   }
-  // The lamp's light on all of it.
-  glow(p, k, 6.55, -1.2, 1.6, M.sun, 0.12 * lampOn)
 }
 
 function star(p: p5, k: number, x: number, y: number, r: number, col: string): void {

@@ -228,7 +228,8 @@ export const seatAt = (t: number, u: number): Pt => vanPoint(vanPose(t), u, SEAT
 /** Fischer's taxi: it comes up the street, stops at the kerb by the awning, and goes on up it into the queue. */
 export const TAXI_STOP = -44.0
 export const TAXI_LEN = 2.2
-export const TAXI_SEAT: Pt = [-0.27, -0.8]
+/** Fischer in its back seat, from its middle: in the rear window, clear of its slanted pillar and its sill. */
+export const TAXI_SEAT: Pt = [-0.19, -0.83]
 export const TAXI_QUEUE = -38
 const T_TAXI_IN = 69.0
 const TAXI_RUN = 8

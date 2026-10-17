@@ -1,5 +1,5 @@
 import { R, type Pt } from '../../../../../parts'
-import { BEATS, HALF, LAST, SEAM, SWELL, TONIC } from '../music'
+import { BEATS, HALF, LAST, SEAM, SWELL, TONIC, chord } from '../music'
 
 /**
  * The lake house's clock: everything in the room that moves or changes, as pure functions of show time, so the room's
@@ -34,11 +34,16 @@ export function hermite(u: number, d: number, x0: number, v0: number, x1: number
 
 /* ------------------------------------------------------------------ the eras */
 
-/** The house's four times: when the room is what. */
+/** The house's six times: when the room is what. */
 export const ERA = {
   dawn: [0, SEAM.swing] as const,
+  /** Years on, toward evening: Hannah a teenager at the window, who turns on her mother and goes (`teen.ts`). */
+  teen: [SEAM.teen, SEAM.bed] as const,
   bed: [SEAM.bed, SEAM.news] as const,
-  news: [SEAM.news, SEAM.arrival] as const,
+  /** The same night, the shell come down: a helicopter comes for her (`recruit.ts`). */
+  recruit: [SEAM.recruit, SEAM.camp] as const,
+  /** A flash in the middle of the language: an afternoon years on, Hannah drawing at the window (`flash.ts`). */
+  flash: [SEAM.flash, SEAM.share] as const,
   home: [SEAM.home, 409] as const,
 }
 /** The last scene's chords: the two of them turn to the empty cradle (TURN) and step toward it (NEAR); then, on the
@@ -54,11 +59,15 @@ export const BEGIN = 349.495
  */
 export const EMPTY_DX = 0
 
-export type Era = 'dawn' | 'bed' | 'news' | 'home' | 'none'
+export type Era = 'dawn' | 'teen' | 'bed' | 'recruit' | 'flash' | 'home' | 'none'
 export function eraOf(T: number): Era {
   if (T < ERA.dawn[1]) return 'dawn'
+  if (T >= ERA.teen[0] && T < ERA.teen[1]) return 'teen'
   if (T >= ERA.bed[0] && T < ERA.bed[1]) return 'bed'
-  if (T >= ERA.news[0] && T < ERA.news[1]) return 'news'
+  if (T >= ERA.recruit[0] && T < ERA.recruit[1]) return 'recruit'
+  if (T >= ERA.flash[0] && T < ERA.flash[1]) return 'flash'
+  // For one chord the picture is out on the lawn (the run remembered): the room is not drawn under it.
+  if (T >= SEAM.recall && T < SEAM.cradle) return 'none'
   if (T >= ERA.home[0]) return 'home'
   return 'none'
 }
@@ -282,6 +291,7 @@ export function tvOn(T: number): number {
  *  - `morn`: the morning, the sun coming low through the glass;
  *  - `grey`: an overcast day, flat and cool (the bed);
  *  - `night`: the room dark but for what glows in it (the news).
+ * The flash is an afternoon in full sun: the end's morning light, which it foretells.
  * And `sun`, the direct light through the glass onto the floor; `fog`, how thick the fog is over the lake; `amb`, how
  * lit the room is overall (derived), for what stands in it.
  */
@@ -312,12 +322,21 @@ export function lightAt(T: number): Light {
     if (u <= 0) return FIRST_LIGHT
     return light(1 - 0.78 * u, 0.78 * u, 0, 0, 0.8 * u ** 1.3, 0.85 - 0.35 * u)
   }
-  if (T < ERA.news[0]) {
-    // A grey day. On the swell the room greys and the light goes out of it.
-    const g = ss(T, SWELL, SWELL + 3.6)
-    return light(0.12 * g, 0, 1 - 0.3 * g, 0.18 * g, 0, 0.8 + 0.2 * g)
+  if (T >= ERA.teen[0] && T < ERA.teen[1]) {
+    // Toward evening: a low warm sun across the floor as she comes to Hannah, going to the blue hour once Hannah has
+    // gone (her going is the chord, `teen.ts`).
+    const u = ss(T, chord(15) + 0.5, SEAM.bed - 0.4)
+    return light(0.05 + 0.7 * u, 0.8 * (1 - u), 0.15 + 0.1 * u, 0, 0.75 * (1 - u), 0.4 + 0.4 * u)
   }
-  if (T < ERA.news[1] + 1) return light(0, 0, 0, 1, 0, 0.2)
+  if (T < ERA.bed[1]) {
+    // The days of her illness, a light each (`DAYS`). On the swell the room greys and the light goes out of it.
+    const d = dayAt(T).L
+    const g = ss(T, SWELL, SWELL + 3.6)
+    const h = 1 - g
+    return light(d.pre * h + 0.45 * g, d.morn * h, d.grey * h + 0.35 * g, d.night * h + 0.2 * g, d.sun * h, d.fog + (1 - d.fog) * 0.3 * g)
+  }
+  if (T >= ERA.recruit[0] - 1 && T < ERA.recruit[1] + 1) return light(0, 0, 0, 1, 0, 0.2)
+  if (T >= ERA.flash[0] - 1 && T < ERA.flash[1] + 1) return light(0, 1, 0, 0, 0.95, 0.15)
   if (T < BEGIN) {
     // The morning after: the sun comes through the glass.
     const u = ss(T, SEAM.home, SEAM.home + 2.4)
@@ -329,6 +348,46 @@ export function lightAt(T: number): Light {
   if (u < 1) return light(u, 1 - u, 0, 0, 1 - u, 0.3 + 0.55 * u)
   return FIRST_LIGHT
 }
+
+/**
+ * The bed is the days of her illness. On each of the clock's strikes the picture cuts (`house.ts`) and it is another
+ * day: another light in the room, another hour on the clock, the lamp by the bed lit at night. The last goes to the
+ * blue hour, the light she came in at dawn, and on the swell she goes and the lamp goes out. (One grey afternoon for
+ * 26 s, the prologue's longest scene read as one held moment; the film tells her illness as a montage of days.)
+ */
+interface Day {
+  t: number
+  L: Light
+  /** The clock's hour as the day begins (24 h). */
+  hour: number
+  /** The lamp by the bed: 0 off, 1 lit. */
+  lamp: number
+}
+export const DAYS: Day[] = [
+  // A grey afternoon.
+  { t: SEAM.bed, L: light(0, 0, 1, 0, 0, 0.8), hour: 15.1, lamp: 0 },
+  // Night, the vigil: the room dark, the lamp lit over the two of them.
+  { t: 76.185, L: light(0, 0, 0.12, 0.88, 0, 0.5), hour: 23.4, lamp: 1 },
+  // A pale morning, the sun low through the glass.
+  { t: 80.376, L: light(0.15, 0.75, 0.1, 0, 0.7, 0.55), hour: 7.2, lamp: 0 },
+  // Another grey day.
+  { t: 85.31, L: light(0, 0.1, 0.9, 0, 0.05, 0.85), hour: 14.4, lamp: 0 },
+  // The last: evening going to the blue hour, the lamp lit again.
+  { t: 89.281, L: light(0.7, 0, 0.12, 0.18, 0, 0.9), hour: 19.4, lamp: 0.9 },
+]
+export function dayAt(T: number): Day {
+  let d = DAYS[0]
+  for (const x of DAYS) if (T >= x.t) d = x
+  return d
+}
+/** The clock's time at T, in hours: the day's hour, going on with the show's seconds; stopped when she goes. */
+export function clockHour(T: number): number {
+  const at = Math.min(T, GONE[0])
+  const d = dayAt(at)
+  return d.hour + (at - d.t) * 0.012
+}
+/** The lamp by the bed: lit at night and on the last evening; going out as she goes. */
+export const lampAt = (T: number): number => dayAt(T).lamp * (1 - ss(T, SWELL, GONE[1]))
 
 /* ------------------------------------------------------------------ Louise */
 
@@ -385,7 +444,8 @@ export const IAN_X = HOME_X + 0.36
 export const HUG_T = 337.85
 const STEP = 0.0925
 /** Their steps toward the cradle: each begins on its chord and takes a long breath. */
-const steps = (T: number, step = STEP): number => step * (s5((T - TURN + 0.1) / 1.3) + s5((T - NEAR + 0.1) / 1.3))
+/** (The first is taken while the picture is away on the lawn, `SEAM.recall`; both start from rest at a cut.) */
+const steps = (T: number, step = STEP): number => step * (s5((T - TURN - 0.3) / 1.3) + s5((T - NEAR - 0.05) / 1.3))
 /** Ian beside her: when she rolls into him he gives a little with it and comes back against her; then, from the turn,
  * he goes round behind the cradle to its far side, so it stands between them as she goes to it and as the baby
  * comes. He looks at her; at the cradle as he goes round it; at her again from its far side. */

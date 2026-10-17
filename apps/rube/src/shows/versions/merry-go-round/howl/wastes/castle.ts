@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
-import { alpha, hash } from '../kit'
+import { alpha, frame, hash, smooth } from '../kit'
 import { drawDoor } from '../cast'
 import { CALCIFER, DIAL, ROOM, TOWN, WASTES } from '../worlds'
 
@@ -561,13 +561,12 @@ function tongue(p: p5, k: number, x: number, y: number, bw: number, h: number, s
 /**
  * Calcifer roaring out of the chimney's mouth (ex, ey, world cells): a sheaf of tongues of his fire leaping up and
  * swept back on the wind, his three colours one inside the other, flames tearing off the tips as each roar dies,
- * and a warm light thrown round it (a long soft haze, never a disc). `f` is how hard he is roaring now (0..1);
+ * and no haze round it: in the open sky there is nothing for its light to fall on. `f` is how hard he is roaring now (0..1);
  * `roars` are the roars' [time, strength] (for the torn-off flames). The walk's roar and the last chord's.
  */
 export function drawChimneyFire(p: p5, k: number, t: number, ex: number, ey0: number, f: number, roars: readonly (readonly [number, number, ...number[]])[]): void {
   if (f < 0.01) return
   const ey = ey0 + 0.1
-  puff(p, k, ex - 0.5 * f, ey - 1.2 - 1.4 * f, 1.4 + 2.4 * f, CALCIFER.body, 0.12 * f, 1.4)
   p.push()
   p.noStroke()
   // Torn-off flames rising off the tips as each roar dies.
@@ -679,7 +678,6 @@ export function drawCastle(p: p5, k: number, weight: number, ink: string, pose: 
     const on = clamp01((lights - hash(i, 7) * 0.75) / 0.2)
     inked(mixHex(ironDark, tone(WASTES.window), on), W * 0.7)
     p.rect(X(x), X(y), X(w), X(h), X(r))
-    if (on > 0.02) puff(p, k, x + w / 2, y + h / 2, Math.max(w, h) * 1.2, WASTES.window, 0.2 * on * (1 - haze))
   }
   // The body's transform: pitched about the hips' middle, bobbed and sat.
   const body = () => {
@@ -1012,6 +1010,39 @@ export function drawCastle(p: p5, k: number, weight: number, ink: string, pose: 
     p.noStroke()
     p.fill(ironDark)
     poly(p, k, [...BELLY, ...BELLY.map(([x, y]) => [x, y - 1.05] as Pt).reverse()])
+    p.stroke(alpha(p, INK, 0.45))
+    p.strokeWeight(W * 0.6)
+    p.noFill()
+    const SEAMS_X = [-6.1, -3.7, -1.25, 1.35, 3.85, 5.65]
+    const seamX = (x: number, y: number) => x + Math.sin(((y + 12.6) / 7) * Math.PI) * x * 0.035
+    const seamY = (x: number) => -10.05 + 0.18 * Math.sin(x * 0.4)
+    for (const x of SEAMS_X) {
+      p.beginShape()
+      for (let i = 0; i <= 8; i++) p.vertex(X(seamX(x, -12.6 + (i / 8) * 7)), X(-12.6 + (i / 8) * 7))
+      p.endShape()
+    }
+    p.beginShape()
+    for (let i = 0; i <= 16; i++) {
+      const x = -8.7 + (i / 16) * 15.6
+      p.vertex(X(x), X(seamY(x)))
+    }
+    p.endShape()
+    // Rivets down either side of every seam, a dark head each, as the field's close look at the hull has them; only
+    // in the close frames on the porch, where a head is a few pixels across. Wider, they would be grain, so they fade.
+    const seen = frame(p, k)
+    const near = 1 - smooth(seen.x1 - seen.x0, 15, 24)
+    if (near > 0.02) {
+      const heads = new Path2D()
+      const R0 = 0.032
+      const rivet = (x: number, y: number) => {
+        heads.moveTo(X(x + R0), X(y))
+        heads.arc(X(x), X(y), X(R0), 0, Math.PI * 2)
+      }
+      for (const x0 of SEAMS_X) for (let y = -12.35; y < -6.0; y += 0.27) for (const side of [-0.1, 0.1]) rivet(seamX(x0, y) + side, y)
+      for (let x = -8.55; x < 6.8; x += 0.27) for (const side of [-0.1, 0.1]) rivet(x, seamY(x) + side)
+      ctx.fillStyle = alpha(p, mixHex(ironDark, INK, 0.35), 0.8 * near).toString()
+      ctx.fill(heads)
+    }
     p.stroke(INK)
     p.strokeWeight(W * 0.7)
     p.fill(rust)
@@ -1025,23 +1056,6 @@ export function drawCastle(p: p5, k: number, weight: number, ink: string, pose: 
     p.strokeWeight(W * 0.7)
     p.fill(tone(mixHex(WASTES.iron, WASTES.slate, 0.5)))
     p.rect(X(0.9), X(-9.5), X(1.7), X(1.25), X(0.05))
-    p.stroke(alpha(p, INK, 0.45))
-    p.strokeWeight(W * 0.6)
-    p.noFill()
-    for (const x of [-6.1, -3.7, -1.25, 1.35, 3.85, 5.65]) {
-      p.beginShape()
-      for (let i = 0; i <= 8; i++) {
-        const v = i / 8
-        p.vertex(X(x + Math.sin(v * Math.PI) * x * 0.035), X(-12.6 + v * 7))
-      }
-      p.endShape()
-    }
-    p.beginShape()
-    for (let i = 0; i <= 16; i++) {
-      const x = -8.7 + (i / 16) * 15.6
-      p.vertex(X(x), X(-10.05 + 0.18 * Math.sin(x * 0.4)))
-    }
-    p.endShape()
     p.stroke(INK)
     p.strokeWeight(W * 0.7)
     p.fill(ironDark)
@@ -1146,7 +1160,6 @@ export function drawCastle(p: p5, k: number, weight: number, ink: string, pose: 
     p.strokeWeight(W * 0.7)
     line([7.55, -11.5], [7.55, -10.6])
     line([7.1, -11.05], [8.0, -11.05])
-    if (lit > 0.02) puff(p, k, 7.55, -11.05, 1.7, WASTES.window, 0.35 * lit)
     inked(ironDark)
     poly(p, k, spline([[6.55, -11.45], [7.3, -12.0], [8.3, -11.95], [8.85, -11.5], [8.2, -11.65], [7.4, -11.7], [6.7, -11.25]], 4))
     inked(plaster, W * 0.6)
@@ -1292,7 +1305,6 @@ export function drawCastle(p: p5, k: number, weight: number, ink: string, pose: 
   const roar = clamp01(pose.roar ?? 0)
   const [cx, cy] = bodyAt(pose, CASTLE.chimney)
   if (roar > 0.01 && !(mods.chimney && (mods.chimney.gone ?? 0) > 0.5)) {
-    puff(p, k, cx, cy - 0.6, 3.2 * roar, CALCIFER.body, 0.35 * roar)
     p.noStroke()
     for (let i = 0; i < 3; i++) {
       const h = (1.2 + 1.1 * roar) * (1 - i * 0.28) * (0.85 + 0.15 * Math.sin(t * 17 + i * 2))

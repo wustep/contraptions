@@ -5,6 +5,7 @@ import { FLOOR, R, laneAt, mixHex, puff, type Lane, type Pt, type Seg } from '..
 import { alpha, carried, hash, knock, part, smooth, type Company, type Ctx, type PartShot } from '../kit'
 import { cue, UNDOCK } from '../music'
 import { BALL, DUST, MURPH } from '../worlds'
+import { warmthAt } from './daylight'
 import { fromRim, RIM_R, SEAM, standOnRim, stationFrame } from './station'
 
 /**
@@ -111,6 +112,8 @@ const xy = (q: Pt): { x: number; y: number } => ({ x: q[0], y: q[1] })
 /** The trapdoor comes down on its stop. */
 const STOP = cue(153.5)
 
+/** The flight across the axis, bat to window: nothing trails him through it (`LiftoffShow.trailOff`). */
+export const IN_FLIGHT: readonly [number, number] = [HIT, WINDOW]
 export const BALLPARK_HITS = [IN, CATCH, TOSS, FEED, cue(135.5), SPIN1, COCK1, SPIN2, COCK2, PITCH, HIT, ...LAMPS, POPLAR, TREE, WINDOW, HATCH, STOP, SEAT, DOWN, STEP, TOUCH, NUDGE]
 
 /* ------------------------------------------------------------------ the geometry */
@@ -721,7 +724,8 @@ export const ballpark = part<BallparkState>(
       { t: CATCH - 0.3, cells: 4.8, hold: wall(2.1, 1.9), w: 0.9 },
       { t: FEED, cells: 5.0, hold: wall(3.0, 2.0), w: 1 },
       { t: SPIN1 + 0.5, cells: 5.5, hold: wall(5.4, 2.1), w: 1 },
-      { t: HIT, cells: 5.5, hold: wall(5.5, 2.1), w: 1 },
+      // In a little while the wheels spin up and the bat is drawn back, so the hit lands on a tighter frame.
+      { t: HIT, cells: 4.95, hold: wall(5.55, 2.1), w: 1 },
       { t: cue(141.6), cells: 13, hold: mid(flightAt(cue(141.6)), tower, 0.3), w: 0.7 },
       // The whole station, once, as he leaves the ballpark's side of it: the scale of the thing.
       { t: cue(143.4), cells: 34, hold: [AX[0] + 0.8, AX[1] + 1.2], w: 1 },
@@ -765,13 +769,10 @@ function drawPark(p: p5, s: BallparkState, c: Ctx): void {
 }
 
 /**
- * Pulled right back, the ball is a speck: it trails a short streak of its
- * own colour, which fades as the camera comes in and it is big again. How
- * small it is is judged on the screen, in CSS pixels, not in the canvas's
- * (on a phone's dense screen those are three to one, and the streak held
- * back where the ball was smallest). Where it is a speck it also carries a
- * soft warm halo, never under 9px across the screen, so a phone held upright,
- * whose frame is a fifth of 1080p's, can find it across the whole ring.
+ * Pulled right back, the ball is a speck. How small it is is judged on the screen, in CSS pixels, not in the canvas's
+ * (on a phone's dense screen those are three to one). Where it is a speck it carries a soft halo of its own sand, never
+ * under 9px across the screen, so a phone held upright, whose frame is a fifth of 1080p's, can find it across the whole
+ * ring. Nothing trails it: the ring turning under him is the gag, and the camera shows it.
  */
 /** His sand as "r, g, b", once: the halo is drawn every frame of the flight, and a p5 colour parsed thrice a frame cost a millisecond on a phone's canvas. */
 const BALL_RGB = [1, 3, 5].map((i) => parseInt(BALL.slice(i, i + 2), 16)).join(', ')
@@ -779,72 +780,22 @@ function drawStreak(p: p5, c: Ctx, T: number): void {
   if (T <= HIT + 0.04 || T >= WINDOW) return
   const density = p.pixelDensity()
   const px = (2 * R * c.k) / density
-  drawWay(p, c, T, px)
   // Not over the far house in the last instant: by then the camera is in close anyway.
   // (Faded in off the bat over a third of a second: on a phone he is already small at the hit, and it popped on.)
   const f = clamp((18 - px) / 9) * smooth(T, HIT + 0.04, HIT + 0.38) * (1 - smooth(T, WINDOW - 0.6, WINDOW - 0.25))
   if (f <= 0) return
   const X = (v: number) => v * c.k
-  {
-    const [hx, hy] = flightAt(T)
-    const r = Math.max(R * c.k * 2.4, 9 * density)
-    const ctx = p.drawingContext as CanvasRenderingContext2D
-    const g = ctx.createRadialGradient(X(hx), X(hy), 0, X(hx), X(hy), r)
-    g.addColorStop(0, `rgba(${BALL_RGB}, ${0.5 * f})`)
-    g.addColorStop(0.45, `rgba(${BALL_RGB}, ${0.2 * f})`)
-    g.addColorStop(1, `rgba(${BALL_RGB}, 0)`)
-    ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.arc(X(hx), X(hy), r, 0, Math.PI * 2)
-    ctx.fill()
-  }
-  const n = 16
-  const span = 0.55
-  for (let i = n; i >= 1; i--) {
-    const t0 = T - (i / n) * span
-    const t1 = T - ((i - 1) / n) * span
-    if (t0 < HIT) continue
-    const a = flightAt(t0)
-    const b = flightAt(t1)
-    const u = 1 - (i - 0.5) / n
-    p.stroke(alpha(p, BALL, f * 0.6 * u))
-    p.strokeWeight(Math.max(2 * density, R * c.k * 1.8) * (0.35 + 0.65 * u))
-    p.line(X(a[0]), X(a[1]), X(b[0]), X(b[1]))
-  }
-}
-
-/**
- * His way since the bat, dotted, behind the streak. He flies straight and the ring turns under him, so seen from the
- * ring his way bends round under the hub: that is the gag, and a short streak never showed it. The dots are fixed on
- * the way (one every `WAY_GAP` s of flight) so they stay put as it grows, and they fade with age, in a few steps, each
- * step one path. Gone with the streak as he comes down to the far house.
- */
-const WAY_GAP = 0.06
-/** The dots' colour as "r, g, b": his sand taken down toward the ink, since sand alone is lost on the pale air. */
-const WAY_RGB = (() => {
-  const h = mixHex(BALL, '#2A1F17', 0.35)
-  return [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)).join(', ')
-})()
-function drawWay(p: p5, c: Ctx, T: number, px: number): void {
-  const f = clamp((30 - px) / 12) * smooth(T, HIT + 0.3, HIT + 1) * (1 - smooth(T, WINDOW - 1.4, WINDOW - 0.5))
-  if (f <= 0) return
-  const density = p.pixelDensity()
+  const [hx, hy] = flightAt(T)
+  const r = Math.max(R * c.k * 2.4, 9 * density)
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const r = Math.max(1.3 * density, R * c.k * 0.28)
-  const last = T - 0.45
-  const n = Math.floor((last - HIT) / WAY_GAP)
-  if (n < 1) return
-  const STEPS = 5
-  for (let k = 0; k < STEPS; k++) {
-    ctx.beginPath()
-    for (let i = Math.floor((n * k) / STEPS); i < Math.floor((n * (k + 1)) / STEPS); i++) {
-      const [x, y] = flightAt(HIT + (i + 1) * WAY_GAP)
-      ctx.moveTo(x * c.k + r, y * c.k)
-      ctx.arc(x * c.k, y * c.k, r, 0, Math.PI * 2)
-    }
-    ctx.fillStyle = `rgba(${WAY_RGB}, ${f * (0.15 + (0.5 * (k + 1)) / STEPS)})`
-    ctx.fill()
-  }
+  const g = ctx.createRadialGradient(X(hx), X(hy), 0, X(hx), X(hy), r)
+  g.addColorStop(0, `rgba(${BALL_RGB}, ${0.5 * f})`)
+  g.addColorStop(0.45, `rgba(${BALL_RGB}, ${0.2 * f})`)
+  g.addColorStop(1, `rgba(${BALL_RGB}, 0)`)
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.arc(X(hx), X(hy), r, 0, Math.PI * 2)
+  ctx.fill()
 }
 
 function overPark(p: p5, s: BallparkState, c: Ctx): void {
@@ -1281,7 +1232,6 @@ function secondHand(T: number): number {
 function drawBoard(p: p5, c: Ctx, T: number): void {
   const { k, ink, weight } = c
   const X = (v: number) => v * k
-  const ctx = p.drawingContext as CanvasRenderingContext2D
   const { x0, x1, y0, y1 } = BOARD
   standOnRim(p, k, AX, A_BOARD, () => {
     // The mast, tapering, and the two stays out to the board's lower corners.
@@ -1315,19 +1265,6 @@ function drawBoard(p: p5, c: Ctx, T: number): void {
     for (let i = 0; i < 9; i++) plate(plateX(i), ROW_AWAY, false, 1)
     for (let i = 0; i < 9; i++) {
       const u = plateTurn(i, T)
-      const since = T - INNINGS[i]
-      if (since > 0) {
-        // A lit plate glows, and flares as it lands.
-        const r = X(0.24 + 0.2 * knock(since, 0.2))
-        const g = ctx.createRadialGradient(X(plateX(i)), X(ROW_HOME), 0, X(plateX(i)), X(ROW_HOME), r)
-        g.addColorStop(0, `rgba(255, 244, 214, ${0.3 + 0.45 * knock(since, 0.2)})`)
-        g.addColorStop(1, 'rgba(255, 244, 214, 0)')
-        // Saved and restored, so p5's own idea of the fill stays true for what it draws next.
-        ctx.save()
-        ctx.fillStyle = g
-        ctx.fillRect(X(plateX(i)) - r, X(ROW_HOME) - r, 2 * r, 2 * r)
-        ctx.restore()
-      }
       plate(plateX(i), ROW_HOME, u >= 0.5, Math.abs(Math.cos(Math.PI * u)))
     }
     // The clock: a bone face, twelve marks, and its hands. It keeps the station's time, which is the organ's.
@@ -1356,6 +1293,7 @@ function drawBoard(p: p5, c: Ctx, T: number): void {
 /** Its lamps: dark glass; lit, a warm yellow (as the spoke's landings are). */
 const LAMP_DARK = mixHex(DUST.tin, '#2A1F17', 0.55)
 const LAMP_LIT = '#FFE08A'
+const LAMP_BEAM = '#F2A23C'
 
 function drawTower(p: p5, c: Ctx, T: number): void {
   const { k, ink, weight } = c
@@ -1372,6 +1310,23 @@ function drawTower(p: p5, c: Ctx, T: number): void {
     p.endShape(p.CLOSE)
     outline(p, alpha(p, ink, 0.5).toString(), weight * 0.5)
     for (let y = -0.4; y > -h + 0.3; y -= 0.22) p.line(X(0.1), X(y), X(0.22), X(y))
+    // Each bank, once lit, throws its light down over the field: a flat warm wedge apiece, so the banks coming on a
+    // beat at a time are seen even at the whole station's scale, as light on the ground rather than a glow in the air.
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    ctx.save()
+    for (let i = 0; i < 4; i++) {
+      const on = smooth(T - LAMPS[i], -0.02, 0.12)
+      if (on <= 0) continue
+      ctx.fillStyle = alpha(p, LAMP_BEAM, 0.13 * on).toString()
+      ctx.beginPath()
+      ctx.moveTo(X(-0.3 + 0.12 * i), X(-h - 0.4))
+      ctx.lineTo(X(-0.1 + 0.12 * i), X(-h - 0.2))
+      ctx.lineTo(X(-2.4 - 0.7 * i), X(0))
+      ctx.lineTo(X(-4.6 - 0.9 * i), X(0))
+      ctx.closePath()
+      ctx.fill()
+    }
+    ctx.restore()
     p.push()
     p.translate(0, X(-h - 0.3))
     p.rotate(0.22)
@@ -1382,20 +1337,6 @@ function drawTower(p: p5, c: Ctx, T: number): void {
       const ly = -0.14 + Math.floor(i / 2) * 0.28
       const since = T - LAMPS[i]
       const on = since >= 0
-      if (on) {
-        const ctx = p.drawingContext as CanvasRenderingContext2D
-        const r = X(0.9 + 0.8 * knock(since, 0.25))
-        // An amber pool, not a white one: on the station's pale air a white glow, and a lamp a shade lighter than the
-        // bone of an unlit one, read the same lit or dark, and the banks coming on a beat at a time were not seen.
-        const g = ctx.createRadialGradient(X(lx), X(ly), 0, X(lx), X(ly), r)
-        g.addColorStop(0, `rgba(242, 162, 60, ${0.5 + 0.3 * knock(since, 0.25)})`)
-        g.addColorStop(1, 'rgba(242, 162, 60, 0)')
-        // Saved and restored, so p5's own idea of the fill stays true for what it draws next.
-        ctx.save()
-        ctx.fillStyle = g
-        ctx.fillRect(X(lx) - r, X(ly) - r, 2 * r, 2 * r)
-        ctx.restore()
-      }
       solid(p, ink, weight * 0.7, on ? LAMP_LIT : LAMP_DARK)
       p.circle(X(lx), X(ly), X(0.22))
       for (const dx of [-0.12, 0.12]) {
@@ -1540,6 +1481,7 @@ function drawHouse(p: p5, c: Ctx, T: number): void {
     drawWindow(p, c, T)
     drawAttic(p, c, T)
     drawRoom(p, c, T)
+    drawEvening(p, c, T)
     drawChair(p, c, T)
     // The attic floor: boards, the trapdoor cut in them, and the flaps over the car's well.
     solid(p, ink, weight, DUST.wood)
@@ -1720,6 +1662,49 @@ function drawRoom(p: p5, c: Ctx, T: number): void {
 }
 
 /**
+ * The station's afternoon in Murph's house (`daylight.ts`): the plaster and the attic take the low warm light, and it
+ * comes in at both windows in flat shafts, the downstairs one laying a bright patch across the floor where they meet.
+ * It comes up as he flies to her and goes as the lift climbs away.
+ */
+const EVENING = '#F4B860'
+const SHAFT_LIGHT = '#FFD893'
+function drawEvening(p: p5, c: Ctx, T: number): void {
+  const warm = warmthAt(T)
+  if (warm <= 0.01) return
+  const { k } = c
+  const X = (v: number) => v * k
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  // The rooms' warmth: a flat wash over the plaster and the attic's boards.
+  ctx.fillStyle = alpha(p, EVENING, 0.26 * warm).toString()
+  ctx.fillRect(X(H_L), X(H_CEIL), X(H_R - H_L), X(-H_CEIL))
+  ctx.beginPath()
+  ctx.moveTo(X(H_L), X(H_LOFT))
+  ctx.lineTo(X(H_RIDGE_X), X(H_RIDGE + H_ROOF))
+  ctx.lineTo(X(H_R), X(H_LOFT))
+  ctx.closePath()
+  ctx.fill()
+  // The shafts: each window's light carried down and across to the floor below it, low and long.
+  const shaft = (x0: number, y0: number, x1: number, y1: number, floor: number, a: number, run: number) => {
+    const at = (x: number, y: number) => x - run * (floor - y)
+    ctx.fillStyle = alpha(p, SHAFT_LIGHT, a * warm).toString()
+    ctx.beginPath()
+    ctx.moveTo(X(x0), X(y0))
+    ctx.lineTo(X(x1), X(y0))
+    ctx.lineTo(X(x1), X(y1))
+    ctx.lineTo(X(at(x1, y1)), X(floor))
+    ctx.lineTo(X(at(x0, y0)), X(floor))
+    ctx.closePath()
+    ctx.fill()
+    // Where it lands: the patch on the boards, a shade brighter.
+    ctx.fillRect(X(at(x0, y0)), X(floor - 0.03), X(at(x1, y1) - at(x0, y0)), X(0.03))
+  }
+  shaft(1.2, -1.1, 1.7, -0.54, 0, 0.3, 2.6)
+  shaft(WIN.x - WIN.w / 2, WIN.y - WIN.h / 2, WIN.x + WIN.w / 2, WIN.y + WIN.h / 2, H_LOFT, 0.24, 1.7)
+  ctx.restore()
+}
+
+/**
  * Murph's rocking chair, side on: two rockers on the one arc (the far one a shade darker, just behind), turned legs
  * joined by a stretcher, the seat, an arm on a turned post with a scrolled end, and a tall raked back of spindles
  * under a curved crest rail, a small quilt folded over it. Drawn at full size in its own frame (x toward the lift,
@@ -1882,22 +1867,9 @@ function drawShards(p: p5, c: Ctx, T: number): void {
   if (since < 0) return
   const { k, ink, weight } = c
   const X = (v: number) => v * k
-  const ctx = p.drawingContext as CanvasRenderingContext2D
   standOnRim(p, k, AX, A_HOUSE, () => {
-    // The pane goes in a short flash of light.
-    if (since < 0.16) {
-      const a = 1 - since / 0.16
-      const r = X(0.32 + since * 1.6)
-      ctx.save()
-      const g = ctx.createRadialGradient(X(WIN.x), X(WIN.y), 0, X(WIN.x), X(WIN.y), r)
-      g.addColorStop(0, `rgba(255, 248, 226, ${0.85 * a})`)
-      g.addColorStop(1, 'rgba(255, 248, 226, 0)')
-      ctx.fillStyle = g
-      ctx.fillRect(X(WIN.x) - r, X(WIN.y) - r, 2 * r, 2 * r)
-      ctx.restore()
-    }
-    // The slivers: thin, glassy, turning so they catch the light as they go; each drops to the boards (or the sill
-    // outside), bounces once, and lies there, a glint.
+    // The pane goes in a shower of slivers, no flash: thin, glassy, turning so they catch the light as they go; each
+    // drops to the boards (or the sill outside), bounces once, and lies there, a glint.
     const [dx, dy] = V_WINDOW
     const base = Math.atan2(dy, dx)
     for (const sl of SLIVERS) {

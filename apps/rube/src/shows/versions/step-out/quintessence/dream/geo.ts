@@ -49,14 +49,8 @@ export const DRAIN = at(8, 1)
 export const LEAP_BACK = at(8, 2)
 export const LAND_BACK = at(8, 4)
 
-/** The fire's flares: a window blowing out, the roof going up. [show time, which source]. */
-export const FLARES: [number, number][] = [
-  [BURST, 0],
-  [at(4, 1), 1],
-  [at(5, 1), 2],
-  [at(7, 1), 1],
-  [at(7, 3), 0],
-]
+/** The fire's flares: the window blowing out, then the fire in the room flaring up again on four beats. */
+export const FLARES: number[] = [BURST, at(4, 1), at(5, 1), at(7, 1), at(7, 3)]
 
 /** How far the colour has drained, 0 to 1: from the last bar's downbeat to just before the cut. */
 export const drained = (t: number): number => ease((t - DRAIN) / 1.45)
@@ -254,7 +248,7 @@ export const DREAM_STRIKES: number[] = [
   CAR_IN,
   GATE,
   BRAKE,
-  ...FLARES.slice(1).map(([t]) => t),
+  ...FLARES.slice(1),
   CAR_DOWN,
   GATE_UP,
   DOOR,

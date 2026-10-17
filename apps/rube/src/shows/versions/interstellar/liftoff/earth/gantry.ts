@@ -182,9 +182,10 @@ export const gantry = part<GantryState>(
     { t: beat(122.2), cells: 7.6, hold: [0.2, -2.2], w: 0.95 },
     // The two-shot of the countdown: the two of them in the window at the top of the frame, and at the foot of the
     // tower, at the bottom, Murph, kept back by TARS, looking up. Held while the lamps go out, to the arm swinging back.
-    // (Under Zoom, 1.5 times closer, it keeps the window: the two of them are the shot's lead.)
+    // (Under Zoom, 1.5 times closer, it keeps the window: the two of them are the shot's lead.) Not held dead: it
+    // breathes out a little and rises while the lamps go out, the storm looming over the tower, before the push in.
     { t: SEATED, cells: 9.8, hold: [RX - 1.5, -4.6] },
-    { t: beat(130.5), cells: 9.8, hold: [RX - 1.4, -4.6] },
+    { t: beat(130.5), cells: 10.3, hold: [RX - 1.35, -4.8] },
     // The countdown: a slow push in on the two in the window as the lamps go out, and the ignition throws it wide again.
     // Close enough, by the last lamp, that the two of them read as two, side by side at the glass. The push goes on to
     // the pedal itself and turns there: the camera is thrown by the engines, it does not see them coming.
@@ -223,27 +224,19 @@ function drawGantry(p: p5, s: GantryState, c: Ctx): void {
   for (let i = 0; i < 10; i++) {
     const y = lampY(i)
     const on = t >= LAMPS[i] && t < DARK[9 - i]
-    const flash = on ? knock(t - LAMPS[i], 0.2) : 0
     const off = t >= DARK[9 - i] ? knock(t - DARK[9 - i], 0.25) : 0
     // A bulkhead lamp on a bracket: a squared housing with its guard bars, never a disc that could be taken for a ball.
-    // Lit, it is near white; dark, its glass is dark, so that against the dust-pale sky each one going out on its beat
-    // is seen to go, not only its glow.
-    solid(p, ink, weight * 0.8, on ? LAMP_LIT : LAMP_DARK)
+    // Lit, it is near white; dark, its glass is dark, cooling through amber as it
+    // goes out, so that against the storm light each one going out on its beat is seen to go. No glow round it: the
+    // glass itself is the light.
+    const glass = on ? LAMP_LIT : mixHex(LAMP_DARK, '#D9873C', 0.8 * off)
+    solid(p, ink, weight * 0.8, glass)
     p.rect(X(LEG0 - 0.22), X(y), X(0.15), X(0.11), X(0.025))
     outline(p, ink, weight * 0.5)
     p.line(X(LEG0 - 0.22), X(y - 0.055), X(LEG0 - 0.22), X(y + 0.055))
     p.line(X(LEG0 - 0.295), X(y), X(LEG0 - 0.145), X(y))
     outline(p, ink, weight * 0.8)
     p.line(X(LEG0 - 0.145), X(y), X(LEG0 - 0.04), X(y))
-    if (on || off > 0.01) {
-      const ctx = p.drawingContext as CanvasRenderingContext2D
-      const a = on ? 0.6 + 0.35 * flash : 0.5 * off
-      const g = ctx.createRadialGradient(X(LEG0 - 0.22), X(y), 0, X(LEG0 - 0.22), X(y), X(0.55))
-      g.addColorStop(0, `rgba(255, 196, 92, ${a})`)
-      g.addColorStop(1, 'rgba(255, 196, 92, 0)')
-      ctx.fillStyle = g
-      ctx.fillRect(X(LEG0 - 0.77), X(y - 0.55), X(1.1), X(1.1))
-    }
   }
 
   // The cable, and the cage on it: a floor and a roof, bars behind (the front bars are drawn over the balls).

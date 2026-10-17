@@ -151,10 +151,11 @@ export const lens = scenery<{ iris: IrisAt } | null>({
       ctx.fillStyle = paint('#3A5A9A', 0.28 * m)
       fill()
       if (iris && iris.f > 0.05) {
-        // The warm light of the dream gathering in the circle as it closes: a lamp's warmth, laid on by screen.
-        ctx.globalCompositeOperation = 'screen'
+        // The warm colour of the dream gathering in the circle as it closes: a colour laid into the picture (soft light),
+        // not light added to it.
+        ctx.globalCompositeOperation = 'soft-light'
         const warm = ctx.createRadialGradient(iris.x * k, iris.y * k, 0, iris.x * k, iris.y * k, iris.r * k)
-        const a = 0.42 * iris.f * iris.f
+        const a = 0.7 * iris.f * iris.f
         warm.addColorStop(0, rgba('#F2A65A', a))
         warm.addColorStop(0.65, rgba('#C8506A', 0.7 * a))
         warm.addColorStop(1, rgba('#C8506A', 0))

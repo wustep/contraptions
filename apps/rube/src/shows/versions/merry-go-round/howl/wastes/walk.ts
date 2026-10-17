@@ -231,12 +231,6 @@ function drawLantern(p: p5, k: number, weight: number, ink: string, T: number): 
     ctx.fillStyle = g
     ctx.fillRect(X(-1.05), X(-1.05), X(2.1), X(2.1))
     ctx.restore()
-    // A faint warm wash round the lantern itself and the hood it hangs from, gone before it reaches her.
-    const h = ctx.createRadialGradient(X(lx), X(ly + 0.1), 0, X(lx), X(ly + 0.1), X(1.1))
-    h.addColorStop(0, `rgba(255, 206, 140, ${0.16 * lit})`)
-    h.addColorStop(1, 'rgba(255, 190, 120, 0)')
-    ctx.fillStyle = h
-    ctx.fillRect(X(lx - 1.1), X(ly - 1.0), X(2.2), X(2.2))
   }
   const ajar = ajarAt(T)
   if (ajar > 0.01) {
@@ -285,13 +279,4 @@ function drawLantern(p: p5, k: number, weight: number, ink: string, T: number): 
   p.triangle(X(-0.11), X(0.04), X(0.11), X(0.04), 0, X(-0.06))
   p.rect(0, X(0.26), X(0.17), X(0.04))
   p.pop()
-  if (lit > 0.01) {
-    const cx = lx - 0.14 * Math.sin(angle)
-    const cy = ly + 0.14 * Math.cos(angle)
-    const g = ctx.createRadialGradient(X(cx), X(cy), 0, X(cx), X(cy), X(0.45))
-    g.addColorStop(0, `rgba(255, 227, 163, ${0.4 * lit})`)
-    g.addColorStop(1, 'rgba(255, 227, 163, 0)')
-    ctx.fillStyle = g
-    ctx.fillRect(X(cx - 0.45), X(cy - 0.45), X(0.9), X(0.9))
-  }
 }

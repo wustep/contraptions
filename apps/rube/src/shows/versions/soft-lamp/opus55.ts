@@ -1,3 +1,10 @@
+// Soft Lamp's moving take: hidden for now (Stephen, Oct 15), so the work is its still take alone.
+// The picker, Theater and the build list every `versions/<work>/<take>.show.ts`, so this file was renamed from
+// `opus55.show.ts` to take it off the list; its code (`performance` in `lamp/index.ts`) and card are untouched, and
+// `check:shows` still runs its checks on that code. To bring it back, rename it to `opus55.show.ts`, give the still
+// take back its label `Opus 5.5 (Still)` (two takes of a work may not share one), restore the lines commented out
+// beside the still-only ones in `checks/shows.ts` and `checks/soft-lamp.ts`, and drop the still take's run of
+// `checkSoftLamp` on this take's code in `checks/shows.ts`.
 import { defineShow } from '../../registry'
 
 /**

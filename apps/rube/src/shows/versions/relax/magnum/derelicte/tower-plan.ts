@@ -423,6 +423,13 @@ function simulateLead(): Float32Array {
   }
   return out
 }
+/**
+ * Simulate the pulled lead now, if it has not been: a few tens of milliseconds, which the show spends while it loads
+ * rather than on the first frame after the plug, the one frame that must not stall.
+ */
+export function warmLead(): void {
+  if (!LEAD) LEAD = simulateLead()
+}
 /** The pulled lead's points at show time `t` (on the world clock), rig first. */
 export function leadOut(t: number): Pt[] {
   if (!LEAD) LEAD = simulateLead()

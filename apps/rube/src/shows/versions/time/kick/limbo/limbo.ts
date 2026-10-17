@@ -8,7 +8,6 @@ import { G } from '../physics'
 import { DOWN, FISCHER_DOWN, FISCHER_UP, ORIGIN, UP, exitFor, local } from '../stack'
 import { FISCHER, KID_DARK, KID_ID, KID_SCALE, LIMBO, SLEEP } from '../worlds'
 import {
-  A_KICK_AT,
   BOTTOM,
   BREAK_X,
   CABIN,
@@ -16,7 +15,6 @@ import {
   EDGE_X,
   FALL_G,
   FIRST_AT,
-  F_KICK_AT,
   GARDEN_VIEW,
   HIS,
   KICK_AT,
@@ -187,18 +185,11 @@ function drawPlunge(pen: Pen, t: number): void {
   }
 }
 
-/** The kicks: where the fall turns into the throw, a soft flare in the air; and where they leave limbo's sky, the tear. */
+/**
+ * The kicks: Fischer's throw off the roof marked as it is in Paris, by the streak behind him (a flash where the fall
+ * turned into the throw was lost on the pale sky); and where they leave limbo's sky, the tear.
+ */
 function drawKicks(pen: Pen, t: number): void {
-  const flare = (at: Pt, when: number) => {
-    const u = t - when
-    if (u < 0 || u > 1.2) return
-    // A shock in the air, wide and flat, gone at once: not a glow.
-    soft(pen, at[0], at[1] + 0.1, 1.2 + 1.8 * sm(u / 0.4), 0.18 + 0.12 * sm(u / 0.4), LIMBO.foam, 0.4 * Math.exp(-u / 0.2))
-  }
-  flare(KICK_AT, Q.kick)
-  flare(A_KICK_AT, Q.kick)
-  flare(F_KICK_AT, Q.fischerKick)
-  // The flare is lost on the pale sky: his throw is marked as it is in Paris, by the streak behind him.
   streak(pen.p, pen.k, fischerAt, Q.fischerKick, t, FISCHER)
   // The tear in the top of the sky, as they go up out of it into the dark.
   const through = (x: number, when: number) => tear(pen.p, pen.k, [x, TOP_OF_SKY + 0.6], t - when, 1.2, LIMBO.foam)

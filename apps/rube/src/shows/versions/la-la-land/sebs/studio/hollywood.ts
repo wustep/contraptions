@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { FLOOR, R, laneAt, mixHex, type Lane, type Pt, type Seg } from '../../../../../parts'
-import { beam, box, carried, glow, hash, knock, part, rgba, ring, smooth, type Ctx, type Way } from '../kit'
+import { box, carried, glow, hash, part, rgba, ring, smooth, type Ctx, type Way } from '../kit'
 import { dream, snap } from '../music'
 import { G, hop } from '../physics'
 import { MIA, STUDIO_MAT as M } from '../worlds'
@@ -15,17 +15,16 @@ import { BURST, EXIT, MIA_AT_BURST, SIGN, clothDrop, flood as studioFlood, monot
  * in the floor by the stage door throws him out into the colour; a beat later
  * it throws her. They leapfrog down a walk of fame, a star lighting under each
  * landing, while on the painted mountain the sign's nine blocks light one a
- * beat, and two searchlights come on behind the hill on the loudest hit of the
- * number. A kick-line of hinged legs in the ensemble's colours juggles him
+ * beat. A kick-line of hinged legs in the ensemble's colours juggles him
  * along its toes on the band's pattern (1, 2, 3, and-4) while she rolls along
  * in front and stops to watch. At the foot of the hill a round yellow bush on
  * its spring throws them up onto the winding road; at every hairpin another
  * bush catches them on its shoulder and throws them back and up to the next
  * stretch, a lamp lighting on each stretch as he passes. On the crest the
- * flourish: six hits, and on each one more searchlight swings into a fan behind
- * them, the kick-line below kicking with every one; on the last the sign blazes
- * and they hop together. Then the lamps go out one by one, up the hill, into
- * the dark.
+ * flourish: six hits, the sign turning to her yellow a block a hit and the
+ * kick-line below kicking with every one; on the last they hop together. A
+ * flock goes over the mountain, and the evening's shade climbs it as the number
+ * ends. Then the lamps go out one by one, up the hill, into the dark.
  *
  * Frame: its x is the studio's minus `EXIT[0]`. The ball comes in on the trap
  * at (-0.5, 0) and ends on the crest.
@@ -54,8 +53,6 @@ for (let i = 0; i < 4; i++) {
 }
 /** The sign lights a block a beat from the cloth's landing. */
 const SIGN_AT = SIGN.map((_, i) => beat(166 + i))
-/** The searchlights: two come on with the number's loudest hit and sweep; the flourish swings all six into a fan. */
-const SWEEP_ON = beat(169)
 
 /** The kick-line: eight hinged legs from a bar, kicking in unison on the band's pattern. */
 const HIP = -1.72
@@ -240,17 +237,16 @@ const X = (k: number, v: number) => v * k
 const paintAt = (x: number, t: number) => studioFlood(x + EXIT[0], t)
 const paint = (x: number, t: number, color: string) => mixHex(M.flat, color, paintAt(x, t))
 
-/** How lit a lamp is: off until `on` (a flash, settling), off again at `off`. */
+/** How lit a lamp is: off until `on`, when it comes on (a lamp, not a flash), off again at `off`. */
 function lampLevel(t: number, on: number, off: number): number {
   if (t < on || t >= off) return 0
-  return 0.62 + 0.38 * knock(t - on, 0.3)
+  return 0.8 * smooth(t - on, 0, 0.1)
 }
 
 /** The sign's lights, on the landed cloth. */
 function drawSign(p: p5, c: Ctx, t: number): void {
   const { k } = c
   const dy = -clothDrop(t)
-  const blaze = knock(t - BUTTON, 0.5)
   // Whose dream this is: over the flourish's six hits the sign goes from white to her yellow, a block a hit from the
   // middle outward, and blazes in it on the last: her name in lights, without a letter.
   const hers = (i: number): number => {
@@ -260,9 +256,9 @@ function drawSign(p: p5, c: Ctx, t: number): void {
   SIGN.forEach((b, i) => {
     const on = lampLevel(t, SIGN_AT[i], OUT[3])
     if (on <= 0) return
-    const lift = on + 0.5 * blaze
+    const lift = on / 0.8
     const y = hers(i)
-    glow(p, k, b.x, b.y - b.h / 2 + dy, 0.95 + 0.4 * blaze + 0.3 * y, mixHex(M.lamp, MIA, 0.8 * y), (0.42 + 0.2 * y) * lift, 1, 1.15)
+    // The block is the light: nothing round it.
     p.push()
     p.translate(X(k, b.x), X(k, b.y + dy))
     p.rotate(b.tilt)
@@ -273,39 +269,43 @@ function drawSign(p: p5, c: Ctx, t: number): void {
   })
 }
 
-/** The searchlights: where each beam points (radians from straight up) and how bright, at t. */
-const FAN = [-0.66, -0.4, -0.14, 0.14, 0.4, 0.66]
-/** Which hit of the flourish brings each beam to its place: the two sweeping first, then in from the outside. */
-const LOCK = [0, 2, 4, 5, 3, 1]
-const SL_X = [14.55, 14.95, 15.3, 15.6, 15.95, 16.3]
-const SL_Y = YC + FLOOR + 0.28
-function searchlight(i: number, t: number): { a: number; on: number } {
-  const lockAt = FLOURISH[LOCK[i]]
-  const sweeping = i === 0 || i === 5
-  const off = t >= OUT[3] ? 0 : 1
-  if (sweeping && t >= SWEEP_ON) {
-    const side = i === 0 ? -1 : 1
-    const s = t - SWEEP_ON
-    // Up out of the hill, then a slow sway across the painted sky, the two crossing.
-    const swing = side * (0.1 + 0.42 * (1 - Math.cos(s * 1.05 + (side > 0 ? 0.9 : 0))) * smooth(s, 0, 1.4))
-    const a = t < lockAt ? swing : FAN[i] + (swing - FAN[i]) * Math.exp(-(t - lockAt) / 0.06)
-    return { a, on: off * (0.75 + 0.25 * knock(s, 0.25)) * smooth(s, -0.02, 0.06) }
-  }
-  if (t < lockAt) return { a: FAN[i], on: 0 }
-  return { a: FAN[i], on: off * (0.75 + 0.5 * knock(t - lockAt, 0.22)) }
-}
-
-function drawBeams(p: p5, c: Ctx, t: number): void {
+/**
+ * A flock going over at dusk, in front of the mountain, from the climb to the end of the number: small dark birds in
+ * a loose skein, beating their wings each to its own time, drifting home across the painted face. Hollywood frame.
+ */
+const FLOCK = Array.from({ length: 9 }, (_, i) => ({
+  dx: 0.42 * i + 0.25 * hash(i, 71),
+  dy: 0.22 * Math.abs(i - 3) - 0.1 * hash(i, 72) + (i > 3 ? 0.05 : 0),
+  ph: hash(i, 73) * Math.PI * 2,
+  hz: 2.4 + 0.8 * hash(i, 74),
+  s: 0.09 + 0.03 * hash(i, 75),
+}))
+const FLOCK_FROM = 156.5
+function drawFlock(p: p5, c: Ctx, t: number): void {
+  if (t < FLOCK_FROM || t > MIA_TO) return
   const { k } = c
-  const blaze = knock(t - BUTTON, 0.6)
-  for (let i = 0; i < 6; i++) {
-    const { a, on } = searchlight(i, t)
-    if (on <= 0.01) continue
-    const L = 17
-    const x1 = SL_X[i] + Math.sin(a) * L
-    const y1 = SL_Y - Math.cos(a) * L
-    beam(p, k, SL_X[i], SL_Y, x1, y1, 0.16, 2.1, M.lamp, (0.2 + 0.08 * blaze) * on)
+  const u = t - FLOCK_FROM
+  const x0 = 22.5 - 0.95 * u
+  const y0 = -8.3 + 0.35 * Math.sin(u * 0.32) - 0.03 * u
+  const ink = mixHex(M.hillDeep, M.mountain, 0.25)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.strokeStyle = ink
+  ctx.lineWidth = Math.max(1, 0.028 * k)
+  ctx.lineCap = 'round'
+  ctx.beginPath()
+  for (const b of FLOCK) {
+    const x = x0 + b.dx + 0.06 * Math.sin(u * 0.7 + b.ph)
+    const y = y0 + b.dy + 0.05 * Math.sin(u * 0.9 + b.ph * 1.3)
+    // The wings: two shallow strokes from the body, up and down with the beat.
+    const flap = Math.sin(t * b.hz * Math.PI * 2 + b.ph)
+    const tip = b.s * (0.15 + 0.55 * flap)
+    ctx.moveTo((x - b.s) * k, (y - tip) * k)
+    ctx.quadraticCurveTo((x - b.s * 0.45) * k, (y - tip * 0.2 - b.s * 0.25) * k, x * k, y * k)
+    ctx.quadraticCurveTo((x + b.s * 0.45) * k, (y - tip * 0.2 - b.s * 0.25) * k, (x + b.s) * k, (y - tip) * k)
   }
+  ctx.stroke()
+  ctx.restore()
 }
 
 /** The hill: a painted mound, the road winding up its face in stretches and hairpins. */
@@ -416,7 +416,9 @@ function drawHill(p: p5, c: Ctx, t: number, s: HollyState): void {
     const lit = new Path2D()
     const body = new Path2D()
     for (const { lobes } of SCRUB) {
-      for (const [lx, ly, r] of lobes) {
+      for (const [x0, ly, r] of lobes) {
+        // Stirring: a breeze runs along the hedge, the clumps' tops leaning with it.
+        const lx = x0 + 0.03 * Math.sin(t * 1.4 - x0 * 1.1) * (0.4 + r * 4)
         lit.moveTo(X(k, lx + r * 1.17), X(k, ly - r * 0.26))
         lit.arc(X(k, lx + r * 0.22), X(k, ly - r * 0.26), X(k, 0.95 * r), 0, Math.PI * 2)
         body.moveTo(X(k, lx + r), X(k, ly))
@@ -522,10 +524,8 @@ function drawLampHead(p: p5, c: Ctx, t: number, x: number, y: number, on: number
   const { k, ink, weight } = c
   const lit = lampLevel(t, on, off)
   const top = y - LAMP_H
-  if (lit > 0) {
-    glow(p, k, x, top - 0.12, 0.85, M.lamp, 0.55 * lit)
-    glow(p, k, x, y + 0.05, 0.9, M.lamp, 0.3 * lit, 1.3, 0.32)
-  }
+  // Its light on the road under it.
+  if (lit > 0) glow(p, k, x, y + 0.05, 0.9, M.lamp, 0.3 * lit, 1.3, 0.32)
   const head = lit > 0 ? M.lamp : mixHex(M.lamp, M.purple, 0.55)
   solid(p, ink, weight * 0.6, paint(x, t, head))
   p.beginShape()
@@ -660,8 +660,8 @@ function drawStars(p: p5, c: Ctx, t: number): void {
     const f = paintAt(s.x, t)
     if (f <= 0) continue
     const since = t - s.at
-    const lit = since < 0 ? 0 : (0.5 + 0.5 * knock(since, 0.28)) * fade
-    if (lit > 0) glow(p, k, s.x, FLOOR + 0.02, 0.55 + 0.25 * knock(since, 0.2), M.star, 0.55 * lit, 1, 0.45)
+    const lit = since < 0 ? 0 : 0.6 * smooth(since, 0, 0.08) * fade
+    if (lit > 0) glow(p, k, s.x, FLOOR + 0.02, 0.4, M.star, 0.22 * lit, 1, 0.35)
     p.push()
     p.translate(X(k, s.x), X(k, FLOOR + 0.03))
     p.scale(1, 0.34)
@@ -903,7 +903,7 @@ function drawHollywood(p: p5, s: HollyState, c: Ctx): void {
   p.rectMode(p.CORNER)
   p.ellipseMode(p.CENTER)
   drawSign(p, c, t)
-  drawBeams(p, c, t)
+  drawFlock(p, c, t)
   drawHill(p, c, t, s)
   for (let i = 0; i < BUSH.length; i++) drawBush(p, c, t, i)
   s.lamps.forEach(([x, y], i) => drawLampHead(p, c, t, x, y, i < 3 ? LAMP_AT[i] : CREST_LAMP_AT, OUT[i]))
@@ -948,8 +948,8 @@ export const hollywood = part<HollyState>(
     { t: beat(185.5), cells: 6.4, hold: [14.9, -2.6], w: 0.45 },
     { t: beat(197), cells: 5.9, hold: [15.0, -3.5], w: 0.4 },
     { t: beat(207), cells: 6.8, hold: [14.6, -6.2], w: 0.6 },
-    // The top of the number: the two of them on the crest under the whole sign, the searchlights fanning out of it on
-    // the six hits; then back to the whole hill as its lamps go out one by one.
+    // The top of the number: the two of them on the crest under the whole sign as it turns to her yellow on the six
+    // hits; then back to the whole hill as its lamps go out one by one.
     { t: FLOURISH[0] - 0.3, cells: 6.9, hold: [13.7, -7.55], w: 1 },
     // Pushing in on them across the six accelerating hits, so the frame builds with the music to the last.
     { t: 167.95, cells: 5.9, hold: [13.75, -7.7], w: 1 },

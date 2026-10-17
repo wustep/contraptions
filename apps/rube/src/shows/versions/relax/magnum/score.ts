@@ -2,9 +2,10 @@ import type { BallState, Pt } from '../../../../parts'
 import type { Framing } from '../../../registry'
 import { director, follower, type Shot } from './camera'
 import { credits } from './credits'
-import { frame, lay, scenery, standing, type Chain, type Link } from './kit'
+import { dissolves } from './dissolve'
+import { lay, standing, type Chain, type Link } from './kit'
 import { CALL1, DURATION, SEAM, SPLASH, STOP, WASH } from './music'
-import { FIRST, SEAMS } from './seams'
+import { FIRST } from './seams'
 import { MagnumShow, type Leg, type Riders, type Spans, type WorldSet } from './show'
 import { DEREK, type WorldKey } from './worlds'
 import { awardsSet, AWARDS_CELLS, AWARDS_AT, awards } from './awards/awards'
@@ -21,11 +22,11 @@ import { centerSet, CENTER_CELLS, CENTER_AT, center } from './center/center'
  * (`music.ts`, `seams.ts`).
  *
  *   0        the awards: Male Model of the Year, and Derek is sure it is his; the drums come in and it is Hansel's
- *   27.394   flash: Mugatu's day spa, on the hook: pampered down a line of treatments, then taught to strike on a song
- *   83.552   flash: the underground walk-off, Derek and Hansel under the lasers; friends after
- *   116.820  cut: Derelicte, on the count-in: the needle drops, and Derek walks; Hansel climbs to the booth; the plug
+ *   27.394   dissolve: Mugatu's day spa, on the hook: pampered down a line of treatments, then taught to strike on a song
+ *   83.552   dissolve: the underground walk-off, Derek and Hansel under the lasers; friends after
+ *   116.820  dissolve: Derelicte, on the count-in: the needle drops, and Derek walks; Hansel climbs to the booth; the plug
  *            (182.817); the star; Magnum on the splash out of the silence (186.474)
- *   202.095  flash: the Derek Zoolander Center for Kids Who Can't Read Good, a center for ants, made three times bigger
+ *   202.095  dissolve: the Derek Zoolander Center for Kids Who Can't Read Good, a center for ants, made three times bigger
  *            three times; the credits
  */
 
@@ -45,61 +46,26 @@ const PLAN = (): LegPlan[] => [
   { key: 'center', world: 'center', at: CENTER_AT, links: [{ part: center, end: DURATION }] },
 ]
 
-/**
- * The flash cuts (the director's): three of the cuts happen inside a press camera's flash, the fashion world's own
- * punctuation. White up in a tenth of a second to the cut, and down over the next two thirds; the place changes where
- * nothing can be seen, and his place in the frame holds.
- */
-const FLASHES: { at: number; up: number; down: number; color: string }[] = Object.values(SEAMS)
-  .filter((s) => s.flash)
-  .map((s) => ({ at: s.t, up: 0.1, down: 0.66, color: '#FFFBF2' }))
-export const flashCutAt = (t: number): number => {
-  for (const f of FLASHES) {
-    if (t < f.at - f.up || t > f.at + f.down) continue
-    if (t < f.at) {
-      const u = (t - (f.at - f.up)) / f.up
-      return u * u
-    }
-    const u = (t - f.at) / f.down
-    return Math.pow(1 - u, 2.2)
-  }
-  return 0
-}
-const flashCut = scenery<null>({
-  name: 'flash-cut',
-  draw: () => {},
-  over: (p, _s, c) => {
-    const a = flashCutAt(c.t)
-    if (a <= 0.001) return
-    const f = frame(p, c.k)
-    const col = p.color(FLASHES[0].color)
-    col.setAlpha(255 * a)
-    p.push()
-    p.noStroke()
-    p.rectMode(p.CORNER)
-    p.fill(col)
-    p.rect((f.x0 - 1) * c.k, (f.y0 - 1) * c.k, (f.x1 - f.x0 + 2) * c.k, (f.y1 - f.y0 + 2) * c.k)
-    p.pop()
-  },
-})
+/** The dissolves (`dissolve.ts`): one piece over every place, handed the show and its camera once they are made. */
+const dissolve = dissolves()
 
-/** A big, sparse claim of cells round a place, so its after-drawings (the flash, the credits) are drawn wherever the camera is. */
+/** A big, sparse claim of cells round a place, so its after-drawings (the dissolve, the credits) are drawn wherever the camera is. */
 const claim = (x0: number, y0: number, x1: number, y1: number): Pt[] => {
   const out: Pt[] = []
   for (let x = x0; x <= x1; x += 3) for (let y = y0; y <= y1; y += 3) out.push([x, y])
   return out
 }
 
-/** Each place's standing scenery, and what is drawn over everything (the flash cuts, the credits' shade). */
+/** Each place's standing scenery, and what is drawn over everything (the dissolves, the credits' shade). */
 const SETS = (): Partial<Record<WorldKey, WorldSet>> => ({
-  awards: { scenery: [standing(awardsSet, 0, 0, AWARDS_CELLS, null, DURATION)], after: [standing(flashCut, 0, 0, claim(-60, -40, 60, 30), null, DURATION)] },
-  spa: { scenery: [standing(spaSet, 0, 0, SPA_CELLS, null, DURATION)], after: [standing(flashCut, 0, 0, claim(-60, -40, 60, 30), null, DURATION)] },
-  club: { scenery: [standing(clubSet, 0, 0, CLUB_CELLS, null, DURATION)], after: [standing(flashCut, 0, 0, claim(-60, -40, 60, 30), null, DURATION)] },
+  awards: { scenery: [standing(awardsSet, 0, 0, AWARDS_CELLS, null, DURATION)], after: [standing(dissolve.piece, 0, 0, claim(-60, -40, 60, 30), null, DURATION)] },
+  spa: { scenery: [standing(spaSet, 0, 0, SPA_CELLS, null, DURATION)], after: [standing(dissolve.piece, 0, 0, claim(-60, -40, 60, 30), null, DURATION)] },
+  club: { scenery: [standing(clubSet, 0, 0, CLUB_CELLS, null, DURATION)], after: [standing(dissolve.piece, 0, 0, claim(-60, -40, 60, 30), null, DURATION)] },
   derelicte: {
     scenery: [standing(derelicteSet, 0, 0, DERELICTE_CELLS, null, DURATION), standing(towerSet, DERELICTE_AT[0], DERELICTE_AT[1], TOWER_CELLS.map(([x, y]) => [x + DERELICTE_AT[0], y + DERELICTE_AT[1]] as Pt), null, DURATION)],
-    after: [standing(flashCut, 0, 0, claim(-60, -40, 60, 30), null, DURATION)],
+    after: [standing(dissolve.piece, 0, 0, claim(-60, -40, 60, 30), null, DURATION)],
   },
-  center: { scenery: [standing(centerSet, 0, 0, CENTER_CELLS, null, DURATION)], after: [standing(flashCut, 0, 0, claim(-60, -40, 60, 30), null, DURATION), standing(credits, 0, 0, claim(-60, -40, 60, 30), null, DURATION)] },
+  center: { scenery: [standing(centerSet, 0, 0, CENTER_CELLS, null, DURATION)], after: [standing(dissolve.piece, 0, 0, claim(-60, -40, 60, 30), null, DURATION), standing(credits, 0, 0, claim(-60, -40, 60, 30), null, DURATION)] },
 })
 
 /**
@@ -212,8 +178,6 @@ export function compose(): { show: MagnumShow; camera: (t: number) => Framing } 
     const f = cams[owner](t)
     return { ...f, cells: f.cells * (1 - punch(t)) }
   }
+  dissolve.bind(show, camera)
   return { show, camera }
 }
-
-/** For the check: the cuts that happen inside a flash. */
-export const FLASHED = FLASHES.map((f) => f.at)

@@ -32,8 +32,8 @@ The folder and file names are addresses, so they are chosen once:
   `rule-the-world` **Rally**. The write-up says which is which.
 - **Take**: `<take>.show.ts`, which is also `/shows/<work>/<take>/` and the
   card `public/shows/<work>/<take>.png`. Name it for who made it (`opus55`,
-  `fable51`, `grok47`), or with a letter (`take-a`). La La Land's two keep the
-  model's point as a hyphen (`opus5-5`, `fable5-1`). A second take by the same
+  `fable51`, `grok47`), or with a letter (`take-a`). La La Land's takes keep the
+  model's point as a hyphen (`opus5-5`, and `fable5-1`, hidden for now). A second take by the same
   hand adds its code name (`opus55-spark`). Don't repeat the work's name in it.
   Takes sort by name, and the first is the work's own page, unless the registry
   puts another first (`PREFERRED_TAKES`: Epilogue's and Cornfield Chase's Opus).
@@ -58,9 +58,9 @@ A name already shipped stays, even where it misses these (`come-recover/opus55-a
 is Everything's only take, with its code name in the id). Renaming a take moves a public link
 and its card, so the old name goes in `RENAMED_TAKES` (`../registry.ts`): the page opens the old
 address as the take and writes the new one back, and the build writes a page at the old address
-too. Three have moved: `la-la-land/opus55-sebs` → `opus5-5`, `la-la-land/fable51-epilogue` →
-`fable5-1`, `cornfield-chase/opus55-music-sync` → `opus55`. (`cornfield-chase/tech-demo` → `grok47` is
-commented out while that take is hidden.)
+too. Two have moved: `la-la-land/opus55-sebs` → `opus5-5` and `cornfield-chase/opus55-music-sync` →
+`opus55`. (`la-la-land/fable51-epilogue` → `fable5-1` and `cornfield-chase/tech-demo` → `grok47` are
+commented out while those takes are hidden.)
 A work has no such map yet, so renaming one waits for it.
 
 ## The file
@@ -294,7 +294,8 @@ against it (`apps/rube/checks/sebs.ts`). The recordings are copyrighted and
 demo only: `apps/rube/src/shows/versions/la-la-land/SEBS_ATTRIBUTION.txt`. The whole story is in
 `apps/rube/src/shows/versions/la-la-land/SEBS.md`.
 
-`la-la-land/fable5-1` (in the picker, **Fable 5.1** under
+`la-la-land/fable5-1` (hidden for now, Oct 15: its file is `fable5-1.ts`, not `fable5-1.show.ts`,
+so Epilogue is its Opus take alone; it stood in the picker as **Fable 5.1** under
 **Epilogue**) is Justin Hurwitz's *Epilogue* from La La Land, demo
 only (`apps/rube/src/shows/versions/la-la-land/EPILOGUE_ATTRIBUTION.txt`), played whole from its
 first sample, with every piece new. The show lives in `la-la-land/epilogue/`,
@@ -328,7 +329,8 @@ and the flowers it opens under the moon stay lit and open until dawn, so the sea
 its night. The code is `gymnopedie/orbit/`. Licences:
 `apps/rube/src/shows/versions/gymnopedie/ATTRIBUTION.txt`; the report is `apps/rube/src/shows/versions/gymnopedie/GYMNOPEDIE.md`.
 
-`soft-lamp/opus55` (in the picker, **Soft Lamp**, one take, **Opus 5.5**, on the **Ambient** shelf) is half an hour of
+`soft-lamp/opus55-still` (in the picker, **Soft Lamp**, one take, **Opus 5.5**, on the **Ambient** shelf; the moving
+camera, `soft-lamp/opus55`, is hidden for now, Oct 15: its file is `opus55.ts`, not `opus55.show.ts`) is half an hour of
 Lofi Girl's *Best of lofi hip hop 2021*, its first twelve tracks, played from the label's upload only (YouTube
 n61ULEU7CO0, from the video's zero to 30:12.4; `apps/rube/src/shows/versions/soft-lamp/ATTRIBUTION.txt`), round a small
 machine on a study desk by a window, from dusk into a rainy night, in the manner of a lofi stream. `scripts/shows/soft-lamp-onsets.py` measures the mix once from a
@@ -409,7 +411,7 @@ the spark and its flame. The accelerando from 104 to 198 bpm has no steady comb,
 `apps/rube/src/shows/versions/mountain-king/SPARK.md`.
 
 
-`heptapod-b/opus55` (in the picker, **Logogram**, one take, **Opus 5.5**) is Jóhann Jóhannsson's *Heptapod B* from
+`heptapod-b/opus55` (hidden from the picker for now, Oct 14: its file is `opus55.ts`, not `opus55.show.ts`; was **Logogram**, one take, **Opus 5.5**) is Jóhann Jóhannsson's *Heptapod B* from
 *Arrival*, whole, demo only (`apps/rube/src/shows/versions/heptapod-b/ATTRIBUTION.txt`), and then the end credits in
 the quiet after it. Every piece is new. It follows the film's spine as a circle: it opens in the lake house by the long
 window, Louise (the orange ball) and her daughter Hannah (the little peach one), which the film lets us take for the
@@ -462,14 +464,17 @@ Daylight*, the *Blue Notebooks* recording that *Arrival* opens and closes on, wh
 (`apps/rube/src/shows/versions/nature-of-daylight/ATTRIBUTION.txt`), and then the end credits in the quiet after it.
 Every piece is new. It tells the whole film in order, and ends on its own first frame: the lake house at dawn, Louise
 (the gold ball) and baby Hannah (the rose ball, who grows); the swing by the lake; the bed by the window, where Hannah
-goes on the lament's swell; the television at night, whose picture of a shell becomes the real one over Montana on the
-double bass (a match cut on the shell); the camp, the chamber and the glass, the heptapods, contact and the language;
-the world's twelve links falling like dominoes when the bass drops out; the bomb; the fog beyond the glass, where she is
-shown Hannah grown; the gala years on, where General Shang (the red ball) tells her what to say; the call, on the
-loudest bars, when the dominoes stand again in the order they fell, backwards; the shell going up the way it came
-down; daylight; Ian (the blue ball); and home. The code is `nature-of-daylight/palindrome/`, on the same kit as Logogram
-(parts built to timed slots, an authored camera, match cuts between six places, a white-out, the end credits from
-`Performance.titles`). The playing is free (a beat is 0.87 to 1.1 s), so `scripts/shows/nature-of-daylight-onsets.py`
+goes on the lament's swell; her lecture hall the day they came, the phones lighting, the news on the screen, whose
+picture of a shell becomes the real one over Montana on the double bass (a match cut on the shell); the helicopter
+coming for her at the lake house that night; the camp; the
+shaft up into the shell, where gravity turns and the camera with it; the chamber and the glass, the heptapods, contact
+and the language, with a flash of Hannah drawing at the window and the world's twelve sites sharing a word round their
+ring; that ring falling like dominoes when the bass drops out; the bomb; the fog beyond the glass, where she is
+shown Hannah grown as Abbott dies; the same hall years on, where she teaches their writing; the gala, where General Shang (the red ball) tells her what to say; the
+call, on the loudest bars, Ian holding the soldiers off at the door, when the dominoes stand again in the order they
+fell, backwards, and the shells leave every screen; the shell going up the way it came down; daylight; Ian (the blue ball); and home. The code is `nature-of-daylight/palindrome/`, on the same kit as Logogram
+(parts built to timed slots, an authored camera with a roll, match and scale cuts between eight places, a white-out,
+the end credits from `Performance.titles`). The playing is free (a beat is 0.87 to 1.1 s), so `scripts/shows/nature-of-daylight-onsets.py`
 tracks the beats one by one and finds every change of chord from the harmony itself, into
 `scripts/shows/plans/nature-of-daylight-onsets.json`; `check:shows` holds every strike to it, nearly every change of
 chord to a strike, and the palindromes to their mirror (`apps/rube/checks/palindrome.ts`). The report is

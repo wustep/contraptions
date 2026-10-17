@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { mixHex, R, type Pt } from '../../../../../parts'
-import { bloom, pool, rgba } from '../cast'
+import { pool, rgba } from '../cast'
 import { box, frame, hash, scenery, type Ctx } from '../kit'
 import { level } from '../music'
 import { BAND, clock } from '../stack'
@@ -776,36 +776,85 @@ function drawFace(ctx: C2D, c: Ctx, x0: number, x1: number): void {
 /** The pistes: the groove the skis cut, a soft shade a little wider than a ball, under the path they run. */
 function drawPistes(ctx: C2D, k: number, x0: number, x1: number): void {
   ctx.save()
-  ctx.lineCap = 'round'
+  ctx.lineCap = 'butt'
   ctx.lineJoin = 'round'
-  // Each kind is one path, stroked once: where one piste runs on into the next their ends overlap, and stroked apart
-  // the overlap showed as a darker blot.
+  // Where one piste runs on into the next they are one line, stroked once (stroked apart, the overlap showed as a
+  // darker blot). Where a groove begins or ends on open snow (a landing, a lip, the top of the run, the ledge), it fades
+  // in or out over its last cell: a round cap there read as the end of a tube laid on the face.
+  const TAPER = 0.9
   for (const which of ['piste', 'branch'] as const) {
-    ctx.beginPath()
+    const chains: Pt[][] = []
     for (const { path: pth, kind } of PISTES) {
       if (kind !== which) continue
-      const pts = pth.pts
-      const xs = pts.map((q) => q[0])
-      if (Math.max(...xs) < x0 - 1 || Math.min(...xs) > x1 + 1) continue
       // The groove sits under the ball's path, on the snow: straight down from it, so that round a hairpin's turn it
       // follows the arc a ball's width lower rather than jumping from one side of the path to the other.
-      const under = (i: number): Pt => [pts[i][0], pts[i][1] + R]
-      for (let i = 0; i < pts.length; i++) {
-        const [x, y] = under(i)
-        if (i === 0) ctx.moveTo(x * k, y * k)
-        else ctx.lineTo(x * k, y * k)
-      }
+      const pts = pth.pts.map(([x, y]): Pt => [x, y + R])
+      const last = chains[chains.length - 1]
+      const end = last?.[last.length - 1]
+      if (end && Math.hypot(end[0] - pts[0][0], end[1] - pts[0][1]) < 1e-6) last.push(...pts.slice(1))
+      else chains.push(pts)
     }
-    ctx.strokeStyle = rgba(SNOW.snowDeep, which === 'piste' ? 0.34 : 0.26)
+    const body = new Path2D()
+    const tips: [Pt, Pt, Pt[]][] = []
+    for (const ch of chains) {
+      const xs = ch.map((q) => q[0])
+      if (Math.max(...xs) < x0 - 1 || Math.min(...xs) > x1 + 1) continue
+      let len = 0
+      for (let i = 1; i < ch.length; i++) len += Math.hypot(ch[i][0] - ch[i - 1][0], ch[i][1] - ch[i - 1][1])
+      const tl = Math.min(TAPER, len / 3)
+      const head = cutAt(ch, tl)
+      const tail = cutAt(ch, len - tl)
+      const mid = [head.at, ...ch.slice(head.i + 1, tail.i + 1), tail.at]
+      mid.forEach(([x, y], i) => (i ? body.lineTo(x * k, y * k) : body.moveTo(x * k, y * k)))
+      tips.push([head.at, ch[0], [ch[0], ...ch.slice(1, head.i + 1), head.at].reverse()])
+      tips.push([tail.at, ch[ch.length - 1], [tail.at, ...ch.slice(tail.i + 1)]])
+    }
+    const deep = rgba(SNOW.snowDeep, which === 'piste' ? 0.34 : 0.26)
+    ctx.strokeStyle = deep
     ctx.lineWidth = Math.max(1, 0.1 * k)
-    ctx.stroke()
+    ctx.stroke(body)
     ctx.strokeStyle = rgba(SNOW.snowShade, 0.9)
     ctx.lineWidth = Math.max(1, 0.24 * k)
     ctx.globalCompositeOperation = 'multiply'
-    ctx.stroke()
+    ctx.stroke(body)
     ctx.globalCompositeOperation = 'source-over'
+    // The fading ends: from where the body stops to the open end, thinning to nothing.
+    for (const [from, to, pts] of tips) {
+      const tip = new Path2D()
+      pts.forEach(([x, y], i) => (i ? tip.lineTo(x * k, y * k) : tip.moveTo(x * k, y * k)))
+      const fade = (col: string, a: number) => {
+        const g = ctx.createLinearGradient(from[0] * k, from[1] * k, to[0] * k, to[1] * k)
+        g.addColorStop(0, rgba(col, a))
+        g.addColorStop(1, rgba(col, 0))
+        return g
+      }
+      ctx.strokeStyle = fade(SNOW.snowDeep, which === 'piste' ? 0.34 : 0.26)
+      ctx.lineWidth = Math.max(1, 0.1 * k)
+      ctx.stroke(tip)
+      ctx.strokeStyle = fade(SNOW.snowShade, 0.9)
+      ctx.lineWidth = Math.max(1, 0.24 * k)
+      ctx.globalCompositeOperation = 'multiply'
+      ctx.stroke(tip)
+      ctx.globalCompositeOperation = 'source-over'
+    }
   }
   ctx.restore()
+}
+
+/** The point `s` cells along a polyline, and the index of the vertex at or before it. */
+function cutAt(pts: Pt[], s: number): { at: Pt; i: number } {
+  let run = 0
+  for (let i = 1; i < pts.length; i++) {
+    const [ax, ay] = pts[i - 1]
+    const [bx, by] = pts[i]
+    const d = Math.hypot(bx - ax, by - ay)
+    if (run + d >= s) {
+      const u = d > 0 ? (s - run) / d : 0
+      return { at: [ax + (bx - ax) * u, ay + (by - ay) * u], i: i - 1 }
+    }
+    run += d
+  }
+  return { at: pts[pts.length - 1], i: pts.length - 2 }
 }
 
 /** The shoulder's cornice, the kicker at the rock step's lip, the ledge's lip. */
@@ -1282,7 +1331,10 @@ function drawGroundFloor(p: p5, ctx: C2D, c: Ctx, t: number, st: number): void {
       ctx.fill()
       inked(ctx, c, 0.5)
       const on = t > T.paddles ? 0.6 + 0.4 * Math.sin((t - T.paddles) * TAU * 1.05) : 0.35
-      bloom(p, k, [px + 0.18, fl + 0.85], 0.12, SNOW.flash, 0.5 * on)
+      ctx.beginPath()
+      ctx.arc((px + 0.18) * k, (fl + 0.85) * k, Math.max(0.8, 0.035 * k), 0, TAU)
+      ctx.fillStyle = mixHex(SNOW.vault, SNOW.flash, on)
+      ctx.fill()
     }
   }
   rect(ctx, k, x0 - 0.2, FORT.foot - 0.35, x1 + 0.2, FORT.foot)
@@ -1306,7 +1358,6 @@ function drawGroundFloor(p: p5, ctx: C2D, c: Ctx, t: number, st: number): void {
     ctx.fillStyle = mixHex(SNOW.concreteDark, mixHex(SNOW.snow, SNOW.flash, 0.3), lamp)
     ctx.fill()
     pool(p, k, [lx, fl], 1.3, 0.22, SNOW.snow, 0.28 * lamp + 0.15 * Math.max(0, surge))
-    bloom(p, k, [lx, FORT.ceil + 0.15], 0.9, SNOW.snow, 0.12 * lamp)
   }
   // As the charges go, dust sifts down out of the ceiling's cracks.
   const sagging = clamp01((t - T.charges) / 0.3)
@@ -1412,7 +1463,6 @@ function drawVaultFace(p: p5, ctx: C2D, c: Ctx, t: number): void {
   if (warm > 0.003) {
     pool(p, k, [dx - 0.25, fl - 0.04], 2.1, 0.32, SNOW.pinwheel, 0.34 * warm)
     pool(p, k, [dx - 0.1, fl - 0.04], 1.0, 0.18, mixHex(SNOW.pinwheel, SNOW.flash, 0.4), 0.3 * warm)
-    bloom(p, k, [dx, dy + 0.35 * r], 1.6 * r, SNOW.pinwheel, 0.12 * warm)
   }
 }
 
@@ -1486,7 +1536,19 @@ function drawVaultInside(p: p5, ctx: C2D, c: Ctx, t: number): void {
   ctx.fillRect((dx - r) * k, (dy - r) * k, 2 * r * k, 2 * r * k)
   // The lamp's light down on the bed: the one warm light in the fortress.
   pool(p, k, [dx + 0.2, fl - 0.55], 1.1, 0.45, SNOW.pinwheel, 0.42)
-  bloom(p, k, [dx + 0.1, dy - r + 0.1], 0.9, SNOW.flash, 0.3)
+  // The lamp itself, on a short drop from the vault's crown: a dark shade, lit under its rim.
+  {
+    const lx = dx + 0.1
+    const ly = dy - r + 0.12
+    ctx.strokeStyle = SNOW.vault
+    ctx.lineWidth = Math.max(1, 0.025 * k)
+    ctx.beginPath()
+    ctx.moveTo(lx * k, (dy - r) * k)
+    ctx.lineTo(lx * k, ly * k)
+    ctx.stroke()
+    fill(ctx, [[lx - 0.07, ly], [lx + 0.07, ly], [lx + 0.14, ly + 0.11], [lx - 0.14, ly + 0.11]], k, SNOW.vault)
+    fill(ctx, [[lx - 0.13, ly + 0.1], [lx + 0.13, ly + 0.1], [lx + 0.14, ly + 0.125], [lx - 0.14, ly + 0.125]], k, mixHex(SNOW.pinwheel, SNOW.flash, 0.5))
+  }
   // The bed: legs, the mattress, the sheet over him, the pillow at the right, by the bedside and its pinwheel.
   const bx0 = dx - 0.75
   const bx1 = dx + 0.55
@@ -1680,8 +1742,8 @@ function drawCollapseDust(ctx: C2D, c: Ctx, t: number): void {
 }
 
 /**
- * The snow falling, on the snow's own clock (while he is in limbo it hangs in the air): flakes of many sizes, soft,
- * sparse, drifting; in `near` a few bigger ones out of focus, in front of everything. While the fortress stands
+ * The snow falling, on the snow's own clock (while he is in limbo it hangs in the air): flakes of many sizes, sparse,
+ * drifting; in `near` a few bigger ones close to us and falling faster, in front of everything. While the fortress stands
  * (`indoors`), none falls in its ground floor: the antechamber, the vault and the footing under them are inside.
  */
 function drawSnowfall(ctx: C2D, k: number, f: ReturnType<typeof frame>, st: number, near: boolean, indoors: boolean): void {
@@ -1705,18 +1767,8 @@ function drawSnowfall(ctx: C2D, k: number, f: ReturnType<typeof frame>, st: numb
         const y = j * S + ((h2 * S + st * speed) % S)
         if (indoors && x > FORT.x0 && x < FORT.x1 && y > FORT.ceil && y < FORT.foot + 1.5) continue
         const r = near ? 0.035 + 0.03 * h1 : 0.018 + 0.04 * h3 * h3
-        const a = near ? 0.5 : 0.35 + 0.45 * h1
+        const a = near ? 0.8 : 0.35 + 0.45 * h1
         if (r * k < 0.5 && !near) continue
-        if (near) {
-          // Out of focus, close to the lens: a soft spot, never a disc.
-          const R = r * 2.2 * k
-          const g = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, R)
-          g.addColorStop(0, rgba(SNOW.snow, a))
-          g.addColorStop(1, rgba(SNOW.snow, 0))
-          ctx.fillStyle = g
-          ctx.fillRect(x * k - R, y * k - R, 2 * R, 2 * R)
-          continue
-        }
         ctx.fillStyle = rgba(SNOW.snow, a)
         ctx.beginPath()
         ctx.arc(x * k, y * k, Math.max(0.6, r * k), 0, TAU)

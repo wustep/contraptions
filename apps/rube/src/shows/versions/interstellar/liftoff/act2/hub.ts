@@ -1,11 +1,12 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInOutSine, easeOutBack } from '../../../../../../../../src/core/ease'
-import { FLOOR, mixHex, puff, type Pt } from '../../../../../parts'
+import { FLOOR, mixHex, puff, R, type Pt } from '../../../../../parts'
 import { alpha, carried, knock, lastOf, part, route, smooth, type Ctx, type PartShot } from '../kit'
 import { cue } from '../music'
 import { DUST } from '../worlds'
 import { fromRim, RIM_R, SEAM, stationFrame } from './station'
+import { drawBayDepth } from './hub-bay'
 
 /**
  * Up the spoke to the Ranger.
@@ -441,24 +442,6 @@ const CELLS: Pt[] = (() => {
 /** A colour with an alpha, as the string `outline` and `solid` take. */
 const tone = (p: p5, hex: string, a: number): string => alpha(p, hex, a).toString()
 
-const rgba = (hex: string, a: number): string => {
-  const n = parseInt(hex.slice(1), 16)
-  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${Math.max(0, Math.min(1, a))})`
-}
-
-function glow(p: p5, k: number, x: number, y: number, r: number, hex: string, a: number, r0 = 0): void {
-  if (a <= 0.003) return
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  const g = ctx.createRadialGradient(x * k, y * k, r0 * k, x * k, y * k, r * k)
-  g.addColorStop(0, rgba(hex, a))
-  g.addColorStop(1, rgba(hex, 0))
-  // Saved and restored, so p5's own idea of the fill stays true.
-  ctx.save()
-  ctx.fillStyle = g
-  ctx.fillRect((x - r) * k, (y - r) * k, 2 * r * k, 2 * r * k)
-  ctx.restore()
-}
-
 function shape(p: p5, k: number, pts: Pt[], close = true): void {
   p.beginShape()
   for (const [x, y] of pts) p.vertex(x * k, y * k)
@@ -508,9 +491,37 @@ function drawFront(p: p5, s: HubState, c: Ctx): void {
   const T = c.t + s.begin
   const { k } = c
   inHub(p, k, () => {
+    drawSill(p, c, T)
     drawCanopy(p, c, T)
     drawClaw(p, c, T)
   })
+}
+
+/**
+ * In front of him as the arm lowers him into the seat and while he sits in it: the hull's near side, below the sill,
+ * drawn again inside his own disc and only over the cockpit's span. So he sits down in the cockpit, behind the hull's
+ * side, and not on top of its white. (Hub frame.)
+ */
+function drawSill(p: p5, c: Ctx, T: number): void {
+  if (T < SWUNG) return
+  const { k, ink, weight } = c
+  const [bx, by] = ballAt(T)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.beginPath()
+  ctx.arc((bx - AX[0]) * k, (by - AX[1]) * k, R * k + weight, 0, TAU)
+  ctx.clip()
+  inShip(p, c, T, (cs) => {
+    ctx.beginPath()
+    ctx.rect(-0.46 * k, 0.06 * k, 1.02 * k, 0.5 * k)
+    ctx.clip()
+    solid(p, ink, cs.weight, DUST.bone)
+    shape(p, k, HULL)
+    p.noStroke()
+    p.fill(ink)
+    shape(p, k, BELLY)
+  })
+  ctx.restore()
 }
 
 /* ---- the bay: the hub's light, and the end wall behind the ship */
@@ -518,30 +529,25 @@ function drawFront(p: p5, s: HubState, c: Ctx): void {
 function drawBay(p: p5, c: Ctx, T: number): void {
   const { k, ink, weight } = c
   const X = (v: number) => v * k
-  // The spindle's light, round the hub.
-  glow(p, k, 0, 0, RING_OUT + 3.2, DUST.light, 0.85, RING_OUT - 0.2)
-  // The end wall inside the collar: a cool grey, lit from behind the ship.
-  solid(p, ink, weight * 0.7, DUST.sky)
-  p.circle(0, 0, X(2 * RING_IN))
-  glow(p, k, 0, 0, RING_IN, DUST.light, 0.7)
-  // The end wall's rings and the spindle's end: concentric, faint.
+  // Inside the collar: the docking bay going away down the axis, with its traffic (`hub-bay.ts`).
+  drawBayDepth(p, c, T, RING_IN)
+  // The spindle's end, on the far bulkhead: a bolted cap, faint. (It was a pale disc in a dark ring, a ball's size and
+  // colour right beside the cockpit, and it read as another ball.)
   outline(p, tone(p, ink, 0.18), weight * 0.6)
-  p.circle(0, 0, X(2 * 2.2))
-  p.circle(0, 0, X(2 * 1.4))
-  // The spindle's end: a bolted cap in the wall, faint like the rings round it. (It was a pale disc in a dark ring,
-  // a ball's size and colour right beside the cockpit, and it read as another ball.)
   p.circle(0, 0, X(0.6))
   p.circle(0, 0, X(0.22))
   p.noStroke()
   p.fill(tone(p, ink, 0.25))
   for (let i = 0; i < 6; i++) p.circle(X(Math.cos((i / 6) * TAU + 0.3) * 0.2), X(Math.sin((i / 6) * TAU + 0.3) * 0.2), X(0.03))
-  // Bay lamps round the inside of the collar: on when the car arrives.
+  // Bay lamps round the inside of the collar: slits along it, dark glass until the car arrives, then lit.
   const on = smooth(T, LAND - 0.05, LAND + 0.1)
   for (let i = 0; i < 12; i++) {
     const a = (i / 12) * TAU + 0.26
-    const lx = Math.cos(a) * (RING_IN - 0.12)
-    const ly = Math.sin(a) * (RING_IN - 0.12)
-    glow(p, k, lx, ly, 0.3, DUST.light, 0.6 * on)
+    p.push()
+    p.rotate(a)
+    solid(p, tone(p, ink, 0.6), weight * 0.4, on > 0.5 ? DUST.light : mixHex(DUST.tin, ink, 0.35))
+    p.rect(X(RING_IN - 0.09), 0, X(0.06), X(0.22), X(0.02))
+    p.pop()
   }
 }
 
@@ -600,7 +606,22 @@ function drawShaft(p: p5, c: Ctx, T: number): void {
     // the lit lamps climbing the spoke behind the car, a beat at a time, were not seen.
     const on = smooth(since, -0.02, 0.14)
     const lx = WALL_L - 0.22
-    if (on > 0) glow(p, k, lx, v, 0.36, LAMP_POOL, 0.6 * on)
+    if (on > 0) {
+      // Its light on the air by the slit: one small flat fan, warm. The lit glass says lit or dark; this only says
+      // which way it shines.
+      const ctx = p.drawingContext as CanvasRenderingContext2D
+      ctx.save()
+      ctx.fillStyle = alpha(p, LAMP_POOL, 0.16 * on).toString()
+      for (const [reach, spread] of [[0.4, 0.24]]) {
+        ctx.beginPath()
+        ctx.moveTo(X(lx - 0.02), X(v - 0.03))
+        ctx.arc(X(lx - 0.02), X(v), X(reach), Math.PI - spread, Math.PI + spread)
+        ctx.lineTo(X(lx - 0.02), X(v + 0.03))
+        ctx.closePath()
+        ctx.fill()
+      }
+      ctx.restore()
+    }
     outline(p, ink, weight * 0.5)
     p.line(X(WALL_L - 0.04), X(v), X(lx + 0.07), X(v))
     solid(p, ink, weight * 0.5, on > 0.5 ? LAMP_LIT : LAMP_DARK)
@@ -739,7 +760,6 @@ function drawLift(p: p5, c: Ctx, T: number): void {
   solid(p, ink, weight * 0.7, DUST.light)
   p.rect(0, X(vf - CAR_H / 2), X(CAR_R - CAR_L - POST), X(CAR_H))
   // Its lamp: a slit under the roof, warm white, not a bulb.
-  glow(p, k, 0, vf - CAR_H + 0.12, 0.7, DUST.light, 0.22)
   solid(p, ink, weight * 0.45, DUST.light)
   p.rect(0, X(vf - CAR_H + 0.03), X(0.3), X(0.035), X(0.012))
   // The floor, a plank deck; the +u post (the -u side is the door); the roof, with the hatch over the ball.
@@ -852,7 +872,6 @@ function drawDial(p: p5, c: Ctx, T: number): void {
   p.circle(X(cu), X(cv), X(0.05))
   // The lamp over it.
   const home = T >= LAND
-  if (home) glow(p, k, cu, cv - r - 0.12, 0.32, DUST.light, 0.7 * (0.6 + 0.4 * knock(T - LAND, 0.3)))
   solid(p, ink, weight * 0.6, home ? DUST.teal : DUST.rust)
   p.circle(X(cu), X(cv - r - 0.12), X(0.11))
 }
@@ -967,7 +986,6 @@ function drawClamps(p: p5, c: Ctx, T: number): void {
     // The lamp on the beam beside it: red, clamped; teal, free.
     const free = since >= 0
     const lx = x + FACE * 0.18
-    if (free) glow(p, k, lx, BEAM_Y + 0.05, 0.22 + 0.3 * knock(since, 0.2), DUST.light, 0.4 + 0.5 * knock(since, 0.3))
     solid(p, ink, weight * 0.5, free ? DUST.teal : DUST.rust)
     p.circle(X(lx), X(BEAM_Y + 0.05), X(0.075))
     if (since > 0 && since < 0.5) {
@@ -1113,8 +1131,11 @@ function drawRanger(p: p5, c0: Ctx, T: number): void {
     bubble(p, k)
     const wake = smooth(T, WAKE - 0.03, WAKE + 0.06)
     if (wake > 0) {
+      // The panel's light in the well: flat and warm, a little brighter for a moment as it comes on.
       const kick = knock(T - WAKE, 0.3)
-      glow(p, k, 0.12, -0.02, 0.42 + 0.2 * kick, DUST.corn, 0.45 * wake + 0.4 * kick)
+      p.noStroke()
+      p.fill(alpha(p, DUST.corn, 0.3 * wake + 0.15 * kick))
+      bubble(p, k)
       for (const [x, y, col] of [
         [0.4, 0.04, DUST.corn],
         [0.33, -0.05, DUST.teal],
@@ -1142,7 +1163,6 @@ function drawRanger(p: p5, c0: Ctx, T: number): void {
     p.circle(X(PORT[0]), X(PORT[1]), X(0.12))
     // The wingtip lamp: dark, then a blink on every beat once the ship is awake.
     const blink = wake > 0.5 ? knock(lastOf([WAKE, ...CLAMPS], T).ago, 0.18) : 0
-    if (blink > 0.02) glow(p, k, -1.95, 0.7, 0.28, DUST.rust, 0.8 * blink)
     solid(p, ink, weight * 0.5, blink > 0.3 ? DUST.corn : DUST.rust)
     p.circle(X(-1.95), X(0.7), X(0.075))
   })
@@ -1194,8 +1214,6 @@ function drawArm(p: p5, c: Ctx, T: number): void {
   const park = reach(HOME)
   const pe: Pt = [bx + L1 * Math.cos(park.sh), by + L1 * Math.sin(park.sh)]
   const pa = Math.atan2(pe[1], pe[0])
-  const snap = knock(T - STOW, 0.2)
-  if (snap > 0.02) glow(p, k, pe[0], pe[1], 0.35, DUST.light, 0.7 * snap)
   p.push()
   p.translate(X(Math.cos(pa) * (RING_IN + 0.02)), X(Math.sin(pa) * (RING_IN + 0.02)))
   p.rotate(pa + Math.PI / 2)

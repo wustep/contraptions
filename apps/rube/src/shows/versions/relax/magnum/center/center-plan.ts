@@ -82,7 +82,7 @@ export const PRESS_SCALE = 1.1
 
 /** The cut (in a flash) from Derelicte. */
 export const CUT = SEAM.center
-/** Derek bumps the bell-pull: the sheet goes up into the tree. The camera cuts to the model on it. */
+/** Derek bumps the bell-pull: the sheet goes up into the tree. The picture dissolves to the model on it. */
 export const BUMP = bar(98)
 /** He comes up beside it, and it is the size of a center for ants. */
 export const BESIDE = bar(100)
@@ -480,7 +480,7 @@ export const lanternLitAt = (i: number, t: number): number => {
 }
 
 /**
- * The first stars, coming out one by one in the deep blue: few, each its own size and brightness, twinkling slowly.
+ * The first stars, coming out one by one in the deep blue: few, each its own size and brightness, steady.
  * [x, y (world cells, far: they move a little less than the land), size 0..1, warm, when].
  */
 export const STARS: [number, number, number, boolean, number][] = (() => {
@@ -507,14 +507,12 @@ export const STARS: [number, number, number, boolean, number][] = (() => {
     return [x, y, size, warm, t]
   })
 })()
-/** How bright star `i` is at `t` (0..1), its slow twinkle in. */
+/** How bright star `i` is at `t` (0..1): coming out over a second and a half, and then steady. */
 export function starAt(i: number, t: number): number {
   const on = STARS[i][4]
   const u = (t - on) / 1.6
   if (u <= 0) return 0
-  const up = u >= 1 ? 1 : u * u * (3 - 2 * u)
-  const w = 0.7 + 0.45 * ((i * 0.37) % 1)
-  return up * (0.8 + 0.2 * Math.sin(t * w + i * 2.1))
+  return u >= 1 ? 1 : u * u * (3 - 2 * u)
 }
 
 /** The lamps along the path, coming on down the lawn from the Center: [x, when]. */

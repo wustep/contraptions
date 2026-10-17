@@ -4,7 +4,7 @@ Copyrighted recording. This is a private tech demo only. Do not ship this audio 
 
 The music is Justin Hurwitz's *Epilogue* from *La La Land* (2016). Attribution is in `apps/rube/src/shows/versions/la-la-land/EPILOGUE_ATTRIBUTION.txt`.
 
-Open it at `/shows/la-la-land/fable5-1/`. In the Shows picker it is **Fable 5.1**, a take of the work **Epilogue**.
+This take is hidden for now (Oct 15), so the work **Epilogue** is its Opus 5.5 take alone, and `/shows/la-la-land/fable5-1/` opens that. To bring it back, rename `fable5-1.ts` to `fable5-1.show.ts` (see its header); then open it at `/shows/la-la-land/fable5-1/`, where the Shows picker has it as **Fable 5.1**, a take of the work **Epilogue**.
 
 ## What it is
 
@@ -78,9 +78,9 @@ Every part is handed a slot (the show time the ball arrives, the time it must le
 
 ## Chrome, credits, checks
 
-- In the picker the work is **Epilogue** and this take is **Fable 5.1**, with no note and no byline.
+- In the picker (while it is shown) the work is **Epilogue** and this take is **Fable 5.1**, with no note and no byline.
 - The credits are the page's words (`Performance.titles(t)`), since a show's canvas sets no type: Directed by Claude Fable 5.1; Machines, drawings and code, Claude Fable 5.1; With, Sebastian (the blue ball), Mia (the yellow ball) and David (the grey ball); Music, Justin Hurwitz, "Epilogue" from La La Land (2016); Drawn with p5.js. They come up high in the frame, over the piano's lid, from the second of the last chords, and are gone before the last.
-- `check:shows` holds: every strike on a measured onset (over 400 of them); the loud swing, the waltz and the number nearly every beat struck; the piano's strong notes struck and the four notes at the end; the kiss struck on the burst; the ball never jumping and never hidden more than 2.5 s; Seb solid the whole show; the touch at her table on the kiss; the three universes changing on the kiss and the drop; no portal and no drawn cut; Mia at her table for the kiss, with him through the dream at fifteen sample times, at her table again after the pull-back; her husband only in the club at the end; two balls with two ids where she is, three with him; neither ever jumping or appearing in shot; the credits' names and timing.
+- `check:shows` held, and will again when the take is shown (its checks are commented out while it is hidden): every strike on a measured onset (over 400 of them); the loud swing, the waltz and the number nearly every beat struck; the piano's strong notes struck and the four notes at the end; the kiss struck on the burst; the ball never jumping and never hidden more than 2.5 s; Seb solid the whole show; the touch at her table on the kiss; the three universes changing on the kiss and the drop; no portal and no drawn cut; Mia at her table for the kiss, with him through the dream at fifteen sample times, at her table again after the pull-back; her husband only in the club at the end; two balls with two ids where she is, three with him; neither ever jumping or appearing in shot; the credits' names and timing.
 
 ## How it was built
 

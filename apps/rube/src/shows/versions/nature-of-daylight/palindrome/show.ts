@@ -46,8 +46,9 @@ export type Spans = (Company & { world: WorldKey })[]
 /** Extra balls from a part, over its slot, in world cells. */
 export type Riders = { from: number; to: number; leg: number; fn: PartRiders }[]
 
-/** The lake house's legs out on its lawn: the swing and what she is shown (the lawn draws only during these). */
-const LAWN_LEGS = new Set(['swing', 'sees'])
+/** The lake house's legs out on its lawn: the swing, what she is shown, and the run remembered at the end (the lawn
+ * draws only during these). */
+const LAWN_LEGS = new Set(['swing', 'sees', 'recall'])
 
 function boundsOf(pieces: Placed[]): Box {
   const b: Box = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity }

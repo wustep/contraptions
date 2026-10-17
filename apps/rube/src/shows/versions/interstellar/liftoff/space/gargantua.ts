@@ -524,15 +524,18 @@ const rgba = (hex: string, a: number): string => {
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${Math.max(0, Math.min(1, a))})`
 }
 
-function glow(p: p5, x: number, y: number, r: number, hex: string, a: number): void {
+/** Vapour, or a pool of light (pixels): flat and uninked, a wider fainter disc round a smaller one. No soft halo. */
+function vapour(p: p5, x: number, y: number, r: number, hex: string, a: number): void {
   if (a <= 0.005 || r <= 0) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const g = ctx.createRadialGradient(x, y, 0, x, y, r)
-  g.addColorStop(0, rgba(hex, a))
-  g.addColorStop(0.4, rgba(hex, a * 0.45))
-  g.addColorStop(1, rgba(hex, 0))
-  ctx.fillStyle = g
-  ctx.fillRect(x - r, y - r, 2 * r, 2 * r)
+  ctx.fillStyle = rgba(hex, a * 0.22)
+  ctx.beginPath()
+  ctx.arc(x, y, r, 0, TAU)
+  ctx.fill()
+  ctx.fillStyle = rgba(hex, a * 0.3)
+  ctx.beginPath()
+  ctx.arc(x, y, r * 0.55, 0, TAU)
+  ctx.fill()
 }
 
 function bar(p: p5, ink: string, weight: number, fill: string, w: number, pts: Pt[]): void {
@@ -610,40 +613,21 @@ function holeSolid(p: p5, c: Ctx, h: HoleLook, bright = 0, fade = 1): void {
   p.translate(X(h.cx), X(h.cy))
   p.rotate(TILT)
   p.noFill()
-  // The disk's glow tapers into space without a rounded bar at either end.
-  if (A > 0.004) {
-    const reach = X(DISK * r)
-    ctx.save()
-    ctx.scale(1, 0.075)
-    const haze = ctx.createRadialGradient(0, 0, 0, 0, 0, reach)
-    haze.addColorStop(0, rgba(DARK.gold, 0.3 * A))
-    haze.addColorStop(0.45, rgba(DARK.amber, 0.16 * A))
-    haze.addColorStop(1, rgba(DARK.amber, 0))
-    ctx.fillStyle = haze
-    ctx.fillRect(-reach, -reach, reach * 2, reach * 2)
-    ctx.restore()
-  }
-  // The far side of the disk, bent over the top of the dark and under it by the lensing: near and big, broad bands of
-  // light, hottest where they hug the dark and going off into the haze.
-  const band = (a0: number, a1: number, rout: number, peak: number, body: number) => {
+  // The far side of the disk, bent over the top of the dark and under it by the lensing: broad bands of light in flat
+  // steps, white where they hug the dark, then gold, then a thin amber at the outside. Crisp edges, no haze.
+  const band = (a0: number, a1: number, steps: [number, number, string, number][], peak: number) => {
     if (peak <= 0.004) return
-    ctx.save()
-    const g = ctx.createRadialGradient(0, 0, X(1.0 * r), 0, 0, X(rout * r))
-    g.addColorStop(0, rgba(WHITE, peak))
-    g.addColorStop(0.1, rgba(DARK.gold, 0.95 * peak))
-    g.addColorStop(body, rgba(DARK.gold, 0.6 * peak))
-    g.addColorStop(Math.min(0.95, body + 0.3), rgba(DARK.amber, 0.22 * peak))
-    g.addColorStop(1, rgba(DARK.amber, 0))
-    ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.arc(0, 0, X(rout * r), a0, a1)
-    ctx.arc(0, 0, X(1.0 * r), a1, a0, true)
-    ctx.closePath()
-    ctx.fill()
-    ctx.restore()
+    for (const [r0, r1, hex, a] of steps) {
+      ctx.fillStyle = rgba(hex, a * peak)
+      ctx.beginPath()
+      ctx.arc(0, 0, X(r1 * r), a0, a1)
+      ctx.arc(0, 0, X(r0 * r), a1, a0, true)
+      ctx.closePath()
+      ctx.fill()
+    }
   }
-  band(Math.PI + 0.01, TAU - 0.01, 1.55, Math.min(1, 0.95 * A * (1 + 0.4 * bright)), 0.32)
-  band(0.01, Math.PI - 0.01, 1.25, Math.min(1, 0.5 * A * (1 + 0.4 * bright)), 0.2)
+  band(Math.PI + 0.01, TAU - 0.01, [[1.0, 1.04, WHITE, 1], [1.04, 1.14, DARK.gold, 0.88], [1.14, 1.3, DARK.gold, 0.5], [1.3, 1.4, DARK.amber, 0.18]], Math.min(1, 0.95 * A * (1 + 0.4 * bright)))
+  band(0.01, Math.PI - 0.01, [[1.0, 1.03, WHITE, 0.9], [1.03, 1.11, DARK.gold, 0.7], [1.11, 1.22, DARK.amber, 0.28]], Math.min(1, 0.5 * A * (1 + 0.4 * bright)))
   // Ribbons within the lensed disk resolve its curve through the glow. The approaching side is hotter.
   if (A > 0.004) {
     ctx.save()
@@ -734,8 +718,6 @@ function drawGargantua(p: p5, _s: GargState, c: Ctx, T: number): void {
   const h = holeLook(T)
   // Its light goes first as the dark opens.
   const fade = 1 - smooth(T, HORIZON - 0.02, HORIZON + 0.22)
-  glow(p, X(h.cx), X(h.cy), X(4.6 * h.r), DARK.amber, 0.16 * fade)
-
   // Behind the hole: the Ranger and the ball's tether when they are on the far side.
   const sw = swingAt(T)
   const shipBehind = T >= CATCH && T <= RELEASE && sw.behind
@@ -755,7 +737,6 @@ function drawGargantua(p: p5, _s: GargState, c: Ctx, T: number): void {
     const [bx, by] = swingPt(at)
     const [vx, vy] = vel(swingPt, at)
     const a0 = Math.atan2(vy, vx)
-    glow(p, X(bx), X(by), X(0.2 + 0.35 * since), VOID.ink, 0.75 * power * knock(since, 0.12))
     p.noStroke()
     for (let i = 0; i < 9; i++) {
       const a = a0 + (hash(i, seed, 3) - 0.5) * 1.6
@@ -877,12 +858,12 @@ function drawRanger(p: p5, c: Ctx, T: number): void {
   if (gas >= 0 && gas < 0.8) {
     const u = gas / 0.8
     const [gx, gy] = W(ax, -0.2 - 1.0 * Math.sqrt(u))
-    glow(p, X(gx), X(gy), X(0.06 + 0.14 * Math.sqrt(u)), VOID.ink, 0.55 * (1 - u) ** 1.5)
+    vapour(p, X(gx), X(gy), X(0.06 + 0.14 * Math.sqrt(u)), VOID.ink, 0.55 * (1 - u) ** 1.5)
   }
   const rel = T - RELEASE
   if (rel >= 0 && rel < 0.8) {
     const u = rel / 0.8
-    glow(p, X(claw.base[0] + (claw.dir[0] * 0.1 + 0.05) * (1 + u)), X(claw.base[1] + claw.dir[1] * 0.1 * (1 + u)), X(0.05 + 0.1 * Math.sqrt(u)), VOID.ink, 0.5 * (1 - u) ** 1.5)
+    vapour(p, X(claw.base[0] + (claw.dir[0] * 0.1 + 0.05) * (1 + u)), X(claw.base[1] + claw.dir[1] * 0.1 * (1 + u)), X(0.05 + 0.1 * Math.sqrt(u)), VOID.ink, 0.5 * (1 - u) ** 1.5)
   }
 }
 
@@ -1041,14 +1022,6 @@ function drawInside(p: p5, s: GargState, c: Ctx, T: number): void {
   // Murph's case, as deep in as it still is (all of it, the lattice round it included, scaled toward the one point).
   const dv = diveAt(T)
   const deep = depthScale(dv)
-  if (bk > 0.002) {
-    ctx.save()
-    ctx.globalAlpha = bk
-    // The light of the room through the case spills into the dark: warmer as he nears it.
-    const [gx, gy] = toward([back(0.78), BK[1] - 0.65], deep)
-    glow(p, X(gx), X(gy), X(2.6 * deep), DUST.light, 0.22 + 0.12 * (1 - smooth(dv, 0, 1.5)) * (1 - smooth(T, LAND, LAND + 0.8)))
-    ctx.restore()
-  }
   if (lat > 0.002) drawThreads(p, c, T, lat)
   if (lat > 0.002) drawRooms(p, c, T, lat)
   if (lat > 0.002) drawLattice(p, c, T, lat, f)
@@ -1223,9 +1196,7 @@ function miniCase(p: p5, k: number, ink: string, weight: number, a: number): voi
   if (offCanvas(ctx, X(-0.8), X(Math.min(CAP, mid - 1.5)), X(2.35), X(Math.max(FLOOR, mid + 1.5)))) return
   const was = ctx.globalAlpha
   ctx.globalAlpha = was * a
-  // Its room's light behind it, lamplight, and a little of it spilling round the case into the dark (warm, so that
-  // seen dim over the dark it goes amber, not grey; small, so a hundred of them do not fog the dark between).
-  glow(p, X(0.775), X((CAP + FLOOR) / 2), X(1.5), DARK.amber, 0.18)
+  // Its room's lamplight behind it, warm, so that seen dim over the dark it goes amber, not grey.
   p.noStroke()
   p.fill(ROOM_LIGHT)
   p.rect(X(0.775), X((CAP + FLOOR) / 2), X(2.35), X(FLOOR - CAP))
@@ -1292,14 +1263,24 @@ function drawStreaks(p: p5, c: Ctx, T: number, f: ReturnType<typeof frame>): voi
 
 /** The warm light he drifts toward through the dark: small and far, then near; the room opens out of it. */
 function drawWarmth(p: p5, c: Ctx, T: number): void {
-  const on = smooth(T, GLOW_ON, GLOW_ON + 0.6) * (1 - smooth(T, IN_BED - 0.1, IN_BED + 0.4))
+  const on = smooth(T, GLOW_ON, GLOW_ON + 0.6) * (1 - smooth(T, IN_BED - 0.25, IN_BED + 0.1))
   if (on <= 0.005) return
   const { k } = c
   const X = (v: number) => v * k
   const grow = smooth(T, GLOW_ON, IN_BED)
-  // A light, not a thing: wide and soft, no bright core the size of a ball beside him.
-  glow(p, X(OPENING[0]), X(OPENING[1]), X(0.4 + 1.6 * grow), DUST.light, 0.5 * on)
-  glow(p, X(OPENING[0]), X(OPENING[1]), X(0.3 + 0.5 * grow), '#FFF6DE', 0.35 * on)
+  // A light, not a thing: wide and soft, no bright core the size of a ball beside him. (The one soft light left in the
+  // dark, kept because it is the story here: the room he falls into opens out of it. Drawn flat, it read as a disc.)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  for (const [r, hex, a] of [[0.4 + 1.6 * grow, DUST.light, 0.5 * on], [0.3 + 0.5 * grow, '#FFF6DE', 0.35 * on]] as [number, string, number][]) {
+    const x = X(OPENING[0])
+    const y = X(OPENING[1])
+    const g = ctx.createRadialGradient(x, y, 0, x, y, X(r))
+    g.addColorStop(0, rgba(hex, a))
+    g.addColorStop(0.4, rgba(hex, a * 0.45))
+    g.addColorStop(1, rgba(hex, 0))
+    ctx.fillStyle = g
+    ctx.fillRect(x - X(r), y - X(r), 2 * X(r), 2 * X(r))
+  }
 }
 
 /** The opening's edge, feathered into the dark: drawn inside its clip, last, so the room fades out to it and has no rim. */
@@ -1454,8 +1435,10 @@ function drawCaseBack(p: p5, c: Ctx, T: number, look: Look = MURPHS): void {
     const h = b.h * Math.max(0.03, Math.cos(a.tip))
     backOfBook(p, c, b.x, SHELF_TOP + a.drop, b.w * (1 - 0.12 * Math.sin(a.tip)), h, b.color, ink)
   })
+  // Each one's going knocks a little dust off the board, which rises and thins in the room's light.
   ROW.forEach((b, i) => {
-    if (T >= PUSHES[i]) glow(p, X(b.x), X(SHELF_TOP - b.h / 2), X(0.4), DUST.light, 0.6 * knock(T - PUSHES[i] - 0.1, 0.25) * smooth(T, PUSHES[i], PUSHES[i] + 0.1))
+    const since = T - PUSHES[i] - 0.1
+    if (since > 0 && since < 0.9) vapour(p, X(b.x), X(SHELF_TOP - 0.06 - 0.25 * since), X(0.08 + 0.16 * since), DUST.light, 0.9 * (1 - since / 0.9))
   })
   // The lander model, the opening's own; pushed, it tips away the same way (shorter as it turns from us) and drops.
   const la = away(LAND, T, 0.36)
@@ -1466,8 +1449,9 @@ function drawCaseBack(p: p5, c: Ctx, T: number, look: Look = MURPHS): void {
     drawLander(p, { k, ink, weight: w }, 0, 0, 0)
     p.pop()
   }
-  // Where it stood, the room's light comes through.
-  if (T >= LAND) glow(p, X(LANDER_X), X(SHELF_TOP - 0.12), X(0.55), DUST.light, 0.75 * knock(T - LAND - 0.12, 0.35) * smooth(T, LAND, LAND + 0.12))
+  // Where it stood, its dust.
+  const ls = T - LAND - 0.12
+  if (ls > 0 && ls < 1.1) vapour(p, X(LANDER_X), X(SHELF_TOP - 0.08 - 0.25 * ls), X(0.1 + 0.2 * ls), DUST.light, 0.9 * (1 - ls / 1.1))
   // The middle shelf, from behind, and the bottom one's stack and box.
   const mid = [
     [0.1, 0.3, DUST.denim], [0.09, 0.32, DUST.bone], [0.12, 0.28, DUST.rust], [0.08, 0.3, DUST.sage], [0.1, 0.34, DUST.corn],
@@ -1682,7 +1666,6 @@ function drawOver(p: p5, s: GargState, c: Ctx): void {
     return
   }
   const room = roomAt(T)
-  const at = laneAt(s.lane, c.t)
   const ctx = p.drawingContext as CanvasRenderingContext2D
   if (room > 0.002 && roomShows(T) > 0.002) {
     // The room's front (the dumbwaiter's wall, the toy), and its night: inside the opening while it opens.
@@ -1700,19 +1683,5 @@ function drawOver(p: p5, s: GargState, c: Ctx): void {
     p.pop()
     featherOpening(p, c, T)
     ctx.restore()
-  }
-  // While he is a ghost he gives off a little light of its own, a little more on each book he pushes (not on the watch).
-  const ghost = smooth(T, HORIZON, HORIZON + 0.35) * (1 - smooth(T, WAKE - 0.05, WAKE + 0.25))
-  if (ghost > 0.005) {
-    const push = Math.max(0, -shoveAt(T) - 0.05 * leanPulse(T - TOUCH)) / 0.07
-    const a = ghost * (0.4 + 0.25 * push)
-    const x = X(at.x)
-    const y = X(at.y)
-    const g = ctx.createRadialGradient(x, y, 0, x, y, 0.45 * k)
-    g.addColorStop(0, `rgba(255, 246, 214, ${a})`)
-    g.addColorStop(0.35, `rgba(255, 236, 190, ${a * 0.5})`)
-    g.addColorStop(1, 'rgba(255, 236, 190, 0)')
-    ctx.fillStyle = g
-    ctx.fillRect(x - 0.45 * k, y - 0.45 * k, 0.9 * k, 0.9 * k)
   }
 }

@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { mixHex, type Pt } from '../../../../../parts'
-import { box, carried, frame, glow, knock, part, rgba, smooth, type PartShot } from '../kit'
+import { box, carried, frame, part, rgba, smooth, type PartShot } from '../kit'
 import { NIGHT_MAT } from '../worlds'
 import { IRIS_OPEN } from '../transitions'
 import {
@@ -164,7 +164,6 @@ function paintedSky(p: p5, k: number, T: number): void {
     ctx.fill()
   }
   for (const d of DABS) {
-    glow(p, k, d.x, d.y - up, d.r * 5, NIGHT_MAT.gold, 0.22)
     ctx.fillStyle = rgba(NIGHT_MAT.gold, 0.9)
     ctx.beginPath()
     ctx.arc(d.x * k, (d.y - up) * k, d.r * k, 0, Math.PI * 2)
@@ -173,19 +172,185 @@ function paintedSky(p: p5, k: number, T: number): void {
   // The moon, a painted crescent.
   const mx = MOON[0]
   const my = MOON[1] - up
-  glow(p, k, mx, my, 1.6, NIGHT_MAT.gold, 0.2)
   ctx.fillStyle = NIGHT_MAT.gold
   ctx.beginPath()
   ctx.arc(mx * k, my * k, 0.42 * k, -Math.PI * 0.62, Math.PI * 0.62, true)
   ctx.arc((mx - 0.2) * k, (my - 0.05) * k, 0.36 * k, Math.PI * 0.5, -Math.PI * 0.55, false)
   ctx.closePath()
   ctx.fill()
+  paintedClouds(ctx, k, T, up, f)
   ctx.restore()
   // The drop's hem, seen only when it flies.
   if (up > 0.2) {
     ctx.fillStyle = NIGHT_MAT.deep
     ctx.fillRect((f.x0 - 1) * k, (bottom - 0.05) * k, (f.x1 - f.x0 + 2) * k, 0.08 * k)
   }
+}
+
+/**
+ * Clouds, painted on cut-out flats and hung on wires in front of the sky drop, each on its own track: they slide
+ * slowly across the night, the nearer faster, the moon going behind one and out again. A theatre's sky.
+ */
+const CLOUDS = [
+  { x0: 6.0, y: -4.25, w: 2.6, v: 0.16, lobes: [[-0.35, 0, 0.3], [0, -0.12, 0.38], [0.36, -0.02, 0.3], [0.62, 0.06, 0.2]] },
+  { x0: 15.5, y: -5.1, w: 3.2, v: 0.11, lobes: [[-0.4, 0.02, 0.28], [-0.08, -0.14, 0.4], [0.3, -0.06, 0.34], [0.6, 0.04, 0.22]] },
+  { x0: -4.5, y: -5.9, w: 2.2, v: 0.07, lobes: [[-0.3, 0, 0.3], [0.05, -0.1, 0.36], [0.4, 0.02, 0.26]] },
+]
+function paintedClouds(ctx: CanvasRenderingContext2D, k: number, T: number, up: number, f: { x0: number; x1: number; y0: number }): void {
+  for (const c of CLOUDS) {
+    const x = c.x0 - c.v * (T - 269)
+    const y = c.y - up
+    if (x + c.w < f.x0 - 1 || x - c.w > f.x1 + 1) continue
+    // Its wires, up into the flies.
+    ctx.strokeStyle = rgba(NIGHT_MAT.swirl, 0.35)
+    ctx.lineWidth = Math.max(1, 0.012 * k)
+    ctx.beginPath()
+    for (const dx of [-0.35, 0.35]) {
+      ctx.moveTo((x + dx * c.w) * k, (y - 0.3 * c.w * 0.5) * k)
+      ctx.lineTo((x + dx * c.w) * k, (f.y0 - 1) * k)
+    }
+    ctx.stroke()
+    // The flat: lobes over a level foot, one painted fill, the moonlight laid along its top.
+    const cloud = new Path2D()
+    for (const [lx, ly, r] of c.lobes) {
+      cloud.moveTo((x + (lx + r) * c.w) * k, (y + ly * c.w) * k)
+      cloud.ellipse((x + lx * c.w) * k, (y + ly * c.w) * k, r * c.w * k, r * c.w * 0.62 * k, 0, 0, Math.PI * 2)
+    }
+    const l0 = c.lobes[0]
+    const l1 = c.lobes[c.lobes.length - 1]
+    cloud.rect((x + (l0[0] - 0.05) * c.w) * k, (y + 0.02 * c.w) * k, (l1[0] - l0[0] + 0.1) * c.w * k, 0.14 * c.w * k)
+    ctx.fillStyle = mixHex(NIGHT_MAT.cobalt, NIGHT_MAT.swirl, 0.55)
+    ctx.fill(cloud)
+    ctx.save()
+    ctx.clip(cloud)
+    ctx.fillStyle = rgba(NIGHT_MAT.white, 0.16)
+    ctx.translate(0, -0.06 * c.w * k)
+    ctx.fill(cloud)
+    ctx.restore()
+    ctx.strokeStyle = rgba(NIGHT_MAT.deep, 0.5)
+    ctx.lineWidth = Math.max(1, 0.02 * k)
+    ctx.beginPath()
+    ctx.moveTo((x + (l0[0] - 0.05) * c.w) * k, (y + 0.16 * c.w) * k)
+    ctx.lineTo((x + (l1[0] + 0.05) * c.w) * k, (y + 0.16 * c.w) * k)
+    ctx.stroke()
+  }
+}
+
+/** People strolling on the far bank's quay, small with distance, under their umbrellas. */
+const STROLLERS = [
+  { x0: 1.0, v: 0.22, umbrella: true },
+  { x0: 8.5, v: -0.17, umbrella: false },
+  { x0: 12.0, v: 0.14, umbrella: true },
+  { x0: 19.0, v: -0.2, umbrella: true },
+  { x0: -3.0, v: 0.12, umbrella: false },
+]
+function strollers(ctx: CanvasRenderingContext2D, k: number, T: number): void {
+  ctx.fillStyle = mixHex(NIGHT_MAT.deep, '#000000', 0.25)
+  ctx.strokeStyle = ctx.fillStyle
+  ctx.lineCap = 'round'
+  for (const [i, st] of STROLLERS.entries()) {
+    const x = st.x0 + st.v * (T - 269)
+    const s = 0.3
+    const foot = BANK - 0.02
+    const step = Math.sin((T * 1.6 + i) * Math.PI * 2)
+    ctx.lineWidth = 0.05 * s * k * 1.4
+    ctx.beginPath()
+    ctx.moveTo(x * k, (foot - 0.45 * s) * k)
+    ctx.lineTo((x + 0.1 * s * step) * k, foot * k)
+    ctx.moveTo(x * k, (foot - 0.45 * s) * k)
+    ctx.lineTo((x - 0.1 * s * step) * k, foot * k)
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.moveTo((x - 0.1 * s) * k, (foot - 0.85 * s) * k)
+    ctx.lineTo((x + 0.1 * s) * k, (foot - 0.85 * s) * k)
+    ctx.lineTo((x + 0.16 * s) * k, (foot - 0.35 * s) * k)
+    ctx.lineTo((x - 0.16 * s) * k, (foot - 0.35 * s) * k)
+    ctx.closePath()
+    ctx.fill()
+    ctx.beginPath()
+    ctx.arc(x * k, (foot - 1.0 * s) * k, 0.09 * s * k, 0, Math.PI * 2)
+    ctx.fill()
+    if (st.umbrella) {
+      const ux = x + 0.05 * s * Math.sign(st.v)
+      ctx.lineWidth = 0.025 * s * k
+      ctx.beginPath()
+      ctx.moveTo(ux * k, (foot - 0.75 * s) * k)
+      ctx.lineTo(ux * k, (foot - 1.3 * s) * k)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.moveTo((ux - 0.36 * s) * k, (foot - 1.18 * s) * k)
+      ctx.quadraticCurveTo(ux * k, (foot - 1.6 * s) * k, (ux + 0.36 * s) * k, (foot - 1.18 * s) * k)
+      ctx.closePath()
+      ctx.fill()
+    }
+  }
+}
+
+/**
+ * A bateau-mouche going down the river through the waltz: a long low boat, its saloon's windows lit, a lamp at its bow
+ * and a flag at its stern, its lit windows drawn down into the water under it in broken strokes. It is on the river,
+ * between the far bank and the quay, so it slides by the camera at a pace between theirs.
+ */
+function boat(ctx: CanvasRenderingContext2D, k: number, T: number, f: { cx: number; x0: number; x1: number }): void {
+  const x = 24 - 0.78 * (T - 268) + (f.cx - 7) * 0.15
+  const L = 3.6
+  if (x + L / 2 < f.x0 - 1 || x - L / 2 > f.x1 + 1) return
+  const water = BANK + 0.4
+  const bob = 0.012 * Math.sin(T * 1.9)
+  const y = water + bob
+  // The reflection first: the windows' gold broken up on the water, the hull's dark under it.
+  ctx.fillStyle = rgba(NIGHT_MAT.deep, 0.8)
+  ctx.fillRect((x - L / 2 + 0.2) * k, y * k, (L - 0.4) * k, 0.1 * k)
+  for (let i = 0; i < 9; i++) {
+    const wx = x - L / 2 + 0.55 + i * 0.32
+    const wob = 0.03 * Math.sin(T * 3.1 + i * 1.7)
+    ctx.fillStyle = rgba(NIGHT_MAT.gold, 0.45)
+    ctx.fillRect((wx + wob - 0.06) * k, (y + 0.05) * k, 0.12 * k, 0.025 * k)
+    ctx.fillRect((wx - wob - 0.04) * k, (y + 0.1) * k, 0.08 * k, 0.02 * k)
+  }
+  // The hull: a long low shape, its bow raised at the left (it goes left).
+  ctx.fillStyle = mixHex(NIGHT_MAT.deep, '#000000', 0.2)
+  ctx.beginPath()
+  ctx.moveTo((x - L / 2) * k, (y - 0.2) * k)
+  ctx.lineTo((x + L / 2) * k, (y - 0.14) * k)
+  ctx.lineTo((x + L / 2 - 0.12) * k, y * k)
+  ctx.lineTo((x - L / 2 + 0.22) * k, y * k)
+  ctx.closePath()
+  ctx.fill()
+  ctx.fillStyle = rgba(NIGHT_MAT.swirl, 0.7)
+  ctx.fillRect((x - L / 2 + 0.1) * k, (y - 0.17) * k, (L - 0.2) * k, 0.025 * k)
+  // The saloon: a glass-roofed cabin, its windows lit.
+  ctx.fillStyle = NIGHT_MAT.cobalt
+  ctx.beginPath()
+  ctx.moveTo((x - L / 2 + 0.45) * k, (y - 0.15) * k)
+  ctx.lineTo((x - L / 2 + 0.55) * k, (y - 0.38) * k)
+  ctx.lineTo((x + L / 2 - 0.35) * k, (y - 0.38) * k)
+  ctx.lineTo((x + L / 2 - 0.25) * k, (y - 0.15) * k)
+  ctx.closePath()
+  ctx.fill()
+  ctx.fillStyle = NIGHT_MAT.gold
+  for (let i = 0; i < 9; i++) ctx.fillRect((x - L / 2 + 0.5 + i * 0.32) * k, (y - 0.33) * k, 0.2 * k, 0.12 * k)
+  ctx.fillStyle = rgba(NIGHT_MAT.white, 0.25)
+  ctx.fillRect((x - L / 2 + 0.55) * k, (y - 0.4) * k, (L - 0.9) * k, 0.03 * k)
+  // A lamp at the bow; a flag at the stern, stirring.
+  ctx.fillStyle = NIGHT_MAT.gold
+  ctx.beginPath()
+  ctx.arc((x - L / 2 + 0.12) * k, (y - 0.28) * k, 0.035 * k, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.strokeStyle = NIGHT_MAT.deep
+  ctx.lineWidth = Math.max(1, 0.015 * k)
+  ctx.beginPath()
+  ctx.moveTo((x + L / 2 - 0.1) * k, (y - 0.15) * k)
+  ctx.lineTo((x + L / 2 - 0.1) * k, (y - 0.62) * k)
+  ctx.stroke()
+  const fl = 0.04 * Math.sin(T * 4.3)
+  ctx.fillStyle = mixHex(NIGHT_MAT.petal, NIGHT_MAT.deep, 0.15)
+  ctx.beginPath()
+  ctx.moveTo((x + L / 2 - 0.1) * k, (y - 0.62) * k)
+  ctx.quadraticCurveTo((x + L / 2 + 0.05) * k, (y - 0.6 + fl) * k, (x + L / 2 + 0.16) * k, (y - 0.56 + fl * 1.5) * k)
+  ctx.lineTo((x + L / 2 - 0.1) * k, (y - 0.48) * k)
+  ctx.closePath()
+  ctx.fill()
 }
 
 function farBank(p: p5, k: number, T: number): void {
@@ -246,9 +411,7 @@ function farBank(p: p5, k: number, T: number): void {
       const yy = base - 1.2 - 3.9 * v
       const hw = 0.62 * (1 - v) + 0.06
       const xx = x + (scatter(i, 131) * 2 - 1) * hw
-      const tw = 0.5 + 0.5 * Math.sin(T * (2 + 3 * scatter(i, 132)) + i)
-      glow(p, k, xx, yy, 0.16, NIGHT_MAT.gold, 0.5 * tw)
-      ctx.fillStyle = rgba(NIGHT_MAT.gold, 0.6 + 0.4 * tw)
+      ctx.fillStyle = rgba(NIGHT_MAT.gold, 0.85)
       ctx.fillRect((xx - 0.02) * k, (yy - 0.02) * k, 0.04 * k, 0.04 * k)
     }
   }
@@ -303,11 +466,11 @@ function farBank(p: p5, k: number, T: number): void {
     ctx.lineTo((h.x0 + 0.12) * k, (BANK - 0.12) * k)
     ctx.stroke()
     for (const w of h.windows) {
-      glow(p, k, w[0], w[1], 0.22, NIGHT_MAT.gold, 0.3)
       ctx.fillStyle = NIGHT_MAT.gold
       ctx.fillRect((w[0] - 0.045) * k, (w[1] - 0.07) * k, 0.09 * k, 0.13 * k)
     }
   }
+  strollers(ctx, k, T)
   // As the iris opens, the trumpet's gold drawing of the city is still on it a moment: a line of gold along the roofs
   // and up the tower, going out as the waltz begins. The drawing became the painting.
   const traced = smooth(T, IRIS_OPEN, IRIS_OPEN + 0.5) * (1 - smooth(T, IRIS_OPEN + 3.0, IRIS_OPEN + 5.0))
@@ -346,11 +509,24 @@ function farBank(p: p5, k: number, T: number): void {
     ctx.lineTo((x + 0.4 + 0.6 * scatter(i, 142)) * k, y * k)
     ctx.stroke()
   }
+  // The lit windows drawn down into the water: short gold strokes, broken by the ripples and moving with them.
+  ctx.fillStyle = rgba(NIGHT_MAT.gold, 0.4)
   for (const h of HOUSES) {
     if (!vis(h)) continue
-    for (const w of h.windows) glow(p, k, w[0] + far + 0.03 * Math.sin(T * 1.7 + w[0] * 3), BANK + 0.24, 0.26, NIGHT_MAT.gold, 0.28, 0.28, 1)
+    for (const w of h.windows) {
+      const wx = w[0] + far
+      for (let j = 0; j < 3; j++) {
+        const wob = 0.04 * Math.sin(T * (1.5 + 0.4 * j) + w[0] * 3 + j * 2)
+        ctx.fillRect((wx + wob - 0.05 + 0.01 * j) * k, (BANK + 0.08 + 0.1 * j) * k, (0.1 - 0.02 * j) * k, 0.03 * k)
+      }
+    }
   }
-  glow(p, k, TOWER_X + far, BANK + 0.25, 0.9, NIGHT_MAT.gold, 0.18, 0.4, 0.5)
+  for (let j = 0; j < 4; j++) {
+    const wob = 0.06 * Math.sin(T * 1.3 + j * 1.9)
+    ctx.fillStyle = rgba(NIGHT_MAT.gold, 0.3 - 0.05 * j)
+    ctx.fillRect((TOWER_X + far + wob - 0.3 + 0.06 * j) * k, (BANK + 0.08 + 0.1 * j) * k, (0.6 - 0.12 * j) * k, 0.03 * k)
+  }
+  boat(ctx, k, T, f)
   // The quay's parapet: dressed stone, a pale coping, piers.
   ctx.fillStyle = NIGHT_MAT.ultramarine
   ctx.fillRect((f.x0 - 1) * k, PARAPET * k, (f.x1 - f.x0 + 2) * k, (UPSTAGE - PARAPET + 0.01) * k)
@@ -483,10 +659,7 @@ function lamp(p: p5, k: number, ink: string, weight: number, T: number, x: numbe
   const up = lift(T, 2)
   const foot = -0.3 - up
   const light = lampLight(T)
-  const lx = x
-  const ly = foot - 2.42
-  glow(p, k, lx, ly, 1.9, NIGHT_MAT.gold, 0.34 * light)
-  glow(p, k, lx, ly, 0.55, NIGHT_MAT.gold, 0.35 * light)
+  // (Its light on the wet stones round its foot is the floor's: the cobbles lit in its pool, and its reflection.)
   solid(p, ink, weight * 0.9, NIGHT_MAT.deep)
   p.beginShape()
   p.vertex((x - 0.17) * k, foot * k)
@@ -572,11 +745,10 @@ function clock(p: p5, k: number, ink: string, weight: number, T: number): void {
   p.translate(x * k, (foot - 2.86) * k)
   p.rotate(shake(T))
   const fy = FACE_Y - (-0.38) + 2.86
-  const chimeGlow = CHIME_HITS.reduce((a, h) => a + 0.5 * knock(T - h, 0.3), 0)
-  glow(p, k, 0, fy, 1.2, NIGHT_MAT.white, (0.2 + 0.4 * chimeGlow) * light)
   solid(p, ink, weight, NIGHT_MAT.gold)
   p.circle(0, fy * k, (FACE_R + 0.08) * 2 * k)
-  solid(p, ink, weight * 0.8, mixHex(NIGHT_MAT.white, NIGHT_MAT.gold, 0.12))
+  // The face, lit from inside as the lamps are: brighter as they come up.
+  solid(p, ink, weight * 0.8, mixHex(mixHex(NIGHT_MAT.white, NIGHT_MAT.gold, 0.12), NIGHT_MAT.cobalt, 0.35 * (1 - light)))
   p.circle(0, fy * k, FACE_R * 2 * k)
   outline(p, NIGHT_MAT.deep, weight * 0.75)
   for (let h = 0; h < 12; h++) {
@@ -615,7 +787,6 @@ function clock(p: p5, k: number, ink: string, weight: number, T: number): void {
   p.bezierVertex(-0.12 * k, 0.2 * k, -0.13 * k, 0.05 * k, -0.05 * k, 0)
   p.endShape(p.CLOSE)
   p.pop()
-  glow(p, k, 0, top - 0.26, 0.8, NIGHT_MAT.gold, 0.55 * chimeGlow)
   // The hammer: an arm from the arch's right foot, its head to the bell's lip.
   p.push()
   p.translate(0.31 * k, (top - 0.02) * k)

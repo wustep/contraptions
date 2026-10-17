@@ -1,8 +1,6 @@
 import type p5 from 'p5'
-import { easeInOutCubic } from '../../../../../../../src/core/ease'
 import type { PieceCtx } from '../../../../parts'
 import type { Show } from '../../../../show'
-import { clamp } from './screen'
 
 /**
  * The one door of the show, drawn in the night's colour rather than the field's ink: the stage's iris, closing on the
@@ -17,11 +15,10 @@ export function nightfall(p: p5, c: PieceCtx, col: number, line: number, show: S
   const seg = here.placed.lane.segs[here.seg]
   if (here.placed.piece.name !== 'portal' || !seg?.portal) return
   const f = seg.portal === 'out' ? here.raw : 1 - here.raw
-  const shut = seg.portal === 'out' ? clamp((f - 0.35) / 0.55) : clamp((f - 0.1) / 0.45)
-  if (shut <= 0) return
+  if (f <= 0) return
   const W = p.width
   const H = p.height
-  const radius = Math.hypot(W, H) * 0.6 * (1 - easeInOutCubic(shut))
+  const radius = Math.hypot(W, H) * 0.6 * (1 - f)
   const rim = Math.hypot(W, H)
   const ctx = p.drawingContext as CanvasRenderingContext2D
   // The stage has the canvas at the scenery's cell, in the canvas's own pixels, as its iris is drawn.
