@@ -428,13 +428,15 @@ function drawPlume(pen: Pen, e: Calving, t: number, f: Frame): void {
     // The crown: spreading like a fountain's, and coming back down in two curtains of spray at its edges.
     const crownY = base - top
     const spread = W * (0.55 + 1.15 * sm(u / 1.8))
-    soft(pen, x, crownY + 0.25, spread, 0.75 + 0.3 * u, SPRAY_NEAR, 0.78 * fade)
+    // Its crown and its foot come up with it (at full strength from the hit's first frame, a white blob beside the stump).
+    const up = sm(u / 0.1)
+    soft(pen, x, crownY + 0.25, spread, 0.75 + 0.3 * u, SPRAY_NEAR, 0.78 * fade * up)
     if (u > 0.5) {
       const len = Math.min(top * 0.95, 2.2 * (u - 0.5) ** 1.2)
       for (const side of [-1, 1]) soft(pen, x + side * spread * 0.78, crownY + 0.3 + len / 2, W * 0.32, len / 2 + 0.35, SPRAY, 0.6 * fade)
     }
     // White water boiling at its foot.
-    soft(pen, x, base - 0.3, W * (0.9 + 1.4 * sm(u / 1.2)), 0.55, SPRAY_NEAR, 0.8 * fade)
+    soft(pen, x, base - 0.3, W * (0.9 + 1.4 * sm(u / 1.2)), 0.55, SPRAY_NEAR, 0.8 * fade * up)
     // The mist it leaves hanging, lingering.
     soft(pen, x, base - 1.0, W * (1.4 + 2.4 * sm(u / 3.5)), 1.2 + 0.45 * u, SPRAY, 0.5 * Math.exp(-u / 3.2) * sm(u / 0.3))
     // The swell running out from it across the water, both ways: a foaming crest, and the water stirred behind it.
@@ -531,7 +533,8 @@ const WRECKAGE: [number, number, number, number][] = [
   [-12.6, 0.8, 0.3, -0.3],
 ]
 function drawWreckage(pen: Pen, t: number, xa: number, xb: number): void {
-  if (t < Q.under) return
+  // Afloat from the return's first moment, before the sea is in view (from going under, it came on in a frame).
+  if (t < Q.begin) return
   const ctx = pen.p.drawingContext as CanvasRenderingContext2D
   const { k } = pen
   WRECKAGE.forEach(([x, w, h, tilt], i) => {
