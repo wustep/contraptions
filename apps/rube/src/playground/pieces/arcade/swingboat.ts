@@ -7,14 +7,15 @@ import { flash, glow, lamp, score } from '../../../pieces/arcade/neon'
  * A swing boat. A crescent hull hangs by two rods from the head of an
  * A-frame, its stern's tip level with the lane, a brake shoe on the floor
  * under its keel. The ball rolls off the rail's end over the stern and
- * down into the dish of the deck, and its way shoves the boat off: forward a
- * little, back further, forward further still, back as high as it goes, the
- * ball bedded in the bottom of the dish the whole time, since a thing in a
- * swinging boat is pressed straight into its deck. On the way down the third
- * time the brake bites at the bottom of the swing, in sparks, and the boat
- * stops dead; the ball does not. It runs on up the dish at the pace the boat
- * had, off the bow's tip, and over the water to the far rail. The boat
- * creeps back to plumb on its brake, and the lamps along it go out.
+ * down into the dish of the deck, and the ride starts under it, its lamps
+ * chasing: forward a little, back further, forward further still, back as
+ * high as it goes, the ball bedded in the bottom of the dish the whole
+ * time, since a thing in a swinging boat is pressed straight into its
+ * deck. On the way down the third time the brake bites at the bottom of
+ * the swing and the boat stops dead; the ball does not. It runs on up the
+ * dish at the pace the boat had, off the bow's tip, and over the gap to
+ * the far rail. The boat creeps back to plumb on its brake, and the lamps
+ * along it go out.
  *
  * The boat's angle is one function of time, and the ball's place in the
  * dish another; the lane is the two together, traced, and the drawing reads
@@ -201,18 +202,8 @@ export const swingboat = definePiece<{ color: string }>({
     solid(p, ink, weight, running > 0.5 ? s.color : bg)
     p.circle(CX * k, PY * k, 0.11 * k)
 
-    // The brake biting: sparks off the shoe, under the keel.
+    // The brake biting, under the keel: the arcade's hit mark off the shoe.
     flash(p, k, s.color, weight, CX, 0.44, since, 0.22, 0.05, 0.2)
-    if (since > 0 && since < 0.22) {
-      const f = since / 0.22
-      p.push()
-      p.stroke(s.color)
-      p.strokeWeight(weight)
-      for (const [dx, dy] of [[-1, -0.35], [-0.8, -0.7], [0.75, -0.75], [1, -0.3]]) {
-        p.line((CX + dx * (0.12 + 0.14 * f)) * k, (0.45 + dy * (0.05 + 0.12 * f)) * k, (CX + dx * (0.16 + 0.2 * f)) * k, (0.45 + dy * (0.07 + 0.17 * f)) * k)
-      }
-      p.pop()
-    }
   },
   // The ride pays as the ball leaves the bow, over the frame's head.
   scores: (p, s, { k, since, bg }) => score(p, k, s.color, bg, CX, PY - 0.08 + 0.1, '+150', since - T_RUN, 1),
