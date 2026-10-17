@@ -125,7 +125,7 @@ function drawFloes(g: C2, k: number, f: ReturnType<typeof frame>, hz: number, t:
     if (y < f.y0 - 1 || y > f.y1 + 1) continue
     const fog = Math.pow(1 - s, 1.6)
     const band = Math.min(BANDS - 1, Math.floor(fog * BANDS))
-    const density = 0.45 * Math.pow(s, 0.6)
+    const density = 0.36 * Math.pow(s, 0.7)
     const squash = Math.max(0.07, Math.min(0.6, e / z))
     for (let n = n0; n <= n1; n++) {
       if (hash(n, L, 21) > density) continue
