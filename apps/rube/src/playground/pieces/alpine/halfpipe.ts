@@ -1,6 +1,6 @@
-import { outline, solid } from '../../../../../../src/core/draw'
+import { solid } from '../../../../../../src/core/draw'
 import { FLOOR, R, ROLL, definePiece, over, ramp, trace, type Lane, type Pt } from '../../../parts'
-import { SNOW, powder, snow, snowAt, snowWhite } from './snow'
+import { SNOW, powder, snowAt, snowWhite } from './snow'
 
 /**
  * A halfpipe cut in the snow, two cells across and most of a floor deep.
@@ -141,40 +141,8 @@ const LANE: Lane = {
   fire: LINE.launch,
 }
 
-/** The pipe's skin, coping to coping, and the snow's body behind it. */
+/** The pipe's skin, coping to coping: the line the ball rides, a radius outside its centre. */
 const SKIN: Pt[] = LINE.skin.filter((q): q is Pt => q !== null).filter((q, i, all) => i === 0 || q !== all[i - 1])
-/** How thick the snow stands behind the walls, and under the decks where they leave the ground. */
-const WALL = 0.11
-const BACK: Pt[] = (() => {
-  const out: Pt[] = []
-  for (let i = 1; i + 1 < SKIN.length; i++) {
-    const [ax, ay] = SKIN[i - 1]
-    const [bx, by] = SKIN[i + 1]
-    const len = Math.hypot(bx - ax, by - ay) || 1
-    const q: Pt = [SKIN[i][0] - ((by - ay) / len) * WALL, SKIN[i][1] + ((bx - ax) / len) * WALL]
-    // Only under the ground: above it the walls' backs are the banks.
-    if (q[1] > snowAt(q[0]) && q[0] > LINE.near[0] - WALL - 0.02 && q[0] < LINE.far[0] + WALL + 0.02) out.push(q)
-  }
-  return out
-})()
-/** The banks under the two decks: nothing at the piece's edge, where the track is a rail, and swelling down to the ground this far in. */
-const SWELL = 0.2
-const NEAR_FOOT = -0.5 + SWELL
-const FAR_FOOT = 1.5 - SWELL
-const bankUnder = (edge: number, hand: 1 | -1): Pt[] => {
-  const out: Pt[] = []
-  for (let i = 0; i <= 8; i++) {
-    const u = i / 8
-    const x = edge + hand * SWELL * u
-    out.push([x, FLOOR + 0.03 + (snowAt(x) - FLOOR - 0.03) * (1 - (1 - u) ** 3)])
-  }
-  return out
-}
-const NEAR_BANK = bankUnder(-0.5, 1)
-const FAR_BANK = bankUnder(1.5, -1)
-/** The pipe's belly: its middle, and how low it hangs. It rests in a heap on the snow of the floor below. */
-const BELLY_X = BACK.reduce((low, q) => (q[1] > low[1] ? q : low), BACK[0])[0]
-const BELLY = Math.max(...BACK.map((q) => q[1]))
 
 export const halfpipe = definePiece<{ white: string }>({
   name: 'halfpipe',
@@ -192,33 +160,15 @@ export const halfpipe = definePiece<{ white: string }>({
     return { cells, exit: { at: [2, 0], dir: 1 }, lane: LANE, state: { white: snowWhite(theme) } }
   },
   draw: (p, s, { k, t, ink, weight }) => {
-    snow(p, k, ink, weight, -0.5, NEAR_FOOT)
-    snow(p, k, ink, weight, FAR_FOOT, 1.5)
-    // The floor below has its own snow, and the pipe's belly rests in a heap of it: white under one soft line, the ground's own beneath.
-    const heap: Pt[] = [[BELLY_X - 0.5, snowAt(BELLY_X - 0.5, SNOW + 1)], [BELLY_X - 0.22, BELLY - 0.03], [BELLY_X + 0.22, BELLY - 0.03], [BELLY_X + 0.5, snowAt(BELLY_X + 0.5, SNOW + 1)]]
-    for (const stroked of [false, true]) {
-      if (stroked) outline(p, ink, weight)
-      else {
-        p.noStroke()
-        p.fill(s.white)
-      }
-      p.beginShape()
-      p.curveVertex(heap[0][0] * k, heap[0][1] * k)
-      for (const [x, y] of heap) p.curveVertex(x * k, y * k)
-      p.curveVertex(heap[3][0] * k, heap[3][1] * k)
-      p.endShape()
-    }
-    snow(p, k, ink, weight, -0.5, heap[0][0], SNOW + 1)
-    snow(p, k, ink, weight, heap[3][0], 1.5, SNOW + 1)
-
-    // One body of snow: the banks under the decks, the walls' backs under the ground, and the skin the ball rides.
+    // One body of snow, from the decks down to the floor below's own snow, with the pipe cut out of its top.
     solid(p, ink, weight, s.white)
     p.beginShape()
     for (const [x, y] of SKIN) p.vertex(x * k, y * k)
     p.vertex(1.5 * k, FLOOR * k)
-    for (const [x, y] of FAR_BANK) p.vertex(x * k, y * k)
-    for (let i = BACK.length - 1; i >= 0; i--) p.vertex(BACK[i][0] * k, BACK[i][1] * k)
-    for (let i = NEAR_BANK.length - 1; i >= 0; i--) p.vertex(NEAR_BANK[i][0] * k, NEAR_BANK[i][1] * k)
+    for (let i = 0; i <= 24; i++) {
+      const x = 1.5 - (2 * i) / 24
+      p.vertex(x * k, snowAt(x, SNOW + 1) * k)
+    }
     p.endShape(p.CLOSE)
 
     // The landing: a puff of powder off the far deck.
