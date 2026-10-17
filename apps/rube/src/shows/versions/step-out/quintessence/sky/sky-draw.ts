@@ -92,7 +92,7 @@ export function drawSkySet(p: p5, k: number, t: number, under = false): void {
     [1, rgba(SKY.seaFar, 0)],
   ])
   g.fillRect(x0 * k, (hz - 0.35) * k, (x1 - x0) * k, 0.8 * k)
-  drawTown(g, k, e, t, SURF, SKY.seaFar)
+  drawTown(g, k, e, SURF, SKY.seaFar)
   drawBergs(g, k, e, t, SURF, SKY.seaFar)
   drawFloes(g, k, f, hz, t)
   if (!under) drawNearWater(g, k, f, t)
@@ -179,36 +179,9 @@ function drawNearWater(g: C2, k: number, f: ReturnType<typeof frame>, t: number)
   g.stroke(crests)
 }
 
-/**
- * The quay's face: its courses of stone and their joints, old tyres hung on chains for fenders, an iron ladder down to
- * the water, and the wet dark of it running down from the top. One stroke for the joints, one fill for the tyres.
- */
+/** The quay's face: old tyres hung on chains for fenders, and an iron ladder down to the water. */
 function drawQuayFace(g: C2, k: number, xa: number, xb: number, top: number, t: number): void {
   if (xb <= xa) return
-  const foot = SURF + 0.3
-  const joints = new Path2D()
-  let row = 0
-  for (let y = top + 0.3; y < foot; y += 0.3, row++) {
-    joints.moveTo(xa * k, y * k)
-    joints.lineTo(xb * k, y * k)
-    for (let x = Math.floor(xa / 1.1) * 1.1 + (row % 2) * 0.55; x < xb; x += 1.1) {
-      joints.moveTo(x * k, (y - 0.3) * k)
-      joints.lineTo(x * k, y * k)
-    }
-  }
-  g.strokeStyle = rgba('#3E4744', 0.32)
-  g.lineWidth = Math.max(0.8, 0.018 * k)
-  g.stroke(joints)
-  // Wet streaks down from the edge.
-  const wet = new Path2D()
-  for (let i = Math.floor(xa / 0.45); i * 0.45 < xb; i++) {
-    if (hash(i, 111) < 0.55) continue
-    const x = i * 0.45 + hash(i, 112) * 0.3
-    wet.rect(x * k, (top + 0.04) * k, (0.03 + 0.05 * hash(i, 113)) * k, (0.2 + 0.7 * hash(i, 114)) * k)
-  }
-  g.fillStyle = rgba('#2F3735', 0.22)
-  g.fill(wet)
-  // Tyres on chains, and the ladder.
   const tyres = new Path2D()
   const chains = new Path2D()
   for (let x = Math.ceil((xa - 1.75) / 3.5) * 3.5 + 1.75; x < xb; x += 3.5) {
@@ -269,29 +242,17 @@ function drawLapping(g: C2, k: number, f: ReturnType<typeof frame>, xa: number, 
   g.stroke(foam)
 }
 
-/** Rain lying on the quay's top in puddles that hold the sky; the rotor's wash shivers them into rings as it lifts. */
-function drawPuddles(g: C2, k: number, f: ReturnType<typeof frame>, top: number, back: number, t: number): void {
-  const wash = smooth(t, LIFT - 1.6, LIFT - 0.2) * (1 - smooth(t, LIFT + 1.5, LIFT + 3.5))
+/** Rain lying on the quay's top in a few puddles that hold the sky. */
+function drawPuddles(g: C2, k: number, f: ReturnType<typeof frame>, top: number, back: number): void {
   const pools = new Path2D()
-  const rings = new Path2D()
   const y = (top + back) / 2 + 0.03
-  for (const [x, w] of [[-8.6, 0.9], [-6.1, 0.6], [-1.6, 1.1], [6.9, 0.35], [-11.8, 0.8]] as [number, number][]) {
+  for (const [x, w] of [[-8.6, 0.9], [-1.6, 1.1], [-11.8, 0.8]] as [number, number][]) {
     if (x + w < f.x0 || x - w > f.x1) continue
     pools.moveTo((x + w) * k, y * k)
     pools.ellipse(x * k, y * k, w * k, 0.06 * k, 0, 0, Math.PI * 2)
-    // Rings going out from the middle of each, quicker as the wash comes on; a slow few from the drizzle anyway.
-    for (let j = 0; j < 3; j++) {
-      const u = (((t * (0.5 + 1.6 * wash) + j / 3 + x * 0.37) % 1) + 1) % 1
-      const r = 0.08 + u * w * 0.85
-      rings.moveTo((x + r) * k, y * k)
-      rings.ellipse(x * k, y * k, r * k, r * 0.07 * k, 0, 0, Math.PI * 2)
-    }
   }
   g.fillStyle = rgba(SKY.low, 0.7)
   g.fill(pools)
-  g.strokeStyle = rgba('#7F8A89', 0.35 + 0.3 * wash)
-  g.lineWidth = Math.max(0.6, 0.012 * k)
-  g.stroke(rings)
 }
 
 /** The quay at the harbour's edge, the pad on it, the windsock. */
@@ -321,7 +282,7 @@ function drawQuay(g: C2, k: number, f: ReturnType<typeof frame>, t: number): voi
   g.fillRect(xa * k, top * k, (QUAY_X - xa) * k, 0.04 * k)
   drawQuayFace(g, k, Math.max(xa, f.x0 - 1), Math.min(QUAY_X, f.x1 + 1), top, t)
   drawLapping(g, k, f, Math.max(xa, f.x0 - 1), Math.min(QUAY_X, f.x1 + 1), t)
-  drawPuddles(g, k, f, top, back, t)
+  drawPuddles(g, k, f, top, back)
   // Bollards on the edge.
   for (const bx of [-9.5, -4.5, 6.6]) {
     rrect(g, k, bx - 0.11, top - 0.3, bx + 0.11, top + 0.01, 0.06)
@@ -796,21 +757,21 @@ export function drawWash(p: p5, k: number, t: number): void {
   // On the pad: dust and spray thrown out flat along the quay, round the lift.
   if (t > LIFT - 1.5 && t < LIFT + 3) {
     const a = smooth(t, LIFT - 1.5, LIFT) * (1 - smooth(t, LIFT + 1, LIFT + 3))
-    for (let i = 0; i < 18; i++) {
+    for (let i = 0; i < 8; i++) {
       const u = ((t * 1.3 + hash(i, 51)) % 1)
       const dir = i % 2 ? 1 : -1
       const x = h.x + 0.4 + dir * (0.6 + u * 3.2)
       oval(g, k, x, 0.04 - u * 0.12, 0.25 + u * 0.4, 0.03 + u * 0.05, rgba('#DDE2E0', a * 0.35 * (1 - u)))
     }
   }
-  // Over the water, when it is low: rings going out on the sea.
+  // Over the water, when it is low: two rings going out on the sea.
   if (height < 4.5 && t > BEGIN + 10) {
     const a = smooth(-height, -4.5, -2.0)
     g.lineWidth = Math.max(1, 0.03 * k)
-    for (let i = 0; i < 4; i++) {
-      const u = ((t * 0.7 + i / 4) % 1)
+    for (let i = 0; i < 2; i++) {
+      const u = ((t * 0.5 + i / 2) % 1)
       const r = 0.6 + u * 3.6
-      g.strokeStyle = rgba('#DCE3E0', a * 0.5 * (1 - u))
+      g.strokeStyle = rgba('#DCE3E0', a * 0.35 * Math.min(1, u * 5) * (1 - u))
       g.beginPath()
       g.ellipse((h.x + 0.4) * k, (SURF + 0.06) * k, r * k, r * 0.07 * k, 0, 0, Math.PI * 2)
       g.stroke()

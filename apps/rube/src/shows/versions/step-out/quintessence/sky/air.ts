@@ -270,11 +270,10 @@ const TABLE: [number, number][] = [[0, 0], [0.03, -0.75], [0.2, -0.85], [0.45, -
 const HOUSES = ['#C08A3E', '#4F8C88', '#CFA43E', '#4E6F94', '#E4E6E1', '#6E8F6A']
 
 /**
- * Nuuk across the harbour from the pad: Sermitsiaq's dark bulk under its snow beyond the town, the low shore, and the
- * houses climbing it in their colours (ochre, teal, mustard, blue, white), a window here and there lit. Left behind as
- * the helicopter goes.
+ * Nuuk across the harbour from the pad: Sermitsiaq's dark bulk under its snow beyond the town, the low shore, and a
+ * few houses up it in their colours (ochre, teal, mustard, blue, white). Left behind as the helicopter goes.
  */
-export function drawTown(g: C2, k: number, e: Eye, t: number, surf: number, haze: string): void {
+export function drawTown(g: C2, k: number, e: Eye, surf: number, haze: string): void {
   // Seen from the pad and the first of the climb; below the horizon from any height, and out over the sea, it is
   // left behind.
   const seen = (1 - smooth(surf - e.hz, 2.6, 4.2)) * (1 - smooth(e.cx, 26, 34))
@@ -327,20 +326,18 @@ export function drawTown(g: C2, k: number, e: Eye, t: number, surf: number, haze
   g.fill(shore)
   const walls = HOUSES.map(() => new Path2D())
   const roofs = new Path2D()
-  const lit = new Path2D()
-  for (let i = 0; i < 70; i++) {
-    const x = a.x + (b.x - a.x) * ((i + hash(i, 102)) / 70)
+  for (let i = 0; i < 24; i++) {
+    const x = a.x + (b.x - a.x) * ((i + hash(i, 102)) / 24)
     if (x < e.x0 - 0.5 || x > e.x1 + 0.5) continue
     const up = hill(x) * (0.15 + 0.75 * hash(i, 103))
-    const w = s * (0.45 + 0.3 * hash(i, 104))
-    const h = s * (0.32 + 0.2 * hash(i, 105))
+    const w = s * (0.55 + 0.35 * hash(i, 104))
+    const h = s * (0.38 + 0.22 * hash(i, 105))
     const y = a.y - up
     walls[Math.floor(hash(i, 106) * HOUSES.length)].rect((x - w / 2) * k, (y - h) * k, w * k, h * k)
     roofs.moveTo((x - w / 2 - 0.04 * s) * k, (y - h) * k)
     roofs.lineTo(x * k, (y - h - 0.22 * s) * k)
     roofs.lineTo((x + w / 2 + 0.04 * s) * k, (y - h) * k)
     roofs.closePath()
-    if (hash(i, 107) < 0.4) lit.rect((x - w * 0.18) * k, (y - h * 0.62) * k, w * 0.18 * k, h * 0.26 * k)
   }
   walls.forEach((p, i) => {
     g.fillStyle = mix(HOUSES[i], haze, 0.3)
@@ -348,7 +345,5 @@ export function drawTown(g: C2, k: number, e: Eye, t: number, surf: number, haze
   })
   g.fillStyle = mix('#36403F', haze, 0.3)
   g.fill(roofs)
-  g.fillStyle = rgba('#F2D9A0', 0.55 + 0.1 * Math.sin(t * 0.7))
-  g.fill(lit)
   g.restore()
 }
