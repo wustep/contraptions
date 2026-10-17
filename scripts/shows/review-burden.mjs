@@ -1,5 +1,5 @@
 // Reproducible frame scrub and contact sheets. Run against this worktree's Vite:
-// node scripts/shows/review-burden.mjs --round 1 --port 8863 [--scan]
+// node scripts/shows/review-burden.mjs --round 1 --port 8863 [--scan] [--export]
 import { createRequire } from 'node:module'
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
@@ -59,7 +59,7 @@ for (const [name, t] of [['shire', 4], ['council', 86], ['pass', 132], ['bridge'
   save(`${output}/${name}.png`, await page.evaluate(t => window.shows.still(t, 1280, 720), t))
 }
 save('public/shows/bridge-of-khazad-dum/astra.png', await page.evaluate(() => window.shows.still(255, 1200, 630)))
-const report = { round: args.round, errors, frames: 0, speed: [], reversible: false, credits: false }
+const report = { round: args.round, errors, frames: 0, speed: [], reversible: false, credits: false, matte: false, views: [], dom: null, export: null, youtube: null }
 for (const speed of [1, 2]) {
   report.speed.push(await page.evaluate(speed => { window.shows.setSpeed(speed); return window.shows.state().speed }, speed))
 }
@@ -90,12 +90,75 @@ const credit = await page.evaluate(async () => {
   img.src = url; await img.decode()
   const c = document.createElement('canvas'); c.width = 1280; c.height = 720
   const g = c.getContext('2d'); g.drawImage(img, 0, 0)
-  wordPainter(1280, 720)(g, perf.titles(365))
-  return { png: c.toDataURL(), hasDirector: perf.titles(365).some(c => c.names.includes('GPT-6 Astra')) }
+  const proto = CanvasRenderingContext2D.prototype
+  const shadow = Object.getOwnPropertyDescriptor(proto, 'shadowBlur'), filter = Object.getOwnPropertyDescriptor(proto, 'filter')
+  let matte = true
+  Object.defineProperty(proto, 'shadowBlur', { ...shadow, set(v) { if (v > 0) matte = false; shadow.set.call(this, v) } })
+  Object.defineProperty(proto, 'filter', { ...filter, set(v) { if (v !== 'none') matte = false; filter.set.call(this, v) } })
+  try {
+    const paint = wordPainter(1280, 720)
+    for (const t of [357.5, 365, 370, 377]) { g.clearRect(0, 0, c.width, c.height); paint(g, perf.titles(t)) }
+    g.clearRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0); paint(g, perf.titles(365))
+  } finally {
+    Object.defineProperty(proto, 'shadowBlur', shadow); Object.defineProperty(proto, 'filter', filter)
+  }
+  return { png: c.toDataURL(), hasDirector: perf.titles(365).some(c => c.names.includes('GPT-6 Astra')), matte }
 })
-save(`${output}/video-credit.png`, credit.png); report.credits = credit.hasDirector
+save(`${output}/video-credit.png`, credit.png); report.credits = credit.hasDirector; report.matte = credit.matte
+for (const view of ['zoom', 'overview']) {
+  await page.evaluate(view => { window.shows.setZoom(view === 'zoom'); window.shows.setOverview(view === 'overview') }, view)
+  await sheet(view, [4, 86, 132, 198, 247, 276, 328, 345])
+  report.views.push(view)
+}
+await page.evaluate(() => { window.shows.setZoom(false); window.shows.setOverview(false); window.shows.seek(363.7); window.shows.paintAt(363.7) })
+await page.waitForTimeout(150)
+report.dom = await page.evaluate(() => {
+  const card = document.querySelector('.stage-words .card.matte')
+  return card ? { text: card.textContent, shadow: getComputedStyle(card).textShadow, filter: getComputedStyle(card).filter } : null
+})
+if (args.export) {
+  const downloaded = page.waitForEvent('download', { timeout: 30000 })
+  const saved = await page.evaluate(async () => {
+    const { performance: perf } = await import('/apps/rube/src/shows/versions/bridge-of-khazad-dum/astra/index.ts')
+    const { createShowStage } = await import('/apps/rube/src/shows/stage.ts')
+    const from = 363.2, host = document.createElement('div')
+    host.style.cssText = 'position:fixed;inset:0;width:1280px;height:720px;z-index:9999;'
+    document.body.append(host)
+    const stage = createShowStage(host, { time: () => 0 })
+    const show = Object.assign(Object.create(perf.show), { at: t => perf.show.at(from + t) })
+    stage.set({ ...perf, show, duration: 6.2, soundtrack: undefined, camera: t => perf.camera(from + t), titles: t => perf.titles(from + t) })
+    try {
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
+      return await stage.saveVideo('burden-export-proof', { label: '720p', w: 1280, h: 720 }, 2, false, new AbortController().signal)
+    } finally { stage.destroy(); host.remove() }
+  })
+  const download = await downloaded, path = `${output}/${download.suggestedFilename()}`
+  await download.saveAs(path)
+  report.export = { saved, path, showRange: [363.2, 369.4], speed: 2 }
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.evaluate(() => { window.shows.seek(365); window.shows.paintAt(365) })
+  await page.waitForTimeout(200)
+  await page.screenshot({ path: `${output}/mobile-credit.png` })
+  await page.setViewportSize({ width: 1280, height: 800 })
+  // Confirm the live route creates the actual YouTube player, separately from silent capture.
+  await page.goto(`${base}/shows/bridge-of-khazad-dum/astra/`)
+  await page.waitForFunction(() => window.shows && !window.shows.state().loading)
+  await page.waitForTimeout(1500)
+  report.youtube = await page.evaluate(() => ({ state: window.shows.state(), frames: [...document.querySelectorAll('iframe')].map(f => f.src) }))
+  const rates = []
+  for (const speed of [1, 2]) {
+    await page.evaluate(speed => window.shows.setSpeed(speed), speed)
+    await page.waitForTimeout(600)
+    const before = await page.evaluate(() => ({ heard: window.shows.state().heard, wall: performance.now() }))
+    await page.waitForTimeout(1100)
+    const after = await page.evaluate(() => ({ heard: window.shows.state().heard, wall: performance.now() }))
+    rates.push({ speed, measured: (after.heard - before.heard) / ((after.wall - before.wall) / 1000) })
+  }
+  report.youtube.rates = rates
+  await page.evaluate(() => window.shows.pause())
+}
 report.errors = errors
 writeFileSync(`${output}/report.json`, JSON.stringify(report, null, 2) + '\n')
 console.log(JSON.stringify(report))
 await browser.close()
-if (errors.length || !report.reversible || !report.credits) process.exitCode = 1
+if (errors.length || !report.reversible || !report.credits || !report.matte || !report.dom || report.dom.shadow !== 'none' || report.dom.filter !== 'none') process.exitCode = 1

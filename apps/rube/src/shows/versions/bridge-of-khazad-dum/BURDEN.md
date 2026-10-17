@@ -76,7 +76,7 @@ cast overlap at the bridge. Rebuilt shared support geometry, fixed the
 stair hinge, and gave Gandalf a small pin perch. Replaced angular foliage
 and hills with curved silhouettes; refined door joints and masonry.
 
-Suggested tweet: **Burden · after The Fellowship of the Ring**
+Suggested tweet: **Burden · after The Lord of the Rings: The Fellowship of the Ring**
 
 ### Round 2
 
@@ -87,3 +87,30 @@ centre axle and the columns behind the chasm. Held the wide frame through
 Gandalf's fall before following the survivors. Re-rendered all 11,490 frames;
 zero browser errors, no canvas text, identical reverse-scrub pixels, both
 speed settings and the export credit painter passed again.
+
+### Round 3
+
+The credit proof put the director across an Argonath hand. Moved all cards
+into clear sky and added the optional `TitleCard.matte` treatment, shared
+by live DOM and video: no halo on text or swatches, no blur during fades.
+The other takes keep their existing treatment. Reframed Gandalf's pin
+handoff closer before the slow reveal of the chasm; refined the kings'
+carved faces, cloaks and hands. The ring's temptation now pulls toward the
+seat's visible hanging cord.
+
+Re-rendered all 11,490 frames, plus Zoom, Overview and a 390 × 844 live
+portrait view. Zero browser errors, exact reverse-scrub pixels, no text in
+the live canvas; DOM and video credit checks confirm zero halo or blur.
+Recorded a 6.2-second end-credit excerpt at 2× through the actual
+`createShowStage().saveVideo()` / MediaRecorder path. Decoding the 1280 × 720
+VP9 file confirms the director card is baked into the video and that no
+audio stream is present. The official YouTube embed reported ready, with
+no fallback; observed clock rates were 0.986× and 1.956× for 1× and 2×.
+
+Run the media checks with:
+
+```sh
+node scripts/shows/review-burden.mjs --round 3 --port 8863 --scan --export
+```
+
+Selected screenshots and the review record are in `docs/shows/burden/`.

@@ -56,4 +56,6 @@ export function checkBurden(perf: Performance, version: ShowVersion, check: Chec
   const said = Array.from({ length: DURATION - MUSIC_END }, (_, i) => perf.titles?.(MUSIC_END + i)).flat().map(c => JSON.stringify(c)).join(' ')
   check('Burden: end cards identify title, director, locked cast and cue for DOM and export',
     ['Burden', 'GPT-6 Astra', 'Frodo', 'Sam', 'Gandalf', 'Howard Shore', 'The Bridge of Khazad Dum'].every(s => said.includes(s)))
+  check('Burden: every credit opts into matte, opacity-only live and video cards',
+    [358, 365, 371, 378].every(t => perf.titles!(t).length > 0 && perf.titles!(t).every(c => c.matte && !c.shade)))
 }

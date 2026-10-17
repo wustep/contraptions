@@ -15,6 +15,6 @@ export function creditsAt(t: number): TitleCard[] {
   return cards.flatMap((card, i) => {
     const at = MUSIC_END + i * 6.2
     const light = smooth(t, at, at + 1.1) * (1 - smooth(t, at + 5, at + 6.2))
-    return light > 0 ? [{ ...card, key: `burden-${i}`, light, rise: 0, at: [0.5, 0.15] as [number, number], scale: i === 3 ? 0.66 : 0.85, plain: true }] : []
+    return light > 0 ? [{ ...card, key: `burden-${i}`, light, rise: 0, at: [0.74, 0.16] as [number, number], scale: i === 3 ? 0.62 : 0.85, plain: true, matte: true }] : []
   })
 }

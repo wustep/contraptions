@@ -135,7 +135,9 @@ export function ringAt(t: number): Pt {
     return [p[0] + q[0], p[1] + q[1]] as Pt
   })()
   const temptation = smooth(t, 311, 315) * (1 - smooth(t, 317, 320))
-  return [ground[0] + 1.12 * temptation, ground[1] + 0.045 - 0.26 * temptation]
+  // The aperture's hanging cord draws the hoop toward the empty seat; the
+  // traveller keeps moving until the tether slips free. The pull has a source.
+  return [mix(ground[0], 152.8, temptation * 0.82), mix(ground[1] + 0.045, 9.7, temptation * 0.82)]
 }
 
 export function castAt(t: number): ShowBall[] {
