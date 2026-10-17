@@ -13,8 +13,8 @@ import { WATER, piling, seaWater, seabed, water } from '../../../pieces/harbor/s
  * the back, round the front, wider and higher every turn as the foot wanders
  * back out to sea, and at the top of the last turn it lets the ball go off
  * its front, onward, onto the deck up there. Then it has nothing left in
- * it: the funnel thins to a thread from the foot up and is gone, and the
- * cloud is only a cloud.
+ * it: the funnel ropes out, its foot lifting off the sea and drawn up
+ * thinner and thinner into the cloud, and the cloud is only a cloud.
  *
  * The funnel's axis, its width and the ball's turn about it are functions of
  * time and height; the ball's lane is traced from them, so what is seen from
@@ -114,26 +114,38 @@ const orbitAt = (base: number, y: number) => widthAt(base, y) * 0.85 + 0.055
 
 const SPOUTS = { 2: build(2), 3: build(3) }
 
-/** The streaks on the funnel's near side: three ropes of water wound round it, turning. Drawn before the ball, and again over it when it is round the back. */
+/** How far up the funnel its lower end is, 0 at the sea: once the ball is let go it ropes out, up into the cloud. */
+const lowAt = (sp: Spout, t: number): number => 1 - sp.left(t)
+/** How much of the funnel's width it has at `up`: thinning as it ropes out, and tapering to a point at its lower end once it has left the sea. */
+const fullAt = (sp: Spout, t: number, up: number): number => {
+  const low = lowAt(sp, t)
+  return low > 0 ? (1 - 0.6 * low) * clamp((up - low) / 0.2) : 1
+}
+
+/** The funnel from its lower end to the cloud, `n` steps, as heights. */
+function heights(sp: Spout, t: number, n: number): number[] {
+  const y0 = lerp(WATER, sp.base, lowAt(sp, t))
+  return Array.from({ length: n + 1 }, (_, i) => lerp(y0, sp.base, i / n))
+}
+
+/** The streaks on the funnel's near side: three ropes of water wound slowly round it, turning. Drawn before the ball, and again over it when it is round the back. */
 function streaks(p: p5, k: number, color: string, weight: number, sp: Spout, t: number): void {
-  const left = sp.left(t)
-  if (left <= 0) return
+  if (sp.left(t) <= 0) return
   const footX = sp.foot(t)
   p.noFill()
   p.stroke(color)
   p.strokeWeight(weight * 1.15)
-  const n = 26 * sp.floors
+  const ys = heights(sp, t, 26 * sp.floors)
   for (let band = 0; band < 3; band++) {
     let open = false
-    for (let i = 0; i <= n; i++) {
-      const y = lerp(WATER, sp.base, i / n)
+    for (const y of ys) {
       const up = upAt(sp.base, y)
-      const a = (band / 3) * Math.PI * 2 + up * sp.floors * 5.2 - t * TURN
-      const near = Math.sin(a) < -0.12 && up > 1 - left
+      const a = (band / 3) * Math.PI * 2 + up * sp.floors * 2.4 - t * TURN
+      const near = Math.sin(a) < -0.12
       if (near && !open) p.beginShape()
       if (!near && open) p.endShape()
       open = near
-      if (near) p.vertex((axisAt(footX, sp.base, y) + widthAt(sp.base, y) * left * Math.cos(a) * 0.96) * k, y * k)
+      if (near) p.vertex((axisAt(footX, sp.base, y) + widthAt(sp.base, y) * fullAt(sp, t, up) * Math.cos(a) * 0.96) * k, y * k)
     }
     if (open) p.endShape()
   }
@@ -166,20 +178,18 @@ export const waterspout = definePiece<SpoutState>({
     piling(p, k, ink, weight, POST_X, top + FLOOR, 0.5)
     seabed(p, k, ink, weight, -0.5, 1.5)
 
-    // The funnel: paper inside one line, thin at the sea and wide at the cloud, a slow wave going up it. It thins away from the foot up.
+    // The funnel: paper inside one line, thin at the sea and wide at the cloud, a slow wave going up it. Spent, it ropes out from the sea up.
     if (left > 0) {
-      const n = 22 * s.floors
-      const edge = (side: 1 | -1, i: number): Pt => {
-        const y = lerp(WATER, sp.base, i / n)
+      const ys = heights(sp, t, 22 * s.floors)
+      const edge = (side: 1 | -1, y: number): Pt => {
         const up = upAt(sp.base, y)
         const wave = 0.012 * Math.sin(up * 9 - t * 6) * (1 - up)
-        const gone = clamp((up - (1 - left)) / 0.2)
-        return [axisAt(footX, sp.base, y) + wave + side * widthAt(sp.base, y) * left * gone, y]
+        return [axisAt(footX, sp.base, y) + wave + side * widthAt(sp.base, y) * fullAt(sp, t, up), y]
       }
       solid(p, ink, weight, bg)
       p.beginShape()
-      for (let i = 0; i <= n; i++) p.vertex(edge(-1, i)[0] * k, edge(-1, i)[1] * k)
-      for (let i = n; i >= 0; i--) p.vertex(edge(1, i)[0] * k, edge(1, i)[1] * k)
+      for (const y of ys) p.vertex(edge(-1, y)[0] * k, y * k)
+      for (const y of [...ys].reverse()) p.vertex(edge(1, y)[0] * k, y * k)
       p.endShape(p.CLOSE)
       streaks(p, k, seaWater(theme), weight, sp, t)
     }
@@ -194,14 +204,15 @@ export const waterspout = definePiece<SpoutState>({
     p.bezierVertex((CLOUD_X + 0.2) * k, (cy - 0.15) * k, (CLOUD_X + 0.4) * k, (cy - 0.09) * k, (CLOUD_X + 0.34) * k, cy * k)
     p.endShape(p.CLOSE)
 
-    // The sea, heaped up a little round the spout's foot while there is one.
+    // The sea, heaped up a little round the spout's foot while it stands on it, and let down as it lifts off.
     water(p, k, ink, bg, weight, -0.5, 1.5)
-    if (left > 0.3) {
+    const heap = over(left, 0.85, 1)
+    if (heap > 0) {
       outline(p, ink, weight * 0.8)
       for (const side of [-1, 1]) {
         p.beginShape()
         p.vertex((footX + side * 0.16) * k, (WATER + 0.005) * k)
-        p.quadraticVertex((footX + side * 0.07) * k, (WATER - 0.005) * k, (footX + side * THIN * 1.1) * k, (WATER - 0.07) * k)
+        p.quadraticVertex((footX + side * 0.07) * k, (WATER - 0.005 * heap) * k, (footX + side * THIN * 1.1) * k, (WATER - 0.07 * heap) * k)
         p.endShape()
       }
     }
