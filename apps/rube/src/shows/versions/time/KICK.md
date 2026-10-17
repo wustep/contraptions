@@ -610,6 +610,20 @@ the city, an orange circle and the balls' rolling):
   river's mist thins to nothing; the landing gear comes down out of the wings and the bay; the glass door's foot
   swings behind him; the children ease to rest in the embrace.
 
+A second glitch pass read every section again for the first pass's regressions and what it missed:
+- **The children** held before the embrace with their faces turned up and away from him (their roll was counted to
+  the embrace); it is counted to half way, the space they close is smaller, and they face him from first to last.
+  The face is there from the first moment of their turn, ink in the dark ball.
+- **Limbo's breakers** lost the last of their stray foam: the collapse cloud hanging over the break and the dash at
+  the wash's edge are gone, and the wash fades in at its seaward end (it began as a box under the water).
+- **Limbo's city**: the great tops' spray stands up beside their stumps, where it shows (behind the stumps' middles it
+  was hidden); a slab off the broken tower keeps the roof's slope, and its stump no longer loses a strip.
+- **The snow** falls only in the air (not through the cut rock under the fortress, nor out of the open air beside it),
+  its sky comes up out of the dark with no ruled line, and the skis come on under them as they land.
+- **Pops**: the fold's knuckles grow out of the slot, the van's underside fades as the floor goes soft, the patches
+  through the cabin's roof are his width (one bar wider than the cabin), and the hotel's ceiling plaster stays to the
+  frame's edge.
+
 ## Inception nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
