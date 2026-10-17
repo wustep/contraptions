@@ -86,7 +86,8 @@ export const stairs = definePiece<{ color: string; taps: number[] }>({
       p.push()
       p.stroke(s.color)
       p.strokeWeight(weight)
-      for (const a of [-2.4, -0.7]) {
+      // Up and back off the tread: aimed forward, the last step's reached into the next cell.
+      for (const a of [-2.5, -1.4]) {
         const r0 = 0.08 + 0.1 * (1 - f)
         p.line((x + Math.cos(a) * r0) * k, (y + Math.sin(a) * r0) * k, (x + Math.cos(a) * (r0 + 0.05)) * k, (y + Math.sin(a) * (r0 + 0.05)) * k)
       }

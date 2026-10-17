@@ -70,7 +70,8 @@ export const cannon = definePiece<{ color: string }>({
 
     // Smoke, before the barrel so it is behind it: a string of puffs out of
     // the muzzle, each swelling as it drifts up and away, then shrinking to
-    // nothing. The first is the biggest and the last the lightest.
+    // nothing. The first is the biggest and the last the lightest, and the
+    // last thins out before it leaves the piece's top cell.
     if (since > 0 && since < 2) {
       for (let i = 0; i < 4; i++) {
         const born = i * 0.07
@@ -79,10 +80,10 @@ export const cannon = definePiece<{ color: string }>({
         if (age <= 0 || age >= life) continue
         const f = age / life
         const e = easeOutCubic(f)
-        const along = 0.08 + e * (0.22 + i * 0.16)
+        const along = 0.08 + e * (0.22 + i * 0.12)
         const side = e * 0.12 * Math.sin(i * 2.1)
         const x = MUZZLE[0] + Math.cos(ANGLE) * along + side
-        const y = MUZZLE[1] + Math.sin(ANGLE) * along - e * (0.28 + i * 0.1)
+        const y = MUZZLE[1] + Math.sin(ANGLE) * along - e * (0.28 + i * 0.07)
         const r = 0.16 * (1 - i * 0.16) * easeOutCubic(Math.min(1, f * 2.5)) * (1 - easeInQuad(f))
         if (r > 0.015) puff(p, k, ink, weight, bg, x, y, r)
       }
