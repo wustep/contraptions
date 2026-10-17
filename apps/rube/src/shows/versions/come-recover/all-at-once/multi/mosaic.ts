@@ -508,15 +508,10 @@ const emerging = (t: number): number => smoothstep((t - (FLICKER - 3.2)) / 3.2)
 /** The laundromat's night, as the room's own light map has it with no tube on. */
 const MOONLIT = '#1B2238'
 
-/** The tubes coming on: 0 in the dark, 1 lit. A flicker on the half-beat, then on for good on 69, with a stammer. */
+/** The tubes coming on: 0 in the dark, 1 lit. Up from the half-beat, and on for good on 69, with no flicker. */
 function lights(t: number): number {
-  if (t < FLICKER) return 0.02 + 0.24 * emerging(t)
-  if (t < FLICKER + 0.06) return 0.75
-  if (t < LIGHTS) return 0.12
-  const x = t - LIGHTS
-  if (x < 0.05) return 0.9
-  if (x < 0.1) return 0.45
-  return 1
+  const dark = 0.02 + 0.24 * emerging(t)
+  return dark + (1 - dark) * smoothstep((t - FLICKER) / (LIGHTS - FLICKER))
 }
 
 const smoothstep = (u: number): number => {
