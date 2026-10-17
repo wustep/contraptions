@@ -42,8 +42,9 @@ export class QuarterTurnShow extends Show {
         const g = p.drawingContext as CanvasRenderingContext2D
         g.save()
         g.scale(c.k, c.k)
-        // A line a little over a pixel at 1080p, never under one.
-        paintToy(g, machine, this.clamp(c.t), Math.max(1 / c.k, 0.011))
+        // A line a little over a pixel at 1080p, and never exactly one: at one device pixel the canvas switches between
+        // two ways of drawing a hairline as the scale wavers in its last digits, and every outline shimmers.
+        paintToy(g, machine, this.clamp(c.t), Math.max(1.25 / c.k, 0.011))
         g.restore()
       },
     }

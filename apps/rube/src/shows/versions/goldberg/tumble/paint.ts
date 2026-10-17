@@ -1,5 +1,5 @@
 import { DEPTH, FLOOR, FOOT, LIGHT, PLANK, POCKET, ROWS, THICK, VIEW, W, screen, type V3 } from './geo'
-import { INK, PAINT, WOOD, lit, mix } from './look'
+import { INK, PAINT, WOOD, lit } from './look'
 import { CUBES, STEP, type CubeName, type CubeState, type Dir, type Machine, type PlankState } from './machine'
 
 /**
@@ -309,7 +309,7 @@ function drawFlipped(g: G, p: PlankState, home: CubeName): void {
   const u0 = POCKET / PLANK
   const u1 = (POCKET + 1) / PLANK
   const quad = pocketFace === 0 ? [along(u0, 0), along(u1, 0), along(u1, 1), along(u0, 1)] : [along(0, u0), along(0, u1), along(1, u1), along(1, u0)]
-  face(g, quad, lit(mix(PAINT[home], WOOD.pocket, 0.35), 0.62))
+  face(g, quad, lit(PAINT[home], 0.7))
 }
 
 /* ------------------------------------------------------------------ the frame */

@@ -1,9 +1,15 @@
 import { LAP } from './geo'
 import { Machine, type CubeName, type Cue, type Dir, type Setup } from './machine'
-import { bar, beat, quarter } from './music'
+import { beat, quarter } from './music'
 
 /**
- * The score: what moves on which beat. (A sketch: the clock's lap and a few moves to see the toy work.)
+ * The score: what moves on which beat. Every cue lands on a note of the measured clock (`music.ts`): a cube's flop
+ * ends on its beat, a plank's slide ends on a downbeat. `machine.ts` builds the toy from these and checks it.
+ *
+ * The toy keeps the metre in layers: the planks move on the phrases (four bars), the black cube on the bars, the
+ * coloured cubes on the beats, and a struck cube or a last dash on the eighths. Each of the four halves (A, A', B, B')
+ * ends in the music with a run down eight sixteenths to the last note alone, and in the toy with a cube coming home
+ * on that note.
  */
 
 const cues: Cue[] = []
@@ -26,18 +32,14 @@ function flip(row: number, from: number, until: number): void {
 const dirOf = (a: readonly [number, number], b: readonly [number, number]): Dir =>
   b[0] > a[0] ? 'E' : b[0] < a[0] ? 'W' : b[1] > a[1] ? 'S' : 'N'
 
-// The clock: from one cell past the front's middle, a step on every downbeat from bar 2.
-for (let n = 2; n <= 64; n++) {
-  const i = (n - 1) % LAP.length
-  step('black', dirOf(LAP[i], LAP[(i + 1) % LAP.length]), (n - 1) * 3 + 1, 'step', 0.5)
-}
-
 /** Beat `k` (1 to 3, fractions between) of bar `n`, counted in quarters from the first downbeat. */
 const at = (n: number, k = 1): number => (n - 1) * 3 + k
 
-/** `cube` walks `dirs` (a letter a step), one step a beat from beat `from`, or every `every` beats. */
-function walk(cube: CubeName, dirs: string, from: number, every = 1): void {
-  for (let i = 0; i < dirs.length; i++) step(cube, dirs[i] as Dir, from + i * every)
+// The clock: from one cell past the front's middle, a step on every downbeat from bar 2, so that its laps of the rim
+// (32 cells) end at the front's middle on bars 32 and 64, the ends of the two parts.
+for (let n = 2; n <= 64; n++) {
+  const i = (n - 1) % LAP.length
+  step('black', dirOf(LAP[i], LAP[(i + 1) % LAP.length]), at(n), 'step', 0.5)
 }
 
 /** Struck: knocked over by a cube landing against it, it leaves already moving and lands quicker. */
@@ -103,8 +105,8 @@ step('red', 'N', at(48, 2.5), 'step', 0.5)
 struck('green', 'N', at(48, 3))
 
 /* B2, bars 49–64: the clock's pocket turns up; the striker walks home over the others, a step on each second beat
-   (the clock has the first); then the whole board swings, all five planks at once, zig to zag and back; on the
-   last bar's downbeat they come flush, and on the last note the clock steps into the last pocket. */
+   (the clock has the first); then the board swings zig to zag and back, a plank a beat; on the last bar's downbeat
+   all five come flush together, and on the last note the clock steps into the last pocket. */
 flip(4, at(49), at(50))
 route('red', 'NNWWSSS', [at(50, 2), at(51, 2), at(52, 2), at(53, 2), at(54, 2), at(55, 2), at(56, 1)])
 // The swing goes over the board as a ripple, a beat a plank: back to front, then front to back; then all at once.
@@ -115,5 +117,3 @@ for (let r = 0; r < 5; r++) slide(r, 1, at(63), at(64))
 step('black', 'N', at(64, 3), 'step', 0.55)
 
 export const MACHINE = new Machine(SETUP, cues)
-void bar
-void walk

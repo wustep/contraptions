@@ -3,20 +3,18 @@ import type { World } from '../../../../worlds'
 import type { CubeName } from './machine'
 
 /**
- * A painted wooden toy: maple planks in a walnut tray, five cubes in milk paint. Flat colour, a face lit by how it
- * turns to one light, and a thin dark line round every face; no gloss, no glow.
+ * A painted wooden toy on a pale table: maple planks in a tray painted grey-green, five cubes in milk paint. Flat
+ * colour, a face lit by how it turns to one light, and a thin dark line round every face; no gloss, no glow.
  */
-export const PAPER = '#C4C7C0'
+export const PAPER = '#E5E0D6'
 export const INK = '#2A221C'
 
 export const WOOD = {
   /** The planks, one row in two a shade apart so each reads as its own. */
   plank: ['#E2C596', '#D9B988'],
-  /** The tray: its rim, and its floor down between the planks' ends. */
-  rim: '#9A6A47',
-  floor: '#6B4A33',
-  /** A pocket's walls, under its painted lining. */
-  pocket: '#7A5A3E',
+  /** The tray, painted: its rim, and its floor down between the planks' ends. */
+  rim: '#7E8B86',
+  floor: '#5A6461',
 } as const
 
 export const PAINT: Record<CubeName, string> = {
@@ -66,11 +64,4 @@ export function lit(hex: string, k: number): string {
   if (k <= 1) return `#${hx(r * k)}${hx(g * k)}${hx(b * k)}`
   const w = Math.min(1, k - 1)
   return `#${hx(r + (255 - r) * w)}${hx(g + (255 - g) * w)}${hx(b + (255 - b) * w)}`
-}
-
-/** `a` toward `b` by `u`. */
-export function mix(a: string, b: string, u: number): string {
-  const [r1, g1, b1] = rgb(a)
-  const [r2, g2, b2] = rgb(b)
-  return `#${hx(r1 + (r2 - r1) * u)}${hx(g1 + (g2 - g1) * u)}${hx(b1 + (b2 - b1) * u)}`
 }
