@@ -5,7 +5,7 @@ import { RENAMED_TAKES, readShows, type ShowVersion, type Work } from './apps/ru
 import { cardPath, showCard, showPath, type ShareCard } from './apps/rube/src/shows/share'
 
 /**
- * One site, one build: six pages and three forwarding addresses.
+ * One site, one build: seven pages and three forwarding addresses.
  *
  *   /machine/        Machine (apps/rube)
  *   /explorations/   the generator Machine grew out of (src)
@@ -15,6 +15,7 @@ import { cardPath, showCard, showPath, type ShareCard } from './apps/rube/src/sh
  *   /theater/        the ticked shows (the favourites to begin with), shuffled; off the mode switch until visited (`shell.ts`)
  *   /playground/     pieces and worlds waiting to be let into Machine (apps/rube/src/playground)
  *   /builder/        where new pieces and worlds are made (apps/rube/src/builder); not on the switch
+ *   /games/pocket-orchestra/  a standalone musical machine game (apps/pocket-orchestra)
  *
  * `/` forwards to `/machine/`, `/sandbox/` (where Explorations used to live)
  * to `/explorations/`, and `/rube/` (where Machine did) to `/machine/`, each
@@ -54,7 +55,7 @@ function rootToMachine(): Plugin {
 /** A page path without the slash goes to the directory, as a static host would send it. */
 function trailingSlash(): Plugin {
   const redirect: Connect.NextHandleFunction = (req, res, next) => {
-    const m = /^\/(explorations|machine|shows|theater|builder|playground|sandbox|rube|shows\/[a-z0-9-]+(?:\/[a-z0-9-]+)?)(\?.*)?$/.exec(req.url ?? '')
+    const m = /^\/(explorations|machine|shows|theater|builder|playground|sandbox|rube|shows\/[a-z0-9-]+(?:\/[a-z0-9-]+)?|games\/pocket-orchestra)(\?.*)?$/.exec(req.url ?? '')
     if (!m) return next()
     res.writeHead(302, { Location: `/${m[1]}/${m[2] ?? ''}` })
     res.end()
@@ -211,6 +212,7 @@ export default defineConfig({
         theater: `${here}theater/index.html`,
         sandbox: `${here}sandbox/index.html`,
         rube: `${here}rube/index.html`,
+        pocketOrchestra: `${here}games/pocket-orchestra/index.html`,
       },
     },
   },
