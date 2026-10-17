@@ -79,6 +79,9 @@ const TRAIL_FROM = ROLL * 1.25
 const TRAIL_FULL = FAST * 1.2
 const TRAIL_MAX = 2.6 * R
 
+/** The smallest star the backdrop draws, in pixels. */
+const STAR_MIN = 1.8
+
 /** A cheap stable hash to scatter stars by cell. */
 const hash = (a: number, b: number, s: number): number => {
   let h = (a * 374761393 + b * 668265263 + s * 1013904223) | 0
@@ -616,6 +619,8 @@ function drawBackdrop(
       }
     }
   } else {
+    // Stars: a dot or two a cell. None is smaller than STAR_MIN pixels across: a dot under a pixel lights or goes
+    // out with where it falls between pixels, and as the camera glided the smallest stars blinked on and off.
     p.noStroke()
     for (let c = c0; c <= c1; c++) {
       for (let r = r0; r <= r1; r++) {
@@ -623,9 +628,9 @@ function drawBackdrop(
         for (let i = 0; i < n; i++) {
           const fx = hash(c, r, 10 + i)
           const fy = hash(c, r, 20 + i)
-          const size = 0.6 + hash(c, r, 30 + i) * 1.6
+          const size = STAR_MIN + hash(c, r, 30 + i) * 0.8
           const star = p.color(u.theme.ink)
-          star.setAlpha(60 + hash(c, r, 40 + i) * 90)
+          star.setAlpha(40 + hash(c, r, 40 + i) * 70)
           p.fill(star)
           p.circle(sx(c - 0.5 + fx), sy(r - 0.5 + fy), size)
         }
