@@ -190,20 +190,22 @@ export const swingAngle = (t: number): number => 0.06 * Math.sin((2 * Math.PI * 
 
 export const KR = R * KID_SCALE
 const KID_Y = FLOOR - KR
-/** The embrace: they close the space, to here. */
+/** Where each stops, a little space from him and from each other; and the embrace, where they close it. */
+const GAP = [0.045, 0.03]
+const MEET_X = [STOP_X + R + KR + GAP[0], STOP_X + R + KR + GAP[0] + 2 * KR + GAP[1]]
 const HUG_X = [STOP_X + R + KR + 0.002, STOP_X + R + 3 * KR + 0.004]
 /**
- * Where they play on the lawn by the swing, their backs to the house: whole turns of a roll from where they embrace
- * him, so each rolls to him (its face turning with it) and comes to rest with its face to him as it turned to him.
+ * Where they play on the lawn by the swing, their backs to the house: whole turns of a roll from half way between where
+ * they stop and where they embrace him, so each rolls to him (its face turning with it) and holds, and closes the
+ * space, with its face to him as it turned to him. (Counted to the embrace alone, their faces were turned up and away
+ * from him for the whole hold.) The space they close is small, so the face turns a little either side of him.
  */
-export const KIDS_AT = [HUG_X[0] + 2 * (2 * Math.PI * KR), HUG_X[1] + 3 * (2 * Math.PI * KR)] as const
+export const KIDS_AT = [(MEET_X[0] + HUG_X[0]) / 2 + 2 * (2 * Math.PI * KR), (MEET_X[1] + HUG_X[1]) / 2 + 3 * (2 * Math.PI * KR)] as const
 /** How long each takes to turn round (the light coming round onto them), and how much after the first the second turns. */
 const TURN_FOR = 1.15
 const TURN_LAG = [0, 0.32]
-/** When each sets off to him, and where each comes to rest: a little space from him, and from each other. */
+/** When each sets off to him. */
 const RUN_AT = [TURN + 1.25, TURN + 1.5]
-const GAP = [0.1, 0.075]
-const MEET_X = [STOP_X + R + KR + GAP[0], STOP_X + R + KR + GAP[0] + 2 * KR + GAP[1]]
 const HUG_FROM = HOLD - 0.75
 
 /**
@@ -257,7 +259,9 @@ export function kids(t: number): ShowBall[] {
     // them now) and their faces (a ball's mark) come round over the top to him, looking up a little (he is taller).
     const r = Math.min(1, e / 0.5)
     const f = Math.max(0, Math.min(1, (e - 0.42) / 0.58))
-    const face = e < 0.42 ? null : -Math.PI / 2 - (Math.PI / 2 - 0.32) * (f * f * (3 - 2 * f))
+    // The face is there from the turn's first moment, the ink in the dark ball, and comes up with their colours (it
+    // came on whole in a frame, half way round).
+    const face = e <= 0 ? null : -Math.PI / 2 - (Math.PI / 2 - 0.32) * (f * f * (3 - 2 * f))
     return {
       id: KID_ID + i,
       x: kidX(i, t),
