@@ -155,9 +155,11 @@ export const springboard = definePiece<{ color: string }>({
       const front = IN[0] + 0.08 + (UP[0] - IN[0] - 0.12) * over(t, T_IN, T_UP)
       const fade = 1 - over(t, T_UP, T_UP + 0.25)
       solid(p, ink, weight * 0.7, bg)
+      // Each swells out of the water where the ball went in, instead of being there whole the frame it is past it.
       for (let i = 0; i < 3; i++) {
         const bx = front - i * 0.1
-        if (bx > IN[0]) p.circle(bx * k, (WATER - 0.02 - 0.012 * ((i + 1) % 2)) * k, (0.045 - 0.008 * i) * fade * k)
+        const grow = over(bx, IN[0] + 0.08, IN[0] + 0.14)
+        if (grow > 0) p.circle(bx * k, (WATER - 0.02 - 0.012 * ((i + 1) % 2)) * k, (0.045 - 0.008 * i) * fade * grow * k)
       }
     }
     splash(p, k, sea, weight, UP[0] + 0.04, WATER, over(t, T_UP - 0.02, T_UP + 0.5), 0.9)
