@@ -2,7 +2,7 @@ import type { Pt } from '../../../../../parts'
 import { hash } from '../kit'
 import { layer, onLayer, rgbaOf, type View } from '../depth'
 import { cityThrough } from './city'
-import { DOOR_X, FLOOR } from './press-plan'
+import { DOOR_X, FLOOR, T0 } from './press-plan'
 import { lampsOn, runOf } from './pulse'
 
 /**
@@ -162,13 +162,13 @@ interface Line {
   web: string
   /** Its lamps hang over every `lamps`th unit. */
   lamps: number
-  /** Its catwalk's height over its floor, and the men on it: their speed, cells a second, and where they set off. */
+  /** Its catwalk's height over its floor, and the men on it: their speed, cells a second, and where they are as the place opens. */
   walk?: { up: number; men: [number, number][] }
 }
 
 const LINES: Line[] = [
   { i: 3, z: 0.32, pitch: 1.12, h: 1.3, body: '#1A252B', steel: '#22313A', web: '#4A5052', lamps: 4 },
-  { i: 2, z: 0.48, pitch: 1.7, h: 1.85, body: '#141D22', steel: '#1C2830', web: '#59595A', lamps: 3, walk: { up: 2.5, men: [[-0.2, 17.5], [0.14, 9.0]] } },
+  { i: 2, z: 0.48, pitch: 1.7, h: 1.85, body: '#141D22', steel: '#1C2830', web: '#59595A', lamps: 3, walk: { up: 2.5, men: [[-0.2, 17.5], [0.14, 6.0]] } },
   { i: 1, z: 0.66, pitch: 2.4, h: 2.4, body: '#0D1316', steel: '#141D21', web: '#6B6A66', lamps: 2 },
 ]
 
@@ -275,8 +275,7 @@ function pressLine(ctx: C2, v: View, t: number, L: Line): void {
       const men = new Path2D()
       const tall = 0.6 * h
       for (const [vx, x0] of L.walk.men) {
-        const span = 26 * L.z + 6
-        const x = (((x0 + vx * t - s.x0) % span) + span) % span + s.x0 - 1
+        const x = x0 + vx * (t - T0)
         if (x < s.x0 - 1 || x > s.x1 + 1) continue
         const stride = Math.sin(t * 5.2 + x0)
         figure(men, x, dy, tall, stride, vx < 0 ? -1 : 1)

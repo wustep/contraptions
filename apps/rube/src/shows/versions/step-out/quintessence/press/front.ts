@@ -64,19 +64,18 @@ function pools(ctx: C2, v: View, t: number, xr: number): void {
   }
 }
 
-/** The morning in at the loading door, laid across the hall's floor: a fan from the threshold, longest along the floor's line. */
+/** The morning in at the loading door, laid across the hall's floor: a wedge from the threshold, longest along the floor's line. */
 function door(ctx: C2, v: View): void {
   if (v.x1 < DOOR_X - 7 || v.x0 > DOOR_X + 1) return
   const k = v.k
-  ctx.fillStyle = rgbaOf('#F4C98A', 0.06)
-  for (const len of [5, 2.4]) {
-    ctx.beginPath()
-    ctx.moveTo(DOOR_X * k, (FLOOR - 0.01) * k)
-    ctx.lineTo((DOOR_X - len) * k, (FLOOR + 0.02 * len) * k)
-    ctx.lineTo((DOOR_X - 0.35 * len) * k, (FLOOR + 0.22 * len) * k)
-    ctx.closePath()
-    ctx.fill()
-  }
+  const len = 5
+  ctx.fillStyle = rgbaOf('#F4C98A', 0.08)
+  ctx.beginPath()
+  ctx.moveTo(DOOR_X * k, (FLOOR - 0.01) * k)
+  ctx.lineTo((DOOR_X - len) * k, (FLOOR + 0.02 * len) * k)
+  ctx.lineTo((DOOR_X - 0.35 * len) * k, (FLOOR + 0.22 * len) * k)
+  ctx.closePath()
+  ctx.fill()
 }
 
 /* ------------------------------------------------------------------ near the lens */

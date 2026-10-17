@@ -142,7 +142,7 @@ export function drawOffice(ctx: C2, v: View, t: number, cover: (g: C2, k: number
       cores.arc(cx, cy, 0.11, 0, Math.PI * 2)
     }
   }
-  ctx.fillStyle = rgbaOf(OP.reel, 0.55)
+  ctx.fillStyle = rgbaOf(OP.reel, 0.32)
   ctx.fill(faces)
   ctx.fillStyle = '#252B2E'
   ctx.fill(cores)

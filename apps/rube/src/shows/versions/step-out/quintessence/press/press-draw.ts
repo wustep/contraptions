@@ -16,7 +16,6 @@ import {
   COPY,
   copiesAt,
   CRIMP,
-  CURTAIN,
   CUTS,
   DECK,
   DOOR_TOP,
@@ -695,7 +694,7 @@ function drawFalling(g: C2, k: number, t: number): void {
   g.restore()
 }
 
-/** The tray, the ram, the stacker's posts, the stack (or the bundle and the next stack), the joggers and the strapper. */
+/** Behind: the deck, the joggers, the pusher and the strapping arch. In front: the tray, the ram, the stack (or the next one), the strap. */
 function drawStacker(g: C2, k: number, t: number, front: boolean): void {
   const sx0 = STACK_X - STACK_W / 2
   const sx1 = STACK_X + STACK_W / 2
@@ -703,6 +702,21 @@ function drawStacker(g: C2, k: number, t: number, front: boolean): void {
     // The deck under tray and stack, on legs.
     rect(g, k, TRAY_X - 0.55, DECK, sx1 - TRAY_X + 0.62, 0.1, PAL.iron)
     for (const lx of [TRAY_X - 0.45, sx1 - 0.05]) rect(g, k, lx, DECK + 0.1, 0.09, FLOOR - DECK - 0.1, PAL.ironLo)
+    // The joggers and the pusher, behind the stack. Each is parked inside a post of the arch, hidden by it, and comes
+    // out of it to work: the joggers slap the stack square when it is full and go back in on the crimp; the pusher
+    // comes out on its rod to the stack's back as it is crimped, shoves the bundle out, and goes back in.
+    const post = (side: number) => (side < 0 ? sx0 - 0.25 : sx1 + 0.25)
+    const out = 1 - smooth(t, JOG[0] - 0.35, JOG[0]) + smooth(t, CRIMP, CRIMP + 0.3)
+    const jogIn = 0.01 + 0.05 * (1 - hitOf(JOG, t, 0.1)) + 0.16 * out
+    for (const side of [-1, 1]) {
+      const x = side < 0 ? sx0 - jogIn - 0.06 : sx1 + jogIn
+      rect(g, k, x, BUNDLE_TOP + 0.35, 0.06, DECK - BUNDLE_TOP - 0.5, PAL.ironHi)
+    }
+    const push = t < SHOVE ? 0 : Math.max(0, bundleX(Math.min(t, SHOVE + 0.82)) - STACK_X) * (t < SHOVE + 0.82 ? 1 : Math.max(0, 1 - (t - SHOVE - 0.82) / 0.5))
+    const slide = smooth(t, CRIMP - 0.4, CRIMP + 0.05) * (1 - smooth(t, SHOVE + 1.2, SHOVE + 1.6))
+    const px = post(-1) - 0.03 + slide * (sx0 - 0.06 - post(-1) + 0.03) + push
+    rect(g, k, post(-1), BUNDLE_TOP + 0.6, Math.max(0, px - post(-1)), 0.06, PAL.steel)
+    rect(g, k, px, BUNDLE_TOP + 0.1, 0.06, DECK - BUNDLE_TOP - 0.15, PAL.ironHi)
     // The strapping arch over the stacker.
     const archTop = BUNDLE_TOP - 0.38
     g.strokeStyle = PAL.iron
@@ -743,24 +757,8 @@ function drawStacker(g: C2, k: number, t: number, front: boolean): void {
   if (n1 > 0) drawStack(g, k, STACK_X, n1)
   const n2 = t >= RAM_AGAIN ? copiesAt(t, RAMS_NEXT) : 0
   if (n2 > 0) drawStack(g, k, STACK_X, n2)
-  // The joggers: two paddles that slap the stack square when it is full.
-  if (t >= JOG[0] - 0.35 && t < SHOVE) {
-    const jog = hitOf(JOG, t, 0.1)
-    const come = 1 - smooth(t, JOG[0] - 0.35, JOG[0])
-    const jogIn = 0.01 + 0.05 * (1 - jog) + 0.5 * come
-    rect(g, k, sx0 - jogIn - 0.07, BUNDLE_TOP + 0.35, 0.07, DECK - BUNDLE_TOP - 0.5, PAL.ironHi)
-    rect(g, k, sx1 + jogIn, BUNDLE_TOP + 0.35, 0.07, DECK - BUNDLE_TOP - 0.5, PAL.ironHi)
-  }
   // The strap, going round: up the far side, over the top, down; cinched; crimped. It stays on the bundle.
   if (t >= STRAP_UP && t < SHOVE + 0.01) drawStrap(g, k, STACK_X, t)
-  // The pusher behind the bundle.
-  const push = t < SHOVE ? 0 : Math.max(0, bundleX(Math.min(t, SHOVE + 0.82)) - STACK_X) * (t < SHOVE + 0.82 ? 1 : Math.max(0, 1 - (t - SHOVE - 0.82) / 0.5))
-  if (t >= CRIMP - 0.4 && t < SHOVE + 1.6) {
-    const down = smooth(t, CRIMP - 0.4, CRIMP + 0.05) * (1 - smooth(t, SHOVE + 1.2, SHOVE + 1.6))
-    const lift = (1 - down) * (DECK - BUNDLE_TOP)
-    rect(g, k, sx0 - 0.16 + push, BUNDLE_TOP + 0.1 - lift, 0.12, DECK - BUNDLE_TOP - 0.15, PAL.ironHi)
-    rect(g, k, sx0 - 0.9, BUNDLE_TOP + 0.6 - lift, 0.74 + push, 0.06, PAL.steel)
-  }
 }
 
 function drawStack(g: C2, k: number, x: number, n: number): void {
@@ -810,44 +808,38 @@ function drawBundle(g: C2, k: number, t: number): void {
   drawStrap(g, k, bx, t)
 }
 
-/** The strip curtain in the loading door: clear strips that the bundle pushes through and that slap back after. */
-function drawCurtain(g: C2, k: number, t: number): void {
-  const len = FLOOR - 0.06 - DOOR_TOP
-  const bx = bundleX(t)
-  const front = bx + STACK_W / 2
-  const back = bx - STACK_W / 2
-  // The strips swing back once the bundle's back is through: slapping shut on one beat, and back the other way on the next.
+/**
+ * How far strip `i` of the curtain hangs from upright at `t`, toward the street: stirring a little; pushed aside by
+ * the bundle's front and leaning on its top as it goes through; then, once its back is through, let go to swing back,
+ * slapping shut on one beat and back the other way on the next.
+ */
+function stripAngle(i: number, sx: number, t: number): number {
   const half = SLAPS[1] - SLAPS[0]
   const release = SLAPS[0] - half / 2
+  const held = (when: number): number => {
+    const bx = bundleX(when)
+    const front = bx + STACK_W / 2
+    if (front < sx) return 0
+    const contact = Math.min(Math.max(sx + 0.12, bx - STACK_W / 2 + 0.05), front)
+    return Math.atan2(contact - sx, BUNDLE_TOP - DOOR_TOP)
+  }
+  const stir = (when: number): number => 0.015 * Math.sin(when * 1.3 + i)
+  if (t < release) return stir(t) + held(t)
+  const u = t - release
+  return (stir(release) + held(release)) * Math.exp(-u / 0.45) * Math.cos((Math.PI / half) * u)
+}
+
+/** The strip curtain in the loading door: clear strips, behind the conveyor and the bundle, that it pushes aside. */
+function drawCurtain(g: C2, k: number, t: number): void {
+  const len = FLOOR - 0.06 - DOOR_TOP
   for (let i = 0; i < 3; i++) {
-    const sx = DOOR_X + 0.03 + i * 0.03
-    const a = 0.3 + 0.06 * i
-    const pts: [number, number][] = [[sx, DOOR_TOP]]
-    if (t >= CURTAIN - 0.05 && t < release && front >= sx - 0.02) {
-      // Draped over the bundle (and him): down to its top, along it, and down its front.
-      const cx0 = Math.min(Math.max(sx + 0.12, back + 0.05), front)
-      const y = BUNDLE_TOP - 0.02
-      const first = Math.hypot(cx0 - sx, y - DOOR_TOP)
-      let left = len - first
-      pts.push([cx0, y])
-      const along = Math.min(left, Math.max(0, front - cx0))
-      pts.push([cx0 + along, y])
-      left -= along
-      if (left > 0) pts.push([front + 0.02, y + Math.min(left, DECK - y)])
-    } else {
-      let ang = 0.015 * Math.sin(t * 1.3 + i)
-      if (t >= release) {
-        const u = t - release
-        const w = Math.PI / half
-        ang = 0.55 * Math.exp(-u / 0.45) * Math.cos(w * u)
-      }
-      pts.push([sx + Math.sin(ang) * len, DOOR_TOP + Math.cos(ang) * len])
-    }
+    const sx = DOOR_X - 0.02 + i * 0.03
+    const ang = stripAngle(i, sx, t)
     // Each strip: the clear plastic, grey-green, and its thick edge darker down the middle of it.
-    g.lineJoin = 'round'
     g.beginPath()
-    pts.forEach(([x, y], j) => (j ? g.lineTo(x * k, y * k) : g.moveTo(x * k, y * k)))
-    g.strokeStyle = hexA(PAL.strip, a)
+    g.moveTo(sx * k, DOOR_TOP * k)
+    g.lineTo((sx + Math.sin(ang) * len) * k, (DOOR_TOP + Math.cos(ang) * len) * k)
+    g.strokeStyle = hexA(PAL.strip, 0.3 + 0.06 * i)
     g.lineWidth = 0.075 * k
     g.stroke()
     g.strokeStyle = hexA('#3E4C50', 0.4)
@@ -882,16 +874,17 @@ export function drawMachine(p: p5, c: Ctx, t: number): void {
     drawStacker(g, k, t, false)
     drawFolder(g, k)
   }
+  // The strip curtain behind the conveyor and the bundle: they go through it.
+  if (vis(DOOR_X - 1, DOOR_X + 1)) {
+    g.lineCap = 'butt'
+    drawCurtain(g, k, t)
+    g.lineCap = 'round'
+  }
   if (vis(CONVEYOR.x0 - 1, CONVEYOR.x1 + 1)) drawConveyor(g, k)
   if (vis(TRAY_X - 2, STACK_X + 2)) {
     drawStacker(g, k, t, true)
     drawFalling(g, k, t)
   }
   if (vis(bundleX(t) - 1, bundleX(t) + 1)) drawBundle(g, k, t)
-  // The strip curtain last, behind him: he goes through it, and it never lies over him.
-  if (vis(DOOR_X - 1, DOOR_X + 1)) {
-    g.lineCap = 'butt'
-    drawCurtain(g, k, t)
-  }
   g.restore()
 }
