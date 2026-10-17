@@ -29,7 +29,7 @@ import { himalayaFront } from './himalaya/front'
 import { pressFront } from './press/front'
 import { streetFront } from './street/front'
 import { passages } from './passage'
-import { motes, rgbaOf, sway, view, wash } from './depth'
+import { rgbaOf, sway, view, wash } from './depth'
 
 /**
  * The whole show, in order: which place has Walter from when to when, and which part has him in each. Every part is
@@ -92,16 +92,8 @@ const ashCut = scenery<null>({
   over: (p, _s, c) => {
     const a = ashAt(c.t)
     if (a <= 0.001) return
-    const v = view(p, c.k)
-    const ctx = p.drawingContext as CanvasRenderingContext2D
-    // The ash is a weather, not a card: thicker overhead, still falling in two planes of flakes over the grey.
-    wash(ctx, v, rgbaOf(ASH.color, Math.min(1, a * 1.08)), rgbaOf(ASH.color, a * 0.97))
-    ctx.save()
-    // The flakes come and go with the grey, so none hang in his mother's room once it has lifted.
-    ctx.globalAlpha = 0.8 * Math.min(1, a * 2)
-    motes(ctx, v, c.t, { n: 60, seed: 41, tile: [6, 5], r: [0.015, 0.035], v: [0.25, 0.55], sway: [0.12, 0.35], color: '#9C978E', square: true })
-    motes(ctx, v, c.t, { n: 14, seed: 42, tile: [6, 5], r: [0.025, 0.04], v: [0.4, 0.9], sway: [0.2, 0.25], color: '#ABA69D', square: true })
-    ctx.restore()
+    // The ash is a weather, not a card: thicker overhead. Its flakes are Iceland's, falling before it closes in.
+    wash(p.drawingContext as CanvasRenderingContext2D, view(p, c.k), rgbaOf(ASH.color, Math.min(1, a * 1.08)), rgbaOf(ASH.color, a * 0.97))
   },
 })
 
