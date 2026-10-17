@@ -76,11 +76,14 @@ export function tipped(x0: number, phi: number): Pt {
 }
 export const EVELYN_SEAT = -0.5
 
-/** The dark ring in the sand: its hole's radius and its outer radius (on the ground), and how high its rim stands. */
+/**
+ * The everything bagel in the sand: the radius of its hole's lip (where the stones come down onto it), its outer
+ * radius, and how far the floor's edge lies under the lip (the bagel risen, and settled a little into the sand).
+ */
 export const RI = 0.62
 export const RO = 1.28
-export const RIM = 0.13
-/** How much the ring's round is squashed: it lies on the sand and the camera looks a little down on it. */
+export const LIP_OVER = 0.62
+/** How much the bagel's round is squashed: it lies on the sand and the camera looks a little down on it. */
 export const Q = 0.3
 /** How Evelyn is falling as she goes in, on the jump (SEAMS.brink). */
 export const SEAM_V: Pt = [0.4, 3.0]
@@ -430,9 +433,9 @@ export function plan(): Plan {
     J.hop(to, fall(102))
     land(J, 'joy')
   }
-  // The ring's rim: the last landing is on its inner edge (its top, RIM over the sand), so the hop in drops into the hole.
+  // The bagel's lip: the last landing is on the inner edge of its crust, so the hop in drops into the hole.
   const rimTop = J.p[1] + R
-  const floor = rimTop + RIM + RO * Q
+  const floor = rimTop + LIP_OVER
   const lastRim: Pt = J.p
   const ringX = lastRim[0] + RI - 0.02
   // Into the hole: the seam's fall, and on down in the dark at that pace (the ring's front hides it).
