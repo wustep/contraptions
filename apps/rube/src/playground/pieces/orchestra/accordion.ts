@@ -93,12 +93,15 @@ export const accordion = definePiece<AccordionState>({
     outline(p, ink, weight)
     p.line(-0.46 * k, ground * k, 0.46 * k, ground * k)
 
-    // The bellows: pale cloth between the two ends, one pleat a fold, each side as tall as that side stands.
+    // The bellows: pale cloth between the two ends, one pleat a fold, each side as tall as that side stands. Pressed
+    // shut, the pleats lie flat in one band, and their zigzag goes with them rather than closing into a black saw.
     const foot = ground - END
     const side = (x: number, sgn: number): Pt[] => {
       const top = yOf(x) + END
+      const step = (foot - top) / (FOLDS * 2)
+      const pleat = PLEAT * clamp((step - 0.012) / 0.03)
       const pts: Pt[] = []
-      for (let i = 0; i <= FOLDS * 2; i++) pts.push([x - sgn * (i % 2 ? PLEAT : 0), top + ((foot - top) * i) / (FOLDS * 2)])
+      for (let i = 0; i <= FOLDS * 2; i++) pts.push([x - sgn * (i % 2 ? pleat : 0), top + step * i])
       return pts
     }
     const west = side(-HALF, -1)
@@ -108,9 +111,10 @@ export const accordion = definePiece<AccordionState>({
     for (const [x, y] of west) p.vertex(x * k, y * k)
     for (const [x, y] of [...east].reverse()) p.vertex(x * k, y * k)
     p.endShape(p.CLOSE)
-    // A crease across at every fold's peak, while there is room to see one.
-    if ((foot - lead - END) / FOLDS > 0.05) {
-      outline(p, ink, weight * 0.6)
+    // A crease across at every fold's peak, thinning to nothing as the folds close up on one another.
+    const crease = weight * 0.6 * clamp(((foot - lead - END) / FOLDS - 0.07) / 0.06)
+    if (crease > 0.2) {
+      outline(p, ink, crease)
       for (let i = 2; i < FOLDS * 2; i += 2) p.line(west[i][0] * k, west[i][1] * k, east[i][0] * k, east[i][1] * k)
     }
 
@@ -121,12 +125,9 @@ export const accordion = definePiece<AccordionState>({
     p.translate(0, (yOf(0) + END / 2) * k)
     p.rotate(tilt)
     p.rect(0, 0, (2 * HALF + 0.04) * k, END * k, 0.025 * k)
-    // Its keyboard, seen from the front: a strip of ivory and the black keys on it.
+    // Its keyboard, seen from the front: a strip of ivory.
     solid(p, ink, weight * 0.7, ivory(theme))
     p.rect(0, 0.012 * k, 0.56 * k, 0.078 * k, 0.008 * k)
-    p.fill(ink)
-    p.noStroke()
-    for (let i = 0; i < 6; i++) if (i !== 2) p.rect((-0.2 + i * 0.08) * k, -0.004 * k, 0.04 * k, 0.046 * k)
     p.pop()
   },
 })
