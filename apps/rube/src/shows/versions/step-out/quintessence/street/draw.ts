@@ -6,14 +6,14 @@ import { LIFE_RED, WALTER_WARM } from '../worlds'
 import { contact, INK, knock, mix, ramp, rgba, rule, settle, slab } from '../negatives/hand'
 import { drawCrossers, drawPeople, drawPigeons, drawSale, drawTraffic, FLASH, peopleShadows, steam, WALK } from './city'
 import { AVENUE_FAR, drawFireEscape, drawFronts, drawGround, drawRoofs, skyShows } from './fronts'
-import { LANE, morning, S, shadeAt, shadeTint } from './light'
+import { LANE, morning, S, shadeEdge, shadeTint } from './light'
 import { CELLAR, cherylAt, CLANKS, CORNER, COVER, FLIPS, HAULS, IN, KERB, PAVE, SLOT_W, SLOTS, STAND, STOP, WALTER_STOP, walterAt } from './plan'
-import { drawAvenue, drawCity, drawSky } from './sky'
+import { drawCity, drawSky } from './sky'
 
 /**
  * The street, drawn (the B1 builder's): the negatives room's hand in a New York morning. Flat values and the one
  * graphite line; the light is the soft thing, and the shade of the buildings behind the camera lies cool over the
- * street with the sun coming through it in bands. Nothing on it is red but the Life box on the one cover.
+ * road and the near side of the pavement, to one clean edge. Nothing on it is red but the Life box on the one cover.
  *
  * In order, back to front: the sky and the city behind (`sky.ts`, only where the fronts let it be seen), the fronts
  * (`fronts.ts`), the pavement and the road, the furniture and the stand, the people and the pigeons, the traffic and
@@ -147,24 +147,16 @@ function handAt(jobs: [number, number][], t: number): Pt | null {
     from = [gx(s), at(s, a + 0.05)]
     since = a + 0.05
   }
-  const u = ramp(t, since, since + 0.45)
+  // Quick after the last, so the cover is clear of his sleeve by the chord.
+  const u = ramp(t, since, since + 0.3)
   return u >= 1 ? null : [from[0], from[1] + (hid - from[1]) * u]
 }
 
 function drawStand(ctx: C2, k: number, t: number): void {
   const { x0, x1, roof, eave, open } = STAND
-  // Its shadow on the pavement, long to the right in the morning.
-  ctx.fillStyle = rgba(INK, 0.07)
-  ctx.beginPath()
-  ctx.moveTo(x1 * k, PAVE * k)
-  ctx.lineTo((x1 + 1.6) * k, (PAVE + 0.32) * k)
-  ctx.lineTo((x0 + 1.2) * k, (PAVE + 0.32) * k)
-  ctx.lineTo(x0 * k, PAVE * k)
-  ctx.fill()
   // This morning's delivery by its side, two bundles off the van in their straps, waiting to be cut open.
   for (const [bx, by] of [[x1 + 0.08, PAVE], [x1 + 0.12, PAVE - 0.25]] as [number, number][]) {
     slab(ctx, k, bx, by - 0.25, bx + 0.56, by, '#E6E1D5', { color: rgba(INK, 0.8), w: 0.8 })
-    for (let y = by - 0.05; y > by - 0.24; y -= 0.05) rule(ctx, k, bx + 0.02, y, bx + 0.54, y, rgba(INK, 0.22), 0.6)
     slab(ctx, k, bx + 0.25, by - 0.25, bx + 0.29, by, '#3A4247')
   }
   slab(ctx, k, x0, roof, x1, PAVE, S.kiosk, { color: INK, w: 1 })
@@ -180,16 +172,9 @@ function drawStand(ctx: C2, k: number, t: number): void {
       slab(ctx, k, x, y, x + w, y + 0.5, rgba('#2C3330', 0.35))
     }
   }
-  // Below the racks, the back of the stand: a shelf of gum and sweets in their boxes, folded papers in stacks, and
-  // the man who keeps it, dim in the dark at the back, shifting as he works.
-  rule(ctx, k, open.x0 + 0.05, -1.05, open.x1 - 0.05, -1.05, rgba('#5C6762', 0.9), 1)
-  for (let i = 0; i < 14; i++) {
-    const x = open.x0 + 0.1 + i * 0.18
-    slab(ctx, k, x, -1.05 - 0.1 - 0.06 * hash(i, 4), x + 0.13, -1.05, ['#6B6A5A', '#5A6670', '#7A6650', '#58625A'][i % 4])
-  }
-  for (const [x, n] of [[open.x0 + 0.15, 6], [open.x1 - 0.75, 5]] as [number, number][]) {
-    for (let j = 0; j < n; j++) slab(ctx, k, x, -0.42 - (j + 1) * 0.05, x + 0.6, -0.42 - j * 0.05, j % 2 ? '#8E918C' : '#A3A6A0', { color: rgba(INK, 0.5), w: 0.6 })
-  }
+  // Below the racks, the back of the stand: folded papers in two stacks, and the man who keeps it, dim in the dark
+  // at the back, shifting as he works.
+  for (const [x, n] of [[open.x0 + 0.15, 6], [open.x1 - 0.75, 5]] as [number, number][]) slab(ctx, k, x, -0.42 - n * 0.05, x + 0.6, -0.42, '#989B95', { color: rgba(INK, 0.5), w: 0.6 })
   {
     const lean = 0.06 * sway(t, 0.13, 4)
     const vx = 7.42 + lean
@@ -266,7 +251,7 @@ function drawStand(ctx: C2, k: number, t: number): void {
 
 /* ------------------------------------------------------------------ the set */
 
-/** The pavement, the kerb, the road with its lanes and its manholes, the corner and the crossings, the far side's. */
+/** The pavement, the kerb, the road with its lanes and its manhole, the corner and the crossings, the far side's. */
 function drawGroundPlane(ctx: C2, v: View): void {
   const k = v.k
   const x0 = v.x0 - 1
@@ -284,91 +269,22 @@ function drawGroundPlane(ctx: C2, v: View): void {
   ctx.moveTo(x0 * k, (PAVE + KERB) * 0.5 * k)
   ctx.lineTo(end * k, (PAVE + KERB) * 0.5 * k)
   ctx.stroke()
-  for (let i = Math.floor(x0 / 0.75); i * 0.75 < end; i++) {
-    if (hash(i, 3, 9) > 0.72) slab(ctx, k, i * 0.75 - 0.03, PAVE + 0.01, i * 0.75 + 0.72, (PAVE + KERB) * 0.5, rgba('#B9B1A0', 0.25))
-    if (hash(i, 4, 9) > 0.6) slab(ctx, k, i * 0.75 + 0.05, (PAVE + KERB) * 0.5 + 0.02, i * 0.75 + 0.7, KERB - 0.01, rgba('#CFC7B6', 0.5))
-    if (hash(i, 5, 9) > 0.55) rule(ctx, k, i * 0.75 + 0.2, PAVE + 0.04, i * 0.75 + 0.45, PAVE + 0.16, rgba(INK, 0.18), 0.8)
-  }
   rule(ctx, k, x0, PAVE, end, PAVE, rgba(INK, 0.8), 0.9)
   slab(ctx, k, x0, KERB, end, KERB + 0.1, S.kerb, { color: rgba(INK, 0.6), w: 0.8 })
-  // The road: asphalt, its patches and seams, the lane line, the manholes.
+  // The road: plain asphalt, the gutter a little darker, the lane line, the manhole the steam comes up out of.
   slab(ctx, k, x0, KERB + 0.1, x1, v.y1 + 1, S.road)
   slab(ctx, k, x0, KERB + 0.1, x1, KERB + 0.24, rgba(S.roadDark, 0.6))
-  ctx.strokeStyle = rgba('#5E5C58', 0.5)
-  ctx.beginPath()
-  for (let i = Math.floor(x0 / 2.3); i * 2.3 < x1; i++) {
-    const sx = i * 2.3 + hash(i, 1, 4) * 1.2
-    const sy = KERB + 0.35 + hash(i, 2, 4) * 1.6
-    ctx.moveTo(sx * k, sy * k)
-    ctx.bezierCurveTo((sx + 0.4) * k, (sy - 0.08) * k, (sx + 0.7) * k, (sy + 0.1) * k, (sx + 1.3) * k, (sy + 0.02) * k)
-  }
-  ctx.stroke()
-  for (let i = Math.floor(x0 / 3.1); i * 3.1 < x1; i++) if (hash(i, 5, 4) > 0.55) slab(ctx, k, i * 3.1, KERB + 0.4 + hash(i, 6, 4) * 1.2, i * 3.1 + 1.1 + hash(i, 7, 4), KERB + 0.62 + hash(i, 6, 4) * 1.2, rgba('#86847E', 0.45), { color: rgba('#5E5C58', 0.35), w: 0.8 })
-  // Where the wheels run, each lane worn a little darker; oil where cars stand; the sealed cracks.
-  for (const y of [LANE.far - 0.06, LANE.near - 0.06]) slab(ctx, k, x0, y - 0.1, x1, y + 0.02, rgba('#7F7D78', 0.35))
-  ctx.fillStyle = rgba('#5A5853', 0.25)
-  ctx.beginPath()
-  for (let i = Math.floor(x0 / 1.7); i * 1.7 < x1; i++) {
-    const ox = i * 1.7 + hash(i, 11, 4) * 1.2
-    const oy = (hash(i, 12, 4) > 0.5 ? LANE.far : LANE.near) - 0.05
-    ctx.moveTo((ox + 0.3) * k, oy * k)
-    ctx.ellipse(ox * k, oy * k, 0.3 * k, 0.05 * k, 0, 0, Math.PI * 2)
-  }
-  ctx.fill()
-  ctx.strokeStyle = rgba('#4E4C48', 0.45)
-  ctx.beginPath()
-  for (let i = Math.floor(x0 / 0.9); i * 0.9 < x1; i++) {
-    if (hash(i, 13, 4) < 0.45) continue
-    const cx = i * 0.9 + hash(i, 14, 4) * 0.5
-    const cy = KERB + 0.3 + hash(i, 15, 4) * 1.9
-    ctx.moveTo(cx * k, cy * k)
-    ctx.quadraticCurveTo((cx + 0.15) * k, (cy - 0.06) * k, (cx + 0.32) * k, (cy + 0.03) * k)
-    ctx.quadraticCurveTo((cx + 0.45) * k, (cy + 0.09) * k, (cx + 0.6) * k, (cy + 0.02) * k)
-  }
-  ctx.stroke()
-  // A storm drain in the gutter, a vault grate in the paving by the café.
-  for (const dx of [6.6, 18.6]) slab(ctx, k, dx, KERB + 0.1, dx + 0.7, KERB + 0.2, '#4B4A47', { color: rgba(INK, 0.6), w: 0.8 })
+  // A vault grate in the paving by the café.
   slab(ctx, k, 8.75, PAVE + 0.06, 9.95, PAVE + 0.3, '#8E8E89', { color: rgba(INK, 0.7), w: 0.8 })
-  ctx.strokeStyle = rgba(INK, 0.4)
-  ctx.beginPath()
-  for (let x = 8.85; x < 9.95; x += 0.1) {
-    ctx.moveTo(x * k, (PAVE + 0.06) * k)
-    ctx.lineTo((x - 0.02) * k, (PAVE + 0.3) * k)
-  }
-  ctx.moveTo(8.75 * k, (PAVE + 0.18) * k)
-  ctx.lineTo(9.95 * k, (PAVE + 0.18) * k)
-  ctx.stroke()
   // The line between the lanes, in dashes; the near lane's edge.
   const mid = (LANE.far + LANE.near) / 2 - 0.42
   for (let x = Math.floor(x0 / 1.2) * 1.2; x < x1; x += 1.2) if (x < CORNER.kerb - 0.6 || x > AVENUE_FAR) slab(ctx, k, x, mid, x + 0.6, mid + 0.06, '#E4E0D4')
-  // The road's joints and cracks across the lanes, where the paving was cut and laid again.
-  ctx.strokeStyle = rgba('#55534F', 0.5)
+  ctx.fillStyle = '#6E6C67'
+  ctx.strokeStyle = rgba(INK, 0.7)
   ctx.beginPath()
-  for (let i = Math.floor(x0 / 1.1); i * 1.1 < x1; i++) {
-    const cx = i * 1.1 + hash(i, 16, 4) * 0.6
-    const cy = KERB + 0.25 + hash(i, 17, 4) * 1.5
-    const len = 0.25 + 0.4 * hash(i, 18, 4)
-    ctx.moveTo(cx * k, cy * k)
-    ctx.lineTo((cx - 0.08) * k, (cy + len * 0.5) * k)
-    ctx.lineTo((cx - 0.02) * k, (cy + len) * k)
-  }
+  ctx.ellipse(11.6 * k, (KERB + 0.42) * k, 0.42 * k, 0.09 * k, 0, 0, Math.PI * 2)
+  ctx.fill()
   ctx.stroke()
-  for (const [mx, my] of [[3.75, KERB + 0.42], [11.6, KERB + 0.42], [21.4, KERB + 1.25]] as [number, number][]) {
-    if (mx < x0 - 1 || mx > x1 + 1) continue
-    ctx.fillStyle = '#6E6C67'
-    ctx.beginPath()
-    ctx.ellipse(mx * k, my * k, 0.42 * k, 0.09 * k, 0, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.strokeStyle = rgba(INK, 0.7)
-    ctx.stroke()
-    ctx.strokeStyle = rgba(INK, 0.3)
-    ctx.beginPath()
-    for (let d = -0.28; d <= 0.28; d += 0.14) {
-      ctx.moveTo((mx + d) * k, (my - 0.06) * k)
-      ctx.lineTo((mx + d) * k, (my + 0.06) * k)
-    }
-    ctx.stroke()
-  }
   // The corner: the pavement ends; the avenue's crossing beyond, its stripes; the stop lines; the ladder across this street.
   slab(ctx, k, CORNER.kerb, PAVE + 0.2, x1, KERB + 0.1, S.road)
   for (let i = 0; i < 6; i++) slab(ctx, k, CORNER.kerb + 0.3 + i * 0.5, PAVE + 0.32, CORNER.kerb + 0.55 + i * 0.5, KERB + 0.06, '#E0DDD5')
@@ -470,18 +386,6 @@ function drawBike(ctx: C2, k: number): void {
   ctx.lineCap = 'butt'
 }
 
-/** The steam stack the gas company has put over a manhole, orange and white, steam pouring off its top. */
-function drawStack(ctx: C2, v: View): void {
-  const x = -1.75
-  if (x + 3 < v.x0 || x - 4 > v.x1) return
-  const k = v.k
-  const top = -1.0
-  const foot = KERB + 0.3
-  for (let i = 0, y = foot; y > top; i++, y -= 0.28) slab(ctx, k, x - 0.15, Math.max(top, y - 0.28), x + 0.15, y, i % 2 ? '#F2EEE4' : '#E58A3A')
-  slab(ctx, k, x - 0.15, top, x + 0.15, foot, null, { color: INK, w: 0.9 })
-  slab(ctx, k, x - 0.28, foot - 0.06, x + 0.28, foot + 0.04, '#5E5C58', { color: INK, w: 0.8 })
-}
-
 /** The low wire rack of papers along the stand's front, their top sheets lifting in the air off the street. */
 function drawPapers(ctx: C2, k: number, t: number): void {
   const y = PAVE - 0.02
@@ -512,65 +416,17 @@ function blob(path: Path2D, x: number, y: number, rx: number, ry: number, rot: n
 }
 
 /**
- * A tree's shadow from across the street (cells, about its bough): sprigs out from the bough, leaves along each, in
- * three groups that stir apart. Pure geometry, so each is made once and kept; `skip` leaves out what would fall where
- * it must not (the cover), judged where it hangs at rest.
- */
-const canopies = new Map<number, Path2D[]>()
-function canopy(seed: number, skip: (x: number, y: number) => boolean, at: Pt): Path2D[] {
-  const kept = canopies.get(seed)
-  if (kept) return kept
-  const groups = [new Path2D(), new Path2D(), new Path2D()]
-  for (let s = 0; s < 6; s++) {
-    const path = groups[s % 3]
-    const a = (s / 6) * Math.PI * 2 + hash(s, 1, seed)
-    const len = 0.9 + 0.8 * hash(s, 2, seed)
-    for (let i = 1; i <= 7; i++) {
-      const u = i / 7
-      const bend = 0.25 * u * u * (hash(s, 3, seed) - 0.5)
-      const x = Math.cos(a + bend) * len * u
-      const y = Math.sin(a + bend) * len * u * 0.7 + 0.25 * u
-      if (skip(at[0] + x, at[1] + y)) continue
-      for (const side of [-1, 1]) {
-        const r = 0.07 + 0.05 * hash(s * 9 + i, side + 5, seed)
-        const rot = a + side * 0.9 + 0.5 * (hash(s * 9 + i, side + 7, seed) - 0.5)
-        const lx = x + Math.cos(rot) * r
-        const ly = y + Math.sin(rot) * r
-        const ex = Math.cos(rot) * r
-        const ey = Math.sin(rot) * r
-        // Wound the same way as the shade's boxes, so where a leaf falls in the shade the two are one shade.
-        path.moveTo(lx - ex, ly - ey)
-        path.quadraticCurveTo(lx + ey * 0.6, ly - ex * 0.6, lx + ex, ly + ey)
-        path.quadraticCurveTo(lx - ey * 0.6, ly + ex * 0.6, lx - ex, ly - ey)
-        path.closePath()
-      }
-    }
-  }
-  canopies.set(seed, groups)
-  return groups
-}
-
-/** A tree's shadow added into `into` at `at`, its three groups each stirring on its own. */
-function leafShadow(into: Path2D, t: number, at: Pt, seed: number, skip: (x: number, y: number) => boolean): void {
-  canopy(seed, skip, at).forEach((g, i) => {
-    const dx = 0.05 * sway(t, 0.21 + 0.07 * i, seed + i)
-    const dy = 0.025 * sway(t, 0.33 + 0.05 * i, seed + i + 3)
-    const turn = 0.035 * sway(t, 0.27, seed + i * 5)
-    const c = Math.cos(turn)
-    const sn = Math.sin(turn)
-    into.addPath(g, new DOMMatrix([c, sn, -sn, c, at[0] + dx, at[1] + dy]))
-  })
-}
-
-/**
- * The shade over the street (see `light.ts`): the buildings behind the camera, and the shadows cast long to the left
- * by everything standing in the sun: the stand, the lamp post, the signal, the people, the two of them; the trees
- * across the street dappling the lit fronts. Laid on in two fills of a cool blue, lighter on the ground; every shape
- * in them is wound the same way, so where they overlap they are one shade, not two.
+ * The shade over the street (see `light.ts`): the buildings behind the camera over the road and the near side of the
+ * pavement, to one clean edge; and the shadows cast long to the left by what stands in the sun: the stand, the man at
+ * the stand, the two of them. Laid on in two fills of a cool blue, lighter on the ground; every shape in them is wound
+ * the same way, so where they overlap they are one shade, not two.
  */
 function drawShade(ctx: C2, v: View, t: number): void {
   const k = v.k
-  const { walls, ground } = shadeAt(t, v.x0, v.x1, v.y1 + 1)
+  const walls = new Path2D()
+  const ground = new Path2D()
+  const edge = shadeEdge(t)
+  ground.rect(v.x0 - 1, edge, v.x1 - v.x0 + 2, v.y1 + 1 - edge)
   // The stand's shadow on the front behind it and along the pavement.
   walls.rect(STAND.x0 - 0.42, STAND.eave + 0.25, 0.42, PAVE - STAND.eave - 0.25)
   ground.moveTo(STAND.x0 - 2.2, PAVE)
@@ -578,25 +434,9 @@ function drawShade(ctx: C2, v: View, t: number): void {
   ground.lineTo(STAND.x0 + 0.4, PAVE + 0.22)
   ground.lineTo(STAND.x0 - 1.9, PAVE + 0.22)
   ground.closePath()
-  // Poles: the lamp post's, the signal's, thin on the wall and the paving.
-  for (const [x, h] of [[2.9, 4.4], [CORNER.kerb - 0.16, 3.6]] as [number, number][]) {
-    walls.rect(x - 0.5, PAVE - h, 0.07, h)
-    ground.moveTo(x, PAVE + 0.26)
-    ground.lineTo(x - 0.5, PAVE)
-    ground.lineTo(x - 0.43, PAVE)
-    ground.lineTo(x + 0.07, PAVE + 0.26)
-    ground.closePath()
-  }
   // The two of them: their shadows long on the paving.
   if (t >= IN) for (const [x] of [walterAt(t), cherylAt(t)]) blob(ground, x - 0.42, PAVE + 0.05, 0.44, 0.05, 0)
   peopleShadows(ground, t)
-  // Leaves: the trees across the street, their shadows on the lit fronts (never on the cover).
-  const cover = { x0: COVER.x0 - 0.1, x1: COVER.x1 + 0.1, y0: COVER.y0 - 0.15, y1: COVER.y1 + 0.08 }
-  const off = (x: number, y: number) => x > cover.x0 && x < cover.x1 && y > cover.y0 && y < cover.y1
-  for (const [cx, cy, seed] of [[0.3, -2.1, 1], [5.3, -2.0, 2], [8.0, -2.2, 3], [13.5, -1.8, 4], [19.6, -2.7, 5], [24.4, -2.4, 6]] as [number, number, number][]) {
-    if (cx + 3 < v.x0 || cx - 3 > v.x1) continue
-    leafShadow(walls, t, [cx, cy], seed, off)
-  }
   ctx.save()
   ctx.scale(k, k)
   ctx.fillStyle = shadeTint(t)
@@ -613,7 +453,6 @@ export function drawStreet(p: p5, k: number, t: number): void {
   if (skyShows(v)) {
     drawSky(ctx, v, t)
     drawCity(ctx, v, t)
-    drawAvenue(ctx, v, t)
   }
   drawFronts(ctx, v, t)
   drawFireEscape(ctx, v)
@@ -627,7 +466,6 @@ export function drawStreet(p: p5, k: number, t: number): void {
   for (const [a, b, c] of [[CELLAR.x0, CELLAR.mid, CLANKS[0]], [CELLAR.mid, CELLAR.x1, CLANKS[1]]]) {
     const y = PAVE + dip(c)
     slab(ctx, k, a, y, b, y + 0.1, S.steel, { color: INK, w: 0.9 })
-    for (let x = a + 0.08; x < b - 0.04; x += 0.12) rule(ctx, k, x, y + 0.03, x + 0.05, y + 0.07, rgba(INK, 0.4), 0.8)
   }
   drawLamp(ctx, k)
   drawBike(ctx, k)
@@ -636,14 +474,10 @@ export function drawStreet(p: p5, k: number, t: number): void {
   drawSale(ctx, k, t)
   drawPeople(ctx, v, t)
   drawPigeons(ctx, v, t)
-  drawStack(ctx, v)
   drawTraffic(ctx, v, t, 'far')
-  // Steam, always: off the stack, and up out of the manholes in the far lane; the near lane goes by in front of it,
-  // and the shade falls across it. Never more than two plumes in the frame.
-  const m = morning(t)
-  steam(ctx, v, t, -1.75, -1.0, 2.4, 5, 1, 1.2)
-  steam(ctx, v, t, 3.75, KERB + 0.4, 2.1, 5, 2, 1.1 + 0.3 * m)
-  steam(ctx, v, t, 11.6, KERB + 0.4, 2.2, 5, 3, 1.0 + 0.3 * m)
+  // Steam, the one plume: up out of the manhole by the café in the far lane; the near lane goes by in front of it,
+  // and the shade falls across it.
+  steam(ctx, v, t, 11.6, KERB + 0.4, 1.8, 0.32 + 0.1 * morning(t))
   drawTraffic(ctx, v, t, 'near')
   drawCrossers(ctx, v, t)
   drawShade(ctx, v, t)
