@@ -1,7 +1,7 @@
 import './style.css'
 import { createGarden, type Garden, type GardenState } from './garden'
 import { icons, portrait, toyIcon } from './icons'
-import { RESIDENTS, TOYS, behaviorById, behaviors, cleanName, decide, loadMemory, remember, residents, saveMemory, toys, type BehaviorId, type Decision, type Resident, type Toy } from './model'
+import { RESIDENTS, TOYS, behaviorById, behaviors, cleanName, decide, loadMemory, personalize, remember, residents, saveMemory, toys, type BehaviorId, type Decision, type Resident, type Toy } from './model'
 import { loadCast, perform, type Cast, type Performance } from './performance'
 import { GardenSound } from './sound'
 
@@ -38,7 +38,7 @@ app.innerHTML = `
     <div class="game-layout">
       <section class="garden-panel" aria-label="The little garden">
         <div class="garden-bar"><span class="eyebrow"><i class="status-dot"></i> THE LITTLE GARDEN</span><button class="text-button" id="pause" aria-pressed="false">Ⅱ <span>Pause</span></button></div>
-        <div class="scene-wrap"><div id="stage" role="img" aria-label="A mechanical snail, frog, and sensitive plant share a tiny conservatory."></div><span class="scene-note">a place for small peculiarities</span><div class="resident-targets">${RESIDENTS.map((id) => `<button class="resident-target target-${id}" data-resident="${id}" aria-label="Choose ${memory.names[id]}, ${residents[id].species}"><span>${esc(memory.names[id])}</span></button>`).join('')}</div><div class="pause-overlay" hidden><span>Taking a little breather.</span><button id="resume">Back to the garden ${icons.arrow}</button></div></div>
+        <div class="scene-wrap"><div id="stage" role="img" aria-label="A mechanical snail, frog, and sensitive plant share a tiny conservatory."></div><span class="scene-note">a place for small peculiarities</span><div class="resident-targets">${RESIDENTS.map((id) => `<button class="resident-target target-${id}" data-resident="${id}" aria-label="Choose ${esc(memory.names[id])}, ${residents[id].species}"><span>${esc(memory.names[id])}</span></button>`).join('')}</div><div class="pause-overlay" hidden><span>Taking a little breather.</span><button id="resume">Back to the garden ${icons.arrow}</button></div></div>
         <div class="resident-row" role="group" aria-label="Choose a resident">${RESIDENTS.map((id) => `<button class="resident-card" data-resident="${id}" aria-pressed="${id === state.selected}"><span class="resident-number">${residents[id].number}</span><span><strong data-name="${id}">${esc(memory.names[id])}</strong><small>${residents[id].mood}</small></span><span class="resident-check" aria-hidden="true">↗</span></button>`).join('')}</div>
         <div class="caption-row"><span class="caption-icon">${icons.leaf}</span><p id="caption" role="status">Pick a resident, offer a toy, and see what happens.</p><span class="caption-end" aria-hidden="true">✳</span></div>
         <div class="perch-row"><span class="eyebrow">PERCHES</span><div class="segmented" role="group" aria-label="Arrange the perches"><button data-perches="apart" aria-pressed="true">A little space</button><button data-perches="together" aria-pressed="false">Closer together</button></div><span class="perch-note">Good neighbors make good stories.</span></div>
@@ -137,7 +137,7 @@ function select(id: Resident): void {
   const behavior = previous && behaviorById(previous.decision.behavior)
   el('#observation-label').textContent = behavior ? 'THE LAST LITTLE STORY' : 'A FIELD NOTE'
   el('#observation-title').textContent = behavior?.title ?? 'A small introduction.'
-  el('#observation-line').textContent = behavior?.line ?? residents[id].note
+  el('#observation-line').textContent = behavior ? personalize(behavior.line, memory.names) : residents[id].note
   el('#postcard').hidden = !behavior
   refresh()
 }
@@ -174,9 +174,9 @@ function finish(): void {
   if (!replaying) persist()
   el('#observation-label').textContent = discovered ? 'NEW IN YOUR SCRAPBOOK' : 'A FAMILIAR LITTLE QUIRK'
   el('#observation-title').textContent = behavior.title
-  el('#observation-line').textContent = behavior.line
+  el('#observation-line').textContent = personalize(behavior.line, memory.names)
   el('#postcard').hidden = false
-  caption(`${discovered ? 'Discovered' : 'Remembered'}: ${behavior.title}. ${behavior.line}`)
+  caption(`${discovered ? 'Discovered' : 'Remembered'}: ${behavior.title}. ${personalize(behavior.line, memory.names)}`)
   if (discovered) sound.play({ kind: 'bell', pitch: 0.75 })
   refresh()
 }
@@ -212,8 +212,8 @@ function openBook(): void {
   el('.book-total').textContent = busy ? 'Close the scrapbook to finish the current story.' : `${memory.found.length} / 13 discovered`
   el('#book-pages').innerHTML = behaviors.map((b, index) => {
     const found = memory.found.includes(b.id)
-    const hint = b.hint.replaceAll('Pip', memory.names.snail).replaceAll('Moss', memory.names.frog).replaceAll('Fern', memory.names.fern)
-    return `<article class="book-page ${found ? 'discovered' : 'undiscovered'}"><div class="page-top"><span>${String(index + 1).padStart(2, '0')}</span><span>${found ? esc(memory.names[b.resident]) : 'YET TO BE DISCOVERED'}</span></div><div class="page-illustration">${found ? portrait(b.resident) + toyIcon(b.toy) : '<span>?</span>'}</div><h3>${found ? b.title : 'A little mystery'}</h3><p>${found ? b.line : 'There’s something you don’t know about this friend. Yet.'}</p>${found ? `<button class="replay-button" data-replay="${b.id}" ${busy ? 'disabled' : ''}>${icons.replay} Watch again</button>` : `<details><summary>A small hint</summary><p>${esc(hint)}</p></details>`}</article>`
+    const hint = personalize(b.hint, memory.names)
+    return `<article class="book-page ${found ? 'discovered' : 'undiscovered'}"><div class="page-top"><span>${String(index + 1).padStart(2, '0')}</span><span>${found ? esc(memory.names[b.resident]) : 'YET TO BE DISCOVERED'}</span></div><div class="page-illustration" aria-hidden="true">${found ? portrait(b.resident) + toyIcon(b.toy) : '<span>?</span>'}</div><h3>${found ? b.title : 'A little mystery'}</h3><p>${found ? esc(personalize(b.line, memory.names)) : 'There’s something you don’t know about this friend. Yet.'}</p>${found ? `<button class="replay-button" data-replay="${b.id}" ${busy ? 'disabled' : ''}>${icons.replay} Watch again</button>` : `<details><summary>A small hint</summary><p>${esc(hint)}</p></details>`}</article>`
   }).join('')
   el<HTMLDialogElement>('#scrapbook').showModal()
 }
@@ -284,6 +284,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) sound
 motion.addEventListener('change', () => { state.reducedMotion = motion.matches })
 window.addEventListener('pagehide', (event) => { if (!event.persisted) { garden?.destroy(); sound.destroy() } })
 
+persist()
 refresh()
 loadCast().then((loaded) => {
   cast = loaded

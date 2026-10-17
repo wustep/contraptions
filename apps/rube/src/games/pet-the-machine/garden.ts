@@ -7,7 +7,7 @@ import { laneAt, type Piece, type PieceCtx } from '../../parts'
 import type { Placed } from '../../plan'
 import { Show, type ShowPoint } from '../../show'
 import type { Universe } from '../../universe'
-import { RESIDENTS, behaviors, behaviorById, toys, type Memory, type Perches, type Resident } from './model'
+import { RESIDENTS, behaviors, behaviorById, personalize, toys, type Memory, type Perches, type Resident } from './model'
 import { ACTOR_SCALE, actorTime, ink, paper, position, theme, type Cast, type Performance } from './performance'
 
 export interface GardenState {
@@ -226,6 +226,7 @@ export function createGarden(host: HTMLElement, state: GardenState, cast: Cast, 
   let release = () => {}
   let last = performance.now()
   let exporting = false
+  let suspended = false
   let cameraX = 0
   let cameraY = 0.1
   let firstFrame = true
@@ -239,7 +240,7 @@ export function createGarden(host: HTMLElement, state: GardenState, cast: Cast, 
       const now = performance.now()
       const dt = Math.min((now - last) / 1000, 0.05)
       last = now
-      if (!exporting && !document.hidden) tick(dt)
+      if (!suspended && !document.hidden) tick(dt)
       const phone = window.matchMedia('(max-width: 520px)').matches && !exporting
       const duet = state.performance?.decision.behavior === 'neighbors'
       const perches = state.performance?.decision.perches ?? state.memory.perches
@@ -257,43 +258,53 @@ export function createGarden(host: HTMLElement, state: GardenState, cast: Cast, 
 
   return {
     async postcard(play) {
-      const previous = { performance: state.performance, time: state.time }
+      const previous = { performance: state.performance, time: state.time, width: instance.width, height: instance.height, density: instance.pixelDensity(), cameraX, cameraY }
       exporting = true
-      state.performance = play
-      state.time = clamp(play.hero / play.duration) * play.duration
-      instance.redraw()
+      suspended = true
       const card = document.createElement('canvas')
       card.width = 1400
       card.height = 1040
       const ctx = card.getContext('2d')!
-      ctx.fillStyle = paper
-      ctx.fillRect(0, 0, card.width, card.height)
-      ctx.strokeStyle = '#a7af9f'
-      ctx.lineWidth = 2
-      ctx.strokeRect(28, 28, 1344, 984)
-      ctx.fillStyle = ink
-      ctx.font = '16px ui-monospace, monospace'
-      ctx.fillText('POSTCARDS FROM THE LITTLE GARDEN', 64, 83)
-      const source = canvasOf(instance)
-      const width = 1280
-      const height = Math.min(670, width * source.height / source.width)
-      ctx.drawImage(source, 60, 100 + (670 - height) / 2, width, height)
-      const behavior = behaviorById(play.decision.behavior)!
-      ctx.font = '46px Georgia, serif'
-      ctx.fillText(behavior.title, 65, 820)
-      ctx.font = '22px Georgia, serif'
-      ctx.fillText(behavior.line, 65, 867)
-      ctx.font = '15px ui-monospace, monospace'
-      ctx.fillText(`${state.memory.names.snail} / ${state.memory.names.frog} / ${state.memory.names.fern}`, 65, 945)
-      ctx.textAlign = 'right'
-      ctx.fillText(`PET THE MACHINE  ·  ${String(behaviors.findIndex((b) => b.id === behavior.id) + 1).padStart(2, '0')} / 13`, 1335, 945)
-      state.performance = previous.performance
-      state.time = previous.time
-      instance.redraw()
-      exporting = false
+      try {
+        state.performance = play
+        state.time = clamp(play.hero / play.duration) * play.duration
+        // Export the same full garden on every device, at twice the postcard's display density.
+        instance.pixelDensity(2)
+        instance.resizeCanvas(1280, 670, true)
+        instance.redraw()
+        ctx.fillStyle = paper
+        ctx.fillRect(0, 0, card.width, card.height)
+        ctx.strokeStyle = '#a7af9f'
+        ctx.lineWidth = 2
+        ctx.strokeRect(28, 28, 1344, 984)
+        ctx.fillStyle = ink
+        ctx.font = '16px ui-monospace, monospace'
+        ctx.fillText('POSTCARDS FROM THE LITTLE GARDEN', 64, 83)
+        const source = canvasOf(instance)
+        ctx.drawImage(source, 60, 100, 1280, 670)
+        const behavior = behaviorById(play.decision.behavior)!
+        ctx.font = '46px Georgia, serif'
+        ctx.fillText(behavior.title, 65, 820)
+        ctx.font = '22px Georgia, serif'
+        ctx.fillText(personalize(behavior.line, state.memory.names), 65, 867)
+        ctx.font = '15px ui-monospace, monospace'
+        ctx.fillText(`${state.memory.names.snail} / ${state.memory.names.frog} / ${state.memory.names.fern}`, 65, 945)
+        ctx.textAlign = 'right'
+        ctx.fillText(`PET THE MACHINE  ·  ${String(behaviors.findIndex((b) => b.id === behavior.id) + 1).padStart(2, '0')} / 13`, 1335, 945)
+      } finally {
+        state.performance = previous.performance
+        state.time = previous.time
+        instance.pixelDensity(previous.density)
+        instance.resizeCanvas(previous.width, previous.height, true)
+        cameraX = previous.cameraX
+        cameraY = previous.cameraY
+        exporting = false
+        instance.redraw()
+        suspended = false
+      }
       const blob = await new Promise<Blob | null>((resolve) => card.toBlob(resolve, 'image/png'))
       if (!blob) throw new Error('The postcard could not be drawn.')
-      downloadBlob(blob, `pet-the-machine-${behavior.id}.png`)
+      downloadBlob(blob, `pet-the-machine-${play.decision.behavior}.png`)
     },
     destroy() { release(); instance.remove() },
   }

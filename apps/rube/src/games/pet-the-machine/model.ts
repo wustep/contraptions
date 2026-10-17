@@ -36,6 +36,10 @@ export type Behavior = typeof behaviors[number]
 export type BehaviorId = Behavior['id']
 export type Decision = { resident: Resident; toy: Toy; behavior: BehaviorId; perches: Perches }
 export const behaviorById = (id: string): Behavior | undefined => behaviors.find((b) => b.id === id)
+export function personalize(text: string, names: Record<Resident, string>): string {
+  const ids = { Pip: 'snail', Moss: 'frog', Fern: 'fern' } as const
+  return text.replace(/\b(Pip|Moss|Fern)\b/g, (name) => names[ids[name as keyof typeof ids]])
+}
 
 export interface Memory {
   version: 1
@@ -76,7 +80,8 @@ export function remember(memory: Memory, decision: Decision): boolean {
 
 export const SAVE_KEY = 'contraptions.pet-the-machine.v1'
 export function cleanName(value: string, fallback: string): string {
-  return Array.from(value).filter((c) => c.charCodeAt(0) >= 32 && (c.charCodeAt(0) < 127 || c.charCodeAt(0) > 159)).join('').trim().slice(0, 18) || fallback
+  const printable = Array.from(value).filter((c) => c.charCodeAt(0) >= 32 && (c.charCodeAt(0) < 127 || c.charCodeAt(0) > 159)).join('').trim()
+  return Array.from(printable).slice(0, 18).join('') || fallback
 }
 
 /** Saves are untrusted input, including old versions and half-written browser storage. */
