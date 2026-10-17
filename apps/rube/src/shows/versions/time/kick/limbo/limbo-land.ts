@@ -50,7 +50,6 @@ const SKY_LOW = mixHex(LIMBO.sky, LIMBO.skyWarm, 0.55)
 const FAR_SEA = mixHex(LIMBO.sky, LIMBO.sea, 0.4)
 const NEAR_SEA = mixHex(LIMBO.sea, LIMBO.seaDeep, 0.3)
 const CLOUD = mixHex(LIMBO.sky, LIMBO.foam, 0.45)
-const SEABED_TOP = mixHex(LIMBO.sandWet, LIMBO.seaDeep, 0.55)
 const EARTH = mixHex(LIMBO.sandWet, LIMBO.concreteDark, 0.45)
 const EARTH_DEEP = mixHex(LIMBO.concreteDark, SLEEP.mid, 0.55)
 const CITY_NEAR = mixHex(LIMBO.concreteDark, LIMBO.sky, 0.2)
@@ -605,7 +604,7 @@ export function drawGround(pen: Pen, f: Frame): void {
     [0.8, EARTH_DEEP, 1],
     [1, SLEEP.deep, 1],
   ])
-  // The surface: sand on the shore (wet near the water), the seabed under the sea.
+  // The surface: sand on the shore, wet near the water, and on under the sea.
   const band = (x0: number, x1: number, col: string, a: number, th: number) => {
     const lo = Math.max(xa, x0)
     const hi = Math.min(xb, x1)
@@ -633,10 +632,9 @@ export function drawGround(pen: Pen, f: Frame): void {
   }
   // One depth for all three, so no strip of one is left showing under another (a dark band under the beach).
   const TH = 0.36
-  band(-200, WATERLINE - M + 0.06, SEABED_TOP, 1, TH)
-  fade(WATERLINE - M, WATERLINE + M, SEABED_TOP, TH, 1, 0)
-  band(WATERLINE + M - 0.06, 200, LIMBO.sand, 1, TH)
-  fade(WATERLINE - M, WATERLINE + M, LIMBO.sand, TH, 0, 1)
+  // The sand runs on down under the sea, which darkens it as it deepens (a darker seabed's skin cross-faded into it
+  // across the waterline stood there as a smudge down the beach).
+  band(-200, 200, LIMBO.sand, 1, TH)
   fade(WATERLINE - M - 0.1, WATERLINE - 0.1, LIMBO.sandWet, TH, 0, 0.9)
   {
     const lo = Math.max(xa, WATERLINE - 0.1)
