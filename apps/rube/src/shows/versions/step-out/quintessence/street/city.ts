@@ -414,11 +414,11 @@ interface Flock {
 
 const FLOCKS: Flock[] = [
   // Startled off the pavement by the first clank of the cellar doors, away over the roofs.
-  { n: 5, seed: 3, spots: [{ x0: 2.0, x1: 3.5 }, null], ups: [CLANKS[0] + 0.05], downs: [CLANKS[0] + 5], wheels: [[[4.0, -3.4], 1.4]] },
+  { n: 3, seed: 3, spots: [{ x0: 2.0, x1: 3.5 }, null], ups: [CLANKS[0] + 0.05], downs: [CLANKS[0] + 5], wheels: [[[4.0, -3.4], 1.4]] },
   // Up off the pavement on the last chord, up out of the frame and round over the street, down by the café as the
   // camera draws back; up again when the bus comes by, and down again.
   {
-    n: 10,
+    n: 5,
     seed: 5,
     spots: [{ x0: 8.0, x1: 9.15 }, { x0: 9.0, x1: 11.0 }, { x0: 8.4, x1: 10.4 }],
     ups: [STOP, 254.55],
@@ -427,11 +427,10 @@ const FLOCKS: Flock[] = [
   },
 ]
 
-/** The pigeons' paths, a colour each: the grey of them, the slate of their wings, tails and heads, the green at the neck. */
+/** The pigeons' paths, a colour each: the grey of them, and the slate of their wings, tails and heads. */
 interface Plumage {
   body: Path2D
   dark: Path2D
-  neck: Path2D
 }
 
 /** An oval as its own shape in a path (pixels from cells). */
@@ -463,7 +462,6 @@ function bird(p: Plumage, k: number, x: number, y: number, dir: number, flap: nu
     p.dark.lineTo((hx + dir * 0.045) * k, (hy + 0.006) * k)
     p.dark.lineTo((hx + dir * 0.018) * k, (hy + 0.01) * k)
     p.dark.closePath()
-    oval(p.neck, k, x + dir * 0.05, y - 0.078 + 0.035 * peck, 0.018, 0.014, 0)
     return
   }
   // In the air, seen against the light: a small body, and the wings out to either side, bent at the wrist, beating.
@@ -487,7 +485,7 @@ function bird(p: Plumage, k: number, x: number, y: number, dir: number, flap: nu
 /** The pigeons at `t`: pecking, going up all at once, wheeling, coming down. */
 export function drawPigeons(ctx: C2, v: View, t: number): void {
   const k = v.k
-  const plumage: Plumage = { body: new Path2D(), dark: new Path2D(), neck: new Path2D() }
+  const plumage: Plumage = { body: new Path2D(), dark: new Path2D() }
   const foot = PAVE + 0.2
   for (const f of FLOCKS) {
     for (let i = 0; i < f.n; i++) {
@@ -535,8 +533,6 @@ export function drawPigeons(ctx: C2, v: View, t: number): void {
   ctx.stroke(plumage.body)
   ctx.fillStyle = '#5F6770'
   ctx.fill(plumage.dark)
-  ctx.fillStyle = '#5C8C80'
-  ctx.fill(plumage.neck)
 }
 
 /* ------------------------------------------------------------------ steam */
