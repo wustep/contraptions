@@ -131,6 +131,10 @@ export const pachinko = definePiece<PachinkoState>({
     p.line(0, 0.01 * k, 0, -(FLOOR + 0.06) * k)
     p.pop()
     p.line(-CUP * k, (POCKET_Y + FLOOR) * k, CUP * k, (POCKET_Y + FLOOR) * k)
+    // The lamp sits in a dark socket let into the cup: lit in the cup's own colour on the bare cup, it was lost.
+    p.noStroke()
+    p.fill(bg)
+    p.circle(0, (POCKET_Y + 0.22) * k, 0.14 * k)
     lamp(p, k, ink, weight, s.color, bg, 0, POCKET_Y + 0.22, 0.04, jackpot)
     // The rail out from the pocket's lip.
     rail(p, k, ink, weight, turn * CUP, turn * 0.5, POCKET_Y + FLOOR)
