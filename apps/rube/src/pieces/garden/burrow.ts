@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeOutCubic } from '../../../../../src/core/ease'
-import { FLOOR, ROLL, burst, definePiece, fly, over, rail, ramp, roll, type Lane, type PieceCtx, type Pt } from '../../parts'
+import { FLOOR, ROLL, definePiece, fly, over, rail, ramp, roll, type Lane, type PieceCtx, type Pt } from '../../parts'
 import { tuft } from './green'
 
 /**
@@ -114,6 +114,15 @@ export const burrow = definePiece<BurrowState>({
   over: (p, s, c: PieceCtx) => {
     const { k, since, ink, bg, weight } = c
     const nose = since > 0.8 ? easeOutCubic(over(since, 0.8, 1.3)) * (1 - over(since, 3, 3.6)) : 0
+    // Under the hole's mouth the shaft is earth seen from the front: the ball
+    // sinks into the mouth's near rim and is out of sight before it is gone,
+    // and the ridge comes out from under it, rather than either popping.
+    const mouth = FLOOR + 0.03
+    p.noStroke()
+    p.fill(bg)
+    p.rect(HOLE * k, ((mouth + 0.5) / 2) * k - weight / 4, 2 * LIP * k - weight, (0.5 - mouth) * k - weight / 2)
+    solid(p, ink, weight, ink)
+    p.arc(HOLE * k, mouth * k, 0.3 * k, 0.1 * k, 0, Math.PI, p.CHORD)
     // The molehill, in front of the ball, with the hole in its crown the ball comes up through.
     solid(p, ink, weight, s.color)
     p.beginShape()
@@ -135,14 +144,16 @@ export const burrow = definePiece<BurrowState>({
         const r = 0.12 + 0.3 * f
         p.circle((Math.cos(a) * r) * k, (HILL - CROWN + Math.sin(a) * r + 0.5 * f * f) * k, (0.035 - 0.02 * f) * k)
       }
-      p.stroke(s.color)
-      p.strokeWeight(weight)
-      burst(p, 0, (HILL - CROWN - 0.02) * k, (0.1 + 0.1 * f) * k, (0.16 + 0.14 * f) * k, 5, -Math.PI / 2 - 1.2)
       p.pop()
     }
-    // The mole's nose, up out of the hill after the ball has gone.
+    // The mole's nose, up out of the hole in the hill after the ball has
+    // gone: what is still down the hole is not drawn over the hill's face.
     if (nose > 0.02) {
       p.push()
+      const ctx = p.drawingContext as CanvasRenderingContext2D
+      ctx.beginPath()
+      ctx.rect(-0.2 * k, (HILL - CROWN - 0.3) * k, 0.4 * k, 0.31 * k)
+      ctx.clip()
       p.translate(0, (HILL - CROWN + 0.1 - 0.14 * nose) * k)
       solid(p, ink, weight, s.color)
       p.ellipse(0, 0, 0.14 * k, 0.12 * k)
