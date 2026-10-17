@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine, lerp } from '../../../../../src/core/ease'
-import { FLOOR, R, ROLL, arrive, arriveAt, burst, definePiece, fly, laneAt, over, rail, ramp, wait, type Lane, type Pt } from '../../parts'
+import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, fly, laneAt, over, rail, ramp, wait, type Lane, type Pt } from '../../parts'
 import { piling, water } from './sea'
 
 /**
@@ -74,12 +74,13 @@ export const crab = definePiece<{ color: string }>({
     return { cells, exit: { at: [3, 0], dir: 1 }, lane: LANE, state: { color } }
   },
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
-    const holding = t >= ARRIVE + GRAB * 0.5 && t < FIRE
+    // The grip: closing on the ball over a few frames, let go at the fire.
+    const holding = t < FIRE ? over(t, ARRIVE + GRAB * 0.5 - 0.06, ARRIVE + GRAB * 0.5) : 1 - over(t, FIRE, FIRE + 0.05)
     const [cx, cy] = clawAt(t)
-    // The crab rocks back to throw and settles after.
-    const lean = t < T_AIM ? 0 : t < FIRE ? -0.12 * easeInOutSine(over(t, T_AIM, FIRE)) : since < 0.15 ? -0.12 + 0.2 * over(since, 0, 0.15) : 0.08 * Math.exp(-since * 2) * Math.cos(since * 8)
-    // Legs twitch while it thinks.
-    const twitch = t > ARRIVE && t < FIRE ? 0.06 * Math.sin(t * 24) : 0
+    // The crab rocks back to throw, forward with it, and settles after, from where the throw left it.
+    const lean = t < T_AIM ? 0 : t < FIRE ? -0.12 * easeInOutSine(over(t, T_AIM, FIRE)) : since < 0.15 ? -0.12 + 0.2 * over(since, 0, 0.15) : 0.08 * Math.exp(-(since - 0.15) * 2) * Math.cos((since - 0.15) * 8)
+    // Legs twitch while it thinks: starting and stopping, not snapping on and off.
+    const twitch = 0.06 * Math.sin(t * 24) * over(t, ARRIVE, ARRIVE + 0.1) * (1 - over(t, FIRE - 0.1, FIRE))
 
     // The pier: the deck to the water, the deck beyond, the gap between.
     water(p, k, ink, bg, weight, -0.5, 2.5)
@@ -143,18 +144,13 @@ export const crab = definePiece<{ color: string }>({
     outline(p, ink, weight)
     p.line(sx * k, sy * k, ex * k, ey * k)
     p.line(ex * k, ey * k, cx * k, cy * k)
-    pincer(p, k, ink, weight, s.color, cx, cy, t < T_LIFT ? -1.2 : t < FIRE ? -1.6 : -0.6, holding ? 0.12 : 0.55)
+    // The claw turns up under the ball as it lifts, and over with the follow-through: turned, not flipped.
+    const turn = t < FIRE ? -1.2 - 0.4 * easeInOutSine(over(t, T_LIFT, T_LIFT + 0.15)) : -1.6 + easeInOutSine(over(t, FIRE, FIRE + 0.1))
+    pincer(p, k, ink, weight, s.color, cx, cy, turn, lerp(0.55, 0.12, holding))
     p.pop()
-
-    // The pitch: a burst where the ball left the claw.
-    if (since > 0 && since < 0.2) {
-      const f = over(since, 0, 0.2)
-      p.push()
-      p.stroke(s.color)
-      p.strokeWeight(weight)
-      burst(p, (HIGH[0] - 0.08) * k, (HIGH[1] + 0.02) * k, (0.1 + 0.14 * f) * k, (0.16 + 0.18 * f) * k, 5, 2.8)
-      p.pop()
-    }
+    // The pitch is the arm's follow-through and the ball away; a starburst
+    // round the ball where it left the claw was a sparkle, poking a third of
+    // a cell over the piece.
   },
 })
 

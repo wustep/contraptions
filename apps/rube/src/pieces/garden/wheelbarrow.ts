@@ -131,9 +131,15 @@ export const wheelbarrow = definePiece<{ color: string }>({
     p.translate(ax * k, AY * k)
     p.rotate(tilt)
     p.translate(-ax * k, -AY * k)
-    // The legs at the back, and the handles.
+    // The legs at the back, and the handles. Tipped back, the barrow stands
+    // on its legs: they end on the ground, not through it.
     outline(p, ink, weight)
-    for (const dx of [-0.34, -0.3]) p.line((x + dx) * k, (FLOOR + 0.14) * k, (x + dx - 0.02) * k, 0.5 * k)
+    for (const dx of [-0.34, -0.3]) {
+      const lx = x + dx - 0.02 - ax
+      const foot = Math.min(0.5, AY + (0.5 - AY - lx * Math.sin(tilt)) / Math.cos(tilt))
+      const f = (foot - FLOOR - 0.14) / (0.5 - FLOOR - 0.14)
+      p.line((x + dx) * k, (FLOOR + 0.14) * k, (x + dx - 0.02 * f) * k, foot * k)
+    }
     p.line((x - 0.3) * k, (FLOOR + 0.12) * k, (x - 0.6) * k, (FLOOR + 0.02) * k)
     solid(p, ink, weight, ink)
     p.rect((x - 0.6) * k, (FLOOR + 0.02) * k, 0.06 * k, 0.03 * k)

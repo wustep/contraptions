@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { clamp, easeInOutSine, easeOutCubic, lerp } from '../../../../../src/core/ease'
-import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, fly, laneAt, over, post, rail, ramp, rankBy, wait, type Lane, type PieceCtx, type Pt } from '../../parts'
+import { FLOOR, R, ROLL, arrive, arriveAt, ball, definePiece, fly, laneAt, over, post, rail, ramp, rankBy, wait, type Lane, type PieceCtx, type Pt } from '../../parts'
 import { nearestHue, tuft } from './green'
 
 /**
@@ -104,9 +104,9 @@ function poseAt(t: number, floors: number): Pose {
   const lean =
     t < caught ? LEAN * easeInOutSine(over(t, ARRIVE * 0.4, ARRIVE + 0.12))
     : t < up ? LEAN * (1 - easeInOutSine(over(t, caught, up)))
-    // The spit rocks it back on its haunches, and it settles.
+    // The spit rocks it back on its haunches (in a few hundredths, not in a frame), and it settles.
     : t < spit ? 0
-    : -0.16 * Math.exp(-(t - spit) * 5) * Math.cos((t - spit) * 9)
+    : -0.16 * Math.exp(-(t - spit) * 5) * Math.cos((t - spit) * 9) * easeOutCubic(over(t, spit, spit + 0.06))
   const gape =
     t < FIRE - 0.1 ? 0
     : t < caught ? easeOutCubic(over(t, FIRE - 0.1, FIRE))
@@ -115,7 +115,7 @@ function poseAt(t: number, floors: number): Pose {
     : 0.85 * (1 - easeInOutSine(over(t, spit + 0.12, spit + 0.45)))
   // It breathes all the time; the throat fills right up before the shot.
   const breath = 0.3 + 0.25 * Math.sin(t * 3.1)
-  const throat = t > ARRIVE && t < FIRE ? lerp(breath, 1, easeInOutSine(over(t, ARRIVE, FIRE - 0.05))) : t >= FIRE && t < spit + 0.3 ? 0.15 : breath
+  const throat = t > ARRIVE && t < FIRE ? lerp(breath, 1, easeInOutSine(over(t, ARRIVE, FIRE - 0.05))) : t >= FIRE ? lerp(0.15, breath, over(t, spit + 0.3, spit + 0.6)) : breath
   const cheeks = t < caught ? 0 : t < spit ? Math.min(1, over(t, caught, caught + 0.05)) : 1 - over(t, spit, spit + 0.06)
   // A slow blink now and then; eyes shut tight on the spit.
   const idle = ((t % 3.7) + 3.7) % 3.7
@@ -198,6 +198,13 @@ export const frog = definePiece<FrogState>({
       })
     }
     p.pop()
+    // Out of the lane's sight in the mouth, while the jaws are still shutting on the catch or already opening for the
+    // spit, the ball is drawn here, between the mouth's inside and the jaws: an open mouth is never seen empty.
+    if (pose.gape > 0.02 && laneAt(laneFor(floors, turn), t).hidden) {
+      const [mx, my] = mouthAt(pose.lean)
+      const x = turn * mx
+      ball(p, k, ink, weight, c.color, x * k, (my + top) * k, c.spin(x))
+    }
   },
   over: (p, s, c) => {
     const { k, t, since, ink, weight, theme } = c

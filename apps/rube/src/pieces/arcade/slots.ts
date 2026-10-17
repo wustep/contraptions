@@ -1,7 +1,7 @@
 import { solid } from '../../../../../src/core/draw'
 import { easeInOutSine, easeInQuad } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, mixHex, over, post, rail, ramp, trace, type Lane, type Pt } from '../../parts'
-import { cabinet, digits, flash, glow, score } from './neon'
+import { cabinet, digits, flash, score } from './neon'
 
 /**
  * A one-armed bandit, two floors tall, standing behind the rails. Its arm
@@ -80,16 +80,14 @@ export const slots = definePiece<{ color: string; coin: string }>({
     }
     return { cells, exit: { at: [1, 1], dir: 1 }, lane, state: { color, coin } }
   },
-  draw: (p, s, { k, t, since, ink, bg, weight }) => {
+  draw: (p, s, { k, since, ink, bg, weight }) => {
     const swing = swingAt(since)
-    const pulling = since > -PULL && since < 0
-    const jackpot = since < 0 ? 0 : 1 - over(since, 2.2, 3)
-    const shake = pulling ? 0.004 * Math.sin(t * 70) : since > 0 && since < 0.12 ? 0.01 * Math.sin(since * 80) : 0
+    // The clunk shakes the cabinet. Nothing else does: a shiver all through the pull, a fraction of a pixel, only made its edges swim.
+    const shake = since > 0 && since < 0.12 ? 0.01 * Math.sin(since * 80) : 0
 
-    // The cabinet, from over the reels down to the floor of the cell below. No marquee: seven ringed lamps in half a cell ran into each other and into the reels, and what was left of the band between them read as a row of brackets over the sevens. The glow, the coins and the score say jackpot.
+    // The cabinet, from over the reels down to the floor of the cell below. No marquee: seven ringed lamps in half a cell ran into each other and into the reels, and what was left of the band between them read as a row of brackets over the sevens. The coins and the score say jackpot.
     p.push()
     p.translate(shake * k, 0)
-    glow(p, k, s.coin, CAB_X, REELS_Y, 0.22, jackpot * (0.6 + 0.4 * Math.sin(since * 14)))
     cabinet(p, k, ink, weight, s.color, CAB_X, -0.47, 1.5, CAB_W)
     // The reels: three dark windows, a digit in each — whatever they were left on, a blur while they spin, a seven when they stop.
     const ctx = p.drawingContext as CanvasRenderingContext2D
@@ -122,7 +120,12 @@ export const slots = definePiece<{ color: string; coin: string }>({
     // The payout tray at its foot: a dark recess for the coins to land in.
     solid(p, ink, weight, bg)
     p.rect((CAB_X - 0.04) * k, TRAY_Y * k, 0.44 * k, 0.17 * k, 0.03 * k)
-    // The coins: down into the tray one after another, where they heap up, and nobody picks them up.
+    // The coins: down into the tray one after another, where they heap up, and nobody picks them up. Each drops
+    // in past the recess's lip, from the chute behind the face, rather than appearing whole on the lip.
+    p.push()
+    ctx.beginPath()
+    ctx.rect((CAB_X - 0.04 - 0.22) * k + weight / 2, (TRAY_Y - 0.085) * k + weight / 2, 0.44 * k - weight, 0.17 * k - weight)
+    ctx.clip()
     for (let i = 0; i < COINS; i++) {
       const born = 0.06 + i * 0.09
       if (since < born) break
@@ -130,10 +133,11 @@ export const slots = definePiece<{ color: string; coin: string }>({
       const row = i < 5 ? 0 : 1
       const x = CAB_X - 0.04 + (row ? (i - 6.5) * 0.074 : (i - 2) * 0.074)
       const y1 = TRAY_Y + 0.045 - row * 0.05
-      const y = TRAY_Y - 0.07 + (y1 - TRAY_Y + 0.07) * f
+      const y = TRAY_Y - 0.13 + (y1 - TRAY_Y + 0.13) * f
       solid(p, ink, weight * 0.4, s.coin)
       p.circle(x * k, y * k, 0.068 * k)
     }
+    p.pop()
     p.pop()
 
     // The rail in, to the tray; the rail out, from where the tray's wall comes to lie.

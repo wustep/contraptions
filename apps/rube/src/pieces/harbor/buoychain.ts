@@ -25,7 +25,7 @@ import { WATER, bodyColor, piling, seaWater, seabed, splash, water } from './sea
  * it, rings that down, and goes on riding the swell as before.
  *
  * The swell is drawn: the sea's own colour let down into the paper, heaved
- * up off the still line, with the sea's ink line riding on its back, so it
+ * up off the still line, with the sea's own line riding on its back, so it
  * is the sea's surface that is up and not a hill standing on it. The bed is
  * an eighth of a floor under the still line and a buoy goes up a third of a
  * floor, so only the sea can be what lifts it. By the pilings at either end
@@ -295,16 +295,20 @@ export const buoychain = definePiece<{ colors: string[]; band: string }>({
       p.pop()
     })
 
-    // The sea's line in front of them, so they stand in it: still by the pilings, where every pier has it, and heaved up with the swell along the row.
+    // The sea's line in front of them, so they stand in it: still by the pilings, where every pier has it, and heaved up
+    // with the swell along the row, in the still line's own tone and weight. In full ink the heaved stretch changed
+    // colour and weight where it met the still line at either end, and stood over the decks.
     water(p, k, ink, bg, weight, -0.5, x0)
     water(p, k, ink, bg, weight, x1, 2.5)
-    outline(p, ink, weight * 0.8)
+    outline(p, mixHex(ink, bg, 0.5), weight * 0.7)
+    p.strokeCap(p.SQUARE)
     p.beginShape()
     for (let j = 0; j <= n; j++) {
       const x = x0 + ((x1 - x0) * j) / n
       p.vertex(x * k, (stillAt(x) - liftAt(x, t)) * k)
     }
     p.endShape()
+    p.strokeCap(p.ROUND)
     // What the ball's weight does to it: the float goes down into the sea and throws a little of it up either side.
     XS.forEach((x, i) => {
       for (const side of [-1, 1]) splash(p, k, sea, weight, x + side * (FLOAT[i] / 2 + 0.04), stillAt(x) - liftAt(x, t), over(t, LANDS[i] + 0.03, LANDS[i] + 0.5), 0.45)

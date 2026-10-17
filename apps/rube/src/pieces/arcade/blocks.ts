@@ -103,9 +103,9 @@ export const blocks = definePiece<BlocksState>({
     // The well's foot: the rail across it, that the ball lands on.
     rail(p, k, ink, weight, X0, X1, 1 + FLOOR)
 
-    // The row the ball rolls on, until the line clears: flashing between the colour and the ink once it is whole.
+    // The row the ball rolls on, until the line clears: flashing to the ink twice once it is whole. Three times in as long strobed, a few frames a flash.
     const whole = t >= T_LAND + LOCK
-    const lit = whole && Math.floor((t - T_LAND - LOCK) / (FLASH / 6)) % 2 === 0
+    const lit = whole && Math.floor((t - T_LAND - LOCK) / (FLASH / 3)) % 2 === 0
     if (since < 0) {
       for (let c = 0; c < COLS; c++) {
         if (c === GAP) continue

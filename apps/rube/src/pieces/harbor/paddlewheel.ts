@@ -86,9 +86,12 @@ export const paddlewheel = definePiece<{ color: string }>({
     p.rect(STACK[0] * k, ((STACK[1] + 0.2) / 2) * k, 0.13 * k, (0.2 - STACK[1]) * k)
     solid(p, ink, weight, bg)
     p.rect(STACK[0] * k, (STACK[1] + 0.05) * k, 0.13 * k, 0.07 * k)
+    // Each puff swells out of the mouth and thins away to nothing as it drifts off: one that was still a third its
+    // size at the end of its drift blinked out up there and back in at the mouth.
     for (let i = 0; i < 2; i++) {
       const f = ((t * 0.4 + i / 2) % 1 + 1) % 1
-      puff(p, k, ink, weight * 0.8, bg, STACK[0] + 0.06 + 0.16 * f, STACK[1] - 0.09 - 0.2 * f, 0.03 + 0.07 * Math.sin(Math.PI * f))
+      const r = 0.1 * Math.sin(Math.PI * f)
+      if (r > 0.012) puff(p, k, ink, weight * 0.8, bg, STACK[0] + 0.06 + 0.16 * f, STACK[1] - 0.09 - 0.2 * f, r)
     }
 
     // The wheel: a rim, an arm from the hub to the rim for every paddle, and the paddle at the arm's end with a lip
@@ -129,13 +132,15 @@ export const paddlewheel = definePiece<{ color: string }>({
     outline(p, ink, weight)
     p.line(1.38 * k, (-1 + FLOOR + 0.22) * k, 1.16 * k, (-1 + FLOOR) * k)
 
-    // The churn: water thrown up where the paddles come up out of the sea, as long as the wheel turns.
+    // The churn: water thrown up where the paddles come up out of the sea, as long as the wheel turns. At the rim's
+    // waterline, not under the deck's end half a cell short of the wheel, where it splashed round the piling.
+    const rise = HUB[0] - Math.sqrt(RIM * RIM - (WATER - HUB[1]) ** 2)
     p.push()
     p.noStroke()
     p.fill(sea)
     for (let i = 0; i < 4; i++) {
       const f = ((t * 1.6 + i * 0.25) % 1 + 1) % 1
-      const x = HUB[0] - RIM * 0.72 - 0.08 - 0.12 * f + 0.04 * i
+      const x = rise - 0.04 - 0.12 * f + 0.04 * i
       p.circle(x * k, (WATER - 0.02 - 0.16 * 4 * f * (1 - f) + 0.02 * i) * k, (0.03 - 0.015 * f) * k)
     }
     p.pop()

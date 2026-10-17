@@ -10,8 +10,7 @@ import { bodyColor, luminance, piling, seaWater, splash, water } from './sea'
  * the bell dimples deep under it, its shoulders bulging, and springs back,
  * and the ball goes up in a high arc over the water and comes down onto
  * the deck a floor above. The bell rings on for a while — crown up, crown
- * down — the lights round its rim running out from the middle, and the
- * tentacles take their time to settle.
+ * down — and the tentacles take their time to settle.
  *
  * The crown's height is one function of time: the dimple, the rebound and
  * the ringing are all it, and the ball's lane while it is on the bell is
@@ -145,13 +144,9 @@ export const jellyfish = definePiece<{ color: string; light: string }>({
     for (let i = 0; i < 4; i++) p.quadraticVertex((JX + half - ((i + 0.5) * 2 * half) / 4) * k, (RIM_Y + 0.07) * k, (JX + half - ((i + 1) * 2 * half) / 4) * k, (RIM_Y + 0.012) * k)
     p.endShape(p.CLOSE)
 
-    // The lights round the rim: dark until the bounce, then on from the middle outward, and out the same way.
-    for (let i = -3; i <= 3; i++) {
-      const lit = since > Math.abs(i) * 0.07 && since < 0.9 + Math.abs(i) * 0.22
-      if (!lit) continue
-      solid(p, ink, weight * 0.45, s.light)
-      p.circle((JX + i * 0.095 * (half / HALF)) * k, (RIM_Y - 0.03 - 0.002 * (9 - i * i)) * k, 0.046 * k)
-    }
+    // No lights round the rim: seven dots blinking on one by one after the bounce and off again read as a
+    // row of rivets, or more eyes, and ran a second and a half after the ball had gone. (`light` stays in
+    // the state the shows saved.)
     // Two eyes on the ball, shut tight through the bounce.
     const shut = since > -DOWN - 0.04 && since < 0.22
     for (const dx of [-0.075, 0.075]) {
@@ -175,14 +170,14 @@ export const jellyfish = definePiece<{ color: string; light: string }>({
     // The water the bell shoves aside as it is pressed down, and again as it rings.
     splash(p, k, seaWater(theme), weight, JX - HALF - 0.08, 0.37, over(t, T_TOUCH + 0.03, T_TOUCH + 0.55), 0.7)
     splash(p, k, seaWater(theme), weight, JX + HALF + 0.08, 0.37, over(t, T_TOUCH + 0.03, T_TOUCH + 0.55), 0.7)
-    // The bounce: a puff of lines off the crown.
-    if (since > UP && since < UP + 0.25) {
-      const f = over(since, UP, UP + 0.25)
+    // The bounce: a puff of lines off the crown, short and close, not a ring of rays spreading after the ball.
+    if (since > UP && since < UP + 0.16) {
+      const f = over(since, UP, UP + 0.16)
       p.push()
       p.stroke(s.color)
       p.strokeWeight(weight * (1 - f * 0.5))
       for (const a of [-2.5, -2.05, -1.1, -0.65]) {
-        const r0 = 0.13 + 0.16 * f
+        const r0 = 0.13 + 0.08 * f
         const r1 = r0 + 0.09 * (1 - f * 0.6)
         p.line((JX + Math.cos(a) * r0) * k, (CROWN_Y + Math.sin(a) * r0) * k, (JX + Math.cos(a) * r1) * k, (CROWN_Y + Math.sin(a) * r1) * k)
       }

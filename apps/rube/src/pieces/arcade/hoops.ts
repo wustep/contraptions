@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { coil, outline, solid } from '../../../../../src/core/draw'
 import { clamp, lerp } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, fly, laneAt, over, post, rail, ramp, segTime, trace, wait, type Lane, type Pt } from '../../parts'
-import { display, flash, glow, score } from './neon'
+import { display, flash, litColor, score } from './neon'
 
 /**
  * Arcade basketball. The rail ends at the cup on the tip of a sprung arm,
@@ -12,7 +12,7 @@ import { display, flash, glow, score } from './neon'
  * over the top of two cells and down through the rim. The net takes the
  * pace off it, bulging round it as it goes through, and lets it drop onto
  * the return ramp, which runs it out under the backboard. The rim lights,
- * the board over the backboard goes to 2, and the net swings a while.
+ * the board over the backboard goes to 300, and the net swings a while.
  *
  * The throw is one motion: the cup's swing about the pivot is what the lane
  * traces, and the flight leaves it along the swing's own tangent at the
@@ -170,8 +170,6 @@ export const hoops = definePiece<{ color: string }>({
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
     const a = swung(t)
     const made = since > 0 ? 1 - over(since, 1.6, 2.6) : 0
-    // The arm trembles on its catch once the ball is in the cup.
-    const tremble = t > ARRIVE && t < T_SNAP ? 0.012 * Math.sin(t * 70) * over(t, ARRIVE, T_SNAP) : 0
 
     // The rail to the cup, the return ramp and the rail on; the backboard's post behind them, standing on the ramp, so
     // it never runs on down into the floor below as one pole with whatever stands there.
@@ -191,13 +189,11 @@ export const hoops = definePiece<{ color: string }>({
     outline(p, ink, weight)
     p.line((RIM[0] + RIM_HALF) * k, RIM[1] * k, 1.23 * k, RIM[1] * k)
     p.line((RIM[0] + RIM_HALF) * k, RIM[1] * k, 1.23 * k, (RIM[1] + 0.1) * k)
-    glow(p, k, s.color, 1.22, -1.24, 0.17, made)
     display(p, k, ink, weight, bg, 1.22, -1.24, 0.3, 0.17, since > 0 ? '300' : '0', s.color, since > 0, 0.02)
-    // The rim's far half, behind the ball: a lit ring when the shot is made.
-    glow(p, k, s.color, RIM[0], RIM[1], 0.2, made)
+    // The rim's far half, behind the ball: a lit ring when the shot is made, that dims back to the ink rather than going out at once.
     p.push()
     p.noFill()
-    p.stroke(made > 0.5 ? s.color : ink)
+    p.stroke(litColor(ink, s.color, made))
     p.strokeWeight(weight * 1.2)
     p.arc(RIM[0] * k, RIM[1] * k, RIM_HALF * 2 * k, 0.09 * k, Math.PI, Math.PI * 2)
     p.pop()
@@ -213,7 +209,7 @@ export const hoops = definePiece<{ color: string }>({
     p.pop()
     // The pivot's post, the spring from the arm's tail to the ground, and the stop the tail comes down on.
     post(p, k, ink, weight, PIVOT[0], PIVOT[1], 0.5)
-    const tail = turned([TAIL, 0], a + tremble)
+    const tail = turned([TAIL, 0], a)
     outline(p, ink, weight * 0.75)
     coil(p, (PIVOT[0] + tail[0]) * k, (PIVOT[1] + tail[1]) * k, 0.36 * k, 0.48 * k, 5, 0.04 * k)
     outline(p, ink, weight)
@@ -227,7 +223,7 @@ export const hoops = definePiece<{ color: string }>({
     // The arm, a spoon: the tail, the pivot, the handle out to the bowl the ball sits in.
     p.push()
     p.translate(PIVOT[0] * k, PIVOT[1] * k)
-    p.rotate(a + tremble)
+    p.rotate(a)
     outline(p, ink, weight * 1.5)
     p.line(TAIL * k, 0, (ARM[0] + R + 0.02) * k, (ARM[1] + 0.06) * k)
     solid(p, ink, weight, s.color)
@@ -251,7 +247,7 @@ export const hoops = definePiece<{ color: string }>({
     const made = since > 0 ? 1 - over(since, 1.6, 2.6) : 0
     p.push()
     p.noFill()
-    p.stroke(made > 0.5 ? s.color : ink)
+    p.stroke(litColor(ink, s.color, made))
     p.strokeWeight(weight * 1.2)
     p.arc(RIM[0] * k, RIM[1] * k, RIM_HALF * 2 * k, 0.09 * k, 0, Math.PI)
     p.pop()

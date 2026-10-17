@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine, easeInQuad, easeOutCubic, easeOutQuad } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, fly, laneAt, over, post, rail, ramp, wait, type Lane, type Pt } from '../../parts'
-import { arcadeWater, flash, glow, lamp, score } from './neon'
+import { arcadeWater, flash, lamp, score } from './neon'
 
 /**
  * A dunk tank two floors tall. A glass tank of water stands on a plinth,
@@ -191,7 +191,6 @@ export const dunk = definePiece<DunkState>({
     p.line(UP_L * k, BAR_Y * k, UP_L * k, TANK_FLOOR * k)
     p.line(UP_R * k, BAR_Y * k, UP_R * k, FLAP_TOP * k)
     p.line(UP_L * k, BAR_Y * k, UP_R * k, BAR_Y * k)
-    glow(p, k, s.color, (UP_L + UP_R) / 2, BAR_Y, 0.16, dunked)
     lamp(p, k, ink, weight, s.color, bg, (UP_L + UP_R) / 2, BAR_Y, 0.04, dunked)
     // The drain flap, hinged at its top, swung out by the ball and shut behind it.
     p.push()
@@ -200,6 +199,19 @@ export const dunk = definePiece<DunkState>({
     outline(p, ink, weight * 1.2)
     p.line(0, 0, 0, (TANK_FLOOR - FLAP_TOP) * k)
     p.pop()
+    // Drops off the flap as the ball comes out: behind it, where it comes out through them; in front, the first sat on its face.
+    const dripping = t - T_FLAP
+    if (dripping > 0 && dripping < 0.5) {
+      p.noStroke()
+      p.fill(s.water)
+      for (let i = 0; i < 3; i++) {
+        const s0 = dripping - i * 0.08
+        if (s0 < 0) continue
+        const y = FLAP_TOP + 0.1 + (G / 2) * s0 * s0
+        if (y > TANK_FLOOR) continue
+        p.circle((TANK_X1 + 0.04 + i * 0.05 + 0.3 * s0) * k, y * k, 0.028 * k)
+      }
+    }
     // The peg the stem comes down on.
     const pegX = PIVOT[0] + PEG_AT * Math.sin(OVER) + 0.045 * Math.cos(OVER)
     const pegY = PIVOT[1] - PEG_AT * Math.cos(OVER) + 0.045 * Math.sin(OVER)
@@ -242,9 +254,10 @@ export const dunk = definePiece<DunkState>({
     p.rect(((UP_L + UP_R) / 2) * k, ((level + bed) / 2) * k, (UP_R - UP_L - 2 * inset) * k, (bed - level) * k)
     outline(p, ink, weight * 0.8)
     p.line((UP_L + inset) * k, level * k, (UP_R - inset) * k, level * k)
-    // The splash: drops up and back into the tank, and a ring on the surface.
+    // The splash: drops up and back into the tank, each gone as it comes down through the surface, the highest last;
+    // and a ring on the surface.
     const splash = t - T_SPLASH
-    if (splash > 0 && splash < 0.6) {
+    if (splash > 0 && splash < 0.75) {
       p.noStroke()
       p.fill(s.water)
       for (const [vx, vy] of DROPS) {
@@ -253,6 +266,8 @@ export const dunk = definePiece<DunkState>({
         const x = Math.max(UP_L + 0.04, Math.min(UP_R - 0.04, SPLASH[0] + vx * splash))
         p.circle(x * k, y * k, 0.04 * k)
       }
+    }
+    if (splash > 0 && splash < 0.5) {
       const f = over(splash, 0, 0.5)
       p.push()
       p.noFill()
@@ -260,19 +275,6 @@ export const dunk = definePiece<DunkState>({
       p.strokeWeight(weight * 0.8 * (1 - f))
       p.ellipse(SPLASH[0] * k, level * k, (0.1 + (2 * (UP_R - SPLASH[0]) - 0.16) * f) * k, 0.05 * k)
       p.pop()
-    }
-    // Drops off the flap as the ball comes out.
-    const dripping = t - T_FLAP
-    if (dripping > 0 && dripping < 0.5) {
-      p.noStroke()
-      p.fill(s.water)
-      for (let i = 0; i < 3; i++) {
-        const s0 = dripping - i * 0.08
-        if (s0 < 0) continue
-        const y = FLAP_TOP + 0.1 + (G / 2) * s0 * s0
-        if (y > TANK_FLOOR) continue
-        p.circle((TANK_X1 + 0.04 + i * 0.05 + 0.3 * s0) * k, y * k, 0.028 * k)
-      }
     }
   },
   // Over the frame's bar: on the tank it would lie across the water.

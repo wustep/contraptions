@@ -53,7 +53,8 @@ export const trapdoor = definePiece<{ color: string }>({
     return { cells, exit: { at: [1, 1], dir: 1 }, lane, state: { color } }
   },
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
-    const sink = t < ARRIVE ? 0 : since < SWING ? 1 : 1 - easeInOutSine(over(since, 2.5, 3.5))
+    // The door gives as the ball comes to rest on it, rather than the frame it stops.
+    const sink = since < SWING ? easeOutCubic(over(t, ARRIVE - 0.08, ARRIVE + 0.06)) : 1 - easeInOutSine(over(since, 2.5, 3.5))
     const bolt = t < ARRIVE ? 0 : since < 0 ? easeInQuad(over(t, ARRIVE + 0.05, FIRE)) : since < 2.5 ? 1 : 1 - easeInOutSine(over(since, 2.5, 3.5))
     const open = since < 0 ? 0 : since < SWING ? easeInQuad(over(since, 0, SWING)) : since < 2.5 ? 1 : 1 - easeOutCubic(over(since, 2.5, 3.5))
 

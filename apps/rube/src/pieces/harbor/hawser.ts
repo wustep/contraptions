@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeOutCubic } from '../../../../../src/core/ease'
-import { FLOOR, ROLL, burst, definePiece, fly, over, rail, ramp, roll, trace, type Lane, type Pt } from '../../parts'
+import { FLOOR, ROLL, definePiece, fly, over, rail, ramp, roll, trace, type Lane, type Pt } from '../../parts'
 import { WATER, bodyColor, piling, seabed, water } from './sea'
 
 /**
@@ -201,14 +201,19 @@ export const hawser = definePiece<{ color: string }>({
     p.line(0, -0.03 * k, 0, 0.03 * k)
     p.pop()
 
-    // The stop: a knock off the rat guard.
+    // The stop: a knock off the rat guard, three strokes up off the top of it. A ring of spokes all round the block,
+    // spreading for a fifth of a second, stood round it like a star.
     const hit = t - T_STOP
-    if (hit > 0 && hit < 0.22) {
-      const f = hit / 0.22
+    if (hit > 0 && hit < 0.16) {
+      const f = hit / 0.16
       p.push()
       p.stroke(ink)
       p.strokeWeight(weight * (1 - f))
-      burst(p, (gx - 0.03) * k, (gy - 0.04) * k, (0.06 + 0.08 * f) * k, (0.1 + 0.12 * f) * k, 5, 3.4)
+      for (const a of [-2.1, -1.55, -1.0]) {
+        const r0 = 0.07 + 0.04 * f
+        const r1 = r0 + 0.05
+        p.line((gx + Math.cos(a) * r0) * k, (gy + Math.sin(a) * r0) * k, (gx + Math.cos(a) * r1) * k, (gy + Math.sin(a) * r1) * k)
+      }
       p.pop()
     }
   },

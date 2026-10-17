@@ -148,11 +148,12 @@ export const dolphin = definePiece<{ color: string }>({
 
     p.push()
     aboveWater(p, k, -0.5, 2.5)
-    // The fin, cruising: a dorsal fin and the top of a back, turning round at each end of its beat.
+    // The fin, cruising: a dorsal fin and the top of a back, turning round at each end of its beat, edge on to us
+    // half way round, instead of flipping to face the other way in a frame.
     const up = finUp(t)
     if (up > 0.02) {
       const x = finX(t)
-      const way = Math.cos(t * 0.8) >= 0 ? 1 : -1
+      const way = Math.max(-1, Math.min(1, Math.cos(t * 0.8) * 5))
       p.push()
       p.translate(x * k, (WATER + 0.12 * (1 - up)) * k)
       p.scale(way, 1)
@@ -246,24 +247,7 @@ export const dolphin = definePiece<{ color: string }>({
     water(p, k, ink, bg, weight, -0.5, 2.5)
     splash(p, k, seaWater(theme), weight, NOSE0[0], WATER, over(since, -0.02, 0.55), 1.3)
     splash(p, k, seaWater(theme), weight, noseAt(T_DIVE)[0], WATER, over(since, T_DIVE, T_DIVE + 0.6), 1.5)
-    // The ring round the fin as it comes up, and the flick at the top.
-    if (up < 0.98 && up > 0.02) {
-      p.push()
-      p.noFill()
-      p.stroke(s.color)
-      p.strokeWeight(weight * 0.9 * Math.sin(up * Math.PI))
-      p.ellipse(finX(t) * k, (WATER + 0.02) * k, (0.4 - 0.15 * up) * k, 0.05 * k)
-      p.pop()
-    }
-    if (since > T_TOP && since < T_TOP + 0.18) {
-      const f = over(since, T_TOP, T_TOP + 0.18)
-      p.push()
-      p.stroke(s.color)
-      p.strokeWeight(weight * (1 - f * 0.5))
-      for (const a of [-2.3, Math.PI, 2.3]) {
-        p.line((TOP[0] + Math.cos(a) * (0.16 + 0.1 * f)) * k, (TOP[1] + Math.sin(a) * (0.16 + 0.1 * f)) * k, (TOP[0] + Math.cos(a) * (0.23 + 0.12 * f)) * k, (TOP[1] + Math.sin(a) * (0.23 + 0.12 * f)) * k)
-      }
-      p.pop()
-    }
+    // Nothing round the fin as it comes up, and no lines at the flick: a ring in the dolphin's colour stood round the
+    // fin like a halo, and the flick's strokes were left behind at the top, across the dolphin's own beak.
   },
 })

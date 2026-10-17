@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
-import { FAST, FLOOR, R, ROLL, arcPts, chain, definePiece, flick, fly, over, post, rail, ramp, roll, segTime, type Lane, type Pt } from '../../parts'
-import { flash, glow, marquee, score } from './neon'
+import { FAST, FLOOR, R, ROLL, arcPts, chain, definePiece, flick, fly, mixHex, over, post, rail, ramp, roll, segTime, type Lane, type Pt } from '../../parts'
+import { flash, marquee, score } from './neon'
 
 /**
  * A skee-ball lane. A kicker in the rail slaps the ball as it passes; it
@@ -95,14 +95,14 @@ export const skee = definePiece<{ color: string }>({
     p.pop()
     solid(p, ink, weight, ink)
     p.circle((KICK - 0.1) * k, (FLOOR + 0.06) * k, 0.04 * k)
-    // The target board: three rings standing up, lit from the landing.
-    glow(p, k, s.color, CX, CY, 0.3, lit)
+    // The target board: three rings standing up, lit at the landing and going dark again over a second, not all in one frame.
+    const ring = mixHex(bg, s.color, lit)
     for (const [r, i] of [
       [0.34, 0],
       [0.24, 1],
       [0.14, 2],
     ] as [number, number][]) {
-      solid(p, ink, weight, lit > 0.5 && i % 2 === 0 ? s.color : bg)
+      solid(p, ink, weight, i % 2 === 0 ? ring : bg)
       p.ellipse(CX * k, CY * k, r * 1.6 * k, r * 2 * k)
     }
     solid(p, ink, weight, ink)

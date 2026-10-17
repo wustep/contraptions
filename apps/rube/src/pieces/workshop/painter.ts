@@ -55,22 +55,22 @@ export const painter = definePiece<{ color: string; paint: string }>({
     outline(p, ink, weight)
     p.line(0, (FLOOR + 0.035 + pressed * 0.03) * k, 0, 0.5 * k)
 
-    // The gallows, the pot on it, and the pipes down to the nozzles.
+    // The gallows, the pot of paint hung under it, and the pipes out of its
+    // sides down to the nozzles. (Stood on the beam, the pot rose a fifth
+    // of a cell into the cell above; hung under it there is no room for the
+    // label it wore, and the pot is all paint.)
     gallows(p, k, ink, weight, POST_X, 0.3, POST_X)
     solid(p, ink, weight, s.paint)
-    p.rect(0, -0.62 * k, 0.3 * k, 0.2 * k, 0.02 * k)
-    solid(p, ink, weight, bg)
-    p.rect(0, -0.62 * k, 0.16 * k, 0.08 * k)
+    p.rect(0, -0.425 * k, 0.3 * k, 0.13 * k, 0.02 * k)
     outline(p, ink, weight)
     for (const side of [-1, 1]) {
-      p.line(side * 0.08 * k, -0.5 * k, side * 0.08 * k, -0.42 * k)
-      p.line(side * 0.08 * k, -0.42 * k, side * 0.22 * k, -0.42 * k)
-      p.line(side * 0.22 * k, -0.42 * k, side * 0.22 * k, NOZZLE_Y * k)
+      p.line(side * 0.15 * k, -0.41 * k, side * 0.22 * k, -0.41 * k)
+      p.line(side * 0.22 * k, -0.41 * k, side * 0.22 * k, NOZZLE_Y * k)
     }
     // The valve on the pot's outlet: a tap that turns while the plate is down.
     const open = since < 0 ? 0 : since < SPRAY ? Math.min(1, over(since, 0, 0.06)) : 1 - over(since, SPRAY, SPRAY + 0.08)
     p.push()
-    p.translate(0, -0.47 * k)
+    p.translate(0, -0.345 * k)
     p.rotate((Math.PI / 2) * open)
     solid(p, ink, weight, s.color)
     p.rect(0, 0, 0.09 * k, 0.03 * k, 0.01 * k)

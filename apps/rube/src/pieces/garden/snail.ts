@@ -266,27 +266,24 @@ export const snail = definePiece<{ color: string }>({
     rail(p, k, ink, weight, -0.5, 1.5)
     soil(p, k, ink, weight, -0.5, 1.5)
 
-    // The trail, from where the tail was to where it is: a glossy ribbon, a bead where each pull ended.
+    // The trail, from where the tail was to where it is: a wet ribbon, thickening as it leaves the tail, and a
+    // bead where each pull ended, welling up once the tail has moved off it.
     const x0 = START + TAIL
-    if (xt > x0 + 0.01) {
+    if (xt > x0 + 0.002) {
       p.push()
       const slime = p.color(mixHex(s.color, bg, 0.3))
       slime.setAlpha(150)
       p.stroke(slime)
       p.strokeCap(p.ROUND)
-      p.strokeWeight(0.045 * k)
+      p.strokeWeight(0.045 * k * Math.min(1, (xt - x0) / 0.08))
       p.line(x0 * k, (FLOOR - 0.018) * k, xt * k, (FLOOR - 0.018) * k)
       p.noStroke()
       p.fill(slime)
       for (let i = 1; i < PULLS; i++) {
         const bx = x0 + (CRAWL_D * i) / PULLS
-        if (bx < xt - 0.04) p.ellipse(bx * k, (FLOOR - 0.03) * k, 0.07 * k, 0.05 * k)
+        const well = over(xt, bx + 0.02, bx + 0.08)
+        if (well > 0) p.ellipse(bx * k, (FLOOR - 0.03) * k, 0.07 * well * k, 0.05 * well * k)
       }
-      const gloss = p.color(bg)
-      gloss.setAlpha(200)
-      p.stroke(gloss)
-      p.strokeWeight(0.012 * k)
-      p.line((x0 + 0.03) * k, (FLOOR - 0.028) * k, Math.max(x0 + 0.03, xt - 0.06) * k, (FLOOR - 0.028) * k)
       p.pop()
     }
 

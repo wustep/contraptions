@@ -5,12 +5,12 @@ import { clamp, easeOutCubic } from '../../../../../src/core/ease'
 import { mixHex } from '../../parts'
 
 /**
- * The arcade's shared vocabulary: glow, marquee lights, and a score that
- * pops off whatever the ball just hit. The palettes here are dark, so a
- * colour laid down with a soft halo reads as a lit tube or a lamp; the
- * halo is the only translucency in the show, and it stays here. The
- * halos are kept close and faint: a lamp is lit, not a searchlight, and
- * the ball must still be the brightest thing on the floor.
+ * The arcade's shared vocabulary: lamps, marquee lights, lit tubes, and a
+ * score that pops off whatever the ball just hit. The palettes here are
+ * dark, so a colour laid down flat on them already reads as lit: a lamp is
+ * a dot of the colour, a tube a line of it, with no halo round either. A
+ * halo under every lamp, tube and hit stacked into a haze the ball sat in,
+ * and the ball must still be the brightest thing on the floor.
  *
  * What is lit has to have something dark to be lit against. The colours
  * are pale and so is the ink, so a colour on ink, or on a body of its own
@@ -21,9 +21,8 @@ import { mixHex } from '../../parts'
  */
 
 /**
- * A soft halo behind something lit: a few rings of the colour, fading out. `f` is the brightness. It stays
- * inside a lamp's own reach and never reaches half opacity at its heart: every hit on the floor pops a score
- * and a flash as well, and a brighter, wider halo under those stacked into a blotch the ball sat in.
+ * A soft halo behind something lit: a few rings of the colour, fading out. `f` is the brightness. The stock
+ * arcade no longer draws one (a lamp is lit by its fill alone); the Playground's arcade pieces still do.
  */
 export function glow(p: p5, k: number, color: string, x: number, y: number, r: number, f = 1): void {
   if (f <= 0.01) return
@@ -39,14 +38,24 @@ export function glow(p: p5, k: number, color: string, x: number, y: number, r: n
 }
 
 /**
- * A lamp: a dot in the colour when lit, paper when not, with a halo when
- * lit. A small lamp's outline thins with it, so that the fill — which is
- * what says whether it is lit — is not swallowed by its own rim: at the
- * show's line weight a lamp under a twentieth of a cell was all ink.
+ * What something lit is painted `f` of the way from `off` to `on`: a lamp,
+ * a tube or a lit face coming on or dying down goes through the shades
+ * between, rather than flipping from one to the other half way.
+ */
+export function litColor(off: string, on: string, f: number): string {
+  return f >= 1 ? on : f <= 0 ? off : mixHex(off, on, f)
+}
+
+/**
+ * A lamp: a dot in the colour when lit, paper when not, and between the two
+ * while it dies down — `lit` is how bright, so a lamp that fades out does,
+ * rather than going out all at once half way. A small lamp's outline thins
+ * with it, so that the fill — which is what says whether it is lit — is not
+ * swallowed by its own rim: at the show's line weight a lamp under a
+ * twentieth of a cell was all ink.
  */
 export function lamp(p: p5, k: number, ink: string, weight: number, color: string, bg: string, x: number, y: number, r: number, lit: number): void {
-  if (lit > 0.05) glow(p, k, color, x, y, r * 1.4, lit)
-  solid(p, ink, weight * 0.8 * Math.min(1, r / 0.04), lit > 0.5 ? color : bg)
+  solid(p, ink, weight * 0.8 * Math.min(1, r / 0.04), litColor(bg, color, lit))
   p.circle(x * k, y * k, r * 2 * k)
 }
 
@@ -70,17 +79,10 @@ export function marquee(p: p5, k: number, ink: string, weight: number, color: st
   }
 }
 
-/** A lit tube: the colour with a halo, from (x0, y0) to (x1, y1). `f` is how lit. */
+/** A lit tube: a line in the colour when lit, ink when not, and between the two while it dies down, from (x0, y0) to (x1, y1). `f` is how lit. */
 export function tube(p: p5, k: number, ink: string, weight: number, color: string, x0: number, y0: number, x1: number, y1: number, f = 1): void {
   p.push()
-  if (f > 0.02) {
-    const halo = p.color(color)
-    halo.setAlpha(40 * f)
-    p.stroke(halo)
-    p.strokeWeight(weight * 3.2)
-    p.line(x0 * k, y0 * k, x1 * k, y1 * k)
-  }
-  p.stroke(f > 0.5 ? color : ink)
+  p.stroke(litColor(ink, color, f))
   p.strokeWeight(weight * 1.3)
   p.line(x0 * k, y0 * k, x1 * k, y1 * k)
   p.pop()

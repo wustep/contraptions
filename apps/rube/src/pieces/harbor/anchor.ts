@@ -73,7 +73,9 @@ export const anchor = definePiece<AnchorState>({
     rail(p, k, ink, weight, HATCH, 0.5)
     piling(p, k, ink, weight, -HATCH - 0.06)
     piling(p, k, ink, weight, HATCH + 0.06)
-    for (let i = 1; i < floors; i++) water(p, k, ink, bg, weight, -0.5, 0.5, i + 0.37)
+    // A waterline under every floor it goes down past, and under the deck it lands at: the splash is on that water, and
+    // without it the pier below stood over nothing while the cells beside it had the sea.
+    for (let i = 1; i <= floors; i++) water(p, k, ink, bg, weight, -0.5, 0.5, i + 0.37)
     rail(p, k, ink, weight, turn * HATCH, turn * 0.5, floors + FLOOR)
     piling(p, k, ink, weight, turn * (HATCH + 0.06), floors + FLOOR, floors + 0.5)
     seabed(p, k, ink, weight, -0.5, 0.5, floors + 0.5)

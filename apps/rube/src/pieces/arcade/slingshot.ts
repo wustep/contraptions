@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeOutQuad } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, fly, over, rail, ramp, trace, wait, type Lane, type Pt } from '../../parts'
-import { flash, lamp, score } from './neon'
+import { flash, lamp, litColor, score } from './neon'
 
 /**
  * A slingshot. A fork is clamped to the post that holds the shelf above,
@@ -109,14 +109,7 @@ function band(p: p5, k: number, ink: string, weight: number, color: string, a: P
   }
   p.push()
   p.noFill()
-  if (lit > 0.02) {
-    const halo = p.color(color)
-    halo.setAlpha(40 * lit)
-    p.stroke(halo)
-    p.strokeWeight(weight * 3.2)
-    curve()
-  }
-  p.stroke(lit > 0.5 ? color : ink)
+  p.stroke(litColor(ink, color, lit))
   p.strokeWeight(weight * 1.3)
   curve()
   p.pop()

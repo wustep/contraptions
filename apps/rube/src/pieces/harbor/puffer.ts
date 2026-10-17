@@ -150,36 +150,34 @@ export const puffer = definePiece<{ color: string }>({
     // The sea in front: what is under the line is under water.
     water(p, k, ink, bg, weight, -0.5, 0.5)
 
-    // A snore: one bubble off the mouth every so often, while it sleeps.
+    // A snore: one bubble swelling off the mouth every so often, while it sleeps, and gone again as it rises.
     if (asleep) {
       const g = (((t * 0.55) % 1) + 1) % 1
-      if (g < 0.6) {
+      const d = (0.03 + 0.035 * g) * Math.min(1, g / 0.12, (0.6 - g) / 0.08)
+      if (d > 0.004) {
         solid(p, ink, weight * 0.6, bg)
-        p.circle((CX - rx - 0.035 - 0.02 * g) * k, (y + ry * 0.1 - 0.3 * g) * k, (0.03 + 0.035 * g) * k)
+        p.circle((CX - rx - 0.035 - 0.02 * g) * k, (y + ry * 0.1 - 0.3 * g) * k, d * k)
       }
     }
-    // The sigh: the air comes out of its mouth in a run of bubbles.
-    if (since > HELD && since < HELD + SIGH) {
-      const g = over(since, HELD, HELD + SIGH)
+    // The sigh: the air comes out of its mouth in a run of bubbles, one after another, each swelling out of the mouth
+    // and gone at the top of its rise; the last of them finish rising after the fish is small again. All four came
+    // at once, half way up already, and went at once.
+    const u = since - HELD
+    const cycle = SIGH / 3.2
+    if (u > 0 && u < SIGH + cycle) {
       solid(p, ink, weight * 0.6, bg)
       for (let i = 0; i < 4; i++) {
-        const ph = (g * 3.2 + i / 4) % 1
-        p.circle((CX - rx - 0.035 - 0.05 * ph + 0.015 * Math.sin(ph * 9 + i)) * k, (y + ry * 0.1 - 0.36 * ph) * k, (0.03 + 0.03 * ph) * (1 - g * 0.4) * k)
+        const age = u / cycle - i / 4
+        if (age < 0) continue
+        const ph = age % 1
+        if ((age - ph + i / 4) * cycle > SIGH) continue
+        const g = over(u - ph * cycle, 0, SIGH)
+        const d = (0.03 + 0.03 * ph) * (1 - g * 0.4) * Math.min(1, ph / 0.12, (1 - ph) / 0.12)
+        if (d > 0.004) p.circle((CX - rx - 0.035 - 0.05 * ph + 0.015 * Math.sin(ph * 9 + i)) * k, (y + ry * 0.1 - 0.36 * ph) * k, d * k)
       }
     }
-    // The pop: a start of lines off its back, and the water it shoves aside.
-    if (since > 0 && since < 0.22) {
-      const g = over(since, 0, 0.22)
-      p.push()
-      p.stroke(s.color)
-      p.strokeWeight(weight * (1 - g * 0.6))
-      for (const a of [-2.75, -Math.PI / 2, -0.4]) {
-        const r0 = FULL.rx + 0.11 + 0.1 * g
-        const r1 = r0 + 0.08 * (1 - g * 0.5)
-        p.line((CX + Math.cos(a) * r0) * k, (FULL.cy + Math.sin(a) * r0) * k, (CX + Math.cos(a) * r1) * k, (FULL.cy + Math.sin(a) * r1) * k)
-      }
-      p.pop()
-    }
+    // The pop is the fish blowing up under the ball and the water it shoves aside. A start of lines off its back in
+    // the fish's colour lay across the deck's ends like bits of rail.
     splash(p, k, seaWater(theme), weight, CX - 0.2, 0.37, over(since, 0.02, 0.5), 0.55)
     splash(p, k, seaWater(theme), weight, CX + 0.22, 0.37, over(since, 0.02, 0.5), 0.55)
   },

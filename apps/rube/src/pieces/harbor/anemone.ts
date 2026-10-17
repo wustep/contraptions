@@ -14,7 +14,7 @@ import { piling, water } from './sea'
  * fist — the fan from behind, the fringe up from the front, so the ball is
  * seen between them — and squeeze twice. When they open the ball is the
  * anemone's colour, for good, and a wave runs through the fan and
- * shoulders it out the far side. A few motes of the colour drift up after.
+ * shoulders it out the far side.
  *
  * The anemone is painted the colour it gives, so the ball is seen to take
  * it from the animal.
@@ -186,21 +186,9 @@ export const anemone = definePiece<{ color: string }>({
     p.arc(0, RIM_Y * k, RIM_RX * 2 * k, 0.07 * k, 0.1, Math.PI - 0.1)
     // The fringe, in front of the ball: down the column's lip, or up and over with the rest of the fist.
     tentacles(p, k, ink, weight, s.color, FRINGE, t, since, ballX)
-    // The pool's water, in front of everything in it.
+    // The pool's water, in front of everything in it. Nothing over the crown as it opens: the ball in the anemone's
+    // colour is what it did. A fan of motes of the colour, there from nowhere a fifth of a cell out and drifting for
+    // over a second, stood round it like a sparkle.
     water(p, k, ink, bg, weight, -0.17, 0.19, 0.43)
-
-    // Motes of the colour drifting up as it opens.
-    if (since > HOLD && since < HOLD + 1.3) {
-      const f = over(since, HOLD, HOLD + 1.3)
-      p.push()
-      p.noStroke()
-      p.fill(s.color)
-      for (let i = 0; i < 5; i++) {
-        const a = -Math.PI / 2 + (i - 2) * 0.5
-        const r = 0.2 + 0.26 * easeOutCubic(f)
-        p.circle((Math.cos(a) * r * 0.8 + 0.02 * Math.sin(f * 8 + i)) * k, (0.02 + Math.sin(a) * r) * k, 0.04 * (1 - f) * k)
-      }
-      p.pop()
-    }
   },
 })

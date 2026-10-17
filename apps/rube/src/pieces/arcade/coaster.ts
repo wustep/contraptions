@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { clamp, lerp } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, definePiece, fly, laneAt, over, post, rail, ramp, segTime, wait, type Lane, type Pt, type Seg } from '../../parts'
-import { flash } from './neon'
+import { flash, litColor } from './neon'
 
 /**
  * A roller coaster. A car waits at the station, its seat a little under
@@ -117,26 +117,16 @@ function carAt(t: number): number {
   return X_BRAKE + V_BRAKE * s - ((V_BRAKE / STOP_T) * s * s) / 2
 }
 
-/** A tube along a path, lit by `f`, its halo laid once. */
-function tubePath(p: p5, k: number, ink: string, weight: number, color: string, pts: Pt[], f: number): void {
-  if (pts.length < 2) return
-  const path = () => {
-    p.beginShape()
-    for (const [x, y] of pts) p.vertex(x * k, y * k)
-    p.endShape()
-  }
+/** A tube along the path's points from `i0` to `i1` (inclusive), lit by `f`, laid as one line. */
+function tubePath(p: p5, k: number, ink: string, weight: number, color: string, pts: Pt[], f: number, i0 = 0, i1 = pts.length - 1): void {
+  if (i1 - i0 < 1) return
   p.push()
   p.noFill()
-  if (f > 0.02) {
-    const halo = p.color(color)
-    halo.setAlpha(40 * f)
-    p.stroke(halo)
-    p.strokeWeight(weight * 3.2)
-    path()
-  }
-  p.stroke(p.lerpColor(p.color(ink), p.color(color), clamp(f)))
+  p.stroke(litColor(ink, color, clamp(f)))
   p.strokeWeight(weight * 1.3)
-  path()
+  p.beginShape()
+  for (let i = i0; i <= i1; i++) p.vertex(pts[i][0] * k, pts[i][1] * k)
+  p.endShape()
   p.pop()
 }
 
@@ -199,10 +189,14 @@ export const coaster = definePiece<{ color: string }>({
     outline(p, ink, weight)
     p.line(-0.38 * k, 1.5 * k, 2.3 * k, 1.5 * k)
 
-    // The track: one rail, lit behind the car wherever it has been, going out a while after the ride.
+    // The track: one rail, lit behind the car wherever it has been, going
+    // out a while after the ride. Each stretch is laid once, the lit one up
+    // to the car and the dark one on from it: the lit one laid over the whole
+    // dark rail doubled its edges, and they thinned in a frame when it went out.
     const glowing = t > T_GO ? 1 - over(since, 1.2, 2.2) : 0
-    tubePath(p, k, ink, weight, s.color, pts, 0)
-    if (glowing > 0) tubePath(p, k, ink, weight, s.color, pts.filter((_, i) => X_TRACK0 + i * 0.02 <= x), glowing)
+    const lit = glowing > 0 ? Math.min(pts.length - 1, Math.floor((x - X_TRACK0) / 0.02 + 1e-9)) : 0
+    if (lit > 0) tubePath(p, k, ink, weight, s.color, pts, glowing, 0, lit)
+    tubePath(p, k, ink, weight, s.color, pts, 0, lit)
     // The brake fins on the run-out, closed on the car once it is in them.
     const gripped = t > T_BRAKE ? 1 : 0
     solid(p, ink, weight * 0.8, s.color)
@@ -245,15 +239,17 @@ export const coaster = definePiece<{ color: string }>({
         p.circle(wx * k, (UNDER - 0.042) * k, 0.025 * k)
       }
     })
-    // The sparks off the fins, thrown back from under the car while the brakes bite.
+    // The sparks off the fins, thrown back from under the car while the
+    // brakes bite: the car is stopped in a tenth of a second, so a few, gone
+    // in two; a fan of them hanging on after it had stopped read as a twinkle.
     const braking = t - T_BRAKE
-    if (braking > 0 && braking < 0.4) {
-      const f = braking / 0.4
+    if (braking > 0 && braking < 0.2) {
+      const f = braking / 0.2
       p.push()
       p.stroke(s.color)
       p.strokeWeight(weight * (1.1 - 0.6 * f))
-      for (let i = 0; i < 6; i++) {
-        const a = Math.PI + 0.25 + i * 0.22
+      for (let i = 0; i < 4; i++) {
+        const a = Math.PI + 0.3 + i * 0.3
         const r0 = 0.05 + (0.2 + 0.05 * (i % 3)) * f
         const sx = Math.min(x, X_STOP) - 0.13 - 0.04 * (i % 2)
         const sy = 1 + UNDER - 0.03 + 0.5 * f * f * 0.2

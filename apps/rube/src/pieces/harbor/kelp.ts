@@ -134,7 +134,7 @@ export const kelp = definePiece<KelpState>({
     p.fill(ink)
     for (const x of [-0.12, 0.1]) p.ellipse(x * k, 0.48 * k, 0.07 * k, 0.03 * k)
     // The bubbles the ball leaves behind as it rises: they burst under the cap, the biggest of them whole below it.
-    if (since > 0 && since < climb + 1.2) bubbles(p, k, ink, weight, bg, 0.02, Math.min(0.3, ballY + 0.3), under + 0.07, since, 5)
+    if (since > 0) bubbles(p, k, ink, weight, bg, 0.02, Math.min(0.3, ballY + 0.3), under + 0.07, since, 5, climb)
     // The rim, and the rail out from it.
     solid(p, ink, weight, s.color)
     p.rect(0, (rim - 0.01) * k, (WALL * 2 + 0.06) * k, 0.05 * k)

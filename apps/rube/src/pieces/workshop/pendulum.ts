@@ -23,6 +23,11 @@ const RELEASE = TRIP + 0.1
 const SWING = 0.36
 const FIRE = RELEASE + SWING
 const PERIOD = 2 * Math.PI * Math.sqrt(ROD / 9)
+/** The follow-through after the strike, and where (and how high) it peaks. */
+const OMEGA = (2 * Math.PI) / PERIOD
+const FOLLOW = 0.4
+const PEAK_AT = Math.atan(0.9 * OMEGA) / OMEGA
+const PEAK = CONTACT + FOLLOW * Math.sin(OMEGA * PEAK_AT) * Math.exp(-PEAK_AT / 0.9)
 
 export const pendulum = definePiece<{ color: string }>({
   name: 'pendulum',
@@ -46,11 +51,12 @@ export const pendulum = definePiece<{ color: string }>({
     let angle: number
     if (t < RELEASE) angle = -COCKED
     else if (t < FIRE) angle = -swing(table, 0.25 * over(t, RELEASE, FIRE)) + CONTACT * over(t, RELEASE, FIRE)
-    else {
-      const tau = since
-      angle = CONTACT + 0.4 * Math.sin((tau * 2 * Math.PI) / PERIOD) * Math.exp(-tau / 0.9)
-      if (tau > 0.3) angle = 0.5 * Math.cos(((tau - 0.3) * 2 * Math.PI) / PERIOD) * Math.exp(-(tau - 0.3) / 1.1) * (CONTACT + 0.36)
-    }
+    else if (since < PEAK_AT) angle = CONTACT + FOLLOW * Math.sin(OMEGA * since) * Math.exp(-since / 0.9)
+    // The swing back from the top of the follow-through, from exactly there:
+    // it used to restart at 0.25 from 0.42, snapping the bob back a
+    // fifteenth of a cell in one frame. It hangs still once it is spent.
+    else if (since < PEAK_AT + 8) angle = PEAK * Math.cos(OMEGA * (since - PEAK_AT)) * Math.exp(-(since - PEAK_AT) / 1.1)
+    else angle = 0
     const bx = PIVOT[0] + Math.sin(angle) * ROD
     const by = PIVOT[1] + Math.cos(angle) * ROD
 

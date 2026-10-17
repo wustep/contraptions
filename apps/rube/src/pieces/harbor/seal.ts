@@ -176,7 +176,8 @@ export const seal = definePiece<SealState>({
     const head: Pt = [nose[0] - Math.cos(phi) * SNOUT, nose[1] - Math.sin(phi) * SNOUT]
     // How far it is reared up, for the tail to come up against; and the claps after the toss.
     const reared = over(FLOOR - nose[1], 0, FLOOR - BAL[1] - R)
-    const clapping = since > 0.12 && since < CLAPS
+    // Four claps, from flippers apart to flippers apart, so they start and stop where they rest and nothing jumps.
+    const clapping = since > 0.12 && since < 0.12 + (4 * Math.PI) / 13
     const clap = clapping ? Math.abs(Math.sin((since - 0.12) * 13)) : 0
     const ball = laneAt(LANES[turn], t)
 
@@ -220,20 +221,20 @@ export const seal = definePiece<SealState>({
       ),
     )
     // The near flipper: propping it up, spread for balance, clapping.
-    const prop = clapping ? lerp(2.0, 3.05, clap) : 1.95 + 0.35 * reared
+    const prop = lerp(1.95 + 0.35 * reared, 3.05, clap)
     flipper(p, k, 0.13, 0.27, 0.19, prop)
 
-    // The face: the nose, whiskers that twitch while it balances, an eye that never leaves the ball.
+    // The face: the nose, whiskers, an eye that never leaves the ball. Whiskers twitching at six a
+    // second while it balanced moved a pixel either way at the show's size: a shimmer, not a twitch.
     p.noStroke()
     p.fill(ink)
     p.circle((nose[0] - Math.cos(phi) * 0.022) * k, (nose[1] - Math.sin(phi) * 0.022) * k, 0.045 * k)
-    const twitch = t > T_MEET && t < FIRE ? 0.12 * Math.sin(t * 38) : 0
     const mx = lerp(head[0], nose[0], 0.5)
     const my = lerp(head[1], nose[1], 0.5)
     outline(p, ink, weight * 0.6)
     for (const side of [-1, 1]) {
       for (const fan of [-0.22, 0.22]) {
-        const a = phi + side * (Math.PI / 2 + 0.35) + fan + twitch * side
+        const a = phi + side * (Math.PI / 2 + 0.35) + fan
         p.line((mx + Math.cos(a) * 0.04) * k, (my + Math.sin(a) * 0.04) * k, (mx + Math.cos(a) * 0.1) * k, (my + Math.sin(a) * 0.1) * k)
       }
     }

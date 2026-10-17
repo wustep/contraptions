@@ -86,8 +86,11 @@ function rodAt(t: number): { tip: Pt; bow: number } {
   const ring = Math.exp(-s * 3) * Math.cos(s * 10)
   return { tip: [TIP0[0] + (TIP_WHIP[0] - TIP0[0]) * ring, TIP0[1] + (TIP_WHIP[1] - TIP0[1]) * ring], bow: -0.08 * ring }
 }
-/** The float: on the water, ducked under at the bite, on the line as the ball is hauled, hanging from the line after. */
-const dipAt = (t: number) => (t < T_BITE ? 0 : t < FIRE ? 0.06 * easeInOutSine(over(t, T_BITE, T_BITE + 0.1)) : 0)
+/**
+ * The float: on the water, ducked under at the bite, on the line as the ball is hauled, hanging from the line after.
+ * It stays under till the ball comes out with it; bobbing back up at the whip, a frame before the haul, it jumped.
+ */
+const dipAt = (t: number) => (t < T_BITE ? 0 : t < T_OUT ? 0.06 * easeInOutSine(over(t, T_BITE, T_BITE + 0.1)) : 0)
 
 export const rod = definePiece<RodState>({
   name: 'rod',
@@ -176,9 +179,13 @@ export const rod = definePiece<RodState>({
     // The sea in front; the ball's splash; bubbles while it is under; and the water off it as it is hauled out.
     water(p, k, ink, bg, weight, -0.5, 1.5)
     splash(p, k, sea, weight, IN[0] + 0.03, WATER, over(t, T_IN, T_IN + 0.5), 1)
-    if (t > T_IN + 0.05 && t < T_OUT) bubbles(p, k, ink, weight, bg, UNDER[0] + 0.03, 0.47, WATER - 0.02, t - T_IN, 3)
+    // On a quick clock, since the water is shallow: up and done half a second after the ball is out.
+    if (t > T_IN + 0.05) bubbles(p, k, ink, weight, bg, UNDER[0] + 0.03, 0.47, WATER - 0.02, (t - T_IN - 0.05) * 2.5, 3, (T_OUT - T_IN - 0.05) * 2.5)
     splash(p, k, sea, weight, UNDER[0], WATER, over(t, T_OUT - 0.02, T_OUT + 0.4), 0.8)
     if (t > T_OUT && t < landed) {
+      // Each drop thins to nothing as it falls, and the last of them as the ball lands: they went whole, at the
+      // bottom of each fall and all together at the landing.
+      const dry = 1 - over(t, landed - 0.15, landed)
       p.push()
       p.noStroke()
       p.fill(sea)
@@ -188,7 +195,8 @@ export const rod = definePiece<RodState>({
         [-0.01, 0.7],
       ]) {
         const f = (((t - T_OUT) * 2.2 + d) % 1 + 1) % 1
-        p.ellipse((ball.x + dx) * k, (ball.y + 0.12 + 0.3 * f) * k, 0.025 * k, 0.04 * k)
+        const size = (1 - f) * dry
+        p.ellipse((ball.x + dx) * k, (ball.y + 0.12 + 0.3 * f) * k, 0.025 * size * k, 0.04 * size * k)
       }
       p.pop()
     }

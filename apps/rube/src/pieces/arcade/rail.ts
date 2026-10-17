@@ -1,7 +1,7 @@
 import { outline } from '../../../../../src/core/draw'
 import { FLOOR, over } from '../../parts'
 import { makeRail } from '../rail'
-import { lamp, tube } from './neon'
+import { lamp, litColor, tube } from './neon'
 
 /**
  * The arcade's rail is a lit lane. A cell of it carries a lamp on a stub
@@ -20,7 +20,7 @@ export const laneRail = makeRail(['lamp', 'strip', 'chevron', 'none', 'lamp'] as
   if (s.decor === 'strip') tube(p, k, ink, weight, s.color, -0.3, FLOOR + 0.1, 0.3, FLOOR + 0.1, lit)
   if (s.decor === 'chevron') {
     p.push()
-    p.stroke(lit > 0.5 ? s.color : ink)
+    p.stroke(litColor(ink, s.color, lit))
     p.strokeWeight(weight)
     for (const x of [-0.2, 0, 0.2]) {
       p.line((x - 0.05) * k, 0.4 * k, (x + 0.03) * k, 0.45 * k)
