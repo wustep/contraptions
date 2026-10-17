@@ -14,16 +14,16 @@ export class DepotAudio {
     const c = this.context
     if (!c || this.muted || c.state !== 'running') return
     const tones: Record<Sound, number[]> = {
-      paint: [370, 510], send: [160, 90], good: [660, 880, 1100], bad: [230, 170],
+      paint: [370, 510], send: [320], bang: [95, 55], good: [660, 880, 1100], bad: [230, 170],
       hold: [290], return: [280, 420, 310], tick: [700], finish: [440, 550, 660, 880],
     }
     tones[kind].forEach((hz, i) => {
       const osc = c.createOscillator()
       const gain = c.createGain()
       const at = c.currentTime + i * (kind === 'finish' ? 0.11 : 0.065)
-      osc.type = kind === 'send' ? 'triangle' : 'sine'
+      osc.type = kind === 'bang' ? 'triangle' : 'sine'
       osc.frequency.setValueAtTime(hz, at)
-      osc.frequency.exponentialRampToValueAtTime(hz * (kind === 'send' ? 0.45 : 0.92), at + 0.12)
+      osc.frequency.exponentialRampToValueAtTime(hz * (kind === 'bang' ? 0.45 : 0.92), at + 0.12)
       gain.gain.setValueAtTime(0, at)
       gain.gain.linearRampToValueAtTime(kind === 'good' ? 0.075 : 0.055, at + 0.008)
       gain.gain.exponentialRampToValueAtTime(0.001, at + 0.17)

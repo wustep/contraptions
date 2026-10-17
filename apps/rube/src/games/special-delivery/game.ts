@@ -11,7 +11,7 @@ export interface Activation { station: Station; start: number; color: string; pa
 export interface Choice { at: number; action: 'paint' | 'send' | 'hold' | 'park'; value?: number }
 export interface Delivery { at: number; parcel: number; address: Address; good: boolean; start: number; returns: number }
 interface Pending { at: number; run(): void }
-export type Sound = 'paint' | 'send' | 'good' | 'bad' | 'hold' | 'return' | 'tick' | 'finish'
+export type Sound = 'paint' | 'send' | 'good' | 'bad' | 'hold' | 'return' | 'tick' | 'finish' | 'bang'
 export type Phase = 'open' | 'closing' | 'finished'
 
 /** Decisions own the rules. Timed lanes perform their already-resolved consequences. */
@@ -182,6 +182,7 @@ export class Depot {
     this.inFlight++
     this.ready.forEach((q, i) => this.move(q, readyAt(i)))
     this.onSound('send')
+    this.schedule(start + 0.3 + cannon.fire, () => this.onSound('bang'))
     this.say('Special delivery, coming through!')
     this.schedule(arrival, () => {
       this.inFlight--
@@ -213,6 +214,7 @@ export class Depot {
       fly([10.9, 2.8], returnAt(this.rework.length), 1.05, -1.1)]
     this.motion(p, segs)
     this.activations.push({ station: 'frog', start: frogStart, color: COLORS[p.color] })
+    this.schedule(frogStart + frog.fire, () => this.onSound('return'))
     this.frogFree = frogStart + MACHINES.frog.duration
     p.rescued = true; p.returns++
     this.schedule(this.time + segTime(segs), () => {
@@ -257,11 +259,19 @@ export class Depot {
 
   private finish(): void { this.phase = 'finished'; this.revision++; this.onSound('finish') }
 
-  highlight(): { start: number; end: number; caption: string } | null {
+  highlight(): { cuts: { start: number; end: number }[]; caption: string } | null {
     const rescue = this.deliveries.filter((d) => d.good && d.returns).sort((a, b) => b.returns - a.returns)[0]
-    const delivery = rescue ?? this.deliveries.find((d) => !d.good) ?? this.deliveries.at(-1)
+    const wrong = rescue ? this.deliveries.filter((d) => d.parcel === rescue.parcel && !d.good).at(-1) : this.deliveries.find((d) => !d.good)
+    const delivery = rescue ?? wrong ?? this.deliveries.at(-1)
     if (!delivery) return null
-    return { start: Math.max(0, delivery.start - 0.35), end: Math.min(this.time, delivery.at + (delivery.good ? 0.8 : 4.5)),
-      caption: rescue ? `Parcel ${rescue.parcel}: a second chance, perfectly delivered.` : delivery.good ? 'One more little miracle of postal engineering.' : 'A brief detour through the returns department.' }
+    const cuts: { start: number; end: number }[] = []
+    if (wrong) {
+      const returned = this.parcels.find((p) => p.id === wrong.parcel)?.motions.find((m) => Math.abs(m.start - wrong.at) < 0.0001)
+      const end = returned ? returned.start + segTime(returned.lane.segs) : wrong.at + 4.5
+      cuts.push({ start: Math.max(0, wrong.start - 0.25), end: Math.min(end, rescue?.start ?? Infinity) })
+    }
+    if (delivery.good) cuts.push({ start: Math.max(0, delivery.start - 0.25, cuts.at(-1)?.end ?? 0), end: delivery.at + 0.7 })
+    return { cuts, caption: rescue ? `Parcel ${rescue.parcel}: a scenic detour, a second chance, a perfect delivery.`
+      : delivery.good ? 'One more little miracle of postal engineering.' : 'A brief detour through the returns department.' }
   }
 }

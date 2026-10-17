@@ -25,6 +25,8 @@ let saved = false
 let best = 0
 let bestBefore = 0
 let serial = 0
+let lastTick = -1
+try { audio.muted = localStorage.getItem('delivery-muted') === 'true' } catch { /* Optional preference. */ }
 
 const readBest = (): number => {
   try { return Math.max(0, Number(localStorage.getItem(`delivery-v1-best-${crew}`)) || 0) } catch { return 0 }
@@ -55,7 +57,7 @@ app.innerHTML = `
         <article class="order" id="order-${i}" aria-label="${name} order"><div class="order-top"><span class="address-number">0${i + 1}</span><h2>${name}</h2><span class="order-status" id="order-status-${i}">REQUESTING</span></div>
           <div class="order-request"><div class="wanted" id="wanted-${i}">${dot(i)}<strong>${COLOR_NAMES[i]}</strong></div><div class="order-next">NEXT <span id="next-${i}">${dot((i + 1) % 3, true)}</span></div></div><div class="deadline-track"><span id="deadline-${i}"></span></div>
         </article>`).join('')}</section>
-      <div class="stage-wrap"><div id="stage"></div><div id="pause-overlay" class="pause-overlay" hidden><span class="eyebrow">THE POST CAN WAIT</span><h2>Taking a breather.</h2><p>The shift clock is paused.</p><button id="resume" class="primary">Back to work →</button></div><div class="stage-note"><span>PAINT → SORT → SEND</span><span>ALL POSTAGE IS PERSONAL.</span></div></div>
+      <div class="stage-wrap"><div id="stage"></div><div id="pause-overlay" class="pause-overlay" hidden><span class="eyebrow">THE POST CAN WAIT</span><h2>Taking a breather.</h2><p>The shift clock is paused.</p><button id="resume" class="primary">Back to work →</button></div><span class="replay-badge" id="replay-badge" hidden>SHIFT HIGHLIGHT · 0.8×</span><div class="stage-note"><span>PAINT → SORT → SEND</span><span>ALL POSTAGE IS PERSONAL.</span></div></div>
       <div class="notice" id="notice" role="status"><span class="notice-icon">↳</span><span id="notice-text">Match a parcel’s color to an address’s request.</span><span id="record">BEST 0000</span></div>
       <section class="workstations" aria-label="Game controls">
         <div class="workstation paint-station"><div class="station-heading"><h2><span>01</span> The painter</h2><span class="role" id="paint-role">LEFT HAND</span></div><div class="station-status"><span id="paint-status">Pick a color to paint & queue</span><span id="intake-count">0 / 3 queued</span></div>
@@ -68,10 +70,10 @@ app.innerHTML = `
         </div>
       </section>
     </div>
-    <section class="results" id="results" hidden tabindex="-1" aria-labelledby="result-title"><div class="receipt"><div class="eyebrow">CONTRAPTIONS POSTAL SERVICE / SHIFT RECEIPT</div><h2 id="result-title">That’s the last post.</h2><p id="result-subtitle"></p><div class="receipt-score"><strong id="final-score">0</strong><span>POSTAGE EARNED</span><span id="new-record" hidden>NEW PERSONAL BEST ↗</span></div><div class="receipt-stats" id="receipt-stats"></div><p class="result-note" id="result-note"></p><div class="result-actions"><button id="again" class="primary">Another shift →</button><button id="swap" class="secondary">Swap jobs & play</button><button id="replay" class="text-button">Replay a delivery ↶</button></div></div></section>
+    <section class="results" id="results" hidden tabindex="-1" aria-labelledby="result-title"><div class="receipt"><div class="eyebrow">CONTRAPTIONS POSTAL SERVICE / SHIFT RECEIPT</div><h2 id="result-title">That’s the last post.</h2><p id="result-subtitle"></p><div class="receipt-score"><strong id="final-score">0</strong><span>POSTAGE EARNED</span><span id="new-record" hidden>NEW PERSONAL BEST ↗</span></div><div class="receipt-stats" id="receipt-stats"></div><p class="result-note" id="result-note"></p><div class="result-actions"><button id="again" class="primary">Another shift →</button><button id="swap" class="secondary">Swap jobs & play</button><button id="replay" class="text-button">Replay a delivery ↶</button><button id="back" class="text-button">Back to depot</button></div></div></section>
     <footer><span id="crew-hint">One player · left hand paints, right hand dispatches.</span><span>90 seconds · three addresses · one very useful frog</span></footer>
   </main>
-  <dialog id="help-dialog"><form method="dialog"><button class="dialog-close text-button" aria-label="Close instructions">Close ×</button></form><div class="eyebrow">YOUR FIRST DAY AT THE DEPOT</div><h2>A little organized chaos.</h2><ol><li><strong>Read the requests.</strong> Each address asks for a red, blue, or yellow parcel. The little letter repeats its color.</li><li><strong>Paint & queue.</strong> A / S / D paint red / blue / yellow. Parcels ride up the conveyor in order.</li><li><strong>Send the front parcel.</strong> J / K / L send it to Windmill / Lighthouse / Moon. A match earns 100 postage; every four in a row raises the multiplier.</li><li><strong>Make a little room.</strong> F holds the paint feed. H parks the front parcel, or swaps it with the parked one.</li><li><strong>Save your mistakes.</strong> Gus returns wrong deliveries. Your next paint key repaints the oldest return. Deliver it for a 50-postage rescue bonus.</li></ol><p>One player uses both hands. Two players take a job each on the same keyboard, or tap their own controls. Esc pauses. Sent parcels still count after the bell.</p><p class="muted">Tip: read the NEXT color to prepare ahead. Requests get quicker at 60 and 30 seconds left.</p><button id="help-practice" class="primary">Try a practice delivery →</button></dialog>
+  <dialog id="help-dialog"><form method="dialog"><button class="dialog-close text-button" aria-label="Close instructions">Close ×</button></form><div class="eyebrow">YOUR FIRST DAY AT THE DEPOT</div><h2>A little organized chaos.</h2><ol><li><strong>Read the requests.</strong> Each address asks for a red, blue, or yellow parcel. The little letter repeats its color.</li><li><strong>Paint & queue.</strong> <span id="help-paint-keys">A / S / D</span> paint red / blue / yellow. Parcels ride up the conveyor in order.</li><li><strong>Send the front parcel.</strong> <span id="help-send-keys">J / K / L</span> send it to Windmill / Lighthouse / Moon. A match earns 100 postage; every four in a row raises the multiplier.</li><li><strong>Make a little room.</strong> <span id="help-hold-key">F</span> holds the paint feed. <span id="help-park-key">H</span> parks the front parcel, or swaps it with the parked one.</li><li><strong>Save your mistakes.</strong> Gus returns wrong deliveries. Your next paint key repaints the oldest return. Deliver it for a 50-postage rescue bonus.</li></ol><p>One player uses both hands. Two players take a job each on the same keyboard, or tap their own controls. Esc pauses. Sent parcels still count after the bell.</p><p class="muted">Tip: read the NEXT color to prepare ahead. Requests get quicker at 60 and 30 seconds left.</p><button id="help-practice" class="primary">Try a practice delivery →</button></dialog>
 `
 
 function element<T extends HTMLElement = HTMLElement>(id: string): T { return document.getElementById(id)! as T }
@@ -91,7 +93,8 @@ chooseCrew('solo')
 document.querySelectorAll<HTMLButtonElement>('[data-crew]').forEach((b) => b.addEventListener('click', () => chooseCrew(b.dataset.crew as Crew)))
 
 function start(practice: boolean): void {
-  audio.unlock(); paused = false; replaying = false; saved = false; tutorialStep = 0
+  audio.unlock(); paused = false; replaying = false; saved = false; tutorialStep = 0; lastTick = -1
+  element('replay-badge').hidden = true
   bestBefore = readBest()
   screen = practice ? 'practice' : 'shift'
   game = new Depot(practice ? 'first-post' : `post-${++serial}-${Date.now().toString(36)}`, practice)
@@ -113,6 +116,18 @@ function pause(next: boolean): void {
   if (paused) element('resume').focus()
 }
 bind('learn', () => start(true)); bind('start', () => start(false)); bind('skip', () => start(false))
+bind('back', () => {
+  screen = 'welcome'; paused = false; replaying = false; swapped = false
+  game = new Depot('first-post', true); wireGame(); lastRevision = -1
+  element('welcome').hidden = false; element('results').hidden = true; element('tutorial').hidden = true
+  element('pause').hidden = true; element('pause-overlay').hidden = true; element('replay-badge').hidden = true
+  element('depot').classList.remove('result-mode'); document.body.classList.remove('working')
+  for (let i = 0; i < 3; i++) { element(`paint-key-${i}`).textContent = paintKeys()[i]; element(`send-key-${i}`).textContent = routeKeys()[i] }
+  element('help-paint-keys').textContent = paintKeys().join(' / '); element('help-send-keys').textContent = routeKeys().join(' / ')
+  element('help-hold-key').textContent = 'F'; element('help-park-key').textContent = 'H'
+  element('hold').innerHTML = `${key('F')} Hold feed`
+  chooseCrew(crew); update(); element('learn').focus({ preventScroll: true }); window.scrollTo({ top: 0 })
+})
 bind('again', () => start(false)); bind('resume', () => pause(false)); bind('pause', () => pause(!paused))
 bind('swap', () => {
   swapped = !swapped
@@ -120,9 +135,18 @@ bind('swap', () => {
   element('hold').innerHTML = `${key(swapped ? 'H' : 'F')} Hold feed`
   element('park').innerHTML = `${key(swapped ? 'F' : 'H')} Park / swap`
   chooseCrew(crew)
+  element('help-paint-keys').textContent = paintKeys().join(' / ')
+  element('help-send-keys').textContent = routeKeys().join(' / ')
+  element('help-hold-key').textContent = swapped ? 'H' : 'F'
+  element('help-park-key').textContent = swapped ? 'F' : 'H'
   start(false)
 })
-bind('sound', () => { audio.muted = !audio.muted; element('sound').textContent = audio.muted ? 'Sound off' : 'Sound on'; element('sound').setAttribute('aria-pressed', String(audio.muted)) })
+function syncSound(): void {
+  element('sound').textContent = audio.muted ? 'Sound off' : 'Sound on'
+  element('sound').setAttribute('aria-pressed', String(audio.muted))
+}
+syncSound()
+bind('sound', () => { audio.muted = !audio.muted; syncSound(); try { localStorage.setItem('delivery-muted', String(audio.muted)) } catch { /* Optional preference. */ } })
 const helpDialog = element<HTMLDialogElement>('help-dialog')
 bind('help', () => { pause(true); helpDialog.showModal() })
 bind('help-practice', () => { helpDialog.close(); start(true) })
@@ -160,6 +184,7 @@ function update(): void {
   const active = screen === 'shift' || screen === 'practice'
   const left = Math.max(0, Math.ceil(SHIFT - game.time))
   const seconds = game.practice ? SHIFT : left
+  if (screen === 'shift' && !paused && left <= 10 && left > 0 && left !== lastTick) { lastTick = left; audio.play('tick') }
   element('timer').textContent = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
   element('timer').classList.toggle('urgent', !game.practice && left <= 15)
   element('time-track').style.width = `${game.practice ? 100 : Math.max(0, 1 - game.time / SHIFT) * 100}%`
@@ -231,23 +256,27 @@ function result(): void {
   element('result-note').textContent = game.rescues ? `Gus helped rescue ${game.rescues} ${game.rescues === 1 ? 'parcel' : 'parcels'}. Employee of the month, probably.` : game.mistakes ? 'A few scenic detours. Next time, repaint the returns for bonus postage.' : 'Gus has filed a request for a longer tea break.'
   element('swap').hidden = crew !== 'duo'
   element('replay').hidden = !game.highlight()
+  if (!reducedMotion.matches && game.highlight()) setReplay(true)
   element('results').focus({ preventScroll: true })
   element('results').scrollIntoView({ behavior: reducedMotion.matches ? 'instant' : 'smooth', block: 'center' })
   lastRevision = -1; update()
+  if (replaying) element('notice-text').textContent = game.highlight()!.caption
+}
+function setReplay(on: boolean): void {
+  replaying = on; replayStart = performance.now()
+  element('replay').textContent = replaying ? 'Pause replay ■' : 'Replay a delivery ↶'
+  element('replay-badge').hidden = !replaying
+  element('notice-text').textContent = game.highlight()?.caption ?? game.notice
 }
 bind('replay', () => {
-  const highlight = game.highlight()
-  if (!highlight) return
-  replaying = !replaying; replayStart = performance.now()
-  element('replay').textContent = replaying ? 'Stop replay ■' : 'Replay a delivery ↶'
-  element('notice-text').textContent = highlight.caption
-  if (replaying) element('stage').scrollIntoView({ behavior: 'smooth', block: 'center' })
+  setReplay(!replaying)
+  if (replaying) element('stage').scrollIntoView({ behavior: reducedMotion.matches ? 'instant' : 'smooth', block: 'center' })
 })
 
 const destroyScene = createDepotScene(element('stage'), () => game, () => visualTime)
 let animation = 0
 function frame(now: number): void {
-  const dt = Math.min((now - lastFrame) / 1000, 0.1)
+  const dt = Math.max(0, (now - lastFrame) / 1000)
   lastFrame = now
   if ((screen === 'shift' || screen === 'practice') && !paused && !helpDialog.open) {
     game.advance(game.time + dt)
@@ -255,7 +284,13 @@ function frame(now: number): void {
   }
   if (replaying) {
     const highlight = game.highlight()!
-    visualTime = highlight.start + ((now - replayStart) / 1000 * 0.8) % (highlight.end - highlight.start)
+    const duration = highlight.cuts.reduce((sum, cut) => sum + cut.end - cut.start, 0)
+    let cursor = ((now - replayStart) / 1000 * 0.8) % duration
+    for (const cut of highlight.cuts) {
+      visualTime = cut.start + cursor
+      if (cursor < cut.end - cut.start) break
+      cursor -= cut.end - cut.start
+    }
   } else visualTime = screen === 'welcome' ? reducedMotion.matches ? 0 : now / 1000 : game.time
   const second = Math.floor(game.time * 10)
   if (lastSecond !== second || game.revision !== lastRevision) { lastSecond = second; update() }

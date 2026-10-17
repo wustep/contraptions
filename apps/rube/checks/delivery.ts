@@ -35,6 +35,11 @@ check('a wrong parcel comes back, keeps its identity, and earns a rescue bonus',
   assert.ok(g.send(1)); until(g, () => g.delivered === 1)
   assert.equal(g.score, 150); assert.equal(g.rescues, 1)
   assert.equal(g.activeCount, 0)
+  const replay = g.highlight()!
+  assert.equal(replay.cuts.length, 2)
+  assert.ok(replay.cuts[0].start < g.deliveries[0].at)
+  assert.ok(replay.cuts[0].end > g.deliveries[0].at + 1)
+  assert.ok(replay.cuts.every((cut) => cut.end > cut.start))
 })
 check('feed hold, full intake, parking, and swap preserve queue order', () => {
   const g = new Depot('queues', true)
