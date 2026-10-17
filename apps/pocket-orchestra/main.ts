@@ -2,7 +2,7 @@ import { OrchestraAudio } from './audio'
 import { OrchestraStage } from './stage'
 import { routeAt, routesFor } from './instruments'
 import { icon, pauseIcon, playIcon } from './icons'
-import { boardHeight, boardWidth, clamp, COLORS, copy, decodeTake, encodeTake, MAX_NOTES, mod, NAMES, NOTES, pitchName, PRESETS, resizeTake, STEP, TRACK_GAP, trackY, validTake, VOICES, blankTake, type Note, type Take, type Voice } from './model'
+import { boardHeight, boardWidth, clamp, clearY, COLORS, copy, decodeTake, encodeTake, MAX_NOTES, mod, NAMES, NOTES, pitchName, PRESETS, resizeTake, STEP, TRACK_GAP, trackY, validTake, VOICES, blankTake, type Note, type Take, type Voice } from './model'
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string): T => document.querySelector<T>(selector)!
 const esc = (s: string): string => s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!)
@@ -22,7 +22,7 @@ const note = (): Note | undefined => take.notes.find(n => n.id === selected)
 $('#app').innerHTML = `
 <div class="page">
   <header class="masthead"><a href="/machine/" class="brand"><span class="brand-mark">c.</span> CONTRAPTIONS</a><span>PLAYABLE MACHINES · 01</span></header>
-  <div class="heading"><div class="title"><h1>Pocket Orchestra<span>.</span></h1><div class="preset-wrap"><span class="tiny-dot"></span><select id="presets" aria-label="Starting tune"><option value="current"></option>${PRESETS.map((p, i) => `<option value="${i}">${p.title}</option>`).join('')}<option value="blank">＋ Empty machine</option></select></div></div><div class="heading-actions"><button id="save">Save</button><button id="share">Share ↗</button><button id="help" aria-label="How to play">?</button></div></div>
+  <div class="heading"><div class="title"><h1>Pocket Orchestra<span>.</span></h1><div class="preset-wrap"><span class="tiny-dot"></span><select id="presets" aria-label="Starting tune"><option value="current" hidden></option>${PRESETS.map((p, i) => `<option value="${i}">${p.title}</option>`).join('')}<option value="blank">＋ Empty machine</option></select></div></div><div class="heading-actions"><button id="save">Save</button><button id="share">Share ↗</button><button id="help" aria-label="How to play">?</button></div></div>
   <main>
     <section class="workbench" aria-label="Musical machine">
       <div class="board-toolbar"><div class="track-list" aria-label="Parallel tracks"></div><div class="board-tools"><button id="snap" aria-pressed="true" title="Snap placement to quarter beats">Snap</button><div class="length-control"><button id="shorter" aria-label="Shorten loop by four beats">−</button><output id="length"></output><button id="longer" aria-label="Lengthen loop by four beats">＋</button></div><div class="zoom-control"><button id="zoom-out" aria-label="Zoom out">−</button><button id="fit" title="Fit whole machine">Fit</button><button id="zoom-in" aria-label="Zoom in">＋</button></div></div></div>
@@ -127,7 +127,11 @@ function add(kind: Voice, x: number, y: number): void {
   if (take.notes.length >= MAX_NOTES) { toast('48 voices is a full orchestra.'); return }
   const beat = openBeat(activeTrack, (x - 84) / 86)
   if (beat === null) { toast('Give this track more beats, or add a track.'); return }
-  change(() => { const n: Note = { id: uid(), kind, beat, y: clamp(y, 40, boardHeight(take) - 80), pitch: 0, size: 1, track: activeTrack }; take.notes.push(n); selected = n.id; armed = null })
+  const next: Note = { id: uid(), kind, beat, y, pitch: 0, size: 1, track: activeTrack }
+  const free = clearY(take, next, beat, y)
+  if (free === null) { toast('This spot needs a little more room.'); return }
+  next.y = free
+  change(() => { take.notes.push(next); selected = next.id; armed = null })
 }
 function focusSelected(): void {
   const el = stage.svg.querySelector<SVGElement>(`[data-note="${selected}"]`)
@@ -141,7 +145,10 @@ function duplicate(): void {
   const n = note(); if (!n || take.notes.length >= MAX_NOTES) return
   const beat = openBeat(n.track, n.beat + 1)
   if (beat === null) { toast('This track needs more room.'); return }
-  change(() => { const next = { ...n, id: uid(), beat }; take.notes.push(next); selected = next.id }); focusSelected()
+  const next = { ...n, id: uid(), beat }, y = clearY(take, next, beat, n.y)
+  if (y === null) { toast('Give this piece a little more room.'); return }
+  next.y = y
+  change(() => { take.notes.push(next); selected = next.id }); focusSelected()
 }
 function remove(): void { if (selected) change(() => { take.notes = take.notes.filter(n => n.id !== selected); selected = null }) }
 function addTrack(duplicateCurrent = false): void {
@@ -149,20 +156,45 @@ function addTrack(duplicateCurrent = false): void {
   const source = take.tracks.find(t => t.id === activeTrack)!, original = take.tracks.indexOf(source), index = take.tracks.length
   const notes = duplicateCurrent ? take.notes.filter(n => n.track === source.id) : []
   if (take.notes.length + notes.length > MAX_NOTES) return
-  change(() => {
-    activeTrack = uid(); take.tracks.push({ id: activeTrack, color: COLORS[index], muted: false, volume: source.volume })
-    take.notes.push(...notes.map(n => ({ ...n, id: uid(), track: activeTrack, y: clamp(n.y + (index - original) * TRACK_GAP, 40, boardHeight(take) - 80) })))
-    selected = null
-  })
+  const next = copy(take), id = uid()
+  next.tracks.push({ id, color: COLORS[index], muted: false, volume: source.volume })
+  for (const n of notes) {
+    const added = { ...n, id: uid(), track: id }, y = clearY(next, added, added.beat, n.y + (index - original) * TRACK_GAP)
+    if (y === null) { toast('This arrangement needs more space to double.'); return }
+    added.y = y; next.notes.push(added)
+  }
+  change(() => { take = next; activeTrack = id; selected = null })
   viewport.scrollTo({ top: trackY(index) * zoom - 100, behavior: 'smooth' })
+}
+function resizeLoop(length: number): void {
+  const next = copy(take); resizeTake(next, length)
+  const notes = next.notes; next.notes = []
+  for (const n of notes) {
+    const y = clearY(next, n, n.beat, n.y)
+    if (y === null) { toast('This arrangement needs a longer loop.'); return }
+    n.y = y; next.notes.push(n)
+  }
+  change(() => { take = next })
+}
+function moveNote(n: Note, beat: number, wantedY: number): void {
+  const y = clearY(take, n, beat, wantedY)
+  if (y !== null) change(() => { n.beat = beat; n.y = y })
+}
+function reshape(n: Note, edit: () => void): void {
+  change(() => {
+    const before = { ...n }; edit()
+    const y = clearY(take, n, n.beat, n.y)
+    if (y === null) { Object.assign(n, before); toast('Give this piece a little more room.') }
+    else n.y = y
+  })
 }
 function setZoom(next: number): void {
   const x = (viewport.scrollLeft + viewport.clientWidth / 2) / zoom, y = (viewport.scrollTop + viewport.clientHeight / 2) / zoom
-  zoom = clamp(next, .25, 1.6); render(); viewport.scrollTo(x * zoom - viewport.clientWidth / 2, y * zoom - viewport.clientHeight / 2)
+  zoom = clamp(next, .1, 1.6); render(); viewport.scrollTo(x * zoom - viewport.clientWidth / 2, y * zoom - viewport.clientHeight / 2)
 }
 
 function renderOverview(): void {
-  routeCache = routesFor(take)
+  routeCache = stage.routes
   const w = boardWidth(take)
   $('#overview').setAttribute('viewBox', `0 0 ${w} 40`)
   $('#overview').innerHTML = take.tracks.map((t, i) => `<path d="M0 ${8 + i * 8}h${w}"/>${take.notes.filter(n => n.track === t.id).map(n => `<circle cx="${84 + n.beat * 86}" cy="${8 + i * 8}" r="5" fill="${t.color}"/>`).join('')}<circle class="map-ball" data-map-ball="${t.id}" cy="${8 + i * 8}" r="5" fill="${t.color}"/>`).join('') + '<rect id="map-window" y="1" height="38" rx="5"/>'
@@ -195,8 +227,8 @@ $('#position').addEventListener('change', () => { if (scrubResume) { scrubResume
 $('#tempo').addEventListener('change', () => { const value = Number($<HTMLInputElement>('#tempo').value); if (Number.isFinite(value)) change(() => { take.tempo = clamp(Math.round(value), 48, 160) }) })
 $('#sound').onclick = () => { audio.setVolume(audio.volume ? 0 : .7); $('#sound').setAttribute('aria-pressed', String(!audio.volume)); $('#sound').setAttribute('aria-label', audio.volume ? 'Mute sound' : 'Unmute sound'); $('#sound').textContent = audio.volume ? '♪' : '♩' }
 $('#snap').onclick = () => { snap = !snap; $('#snap').setAttribute('aria-pressed', String(snap)) }
-$('#shorter').onclick = () => change(() => resizeTake(take, take.length - 4))
-$('#longer').onclick = () => change(() => resizeTake(take, take.length + 4))
+$('#shorter').onclick = () => resizeLoop(take.length - 4)
+$('#longer').onclick = () => resizeLoop(take.length + 4)
 $('#zoom-in').onclick = () => setZoom(zoom * 1.2)
 $('#zoom-out').onclick = () => setZoom(zoom / 1.2)
 $('#fit').onclick = () => { zoom = Math.min(viewport.clientWidth / boardWidth(take), viewport.clientHeight / boardHeight(take)); render(); viewport.scrollTo(0, 0) }
@@ -229,9 +261,9 @@ $('#inspector').addEventListener('click', e => {
 })
 $('#inspector').addEventListener('change', e => {
   const el = e.target as HTMLInputElement, n = note(); if (!n) return
-  if (el.id === 'voice') change(() => { n.kind = el.value as Voice })
-  if (el.id === 'note-size') change(() => { n.size = Number(el.value) })
-  if (el.id === 'note-beat') { const beat = openBeat(n.track, Number(el.value) - 1, n.id); if (beat !== null) change(() => { n.beat = beat }) }
+  if (el.id === 'voice') reshape(n, () => { n.kind = el.value as Voice })
+  if (el.id === 'note-size') reshape(n, () => { n.size = Number(el.value) })
+  if (el.id === 'note-beat') { const beat = openBeat(n.track, Number(el.value) - 1, n.id); if (beat !== null) moveNote(n, beat, n.y) }
   if (el.id === 'note-track') {
     const beat = openBeat(el.value, n.beat, n.id)
     if (beat === null) { toast('This track needs more room.'); renderInspector(); return }
@@ -257,8 +289,10 @@ stage.svg.addEventListener('pointermove', e => {
   if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 4) return
   if (!drag.moved) { stop(); drag.moved = true; document.body.classList.add('dragging') }
   const n = take.notes.find(n => n.id === drag!.id)!, beat = openBeat(n.track, drag.originBeat + (e.clientX - drag.x) / zoom / 86, n.id)
-  if (beat !== null) n.beat = beat
-  n.y = clamp(drag.originY + (e.clientY - drag.y) / zoom, 40, boardHeight(take) - 80)
+  if (beat !== null) {
+    const y = clearY(take, n, beat, drag.originY + (e.clientY - drag.y) / zoom)
+    if (y !== null) { n.beat = beat; n.y = y }
+  }
   render()
 })
 function endDrag(cancelled: boolean): void {
@@ -339,6 +373,9 @@ window.addEventListener('keydown', e => {
   if (e.key === 'Enter' && armed && target.id === 'viewport') {
     e.preventDefault(); const box = viewport.getBoundingClientRect(), p = stage.point(box.left + box.width / 2, box.top + box.height / 2); add(armed, p.x, p.y); focusSelected(); return
   }
+  if (e.key === 'Enter' && target.closest('[data-note]')) {
+    e.preventDefault(); selected = target.closest<SVGElement>('[data-note]')!.dataset.note!; activeTrack = note()!.track; armed = null; render(); focusSelected(); return
+  }
   if (e.code === 'Space') { e.preventDefault(); void togglePlay(); return }
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(e.shiftKey); return }
   if (e.key === 'Escape') { armed = null; selected = null; render(); return }
@@ -349,8 +386,8 @@ window.addEventListener('keydown', e => {
   if (e.key.startsWith('Arrow')) {
     e.preventDefault()
     const direction = e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 1
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { const beat = openBeat(n.track, n.beat + direction * (e.shiftKey ? 1 : .25), n.id); if (beat !== null) change(() => { n.beat = beat }) }
-    else change(() => { n.y = clamp(n.y + direction * (e.shiftKey ? 20 : 5), 40, boardHeight(take) - 80) })
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { const beat = openBeat(n.track, n.beat + direction * (e.shiftKey ? 1 : .25), n.id); if (beat !== null) moveNote(n, beat, n.y) }
+    else moveNote(n, n.beat, n.y + direction * (e.shiftKey ? 20 : 5))
     focusSelected()
   }
 })
@@ -363,7 +400,7 @@ function frame(at: number): void {
     lastFrame = at; const time = mod(now(), take.length * STEP)
     stage.setTime(time); updateOverview(time)
     if (document.activeElement !== $('#position')) $<HTMLInputElement>('#position').value = String(time / (take.length * STEP) * 1000)
-    $('#beat-label').textContent = audio.playing || position ? `${String(Math.floor(time / STEP) + 1).padStart(2, '0')} / ${take.length}` : 'READY'
+    $('#beat-label').textContent = audio.playing || position ? `${String(Math.min(take.length - 1, Math.floor(time / STEP + 1e-7)) + 1).padStart(2, '0')} / ${take.length}` : 'READY'
   }
   requestAnimationFrame(frame)
 }
@@ -377,6 +414,7 @@ $('#overview').addEventListener('pointerdown', e => {
   viewport.scrollLeft = (e.clientX - box.left) / box.width * boardWidth(take) * zoom - viewport.clientWidth / 2
 })
 $('#overview').addEventListener('keydown', e => {
+  if (e.key === 'Home' || e.key === 'End') { e.preventDefault(); e.stopPropagation(); viewport.scrollLeft = e.key === 'Home' ? 0 : viewport.scrollWidth }
   if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); viewport.scrollLeft += e.key === 'ArrowLeft' ? -100 : 100 }
 })
 new ResizeObserver(() => updateOverview(now())).observe(viewport)

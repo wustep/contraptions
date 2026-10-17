@@ -13,7 +13,7 @@ export const clamp = (n: number, lo: number, hi: number): number => Math.max(lo,
 export const mod = (n: number, d: number): number => ((n % d) + d) % d
 export const TRACK_GAP = 132
 export const trackY = (i: number): number => 65 + i * TRACK_GAP
-export const boardHeight = (take: Take): number => 71 + take.tracks.length * TRACK_GAP
+export const boardHeight = (take: Take): number => Math.max(300, 71 + take.tracks.length * TRACK_GAP)
 export const beatX = (beat: number): number => 84 + beat * 86
 export const boardWidth = (take: Take): number => beatX(take.length) + 38
 export function pitchName(degree: number): string { return NOTES[mod(degree, 5)] + (4 + Math.floor(degree / 5)) }
@@ -47,6 +47,31 @@ export function resizeTake(take: Take, length: number): void {
   for (const note of take.notes) note.beat = .5 + (note.beat - .5) * (next - 2.5) / (take.length - 2.5)
   take.length = next
 }
+export interface Footprint { left: number; right: number; top: number; bottom: number }
+export function footprint(n: Note): Footprint {
+  const half = { musicbox: 53, triangle: 43, harp: 41, timpani: 38, keys: 42, xylophone: 40 }[n.kind] * n.size + 8
+  return { left: beatX(n.beat) - half, right: beatX(n.beat) + half, top: n.y - (n.kind === 'triangle' ? 26 : 10), bottom: n.y + 78 }
+}
+/** Keep the physical pieces apart while leaving their positions continuous. */
+export function clearY(take: Take, moving: Note, beat: number, wanted: number): number | null {
+  const body = (n: Note): Footprint => {
+    const f = footprint(n)
+    return { left: f.left + 8, right: f.right - 8, top: n.y + (n.kind === 'triangle' ? -20 : 8), bottom: n.y + 70 }
+  }
+  const box = body({ ...moving, beat, y: 0 }), x = beatX(beat)
+  const neighbors = take.notes.filter(n => n.id !== moving.id).map(n => {
+    const r = body(n)
+    // The marble needs room above its own contact, even under another piece.
+    if (x + 8 > r.left && x - 8 < r.right) { r.top -= 16; r.bottom += 16 }
+    if (beatX(n.beat) + 8 > box.left && beatX(n.beat) - 8 < box.right) r.top = Math.min(r.top, n.y - 8)
+    return r
+  }).filter(r => box.left < r.right && box.right > r.left)
+  const choices = [clamp(wanted, 40, boardHeight(take) - 80), ...neighbors.flatMap(r => [r.top - box.bottom, r.bottom - box.top])]
+    .filter(y => y >= 40 && y <= boardHeight(take) - 80 && neighbors.every(r => y + box.bottom <= r.top || y + box.top >= r.bottom))
+  choices.sort((a, b) => Math.abs(a - wanted) - Math.abs(b - wanted))
+  return choices[0] ?? null
+}
+
 export function validTake(value: unknown): Take | null {
   if (!value || typeof value !== 'object') return null
   const t = value as Take
@@ -63,6 +88,8 @@ export function validTake(value: unknown): Take | null {
     noteIds.add(n.id)
     notes.push({ id: n.id, kind: n.kind, pitch: n.pitch, beat: clamp(n.beat, .5, t.length - 2), y: clamp(n.y, 40, boardHeight(t) - 80), size: clamp(n.size, .65, 1.5), track: n.track })
   }
+  // Two contacts on one track cannot occupy the same instant.
+  for (let i = 0; i < notes.length; i++) for (let j = i + 1; j < notes.length; j++) if (notes[i].track === notes[j].track && Math.abs(notes[i].beat - notes[j].beat) < .125) return null
   return { title: typeof t.title === 'string' ? t.title.slice(0, 48) : 'Untitled machine', tempo: clamp(Math.round(t.tempo), 48, 160), length: t.length, tracks: safeTracks, notes }
 }
 function legacy(value: unknown): Take | null {

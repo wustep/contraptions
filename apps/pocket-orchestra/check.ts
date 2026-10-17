@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { eventsBetween, voiceSamples } from './audio'
 import { onSegment, routeAt, routesFor, scoreFor } from './instruments'
-import { beatX, blankTake, boardHeight, copy, decodeTake, encodeTake, frequency, PRESETS, resizeTake, STEP, validTake, VOICES } from './model'
+import { beatX, blankTake, boardHeight, clearY, copy, decodeTake, encodeTake, footprint, frequency, PRESETS, resizeTake, STEP, validTake, VOICES } from './model'
 
 for (const take of [...PRESETS, blankTake()]) assert.deepEqual(decodeTake(encodeTake(take)), take)
 const unicode = { ...copy(PRESETS[0]), title: 'Été — 雨 ♫ <a>' }
@@ -9,6 +9,8 @@ assert.deepEqual(decodeTake(encodeTake(unicode)), unicode)
 for (const hash of ['', '#no', 'v3.abc', 'v2.%%%%', 'v2.' + 'A'.repeat(24001)]) assert.equal(decodeTake(hash), null)
 for (const bad of [{ tempo: Infinity }, { length: 7 }, { tracks: [] }, { notes: Array(49).fill(PRESETS[0].notes[0]) }]) assert.equal(validTake({ ...PRESETS[0], ...bad }), null)
 for (const bad of [{ id: '<svg>' }, { pitch: 1.5 }, { pitch: 15 }, { kind: 'unknown' }, { track: 'missing' }, { beat: NaN }, { size: Infinity }]) assert.equal(validTake({ ...PRESETS[0], notes: [{ ...PRESETS[0].notes[0], ...bad }] }), null)
+const duplicateBeat = copy(PRESETS[0]); duplicateBeat.notes[1].beat = duplicateBeat.notes[0].beat
+assert.equal(validTake(duplicateBeat), null, 'one marble cannot strike two places at the same instant')
 const old = 'v1.' + btoa(JSON.stringify({ title: 'Old take', tempo: 84, slots: [{ kind: 'harp', pitch: 1 }, null] }))
 assert.equal(decodeTake(old)?.notes[0].kind, 'harp')
 assert.equal(decodeTake(old)?.tracks.length, 1)
@@ -18,7 +20,17 @@ assert.ok(Math.abs(frequency(-1) - 220) < .001)
 
 // The ball is on the instrument at the sound event; every segment, including
 // the return belt and vertical lift, meets its neighbor without teleportation.
-for (const take of PRESETS) {
+const crossing = copy(PRESETS[0]), moved = crossing.notes.find(n => n.id === 'n0-1')!
+moved.beat = 3.75; moved.y = clearY(crossing, moved, moved.beat, 232)!
+assert.ok(moved.y > 232, 'a dragged piece keeps room for its marble below the piano')
+const pianoBox = footprint(crossing.notes.find(n => n.id === 'n1-1')!)
+const crossingRoute = routesFor(crossing)[0]
+assert.ok(crossingRoute.segments.some(s => s.lift && s.a.x === s.b.x && !s.returning), 'a blocked rising rail becomes a real lift')
+for (let beat = 0; beat < crossing.length; beat += .001) {
+  const p = routeAt(crossingRoute, beat, crossing.length)
+  assert.ok(!(p.x > pianoBox.left + .01 && p.x < pianoBox.right - .01 && p.y > pianoBox.top + .01 && p.y < pianoBox.bottom - .01), 'the gold marble never travels through the teal piano')
+}
+for (const take of [...PRESETS, crossing]) {
   const routes = routesFor(take), events = scoreFor(take)
   assert.equal(events.length, take.notes.length)
   for (const route of routes) {

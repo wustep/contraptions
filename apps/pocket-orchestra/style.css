@@ -14,3 +14,6 @@
 @media(max-width:600px){.board-viewport{height:340px}.overview{padding:2px 10px 4px}.overview svg{height:24px}.overview button{font-size:9px;min-height:26px}}
 .pitch-controls button{white-space:nowrap;padding:0 3px}
 @media(min-width:601px){.board-viewport{height:clamp(320px,39vw,500px)}}
+.rail-clear{stroke:var(--paper);stroke-width:9;stroke-linecap:butt}
+button.hit-area,button.hit-area:hover:not(:disabled){width:100%;height:100%;min-height:0;padding:0;border:0;border-radius:0;background:transparent;touch-action:none;cursor:grab}
+button.hit-area:focus{outline:none}
