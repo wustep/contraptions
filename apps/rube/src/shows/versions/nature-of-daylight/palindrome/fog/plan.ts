@@ -240,24 +240,26 @@ export function smallU(t: number): number {
   return 1
 }
 /** Before she knows: from the second stroke the white round them goes to a grey dusk as its ends come round to her;
- * the flood on the chord takes it away. */
-export const gathering = (t: number): number => 0.68 * smooth(t, SMALL_STEPS[1], T_KNOW - 0.05) * (1 - smooth(t, T_KNOW + 0.05, T_KNOW + 0.3))
-/** She knows: on the chord the white floods out from the ring over everything but it and her, holds for a beat, and
- * settles. `a` its strength, `r` how far out it has come (a share of the frame). */
+ * the flood on the chord takes it away, as it comes. (In a quarter of a second, with the flood in a tenth, the frame
+ * went from the dusk to white at once: a flash.) */
+export const gathering = (t: number): number => 0.68 * smooth(t, SMALL_STEPS[1], T_KNOW - 0.05) * (1 - smooth(t, T_KNOW, T_KNOW + 0.85))
+/** She knows: from the chord the white floods out from the ring over everything but it and her, swelling over most of
+ * a second, holds for a beat, and settles. `a` its strength, `r` how far out it has come (a share of the frame). */
 export function flood(t: number): { a: number; r: number } {
   if (t <= T_KNOW) return { a: 0, r: 0 }
   const s = t - T_KNOW
-  const a = 0.95 * smooth(s, 0, 0.12) * (1 - 0.72 * smooth(t, T_KNOW + 0.94, T_DOWN + 0.4)) * (1 - 0.6 * smooth(t, T_DOWN + 0.4, T_GALA))
-  return { a, r: easeOut(s / 0.45) }
+  const a = 0.95 * smooth(s, 0, 0.8) * (1 - 0.72 * smooth(t, T_KNOW + 0.94, T_DOWN + 0.4)) * (1 - 0.6 * smooth(t, T_DOWN + 0.4, T_GALA))
+  return { a, r: easeOut(s / 1.1) }
 }
 
 /* ------------------------------------------------------------------ her */
 
 /** Drawn to it: from the second stroke she floats to it and touches it as its ends meet. */
 const toward = (t: number): number => smooth(t, SMALL_STEPS[1], T_KNOW)
-/** The vision letting her go: she comes down out of it, easing to rest. */
-const DOWN = 0.42
-const down = (t: number): number => DOWN * easeOut((t - T_DOWN) / (T_GALA - 0.2 - T_DOWN))
+/** The vision letting her go: she comes down out of it, easing to rest a second before the cut, which dissolves. */
+const DOWN = 0.34
+const SETTLED = 1.05
+const down = (t: number): number => DOWN * easeOut((t - T_DOWN) / (T_GALA - SETTLED - T_DOWN))
 
 /** Louise, beyond the glass, at show time `t` (fog world cells). */
 export function herAt(t: number): Pt {
@@ -379,14 +381,20 @@ export const FOG1_SHOTS: WorldShot[] = [
   { t: T_CLOSE, cells: 5.4, hold: WIDE(-0.05, -0.1) },
   { t: T_RELEASE, cells: 5.3, hold: WIDE(-0.1, -0.15) },
   { t: T_LAND, cells: 5.0, hold: her(T_OUT, [0.8, -0.95]) },
+  // Settled before the cut, which the vision dissolves across.
+  { t: T_OUT - 0.6, cells: 4.6, hold: her(T_OUT, [1.05, -0.95]) },
   { t: T_OUT, cells: 4.6, hold: her(T_OUT, [1.05, -0.95]) },
 ]
 /** When she knows: the ring and her, the whole of the frame. */
 const KNOW_MID: Pt = [0.4 * TOUCH_AT[0] + 0.6 * smallC(T_KNOW)[0], 0.4 * TOUCH_AT[1] + 0.6 * smallC(T_KNOW)[1] - 0.05]
 export const FOG2_SHOTS: WorldShot[] = [
+  // Held as the cut left it while the last of the vision closes into the ring.
+  { t: T_BACK + 0.6, cells: 4.6, hold: her(T_OUT, [1.05, -0.95]) },
   { t: T_BACK + 1.8, cells: 4.35, hold: [(her(T_OUT, [1.05, -0.95])[0] + KNOW_MID[0]) / 2, (her(T_OUT, [1.05, -0.95])[1] + KNOW_MID[1]) / 2] },
   { t: T_KNOW, cells: 4.25, hold: KNOW_MID },
   { t: T_KNOW + 0.94, cells: 4.1, hold: KNOW_MID },
   { t: T_DOWN, cells: 4.2, hold: [KNOW_MID[0] - 0.05, KNOW_MID[1] - 0.1] },
+  // At rest a second before the cut, held through the dissolve into the hall.
+  { t: T_GALA - SETTLED, cells: 4.4, hold: her(T_GALA, [0.8, -0.8]) },
   { t: T_GALA, cells: 4.4, hold: her(T_GALA, [0.8, -0.8]) },
 ]

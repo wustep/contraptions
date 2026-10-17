@@ -1,5 +1,5 @@
 import { R, type Pt } from '../../../../../parts'
-import { BEATS, HALF, LAST, SEAM, SWELL, TONIC } from '../music'
+import { BEATS, HALF, LAST, SEAM, SWELL, TONIC, chord } from '../music'
 
 /**
  * The lake house's clock: everything in the room that moves or changes, as pure functions of show time, so the room's
@@ -37,6 +37,8 @@ export function hermite(u: number, d: number, x0: number, v0: number, x1: number
 /** The house's six times: when the room is what. */
 export const ERA = {
   dawn: [0, SEAM.swing] as const,
+  /** Years on, toward evening: Hannah a teenager at the window, who turns on her mother and goes (`teen.ts`). */
+  teen: [SEAM.teen, SEAM.bed] as const,
   bed: [SEAM.bed, SEAM.news] as const,
   /** The same night, the shell come down: a helicopter comes for her (`recruit.ts`). */
   recruit: [SEAM.recruit, SEAM.camp] as const,
@@ -57,12 +59,15 @@ export const BEGIN = 349.495
  */
 export const EMPTY_DX = 0
 
-export type Era = 'dawn' | 'bed' | 'recruit' | 'flash' | 'home' | 'none'
+export type Era = 'dawn' | 'teen' | 'bed' | 'recruit' | 'flash' | 'home' | 'none'
 export function eraOf(T: number): Era {
   if (T < ERA.dawn[1]) return 'dawn'
+  if (T >= ERA.teen[0] && T < ERA.teen[1]) return 'teen'
   if (T >= ERA.bed[0] && T < ERA.bed[1]) return 'bed'
   if (T >= ERA.recruit[0] && T < ERA.recruit[1]) return 'recruit'
   if (T >= ERA.flash[0] && T < ERA.flash[1]) return 'flash'
+  // For one chord the picture is out on the lawn (the run remembered): the room is not drawn under it.
+  if (T >= SEAM.recall && T < SEAM.cradle) return 'none'
   if (T >= ERA.home[0]) return 'home'
   return 'none'
 }
@@ -317,6 +322,12 @@ export function lightAt(T: number): Light {
     if (u <= 0) return FIRST_LIGHT
     return light(1 - 0.78 * u, 0.78 * u, 0, 0, 0.8 * u ** 1.3, 0.85 - 0.35 * u)
   }
+  if (T >= ERA.teen[0] && T < ERA.teen[1]) {
+    // Toward evening: a low warm sun across the floor as she comes to Hannah, going to the blue hour once Hannah has
+    // gone (her going is the chord, `teen.ts`).
+    const u = ss(T, chord(15) + 0.5, SEAM.bed - 0.4)
+    return light(0.05 + 0.7 * u, 0.8 * (1 - u), 0.15 + 0.1 * u, 0, 0.75 * (1 - u), 0.4 + 0.4 * u)
+  }
   if (T < ERA.bed[1]) {
     // The days of her illness, a light each (`DAYS`). On the swell the room greys and the light goes out of it.
     const d = dayAt(T).L
@@ -433,7 +444,8 @@ export const IAN_X = HOME_X + 0.36
 export const HUG_T = 337.85
 const STEP = 0.0925
 /** Their steps toward the cradle: each begins on its chord and takes a long breath. */
-const steps = (T: number, step = STEP): number => step * (s5((T - TURN + 0.1) / 1.3) + s5((T - NEAR + 0.1) / 1.3))
+/** (The first is taken while the picture is away on the lawn, `SEAM.recall`; both start from rest at a cut.) */
+const steps = (T: number, step = STEP): number => step * (s5((T - TURN - 0.3) / 1.3) + s5((T - NEAR - 0.05) / 1.3))
 /** Ian beside her: when she rolls into him he gives a little with it and comes back against her; then, from the turn,
  * he goes round behind the cradle to its far side, so it stands between them as she goes to it and as the baby
  * comes. He looks at her; at the cradle as he goes round it; at her again from its far side. */

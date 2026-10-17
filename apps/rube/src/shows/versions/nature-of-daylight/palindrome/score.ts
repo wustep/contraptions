@@ -1,19 +1,21 @@
 import type { BallState, Pt } from '../../../../parts'
-import type { Framing } from '../../../registry'
+import type { Blend, Framing } from '../../../registry'
 import { director, follower, type Shot } from './camera'
 import { credits } from './credits'
-import { frame, lay, scenery, standing, type Chain, type Link } from './kit'
+import { frame, lay, scenery, smooth, standing, type Chain, type Link } from './kit'
 import { BLAST, DURATION, PEAK, SEAM } from './music'
 import { FIRST, SEAMS } from './seams'
 import { PalindromeShow, type Leg, type Riders, type Spans, type WorldSet } from './show'
 import { LOUISE, type WorldKey } from './worlds'
-import { houseSet, HOUSE_CELLS, DAWN_AT, BED_AT, RECRUIT_AT, FLASH_AT, HOME_AT, dawn, bed, recruit, flash, home } from './house/house'
+import { houseSet, HOUSE_CELLS, DAWN_AT, TEEN_AT, BED_AT, RECRUIT_AT, FLASH_AT, HOME_AT, CRADLE_AT, dawn, teen, bed, recruit, flash, home } from './house/house'
 import { hallSet, HALL_CELLS, HALL_AT, HALL_SHELL, lecture, teaching } from './hall/hall'
-import { lawnSet, LAWN_CELLS, SWING_AT, SEES_AT, swing, sees } from './lawn/lawn'
+import { lawnSet, LAWN_CELLS, SWING_AT, SEES_AT, RECALL_AT, swing, sees, recall } from './lawn/lawn'
 import { valleySet, VALLEY_CELLS, ARRIVE_AT, CAMP_AT, GOING_AT, SHELL_CUT, arrive, arrive2, going } from './valley/valley'
 import { shaftSet, SHAFT_CELLS, SHAFT_AT, rollAt, shaft } from './shaft/shaft'
 import { chamberSet, CHAMBER_CELLS, CONTACT_AT, AGAIN_AT, BOMB_AT, contact, contact2, bomb } from './chamber/chamber'
 import { fogSet, FOG_CELLS, FOG_AT, FOG2_AT, fog1, fog2 } from './fog/fog'
+import { smallC, T_BACK, T_OUT } from './fog/plan'
+import { hannahAt } from './lawn/swing'
 import { galaSet, GALA_CELLS, GALA_AT, gala } from './fog/gala'
 import { tentSet, TENT_CELLS, DARK_AT, CALL_AT, SHARE_AT, dark, call, share } from './twelve/twelve'
 
@@ -23,7 +25,8 @@ import { tentSet, TENT_CELLS, DARK_AT, CALL_AT, SHARE_AT, dark, call, share } fr
  * (`music.ts`, `seams.ts`).
  *
  *   0        the lake house at dawn: Louise beside the cradle, baby Hannah in it (the first frame, and the last)
- *   22.111   the swing by the lake, years on: she pushes Hannah, who grows
+ *   22.111   the lawn by the lake, years on: Hannah runs off and back into her mother; the swing, and she grows
+ *   59.362   the room at the window, years on: Hannah a teenager, who turns on her mother and goes
  *   71.953   the bed by the window: the cellos; Hannah goes on the swell (93.861)
  *   98.429   the lecture hall, the day they came: the phones light; the news on the screen behind her
  *   102.110  the double bass: the screen's shell becomes the real one over Montana (a match cut on the shell)
@@ -41,7 +44,8 @@ import { tentSet, TENT_CELLS, DARK_AT, CALL_AT, SHARE_AT, dark, call, share } fr
  *   269.915  the gala, years on: Shang tells her what to say
  *   277.647  the tent: the call (288.554); the links stand again, backwards; the ring whole on the loudest (303.827)
  *   311.293  the meadow: the shell goes up into the cloud the way it came down (318.711); daylight; Ian
- *   334.031  the lake house: home; the first frame again from the last B-flat; the credits in the quiet after
+ *   334.031  the lake house: home, Louise and Ian by the window; 341.618 the run remembered, Hannah running back into
+ *            her mother; 345.490 the room, the empty cradle; the first frame again from the last B-flat; the credits
  */
 
 interface LegPlan {
@@ -54,7 +58,8 @@ interface LegPlan {
 
 const PLAN = (): LegPlan[] => [
   { key: 'dawn', world: 'house', at: DAWN_AT, links: [{ part: dawn, end: SEAM.swing }] },
-  { key: 'swing', world: 'house', at: SWING_AT, links: [{ part: swing, end: SEAM.bed }] },
+  { key: 'swing', world: 'house', at: SWING_AT, links: [{ part: swing, end: SEAM.teen }] },
+  { key: 'teen', world: 'house', at: TEEN_AT, links: [{ part: teen, end: SEAM.bed }] },
   { key: 'bed', world: 'house', at: BED_AT, links: [{ part: bed, end: SEAM.news }] },
   { key: 'news', world: 'hall', at: HALL_AT, links: [{ part: lecture, end: SEAM.arrival }] },
   { key: 'arrival', world: 'valley', at: ARRIVE_AT, links: [{ part: arrive, end: SEAM.recruit }] },
@@ -74,7 +79,9 @@ const PLAN = (): LegPlan[] => [
   { key: 'gala', world: 'gala', at: GALA_AT, links: [{ part: gala, end: SEAM.call }] },
   { key: 'call', world: 'tent', at: CALL_AT, links: [{ part: call, end: SEAM.going }] },
   { key: 'going', world: 'valley', at: GOING_AT, links: [{ part: going, end: SEAM.home }] },
-  { key: 'home', world: 'house', at: HOME_AT, links: [{ part: home, end: DURATION }] },
+  { key: 'home', world: 'house', at: HOME_AT, links: [{ part: home, end: SEAM.recall }] },
+  { key: 'recall', world: 'house', at: RECALL_AT, links: [{ part: recall, end: SEAM.cradle }] },
+  { key: 'cradle', world: 'house', at: CRADLE_AT, links: [{ part: home, end: DURATION }] },
 ]
 
 /**
@@ -109,6 +116,65 @@ const veil = scenery<null>({
     p.pop()
   },
 })
+
+/**
+ * The dissolves (the director's): the three cuts that leave the white beyond the glass or come back to it. Cut
+ * there, the white void and a room in full colour swapped in one frame, which read as a flash. Instead the other side,
+ * held at the cut, is laid over the frame for a moment either side of it (`Performance.blend`), so the change is a
+ * dissolve with Louise holding still through it, as at every match cut:
+ *
+ * - **What she is shown opens out of the ring** (250.120): first Hannah inside the small ring Costello writes by her,
+ *   then the swing opening out from it to the whole frame, the ink drawn into it. A soft edge, never a line.
+ * - **And closes back into it** (257.683): the evening drawn in from the frame's edges onto Hannah at the back of the
+ *   arc, the last of it inside the ring as the ring begins to grow.
+ * - **The white gives way to the hall** (266.124), years on: a plain dissolve, the lectern and the rows coming up
+ *   through the fog's white.
+ */
+interface Dissolve {
+  at: number
+  before: number
+  after: number
+  /** An opening round the point the two sides share (each in its own place's cells): the vision's side inside it. */
+  iris?: { vision: 'in' | 'out'; out: Pt; in: Pt }
+}
+const DISSOLVES = (): Dissolve[] => [
+  { at: SEAM.sees, before: 0.55, after: 1.45, iris: { vision: 'in', out: smallC(T_OUT), in: hannahPt(SEAM.sees + 1e-3) } },
+  { at: SEAM.fog2, before: 1.45, after: 0.55, iris: { vision: 'out', out: hannahPt(SEAM.fog2 - 1e-3), in: smallC(T_BACK + 1e-3) } },
+  { at: SEAM.future, before: 1.0, after: 0.4 },
+]
+function hannahPt(t: number): Pt {
+  const h = hannahAt(t)
+  return h ? [h.x, h.y] : [0, 0]
+}
+/** How far the opening has come (0 shut, 1 past the frame's corners): slow from the ring, then fast. */
+const IRIS_R = 9
+const opening = (q: number): number => IRIS_R * Math.max(0, Math.min(1, q)) ** 2.8
+function blendFrom(dissolves: Dissolve[]): (t: number) => Blend | null {
+  return (t) => {
+    for (const d of dissolves) {
+      const t0 = d.at - d.before
+      const t1 = d.at + d.after
+      if (t <= t0 || t >= t1) continue
+      const u = (t - t0) / (t1 - t0)
+      const after = t >= d.at
+      // The other side of the cut, held a moment from it.
+      const from = after ? d.at - 1e-3 : d.at + 1e-3
+      if (!d.iris) {
+        const s = u * u * (3 - 2 * u)
+        return { from, a: after ? 1 - s : s }
+      }
+      // The vision's side is seen inside the opening: the held frame where it is the vision, else round it.
+      const heldIsVision = (d.iris.vision === 'in') === !after
+      const q = d.iris.vision === 'in' ? u : 1 - u
+      const r = opening(q)
+      const [x, y] = after ? d.iris.in : d.iris.out
+      // Round it, the last of the held frame at the corners goes as a fade, whatever the frame's shape.
+      const a = heldIsVision ? 1 : 1 - smooth(q, 0.8, 1)
+      return { from, a, iris: { x, y, r, soft: 0.12 + 0.55 * r, out: !heldIsVision } }
+    }
+    return null
+  }
+}
 
 /** Each place's standing scenery, and what is drawn over everything (the veil, the credits' shade). */
 const SETS = (): Partial<Record<WorldKey, WorldSet>> => ({
@@ -151,7 +217,7 @@ function punch(t: number): number {
 /** A screen offset turned by `a` (the camera's roll): what a world offset looks like on the screen. */
 const turn = (v: Pt, a: number): Pt => [v[0] * Math.cos(a) - v[1] * Math.sin(a), v[0] * Math.sin(a) + v[1] * Math.cos(a)]
 
-export function compose(): { show: PalindromeShow; camera: (t: number) => Framing } {
+export function compose(): { show: PalindromeShow; camera: (t: number) => Framing; blend: (t: number) => Blend | null } {
   const plans = PLAN()
   const chains: Chain[] = []
   let ball: BallState = { color: LOUISE, ghost: false, id: 0 }
@@ -249,7 +315,7 @@ export function compose(): { show: PalindromeShow; camera: (t: number) => Framin
     const angle = angleAt(t)
     return { ...f, cells: f.cells * (1 - punch(t)), ...(angle ? { angle } : {}) }
   }
-  return { show, camera }
+  return { show, camera, blend: blendFrom(DISSOLVES()) }
 }
 
 /** For the check: the cuts that happen inside a white-out. */

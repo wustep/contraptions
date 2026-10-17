@@ -37,15 +37,15 @@ export function checkPalindrome(perf: Performance, version: ShowVersion, check: 
 
   // The places, in the order the story goes, each cut on a chord.
   const order = show.legs.map((l) => l.world).join(',')
-  check('palindrome: the lake house (dawn, the swing, the bed), the lecture hall (the news), the valley, the lake house (they come for her), the valley, the shaft, the shell, the lake house (a flash), the tent (the world as one), the shell, the tent, the shell, the fog, the lake house, the fog, the lecture hall (years on), the gala, the tent, the valley, the lake house',
-    order === 'house,house,house,hall,valley,house,valley,shaft,shell,house,tent,shell,tent,shell,fog,house,fog,hall,gala,tent,valley,house', order)
+  check('palindrome: the lake house (dawn, the swing, the window years on, the bed), the lecture hall (the news), the valley, the lake house (they come for her), the valley, the shaft, the shell, the lake house (a flash), the tent (the world as one), the shell, the tent, the shell, the fog, the lake house, the fog, the lecture hall (years on), the gala, the tent, the valley, the lake house (home, the run remembered on its lawn, home)',
+    order === 'house,house,house,house,hall,valley,house,valley,shaft,shell,house,tent,shell,tent,shell,fog,house,fog,hall,gala,tent,valley,house,house,house', order)
   const onBeat = (t: number, eps: number) => BEATS.some((b) => Math.abs(b.t - t) <= eps)
   const onChord = (t: number, eps: number) => CHORDS.some((c) => Math.abs(c.t - t) <= eps)
   const onOnset = (t: number, eps: number, min = 0.2) => ONSETS.some((o) => o.s >= min && Math.abs(o.t - t) <= eps)
   const cuts = show.legs.slice(1).map((l) => l.from)
   const seams = Object.values(SEAM)
   check('palindrome: every cut between places is on a change of chord',
-    cuts.length === 21 && cuts.every((c) => seams.some((s) => near(s, c, 1e-3))) && seams.every((s) => onChord(s, 1e-3)), cuts.map((t) => t.toFixed(3)).join(', '))
+    cuts.length === 24 && cuts.every((c) => seams.some((s) => near(s, c, 1e-3))) && seams.every((s) => onChord(s, 1e-3)), cuts.map((t) => t.toFixed(3)).join(', '))
   check('palindrome: no portal anywhere, and no cut drawn', [0, 30, 100, 150, 210, 240, 270, 300, 330, 380].every((t) => perf.cuts?.(t) === false))
 
   // One ball, one path: in a place it never jumps; at a cut the camera carries it, so on the screen it holds still
@@ -174,15 +174,15 @@ export function checkPalindrome(perf: Performance, version: ShowVersion, check: 
     near(f0.cells, FIRST.cells) && !!h0 && near(h0.scale ?? 0, HANNAH_AGE.baby, 1e-6) && near(show.hannah(perf.duration)?.scale ?? 0, HANNAH_AGE.baby, 1e-6) && drift < 0.01,
     `off by ${drift.toFixed(4)}`)
   // Hannah's rhyme: at each cut into or out of the lake house, on Louise's right a little above her (the cradle, the
-  // swing, the bed, the flash), growing.
-  const rhyme = (['swing', 'bed', 'flash', 'share', 'sees', 'fog2'] as const).map((key) => {
+  // swing, the stool at the window years on, the bed, the flash), growing.
+  const rhyme = (['swing', 'teen', 'bed', 'flash', 'share', 'sees', 'fog2'] as const).map((key) => {
     const t = SEAMS[key].t
     const side = key === 'fog2' || key === 'share' ? t - 1e-3 : t + 1e-3
     const h = show.hannah(side)
     const l = show.at(side)
     return h ? Math.hypot(h.x - l.x - HANNAH_BY[0], h.y - l.y - HANNAH_BY[1]) : 9
   })
-  check('palindrome: at the lake house\'s cuts Hannah is on Louise\'s right, a little above her: the cradle, the swing, the bed, the flash',
+  check('palindrome: at the lake house\'s cuts Hannah is on Louise\'s right, a little above her: the cradle, the swing, the stool years on, the bed, the flash',
     rhyme.every((d) => d < 0.02), rhyme.map((d) => d.toFixed(3)).join(', '))
 
   // Under Zoom (half as close again as the show's camera) the ball stays in the frame wherever it is to be seen. The

@@ -217,28 +217,34 @@ export function drawSheet(p: p5, k: number, T: number, L: Light): void {
 
 /** The stool: a tall child's stool of the room's grey oak, its seat under her, splayed legs, a rung. */
 export function drawStool(p: p5, k: number, T: number, L: Light): void {
+  // It rocks about the foot of its right leg.
+  stool(p, k, L, HANNAH_AT[0], SEAT_TOP, rock(T), HANNAH_AT[0] + SPLAY)
+}
+
+/** The stool's seat and legs, for the same stool years on (`teen.ts`). */
+export const STOOL = { seat: SEAT, splay: SPLAY, leg: LEG_W }
+
+/** The stool with its seat's middle at `cx` and its top at `top`, turned by `a` about the foot at `pivot` (floor x). */
+export function stool(p: p5, k: number, L: Light, cx: number, top: number, a: number, pivot: number): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const px = (v: number) => v * k
-  const cx = HANNAH_AT[0]
-  const a = rock(T)
   const wood = mix(HOUSE.wood, HOUSE.night, 0.25 * (1 - L.amb))
   const dark = mix(HOUSE.woodDark, HOUSE.night, 0.3 * (1 - L.amb))
   ctx.save()
-  // It rocks about the foot of its right leg.
-  ctx.translate(px(cx + SPLAY), px(FLOOR))
+  ctx.translate(px(pivot), px(FLOOR))
   ctx.rotate(a)
-  ctx.translate(-px(cx + SPLAY), -px(FLOOR))
+  ctx.translate(-px(pivot), -px(FLOOR))
   ctx.strokeStyle = dark
   ctx.lineCap = 'round'
   ctx.lineWidth = Math.max(1, px(LEG_W))
   for (const s of [-1, 1]) {
     ctx.beginPath()
-    ctx.moveTo(px(cx + s * (SEAT.w / 2 - 0.02)), px(SEAT_TOP + SEAT.t))
+    ctx.moveTo(px(cx + s * (SEAT.w / 2 - 0.02)), px(top + SEAT.t))
     ctx.lineTo(px(cx + s * SPLAY), px(FLOOR))
     ctx.stroke()
   }
   ctx.lineWidth = Math.max(1, px(0.02))
-  const ry = SEAT_TOP + 0.6 * (FLOOR - SEAT_TOP)
+  const ry = top + 0.6 * (FLOOR - top)
   const spread = SEAT.w / 2 - 0.02 + (SPLAY - (SEAT.w / 2 - 0.02)) * 0.6
   ctx.beginPath()
   ctx.moveTo(px(cx - spread), px(ry))
@@ -246,9 +252,9 @@ export function drawStool(p: p5, k: number, T: number, L: Light): void {
   ctx.stroke()
   ctx.fillStyle = wood
   ctx.beginPath()
-  ctx.roundRect(px(cx - SEAT.w / 2), px(SEAT_TOP), px(SEAT.w), px(SEAT.t), px(0.012))
+  ctx.roundRect(px(cx - SEAT.w / 2), px(top), px(SEAT.w), px(SEAT.t), px(0.012))
   ctx.fill()
   ctx.fillStyle = rgba(HOUSE.lamp, 0.25 * L.sun)
-  ctx.fillRect(px(cx - SEAT.w / 2 + 0.01), px(SEAT_TOP), px(SEAT.w - 0.02), px(0.008))
+  ctx.fillRect(px(cx - SEAT.w / 2 + 0.01), px(top), px(SEAT.w - 0.02), px(0.008))
   ctx.restore()
 }

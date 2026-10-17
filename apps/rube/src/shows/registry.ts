@@ -19,6 +19,20 @@ import type { Show } from '../show'
  */
 
 /** Where the camera is: the cell at the frame's centre, and how many cells a 16:9 frame shows top to bottom. */
+/**
+ * What `Performance.blend` lays over a frame: the other side of a cut, held at one moment, seen all over at `a`, or
+ * only inside (or outside) a soft round opening that grows from something in the picture. Inside the opening it is
+ * seen whole; its edge has no line, only a ramp `soft` cells wide.
+ */
+export interface Blend {
+  /** The show time of the frame laid over: the other side of the cut, held there. */
+  from: number
+  /** How much of it is seen, 0 to 1. */
+  a: number
+  /** Where it is seen: a circle round `x, y` of radius `r`, in the live frame's world cells; outside it if `out`. */
+  iris?: { x: number; y: number; r: number; soft: number; out?: boolean }
+}
+
 export interface Framing {
   x: number
   y: number
@@ -166,6 +180,12 @@ export interface Performance {
   camera?(t: number): Framing
   /** Whether the show's cuts are drawn at `t`: the iris at a portal, the fade up from ink. Left out, they are. */
   cuts?(t: number): boolean
+  /**
+   * A dissolve across a change of place, at `t`: the frame of another moment laid over this one (`Blend`). The
+   * stage paints that moment first, keeps it, paints `t`, and lays the kept frame on. Left out, or null at `t`, the
+   * frame is `t`'s alone and a cut is a cut.
+   */
+  blend?(t: number): Blend | null
   /**
    * The box Overview frames at `t`, in the world's cells: for a show whose worlds hold several sets far apart (the
    * place in play, not the whole world, most of it empty between them). Left out, the whole world.
