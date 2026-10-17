@@ -117,7 +117,12 @@ export const stacker = definePiece<StackerState>({
       solid(p, lit ? ink : dim, weight * 0.8, lit ? s.color : bg)
       p.rect(0, ry * k, (TOWER - FRAME - 0.03) * 2 * k, BLOCK_H * k, 0.012 * k)
     }
-    // The head: the major-prize lamp, flaring at the top.
+    // The head: the major-prize lamp, flaring at the top. It sits in a dark
+    // socket let into the head: lit in the head's own colour straight on the
+    // head, it read as a lamp going out, an empty ring where a dark one had been.
+    p.noStroke()
+    p.fill(bg)
+    p.circle(0, (top + 0.16) * k, 0.2 * k)
     lamp(p, k, ink, weight, s.color, bg, 0, top + 0.16, 0.07, won)
     // The platform, and the ball on it: a plank in the slot, tilting toward the rail at the top.
     p.push()
