@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInQuad } from '../../../../../src/core/ease'
-import { FLOOR, ROLL, arrive, arriveAt, burst, definePiece, fly, over, rail, ramp, wait, type Lane, type Pt } from '../../parts'
+import { FLOOR, ROLL, arrive, arriveAt, definePiece, fly, over, rail, ramp, wait, type Lane, type Pt } from '../../parts'
 import { bloom, drop, soil, stem } from './green'
 
 /**
@@ -66,7 +66,7 @@ export const sprinkler = definePiece<{ color: string }>({
     // The flowerbed: a row of blooms on stems, nodding when the water reaches them.
     for (let i = 0; i < 4; i++) {
       const fx = 0.6 + i * 0.32
-      const wet = r > 0.3 ? 0.06 * Math.sin(t * 6 + i) : 0
+      const wet = 0.06 * Math.sin(t * 6 + i) * over(r, 0.3, 0.6)
       stem(p, k, ink, weight, fx, 0.5, fx + wet, 0.16 + 0.04 * (i % 2), wet)
       bloom(p, k, ink, weight, s.color, bg, fx + wet, 0.14 + 0.04 * (i % 2), 0.06, 5, 1, i)
     }
@@ -93,26 +93,23 @@ export const sprinkler = definePiece<{ color: string }>({
       const a = angle + (i * Math.PI * 2) / 3
       p.circle((HEAD + Math.cos(a) * 0.1) * k, (FLOOR + 0.03 + Math.sin(a) * 0.02) * k, 0.028 * k)
     }
-    // The water: jets off the arms while it runs, arcing out and down onto the bed.
-    if (r > 0.02) {
-      for (let j = 0; j < 12; j++) {
-        const a = angle * 0.7 + (j * Math.PI * 2) / 12
-        const reach = 0.3 + 0.9 * r * (0.6 + 0.4 * Math.sin(j * 1.7))
-        const f = ((t * 2.5 + j / 12) % 1 + 1) % 1
-        const dx = Math.cos(a) * reach * f
-        const dy = -0.3 * r * Math.sin(Math.PI * f) * (0.5 + 0.5 * Math.abs(Math.sin(a)))
-        if (Math.abs(dx) < 0.1 && f < 0.3) continue
-        drop(p, k, s.color, HEAD + dx, FLOOR - 0.02 + dy + 0.4 * f * f, 0.016)
-      }
-    }
-    // The fling.
-    if (since > 0 && since < 0.2) {
-      const f = over(since, 0, 0.2)
-      p.push()
-      p.stroke(s.color)
-      p.strokeWeight(weight)
-      burst(p, HEAD * k, -0.02 * k, (0.14 + 0.12 * f) * k, (0.2 + 0.16 * f) * k, 6, 0.4 + f)
-      p.pop()
+    // The water: jets off the arms while it runs, arcing out and down onto
+    // the bed. A drop is thrown as hard as the head was turning when it
+    // left, and only once the head is turning, so the jets start and stop
+    // at the head. Back over the path it falls short of the piece's edge,
+    // on its own ground.
+    for (let j = 0; j < 12; j++) {
+      const f = ((t * 2.5 + j / 12) % 1 + 1) % 1
+      const rl = rate(since - f / 2.5)
+      if (rl <= 0.02) continue
+      const a = angle * 0.7 + (j * Math.PI * 2) / 12
+      const c = Math.cos(a)
+      const far = 0.3 + 0.9 * rl * (0.6 + 0.4 * Math.sin(j * 1.7))
+      const reach = c < 0 ? Math.min(far, (HEAD + 0.42) / -c) : far
+      const dx = c * reach * f
+      const dy = -0.3 * rl * Math.sin(Math.PI * f) * (0.5 + 0.5 * Math.abs(Math.sin(a)))
+      if (Math.abs(dx) < 0.1 && f < 0.3) continue
+      drop(p, k, s.color, HEAD + dx, FLOOR - 0.02 + dy + 0.4 * f * f, 0.016)
     }
   },
 })
