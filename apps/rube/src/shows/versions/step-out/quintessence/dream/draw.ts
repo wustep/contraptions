@@ -443,7 +443,9 @@ const PULLEY: Pt = [(SX0 + SX1) / 2, CEIL - SLAB - 0.35]
 export function drawMachine(pen: Pen, t: number): void {
   const cy = ROOM + carY(t)
   const top = cy - CAR_H
-  // The pulley wheel, turning as the car goes.
+  // The brake's pivot, on an arm out from the pulley's hub; then the pulley wheel, turning as the car goes.
+  const piv: Pt = [SX0 - 0.15, PULLEY[1] + 0.05]
+  line(pen, PULLEY, piv, C.iron, 1.6)
   const turn = carY(t) / 0.3
   ellipse(pen, PULLEY, 0.3, 0.3, C.iron, 0.9, C.rope)
   for (let i = 0; i < 3; i++) {
@@ -456,10 +458,9 @@ export function drawMachine(pen: Pen, t: number): void {
   line(pen, [PULLEY[0] - 0.29, PULLEY[1]], [PULLEY[0] - 0.29, top], C.rope, 0.8)
   line(pen, [cwX, PULLEY[1]], [cwX, cwY - 0.45], C.rope, 0.8)
   rect(pen, cwX - 0.09, cwY - 0.45, cwX + 0.09, cwY + 0.15, C.iron, 0.6, C.rope)
-  // The brake: a lever on the pulley's housing that drops on BRAKE.
+  // The brake: a lever on the pivot that drops on BRAKE.
   const lever = BRAKE <= t ? Math.min(1, (t - BRAKE) / 0.12) : 0
   const la = -0.25 + lever * 1.1 + 0.08 * ring(t - BRAKE, 4, 0.2)
-  const piv: Pt = [SX0 - 0.15, PULLEY[1] + 0.05]
   line(pen, piv, [piv[0] - Math.cos(la) * 0.55, piv[1] + Math.sin(la) * 0.55], C.iron, 1.6)
   ellipse(pen, [piv[0] - Math.cos(la) * 0.55, piv[1] + Math.sin(la) * 0.55], 0.07, 0.07, C.wood)
   ellipse(pen, piv, 0.04, 0.04, C.rope)

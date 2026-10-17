@@ -30,7 +30,6 @@ const TONES = {
   steel: ['#151B1D', '#4B4D47', '#6E8789'],
   edge: ['#1B2224', '#6A6B62', '#9AB4B4'],
   rim: ['#111617', '#3A3B36', '#58706F'],
-  face: ['#192022', '#58574F', '#86A2A2'],
   box: ['#181D1D', '#4E4B42', '#728888'],
   dark: ['#0C1011', '#1E1F1C', '#2E3B3C'],
 } as const
@@ -113,19 +112,19 @@ function shelving(b: Builder, x0: number, x1: number, top: number, floor: number
     while (x < x1 - 0.12 * s) {
       const h = hash(row, i, seed)
       const at = binOf(x, y)
-      if (h < 0.6) {
+      if (h < 0.4) {
         // A stack of cans lying flat, one block of them.
         const w = (0.26 + 0.06 * hash(row, i, seed + 3)) * s
         const n = 2 + Math.floor(hash(row, i, seed + 4) * Math.max(1, (pitch / s - 0.06) / 0.055))
-        b.rect('face', x, y - Math.min(n * 0.052, pitch / s - 0.08) * s, x + w, y, at)
+        b.rect('box', x, y - Math.min(n * 0.052, pitch / s - 0.08) * s, x + w, y, at)
         x += w + 0.03 * s
-      } else if (h < 0.9) {
+      } else if (h < 0.65) {
         // An archive box.
         const w = (0.3 + 0.16 * hash(row, i, seed + 5)) * s
         const hgt = Math.min(pitch - 0.07 * s, (0.26 + 0.12 * hash(row, i, seed + 6)) * s)
         b.rect('box', x, y - hgt, x + w, y, at)
         x += w + 0.02 * s
-      } else x += (0.2 + 0.3 * hash(row, i, seed + 7)) * s
+      } else x += (0.3 + 0.4 * hash(row, i, seed + 7)) * s
       x += 0.02 * s
       i++
     }
@@ -149,7 +148,7 @@ function ladder(b: Builder, foot: number, top: [number, number], floor: number, 
     const u = i / n
     const x = top[0] + (foot - top[0]) * u
     const y = top[1] + (floor - top[1]) * u
-    b.rect('edge', x, y, x + w + rail, y + 0.025 * s, at)
+    b.rect('steel', x, y, x + w + rail, y + 0.025 * s, at)
   }
   b.rect('steel', top[0] - 0.02 * s, top[1] - 0.06 * s, top[0] + w + 0.06 * s, top[1] + 0.02 * s, at)
   b.disc('rim', foot + 0.02 * s, floor - 0.04 * s, 0.045 * s, at)
