@@ -25,7 +25,7 @@ import { WATER, bodyColor, piling, seaWater, seabed, splash, water } from './sea
  * it, rings that down, and goes on riding the swell as before.
  *
  * The swell is drawn: the sea's own colour let down into the paper, heaved
- * up off the still line, with the sea's ink line riding on its back, so it
+ * up off the still line, with the sea's own line riding on its back, so it
  * is the sea's surface that is up and not a hill standing on it. The bed is
  * an eighth of a floor under the still line and a buoy goes up a third of a
  * floor, so only the sea can be what lifts it. By the pilings at either end
