@@ -531,15 +531,16 @@ raf = requestAnimationFrame(tick)
 
 /* ------------------------------------------------------------------ keys */
 
-/** Keys that turn something on or off, which a held key must not keep doing (`onKey`). */
-const HELD_ONCE = new Set([' ', 'o', 'c', 'p'])
+/** Keys that turn something on or off, or go somewhere, which a held key must not keep doing (`onKey`). */
+const HELD_ONCE = new Set([' ', 'o', 'c', 'p', 'w'])
 const onKey = (e: KeyboardEvent) => {
   if (!alive) return
   if (e.metaKey || e.ctrlKey || e.altKey) return
   const t = e.target
   if (t instanceof HTMLInputElement || t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement) return
   if (t instanceof HTMLButtonElement && (e.key === ' ' || e.key === 'Enter')) return
-  // A held toggle is one press: play, Overview, the catalog and the panel do not strobe. Steps (R, N, the arrows) repeat.
+  // A held toggle is one press: play, Overview, the catalog and the panel do not strobe, and a held W does not start
+  // its world over and over. Steps (R, N, the arrows) repeat.
   if (e.repeat && HELD_ONCE.has(e.key.toLowerCase())) {
     if (e.key === ' ') e.preventDefault()
     return
