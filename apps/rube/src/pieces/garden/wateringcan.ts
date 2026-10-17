@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine, easeOutCubic } from '../../../../../src/core/ease'
-import { FAST, FLOOR, ROLL, burst, definePiece, over, rail, ramp, roll, wait, type Lane } from '../../parts'
+import { FAST, FLOOR, ROLL, definePiece, over, rail, ramp, roll, wait, type Lane } from '../../parts'
 import { drop } from './green'
 
 /**
@@ -40,12 +40,15 @@ export const wateringcan = definePiece<{ color: string }>({
     // The tongue goes down under the ball; the cord pulls; the can tips over
     // and pours, then rights itself for the next one.
     const pressed = t < T_TONGUE ? 0 : t < T_DIP ? over(t, T_TONGUE, T_DIP) : since < 1.2 ? 1 : 1 - over(since, 1.2, 1.6)
-    const tip =
-      t < T_DIP ? 0
-      : since < 0 ? 0.9 * easeOutCubic(over(t, T_DIP, FIRE))
-      : since < 0.7 ? 0.9
-      : 0.9 * (1 - easeInOutSine(over(since, 0.7, 2.2)))
-    const pouring = tip > 0.6
+    const tip = tipAt(t)
+
+    // The puddle the shower leaves in the dip: water lying on the path, under the rail's line.
+    if (since > 0.1) {
+      const g = over(since, 0.1, 1.2)
+      p.noStroke()
+      p.fill(s.color)
+      p.arc(DIP * k, (FLOOR + 0.02) * k, (0.1 + 0.2 * g) * k, (0.06 + 0.05 * g) * k, Math.PI, Math.PI * 2, p.CHORD)
+    }
 
     // The rail with the dip under the spout, and the tongue in it.
     rail(p, k, ink, weight, -0.5, TONGUE - 0.08)
@@ -91,29 +94,31 @@ export const wateringcan = definePiece<{ color: string }>({
     p.circle((ROSE.x - PIVOT.x) * k, (ROSE.y - PIVOT.y) * k, 0.1 * k)
     p.pop()
 
-    // The shower: drops from the rose down to the ball, while it pours.
-    if (pouring) {
-      const rx = PIVOT.x + Math.cos(tip + Math.atan2(ROSE.y - PIVOT.y, ROSE.x - PIVOT.x)) * Math.hypot(ROSE.x - PIVOT.x, ROSE.y - PIVOT.y)
-      const ry = PIVOT.y + Math.sin(tip + Math.atan2(ROSE.y - PIVOT.y, ROSE.x - PIVOT.x)) * Math.hypot(ROSE.x - PIVOT.x, ROSE.y - PIVOT.y)
-      for (let i = 0; i < 7; i++) {
-        const f = ((t * 3.5 + i / 7) % 1 + 1) % 1
-        const dx = (i - 3) * 0.025 * (1 + f)
-        drop(p, k, s.color, rx + dx - 0.04 * f, ry + (FLOOR - ry) * f, 0.018)
-      }
-    }
-    // The wash: a burst off the ball as the shower hits, and a puddle after.
-    if (since > 0 && since < 0.3) {
-      const f = over(since, 0, 0.3)
-      p.push()
-      p.stroke(s.color)
-      p.strokeWeight(weight)
-      burst(p, DIP * k, 0, (0.16 + 0.12 * f) * k, (0.22 + 0.16 * f) * k, 5, 3.6)
-      p.pop()
-    }
-    if (since > 0.1) {
-      const g = over(since, 0.1, 1.2)
-      solid(p, ink, weight, s.color)
-      p.rect(DIP * k, (FLOOR + 0.05) * k, (0.1 + 0.2 * g) * k, 0.035 * k, 0.02 * k)
+    // The shower: drops from the rose down to the ball. A drop leaves the
+    // rose only while the can is over far enough to pour, and falls from
+    // where the rose was then, so the shower starts at the rose and the last
+    // drops finish their fall after it stops.
+    for (let i = 0; i < 7; i++) {
+      const f = ((t * 3.5 + i / 7) % 1 + 1) % 1
+      const then = tipAt(t - f / 3.5)
+      if (then <= 0.6) continue
+      const rx = PIVOT.x + Math.cos(then + ROSE_A) * ROSE_R
+      const ry = PIVOT.y + Math.sin(then + ROSE_A) * ROSE_R
+      const dx = (i - 3) * 0.025 * (1 + f)
+      drop(p, k, s.color, rx + dx - 0.04 * f, ry + (FLOOR - ry) * f, 0.018)
     }
   },
 })
+
+/** Where the rose is from the pivot: its angle and its distance. */
+const ROSE_A = Math.atan2(ROSE.y - PIVOT.y, ROSE.x - PIVOT.x)
+const ROSE_R = Math.hypot(ROSE.y - PIVOT.y, ROSE.x - PIVOT.x)
+
+/** How far over the can is at piece time `t`: over as the ball rolls into the dip, held while it pours, back slowly. */
+function tipAt(t: number): number {
+  const since = t - FIRE
+  return t < T_DIP ? 0
+    : since < 0 ? 0.9 * easeOutCubic(over(t, T_DIP, FIRE))
+    : since < 0.7 ? 0.9
+    : 0.9 * (1 - easeInOutSine(over(since, 0.7, 2.2)))
+}
