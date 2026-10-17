@@ -494,6 +494,9 @@ function drawNoseGear(pen: Pen, t: number, p: Pal): void {
   const cx = CAB.cx
   const bayY = CAB.cy + CAB.rOut + dy
   if (down <= 0.01) return
+  // Out of the bay as it starts down (its tyres came out whole in a frame).
+  pen.ctx.save()
+  pen.ctx.globalAlpha *= Math.min(1, (down - 0.01) / 0.12)
   for (const s of [-1, 1]) {
     const a = Math.min(1, down * 1.6) * 1.35
     const hinge: Pt = [cx + s * 0.36, bayY - 0.08]
@@ -517,6 +520,7 @@ function drawNoseGear(pen: Pen, t: number, p: Pal): void {
     treads(pen, tx, axleY, 0.14, 0.42, spin)
     rbox(pen, tx - 0.05, axleY - 0.11, tx + 0.05, axleY + 0.11, 0.02, chrome, 0.4)
   }
+  pen.ctx.restore()
 }
 
 /* ------------------------------------------------------------------ light */
@@ -556,13 +560,15 @@ export function drawCabin(pen: Pen, t: number, f: Frame): void {
   const p = palAt(t)
   const dy = jolt(t)
   const { ctx, k } = pen
+  // The nose gear comes down out of its bay from behind the hull (drawn over it, its tyres were there whole at the bay
+  // in the frame it began).
+  drawNoseGear(pen, t, p)
   ctx.save()
   ctx.translate(0, dy * k)
   drawInside(pen, t, p)
   drawDoor(pen, t, p)
   drawSkin(pen, t, p)
   ctx.restore()
-  drawNoseGear(pen, t, p)
   drawSeat(pen, SEAT.ariadne, p, [true, true], dy, lampAt(t))
   drawSeat(pen, SEAT.cobb, p, [true, true], dy, lampAt(t))
   drawSeat(pen, SEAT.team, p, [true, false], dy)
