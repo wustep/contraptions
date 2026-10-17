@@ -251,7 +251,7 @@ function drawStand(ctx: C2, k: number, t: number): void {
 
 /* ------------------------------------------------------------------ the set */
 
-/** The pavement, the kerb, the road with its lanes and its manholes, the corner and the crossings, the far side's. */
+/** The pavement, the kerb, the road with its lanes and its manhole, the corner and the crossings, the far side's. */
 function drawGroundPlane(ctx: C2, v: View): void {
   const k = v.k
   const x0 = v.x0 - 1
@@ -271,24 +271,20 @@ function drawGroundPlane(ctx: C2, v: View): void {
   ctx.stroke()
   rule(ctx, k, x0, PAVE, end, PAVE, rgba(INK, 0.8), 0.9)
   slab(ctx, k, x0, KERB, end, KERB + 0.1, S.kerb, { color: rgba(INK, 0.6), w: 0.8 })
-  // The road: plain asphalt, the gutter a little darker, the lane line, the manholes.
+  // The road: plain asphalt, the gutter a little darker, the lane line, the manhole the steam comes up out of.
   slab(ctx, k, x0, KERB + 0.1, x1, v.y1 + 1, S.road)
   slab(ctx, k, x0, KERB + 0.1, x1, KERB + 0.24, rgba(S.roadDark, 0.6))
-  // A storm drain in the gutter, a vault grate in the paving by the café.
-  for (const dx of [6.6, 18.6]) slab(ctx, k, dx, KERB + 0.1, dx + 0.7, KERB + 0.2, '#4B4A47', { color: rgba(INK, 0.6), w: 0.8 })
+  // A vault grate in the paving by the café.
   slab(ctx, k, 8.75, PAVE + 0.06, 9.95, PAVE + 0.3, '#8E8E89', { color: rgba(INK, 0.7), w: 0.8 })
   // The line between the lanes, in dashes; the near lane's edge.
   const mid = (LANE.far + LANE.near) / 2 - 0.42
   for (let x = Math.floor(x0 / 1.2) * 1.2; x < x1; x += 1.2) if (x < CORNER.kerb - 0.6 || x > AVENUE_FAR) slab(ctx, k, x, mid, x + 0.6, mid + 0.06, '#E4E0D4')
   ctx.fillStyle = '#6E6C67'
   ctx.strokeStyle = rgba(INK, 0.7)
-  for (const [mx, my] of [[3.75, KERB + 0.42], [11.6, KERB + 0.42], [21.4, KERB + 1.25]] as [number, number][]) {
-    if (mx < x0 - 1 || mx > x1 + 1) continue
-    ctx.beginPath()
-    ctx.ellipse(mx * k, my * k, 0.42 * k, 0.09 * k, 0, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.stroke()
-  }
+  ctx.beginPath()
+  ctx.ellipse(11.6 * k, (KERB + 0.42) * k, 0.42 * k, 0.09 * k, 0, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.stroke()
   // The corner: the pavement ends; the avenue's crossing beyond, its stripes; the stop lines; the ladder across this street.
   slab(ctx, k, CORNER.kerb, PAVE + 0.2, x1, KERB + 0.1, S.road)
   for (let i = 0; i < 6; i++) slab(ctx, k, CORNER.kerb + 0.3 + i * 0.5, PAVE + 0.32, CORNER.kerb + 0.55 + i * 0.5, KERB + 0.06, '#E0DDD5')
