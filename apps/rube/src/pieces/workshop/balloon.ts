@@ -71,10 +71,11 @@ export const balloon = definePiece<BalloonState>({
     const bagHang = 0.28
     const bagY = t < ARRIVE + 0.12 ? bagHang : t < ARRIVE + PIN ? lerp(bagHang, 0.42, easeInQuad(over(t, ARRIVE + 0.12, ARRIVE + PIN))) : 0.42
     const dropped = t >= ARRIVE + 0.12
-    if (!dropped) {
-      outline(p, ink, weight)
-      p.line((BASKET_W / 2 + 0.08) * k, (y + FLOOR + 0.02) * k, (BASKET_W / 2 + 0.08) * k, (bagY - 0.07) * k)
-    }
+    // Its cord: up to the pin while it hangs, then gone with the bag as a
+    // tie on its neck, rather than vanishing the frame the pin goes.
+    const cord = bagHang - 0.07 - (FLOOR + 0.02 + sink)
+    outline(p, ink, weight)
+    p.line((BASKET_W / 2 + 0.08) * k, (dropped ? bagY - 0.07 - cord : y + FLOOR + 0.02 + sink) * k, (BASKET_W / 2 + 0.08) * k, (bagY - 0.07) * k)
     solid(p, ink, weight, s.color)
     p.ellipse((BASKET_W / 2 + 0.08) * k, bagY * k, 0.12 * k, 0.14 * k)
     outline(p, ink, weight)
@@ -98,7 +99,10 @@ export const balloon = definePiece<BalloonState>({
 
     // The ropes and the envelope above; it tugs at its ropes the whole time, and sways after the rise.
     const ey = by - 0.55 - 0.012 * Math.sin(t * 2.1)
-    const sway = since < 0 ? 0 : 0.05 * Math.sin((since - riseTime(floors)) * 4) * Math.exp(-Math.max(0, since - riseTime(floors)) * 0.8) * (since > riseTime(floors) ? 1 : 0)
+    // (The sway ends once it is spent: left to decay for ever, its last
+    // millionths of a radian flicked the envelope between renderings.)
+    const swaying = since - riseTime(floors)
+    const sway = swaying > 0 && swaying < 6 ? 0.05 * Math.sin(swaying * 4) * Math.exp(-swaying * 0.8) : 0
     p.push()
     p.translate(0, (by - R * 0.4) * k)
     p.rotate(sway)

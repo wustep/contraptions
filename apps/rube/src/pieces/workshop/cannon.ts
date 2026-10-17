@@ -70,7 +70,8 @@ export const cannon = definePiece<{ color: string }>({
 
     // Smoke, before the barrel so it is behind it: a string of puffs out of
     // the muzzle, each swelling as it drifts up and away, then shrinking to
-    // nothing. The first is the biggest and the last the lightest.
+    // nothing. The first is the biggest and the last the lightest, and the
+    // last thins out before it leaves the piece's top cell.
     if (since > 0 && since < 2) {
       for (let i = 0; i < 4; i++) {
         const born = i * 0.07
@@ -79,15 +80,64 @@ export const cannon = definePiece<{ color: string }>({
         if (age <= 0 || age >= life) continue
         const f = age / life
         const e = easeOutCubic(f)
-        const along = 0.08 + e * (0.22 + i * 0.16)
+        const along = 0.08 + e * (0.22 + i * 0.12)
         const side = e * 0.12 * Math.sin(i * 2.1)
         const x = MUZZLE[0] + Math.cos(ANGLE) * along + side
-        const y = MUZZLE[1] + Math.sin(ANGLE) * along - e * (0.28 + i * 0.1)
+        const y = MUZZLE[1] + Math.sin(ANGLE) * along - e * (0.28 + i * 0.07)
         const r = 0.16 * (1 - i * 0.16) * easeOutCubic(Math.min(1, f * 2.5)) * (1 - easeInQuad(f))
         if (r > 0.015) puff(p, k, ink, weight, bg, x, y, r)
       }
     }
 
+    // The fuse: unlit before the ball, eaten by the spark during the wait,
+    // gone after the bang.
+    const burn = t < ARRIVE ? 0 : over(t, ARRIVE, ARRIVE + FUSE)
+    if (burn < 1) {
+      outline(p, ink, weight)
+      p.noFill()
+      p.beginShape()
+      const n = 20
+      const start = burn
+      for (let i = 0; i <= n; i++) {
+        const f = 1 - (start + (1 - start) * (i / n))
+        const [x, y] = bezAt(FUSE_PTS, f)
+        p.vertex(x * k, y * k)
+      }
+      p.endShape()
+      // The spark eating it: a plain coal, not a spinning star of ticks.
+      if (t >= ARRIVE) {
+        const [x, y] = bezAt(FUSE_PTS, 1 - burn)
+        solid(p, ink, weight, s.color)
+        p.circle(x * k, y * k, 0.06 * k)
+      }
+    }
+    // The match striker: a little tongue in the rail the ball flicks on its
+    // way into the breech.
+    const struck = t < ARRIVE - 0.06 ? 0 : 1 - over(t, ARRIVE + 0.4, ARRIVE + 1)
+    p.push()
+    p.translate(-0.34 * k, FLOOR * k)
+    p.rotate(-0.9 * (1 - struck) - 0.2)
+    solid(p, ink, weight, s.color)
+    p.rect(0.06 * k, 0, 0.12 * k, 0.035 * k)
+    p.pop()
+
+    // The bang: one ring of ticks off the muzzle, not turning as it goes.
+    if (since > 0 && since < 0.22) {
+      const f = over(since, 0, 0.22)
+      clipBox(p, k * 6, k * 4, () => {
+        p.push()
+        p.translate(MUZZLE[0] * k, MUZZLE[1] * k)
+        p.stroke(s.color)
+        p.strokeWeight(weight * 1.2)
+        burst(p, 0, 0, (0.1 + 0.4 * f) * k, (0.22 + 0.5 * f) * k, 7, 0.4)
+        p.pop()
+      })
+    }
+  },
+  // The gun goes over the ball: it rolls into the breech and is gone inside
+  // it, and comes out of the muzzle, instead of vanishing on top of the
+  // barrel and appearing beside its mouth.
+  over: (p, s, { k, since, ink, weight }) => {
     // The bang kicks the whole carriage back on its wheels; it rolls home again.
     const recoil = since < 0 ? 0 : 0.07 * (1 - over(since, 0, 0.4)) * Math.sin(Math.min(1, since / 0.4) * Math.PI)
     const kick = since < 0 ? 0 : 0.05 * Math.sin(Math.min(1, since / 0.9) * Math.PI)
@@ -124,63 +174,6 @@ export const cannon = definePiece<{ color: string }>({
     p.circle(-0.07 * k, 0, 0.14 * k)
     p.pop()
     p.pop()
-
-    // The fuse: unlit before the ball, eaten by the spark during the wait,
-    // gone after the bang.
-    const burn = t < ARRIVE ? 0 : over(t, ARRIVE, ARRIVE + FUSE)
-    if (burn < 1) {
-      outline(p, ink, weight)
-      p.noFill()
-      p.beginShape()
-      const n = 20
-      const start = burn
-      for (let i = 0; i <= n; i++) {
-        const f = 1 - (start + (1 - start) * (i / n))
-        const [x, y] = bezAt(FUSE_PTS, f)
-        p.vertex(x * k, y * k)
-      }
-      p.endShape()
-      if (t >= ARRIVE) {
-        const [x, y] = bezAt(FUSE_PTS, 1 - burn)
-        p.push()
-        p.translate(x * k, y * k)
-        p.rotate(t * 40)
-        p.stroke(s.color)
-        p.strokeWeight(weight)
-        burst(p, 0, 0, 0.02 * k, 0.08 * k, 5)
-        p.pop()
-        solid(p, ink, weight, s.color)
-        p.circle(x * k, y * k, 0.06 * k)
-      }
-    }
-    // The match striker: a little tongue in the rail the ball flicks on its
-    // way into the breech.
-    const struck = t < ARRIVE - 0.06 ? 0 : 1 - over(t, ARRIVE + 0.4, ARRIVE + 1)
-    p.push()
-    p.translate(-0.34 * k, FLOOR * k)
-    p.rotate(-0.9 * (1 - struck) - 0.2)
-    solid(p, ink, weight, s.color)
-    p.rect(0.06 * k, 0, 0.12 * k, 0.035 * k)
-    p.pop()
-
-    // The bang.
-    if (since > 0 && since < 0.22) {
-      const f = over(since, 0, 0.22)
-      clipBox(p, k * 6, k * 4, () => {
-        p.push()
-        p.translate(MUZZLE[0] * k, MUZZLE[1] * k)
-        p.stroke(s.color)
-        p.strokeWeight(weight * 1.2)
-        burst(p, 0, 0, (0.1 + 0.4 * f) * k, (0.22 + 0.5 * f) * k, 9, f)
-        if (f < 0.6) {
-          p.stroke(ink)
-          p.strokeWeight(weight)
-          p.noFill()
-          p.circle(0, 0, (0.14 + 0.6 * f) * k)
-        }
-        p.pop()
-      })
-    }
   },
 })
 

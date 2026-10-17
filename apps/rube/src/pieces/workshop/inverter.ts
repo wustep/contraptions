@@ -1,5 +1,5 @@
 import { outline, solid } from '../../../../../src/core/draw'
-import { FLOOR, R, ROLL, burst, chain, definePiece, mixHex, over, rail, ramp, roll, segTime, type Lane, type Pt, type Seg } from '../../parts'
+import { FLOOR, R, ROLL, chain, definePiece, mixHex, over, rail, ramp, roll, segTime, type Lane, type Pt, type Seg } from '../../parts'
 
 /**
  * A gravity inverter. Two coils on posts hold a field between them with a
@@ -64,7 +64,11 @@ export const inverter = definePiece<{ color: string }>({
     return { cells, exit: { at: [3, 0], dir: 1 }, lane, state: { color } }
   },
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
-    const inside = since > 0 && since < T_DROP + (Math.hypot(DROP - RIDE1, RIDE) / ((ROLL + UPSPEED) / 2))
+    // The field is on while the ball is in it; it comes on and goes off over
+    // a few frames rather than in one, and the coils and lines with it.
+    const off = T_DROP + Math.hypot(DROP - RIDE1, RIDE) / ((ROLL + UPSPEED) / 2)
+    const field = Math.min(over(since, 0, 0.06), 1 - over(since, off, off + 0.1))
+    const inside = field > 0
     // The floor rail stops short of the field and starts again past it.
     rail(p, k, ink, weight, -0.5, RAIL_END)
     rail(p, k, ink, weight, RAIL_BACK, 2.5)
@@ -79,7 +83,7 @@ export const inverter = definePiece<{ color: string }>({
     // The coils on the posts, up by the ceiling, three windings each, lit while the field is on.
     for (const x of [X0, X1]) {
       for (let i = 0; i < 3; i++) {
-        solid(p, ink, weight, inside ? s.color : bg)
+        solid(p, ink, weight, mixHex(bg, s.color, field))
         p.rect(x * k, (CEIL + 0.08 + i * 0.08) * k, 0.14 * k, 0.065 * k, 0.02 * k)
       }
     }
@@ -87,7 +91,7 @@ export const inverter = definePiece<{ color: string }>({
     // drifting up. It had seven, full weight, and filled the frame with hatch.
     if (inside) {
       p.push()
-      p.stroke(mixHex(s.color, bg, 0.35))
+      p.stroke(mixHex(bg, mixHex(s.color, bg, 0.35), field))
       p.strokeWeight(weight * 0.5)
       const ctx = p.drawingContext as CanvasRenderingContext2D
       ctx.setLineDash([0.035 * k, 0.07 * k])
@@ -97,16 +101,8 @@ export const inverter = definePiece<{ color: string }>({
       ctx.setLineDash([])
       p.pop()
     }
-    // The flip and the drop: a ring of lines where the ball leaves a rail.
-    for (const [at, x, y] of [[0, FLIP, 0], [T_DROP, RIDE1, RIDE]] as [number, number, number][]) {
-      if (since > at && since < at + 0.22) {
-        const f = over(since, at, at + 0.22)
-        p.push()
-        p.stroke(s.color)
-        p.strokeWeight(weight)
-        burst(p, x * k, y * k, (0.14 + 0.12 * f) * k, (0.18 + 0.16 * f) * k, 6, 0.4)
-        p.pop()
-      }
-    }
+    // (No ring of lines where the ball leaves a rail: nothing is struck
+    // there, the coils already say the field is on, and the ring off the
+    // ceiling reached a sixth of a cell above the piece.)
   },
 })

@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
-import { easeInQuad, easeOutCubic } from '../../../../../src/core/ease'
-import { FAST, FLOOR, R, ROLL, arcPts, arrive, arriveAt, burst, chain, definePiece, fly, over, rail, ramp, wait, type Lane, type Pt } from '../../parts'
+import { easeInQuad } from '../../../../../src/core/ease'
+import { FAST, FLOOR, R, ROLL, arcPts, arrive, arriveAt, chain, definePiece, fly, over, rail, ramp, wait, type Lane, type Pt } from '../../parts'
 
 /**
  * A trebuchet. The long arm rests with its cup down on the rail and the
@@ -39,7 +39,10 @@ const UP = Math.PI * 1.5
 const armAt = (since: number) => {
   if (since < 0) return REST
   if (since < SWING) return REST + (RELEASE - REST) * easeInQuad(over(since, 0, SWING))
+  // Spent after six seconds, and then still: decayed for ever, its last
+  // millionths of a radian flicked the cup between renderings.
   const u = since - SWING
+  if (u > 6) return UP
   return UP + Math.exp(-u * 1.8) * (0.7 * Math.sin(u * 6) - (UP - RELEASE) * Math.cos(u * 6))
 }
 
@@ -111,7 +114,7 @@ export const trebuchet = definePiece<{ color: string }>({
     outline(p, ink, weight)
     p.line(tail[0] * k, tail[1] * k, (tip[0] - Math.cos(a) * CUP_FLOOR) * k, (tip[1] - Math.sin(a) * CUP_FLOOR) * k)
     // The counterweight hangs plumb from a hinge at the short end, swinging a little with the arm.
-    const hang = 0.2 * Math.sin(a - REST) * (since < SWING ? 1 : Math.exp(-(since - SWING) * 1.2))
+    const hang = since > SWING + 6 ? 0 : 0.2 * Math.sin(a - REST) * (since < SWING ? 1 : Math.exp(-(since - SWING) * 1.2))
     outline(p, ink, weight)
     p.line(tail[0] * k, tail[1] * k, (tail[0] + Math.sin(hang) * 0.06) * k, (tail[1] + Math.cos(hang) * 0.06) * k)
     p.push()
@@ -127,16 +130,8 @@ export const trebuchet = definePiece<{ color: string }>({
     p.circle(tail[0] * k, tail[1] * k, 0.04 * k)
     solid(p, ink, weight, bg)
     p.circle(PIVOT[0] * k, PIVOT[1] * k, 0.07 * k)
-
-    // The release: a puff of lines off the cup.
-    if (since > SWING && since < SWING + 0.2) {
-      const f = easeOutCubic(over(since, SWING, SWING + 0.2))
-      p.push()
-      p.stroke(s.color)
-      p.strokeWeight(weight)
-      burst(p, tip[0] * k, tip[1] * k, (0.1 + 0.16 * f) * k, (0.16 + 0.2 * f) * k, 6, 0.4)
-      p.pop()
-    }
+    // (No star of lines round the cup at the release: nothing is struck
+    // there, and the ball leaving the cup is the event.)
   },
   over: (p, s, { k, since, ink, weight }) => {
     // The cup, in front of the ball: a bowl on the arm's end, its round bottom to the arm.

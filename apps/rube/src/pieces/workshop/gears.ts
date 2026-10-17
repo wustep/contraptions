@@ -113,17 +113,7 @@ export const gears = definePiece<{ color: string }>({
     p.fill(ink)
     p.noStroke()
     p.rect(GATE_X * k, (GATE_TOP - lift + 0.03) * k, 0.08 * k, 0.04 * k)
-    // Ticks off the train while it runs.
-    if (since > 0 && since < RUN) {
-      p.push()
-      p.stroke(s.color)
-      p.strokeWeight(weight)
-      const f = over(since, 0, RUN)
-      for (const a of [-2.3, -1.9, -1.5]) {
-        const r0 = (R2 + 0.06 + 0.06 * f) * k
-        p.line(G2[0] * k + Math.cos(a) * r0, G2[1] * k + Math.sin(a) * r0, G2[0] * k + Math.cos(a) * (r0 + 0.05 * k), G2[1] * k + Math.sin(a) * (r0 + 0.05 * k))
-      }
-      p.pop()
-    }
+    // (No ticks off the train while it runs: three of them hung over the big
+    // gear for the whole run, on top of three gears already seen turning.)
   },
 })

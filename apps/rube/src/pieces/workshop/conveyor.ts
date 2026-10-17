@@ -100,17 +100,21 @@ export const conveyor = definePiece<{ color: string }>({
       p.line(-0.05 * k, 0, 0.05 * k, 0)
       p.pop()
     }
-    // Cleats along the top run, moving with the belt.
+    // Cleats along the top run, moving with the belt. Each one stands up
+    // as it comes over the foot roller and lies down as it goes round the
+    // head, where it used to appear and vanish whole every third of a second.
     for (let i = -1; i < len / CLEAT + 1; i++) {
       const along = ((i * CLEAT + run) % (len + CLEAT) + len + CLEAT) % (len + CLEAT) - CLEAT / 2
-      if (along < 0.02 || along > len - 0.02) continue
+      const stand = Math.min(1, (along - 0.01) / 0.08, (len - 0.01 - along) / 0.08)
+      if (stand <= 0.05) continue
       const x = FOOT[0] + ux * along
       const y = FOOT[1] + uy * along
+      const h = 0.08 * stand
       solid(p, ink, weight, s.color)
       p.push()
       p.translate(x * k, y * k)
       p.rotate(Math.atan2(uy, ux))
-      p.rect(0, -0.04 * k, 0.035 * k, 0.08 * k)
+      p.rect(0, (-h / 2) * k, 0.035 * k, h * k)
       p.pop()
     }
 
@@ -131,21 +135,10 @@ export const conveyor = definePiece<{ color: string }>({
     outline(p, ink, weight)
     p.line((mx - 0.06) * k, (my - 0.16) * k, (HEAD[0] + nx * 0.07 + 0.02) * k, (HEAD[1] + ny * 0.07 - 0.06) * k)
     p.line((mx + 0.06) * k, (my - 0.16) * k, (HEAD[0] + nx * 0.07 + 0.06) * k, (HEAD[1] + ny * 0.07 + 0.02) * k)
-    // A lamp on the motor while it runs.
+    // A lamp on the motor while it runs. (No whine arcs off the box while
+    // it winds up: they poked a quarter of a cell into the next cell, and
+    // the lamp and the flywheel already say the motor is on.)
     solid(p, ink, weight, spinning ? s.color : bg)
     p.circle((mx + 0.06) * k, (my + 0.03) * k, 0.04 * k)
-    // Motor whine: a few short arcs off the box while it winds up.
-    if (t > ARRIVE && since < 0) {
-      const f = over(t, ARRIVE, FIRE)
-      p.push()
-      p.noFill()
-      p.stroke(s.color)
-      p.strokeWeight(weight)
-      for (let i = 1; i <= 2; i++) {
-        const r = (0.14 + i * 0.08 + f * 0.1) * k
-        p.arc((mx + 0.1) * k, my * k, r, r, -0.5, 0.5)
-      }
-      p.pop()
-    }
   },
 })

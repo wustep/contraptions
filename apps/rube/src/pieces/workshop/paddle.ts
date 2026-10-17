@@ -47,16 +47,7 @@ export const paddle = definePiece<{ color: string }>({
     p.noStroke()
     p.circle(0, HUB * k, 0.04 * k)
 
-    // Motion lines while it spins.
-    if (since > 0 && since < 0.5) {
-      const f = over(since, 0, 0.5)
-      p.push()
-      p.noFill()
-      p.stroke(s.color)
-      p.strokeWeight(weight)
-      p.arc(0, HUB * k, (0.62 + 0.1 * f) * k, (0.62 + 0.1 * f) * k, -2.6 + spin, -1.6 + spin)
-      p.pop()
-    }
+    // No motion arc round it as it spins: the blades going round are the motion.
 
     // Rail last so the wheel sits on it, not in a hole through it.
     rail(p, k, ink, weight, -0.5, 0.5)

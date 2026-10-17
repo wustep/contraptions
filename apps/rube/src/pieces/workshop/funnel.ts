@@ -66,14 +66,11 @@ export const funnel = definePiece<{ color: string; turn: 1 | -1 }>({
     const { turn } = s
     // The rail to the rim.
     rail(p, k, ink, weight, -0.5, -RIM_HALF - 0.02)
-    // The bowl shivers on its stand as the ball goes through the neck.
-    const neckAt = -0.11 - 0.09
-    const shiver = since > neckAt && since < neckAt + 0.4 ? 0.02 * Math.sin((since - neckAt) * 40) * (1 - over(since, neckAt, neckAt + 0.4)) : 0
+    // The bowl, in paper: the ball is always in front of it. It stands
+    // still: its shiver as the ball went through the neck was a hundredth
+    // of a cell at the rim, read as nothing but a judder, and slid the
+    // bowl on legs that did not shiver with it.
     p.push()
-    p.translate(0, NECK_Y * k)
-    p.rotate(shiver)
-    p.translate(0, -NECK_Y * k)
-    // The bowl, in paper: the ball is always in front of it.
     solid(p, ink, weight, bg)
     p.quad(-RIM_HALF * k, RIM_Y * k, RIM_HALF * k, RIM_Y * k, NECK_HALF * k, NECK_Y * k, -NECK_HALF * k, NECK_Y * k)
     // The rim, a band of colour seen from a little above, open in the middle.
