@@ -37,15 +37,15 @@ export function checkPalindrome(perf: Performance, version: ShowVersion, check: 
 
   // The places, in the order the story goes, each cut on a chord.
   const order = show.legs.map((l) => l.world).join(',')
-  check('palindrome: the lake house (dawn, the swing, the window years on, the bed), the lecture hall (the news), the valley, the lake house (they come for her), the valley, the shaft, the shell, the lake house (a flash), the tent (the world as one), the shell, the tent, the shell, the fog, the lake house, the fog, the lecture hall (years on), the gala, the tent, the valley, the lake house',
-    order === 'house,house,house,house,hall,valley,house,valley,shaft,shell,house,tent,shell,tent,shell,fog,house,fog,hall,gala,tent,valley,house', order)
+  check('palindrome: the lake house (dawn, the swing, the window years on, the bed), the lecture hall (the news), the valley, the lake house (they come for her), the valley, the shaft, the shell, the lake house (a flash), the tent (the world as one), the shell, the tent, the shell, the fog, the lake house, the fog, the lecture hall (years on), the gala, the tent, the valley, the lake house (home, the run remembered on its lawn, home)',
+    order === 'house,house,house,house,hall,valley,house,valley,shaft,shell,house,tent,shell,tent,shell,fog,house,fog,hall,gala,tent,valley,house,house,house', order)
   const onBeat = (t: number, eps: number) => BEATS.some((b) => Math.abs(b.t - t) <= eps)
   const onChord = (t: number, eps: number) => CHORDS.some((c) => Math.abs(c.t - t) <= eps)
   const onOnset = (t: number, eps: number, min = 0.2) => ONSETS.some((o) => o.s >= min && Math.abs(o.t - t) <= eps)
   const cuts = show.legs.slice(1).map((l) => l.from)
   const seams = Object.values(SEAM)
   check('palindrome: every cut between places is on a change of chord',
-    cuts.length === 22 && cuts.every((c) => seams.some((s) => near(s, c, 1e-3))) && seams.every((s) => onChord(s, 1e-3)), cuts.map((t) => t.toFixed(3)).join(', '))
+    cuts.length === 24 && cuts.every((c) => seams.some((s) => near(s, c, 1e-3))) && seams.every((s) => onChord(s, 1e-3)), cuts.map((t) => t.toFixed(3)).join(', '))
   check('palindrome: no portal anywhere, and no cut drawn', [0, 30, 100, 150, 210, 240, 270, 300, 330, 380].every((t) => perf.cuts?.(t) === false))
 
   // One ball, one path: in a place it never jumps; at a cut the camera carries it, so on the screen it holds still

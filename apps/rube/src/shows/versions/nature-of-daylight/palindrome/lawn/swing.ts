@@ -264,6 +264,16 @@ const RUN_END = 29.304
 /** Where she waits under the seat's back for the first push: the spot `louiseLane` hops up from. */
 const firstPushX = (): number => contactAt(SWING_TOUCHES[0].t)[0] - 0.05
 
+/**
+ * The run again, at the end (341.618 → 345.490): the film's own ending brings back its prologue's Hannah as Louise
+ * chooses, so the room by the window cuts for one chord to the run, a little slower, from Hannah running off to her
+ * running back into her mother, on a strong note of the tune (344.276), and up onto the seat. Show time to the run's.
+ */
+export const RECALL = { bump: 344.276, rate: 0.9 }
+export const recallTime = (t: number): number => RUN.into + (t - RECALL.bump) * RECALL.rate
+/** Louise through the run (world cells), for the remembering of it. */
+export const runLouiseAt = (r: number): Pt => [runX(r), rest(runX(r))]
+
 /* ------------------------------------------------------------------ Louise */
 
 /** Every time Louise's front meets the seat: her pushes, at the back of the arc, on the chords. */

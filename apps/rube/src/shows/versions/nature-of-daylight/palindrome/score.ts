@@ -7,9 +7,9 @@ import { BLAST, DURATION, PEAK, SEAM } from './music'
 import { FIRST, SEAMS } from './seams'
 import { PalindromeShow, type Leg, type Riders, type Spans, type WorldSet } from './show'
 import { LOUISE, type WorldKey } from './worlds'
-import { houseSet, HOUSE_CELLS, DAWN_AT, TEEN_AT, BED_AT, RECRUIT_AT, FLASH_AT, HOME_AT, dawn, teen, bed, recruit, flash, home } from './house/house'
+import { houseSet, HOUSE_CELLS, DAWN_AT, TEEN_AT, BED_AT, RECRUIT_AT, FLASH_AT, HOME_AT, CRADLE_AT, dawn, teen, bed, recruit, flash, home } from './house/house'
 import { hallSet, HALL_CELLS, HALL_AT, HALL_SHELL, lecture, teaching } from './hall/hall'
-import { lawnSet, LAWN_CELLS, SWING_AT, SEES_AT, swing, sees } from './lawn/lawn'
+import { lawnSet, LAWN_CELLS, SWING_AT, SEES_AT, RECALL_AT, swing, sees, recall } from './lawn/lawn'
 import { valleySet, VALLEY_CELLS, ARRIVE_AT, CAMP_AT, GOING_AT, SHELL_CUT, arrive, arrive2, going } from './valley/valley'
 import { shaftSet, SHAFT_CELLS, SHAFT_AT, rollAt, shaft } from './shaft/shaft'
 import { chamberSet, CHAMBER_CELLS, CONTACT_AT, AGAIN_AT, BOMB_AT, contact, contact2, bomb } from './chamber/chamber'
@@ -44,7 +44,8 @@ import { tentSet, TENT_CELLS, DARK_AT, CALL_AT, SHARE_AT, dark, call, share } fr
  *   269.915  the gala, years on: Shang tells her what to say
  *   277.647  the tent: the call (288.554); the links stand again, backwards; the ring whole on the loudest (303.827)
  *   311.293  the meadow: the shell goes up into the cloud the way it came down (318.711); daylight; Ian
- *   334.031  the lake house: home; the first frame again from the last B-flat; the credits in the quiet after
+ *   334.031  the lake house: home, Louise and Ian by the window; 341.618 the run remembered, Hannah running back into
+ *            her mother; 345.490 the room, the empty cradle; the first frame again from the last B-flat; the credits
  */
 
 interface LegPlan {
@@ -78,7 +79,9 @@ const PLAN = (): LegPlan[] => [
   { key: 'gala', world: 'gala', at: GALA_AT, links: [{ part: gala, end: SEAM.call }] },
   { key: 'call', world: 'tent', at: CALL_AT, links: [{ part: call, end: SEAM.going }] },
   { key: 'going', world: 'valley', at: GOING_AT, links: [{ part: going, end: SEAM.home }] },
-  { key: 'home', world: 'house', at: HOME_AT, links: [{ part: home, end: DURATION }] },
+  { key: 'home', world: 'house', at: HOME_AT, links: [{ part: home, end: SEAM.recall }] },
+  { key: 'recall', world: 'house', at: RECALL_AT, links: [{ part: recall, end: SEAM.cradle }] },
+  { key: 'cradle', world: 'house', at: CRADLE_AT, links: [{ part: home, end: DURATION }] },
 ]
 
 /**

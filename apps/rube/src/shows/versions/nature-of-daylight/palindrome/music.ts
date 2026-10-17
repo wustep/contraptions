@@ -213,4 +213,9 @@ export const SEAM = {
   going: chord(84),
   /** The meadow → the lake house: home, and the first frame again (c90). */
   home: chord(90),
+  /** The room by the window → the lawn, for one chord: Hannah running back into her mother, the prologue's run
+   * remembered as she chooses (c92). */
+  recall: chord(92),
+  /** The lawn → the room again, beside the empty cradle (c93). */
+  cradle: chord(93),
 } as const

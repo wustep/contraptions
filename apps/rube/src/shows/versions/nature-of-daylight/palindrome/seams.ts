@@ -288,6 +288,26 @@ export const SEAMS: Record<keyof typeof SEAM, Seam> = {
     shang: null,
     what: 'at rest, Ian touching her on her right. Meadow side: in the daylight where the shell was, the cloud opened. House side: in the lake house at dusk by the long window, Ian beside her; the cradle is there, empty, on her right a little way off. He goes out of the picture before the end; on the fall onto B-flat (349.495) baby Hannah comes into the cradle, her going played backwards, as the camera goes in to it, with no cut, and the picture settles on the first frame.',
   },
+  recall: {
+    t: SEAM.recall,
+    v: [0, 0],
+    cells: 3.0,
+    frame: [1.405, -0.51],
+    ian: [0.265, 0],
+    hannah: null,
+    shang: null,
+    what: 'at rest, Ian against her on her right, the two of them by the window after the embrace. Lawn side, the prologue remembered: on the grass by the still swing, waiting, as Hannah (a small child) runs away from her along the grass, turns, and runs back into her (344.276), the run played a little slower. Ian is only on the room side.',
+  },
+  cradle: {
+    t: SEAM.cradle,
+    v: [0, 0],
+    cells: 2.92,
+    frame: [1.3825, -0.5],
+    ian: null,
+    hannah: null,
+    shang: null,
+    what: 'at rest. Lawn side: by the swing, Hannah up on its seat again. Room side: a step nearer the empty cradle, which stands on her right, Ian going round behind it to its far side; on the chord they step toward it.',
+  },
 }
 
 /**

@@ -66,6 +66,8 @@ export function eraOf(T: number): Era {
   if (T >= ERA.bed[0] && T < ERA.bed[1]) return 'bed'
   if (T >= ERA.recruit[0] && T < ERA.recruit[1]) return 'recruit'
   if (T >= ERA.flash[0] && T < ERA.flash[1]) return 'flash'
+  // For one chord the picture is out on the lawn (the run remembered): the room is not drawn under it.
+  if (T >= SEAM.recall && T < SEAM.cradle) return 'none'
   if (T >= ERA.home[0]) return 'home'
   return 'none'
 }
@@ -442,7 +444,8 @@ export const IAN_X = HOME_X + 0.36
 export const HUG_T = 337.85
 const STEP = 0.0925
 /** Their steps toward the cradle: each begins on its chord and takes a long breath. */
-const steps = (T: number, step = STEP): number => step * (s5((T - TURN + 0.1) / 1.3) + s5((T - NEAR + 0.1) / 1.3))
+/** (The first is taken while the picture is away on the lawn, `SEAM.recall`; both start from rest at a cut.) */
+const steps = (T: number, step = STEP): number => step * (s5((T - TURN - 0.3) / 1.3) + s5((T - NEAR - 0.05) / 1.3))
 /** Ian beside her: when she rolls into him he gives a little with it and comes back against her; then, from the turn,
  * he goes round behind the cradle to its far side, so it stands between them as she goes to it and as the baby
  * comes. He looks at her; at the cradle as he goes round it; at her again from its far side. */

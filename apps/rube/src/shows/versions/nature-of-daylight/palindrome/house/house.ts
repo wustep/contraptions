@@ -389,16 +389,22 @@ export const flash: Part<HouseState> = part<HouseState>(
 
 /* ------------------------------------------------------------------ home */
 
+/**
+ * Home: two legs either side of the run remembered (`lawn.ts`, `recall`), one part. It comes in where she is on the floor
+ * at its slot's start: by the window (HOME_AT), and a step nearer the cradle (CRADLE_AT).
+ */
+const homeAt = (t: number): Pt => [homeX(t) + 0.5, 0]
+export const CRADLE_AT: Pt = homeAt(SEAM.cradle)
 export const home: Part<HouseState> = part<HouseState>(
   { name: 'house-home', draw: nothing },
   (slot) => {
-    const o = HOME_AT
+    const o = homeAt(slot.begin)
     const { segs, end } = floorLane(homeX, slot, o, [337.85, TURN, NEAR, ...HOME_PUSHES.map((q) => q.t)])
-    const company: Company[] = [
+    const all: Company[] = [
       {
         who: 'ian',
         from: slot.begin,
-        to: BEGIN,
+        to: Math.min(BEGIN, slot.end),
         at: (t) => ({ x: ianX(t) - o[0], y: -o[1], spin: ianLook(t) }),
       },
       {
@@ -429,10 +435,13 @@ export const home: Part<HouseState> = part<HouseState>(
         },
       },
     ]
-    return { cells: partCells(o), exit: [end[0] + 0.5, end[1]], lane: { segs, fire: BEGIN - slot.begin }, state: { begin: slot.begin }, company }
+    // Before the cut away, only Ian by the window; after it, all of it.
+    const company = all.filter((c) => c.from < slot.end)
+    const fire = (slot.end > BEGIN ? BEGIN : HUG_T) - slot.begin
+    return { cells: partCells(o), exit: [end[0] + 0.5, end[1]], lane: { segs, fire }, state: { begin: slot.begin }, company }
   },
   (slot) => {
-    const o = HOME_AT
+    const o = homeAt(slot.begin)
     const w = (x: number, y: number): Pt => [x - o[0], y - o[1]]
     const first = w(1.05, -0.95)
     const keys: PartShot[] = [
@@ -450,7 +459,7 @@ export const home: Part<HouseState> = part<HouseState>(
       { t: PLAGAL, cells: 2.6, hold: w(0.7, -0.4) },
       { t: TONIC, cells: 2.7, hold: w(0.69, -0.41) },
       { t: LAST, cells: 4.6, hold: first },
-      { t: slot.end, cells: 4.6, hold: first },
+      ...(slot.end > LAST ? [{ t: slot.end, cells: 4.6, hold: first }] : []),
     ]
     return keys
   },

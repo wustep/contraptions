@@ -5,7 +5,7 @@ import { mix, rgba } from '../cast'
 import { frame, hash } from '../kit'
 import { SEAM } from '../music'
 import { HOUSE, SHELL } from '../worlds'
-import { BRUSHES, hannahAt, louiseAt, PIVOT, SEAT_T, SEAT_W, seatAt, surface } from './swing'
+import { BRUSHES, hannahAt, louiseAt, PIVOT, recallTime, SEAT_T, SEAT_W, seatAt, surface } from './swing'
 
 /**
  * The lawn, drawn from show time: the sky and the light, the far shore and the lake with its fog, the
@@ -944,10 +944,13 @@ function drawSwing(ctx: Ctx, k: number, t: number, near: boolean): void {
  * and grass across the whole frame; seen from away (the Overview camera has the house and the lawn in one frame) it
  * would paint over the room while she is in it. So it draws only while a lawn leg has her: the swing and what she sees.
  */
-const onLawn = (t: number): boolean => (t >= SEAM.swing && t < SEAM.teen) || (t >= SEAM.sees && t < SEAM.fog2)
+const onLawn = (t: number): boolean => (t >= SEAM.swing && t < SEAM.teen) || (t >= SEAM.sees && t < SEAM.fog2) || (t >= SEAM.recall && t < SEAM.cradle)
+/** The lawn's own time: the show's, but in the run remembered at the end, the run's. */
+const lawnTime = (t: number): number => (t >= SEAM.recall && t < SEAM.cradle ? recallTime(t) : t)
 
-export function lawnDraw(p: p5, k: number, t: number): void {
-  if (!onLawn(t)) return
+export function lawnDraw(p: p5, k: number, show: number): void {
+  if (!onLawn(show)) return
+  const t = lawnTime(show)
   const ctx = p.drawingContext as Ctx
   const f = frame(p, k)
   const L = lookAt(t)
@@ -964,8 +967,9 @@ export function lawnDraw(p: p5, k: number, t: number): void {
   ctx.restore()
 }
 
-export function lawnOver(p: p5, k: number, t: number): void {
-  if (!onLawn(t)) return
+export function lawnOver(p: p5, k: number, show: number): void {
+  if (!onLawn(show)) return
+  const t = lawnTime(show)
   const ctx = p.drawingContext as Ctx
   ctx.save()
   drawSwing(ctx, k, t, true)

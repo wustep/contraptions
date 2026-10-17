@@ -1,7 +1,7 @@
 import type { Pt, Seg } from '../../../../../parts'
-import { box, part, scenery, type Company, type PartShot, type Slot } from '../kit'
+import { box, carried, part, scenery, type Company, type PartShot, type Slot } from '../kit'
 import { lawnDraw, lawnOver } from './set'
-import { bankAt, BRUSHES, DEG, hannahAt, hannahLook, louiseLanes, RUN, SEES_FROM, SEES_TO, SEES_TOUCHES, SWING_AT as AT, SWING_TOUCHES } from './swing'
+import { bankAt, BRUSHES, DEG, hannahAt, hannahLook, louiseLanes, RECALL, recallTime, RUN, runLouiseAt, SEES_FROM, SEES_TO, SEES_TOUCHES, SWING_AT as AT, SWING_TOUCHES, WAIT_X } from './swing'
 
 /**
  * The lawn by the lake (the LAWN builder's): the swing on the great tree's long limb, the bank behind it rising toward
@@ -137,6 +137,54 @@ export const sees = part<State>(
   },
 )
 
+/** The run remembered at the end: she comes in waiting by the still swing, where the run has her. */
+export const RECALL_AT: Pt = [WAIT_X + 0.5, 0]
+
+/**
+ * The run again (341.618 → 345.490), for one chord in the last scene: as she chooses, the prologue's child running back
+ * into her mother, as the film's own ending brings its prologue back. The run's own lanes, read at the run's time
+ * (`recallTime`), a little slower; framed as the room by the window was, so the cut holds her place and her size.
+ */
+export const recall = part<State>(
+  { name: 'lawn-recall', draw: nothing },
+  (slot) => {
+    const o = RECALL_AT
+    const at = (t: number): Pt => {
+      const p = runLouiseAt(recallTime(t))
+      return [p[0] - o[0], p[1] - o[1]]
+    }
+    const end = at(slot.end)
+    return {
+      cells: box(-3, -6, 7, 1),
+      exit: [end[0] + 0.5, end[1]] as Pt,
+      lane: { segs: carried(at, slot.begin, slot.end, Math.ceil((slot.end - slot.begin) * 30)), fire: RECALL.bump - slot.begin },
+      state: { begin: slot.begin },
+      company: [
+        {
+          who: 'hannah',
+          from: slot.begin,
+          to: slot.end,
+          at: (t) => {
+            const h = hannahAt(recallTime(t))
+            return h ? { x: h.x - o[0], y: h.y - o[1], scale: h.scale, spin: hannahLook(recallTime(t)) } : null
+          },
+        },
+      ],
+    }
+  },
+  (slot) => {
+    const o = RECALL_AT
+    const her = runLouiseAt(recallTime(slot.begin))
+    const k = (t: number, cells: number, x: number, y: number): PartShot => ({ t, cells, hold: [x - o[0], y - o[1]], w: 1 })
+    return [
+      // Held as the room left it, close on her by the still swing while Hannah runs off and back into her;
+      k(slot.begin + 1.2, 3.0, her[0] + 1.405, -0.51),
+      // and settling, as Hannah is up on the seat, on the framing the room takes back by the cradle.
+      k(slot.end, 2.92, her[0] + 1.3825, -0.5),
+    ]
+  },
+)
+
 /**
  * Every strike on the lawn: Hannah's run (off the seat, the skip at the far end, into her mother on the chord, back up
  * onto the seat), Louise's pushes on the chords (her first from the bottom), the leaves half a bar on once the arcs reach
@@ -150,4 +198,6 @@ export const LAWN_HITS: number[] = [
   ...SWING_TOUCHES.map((x) => x.t),
   ...BRUSHES.map((b) => b.t),
   ...SEES_TOUCHES.map((x) => x.t),
+  // Remembered at the end: into her mother, on the tune's note.
+  RECALL.bump,
 ].filter((t, i, all) => all.indexOf(t) === i).sort((a, b) => a - b)
