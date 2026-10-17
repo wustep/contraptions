@@ -16,6 +16,7 @@ let busy = false
 let paused = false
 let replaying = false
 let lastPlay: Performance | null = null
+const lastStories = new Map<Resident, Performance>()
 let cast: Cast
 let garden: Garden
 let ready = false
@@ -120,6 +121,13 @@ function select(id: Resident): void {
   state.pet = null
   sound.play({ kind: 'pluck', pitch: 1.3 })
   caption(`${memory.names[id]} · ${residents[id].note}`)
+  const previous = lastStories.get(id)
+  lastPlay = previous ?? null
+  const behavior = previous && behaviorById(previous.decision.behavior)
+  el('#observation-label').textContent = behavior ? 'THE LAST LITTLE STORY' : 'A FIELD NOTE'
+  el('#observation-title').textContent = behavior?.title ?? 'A small introduction.'
+  el('#observation-line').textContent = behavior?.line ?? residents[id].note
+  el('#postcard').hidden = !behavior
   refresh()
 }
 
@@ -148,6 +156,7 @@ function finish(): void {
   if (!state.performance) return
   busy = false
   const behavior = behaviorById(state.performance.decision.behavior)!
+  lastStories.set(state.performance.decision.resident, state.performance)
   const discovered = !replaying && remember(memory, state.performance.decision)
   if (discovered) sessionDiscoveries++
   if (!replaying) persist()
@@ -188,11 +197,11 @@ function pat(): void {
 }
 
 function openBook(): void {
-  el('.book-total').textContent = `${memory.found.length} / 13 discovered`
+  el('.book-total').textContent = busy ? 'Close the scrapbook to finish the current story.' : `${memory.found.length} / 13 discovered`
   el('#book-pages').innerHTML = behaviors.map((b, index) => {
     const found = memory.found.includes(b.id)
     const hint = b.hint.replaceAll('Pip', memory.names.snail).replaceAll('Moss', memory.names.frog).replaceAll('Fern', memory.names.fern)
-    return `<article class="book-page ${found ? 'discovered' : 'undiscovered'}"><div class="page-top"><span>${String(index + 1).padStart(2, '0')}</span><span>${found ? esc(memory.names[b.resident]) : 'YET TO BE DISCOVERED'}</span></div><div class="page-illustration">${found ? portrait(b.resident) + toyIcon(b.toy) : '<span>?</span>'}</div><h3>${found ? b.title : 'A little mystery'}</h3><p>${found ? b.line : 'There’s something you don’t know about this friend. Yet.'}</p>${found ? `<button class="replay-button" data-replay="${b.id}">${icons.replay} Watch again</button>` : `<details><summary>A small hint</summary><p>${esc(hint)}</p></details>`}</article>`
+    return `<article class="book-page ${found ? 'discovered' : 'undiscovered'}"><div class="page-top"><span>${String(index + 1).padStart(2, '0')}</span><span>${found ? esc(memory.names[b.resident]) : 'YET TO BE DISCOVERED'}</span></div><div class="page-illustration">${found ? portrait(b.resident) + toyIcon(b.toy) : '<span>?</span>'}</div><h3>${found ? b.title : 'A little mystery'}</h3><p>${found ? b.line : 'There’s something you don’t know about this friend. Yet.'}</p>${found ? `<button class="replay-button" data-replay="${b.id}" ${busy ? 'disabled' : ''}>${icons.replay} Watch again</button>` : `<details><summary>A small hint</summary><p>${esc(hint)}</p></details>`}</article>`
   }).join('')
   el<HTMLDialogElement>('#scrapbook').showModal()
 }

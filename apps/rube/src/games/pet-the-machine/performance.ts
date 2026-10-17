@@ -1,6 +1,7 @@
 import { makeRng } from '../../../../../src/core/rng'
+import { clamp, easeInOutSine, easeOutQuad } from '../../../../../src/core/ease'
 import type { Theme } from '../../../../../src/core/themes'
-import { fly, laneAt, laneTime, trace, wait, type Lane, type Piece, type Placement, type Pt, type Seg } from '../../parts'
+import { R, ROLL, fly, laneAt, laneTime, trace, wait, type Lane, type Piece, type Placement, type Pt, type Seg } from '../../parts'
 import { frog } from '../../pieces/garden/frog'
 import { snail } from '../../pieces/garden/snail'
 import { toys, type Decision, type Perches, type Resident } from './model'
@@ -39,6 +40,16 @@ export function position(id: Resident, perches: Perches): Pt {
 export function inGarden(id: Resident, at: Pt, perches: Perches): Pt {
   const [x, y] = position(id, perches)
   return [x + at[0] * ACTOR_SCALE, y + at[1] * ACTOR_SCALE]
+}
+
+/** The mimosa's rib and droop, from its authored geometry. A fluffy passenger rests on the rib as it moves. */
+function fernSeat(time: number, fire: number, along: number): Pt {
+  const u = 1 - along
+  const x = u * u * 1.22 + 2 * u * along * 0.5 - along * along * 0.37
+  const y = u * u * -0.24 + 2 * u * along * -0.42 - along * along * 0.19
+  const since = time - (fire + 1.66 / (ROLL * 1.55))
+  const angle = since <= 0 ? 0 : -0.16 * (easeOutQuad(clamp(since / 0.4)) + 0.12 * Math.exp(-since * 5) * Math.sin(since * 14) * clamp(since / 0.1)) * (1 - easeInOutSine(clamp((time - 3.4) / 1.6)))
+  return [1.22 + (x - 1.22) * Math.cos(angle) - (y + 0.24) * Math.sin(angle), -0.24 + (x - 1.22) * Math.sin(angle) + (y + 0.24) * Math.cos(angle) - R]
 }
 
 interface Clip { resident: Resident; start: number; duration: number; clock: (t: number) => number }
@@ -105,7 +116,7 @@ export function perform(cast: Cast, decision: Decision, names: Record<Resident, 
     if (toy === 'bell') cues.push({ at: clip.begin + 1.1, kind: 'bell' })
     if (behavior === 'frog-encore') {
       add(fly(point('frog', clip.end), point('frog', 0), 0.8, 1.9))
-      caption('The audience has requested another one. The audience is Moss.')
+      caption(`The audience has requested another one. The audience is ${names.frog}.`)
       const encore = stock('frog', 0.18, 1.2, 1.15)
       cues.push({ at: encore.begin + 0.9, kind: 'bell', pitch: 1.25 })
       hero = encore.begin + 1.05
@@ -124,13 +135,15 @@ export function perform(cast: Cast, decision: Decision, names: Record<Resident, 
     const isFluff = toy === 'pompom'
     const duration = isFluff ? 3.4 : toy === 'bell' ? 3.1 : 2.6
     const begin = now
-    clips.push({ resident: 'fern', start: begin, duration, clock: (t) => toy === 'bell' && t > 1.5 ? t - 1.3 : t })
+    const trusting = behavior === 'fern-trust'
+    const fernClock = (t: number) => trusting ? 3.4 + t : toy === 'bell' && t > 1.5 ? t - 1.3 : t
+    clips.push({ resident: 'fern', start: begin, duration, clock: fernClock })
     if (isFluff) {
-      const crown = inGarden('fern', [0.5, -0.64], perches)
-      add(fly(start, crown, 0.65, 0.4))
+      const seat = (t: number) => inGarden('fern', fernSeat(fernClock(t), lane.fire, trusting ? 0.78 - clamp((t - 0.65) / 1.6) * 0.3 : 0.48), perches)
+      add(fly(start, seat(0.65), 0.65, 0.4))
       hero = now + 0.8
       caption(behavior === 'fern-trust' ? 'A little courage. Stay a while.' : 'This is acceptable. This can stay.')
-      add(...trace((t) => [crown[0] + Math.sin(t * 2) * 0.08, crown[1] + Math.sin(t * 3) * 0.05], 0, 1.6, 100))
+      add(...trace(seat, 0.65, 2.25, 144))
       const last = segs[segs.length - 1].to
       add(fly(last, point('fern', laneTime(lane)), 0.75, 0.2))
       add(wait(point('fern', laneTime(lane)), 0.4))
@@ -144,10 +157,10 @@ export function perform(cast: Cast, decision: Decision, names: Record<Resident, 
     if (toy === 'bell') cues.push({ at: begin + 0.5, kind: 'bell', pitch: 1.5 }, { at: begin + 1.8, kind: 'bell', pitch: 1.2 })
   }
   const end = segs[segs.length - 1].to
-  const destination: Pt = [end[0] + 0.35, 2.0]
+  const destination: Pt = [Math.max(-4.65, Math.min(4.65, end[0] + 0.35)), 1.78]
   add(fly(end, destination, 0.55, 0.22))
   cues.push({ at: now, kind: 'land' })
-  add(wait(destination, 1.0))
+  add(wait(destination, 0.6), wait(destination, 0.4, { portal: 'out' }))
   return { decision, lane: { segs, fire: 0.5 }, duration: now, hero, clips, cues: cues.sort((a, b) => a.at - b.at), captions: captions.sort((a, b) => a.at - b.at) }
 }
 

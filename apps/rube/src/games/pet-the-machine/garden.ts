@@ -20,7 +20,7 @@ export interface GardenState {
   reducedMotion: boolean
 }
 
-const sceneWidth = 11.6
+const sceneWidth = 11.3
 
 function flower(p: p5, x: number, y: number, k: number, color: string, lean = 0): void {
   p.push()
@@ -105,7 +105,7 @@ function actor(p: p5, id: Resident, pass: 'draw' | 'over', c: PieceCtx, state: G
   const pleased = age >= 0 && age < 1.4 ? Math.sin(age / 1.4 * Math.PI) : 0
   p.push()
   p.translate(x * c.k, y * c.k)
-  const ctx: PieceCtx = { ...c, k: c.k * ACTOR_SCALE, t, since: t - stock.placement.lane.fire, weight: Math.max(1.1, c.k * 0.022), spin: (xx) => xx / 0.13 }
+  const ctx: PieceCtx = { ...c, k: c.k * ACTOR_SCALE, t, since: t - stock.placement.lane.fire, color: toys[state.performance?.decision.toy ?? 'ball'].color, weight: Math.max(1.1, c.k * 0.022), spin: (xx) => xx / 0.13 }
   if (pleased && !state.reducedMotion) p.scale(1 + pleased * 0.025, 1 - pleased * 0.025)
   stock.piece[pass]?.(p, stock.placement.state, ctx)
   p.pop()
@@ -124,14 +124,16 @@ function actor(p: p5, id: Resident, pass: 'draw' | 'over', c: PieceCtx, state: G
 /** Cosmetic marks follow the very same lane as the engine's one ball. */
 function toyMark(p: p5, c: PieceCtx, state: GardenState): void {
   const play = state.performance
-  if (!play || state.time > play.duration - 0.5) return
+  if (!play || state.time > play.duration) return
   const at = laneAt(play.lane, state.time)
   // Stock frog's hidden mouth interval is resolved by the clip's own lane.
   const clip = play.clips.find((item) => item.resident === 'frog' && state.time >= item.start && state.time <= item.start + item.duration)
   if (clip && at.hidden) return
   const radius = 0.13 * ACTOR_SCALE * c.k
+  if (at.hidden || at.scale < 0.05) return
   p.push()
   p.translate(at.x * c.k, at.y * c.k)
+  p.scale(at.scale)
   p.rotate(state.time * 2.5)
   if (play.decision.toy === 'bell') {
     outline(p, ink, 1.25)
@@ -149,6 +151,30 @@ function toyMark(p: p5, c: PieceCtx, state: GardenState): void {
   p.pop()
 }
 
+function thought(p: p5, k: number, state: GardenState): void {
+  const play = state.performance
+  if (!play || state.time < 0.7 || state.time > play.duration - 1.5) return
+  const clip = play.clips.filter((c) => state.time >= c.start && state.time <= c.start + c.duration).at(-1)
+  if (!clip) return
+  const [x, y] = position(clip.resident, play.decision.perches)
+  const thoughtX = x + (clip.resident === 'frog' ? 0.1 : 0.55)
+  const thoughtY = y - (clip.resident === 'frog' ? 2.5 : 1.0)
+  const text = clip.resident === 'snail' ? play.decision.toy === 'pompom' ? 'oh.' : 'hmm…' : clip.resident === 'frog' ? play.decision.toy === 'bell' ? '♪' : '!' : play.decision.behavior === 'fern-trust' ? 'hello.' : 'oh!'
+  p.push()
+  p.textFont('Georgia')
+  p.textSize(Math.max(11, k * 0.16))
+  p.textAlign(p.CENTER, p.CENTER)
+  const width = Math.max(27, p.textWidth(text) + 17)
+  solid(p, '#b7c2ac', 1, paper)
+  p.rect(thoughtX * k, thoughtY * k, width, 24, 9)
+  outline(p, '#b7c2ac', 1)
+  p.line(thoughtX * k, thoughtY * k + 12, thoughtX * k - 3, thoughtY * k + 17)
+  p.noStroke()
+  p.fill('#657759')
+  p.text(text, thoughtX * k, thoughtY * k - 1)
+  p.pop()
+}
+
 class GardenShow extends Show {
   readonly universeValue: Universe
   readonly piece: Placed
@@ -159,11 +185,18 @@ class GardenShow extends Show {
       name: 'little-garden', weight: 0, place: () => null,
       draw: (p, _s, c) => {
         scenery(p, c.k, state.performance?.decision.perches ?? state.memory.perches, state.reducedMotion ? 0 : state.idle, state.selected)
+        const play = state.performance
+        if (play) {
+          const [x] = play.lane.segs[play.lane.segs.length - 1].to
+          solid(p, ink, 1, '#dce4d0')
+          p.ellipse(x * c.k, 2.0 * c.k, 0.62 * c.k, 0.13 * c.k)
+        }
         for (const id of RESIDENTS) actor(p, id, 'draw', c, state, cast)
       },
       over: (p, _s, c) => {
         for (const id of RESIDENTS) actor(p, id, 'over', c, state, cast)
         toyMark(p, c, state)
+        thought(p, c.k, state)
       },
     }
     this.piece = { piece: art, state: null, col: 0, row: 0, mirror: 1, cells: [[0, 0]], lane: { segs: [{ from: [0, 0], to: [0, 0], dur: 1 }], fire: 0 }, start: 0, span: 1, ballIn: { color: toys.ball.color, ghost: false, id: 0 }, changes: [], points: 0 }
@@ -176,9 +209,9 @@ class GardenShow extends Show {
   override at(t: number): ShowPoint {
     const play = this.state.performance
     const at = laneAt(play?.lane ?? this.piece.lane, t)
-    const hidden = !play || t < 0 || t > play.duration - 0.5
+    const hidden = !play || t < 0 || t > play.duration
     return { ...at, universe: this.universeValue, placed: this.piece, local: t, begin: 0, ball: this.piece.ballIn,
-      balls: hidden || at.hidden ? [] : [{ id: 1, x: at.x, y: at.y, color: toys[play!.decision.toy].color, scale: ACTOR_SCALE, spin: play!.decision.toy === 'ball' ? undefined : null }],
+      balls: hidden || at.hidden ? [] : [{ id: 1, x: at.x, y: at.y, color: toys[play!.decision.toy].color, scale: ACTOR_SCALE * at.scale, spin: play!.decision.toy === 'ball' ? undefined : null }],
     }
   }
 }
@@ -204,7 +237,7 @@ export function createGarden(host: HTMLElement, state: GardenState, cast: Cast, 
       const dt = Math.min((now - last) / 1000, 0.05)
       last = now
       if (!exporting && !document.hidden) tick(dt)
-      const k = Math.min(p.width / sceneWidth, p.height / 5.4)
+      const k = Math.min(p.width / sceneWidth, p.height / 4.95)
       drawWorld(p, show, state.time, show.at(state.time), { x: 0, y: 0.1 }, k, { x: 0, y: 0, w: p.width, h: p.height }, false)
     }
   })
