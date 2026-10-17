@@ -153,18 +153,9 @@ function handAt(jobs: [number, number][], t: number): Pt | null {
 
 function drawStand(ctx: C2, k: number, t: number): void {
   const { x0, x1, roof, eave, open } = STAND
-  // Its shadow on the pavement, long to the right in the morning.
-  ctx.fillStyle = rgba(INK, 0.07)
-  ctx.beginPath()
-  ctx.moveTo(x1 * k, PAVE * k)
-  ctx.lineTo((x1 + 1.6) * k, (PAVE + 0.32) * k)
-  ctx.lineTo((x0 + 1.2) * k, (PAVE + 0.32) * k)
-  ctx.lineTo(x0 * k, PAVE * k)
-  ctx.fill()
   // This morning's delivery by its side, two bundles off the van in their straps, waiting to be cut open.
   for (const [bx, by] of [[x1 + 0.08, PAVE], [x1 + 0.12, PAVE - 0.25]] as [number, number][]) {
     slab(ctx, k, bx, by - 0.25, bx + 0.56, by, '#E6E1D5', { color: rgba(INK, 0.8), w: 0.8 })
-    for (let y = by - 0.05; y > by - 0.24; y -= 0.05) rule(ctx, k, bx + 0.02, y, bx + 0.54, y, rgba(INK, 0.22), 0.6)
     slab(ctx, k, bx + 0.25, by - 0.25, bx + 0.29, by, '#3A4247')
   }
   slab(ctx, k, x0, roof, x1, PAVE, S.kiosk, { color: INK, w: 1 })
@@ -180,16 +171,9 @@ function drawStand(ctx: C2, k: number, t: number): void {
       slab(ctx, k, x, y, x + w, y + 0.5, rgba('#2C3330', 0.35))
     }
   }
-  // Below the racks, the back of the stand: a shelf of gum and sweets in their boxes, folded papers in stacks, and
-  // the man who keeps it, dim in the dark at the back, shifting as he works.
-  rule(ctx, k, open.x0 + 0.05, -1.05, open.x1 - 0.05, -1.05, rgba('#5C6762', 0.9), 1)
-  for (let i = 0; i < 14; i++) {
-    const x = open.x0 + 0.1 + i * 0.18
-    slab(ctx, k, x, -1.05 - 0.1 - 0.06 * hash(i, 4), x + 0.13, -1.05, ['#6B6A5A', '#5A6670', '#7A6650', '#58625A'][i % 4])
-  }
-  for (const [x, n] of [[open.x0 + 0.15, 6], [open.x1 - 0.75, 5]] as [number, number][]) {
-    for (let j = 0; j < n; j++) slab(ctx, k, x, -0.42 - (j + 1) * 0.05, x + 0.6, -0.42 - j * 0.05, j % 2 ? '#8E918C' : '#A3A6A0', { color: rgba(INK, 0.5), w: 0.6 })
-  }
+  // Below the racks, the back of the stand: folded papers in two stacks, and the man who keeps it, dim in the dark
+  // at the back, shifting as he works.
+  for (const [x, n] of [[open.x0 + 0.15, 6], [open.x1 - 0.75, 5]] as [number, number][]) slab(ctx, k, x, -0.42 - n * 0.05, x + 0.6, -0.42, '#989B95', { color: rgba(INK, 0.5), w: 0.6 })
   {
     const lean = 0.06 * sway(t, 0.13, 4)
     const vx = 7.42 + lean
@@ -284,89 +268,24 @@ function drawGroundPlane(ctx: C2, v: View): void {
   ctx.moveTo(x0 * k, (PAVE + KERB) * 0.5 * k)
   ctx.lineTo(end * k, (PAVE + KERB) * 0.5 * k)
   ctx.stroke()
-  for (let i = Math.floor(x0 / 0.75); i * 0.75 < end; i++) {
-    if (hash(i, 3, 9) > 0.72) slab(ctx, k, i * 0.75 - 0.03, PAVE + 0.01, i * 0.75 + 0.72, (PAVE + KERB) * 0.5, rgba('#B9B1A0', 0.25))
-    if (hash(i, 4, 9) > 0.6) slab(ctx, k, i * 0.75 + 0.05, (PAVE + KERB) * 0.5 + 0.02, i * 0.75 + 0.7, KERB - 0.01, rgba('#CFC7B6', 0.5))
-    if (hash(i, 5, 9) > 0.55) rule(ctx, k, i * 0.75 + 0.2, PAVE + 0.04, i * 0.75 + 0.45, PAVE + 0.16, rgba(INK, 0.18), 0.8)
-  }
   rule(ctx, k, x0, PAVE, end, PAVE, rgba(INK, 0.8), 0.9)
   slab(ctx, k, x0, KERB, end, KERB + 0.1, S.kerb, { color: rgba(INK, 0.6), w: 0.8 })
-  // The road: asphalt, its patches and seams, the lane line, the manholes.
+  // The road: plain asphalt, the gutter a little darker, the lane line, the manholes.
   slab(ctx, k, x0, KERB + 0.1, x1, v.y1 + 1, S.road)
   slab(ctx, k, x0, KERB + 0.1, x1, KERB + 0.24, rgba(S.roadDark, 0.6))
-  ctx.strokeStyle = rgba('#5E5C58', 0.5)
-  ctx.beginPath()
-  for (let i = Math.floor(x0 / 2.3); i * 2.3 < x1; i++) {
-    const sx = i * 2.3 + hash(i, 1, 4) * 1.2
-    const sy = KERB + 0.35 + hash(i, 2, 4) * 1.6
-    ctx.moveTo(sx * k, sy * k)
-    ctx.bezierCurveTo((sx + 0.4) * k, (sy - 0.08) * k, (sx + 0.7) * k, (sy + 0.1) * k, (sx + 1.3) * k, (sy + 0.02) * k)
-  }
-  ctx.stroke()
-  for (let i = Math.floor(x0 / 3.1); i * 3.1 < x1; i++) if (hash(i, 5, 4) > 0.55) slab(ctx, k, i * 3.1, KERB + 0.4 + hash(i, 6, 4) * 1.2, i * 3.1 + 1.1 + hash(i, 7, 4), KERB + 0.62 + hash(i, 6, 4) * 1.2, rgba('#86847E', 0.45), { color: rgba('#5E5C58', 0.35), w: 0.8 })
-  // Where the wheels run, each lane worn a little darker; oil where cars stand; the sealed cracks.
-  for (const y of [LANE.far - 0.06, LANE.near - 0.06]) slab(ctx, k, x0, y - 0.1, x1, y + 0.02, rgba('#7F7D78', 0.35))
-  ctx.fillStyle = rgba('#5A5853', 0.25)
-  ctx.beginPath()
-  for (let i = Math.floor(x0 / 1.7); i * 1.7 < x1; i++) {
-    const ox = i * 1.7 + hash(i, 11, 4) * 1.2
-    const oy = (hash(i, 12, 4) > 0.5 ? LANE.far : LANE.near) - 0.05
-    ctx.moveTo((ox + 0.3) * k, oy * k)
-    ctx.ellipse(ox * k, oy * k, 0.3 * k, 0.05 * k, 0, 0, Math.PI * 2)
-  }
-  ctx.fill()
-  ctx.strokeStyle = rgba('#4E4C48', 0.45)
-  ctx.beginPath()
-  for (let i = Math.floor(x0 / 0.9); i * 0.9 < x1; i++) {
-    if (hash(i, 13, 4) < 0.45) continue
-    const cx = i * 0.9 + hash(i, 14, 4) * 0.5
-    const cy = KERB + 0.3 + hash(i, 15, 4) * 1.9
-    ctx.moveTo(cx * k, cy * k)
-    ctx.quadraticCurveTo((cx + 0.15) * k, (cy - 0.06) * k, (cx + 0.32) * k, (cy + 0.03) * k)
-    ctx.quadraticCurveTo((cx + 0.45) * k, (cy + 0.09) * k, (cx + 0.6) * k, (cy + 0.02) * k)
-  }
-  ctx.stroke()
   // A storm drain in the gutter, a vault grate in the paving by the café.
   for (const dx of [6.6, 18.6]) slab(ctx, k, dx, KERB + 0.1, dx + 0.7, KERB + 0.2, '#4B4A47', { color: rgba(INK, 0.6), w: 0.8 })
   slab(ctx, k, 8.75, PAVE + 0.06, 9.95, PAVE + 0.3, '#8E8E89', { color: rgba(INK, 0.7), w: 0.8 })
-  ctx.strokeStyle = rgba(INK, 0.4)
-  ctx.beginPath()
-  for (let x = 8.85; x < 9.95; x += 0.1) {
-    ctx.moveTo(x * k, (PAVE + 0.06) * k)
-    ctx.lineTo((x - 0.02) * k, (PAVE + 0.3) * k)
-  }
-  ctx.moveTo(8.75 * k, (PAVE + 0.18) * k)
-  ctx.lineTo(9.95 * k, (PAVE + 0.18) * k)
-  ctx.stroke()
   // The line between the lanes, in dashes; the near lane's edge.
   const mid = (LANE.far + LANE.near) / 2 - 0.42
   for (let x = Math.floor(x0 / 1.2) * 1.2; x < x1; x += 1.2) if (x < CORNER.kerb - 0.6 || x > AVENUE_FAR) slab(ctx, k, x, mid, x + 0.6, mid + 0.06, '#E4E0D4')
-  // The road's joints and cracks across the lanes, where the paving was cut and laid again.
-  ctx.strokeStyle = rgba('#55534F', 0.5)
-  ctx.beginPath()
-  for (let i = Math.floor(x0 / 1.1); i * 1.1 < x1; i++) {
-    const cx = i * 1.1 + hash(i, 16, 4) * 0.6
-    const cy = KERB + 0.25 + hash(i, 17, 4) * 1.5
-    const len = 0.25 + 0.4 * hash(i, 18, 4)
-    ctx.moveTo(cx * k, cy * k)
-    ctx.lineTo((cx - 0.08) * k, (cy + len * 0.5) * k)
-    ctx.lineTo((cx - 0.02) * k, (cy + len) * k)
-  }
-  ctx.stroke()
+  ctx.fillStyle = '#6E6C67'
+  ctx.strokeStyle = rgba(INK, 0.7)
   for (const [mx, my] of [[3.75, KERB + 0.42], [11.6, KERB + 0.42], [21.4, KERB + 1.25]] as [number, number][]) {
     if (mx < x0 - 1 || mx > x1 + 1) continue
-    ctx.fillStyle = '#6E6C67'
     ctx.beginPath()
     ctx.ellipse(mx * k, my * k, 0.42 * k, 0.09 * k, 0, 0, Math.PI * 2)
     ctx.fill()
-    ctx.strokeStyle = rgba(INK, 0.7)
-    ctx.stroke()
-    ctx.strokeStyle = rgba(INK, 0.3)
-    ctx.beginPath()
-    for (let d = -0.28; d <= 0.28; d += 0.14) {
-      ctx.moveTo((mx + d) * k, (my - 0.06) * k)
-      ctx.lineTo((mx + d) * k, (my + 0.06) * k)
-    }
     ctx.stroke()
   }
   // The corner: the pavement ends; the avenue's crossing beyond, its stripes; the stop lines; the ladder across this street.
@@ -551,7 +470,6 @@ export function drawStreet(p: p5, k: number, t: number): void {
   for (const [a, b, c] of [[CELLAR.x0, CELLAR.mid, CLANKS[0]], [CELLAR.mid, CELLAR.x1, CLANKS[1]]]) {
     const y = PAVE + dip(c)
     slab(ctx, k, a, y, b, y + 0.1, S.steel, { color: INK, w: 0.9 })
-    for (let x = a + 0.08; x < b - 0.04; x += 0.12) rule(ctx, k, x, y + 0.03, x + 0.05, y + 0.07, rgba(INK, 0.4), 0.8)
   }
   drawLamp(ctx, k)
   drawBike(ctx, k)
