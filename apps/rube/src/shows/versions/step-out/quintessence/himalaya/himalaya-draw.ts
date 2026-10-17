@@ -23,7 +23,7 @@ import {
 } from './himalaya-plan'
 
 /**
- * The Himalayas, drawn on the machine's plane: the face he climbs, its snow wind-rippled and its rock in bands, its
+ * The Himalayas, drawn on the machine's plane: the face he climbs, its snow calm and a few bands of rock through it, its
  * steps capped with snow; the ledge at the top with Sean's tripod and long lens on it; across the valley, the far
  * spur and the mountain behind it, and on the spur, if you look, the snow leopard; and the sea of cloud filling the
  * valley between them, the spur standing out of it. Beyond the valley is `far.ts`.
@@ -248,10 +248,6 @@ export function drawSteps(pen: Pen, f: Frame, t: number): void {
   const a = STEPS[STEPS.length - 1].p[0] - 0.4
   fillPoly(pen, [[a, y], [9.95, y], [9.9, y + 0.12], [9.4, y + 0.32], [8.2, y + 0.45], [a + 0.2, y + 0.4]], tn.faceRock)
   fillPoly(pen, [[a - 0.05, y + 0.02], [a + 0.3, y - 0.05], [9.0, y - 0.05], [9.98, y + 0.01], [9.8, y + 0.07], [a + 0.1, y + 0.07]], litSnow(tn, t, y, cap))
-  // The ledge's underside: a few ribs of rock, the snow's lip over them.
-  line(pen, [[a + 0.5, y + 0.2], [a + 0.9, y + 0.38]], rgba(tn.ink, 0.35), 0.02)
-  line(pen, [[8.6, y + 0.12], [8.9, y + 0.36]], rgba(tn.ink, 0.35), 0.02)
-  line(pen, [[9.3, y + 0.1], [9.5, y + 0.26]], rgba(tn.ink, 0.35), 0.02)
   drawRope(pen, f, t, tn)
 }
 
@@ -413,10 +409,10 @@ export function drawFarRocks(pen: Pen, t: number): void {
 /**
  * The sea of cloud filling the valley, on the machine's plane, its far edge a little under the ledge: the spur and the
  * mountain behind it stand out of it, and the face goes down into it. Seen from above, it is a level floor of cloud,
- * its far edge billowed, with a few heaps standing up out of it: low and flat far off, big and round near, each lit on
- * its crown and in shadow on its flank away from the sun, drifting slowly with the wind. It is lit when the light is
- * down to it. Lesser summits stand out of it here and there, catching the sun on their tops and throwing long shadows
- * across it, shorter as the sun climbs. The pair of choughs wheel over it.
+ * its far edge billowed, with a few big heaps standing up out of it, flatter far off and rounder near, each lit on its
+ * crown and in shadow on its flank away from the sun, drifting slowly with the wind. It is lit when the light is down
+ * to it. Two lesser summits stand out of it, catching the sun on their tops and throwing long shadows across it,
+ * shorter as the sun climbs. The pair of choughs wheel over it.
  */
 /** The summits standing out of the cloud: x, how far into the sea (below its far edge), width, height. */
 const ISLANDS: [number, number, number, number][] = [[26.0, 1.3, 4.4, 1.5], [13.3, 2.5, 3.6, 1.2]]
