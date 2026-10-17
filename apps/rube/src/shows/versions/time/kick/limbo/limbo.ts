@@ -269,17 +269,19 @@ function limboLane(): Seg[] {
   const T = Q.splash - Q.begin
   const splashAt: Pt = [DOWN.limbo.at[0], SEA]
   push({ from: DOWN.limbo.at, to: splashAt, dur: T, arc: (FALL_G * T * T) / 8 })
-  // Under: the water takes the fall from him quickly.
+  // Under: the water takes the fall from him quickly, and he comes to the bottom (it is shallow here, half a cell: he
+  // went on down into the beach under it, and was drawn along inside it).
   const vIn = DOWN.limbo.v[1] + FALL_G * T
   const TAU = 0.12
-  const sink = (s: number): Pt => [splashAt[0], SEA + vIn * TAU * (1 - Math.exp(-(s - Q.splash) / TAU))]
+  const bottom = (x: number): number => sandY(x) - R
+  const sink = (s: number): Pt => [splashAt[0], Math.min(bottom(splashAt[0]), SEA + vIn * TAU * (1 - Math.exp(-(s - Q.splash) / TAU)))]
   push(...carried((s) => sink(s + b), at(Q.splash), at(Q.under), 12))
   const deep = sink(Q.under)
   // The undertow draws them in along the bottom, the swell lifts them, and the breaker brings them to the shore.
   const toShore = (s: number): Pt => {
     const u = (s - Q.under) / (Q.circle - Q.under)
     const x = lerp(deep[0], BREAK_X + 0.05, smoother(u))
-    const yUnder = lerp(deep[1], SEA + 0.95, sm((s - Q.under) / 1.2))
+    const yUnder = Math.min(bottom(x), lerp(deep[1], SEA + 0.95, sm((s - Q.under) / 1.2)))
     const yFloat = surface(x, s) - 0.02
     return [x, lerp(yUnder, yFloat, smoother((s - Q.lift) / 1.3))]
   }
