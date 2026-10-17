@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, laneReach, over, rail, ramp, wait, type Lane } from '../../parts'
-import { flash, lamp, score } from './neon'
+import { lamp, score } from './neon'
 
 /**
  * A photo booth across the lane: a cabinet with a lamp in its header, a
@@ -100,9 +100,10 @@ export const booth = definePiece<BoothState>({
     }
     // The rail, in at one doorway, across the booth's floor and out at the other.
     rail(p, k, ink, weight, -0.5, 0.5)
-    // The lamp in the header: on while there is someone inside, and a wink at the flash.
+    // The lamp in the header: on while there is someone inside, and a wink at the flash. It lights white, the
+    // flash's own light: lit in the header's colour it was lost in the header, and read as out.
     const lit = busy ? (since > 0 && since < 0.1 ? 0 : 1) : 0
-    lamp(p, k, ink, weight, s.color, bg, 0, TOP + HEADER / 2, 0.035, lit)
+    lamp(p, k, ink, weight, ink, bg, 0, TOP + HEADER / 2, 0.035, lit)
     // The slot in the far side, which the strip comes out of.
     solid(p, ink, weight, ink)
     p.rect((HALF + 0.01) * k, SLOT_Y * k, 0.05 * k, 0.03 * k)
@@ -120,23 +121,29 @@ export const booth = definePiece<BoothState>({
       p.fill(ink)
       p.rect(0, ((TOP + HEADER + HEM) / 2) * k, (GAP * 2 + 0.03 * f) * k, (HEM - TOP - HEADER) * k)
     }
-    flash(p, k, ink, weight, 0, 0.0, since, 0.3, 0.2, 0.5)
     // The strip: feeds out of the slot after the flash and hangs, three frames with the ball's portrait in each.
+    // The frames come out with the paper, the last printed first, cut off where the strip is still in the slot.
     const fed = over(since, 0.3, 0.8)
     if (fed > 0) {
       const len = STRIP_L * fed
       const x = HALF + 0.05 + STRIP_W / 2
       solid(p, ink, weight * 0.6, ink)
       p.rect(x * k, (SLOT_Y + len / 2) * k, STRIP_W * k, len * k, 0.005 * k)
+      const ctx = p.drawingContext as CanvasRenderingContext2D
+      ctx.save()
+      ctx.beginPath()
+      ctx.rect((x - STRIP_W / 2) * k, SLOT_Y * k, STRIP_W * k, len * k)
+      ctx.clip()
       p.noStroke()
       for (let i = 0; i < 3; i++) {
-        const fy = SLOT_Y + 0.015 + i * 0.07
-        if (fy + 0.06 > SLOT_Y + len) break
+        const fy = SLOT_Y + 0.015 + i * 0.07 + len - STRIP_L
+        if (fy + 0.06 < SLOT_Y) continue
         p.fill(bg)
         p.rect(x * k, (fy + 0.03) * k, 0.06 * k, 0.06 * k)
         p.fill(color)
         p.circle(x * k, (fy + 0.032) * k, 0.036 * k)
       }
+      ctx.restore()
     }
   },
   scores: (p, s, { k, since, bg }) => score(p, k, s.color, bg, 0, TOP + 0.1, '+100', since, 1),
