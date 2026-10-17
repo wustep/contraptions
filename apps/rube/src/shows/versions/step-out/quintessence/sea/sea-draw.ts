@@ -580,14 +580,23 @@ export function drawDeckThings(p: p5, k: number, t: number): void {
   }
   drawMan(g, k, t, c)
   drawCake(g, k, c[0], c[1])
-  if (t < CAKE + 0.45) {
-    const h: Pt = [c[0] + 0.16, c[1] - 0.2]
-    g.fillStyle = SEA.skin2
-    g.beginPath()
-    g.ellipse(h[0] * k, h[1] * k, 0.085 * k, 0.065 * k, -0.4, 0, Math.PI * 2)
-    g.fill()
-  }
+  // His near hand, over the cake while it is on it and as it leaves it.
+  const h = nearHand(t, c)
+  g.fillStyle = SEA.skin2
+  g.beginPath()
+  g.ellipse(h[0] * k, h[1] * k, 0.085 * k, 0.065 * k, -0.4, 0, Math.PI * 2)
+  g.fill()
   g.restore()
+}
+
+/** Where his near hand is: on the cake while he has it, then back at his side. */
+function nearHand(t: number, c: Pt): Pt {
+  const onCake: Pt = [c[0] + 0.16, c[1] - 0.2]
+  if (t < CAKE + 0.45) return onCake
+  const m = manAt(t)
+  const rest: Pt = [m.shoulder[0] - 0.08, m.shoulder[1] + 0.62]
+  const u = smooth(t, CAKE + 0.45, CAKE + 1.3)
+  return [onCake[0] + (rest[0] - onCake[0]) * u, onCake[1] + (rest[1] - onCake[1]) * u]
 }
 
 /** The carried paper under the cake (its four corners, near side first), around the cake's foot at `c`. */
@@ -696,13 +705,11 @@ function arm(g: C2, k: number, from: Pt, to: Pt, w: number): void {
 function drawMan(g: C2, k: number, t: number, c: Pt): void {
   if (t < UP0) return
   const m = manAt(t)
-  const holding = t < CAKE + 0.45
-  // Where his hands are: on the cake while he has it, then back at his sides.
-  const rest: Pt = [m.shoulder[0] - 0.08, m.shoulder[1] + 0.62]
-  const onCake: Pt = [c[0] + 0.16, c[1] - 0.2]
-  const u = smooth(t, CAKE + 0.45, CAKE + 1.3)
-  const hand: Pt = holding ? onCake : [onCake[0] + (rest[0] - onCake[0]) * u, onCake[1] + (rest[1] - onCake[1]) * u]
-  const far: Pt = holding ? [c[0] + 0.3, c[1] - 0.12] : [hand[0] + 0.12, hand[1] - 0.02]
+  // Where his hands are: on the cake while he has it, then back at his sides, the far one coming off the cake's far
+  // side to beside the near one.
+  const hand = nearHand(t, c)
+  const u = smooth(t, CAKE + 0.45, CAKE + 0.9)
+  const far: Pt = [c[0] + 0.3 + (hand[0] + 0.12 - c[0] - 0.3) * u, c[1] - 0.12 + (hand[1] - 0.02 - c[1] + 0.12) * u]
   g.save()
   g.lineCap = 'round'
   g.lineJoin = 'round'
@@ -751,12 +758,8 @@ function drawMan(g: C2, k: number, t: number, c: Pt): void {
   g.beginPath()
   g.ellipse(m.head[0] * k, m.head[1] * k, 0.15 * k, 0.16 * k, -m.lean, Math.PI, 0)
   g.fill()
-  // The near arm, to the hand.
+  // The near arm, to the hand (the hand itself is drawn over the cake, in `drawDeckThings`).
   g.strokeStyle = SEA.sleeve
   arm(g, k, m.shoulder, hand, 0.15)
-  g.fillStyle = SEA.skin2
-  g.beginPath()
-  g.ellipse(hand[0] * k, hand[1] * k, 0.085 * k, 0.065 * k, -0.4, 0, Math.PI * 2)
-  g.fill()
   g.restore()
 }
