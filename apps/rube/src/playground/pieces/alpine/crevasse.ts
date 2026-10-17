@@ -9,9 +9,10 @@ import { iceBlue, powder, snowWhite } from './snow'
  * than the ball. The ball rolls onto the bridge, which dips under it, and
  * at the middle the bridge gives way: the ball falls between two walls of
  * blue ice, glancing off the far one and then the near one on the way
- * down, with the bridge's lumps falling round it, and lands in the snow on
- * the crevasse's floor. It rolls out under an arch in the ice, on or back.
- * The bridge's two stumps are left at the top, and its lumps at the bottom.
+ * down, with the bridge falling behind it, and lands in the snow on the
+ * crevasse's floor. It rolls out under an arch in the ice, on or back. The
+ * bridge buries itself in the floor's snow behind it, and its two stumps
+ * are left at the top.
  *
  * The fall is one gravity from the break to the floor; the glances only
  * turn it from side to side.
@@ -73,11 +74,8 @@ function laneFor(floors: number, turn: 1 | -1): { lane: Lane; fall: number; land
 }
 const LANES = new Map([1, 2].flatMap((floors) => ([1, -1] as const).map((turn) => [`${floors}:${turn}`, laneFor(floors, turn)] as const)))
 
-/** The bridge's lumps, on the side the ball does not leave by: where across the crack each falls, how long after the break it goes, how big it is. */
-const LUMPS: [x: number, late: number, r: number][] = [
-  [0.13, 0, 0.06],
-  [0.03, 0.06, 0.045],
-]
+/** The middle of the bridge, which falls: half its length, between the stumps. */
+const SLAB = FACE - 0.05
 
 /** One side of the ice in section, from its face at `side * FACE` to its cell's edge: down to the ground, or to the arch the ball leaves under. */
 function wall(p: p5, k: number, side: 1 | -1, top: number, bottom: number, arch: boolean): void {
@@ -125,6 +123,16 @@ export const crevasse = definePiece<CrevasseState>({
     p.rect(((-0.5 - FACE) / 2) * k, (FLOOR + CAP / 2) * k, (0.5 - FACE) * k, CAP * k)
     p.rect(((FACE + OUTER) / 2) * k, (FLOOR + CAP / 2) * k, (OUTER - FACE) * k, CAP * k)
 
+    // The bridge's middle, fallen through behind the ball and tipping as it goes, into the floor's snow, which hides it.
+    if (since >= 0) {
+      solid(p, ink, weight, s.white)
+      p.push()
+      p.translate(0, Math.min(level + 0.2, FLOOR + Y_BREAK + CRUST / 2 + 0.5 * G * 0.85 * since * since) * k)
+      p.rotate(0.45 * Math.min(1, since / 0.3))
+      p.rect(0, 0, SLAB * 2 * k, CRUST * k, (CRUST / 2) * k)
+      p.pop()
+    }
+
     // The snow on the crevasse's floor, level with the rail out, and running out under the arch to the ground there.
     solid(p, ink, weight, s.white)
     p.beginShape()
@@ -163,11 +171,6 @@ export const crevasse = definePiece<CrevasseState>({
       p.vertex(side * (FACE - 0.04) * k, (FLOOR + CRUST + 0.03) * k)
       p.vertex(side * FACE * k, (FLOOR + CRUST) * k)
       p.endShape(p.CLOSE)
-    }
-    // Its lumps, falling with the ball and lying on the floor after.
-    for (const [x, late, r] of LUMPS) {
-      const tau = Math.max(0, since - late)
-      p.circle(-turn * x * k, Math.min(level - r * 0.8, FLOOR + 0.04 + 0.5 * G * 0.8 * tau * tau) * k, r * 2 * k)
     }
   },
   over: (p, s, { k, since, ink, weight }) => {
