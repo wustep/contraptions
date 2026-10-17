@@ -168,9 +168,11 @@ export const DURATION = 408
  * (Seams between two parts of one place are the builders' own.)
  */
 export const SEAM = {
-  /** Dawn at the cradle → the swing on the lawn, years on (c5, A-flat). */
+  /** Dawn at the cradle → the lawn, years on: she runs off and comes back to her mother; the swing (c5, A-flat). */
   swing: chord(5),
-  /** The swing → the bed by the window: the cellos come in (c17). */
+  /** The swing in the spring → the room at the window, years on: Hannah a teenager, who turns from her (c14). */
+  teen: chord(14),
+  /** The window → the bed by the window: the cellos come in (c17). */
   bed: chord(17),
   /** The bed → the lecture hall, the day they came: the phones, the news on the screen (the half cadence, c23). */
   news: chord(23),

@@ -1,5 +1,5 @@
 import { R, type Pt } from '../../../../../parts'
-import { BEATS, HALF, LAST, SEAM, SWELL, TONIC } from '../music'
+import { BEATS, HALF, LAST, SEAM, SWELL, TONIC, chord } from '../music'
 
 /**
  * The lake house's clock: everything in the room that moves or changes, as pure functions of show time, so the room's
@@ -37,6 +37,8 @@ export function hermite(u: number, d: number, x0: number, v0: number, x1: number
 /** The house's six times: when the room is what. */
 export const ERA = {
   dawn: [0, SEAM.swing] as const,
+  /** Years on, toward evening: Hannah a teenager at the window, who turns on her mother and goes (`teen.ts`). */
+  teen: [SEAM.teen, SEAM.bed] as const,
   bed: [SEAM.bed, SEAM.news] as const,
   /** The same night, the shell come down: a helicopter comes for her (`recruit.ts`). */
   recruit: [SEAM.recruit, SEAM.camp] as const,
@@ -57,9 +59,10 @@ export const BEGIN = 349.495
  */
 export const EMPTY_DX = 0
 
-export type Era = 'dawn' | 'bed' | 'recruit' | 'flash' | 'home' | 'none'
+export type Era = 'dawn' | 'teen' | 'bed' | 'recruit' | 'flash' | 'home' | 'none'
 export function eraOf(T: number): Era {
   if (T < ERA.dawn[1]) return 'dawn'
+  if (T >= ERA.teen[0] && T < ERA.teen[1]) return 'teen'
   if (T >= ERA.bed[0] && T < ERA.bed[1]) return 'bed'
   if (T >= ERA.recruit[0] && T < ERA.recruit[1]) return 'recruit'
   if (T >= ERA.flash[0] && T < ERA.flash[1]) return 'flash'
@@ -316,6 +319,12 @@ export function lightAt(T: number): Light {
     const u = n / DAWN_STEPS.length
     if (u <= 0) return FIRST_LIGHT
     return light(1 - 0.78 * u, 0.78 * u, 0, 0, 0.8 * u ** 1.3, 0.85 - 0.35 * u)
+  }
+  if (T >= ERA.teen[0] && T < ERA.teen[1]) {
+    // Toward evening: a low warm sun across the floor as she comes to Hannah, going to the blue hour once Hannah has
+    // gone (her going is the chord, `teen.ts`).
+    const u = ss(T, chord(15) + 0.5, SEAM.bed - 0.4)
+    return light(0.05 + 0.7 * u, 0.8 * (1 - u), 0.15 + 0.1 * u, 0, 0.75 * (1 - u), 0.4 + 0.4 * u)
   }
   if (T < ERA.bed[1]) {
     // The days of her illness, a light each (`DAYS`). On the swell the room greys and the light goes out of it.

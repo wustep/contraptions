@@ -7,7 +7,7 @@ import { BLAST, DURATION, PEAK, SEAM } from './music'
 import { FIRST, SEAMS } from './seams'
 import { PalindromeShow, type Leg, type Riders, type Spans, type WorldSet } from './show'
 import { LOUISE, type WorldKey } from './worlds'
-import { houseSet, HOUSE_CELLS, DAWN_AT, BED_AT, RECRUIT_AT, FLASH_AT, HOME_AT, dawn, bed, recruit, flash, home } from './house/house'
+import { houseSet, HOUSE_CELLS, DAWN_AT, TEEN_AT, BED_AT, RECRUIT_AT, FLASH_AT, HOME_AT, dawn, teen, bed, recruit, flash, home } from './house/house'
 import { hallSet, HALL_CELLS, HALL_AT, HALL_SHELL, lecture, teaching } from './hall/hall'
 import { lawnSet, LAWN_CELLS, SWING_AT, SEES_AT, swing, sees } from './lawn/lawn'
 import { valleySet, VALLEY_CELLS, ARRIVE_AT, CAMP_AT, GOING_AT, SHELL_CUT, arrive, arrive2, going } from './valley/valley'
@@ -25,7 +25,8 @@ import { tentSet, TENT_CELLS, DARK_AT, CALL_AT, SHARE_AT, dark, call, share } fr
  * (`music.ts`, `seams.ts`).
  *
  *   0        the lake house at dawn: Louise beside the cradle, baby Hannah in it (the first frame, and the last)
- *   22.111   the swing by the lake, years on: she pushes Hannah, who grows
+ *   22.111   the lawn by the lake, years on: Hannah runs off and back into her mother; the swing, and she grows
+ *   59.362   the room at the window, years on: Hannah a teenager, who turns on her mother and goes
  *   71.953   the bed by the window: the cellos; Hannah goes on the swell (93.861)
  *   98.429   the lecture hall, the day they came: the phones light; the news on the screen behind her
  *   102.110  the double bass: the screen's shell becomes the real one over Montana (a match cut on the shell)
@@ -56,7 +57,8 @@ interface LegPlan {
 
 const PLAN = (): LegPlan[] => [
   { key: 'dawn', world: 'house', at: DAWN_AT, links: [{ part: dawn, end: SEAM.swing }] },
-  { key: 'swing', world: 'house', at: SWING_AT, links: [{ part: swing, end: SEAM.bed }] },
+  { key: 'swing', world: 'house', at: SWING_AT, links: [{ part: swing, end: SEAM.teen }] },
+  { key: 'teen', world: 'house', at: TEEN_AT, links: [{ part: teen, end: SEAM.bed }] },
   { key: 'bed', world: 'house', at: BED_AT, links: [{ part: bed, end: SEAM.news }] },
   { key: 'news', world: 'hall', at: HALL_AT, links: [{ part: lecture, end: SEAM.arrival }] },
   { key: 'arrival', world: 'valley', at: ARRIVE_AT, links: [{ part: arrive, end: SEAM.recruit }] },

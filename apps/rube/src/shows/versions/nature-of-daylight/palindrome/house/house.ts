@@ -7,6 +7,7 @@ import { CLOCK_HULL, CRADLE_HULL, BED_HULL, LAMP_HULL, TV_HULL, drawBed, drawBed
 import { drawBallMirror, drawFloorLight, drawMirror, drawRoom, drawVignette } from './room'
 import { F, FLASH_HITS, FLASH_X, STOOL_HULL, drawSheet, drawStool, flashX, hannahFlashAt, hannahFlashLook } from './flash'
 import { RC, RECRUIT_HITS, drawRecruit, drawRecruitOver, recruitX } from './recruit'
+import { TEEN_GONE, TEEN_HITS, TEEN_SHOTS, TEEN_STOOL_HULL, TEEN_X, TN, drawTeenStool, hannahTeenAt, hannahTeenDown, hannahTeenLook, teenX } from './teen'
 import {
   EMPTY_DX,
   NEAR,
@@ -40,13 +41,14 @@ import {
 
 /**
  * The lake house, inside (the HOUSE builder's): one long room of dark concrete and pale oak whose whole side is a
- * window over the grey lake. The same room at five times of her life, which we take for the past and which is the
- * future: the cradle at dawn (the show's first frame), the bed by the window over the days of her illness, the night
+ * window over the grey lake. The same room at six times of her life, which we take for the past and which is the
+ * future: the cradle at dawn (the show's first frame), Hannah a teenager at the window turning on her mother and going
+ * (`teen.ts`), the bed by the window over the days of her illness, the night
  * the shells came (the television on, a helicopter's searchlight: `recruit.ts`), an afternoon in the sun when Hannah
  * draws at the window (the flash, in the middle of the language: `flash.ts`), and at the end the morning after the
  * shells, Ian, the empty cradle, and the first frame again. (The news itself is the lecture hall's: `hall/hall.ts`.)
  *
- * The room is one standing drawing that changes by show time (`houseSet`); the parts (`dawn`, `bed`, `recruit`, `flash`, `home`)
+ * The room is one standing drawing that changes by show time (`houseSet`); the parts (`dawn`, `teen`, `bed`, `recruit`, `flash`, `home`)
  * give Louise her lane, Hannah and Ian their places, and the camera its keys. Everything that moves is a function of
  * show time in `time.ts`, read by both.
  */
@@ -61,6 +63,8 @@ function louiseX(T: number): number | null {
   switch (eraOf(T)) {
     case 'dawn':
       return dawnX(T)
+    case 'teen':
+      return teenX(T)
     case 'bed':
       return bedX(T)
     case 'recruit':
@@ -94,6 +98,7 @@ export const houseSet = scenery<null>({
     if (era === 'bed') shadows.push(BED_HULL, CLOCK_HULL, LAMP_HULL)
     if (era === 'recruit') shadows.push(TV_HULL)
     if (era === 'flash') shadows.push(STOOL_HULL)
+    if (era === 'teen') shadows.push(TEEN_STOOL_HULL)
     if (era === 'home' && T < BEGIN) balls.push([ianX(T), 0])
     if (era === 'home' && T >= BEGIN && T < IAN_GONE) balls.push([ianAfter(T), 0])
     drawRoom(p, k, T)
@@ -114,10 +119,14 @@ export const houseSet = scenery<null>({
       drawSheet(p, k, T, L)
       drawStool(p, k, T, L)
     }
+    if (era === 'teen') drawTeenStool(p, k, T, L)
     drawMirror(p, k, T)
-    // Louise first, then Ian when he is here: the same order `balls` has them in.
-    drawBallMirror(p, k, T, balls.map((b, i) => [b, i === 0 ? LOUISE : IAN] as [Pt, string]))
-    drawFloorLight(p, k, T, shadows, balls)
+    // Louise first, then Ian when he is here: the same order `balls` has them in; and Hannah when she is on the floor.
+    const mirrored = balls.map((b, i) => [b, i === 0 ? LOUISE : IAN] as [Pt, string])
+    const down = era === 'teen' && hannahTeenDown(T) ? hannahTeenAt(T) : null
+    if (down) mirrored.push([down, HANNAH])
+    drawBallMirror(p, k, T, mirrored)
+    drawFloorLight(p, k, T, shadows, down ? [...balls, down] : balls)
     if (era === 'recruit') drawTVGlow(p, k, T)
     drawVignette(p, k, T)
   },
@@ -141,6 +150,7 @@ export const houseSet = scenery<null>({
  * the bed are the same place on the floor (the bed stands where the cradle stood); the night they come for her is where
  * she ends at the bed; home starts by the window across the room and ends where dawn began. */
 export const DAWN_AT: Pt = [0.5, 0]
+export const TEEN_AT: Pt = [TEEN_X + 0.5, 0]
 export const BED_AT: Pt = [0.5, 0]
 export const RECRUIT_AT: Pt = [NEWS_X + 0.5, 0]
 export const FLASH_AT: Pt = [FLASH_X + 0.5, 0]
@@ -223,6 +233,32 @@ export const dawn: Part<HouseState> = part<HouseState>(
       { t: DAWN_PUSHES[3].t, cells: 2.6, hold: w(0.7, -0.4) },
       { t: slot.end, cells: 4.6, hold: w(1.05, -0.95) },
     ]
+  },
+)
+
+/* ------------------------------------------------------------------ years on, at the window */
+
+export const teen: Part<HouseState> = part<HouseState>(
+  { name: 'house-teen', draw: nothing },
+  (slot) => {
+    const o = TEEN_AT
+    const { segs, end } = floorLane(teenX, slot, o, [TN.touch, TN.off, TN.again])
+    const company: Company[] = [
+      {
+        who: 'hannah',
+        from: slot.begin,
+        to: TEEN_GONE,
+        at: (t) => {
+          const h = hannahTeenAt(t)
+          return h ? { x: h[0] - o[0], y: h[1] - o[1], scale: HANNAH_AGE.teen, spin: hannahTeenLook(t) } : null
+        },
+      },
+    ]
+    return { cells: partCells(o), exit: [end[0] + 0.5, end[1]], lane: { segs, fire: TN.touch - slot.begin }, state: { begin: slot.begin }, company }
+  },
+  () => {
+    const o = TEEN_AT
+    return TEEN_SHOTS.map(([t, cells, x, y, cut]) => ({ t, cells, hold: [x - o[0], y - o[1]] as Pt, w: 1, ...(cut ? { cut } : {}) }))
   },
 )
 
@@ -426,6 +462,8 @@ export const home: Part<HouseState> = part<HouseState>(
 export const HOUSE_HITS: number[] = [
   // Dawn: she rocks the cradle on every chord.
   ...DAWN_PUSHES.map((q) => q.t),
+  // Years on at the window: the room, her touch on the stool, Hannah rounding on her and going, the empty stool.
+  ...TEEN_HITS,
   // The bed: the clock strikes on the chords, and on the swell it has run down.
   ...CLOCK_STRIKES,
   // They come for her: the light over the lake, the beam finding her, her going.

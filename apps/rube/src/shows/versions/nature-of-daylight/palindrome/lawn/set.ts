@@ -944,7 +944,7 @@ function drawSwing(ctx: Ctx, k: number, t: number, near: boolean): void {
  * and grass across the whole frame; seen from away (the Overview camera has the house and the lawn in one frame) it
  * would paint over the room while she is in it. So it draws only while a lawn leg has her: the swing and what she sees.
  */
-const onLawn = (t: number): boolean => (t >= SEAM.swing && t < SEAM.bed) || (t >= SEAM.sees && t < SEAM.fog2)
+const onLawn = (t: number): boolean => (t >= SEAM.swing && t < SEAM.teen) || (t >= SEAM.sees && t < SEAM.fog2)
 
 export function lawnDraw(p: p5, k: number, t: number): void {
   if (!onLawn(t)) return
