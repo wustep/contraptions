@@ -5,7 +5,7 @@ import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, over, post, rail, ramp, 
 import { glow, lamp, score } from './neon'
 
 /**
- * A little Ferris wheel. Six gondolas hang upright from the rim, each a
+ * A little Ferris wheel. Four gondolas hang upright from the rim, each a
  * seat on a rod under a little roof, and the lamps round the rim chase
  * the whole time. The lane is the boarding platform: the ball rolls onto
  * the seat of the gondola at the bottom and the hub lights; the wheel
@@ -13,7 +13,10 @@ import { glow, lamp, score } from './neon'
  * — easing in and easing out, every gondola swinging out a little on its
  * pivot as it goes; at the top the seat is level with the upper rail, the
  * gondola rocks forward as the wheel stops, and the ball rolls off it and
- * on. Half a turn of six gondolas leaves the wheel exactly as it was.
+ * on. Half a turn of four gondolas leaves the wheel exactly as it was,
+ * with one at each side, hanging clear under the upper rail: with six,
+ * the one beside the top hung across it, and the ball rolled off through
+ * its roof.
  *
  * The wheel's angle, a gondola's swing and the ball's place on its seat
  * are one function of time, which the lane traces and the drawing uses.
@@ -22,7 +25,7 @@ const RIM = 0.5
 /** A seat hangs this far under its pivot, which puts the hub here: the low seat on the lane's line, the high one on the upper rail's. */
 const HANG = 0.34
 const HUB: Pt = [0.5, FLOOR - HANG - RIM]
-const GONDOLAS = 6
+const GONDOLAS = 4
 const SEAT = 0.34
 const ARRIVE = arriveAt(HUB[0])
 const BOARD = 0.15
@@ -88,7 +91,7 @@ const SIDE = 0.035
 /**
  * One gondola hanging from (px, py), swung by `s`: a roof over the pivot, a
  * rod, a car. The car is a floor with a short wall at each end, cut as one
- * shape, so it is still three shapes six times: anything more and the wheel
+ * shape, so it is still three shapes a gondola: anything more and the wheel
  * is a thicket at the show's scale.
  */
 function gondola(p: p5, k: number, ink: string, weight: number, color: string, px: number, py: number, s: number): void {
