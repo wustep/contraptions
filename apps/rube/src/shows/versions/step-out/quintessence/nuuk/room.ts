@@ -1,21 +1,17 @@
 import type { Pt } from '../../../../../parts'
 import { rgbaOf, sway, type View } from '../depth'
-import { hash } from '../kit'
-import { CEIL, COUNTER, COUNTER_TOP, DOOR_IN, FLOOR, GLASS, HEAD as HEAD_Y } from './geo'
+import { CEIL, COUNTER, COUNTER_TOP, FLOOR, GLASS } from './geo'
 
 /**
- * The bar's room, more of it (B's): the boards' grain, what hangs on the walls (a net with its glass floats, a
- * lifebuoy, old photographs of boats, a clock), the two lamps over the counter swinging slowly on their cords with
- * their light going over the boards and the counter, the brass rail along the counter's foot, the piles and the dark
- * water under the floor (the bar stands out over the harbour on its pier), and the rain on the window's glass. In the
- * place's cells, straight onto the canvas: one path a colour.
+ * The bar's room, more of it (B's): what hangs on the walls (a net with its glass floats, a lifebuoy, two old
+ * photographs of boats, a clock), the two lamps over the counter swinging slowly on their cords with their light going
+ * over the counter, the brass rail along the counter's foot, and the piles and the dark water under the floor (the
+ * bar stands out over the harbour on its pier). In the place's cells, straight onto the canvas: one path a colour.
  */
 
 type C2 = CanvasRenderingContext2D
 
 const R = {
-  grain: '#3A2B22',
-  knot: '#1E1612',
   net: '#6E5A45',
   floatG: '#5E7F62',
   floatGLit: '#7E9A76',
@@ -56,41 +52,10 @@ export function lampAt(i: number, t: number): { p: Pt; a: number } {
   return { p: [L.x + Math.sin(a) * L.len, CEIL + Math.cos(a) * L.len], a }
 }
 
-/** The boards' grain: two or three long faint lines down each board, wandering a little, and a knot here and there. */
-export function drawGrain(g: C2, k: number, x0: number, x1: number, top: number, bottom: number, skip?: { x0: number; x1: number; y0: number; y1: number }): void {
-  const grain = new Path2D()
-  const knots = new Path2D()
-  let b = 0
-  for (let x = x0 + 0.05; x < x1; x += 0.34, b++) {
-    for (let j = 0; j < 3; j++) {
-      const gx = x + 0.07 + j * 0.09 + 0.03 * hash(b, j, 61)
-      grain.moveTo(gx * k, top * k)
-      for (let y = top + 0.35; y <= bottom + 0.01; y += 0.35) {
-        const wob = 0.012 * Math.sin(y * 3.1 + b * 1.7 + j)
-        if (skip && gx > skip.x0 && gx < skip.x1 && y > skip.y0 && y - 0.35 < skip.y1) grain.moveTo((gx + wob) * k, y * k)
-        else grain.lineTo((gx + wob) * k, y * k)
-      }
-    }
-    if (hash(b, 62) < 0.5) {
-      const ky = top + (bottom - top) * hash(b, 63)
-      const kx = x + 0.1 + 0.14 * hash(b, 64)
-      if (!skip || !(kx > skip.x0 && kx < skip.x1 && ky > skip.y0 && ky < skip.y1)) {
-        knots.moveTo((kx + 0.025) * k, ky * k)
-        knots.ellipse(kx * k, ky * k, 0.025 * k, 0.04 * k, 0, 0, Math.PI * 2)
-      }
-    }
-  }
-  g.lineWidth = Math.max(0.6, 0.008 * k)
-  g.strokeStyle = rgbaOf(R.grain, 0.7)
-  g.stroke(grain)
-  g.fillStyle = rgbaOf(R.knot, 0.7)
-  g.fill(knots)
-}
-
 /**
  * What hangs on the walls, kept dark so it does not take the eye from the pilot's thumb: a fishing net swagged along
- * under the ceiling with its glass floats; a lifebuoy by the door; old photographs of boats; a clock by the back door
- * whose hand goes round.
+ * under the ceiling with its glass floats; a lifebuoy by the door; two old photographs of boats; a clock by the back
+ * door whose hand goes round.
  */
 export function drawWallThings(g: C2, k: number, t: number): void {
   // The net: swags from nail to nail, the mesh hanging in them.
@@ -158,7 +123,7 @@ export function drawWallThings(g: C2, k: number, t: number): void {
   const frames = new Path2D()
   const pics = new Path2D()
   const darks = new Path2D()
-  for (const [x, y, w, h] of [[4.68, -2.45, 0.38, 0.28], [4.75, -2.02, 0.3, 0.32], [-0.0, -2.55, 0.34, 0.26]] as [number, number, number, number][]) {
+  for (const [x, y, w, h] of [[4.68, -2.3, 0.38, 0.28], [-0.0, -2.55, 0.34, 0.26]] as [number, number, number, number][]) {
     frames.rect(x * k, y * k, w * k, h * k)
     pics.rect((x + 0.04) * k, (y + 0.04) * k, (w - 0.08) * k, (h - 0.08) * k)
     // A boat on the water in each: a hull and a mast.
@@ -196,9 +161,9 @@ export function drawWallThings(g: C2, k: number, t: number): void {
 }
 
 /**
- * The two lamps over the counter, swinging on their cords: each a dark shade lit underneath, its light lying on the
- * boards behind it in a scallop down to the counter, along the counter's top, and on the brass rail, all going to and
- * fro as it swings. Each pool is flat, brightest under the lamp and gone at its edges.
+ * The two lamps over the counter, swinging on their cords: each a dark shade lit underneath, its light lying along the
+ * counter's top and on the brass rail, going to and fro as it swings. Each pool is flat, brightest under the lamp and
+ * gone at its edges.
  */
 export function drawLamps(g: C2, k: number, t: number): void {
   const top = COUNTER_TOP - 0.06
@@ -206,21 +171,6 @@ export function drawLamps(g: C2, k: number, t: number): void {
   for (let i = 0; i < LAMPS.length; i++) {
     const { p, a } = lampAt(i, t)
     const px = p[0] + Math.tan(a) * (top - p[1])
-    const head: Pt = [p[0] + Math.sin(a) * 0.22, p[1] + 0.22]
-    // The scallop on the boards (not across the window's glass): from the shade's rim, flaring to the counter.
-    const w = 0.8
-    g.save()
-    g.beginPath()
-    g.rect(DOOR_IN[1] * k, CEIL * k, (WIN.x0 - 0.08 - DOOR_IN[1]) * k, (top - CEIL) * k)
-    g.clip()
-    g.fillStyle = across(g, k, px, w, R.lamp, 0.11)
-    g.beginPath()
-    g.moveTo((px - w) * k, top * k)
-    g.quadraticCurveTo((head[0] - 0.12 * w) * k, head[1] * k, head[0] * k, head[1] * k)
-    g.quadraticCurveTo((head[0] + 0.12 * w) * k, head[1] * k, (px + w) * k, top * k)
-    g.closePath()
-    g.fill()
-    g.restore()
     // Along the counter's top.
     const a0 = Math.max(c0, px - 0.7)
     const a1 = Math.min(c1, px + 0.7)
@@ -319,27 +269,6 @@ export function drawUnderFloor(g: C2, v: View, t: number, x0: number, x1: number
   g.lineWidth = Math.max(0.8, 0.014 * k)
   g.strokeStyle = rgbaOf(day ? '#8E9CA0' : R.waterLit, 0.6)
   g.stroke(edge)
-  // The swell's crests and troughs on the water, in rows riding it, each row at its own pace.
-  const crests = new Path2D()
-  const troughs = new Path2D()
-  for (let r = 0; r < 5; r++) {
-    const gap = 0.45 + 0.1 * r
-    const off = hash(r, 75) * gap + t * (0.1 + 0.05 * r) * (r % 2 ? 1 : -1)
-    for (let i = Math.floor((a - off) / gap) - 1; i * gap + off < b + 0.3; i++) {
-      if (hash(i, r, 76) < 0.25) continue
-      const x = i * gap + off + (hash(i, r, 77) - 0.5) * gap * 0.5
-      const y = surf(x) + 0.06 + r * 0.09
-      const w = 0.1 + 0.2 * hash(i, r, 73)
-      const p = hash(i, r, 78) < 0.55 ? crests : troughs
-      p.moveTo(x * k, y * k)
-      p.lineTo((x + w) * k, y * k)
-    }
-  }
-  g.lineWidth = Math.max(0.8, 0.012 * k)
-  g.strokeStyle = rgbaOf(day ? '#8E9CA0' : R.waterLit, 0.45)
-  g.stroke(crests)
-  g.strokeStyle = rgbaOf(day ? '#2A3236' : '#0E1416', 0.6)
-  g.stroke(troughs)
   // The piles and their cross braces.
   const piles = new Path2D()
   const braces = new Path2D()
@@ -363,56 +292,10 @@ export function drawUnderFloor(g: C2, v: View, t: number, x0: number, x1: number
 }
 
 /**
- * Rain on the window's glass: drops that gather, run down in a sudden slide, and stop, each leaving a thin trail; and
- * the sleet beyond the glass going by on the wind.
+ * The harbour door's leaf, more of it: the raised panel's lit and shaded edges, a notice pinned between the glass and
+ * the panel, and a brass kick plate.
  */
-export function drawWindowRain(g: C2, k: number, t: number): void {
-  const { x0, x1, y0, y1 } = WIN
-  const drops = new Path2D()
-  const trails = new Path2D()
-  for (let i = 0; i < 26; i++) {
-    const x = x0 + 0.04 + (x1 - x0 - 0.08) * hash(i, 81)
-    // Each drop slides in starts: still, then a quick run, still again; round and round the glass's height.
-    const period = 3 + 4 * hash(i, 82)
-    const ph = (((t + hash(i, 83) * period) / period) % 1 + 1) % 1
-    const run = ph < 0.25 ? 0 : ph < 0.4 ? (ph - 0.25) / 0.15 : 1
-    const h = y1 - y0 - 0.08
-    const start = y0 + 0.04 + h * 0.5 * hash(i, 84)
-    const y = start + (h * 0.5) * run * (0.5 + 0.5 * hash(i, 85))
-    const wob = 0.01 * Math.sin(y * 30 + i)
-    drops.rect((x + wob - 0.01) * k, (y - 0.012) * k, 0.02 * k, 0.024 * k)
-    if (y - start > 0.02) {
-      trails.moveTo(x * k, start * k)
-      trails.lineTo((x + wob) * k, (y - 0.012) * k)
-    }
-  }
-  g.lineWidth = Math.max(0.5, 0.006 * k)
-  g.strokeStyle = rgbaOf('#D7E0E0', 0.35)
-  g.stroke(trails)
-  g.fillStyle = rgbaOf('#E6ECEB', 0.7)
-  g.fill(drops)
-}
-
-/**
- * The harbour door's leaf, more of it: the grain down it, the raised panel's lit and shaded edges, a notice pinned
- * between the glass and the panel, a brass kick plate, and the rain on its glass.
- */
-export function drawDoorDetail(g: C2, k: number, t: number, x: number, w: number): void {
-  const grain = new Path2D()
-  for (let j = 0; j < 7; j++) {
-    const gx = x + w * (0.08 + j * 0.135) + 0.01 * Math.sin(j * 2.3)
-    // Not across the glass.
-    const glass = gx > x + w * 0.2 && gx < x + w * 0.8
-    grain.moveTo(gx * k, (HEAD_Y + 0.15) * k)
-    if (glass) {
-      grain.lineTo(gx * k, (HEAD_Y + 0.35) * k)
-      grain.moveTo((gx + 0.004) * k, -1.2 * k)
-    }
-    grain.lineTo((gx + 0.01) * k, (FLOOR - 0.1) * k)
-  }
-  g.lineWidth = Math.max(0.6, 0.007 * k)
-  g.strokeStyle = rgbaOf('#2E2018', 0.55)
-  g.stroke(grain)
+export function drawDoorDetail(g: C2, k: number, x: number, w: number): void {
   // The panel's edges: lit along its top and left, shaded along its bottom and right.
   const px0 = x + w * 0.2
   const px1 = x + w * 0.8
@@ -428,15 +311,6 @@ export function drawDoorDetail(g: C2, k: number, t: number, x: number, w: number
   g.rotate(-0.05)
   g.fillStyle = '#D9CFB8'
   g.fillRect(-0.15 * k, -0.11 * k, 0.3 * k, 0.21 * k)
-  const words = new Path2D()
-  for (let r = 0; r < 4; r++) {
-    const len = 0.22 * (0.5 + 0.5 * hash(r, 41))
-    words.moveTo(-0.11 * k, (-0.06 + r * 0.045) * k)
-    for (let i = 1; i <= 6; i++) words.lineTo((-0.11 + (len * i) / 6) * k, (-0.06 + r * 0.045 + 0.008 * Math.sin(i * 2.7 + r)) * k)
-  }
-  g.lineWidth = Math.max(0.5, 0.006 * k)
-  g.strokeStyle = rgbaOf('#4A443A', 0.8)
-  g.stroke(words)
   g.fillStyle = '#7E8E95'
   g.beginPath()
   g.arc(0, -0.09 * k, 0.012 * k, 0, Math.PI * 2)
@@ -445,35 +319,11 @@ export function drawDoorDetail(g: C2, k: number, t: number, x: number, w: number
   // The kick plate.
   g.fillStyle = rgbaOf('#9C7A45', 0.8)
   g.fillRect((x + w * 0.06) * k, (FLOOR - 0.2) * k, w * 0.88 * k, 0.1 * k)
-  // The rain on the glass.
-  const gx0 = x + w * 0.2
-  const gx1 = x + w * 0.8
-  const gy0 = HEAD_Y + 0.35
-  const gy1 = -1.2
-  const drops = new Path2D()
-  for (let i = 0; i < 12; i++) {
-    const dx = gx0 + 0.03 + (gx1 - gx0 - 0.06) * hash(i, 51)
-    const period = 2.5 + 3 * hash(i, 52)
-    const ph = (((t + hash(i, 53) * period) / period) % 1 + 1) % 1
-    const dy = gy0 + 0.05 + (gy1 - gy0 - 0.1) * Math.min(1, hash(i, 54) * 0.6 + (ph > 0.6 ? (ph - 0.6) * 1.6 : 0))
-    drops.moveTo((dx + 0.01) * k, dy * k)
-    drops.arc(dx * k, dy * k, 0.01 * k, 0, Math.PI * 2)
-  }
-  g.fillStyle = rgbaOf('#EEF2F1', 0.65)
-  g.fill(drops)
 }
 
-/** The counter's front: its boards' grain and the moulding under its top, so it is wood and not a dark slab. */
+/** The counter's front: the moulding under its top, lit along its upper edge, so it is wood and not a dark slab. */
 export function drawCounterFront(g: C2, k: number): void {
   const [x0, x1] = COUNTER
-  const grain = new Path2D()
-  for (let x = x0 + 0.06; x < x1 - 0.03; x += 0.1) {
-    grain.moveTo(x * k, (COUNTER_TOP + 0.16) * k)
-    grain.quadraticCurveTo((x + 0.012 * Math.sin(x * 9)) * k, ((COUNTER_TOP + FLOOR) / 2) * k, (x - 0.008) * k, (FLOOR - 0.14) * k)
-  }
-  g.lineWidth = Math.max(0.6, 0.007 * k)
-  g.strokeStyle = rgbaOf('#2A1D16', 0.6)
-  g.stroke(grain)
   g.fillStyle = rgbaOf('#8A6444', 0.45)
   g.fillRect(x0 * k, (COUNTER_TOP + 0.1) * k, (x1 - x0) * k, 0.02 * k)
   g.fillStyle = rgbaOf('#140D09', 0.5)
@@ -499,28 +349,24 @@ export function drawAshtray(g: C2, k: number, t: number): void {
 }
 
 /**
- * The little stage's skirt: deep green velvet hung in pleats along its front, stirring in the draught from the doors,
- * its folds catching the lamps (and the spotlight, when it is on).
+ * The little stage's skirt: deep green velvet hung in a few broad folds along its front, stirring in the draught from
+ * the doors, the folds catching the lamps (and the spotlight, when it is on). Two values: the velvet and its lit folds.
  */
 export function drawSkirt(g: C2, k: number, t: number, x0: number, x1: number, top: number, bottom: number, spot: number): void {
   g.fillStyle = '#1C3434'
   g.fillRect(x0 * k, top * k, (x1 - x0) * k, (bottom - top) * k)
   const lit = new Path2D()
-  const dark = new Path2D()
-  const n = Math.round((x1 - x0) / 0.1)
+  const n = Math.round((x1 - x0) / 0.28)
+  const w = (x1 - x0) / n
   for (let i = 0; i < n; i++) {
-    const x = x0 + (i + 0.5) * ((x1 - x0) / n)
+    const x = x0 + (i + 0.5) * w
     const stir = 0.012 * Math.sin(t * 1.3 + i * 0.8) + 0.008 * Math.sin(t * 2.9 + i * 1.9)
-    const p = i % 2 ? dark : lit
-    const w = (x1 - x0) / n / 2
-    p.moveTo((x - w * 0.5) * k, top * k)
-    p.lineTo((x + w * 0.5) * k, top * k)
-    p.lineTo((x + w * 0.6 + stir) * k, bottom * k)
-    p.lineTo((x - w * 0.4 + stir) * k, bottom * k)
-    p.closePath()
+    lit.moveTo((x - w * 0.2) * k, top * k)
+    lit.lineTo((x + w * 0.15) * k, top * k)
+    lit.lineTo((x + w * 0.2 + stir) * k, bottom * k)
+    lit.lineTo((x - w * 0.15 + stir) * k, bottom * k)
+    lit.closePath()
   }
-  g.fillStyle = rgbaOf('#3A5C58', 0.75 + 0.25 * Math.min(1, spot))
+  g.fillStyle = rgbaOf('#3A5C58', 0.5 + 0.3 * Math.min(1, spot))
   g.fill(lit)
-  g.fillStyle = rgbaOf('#0E1C1C', 0.7)
-  g.fill(dark)
 }
