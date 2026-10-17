@@ -5,10 +5,10 @@ import { GLASS, TUBE } from './plan'
 
 /**
  * The archive behind the light table (the B1 builder's): aisles of steel shelving going back into the dark, on
- * three planes, with film cans and labelled boxes on them (flat tones, no lettering), a rolling ladder, the far
- * aisle's end with its green exit sign over a door, and high on the back wall a window at street level, the city's
- * daylight coming in through its grating and lying on the wall under it. In front of them, strips of negatives hang
- * drying on a line, a small picture in every frame.
+ * three planes, with stacks of film cans and boxes on them as plain blocks, a rolling ladder, the far aisle's end
+ * with its green exit sign over a door, and high on the back wall a window at street level, the city's daylight
+ * coming in through its grating and lying on the wall under it. In front of them, strips of negatives hang drying
+ * on a line.
  *
  * The room is lit by the table's spill and nothing else, so the archive is barely there: a can's rim, a box's edge.
  * When the tubes strike and stutter, their flashes light the whole room, and the aisles stand out of the dark for a
@@ -32,7 +32,6 @@ const TONES = {
   rim: ['#111617', '#3A3B36', '#58706F'],
   face: ['#192022', '#58574F', '#86A2A2'],
   box: ['#181D1D', '#4E4B42', '#728888'],
-  label: ['#1D2322', '#6E6A5D', '#9DB3AE'],
   dark: ['#0C1011', '#1E1F1C', '#2E3B3C'],
 } as const
 type Tone = keyof typeof TONES
@@ -97,10 +96,10 @@ class Builder {
 
 /**
  * A run of steel shelving seen side-on, from `x0` to `x1`, its top at `top`, shelves every `pitch` down to `floor`,
- * and on every shelf what an archive keeps: film cans stood on edge in rows, cans lying flat in stacks, archive boxes
- * with a label on the end. `s` is the size of things on this plane (1 for the nearest).
+ * and on every shelf what an archive keeps, each a plain block: stacks of film cans lying flat, archive boxes. `s` is
+ * the size of things on this plane (1 for the nearest).
  */
-function shelving(b: Builder, x0: number, x1: number, top: number, floor: number, pitch: number, s: number, seed: number, simple = false): void {
+function shelving(b: Builder, x0: number, x1: number, top: number, floor: number, pitch: number, s: number, seed: number): void {
   const post = 0.045 * s
   b.rect('steel', x0 - post, top - 0.04 * s, x1 + post, top + 0.02 * s)
   for (let y = top + pitch, row = 0; y < floor; y += pitch, row++) {
@@ -114,35 +113,17 @@ function shelving(b: Builder, x0: number, x1: number, top: number, floor: number
     while (x < x1 - 0.12 * s) {
       const h = hash(row, i, seed)
       const at = binOf(x, y)
-      if (h < 0.26 && !simple) {
-        // A row of cans on edge, touching.
-        const r = (0.1 + 0.035 * hash(row, i, seed + 1)) * s * Math.min(1, (pitch * 0.92) / (0.27 * s))
-        const n = 2 + Math.floor(hash(row, i, seed + 2) * 4)
-        for (let j = 0; j < n && x + 2 * r < x1 - 0.04 * s; j++) {
-          const cx = x + r
-          const cy = y - r
-          b.disc('rim', cx, cy, r, at)
-          b.disc('face', cx, cy, r * 0.8, at)
-          x += 2 * r + 0.01 * s
-        }
-      } else if (h < 0.6) {
-        // A stack of cans lying flat (far off, one block of them).
+      if (h < 0.6) {
+        // A stack of cans lying flat, one block of them.
         const w = (0.26 + 0.06 * hash(row, i, seed + 3)) * s
         const n = 2 + Math.floor(hash(row, i, seed + 4) * Math.max(1, (pitch / s - 0.06) / 0.055))
-        if (simple) b.rect('face', x, y - Math.min(n * 0.052, pitch / s - 0.08) * s, x + w, y, at)
-        else
-          for (let j = 0; j < n; j++) {
-            const cy = y - (j + 1) * 0.052 * s
-            if (cy < y - pitch + 0.06 * s) break
-            b.rect(j % 2 ? 'face' : 'box', x, cy, x + w, cy + 0.042 * s, at)
-          }
+        b.rect('face', x, y - Math.min(n * 0.052, pitch / s - 0.08) * s, x + w, y, at)
         x += w + 0.03 * s
       } else if (h < 0.9) {
-        // An archive box, its label on the end facing out.
+        // An archive box.
         const w = (0.3 + 0.16 * hash(row, i, seed + 5)) * s
         const hgt = Math.min(pitch - 0.07 * s, (0.26 + 0.12 * hash(row, i, seed + 6)) * s)
         b.rect('box', x, y - hgt, x + w, y, at)
-        if (!simple) b.rect('label', x + w * 0.25, y - hgt * 0.72, x + w * 0.75, y - hgt * 0.5, at)
         x += w + 0.02 * s
       } else x += (0.2 + 0.3 * hash(row, i, seed + 7)) * s
       x += 0.02 * s
@@ -179,59 +160,33 @@ function ladder(b: Builder, foot: number, top: [number, number], floor: number, 
 let planes: Plane[] | null = null
 function made(): Plane[] {
   if (planes) return planes
-  // The far end of the aisles: low runs along the back wall, the door under the exit sign, the ceiling's pipes. Each
-  // plane is made only as wide as the camera ever sees it.
+  // The far end of the aisles: low runs along the back wall, the door under the exit sign, the ceiling's dark with a
+  // duct and a pipe along it. Each plane is made only as wide as the camera ever sees it.
   const far = new Builder()
   far.rect('dark', -3, -4.4, 8, -2.2, 2)
-  for (const y of [-2.28, -2.22]) far.rect('steel', -3, y, 8, y + 0.02, 2)
-  for (let x = -2.6; x < 8; x += 1.3) far.rect('steel', x, -2.32, x + 0.02, -2.2, 2)
-  // The ceiling over the far end: its joists, a duct along it in ribbed lengths, the sprinkler line and its heads.
-  for (let x = -3; x < 8; x += 0.24) {
-    far.rect('steel', x, -4.4, x + 0.05, -2.36, 2)
-    far.rect('edge', x, -2.4, x + 0.05, -2.36, 2)
-  }
+  far.rect('steel', -3, -2.28, 8, -2.22, 2)
   far.rect('box', -3, -2.9, 8, -2.66, 2)
-  for (let x = -2.9; x < 8; x += 0.36) far.rect('edge', x, -2.9, x + 0.025, -2.66, 2)
   far.rect('edge', -3, -2.67, 8, -2.65, 2)
   far.rect('steel', -3, -2.52, 8, -2.49, 2)
-  for (let x = -2.5; x < 8; x += 0.9) far.rect('edge', x, -2.49, x + 0.04, -2.44, 2)
   far.rect('dark', 0.68, -1.42, 1.14, 0.6, 2)
   far.rect('steel', 0.65, -1.45, 1.17, -1.42, 2)
-  // A riser pipe and the fuse boxes on the back wall, beside the window.
-  for (const x of [2.35, 2.43]) far.rect('steel', x, -2.22, x + 0.035, 0.6, 2)
-  far.rect('box', 4.3, -1.95, 4.62, -1.62, 2)
-  far.rect('label', 4.38, -1.88, 4.54, -1.8, 2)
-  far.rect('box', 4.7, -1.9, 4.92, -1.68, 2)
-  // Under the window, the old radiator: its fins.
-  far.rect('steel', 2.75, -1.62, 4.1, -1.58, 2)
-  for (let x = 2.78; x < 4.08; x += 0.045) far.rect('steel', x, -1.58, x + 0.024, -1.3, 2)
-  far.rect('steel', 2.75, -1.3, 4.1, -1.27, 2)
-  // Under it, a plan chest of shallow drawers, each with its pull.
+  // A riser pipe on the back wall, beside the window; under the window, a plan chest.
+  far.rect('steel', 2.35, -2.22, 2.39, 0.6, 2)
   far.rect('box', 2.5, -1.18, 4.95, 0.6, 2)
-  for (let y = -1.12; y < 0.55; y += 0.13) {
-    far.rect('rim', 2.53, y + 0.1, 4.92, y + 0.12, 2)
-    far.rect('edge', 2.53, y + 0.12, 4.92, y + 0.13, 2)
-    for (const x of [3.05, 4.25]) far.rect('edge', x, y + 0.05, x + 0.14, y + 0.07, 2)
-  }
   far.rect('edge', 2.46, -1.22, 4.99, -1.18, 2)
-  shelving(far, -3, 0.5, -2.05, 0.6, 0.22, 0.3, 21, true)
-  shelving(far, 1.3, 2.25, -2.05, 0.6, 0.22, 0.3, 22, true)
-  shelving(far, 5.1, 8, -2.05, 0.6, 0.22, 0.3, 23, true)
+  shelving(far, -3, 0.5, -2.05, 0.6, 0.22, 0.3, 21)
+  shelving(far, 1.3, 2.25, -2.05, 0.6, 0.22, 0.3, 22)
+  shelving(far, 5.1, 8, -2.05, 0.6, 0.22, 0.3, 23)
   // The middle runs: an aisle open toward the window, and one toward the exit.
   const mid = new Builder()
   shelving(mid, -3.2, -0.05, -1.6, 1.1, 0.3, 0.45, 31)
   shelving(mid, 4.5, 7.7, -1.6, 1.1, 0.3, 0.45, 33)
   shelving(mid, 8.7, 9.6, -1.6, 1.1, 0.3, 0.45, 34)
-  // A filing cabinet in the aisle toward the window, its drawers' pulls and label holders.
+  // A filing cabinet in the aisle toward the window, its drawers.
   mid.rect('steel', 2.6, -1.38, 3.32, 1.1, 1)
-  for (let y = -1.32; y < 1.0; y += 0.48) {
-    mid.rect('box', 2.64, y, 3.28, y + 0.44, 1)
-    mid.rect('label', 2.86, y + 0.08, 3.06, y + 0.14, 1)
-    mid.rect('edge', 2.84, y + 0.2, 3.08, y + 0.235, 1)
-  }
+  for (let y = -1.32; y < 1.0; y += 0.48) mid.rect('box', 2.64, y, 3.28, y + 0.44, 1)
   // The ceiling over them: a beam, and the long fixtures hanging off it on their chains, unlit.
   mid.rect('dark', -3.2, -3.6, 9.6, -2.78, 2)
-  for (let x = -3.2; x < 9.6; x += 0.32) mid.rect('steel', x, -3.6, x + 0.06, -2.8, 2)
   mid.rect('steel', -3.2, -2.8, 9.6, -2.7, 2)
   for (let x = -2.7; x < 9.6; x += 3.4) {
     for (const cx of [x + 0.15, x + 1.15]) mid.rect('steel', cx, -2.7, cx + 0.012, -2.36, 2)
@@ -245,9 +200,9 @@ function made(): Plane[] {
   ladder(near, -1.3, [-1.62, -1.95], 1.6, 0.62)
   ladder(near, 6.4, [6.75, -1.95], 1.6, 0.62)
   planes = [
-    { z: 0.3, spill: 0.46, flash: 0.75, columns: far.columns },
-    { z: 0.55, spill: 0.6, flash: 0.88, columns: mid.columns },
-    { z: 0.8, spill: 0.8, flash: 1, columns: near.columns },
+    { z: 0.3, spill: 0.3, flash: 0.55, columns: far.columns },
+    { z: 0.55, spill: 0.4, flash: 0.65, columns: mid.columns },
+    { z: 0.8, spill: 0.55, flash: 0.75, columns: near.columns },
   ]
   return planes
 }
@@ -326,7 +281,7 @@ function drawWindow(ctx: C2, k: number, t: number): void {
   ctx.restore()
   // The grating: its bars and its rail, dark against the light.
   const bars = new Path2D()
-  for (let x = x0 + 0.05; x < x1; x += 0.09) bars.rect(x, y0, 0.018, y1 - y0)
+  for (let x = x0 + 0.15; x < x1 - 0.1; x += 0.15) bars.rect(x, y0, 0.018, y1 - y0)
   bars.rect(x0, y0 + (y1 - y0) * 0.45, x1 - x0, 0.016)
   ctx.save()
   ctx.scale(k, k)
@@ -401,7 +356,6 @@ function drawStrips(ctx: C2, k: number, t: number, light: number, flash: number)
   ctx.stroke()
   const base = mix(mix('#141414', '#3B342B', light * 0.55), '#7C8E8C', flash * 0.7)
   const frame = mix(mix('#191A18', '#57503F', light * 0.6), '#A6B8B4', flash * 0.7)
-  const holes = mix(mix('#202322', '#7A7360', light * 0.65), '#C6D6D3', flash * 0.75)
   const clip = mix(mix('#20262A', '#5E6466', light * 0.5), '#B0C2C2', flash * 0.7)
   for (const [x, len, seed] of HANGING) {
     const y = sag(x)
@@ -413,32 +367,11 @@ function drawStrips(ctx: C2, k: number, t: number, light: number, flash: number)
     const w = 0.3
     ctx.fillStyle = base
     ctx.fillRect(-w / 2, 0.05, w, len)
+    // Its frames, each a plain lighter cell.
     const fr = new Path2D()
-    const ho = new Path2D()
-    // In each frame a picture, small and reversed: a horizon, and something standing on it.
-    const clear = new Path2D()
-    const dense = new Path2D()
-    const fw = w - 0.1
-    for (let f = 0.12, i = 0; f + 0.22 < len; f += 0.26, i++) {
-      fr.rect(-w / 2 + 0.05, f, fw, 0.22)
-      const hz = f + 0.22 * (0.3 + 0.45 * hash(i, seed, 91))
-      clear.rect(-w / 2 + 0.05, hz, fw, f + 0.22 - hz)
-      const bw = fw * (0.14 + 0.22 * hash(i, seed, 93))
-      const bh = 0.22 * (0.15 + 0.35 * hash(i, seed, 94))
-      dense.rect(-w / 2 + 0.05 + (fw - bw) * hash(i, seed, 92), hz - bh, bw, bh)
-    }
-    for (let f = 0.08; f < len; f += 0.065) {
-      ho.rect(-w / 2 + 0.012, f, 0.022, 0.03)
-      ho.rect(w / 2 - 0.034, f, 0.022, 0.03)
-    }
+    for (let f = 0.12; f + 0.22 < len; f += 0.26) fr.rect(-w / 2 + 0.05, f, w - 0.1, 0.22)
     ctx.fillStyle = frame
     ctx.fill(fr)
-    ctx.fillStyle = mix(frame, holes, 0.45)
-    ctx.fill(clear)
-    ctx.fillStyle = base
-    ctx.fill(dense)
-    ctx.fillStyle = holes
-    ctx.fill(ho)
     // The clip it hangs by.
     ctx.fillStyle = clip
     ctx.fillRect(-0.045, -0.02, 0.09, 0.09)

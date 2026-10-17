@@ -142,20 +142,18 @@ function picture(ctx: C2, which: number, tone: Tone): void {
     ctx.fill()
   }
   if (which === 24 || which === 21) {
-    // Water: a pale sky with a streak of cloud, a low headland, the grey sea with its ripples and the light on it.
-    // 21 is the same water, close, with a ship.
+    // Water: a pale sky with a streak of cloud, a low headland, the grey sea with a few long ripples. 21 is the same
+    // water, close, with a ship.
     const h = which === 24 ? 0.46 : 0.3
     rect(0, 0, 1, h, 0.86)
-    rect(0.08, h * 0.35, 0.55, h * 0.35 + 0.03, 0.94)
-    rect(0.3, h * 0.6, 0.85, h * 0.6 + 0.025, 0.92)
+    rect(0.08, h * 0.4, 0.6, h * 0.4 + 0.03, 0.94)
     rect(0, h, 1, 1, 0.48)
     if (which === 21) rect(0, h, 1, h + 0.025, 0.36)
-    for (let i = 0; i < 12; i++) {
-      const y = h + 0.05 + i * ((1 - h) / 12.5)
-      const x = hash(i, which) * 0.6
-      strokeLine([[x, y], [x + 0.15 + hash(i, which, 1) * 0.3 + i * 0.015, y]], 0.56 + 0.1 * hash(i, which, 2), 0.018 + i * 0.002)
+    for (let i = 0; i < 4; i++) {
+      const y = h + (1 - h) * (0.22 + i * 0.21)
+      const x = hash(i, which) * 0.45
+      strokeLine([[x, y], [x + 0.3 + hash(i, which, 1) * 0.25, y]], 0.58, 0.022 + i * 0.006)
     }
-    for (let i = 0; i < 5; i++) rect(0.12 + i * 0.07 + hash(i, which, 3) * 0.04, h + 0.04 + i * 0.03, 0.17 + i * 0.07 + hash(i, which, 3) * 0.04, h + 0.055 + i * 0.03, 0.78)
     if (which === 24) {
       fill(0.3)
       ctx.beginPath()
@@ -163,7 +161,7 @@ function picture(ctx: C2, which: number, tone: Tone): void {
       ctx.quadraticCurveTo(0.12, h - 0.1, 0.32, h)
       ctx.fill()
     } else {
-      // The ship on the horizon, and its reflection broken on the water under it.
+      // The ship on the horizon, and its reflection on the water under it.
       const sx = 0.62
       fill(0.12)
       ctx.beginPath()
@@ -175,12 +173,8 @@ function picture(ctx: C2, which: number, tone: Tone): void {
       ctx.fill()
       ctx.fillRect(sx - 0.05, h - 0.09, 0.07, 0.06)
       ctx.fillRect(sx + 0.005, h - 0.15, 0.012, 0.07)
-      for (let i = 0; i < 6; i++) {
-        const y = h + 0.03 + i * 0.07
-        const w = 0.2 - i * 0.022
-        const dx = (hash(i, 7) - 0.5) * 0.05
-        rect(sx - w / 2 + dx, y, sx + w / 2 + dx, y + 0.035, 0.22 + i * 0.04)
-      }
+      rect(sx - 0.1, h + 0.03, sx + 0.1, h + 0.075, 0.26)
+      rect(sx - 0.06, h + 0.13, sx + 0.06, h + 0.165, 0.36)
     }
     return
   }
@@ -260,9 +254,9 @@ function picture(ctx: C2, which: number, tone: Tone): void {
   rect(0.72, 0, 1, 1, 0.38)
   rect(0, 0.8, 1, 1, 0.5)
   fill(0.44)
-  for (let r = 0; r < 5; r++) for (let c = 0; c < 2; c++) ctx.fillRect(0.04 + c * 0.13, 0.08 + r * 0.14, 0.07, 0.08)
+  for (let r = 0; r < 3; r++) ctx.fillRect(0.1, 0.12 + r * 0.22, 0.1, 0.11)
   fill(0.52)
-  for (let r = 0; r < 5; r++) for (let c = 0; c < 2; c++) ctx.fillRect(0.76 + c * 0.12, 0.1 + r * 0.14, 0.06, 0.08)
+  for (let r = 0; r < 3; r++) ctx.fillRect(0.81, 0.14 + r * 0.22, 0.09, 0.11)
   strokeLine([[0.62, 0.2], [0.62, 0.8]], 0.2, 0.014)
   strokeLine([[0.51, 0.82], [0.48, 1]], 0.88, 0.02)
 }
@@ -273,7 +267,7 @@ function shelves(ctx: C2, k: number, light: number, x0: number, x1: number, y0: 
   const gap = 0.92
   for (let r = 0; r < rows; r++) {
     const y = y0 + r * gap
-    // The plank, and the cans and boxes on it, each lit by how near the table it is.
+    // The plank, and the cans and boxes on it, each a plain block lit by how near the table it is.
     for (let x = x0; x < x1; ) {
       const w = 0.28 + hash(r, Math.floor(x * 10), seed) * 0.5
       const kind = hash(r, Math.floor(x * 10), seed + 1)
@@ -281,16 +275,11 @@ function shelves(ctx: C2, k: number, light: number, x0: number, x1: number, y0: 
       if (kind < 0.62) {
         // A stack of flat cans.
         const n = 2 + Math.floor(hash(r, Math.floor(x * 10), seed + 2) * 5)
-        for (let i = 0; i < n; i++) {
-          const cy = y - (i + 1) * 0.09
-          slab(ctx, k, x, cy, x + w * 0.9, cy + 0.075, mix(R.can, R.canLit, lit))
-          rule(ctx, k, x, cy + 0.075, x + w * 0.9, cy + 0.075, rgba(R.dark, 0.6), 0.6)
-        }
+        slab(ctx, k, x, y - n * 0.09, x + w * 0.9, y, mix(R.shelf, R.canLit, lit * 0.8))
       } else if (kind < 0.85) {
         // An archive box.
         const h = 0.32 + hash(r, Math.floor(x * 10), seed + 3) * 0.22
         slab(ctx, k, x, y - h, x + w, y, mix(R.shelf, R.canLit, lit * 0.8))
-        slab(ctx, k, x + w * 0.3, y - h * 0.62, x + w * 0.7, y - h * 0.46, mix(R.shelf, R.wallLit, lit * 0.9))
       }
       x += w + 0.04 + hash(r, Math.floor(x * 10), seed + 4) * 0.25
     }
@@ -398,9 +387,9 @@ function drawDoor(ctx: C2, k: number, t: number, light: number, pane_: boolean):
 
 /**
  * The picture the enlarger throws on the far wall: the water and the ship, out of focus and then in. It is projected
- * light, so it is never quite still: the lamp's flicker in it, a hair and two specks in the gate, and its light
- * falling off a little toward its edges. The defocus is drawn, not filtered: the horizon spread into a band, the
- * ripples gone, the ship laid over itself, spread, until the focus finds it.
+ * light, so it is never quite still: the lamp's flicker in it, and its light falling off a little toward its edges.
+ * The defocus is drawn, not filtered: the horizon spread into a band, the ripples gone, the ship laid over itself,
+ * spread, until the focus finds it.
  */
 function drawPicture(ctx: C2, k: number, t: number): void {
   const on = lampAt(t)
@@ -433,19 +422,19 @@ function drawPicture(ctx: C2, k: number, t: number): void {
   if (sharp > 0.5) {
     ctx.globalAlpha = (sharp - 0.5) * 2
     ctx.strokeStyle = tone(0.66)
-    for (let i = 0; i < 9; i++) {
-      const y = horizon + 0.14 + i * i * 0.022 + i * 0.05
+    for (let i = 0; i < 3; i++) {
+      const y = horizon + 0.3 + i * 0.45
       if (y > y1) break
-      const x = x0 + hash(i, 3) * (x1 - x0) * 0.8
-      ctx.lineWidth = (0.012 + i * 0.004) * k
+      const x = x0 + 0.4 + hash(i, 3) * (x1 - x0) * 0.5
+      ctx.lineWidth = (0.018 + i * 0.008) * k
       ctx.beginPath()
       ctx.moveTo(x * k, y * k)
-      ctx.lineTo((x + 0.6 + i * 0.2) * k, y * k)
+      ctx.lineTo((x + 1.2 + i * 0.4) * k, y * k)
       ctx.stroke()
     }
     ctx.globalAlpha = 1
   }
-  // The ship, a trawler on the horizon, and its reflection under it.
+  // The ship, a trawler on the horizon, and its reflection under it in two plain bars.
   const sx = 2.9
   const ship = new Path2D()
   ship.moveTo((sx - 0.62) * k, (horizon - 0.12) * k)
@@ -457,12 +446,8 @@ function drawPicture(ctx: C2, k: number, t: number): void {
   ship.rect((sx + 0.02) * k, (horizon - 0.75) * k, 0.04 * k, 0.4 * k)
   ship.rect((sx + 0.42) * k, (horizon - 0.5) * k, 0.03 * k, 0.4 * k)
   const wake = new Path2D()
-  for (let i = 0; i < 7; i++) {
-    const y = horizon + 0.08 + i * 0.13
-    const w = 1.1 - i * 0.12
-    const dx = (hash(i, 9) - 0.5) * 0.2
-    wake.rect((sx - w / 2 + dx) * k, y * k, w * k, 0.055 * k)
-  }
+  wake.rect((sx - 0.5) * k, (horizon + 0.1) * k, 1.0 * k, 0.07 * k)
+  wake.rect((sx - 0.3) * k, (horizon + 0.32) * k, 0.6 * k, 0.05 * k)
   const b = 0.16 * blur * k
   const copies: [number, number][] = blur > 0.01 ? [[-b, 0], [b, 0], [0, -b * 0.7], [0, b * 0.7], [0, 0]] : [[0, 0]]
   const each = blur > 0.01 ? 0.32 + 0.68 * sharp * sharp : 1
@@ -476,22 +461,6 @@ function drawPicture(ctx: C2, k: number, t: number): void {
     ctx.fill(wake)
     ctx.restore()
   }
-  // A hair and two specks of dust in the gate, thrown large and soft.
-  ctx.strokeStyle = tone(0.3)
-  ctx.globalAlpha = 0.35 + 0.3 * sharp
-  ctx.lineWidth = 0.025 * k
-  ctx.beginPath()
-  const hx = x0 + 6.3 + 0.03 * Math.sin(t * 1.3)
-  ctx.moveTo(hx * k, (y0 + 0.4) * k)
-  ctx.bezierCurveTo((hx + 0.3) * k, (y0 + 0.9) * k, (hx - 0.2) * k, (y0 + 1.2) * k, (hx + 0.15) * k, (y0 + 1.6) * k)
-  ctx.stroke()
-  ctx.fillStyle = tone(0.28)
-  for (const [px, py, r] of [[x0 + 5.3, y0 + 0.85, 0.032], [x0 + 4.4, y0 + 0.45, 0.024]] as const) {
-    ctx.beginPath()
-    ctx.arc((px + 0.02 * Math.sin(t * 2.1 + px)) * k, py * k, r * k, 0, Math.PI * 2)
-    ctx.fill()
-  }
-  ctx.globalAlpha = 1
   ctx.restore()
   // The picture's light on its own edges: the throw's falloff.
   const v = ctx.createRadialGradient(((x0 + x1) / 2) * k, ((y0 + y1) / 2) * k, 0.5 * k, ((x0 + x1) / 2) * k, ((y0 + y1) / 2) * k, ((x1 - x0) * 0.62) * k)
@@ -539,10 +508,10 @@ function drawHead(ctx: C2, k: number, t: number, light: number): void {
   ctx.lineTo(bx0 * k, (h.y1 - 0.1) * k)
   ctx.fill()
   slab(ctx, k, bx1, E.lens[1] - 0.12, E.lens[0] + 0.06, E.lens[1] + 0.12, mix(R.metal, R.glass, 0.15), { color: rgba(INK, 0.95), w: 1 })
-  // The focus knob turns as the picture comes sharp.
+  // The focus knob on the head's face, beside the vents, turns as the picture comes sharp.
   const turn = (t < LAMP ? 0 : ramp(t, LAMP + 0.2, FOCUS)) * Math.PI * 1.5
   const kx = h.x1 - 0.22
-  const ky = h.y1 + 0.18
+  const ky = h.y1 - 0.2
   slab(ctx, k, kx - 0.08, ky - 0.06, kx + 0.08, ky + 0.06, mix(R.metal, R.glass, 0.12), { color: rgba(INK, 0.9), w: 1 })
   rule(ctx, k, kx, ky, kx + Math.cos(turn) * 0.09, ky + Math.sin(turn) * 0.09, INK, 1)
 }
@@ -612,43 +581,18 @@ function drawTray(ctx: C2, k: number, t: number, light: number, front: boolean):
   slab(ctx, k, E.tray.x0, y - 0.05, E.tray.x1, y + 0.02, rgba(mix(R.dark, mix(R.metal, R.glass, lit * 0.3), Math.max(light, lampAt(t)) * 0.8 + 0.1), 0.9))
 }
 
-/** Each of the housing's louvres, a slit across one of its four panels every so far down: (x0, y, x1) in cells. */
-function louvres(each: (l0: number, y: number, l1: number) => void): void {
-  const x0 = GLASS.x0 + 0.1
-  const w = (GLASS.x1 - 0.1 - x0) / 4
-  for (let i = 0; i < 4; i++) {
-    const l0 = x0 + i * w + (i === 0 ? 0.52 : 0.07)
-    const l1 = x0 + (i + 1) * w - (i === 3 ? 0.92 : 0.07)
-    for (let y = LIP + 0.17; y < 0.88; y += 0.095) each(l0, y, l1)
-  }
-}
-
 /**
- * The housing's face: its panels and their screws, the louvres the tubes' light leaks through (their hum is in it),
- * the maker's plate (no lettering), the switch with its pilot lamp, and the flex down to the floor.
+ * The housing's face: its four panels, the maker's plate (no lettering), the switch with its pilot lamp, and the flex
+ * down to the floor.
  */
 function housing(ctx: C2, k: number, light: number): void {
   const x0 = GLASS.x0 + 0.1
   const x1 = GLASS.x1 - 0.1
   const w = (x1 - x0) / 4
   const seams = new Path2D()
-  const screws = new Path2D()
-  for (let i = 0; i < 4; i++) {
-    const a = x0 + i * w
-    if (i > 0) seams.rect((a - 0.006) * k, (LIP + 0.14) * k, 0.012 * k, (0.92 - LIP - 0.18) * k)
-    for (const [sx, sy] of [[a + 0.09, LIP + 0.2], [a + w - 0.09, LIP + 0.2], [a + 0.09, 0.84], [a + w - 0.09, 0.84]]) {
-      screws.moveTo((sx + 0.016) * k, sy * k)
-      screws.arc(sx * k, sy * k, 0.016 * k, 0, Math.PI * 2)
-    }
-  }
-  const gaps = new Path2D()
-  louvres((l0, y, l1) => gaps.rect(l0 * k, y * k, (l1 - l0) * k, 0.03 * k))
+  for (let i = 1; i < 4; i++) seams.rect((x0 + i * w - 0.006) * k, (LIP + 0.14) * k, 0.012 * k, (0.92 - LIP - 0.18) * k)
   ctx.fillStyle = rgba(INK, 0.55)
   ctx.fill(seams)
-  ctx.fillStyle = mix('#1E2225', '#57605F', light * 0.6)
-  ctx.fill(screws)
-  ctx.fillStyle = '#0F1214'
-  ctx.fill(gaps)
   // The maker's plate and the switch with its pilot lamp, at the near end.
   slab(ctx, k, x1 - 0.85, 0.64, x1 - 0.4, 0.74, mix('#22262A', '#4A4C48', light * 0.6), { color: rgba(INK, 0.8), w: 0.8 })
   slab(ctx, k, x0 + 0.25, 0.6, x0 + 0.45, 0.78, mix('#1C2023', '#3F474B', light * 0.6), { color: rgba(INK, 0.9), w: 0.8 })
@@ -660,19 +604,6 @@ function housing(ctx: C2, k: number, light: number): void {
   ctx.moveTo((x0 + 0.35) * k, 0.78 * k)
   ctx.bezierCurveTo((x0 + 0.35) * k, 1.2 * k, (x0 - 0.15) * k, 1.4 * k, (x0 - 0.45) * k, FLOOR * k)
   ctx.stroke()
-}
-
-/**
- * The tubes' light through the housing's louvres: drawn over the room's dark, since it is the tubes themselves
- * seen through the slits, so it strikes and stutters with them and hums a little once they have caught.
- */
-function louvreLight(ctx: C2, k: number, t: number, light: number): void {
-  if (light <= 0.01) return
-  const slits = new Path2D()
-  louvres((l0, y, l1) => slits.rect(l0 * k, (y + 0.008) * k, (l1 - l0) * k, 0.014 * k))
-  const hum = 1 - 0.08 * (0.5 + 0.5 * Math.sin(t * 7.3) * Math.sin(t * 2.9 + 1))
-  ctx.fillStyle = rgba('#8C8270', clamp01(0.36 * light * hum))
-  ctx.fill(slits)
 }
 
 function drawTable(ctx: C2, k: number, light: number): void {
@@ -850,7 +781,6 @@ export function drawRoom(p: p5, k: number, t: number): void {
   drawEnlarger(ctx, k, t, light)
   drawTable(ctx, k, light)
   darkness(ctx, k, f, light)
-  louvreLight(ctx, k, t, light)
   archiveLights(ctx, v, t, light)
   // What gives light, over the dark: the picture, the corridor through the pane, the lamp, the glass. And what
   // stands in front of the picture, seen by the table's light or the lamp's.

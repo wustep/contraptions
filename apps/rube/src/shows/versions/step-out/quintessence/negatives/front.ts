@@ -1,46 +1,20 @@
 import { scenery } from '../kit'
-import { layer, motes, rgbaOf, view, type View } from '../depth'
+import { layer, rgbaOf, view, type View } from '../depth'
 import { tubeAt } from './draw'
-import { clamp01 } from './hand'
-import { GLASS } from './plan'
 
 /**
  * What stands between the camera and the machine in this place, and the light over all of it: the near plane, the
  * air, the grade. Drawn after the set and the parts and before Walter (`depth.ts`), so nothing here hides him or
  * changes his colour. It is handed show time as `t`.
  *
- * The room's air: a little dust going up slowly through the table's light, close over the glass. Nearest of all, in
- * silhouette along the bottom of the frame, the desk's edge and what is left on it: a mug, short stacks of film cans.
- * Over everything, a cold teal and the top of the frame falling away into the dark.
+ * Nearest of all, in silhouette along the bottom of the frame, the desk's edge and what is left on it: a mug, short
+ * stacks of film cans. Over everything, a cold teal and the top of the frame falling away into the dark.
  */
 
 type C2 = CanvasRenderingContext2D
 
 const ANCHOR: [number, number] = [2.6, -0.6]
 const REF = 3.4
-
-/* ------------------------------------------------------------------ the air */
-
-function air(ctx: C2, v: View, t: number, light: number): void {
-  // A few motes going up slowly through the table's light, close over the glass. They come up with the tubes, on an
-  // eased curve of their light, as the eye finds them.
-  const eased = 1 - (1 - light) * (1 - light)
-  if (eased <= 0.02) return
-  ctx.save()
-  ctx.globalAlpha = clamp01(0.6 * eased)
-  motes(ctx, v, t, {
-    n: 8,
-    seed: 3,
-    tile: [2.6, 1.9],
-    r: [0.006, 0.013],
-    v: [0.02, -0.06],
-    spread: 0.5,
-    sway: [0.05, 0.13],
-    color: 'rgba(255, 236, 206, 0.5)',
-    within: { x0: GLASS.x0 - 0.6, y0: GLASS.top - 1.6, x1: GLASS.x1 + 0.6, y1: GLASS.top + 0.05 },
-  })
-  ctx.restore()
-}
 
 /* ------------------------------------------------------------------ the near plane */
 
@@ -139,7 +113,6 @@ export const negativesFront = scenery<null>({
     const v = view(p, c.k)
     const light = tubeAt(t)
     ctx.save()
-    air(ctx, v, t, light)
     nearPlane(ctx, v, light)
     // A cold teal over the room's darks, and the top of the frame going into them.
     ctx.fillStyle = 'rgba(30, 64, 66, 0.07)'
