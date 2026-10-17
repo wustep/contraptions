@@ -58,7 +58,7 @@ function line(ctx: CanvasRenderingContext2D, text: string, cx: number, y: number
 /** One card, whole, at full light: its top middle at (cx, y). */
 /** Draws a card from its top middle, and says where its words end. */
 function card(ctx: CanvasRenderingContext2D, c: TitleCard, cx: number, y: number, u: number): number {
-  const glow = u * (c.dark ? 1.2 : 1.4)
+  const glow = c.matte ? 0 : u * (c.dark ? 1.2 : 1.4)
   // A plain card (over a light sky) sets its role and "as" lines in its own cream, as the page does; a dark one (over a
   // pale picture) all its words in graphite.
   const ink = c.dark ? DARK_INK : INK
@@ -88,7 +88,7 @@ function card(ctx: CanvasRenderingContext2D, c: TitleCard, cx: number, y: number
     ctx.shadowBlur = glow
     ctx.fillText(n[0], cx - gap / 2, base)
     let x = cx + gap / 2
-    if (n[2]) swatch(ctx, n[2], x, base, as.size, u, c.dark ? DARK_ACCENT : GOLD)
+    if (n[2]) swatch(ctx, n[2], x, base, as.size, u, c.dark ? DARK_ACCENT : c.matte && c.plain ? INK : GOLD, c.matte)
     if (n[2]) x += as.size * (0.78 + 0.45)
     font(ctx, as)
     ctx.textAlign = 'left'
@@ -130,7 +130,7 @@ function veil(into: CanvasRenderingContext2D, cx: number, top: number, bottom: n
 }
 
 /** The ball they are: a disc with an ink ring and a little glow, or 'slab:' and a colour for a bar in its footprint. */
-function swatch(ctx: CanvasRenderingContext2D, spec: string, x: number, base: number, em: number, u: number, edge = GOLD): void {
+function swatch(ctx: CanvasRenderingContext2D, spec: string, x: number, base: number, em: number, u: number, edge = GOLD, matte = false): void {
   const slab = spec.startsWith('slab:')
   const side = em * 0.78
   // CSS sits its bottom 0.08em under the baseline.
@@ -142,7 +142,7 @@ function swatch(ctx: CanvasRenderingContext2D, spec: string, x: number, base: nu
     else ctx.arc(x + side / 2, top + side / 2, side / 2 + grow, 0, Math.PI * 2)
   }
   ctx.shadowColor = 'rgba(244, 238, 223, 0.25)'
-  ctx.shadowBlur = u * 0.9
+  ctx.shadowBlur = matte ? 0 : u * 0.9
   ctx.fillStyle = 'rgba(236, 229, 211, 0.85)'
   shape(ring)
   ctx.fill()
@@ -189,7 +189,7 @@ export function wordPainter(w: number, h: number, dx = 0, dy = 0): (into: Canvas
       into.setTransform(1, 0, 0, 1, 0, 0)
       into.globalAlpha = Math.min(1, c.light)
       into.globalCompositeOperation = 'source-over'
-      into.filter = c.light > 0.995 ? 'none' : `blur(${((1 - c.light) * h * 0.012).toFixed(2)}px)`
+      into.filter = c.matte || c.light > 0.995 ? 'none' : `blur(${((1 - c.light) * h * 0.012).toFixed(2)}px)`
       into.drawImage(surface, dx, dy)
       into.restore()
     }

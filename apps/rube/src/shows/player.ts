@@ -881,7 +881,7 @@ const saidKeys = new Set<string>()
 const cardText = (c: TitleCard): string => [c.role, ...c.names.map((n) => (typeof n === 'string' ? n : `${n[0]}, ${n[1]}`)), ...(c.notes ?? [])].filter(Boolean).join('. ')
 
 function buildCard(c: TitleCard): HTMLElement {
-  const node = el('div', { class: `${c.title ? 'card title' : 'card'}${c.plain ? ' plain' : ''}${c.dark ? ' dark' : ''}${c.shade ? ' shaded' : ''}${c.caption ? ' caption' : ''}` })
+  const node = el('div', { class: `${c.title ? 'card title' : 'card'}${c.plain ? ' plain' : ''}${c.dark ? ' dark' : ''}${c.matte ? ' matte' : ''}${c.shade ? ' shaded' : ''}${c.caption ? ' caption' : ''}` })
   if (c.shade) {
     node.style.setProperty('--shade', String(c.shade))
     node.append(el('div', { class: 'veil' }))
@@ -969,7 +969,7 @@ function renderWords(t: number): void {
     }
     node.style.opacity = c.light.toFixed(3)
     // Out of focus as it comes and goes: it comes into focus as it comes up.
-    node.style.filter = c.light > 0.995 ? '' : `blur(${((1 - c.light) * fh * 0.012).toFixed(2)}px)`
+    node.style.filter = c.matte || c.light > 0.995 ? '' : `blur(${((1 - c.light) * fh * 0.012).toFixed(2)}px)`
   }
 }
 

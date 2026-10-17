@@ -269,6 +269,8 @@ export interface TitleCard {
   caption?: boolean
   /** Optional: the role and the cast's "as" lines in the card's own cream, not gold (for credits over a light sky). */
   plain?: boolean
+  /** Matte end cards: opacity fades only, with no text/swatch halo or focus blur, live and in video. */
+  matte?: boolean
   /**
    * Optional: the words in graphite with a pale glow, not cream, for credits over a pale picture (a morning sky) where
    * cream would vanish; its role and "as" lines a softer graphite. Unset: cream, every show's credits as they were.

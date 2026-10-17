@@ -29,7 +29,7 @@ The folder and file names are addresses, so they are chosen once:
   freely: `come-recover` is **Everything**, `heptapod-b` **Logogram**,
   `interstellar` **Voyage**, `la-la-land` **Epilogue**, `bolero` **Ostinato**,
   `nature-of-daylight` **Palindrome**, `relax` **Magnum**, `time` **Kick**, `step-out` **Quintessence**,
-  `rule-the-world` **Rally**. The write-up says which is which.
+  `rule-the-world` **Rally**, `bridge-of-khazad-dum` **Burden**. The write-up says which is which.
 - **Take**: `<take>.show.ts`, which is also `/shows/<work>/<take>/` and the
   card `public/shows/<work>/<take>.png`. Name it for who made it (`opus55`,
   `fable51`, `grok47`), or with a letter (`take-a`). La La Land's takes keep the
