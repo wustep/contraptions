@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { coil, outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine, easeOutCubic, lerp } from '../../../../../src/core/ease'
-import { FLOOR, R, ROLL, arcPts, arrive, arriveAt, definePiece, laneAt, over, post, rail, ramp, rankBy, segTime, wait, type Lane, type Pt, type Seg } from '../../parts'
+import { FLOOR, R, ROLL, arcPts, arrive, arriveAt, definePiece, laneAt, mixHex, over, post, rail, ramp, rankBy, segTime, wait, type Lane, type Pt, type Seg } from '../../parts'
 import { flash, score } from './neon'
 
 /**
@@ -186,7 +186,7 @@ function falling(s: number, from: number): number {
   return after < 0.3 ? from * 0.2 * Math.abs(Math.sin((Math.PI * after) / 0.1)) * Math.exp(-after * 10) : 0
 }
 
-/** A lit tube along a path, laid as one line so the joints do not bead. */
+/** A lit tube along a path, laid as one line so the joints do not bead; as `f` falls it dims back to the ink, not all at once. */
 function tubePath(p: p5, k: number, ink: string, weight: number, color: string, pts: Pt[], f: number): void {
   const path = () => {
     p.beginShape()
@@ -195,7 +195,7 @@ function tubePath(p: p5, k: number, ink: string, weight: number, color: string, 
   }
   p.push()
   p.noFill()
-  p.stroke(f > 0.5 ? color : ink)
+  p.stroke(mixHex(ink, color, f))
   p.strokeWeight(weight * 1.3)
   path()
   p.pop()
