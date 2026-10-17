@@ -131,7 +131,7 @@ export const stool = definePiece<StoolState>({
       solid(p, ink, weight, gold)
       p.rect(0, ((under + HUB) / 2) * k, 0.075 * k, (HUB - under) * k)
       outline(p, ink, weight * 0.7)
-      for (let ty = HUB - 0.06; ty > under + 0.04; ty -= 0.08) p.line(-0.0375 * k, (ty + 0.016) * k, 0.0375 * k, (ty - 0.016) * k)
+      for (let ty = HUB - 0.07; ty > under + 0.05; ty -= 0.13) p.line(-0.0375 * k, (ty + 0.016) * k, 0.0375 * k, (ty - 0.016) * k)
     }
     solid(p, ink, weight, gold)
     p.rect(0, (HUB + 0.025) * k, 0.18 * k, 0.05 * k, 0.012 * k)
