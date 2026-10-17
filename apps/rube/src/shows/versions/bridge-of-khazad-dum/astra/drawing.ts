@@ -73,11 +73,26 @@ function rock(g: G, points: Pt[], color: string, salt: number): void {
 }
 function branch(g: G, x: number, y: number, h: number, color: string, salt: number): void {
   const sway = (hash(salt) - 0.5) * h * 0.2
-  shape(g, [[x - h * 0.05, y], [x + h * 0.036, y], [x + sway, y - h], [x + sway - h * 0.018, y - h * 0.7]], color)
+  g.beginPath(); g.moveTo(x - h * 0.055, y)
+  g.bezierCurveTo(x + h * 0.025, y - h * 0.28, x - h * 0.04, y - h * 0.53, x + sway, y - h)
+  g.bezierCurveTo(x + h * 0.015, y - h * 0.43, x + h * 0.09, y - h * 0.13, x + h * 0.065, y)
+  g.closePath(); g.fillStyle = color; g.fill()
+  g.beginPath(); g.moveTo(x - h * 0.015, y - 0.2)
+  g.bezierCurveTo(x + h * 0.04, y - h * 0.3, x - h * 0.025, y - h * 0.47, x + sway, y - h * 0.8)
+  g.strokeStyle = mixHex(color, '#C1C3A0', 0.22); g.lineWidth = 0.035; g.stroke()
   for (let i = 0; i < 7; i++) {
     const s = i % 2 ? -1 : 1, by = y - h * (0.25 + i * 0.085), bx = x + sway * (0.25 + i * 0.085)
-    line(g, [[bx, by], [bx + s * h * 0.19, by - h * 0.15], [bx + s * h * 0.29, by - h * 0.18]], color, h * 0.021)
-    shape(g, [[bx + s * h * 0.1, by - h * 0.17], [bx + s * h * 0.34, by - h * 0.25], [bx + s * h * 0.28, by - h * 0.12]], color)
+    g.beginPath(); g.moveTo(bx, by)
+    g.bezierCurveTo(bx + s * h * 0.19, by, bx + s * h * 0.12, by - h * 0.18, bx + s * h * 0.3, by - h * 0.2)
+    g.strokeStyle = color; g.lineWidth = h * (0.021 - i * 0.0015); g.stroke()
+    for (let j = 0; j < 3; j++) {
+      const lx = bx + s * h * (0.17 + j * 0.055), ly = by - h * (0.1 + j * 0.035)
+      const w = h * 0.07, hh = h * 0.04
+      g.beginPath(); g.moveTo(lx - w, ly + hh)
+      g.bezierCurveTo(lx - w, ly - hh, lx + w * 0.35, ly - hh * 2, lx + w, ly - hh)
+      g.bezierCurveTo(lx + w * 0.7, ly + hh, lx - w * 0.1, ly + hh * 1.3, lx - w, ly + hh)
+      g.fillStyle = color; g.fill()
+    }
   }
 }
 
@@ -89,10 +104,17 @@ export const landscape = piece('burden-landscape', (g, t) => {
   rect(g, -100, -120, 500, 300, sky)
 
   // The Shire is broad, quiet earth, with the workings cut into its edge.
-  shape(g, [[-40, 7], [-30, 0], [-22, -3], [-13, -1.5], [-6, -4.8], [4, -3], [13, -1], [24, -3.2], [34, 0], [36, 20], [-40, 20]], '#B0B49A')
-  shape(g, [[-30, 8], [-15, -0.8], [-7, -3], [1, -1.4], [9, 2], [18, 1], [28, 3.3], [28, 32], [-30, 32]], '#6F8068')
+  g.beginPath(); g.moveTo(-40, 7)
+  g.bezierCurveTo(-31, -5, -27, -3, -17, -1.5)
+  g.bezierCurveTo(-8, -7, -2, -5, 8, -1.5)
+  g.bezierCurveTo(18, 2, 20, -6, 34, 0)
+  g.lineTo(36, 20); g.lineTo(-40, 20); g.closePath(); g.fillStyle = '#B0B49A'; g.fill()
+  g.beginPath(); g.moveTo(-30, 8)
+  g.bezierCurveTo(-18, -3, -10, -5, 1, -1.4)
+  g.bezierCurveTo(10, 3.8, 15, -1.4, 28, 3.3)
+  g.lineTo(28, 32); g.lineTo(-30, 32); g.closePath(); g.fillStyle = '#6F8068'; g.fill()
   shape(g, [[-30, 5], [-8, 0.24], [1, 0.24], [8, 1.24], [24, 3.24], [29, 3.24], [29, 30], [-30, 30]], '#424F42')
-  line(g, [[-8, 0.24], [1, 0.24], [8, 1.24], [24, 3.24], [28.6, 3.24]], '#B9BA98', 0.12)
+  line(g, [[-8, 0.215], [1, 0.215], [8, 1.215], [24, 3.215], [28.6, 3.215]], '#B9BA98', 0.12)
   for (let i = 0; i < 95; i++) {
     const x = -10 + hash(i, 1) * 38, y = 4.1 + hash(i, 9) * 6
     line(g, [[x, y], [x + 0.18, y - 0.1]], '#65715A', 0.025)
@@ -109,9 +131,9 @@ export const landscape = piece('burden-landscape', (g, t) => {
   shape(g, [[38, 2], [44, -11], [49, -6], [54, -20], [63, -7], [69, -16], [77, 2]], '#899995')
   shape(g, [[43, -10], [44, -11], [49, -6], [54, -20], [57, -15], [54, -16], [52, -11], [50, -7]], '#D3D5C4')
   rock(g, [[41, 2], [44, -4], [48, -2], [48, 26], [41, 26]], '#697971', 21)
-  rock(g, [[54, -8.76], [58, -7.76], [61, -3.76], [64, 0.24], [67, 27], [54, 27]], '#5B6963', 24)
-  line(g, [[39.2, 2.28], [43, 1.64], [47, 1.24]], '#B2B3A1', 0.11)
-  line(g, [[54, -8.76], [58, -7.76], [61, -3.76], [64, 0.24]], '#C3C7B8', 0.13)
+  rock(g, [[52.65, -8.785], [55.35, -8.785], [58, -7.785], [61, -3.785], [64, 0.215], [67, 27], [54, 27]], '#5B6963', 24)
+  line(g, [[39.2, 2.365], [41.276, 2.012], [45.65, 1.215], [47, 1.215]], '#B2B3A1', 0.11)
+  line(g, [[52.65, -8.785], [55.35, -8.785], [58, -7.785], [61, -3.785], [64, 0.215]], '#C3C7B8', 0.13)
 
   // Moria is an absence cut into a mountain, with just enough masonry to measure it.
   rect(g, 62.5, -45, 75, 100, '#252D2E')
@@ -123,18 +145,22 @@ export const landscape = piece('burden-landscape', (g, t) => {
   for (const x of [67, 75, 95, 103, 133]) {
     rock(g, [[x - 0.5, -30], [x + 0.5, -30], [x + 0.8, 5.3], [x + 1.4, 6], [x - 1.4, 6], [x - 0.8, 5.3]], '#47524E', x)
     line(g, [[x - 0.15, -27], [x - 0.15, 4.7]], '#69726A', 0.05)
+    for (const y of [-12, -6, 0]) {
+      line(g, [[x - 0.56, y], [x + 0.56, y]], '#273930', 0.045)
+      line(g, [[x - 0.52, y + 0.1], [x + 0.52, y + 0.1]], '#6C786A', 0.025)
+    }
     shape(g, [[x - 0.8, -7], [x - 3, -10], [x - 2.7, -10.4], [x, -8.5], [x + 2.7, -10.4], [x + 3, -10], [x + 0.8, -7]], '#4B5752')
   }
   rock(g, [[62, 0.24], [64, 0.24], [72, 1.24], [78, 2.24], [79, 33], [62, 33]], '#47544F', 29)
   line(g, [[64, 0.24], [72, 1.24], [78, 2.24]], '#9A9F8E', 0.11)
-  rock(g, [[91.7, 6.55], [97, 5.24], [104, 5.24], [105, 10], [102, 13], [104, 22], [100, 33], [91, 33]], '#4C5853', 30)
-  line(g, [[91.7, 6.55], [97, 5.24], [104, 5.24]], EDGE, 0.09)
+  rock(g, [[91.33, 6.49], [97, 5.215], [104, 5.215], [105, 10], [102, 13], [104, 22], [100, 33], [91, 33]], '#4C5853', 30)
+  line(g, [[91.33, 6.49], [97, 5.215], [104, 5.215]], EDGE, 0.09)
   rock(g, [[132, 5.24], [139, 5.24], [141, 5.6], [141, 35], [131, 35], [133, 18], [130.5, 14]], '#59665B', 31)
-  line(g, [[132, 5.24], [139, 5.24], [142, 5.44], [144, 5.74]], EDGE, 0.09)
+  line(g, [[132, 5.215], [139, 5.215], [142.65, 5.715], [144, 5.715]], EDGE, 0.09)
 
   // Lothlórien's woven roots lower the travellers to the Anduin.
-  for (let i = 0; i < 8; i++) branch(g, 139 + i * 2.4, 12, 19 + hash(i, 45) * 5, '#687B64', 50 + i)
-  rock(g, [[137.5, 5.24], [139, 5.24], [144, 5.74], [145, 15], [138, 19]], '#707E66', 34)
+  for (let i = 0; i < 6; i++) branch(g, 140 + i * 3.1, 12, 19 + hash(i, 45) * 5, i % 2 ? '#72836B' : '#65785F', 50 + i)
+  rock(g, [[137.5, 5.215], [139, 5.215], [142.65, 5.715], [145.35, 5.715], [145, 15], [138, 19]], '#707E66', 34)
   rock(g, [[149, 10.94], [155, 10.94], [154.6, 13], [149, 16]], '#777F68', 39)
   line(g, [[149.5, 10.94], [155, 10.94]], '#C2BC99', 0.1)
 
@@ -158,6 +184,14 @@ export const bagEnd = piece('burden-round-door-latch', (g, t) => {
     line(g, [[-4.5 + x, -1.25 - half], [-4.5 + x, -1.25 + half]], '#62765A', 0.032)
   }
   ring(g, -4.5, -1.25, 1.6, '#D0C59B', 0.045)
+  for (let i = 0; i < 19; i++) {
+    const a = i * Math.PI * 2 / 19
+    line(g, [[-4.5 + Math.cos(a) * 1.53, -1.25 + Math.sin(a) * 1.53], [-4.5 + Math.cos(a) * 1.71, -1.25 + Math.sin(a) * 1.71]], '#746F50', 0.035)
+  }
+  for (const y of [-2.1, -0.55]) {
+    line(g, [[-5.62, y], [-4.98, y]], '#26392C', 0.1)
+    disk(g, -5.52, y, 0.035, '#92936A'); disk(g, -5.1, y, 0.035, '#92936A')
+  }
   disk(g, -4.5, -1.25, 0.08, BRASS)
   shape(g, [[-4.5, -1.12], [-4.1, -1.16], [-2.25, 0.18], [-2.45, 0.29]], '#97855D', INK)
   line(g, [[-4.3, -1.2], [-2.48, 0.22], [1, 0.22]], '#D1BE8A', 0.06)
@@ -198,13 +232,13 @@ export const council = piece('burden-council-balance', (g, t) => {
     line(g, [[x - 0.25, y], [x + 0.25, y]], '#D3D2B8', 0.085)
   }
   shape(g, [[33.65, 4.1], [34.35, 4.1], [34.65, 12], [34, 15], [33.35, 12]], '#66796D', '#A3AD98', 0.04)
-  g.save(); g.translate(34, 3.8); g.rotate(councilAngle(t))
+  g.save(); g.translate(34, 4.015); g.rotate(councilAngle(t))
   shape(g, [[-5.6, -0.8], [5.6, -0.8], [5.3, -0.55], [0.5, 0.18], [-0.5, 0.18], [-5.3, -0.55]], '#AFB398', INK, 0.06)
   line(g, [[-5.5, -0.82], [5.5, -0.82]], '#E1D7B2', 0.065)
   for (let x = -4; x <= 4; x += 1) line(g, [[x, -0.55], [x * 0.15, 0.07]], '#69796B', 0.03)
   g.restore()
-  disk(g, 34, 3.8, 0.24, BRASS, INK, 0.06)
-  ring(g, 34, 3.8, 0.1, '#D7CAA2', 0.03)
+  disk(g, 34, 4.015, 0.24, BRASS, INK, 0.06)
+  ring(g, 34, 4.015, 0.1, '#D7CAA2', 0.03)
 })
 
 export const mountainLift = piece('burden-mountain-counterweight', (g, t) => {
@@ -251,7 +285,7 @@ export const stair = piece('burden-bucket-stair', (g, t) => {
   line(g, [[-0.3, 0.2], [0.3, 0.2]], INK, 0.035)
   g.restore()
   // The whole stair rocks onto its far abutment. Riders read this identical angle.
-  g.save(); g.translate(85, 4.38); g.rotate(stairAngle(t))
+  g.save(); g.translate(78, 2 + RADIUS); g.rotate(stairAngle(t)); g.translate(7, 0)
   shape(g, [[-7.3, 0], [7.3, 0], [7.3, 0.6], [5, 1.1], [-5, 1.1], [-7.3, 0.6]], '#718072', INK, 0.07)
   line(g, [[-7.3, 0], [7.3, 0]], '#C2C4A9', 0.09)
   for (let i = 0; i < 20; i++) {
@@ -293,6 +327,9 @@ export const bridge = piece('burden-sacrificial-bridge', (g, t) => {
     g.restore()
   }
   const pin = smooth(t, 263.4, 274.2)
+  const perch = 5 + RADIUS - 0.65 * smooth(t, 243, 245) + 0.65 * smooth(t, 253, 257) + pin * 0.12 + fall
+  line(g, [[115.69, perch], [116.31, perch]], '#C4C4A8', 0.07)
+  line(g, [[116, perch + 0.04], [116, 5.7 + fall]], '#8B937C', 0.055)
   rect(g, 115.87, 5.24 + pin * 0.18 + fall, 0.26, 0.55, BRASS)
   line(g, [[115.9, 5.4 + fall], [115.45, 6.1 + fall]], '#D0BD87', 0.06)
 })
