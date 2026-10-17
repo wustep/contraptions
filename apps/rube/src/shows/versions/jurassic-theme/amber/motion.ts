@@ -79,7 +79,7 @@ export function caneOpen(t: number): number {
 /** The rack's one job: it tips as he arrives. Radians, clockwise in screen space. */
 export function pipetteAng(t: number): number {
   const u = smooth(t, PIPETTES, PIPETTES + 0.72)
-  return (u + ring(t - (PIPETTES + 0.72), 1.6, 0.38) * 0.02) * 1.05
+  return (u + ring(t - (PIPETTES + 0.72), 1.6, 0.38) * 0.02) * 0.42
 }
 
 /** The egg's one job: the shell opens on the small note in the hush. */

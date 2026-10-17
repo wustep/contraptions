@@ -53,9 +53,15 @@ function island(ctx: C2D, k: number, f: ReturnType<typeof frame>): void {
 }
 
 function pad(ctx: C2D, k: number): void {
-  fillBox(ctx, k, -3.2, PAD, 3.4, PAD + 0.55, DAWN.pad)
-  fillBox(ctx, k, -3.2, PAD + 0.55, 3.4, 2.4, DAWN.hull)
-  line(ctx, k, [-3.2, PAD], [3.4, PAD], DAWN.ink, Math.max(1, k * 0.015))
+  // The island's near edge, the same rock, falling to the water. The deck is the only made surface.
+  shape(ctx, k, [
+    [-2.8, PAD + 0.22],
+    [3.0, PAD + 0.22],
+    [4.4, 1.15],
+    [-4.1, 1.15],
+  ], DAWN.island)
+  fillBox(ctx, k, -2.6, PAD, 2.8, PAD + 0.22, DAWN.pad)
+  line(ctx, k, [-2.6, PAD], [2.8, PAD], DAWN.ink, Math.max(1, k * 0.012))
 }
 
 function helicopter(ctx: C2D, k: number, t: number, framePass: boolean): void {

@@ -66,14 +66,18 @@ function pipettes(ctx: C2D, k: number, t: number): void {
   const ang = pipetteAng(t)
   const x = 7.15
   const y = TOP
-  // The tray they tip toward.
-  fillBox(ctx, k, x - 0.15, TOP - 0.06, x + 1.7, TOP + 0.05, LAB.steel)
+  const pivot = 0.6
+  fillBox(ctx, k, x - 0.15, TOP - 0.06, x + 1.7, TOP + 0.02, LAB.steel)
   ctx.save()
-  ctx.translate(x * k, y * k)
+  // Nothing below the bench top. A tipped tube meets the top and stops.
+  ctx.beginPath()
+  ctx.rect((x - 2) * k, -6 * k, 8 * k, (y + 0.01 + 6) * k)
+  ctx.clip()
+  ctx.translate((x + pivot) * k, y * k)
   ctx.rotate(ang)
-  fillBox(ctx, k, -0.15, -0.08, 1.35, 0.02, LAB.steel)
+  fillBox(ctx, k, -0.15 - pivot, -0.08, 1.35 - pivot, -0.01, LAB.steel)
   for (let i = 0; i < 5; i++) {
-    const px = 0.08 + i * 0.24
+    const px = 0.08 + i * 0.24 - pivot
     fillBox(ctx, k, px, -1.15, px + 0.07, -0.08, LAB.glass)
     fillBox(ctx, k, px, -0.28, px + 0.07, -0.08, LAB.amberDeep)
   }
