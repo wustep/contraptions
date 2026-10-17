@@ -101,9 +101,11 @@ export const crane = definePiece<{ color: string }>({
     solid(p, ink, weight, s.color)
     p.rect(DROP_X * k, (FLOOR + 0.06) * k, 0.34 * k, 0.07 * k)
 
-    // The trolley: a box on two wheels on the beam, and its cable.
+    // The trolley: a box on two wheels on the beam, and its cable. The box
+    // stops where the magnet docks under it: it was deep enough that the
+    // raised magnet sat a twentieth of a cell up inside it.
     solid(p, ink, weight, s.color)
-    p.rect(trolleyX * k, (BEAM_Y + 0.2) * k, 0.26 * k, 0.16 * k, 0.02 * k)
+    p.rect(trolleyX * k, (BEAM_Y + 0.175) * k, 0.26 * k, 0.11 * k, 0.02 * k)
     for (const dx of [-0.08, 0.08]) {
       solid(p, ink, weight, bg)
       p.circle((trolleyX + dx) * k, (BEAM_Y + 0.03) * k, 0.09 * k)
@@ -115,28 +117,21 @@ export const crane = definePiece<{ color: string }>({
       p.pop()
     }
     outline(p, ink, weight)
-    p.line(trolleyX * k, (BEAM_Y + 0.28) * k, trolleyX * k, (magY - MAG_H / 2) * k)
+    p.line(trolleyX * k, (BEAM_Y + 0.23) * k, trolleyX * k, (magY - MAG_H / 2) * k)
 
-    // The magnet: a horseshoe on its side, a pole stripe, and a lamp that
-    // blinks while it makes up its mind.
+    // The magnet: a horseshoe on its side, a pole stripe, and a lamp on its
+    // face that blinks while it makes up its mind. On top of the magnet the
+    // lamp was inside the trolley whenever the magnet was up; the field
+    // lines either side of the ball while it held are gone, as the lamp
+    // already says so.
     solid(p, ink, weight, s.color)
     p.rect(trolleyX * k, magY * k, 0.32 * k, MAG_H * k, 0.04 * k)
     p.fill(ink)
     p.noStroke()
     p.rect(trolleyX * k, (magY + MAG_H / 2 - 0.025) * k, 0.32 * k, 0.03 * k)
     for (const dx of [-0.1, 0.1]) p.rect((trolleyX + dx) * k, (magY + MAG_H / 2 + 0.01) * k, 0.06 * k, 0.03 * k)
-    solid(p, ink, weight, lit ? s.color : bg)
-    p.circle(trolleyX * k, (magY - MAG_H / 2 - 0.04) * k, 0.05 * k)
-    // Field lines while it holds.
-    if (holding) {
-      p.push()
-      p.noFill()
-      p.stroke(s.color)
-      p.strokeWeight(weight * 0.8)
-      for (const dx of [-0.22, 0.22]) {
-        p.arc((trolleyX + dx) * k, (magY + MAG_H / 2 + 0.08) * k, 0.12 * k, 0.16 * k, dx < 0 ? Math.PI * 0.6 : -Math.PI * 0.4, dx < 0 ? Math.PI * 1.4 : Math.PI * 0.4)
-      }
-      p.pop()
-    }
+    // On the magnet's own colour, lit is the paper and dark is the ink.
+    solid(p, ink, weight, lit ? bg : ink)
+    p.circle(trolleyX * k, (magY - 0.017) * k, 0.05 * k)
   },
 })
