@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInQuad, easeOutCubic } from '../../../../../src/core/ease'
-import { FAST, R, ROLL, burst, definePiece, over, rail, ramp, roll, type Lane } from '../../parts'
+import { FAST, R, ROLL, definePiece, over, rail, ramp, roll, type Lane } from '../../parts'
 import { soil, tuft } from './green'
 
 /**
@@ -199,7 +199,8 @@ export const gate = definePiece<{ color: string }>({
     p.quad((RING[0] - POT_W * 0.36) * k, potY * k, (RING[0] + POT_W * 0.36) * k, potY * k, (RING[0] + POT_W / 2) * k, (potY + POT_H) * k, (RING[0] - POT_W / 2) * k, (potY + POT_H) * k)
     p.rect(RING[0] * k, (potY + POT_H) * k, (POT_W + 0.04) * k, 0.045 * k)
 
-    // The knock on the post, the gate's edge on the ball's back, and the latch going home.
+    // The knock on the post, and the latch going home. The gate's edge on the ball's back is told by the ball
+    // going off faster, with the bang and the latch a moment behind it: no mark of its own.
     p.push()
     p.strokeWeight(weight)
     if (since > 0 && since < 0.18) {
@@ -210,12 +211,6 @@ export const gate = definePiece<{ color: string }>({
         const r1 = r0 + 0.05 * (1 - f)
         p.line((HINGE_X + POST_W / 2 + Math.cos(a) * r0) * k, (-0.27 + Math.sin(a) * r0) * k, (HINGE_X + POST_W / 2 + Math.cos(a) * r1) * k, (-0.27 + Math.sin(a) * r1) * k)
       }
-    }
-    const kicked = since - S_KICK
-    if (kicked > 0 && kicked < 0.2) {
-      const f = over(kicked, 0, 0.2)
-      p.stroke(ink)
-      burst(p, (X_KICK - R) * k, -0.02 * k, (0.14 + 0.12 * f) * k, (0.2 + 0.16 * f) * k, 5, 2.2)
     }
     if (shut > 0 && shut < 0.16) {
       const f = over(shut, 0, 0.16)
