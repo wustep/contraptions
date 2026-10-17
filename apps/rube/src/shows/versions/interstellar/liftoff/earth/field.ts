@@ -94,10 +94,12 @@ export const cornrow = part<RowState>(
         if (x > s.length) break
         stalk(p, k, ink, weight, { x, foot: FLOOR - 0.12, h: 1.9 + hash(i, 4) * 0.5, seed: 40 + i, sway: 0.12 + Math.sin(t * 0.9 + i) * 0.03, plain: i % 2 === 1 })
       }
-      // The bank's face down to the field road: one clean face, its foot exactly on the road's line.
+      // The bank's face down to the field road: one clean face, its foot exactly on the road's line. At the head the
+      // ground falls away from the yard's level to the road's, so the face starts there and grows under that slope,
+      // never down into the yard's soil.
       solid(p, ink, weight, DUST.shade)
       p.beginShape()
-      p.vertex((HEAD - 0.4) * k, (1 + FLOOR) * k)
+      p.vertex((HEAD + 0.4) * k, (1 + FLOOR) * k)
       p.vertex(HEAD * k, FLOOR * k)
       p.vertex((s.length + 0.5) * k, FLOOR * k)
       p.vertex((s.length + 0.5) * k, (1 + FLOOR) * k)
