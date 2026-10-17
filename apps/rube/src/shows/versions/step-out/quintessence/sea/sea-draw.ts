@@ -3,7 +3,7 @@ import type { Pt } from '../../../../../parts'
 import { R } from '../../../../../parts'
 import { hash, smooth } from '../kit'
 import { view } from '../depth'
-import { drawDeepBack, drawSnow, drawWeb } from './deep'
+import { drawDeepBack, drawSnow } from './deep'
 import { G } from '../physics'
 import { ctxOf, mix, oval, poly, rgba, scribble, vgrad, type C2 } from '../sky/paint'
 import { drawParcel } from '../sky/sky-draw'
@@ -117,9 +117,9 @@ export function drawUnder(p: p5, k: number, t: number): void {
   g.beginPath()
   g.rect(x0 * k, W * k, (x1 - x0) * k, (yb - W) * k)
   g.clip()
-  // The far water: its rays, its snow, the school, a jellyfish (`deep.ts`).
+  // The far water: its berg, its light, a shoal, a jellyfish (`deep.ts`).
   drawDeepBack(g, v, t)
-  // Under the skin: its light, and the web the swell makes of the sun on it.
+  // Under the skin, its light.
   if (v.y0 < W + 0.8) {
     g.fillStyle = vgrad(g, k, W, W + 0.5, [
       [0, rgba(SEA.skin, 0.7)],
@@ -127,10 +127,9 @@ export function drawUnder(p: p5, k: number, t: number): void {
       [1, rgba(SEA.skin, 0)],
     ])
     g.fillRect(x0 * k, (W - 0.1) * k, (x1 - x0) * k, 0.6 * k)
-    drawWeb(g, v, t)
   }
   // The snow drifting by at his own distance.
-  drawSnow(g, v, t, 'mid')
+  drawSnow(g, v, t)
   // A line let down over the boat's far side, and the boat's hull from below: dark on the light.
   drawHandLine(g, k, t)
   drawHullUnderLocal(g, k, t)
@@ -139,8 +138,8 @@ export function drawUnder(p: p5, k: number, t: number): void {
 
 /**
  * A hand line let down over the boat's far side and made fast there: it comes out from under the keel and goes down
- * into the dark, leaning a little in the current, a lead at its end and two pale jigs on short snoods above it. The
- * swell lifts the boat and the line rises and settles with it. Paler near the top, where the light still reaches it.
+ * into the dark, leaning a little in the current, a lead at its end. The swell lifts the boat and the line rises and
+ * settles with it.
  */
 function drawHandLine(g: C2, k: number, t: number): void {
   const x0 = BOAT_X0 + 2.6
@@ -150,34 +149,20 @@ function drawHandLine(g: C2, k: number, t: number): void {
   g.save()
   g.lineCap = 'round'
   g.lineWidth = Math.max(0.8, 0.012 * k)
-  for (const [u0, u1, a] of [[0, 0.35, 0.5], [0.35, 0.7, 0.36], [0.7, 1, 0.24]]) {
-    g.beginPath()
-    for (let i = 0; i <= 8; i++) {
-      const [x, y] = at(u0 + ((u1 - u0) * i) / 8)
-      if (i) g.lineTo(x * k, y * k)
-      else g.moveTo(x * k, y * k)
-    }
-    g.strokeStyle = rgba(SEA.line, a)
-    g.stroke()
+  g.beginPath()
+  for (let i = 0; i <= 16; i++) {
+    const [x, y] = at(i / 16)
+    if (i) g.lineTo(x * k, y * k)
+    else g.moveTo(x * k, y * k)
   }
-  // The jigs on their snoods, swinging a little out from the line, and the lead.
-  for (const [u, side] of [[0.8, 1], [0.9, -1]]) {
-    const [x, y] = at(u)
-    const sw = 0.05 * Math.sin(t * 0.9 + u * 7)
-    const jx = x + side * (0.16 + sw)
-    const jy = y + 0.1
-    g.strokeStyle = rgba(SEA.line, 0.22)
-    g.beginPath()
-    g.moveTo(x * k, y * k)
-    g.lineTo(jx * k, jy * k)
-    g.stroke()
-    oval(g, k, jx, jy + 0.06, 0.022, 0.06, rgba('#8FA7A3', 0.5), side * 0.15)
-  }
+  g.strokeStyle = rgba(SEA.line, 0.36)
+  g.stroke()
   const [lx, ly] = at(1)
   oval(g, k, lx, ly + 0.06, 0.045, 0.08, rgba('#0A1A1E', 0.85))
   g.restore()
 }
 
+/** The boat's hull from below: one dark shape on the light, the water's light along its side, its rudder and screw. */
 function drawHullUnderLocal(g: C2, k: number, t: number): void {
   const { len, draft } = BOAT
   const x0 = BOAT_X0
@@ -190,44 +175,22 @@ function drawHullUnderLocal(g: C2, k: number, t: number): void {
   hull.closePath()
   g.fillStyle = mix(SEA.deep, SEA.hull, 0.55)
   g.fill(hull)
-  // Along its side just under the skin, the water's light, one soft band in three flat steps whose lower edges lift
-  // and fall with the swell; and the weed along its waterline, its ragged fringe swaying.
+  // Along its side just under the skin, the water's light: one plain band, its lower edge lifting and falling slowly
+  // with the swell.
   g.save()
   g.clip(hull)
   const x1 = x0 + len + 0.4
-  g.fillStyle = rgba(SEA.skin, 0.06)
-  for (const d of [0.12, 0.27, 0.46]) {
-    g.beginPath()
-    g.moveTo(x0 * k, (W - 0.1) * k)
-    for (let x = x0; x <= x1; x += 0.4) g.lineTo(x * k, (W + d + 0.05 * Math.sin(x * 1.3 - t * 1.5 + d * 9)) * k)
-    g.lineTo(x1 * k, (W - 0.1) * k)
-    g.closePath()
-    g.fill()
-  }
   g.beginPath()
   g.moveTo(x0 * k, (W - 0.1) * k)
-  for (let i = 0, x = x0; x <= x1; i++, x += 0.09) g.lineTo((x + 0.02 * Math.sin(t * 1.3 + i)) * k, (W + 0.04 + 0.06 * hash(i, 36)) * k)
+  for (let x = x0; x <= x1; x += 0.4) g.lineTo(x * k, (W + 0.3 + 0.04 * Math.sin(x * 1.1 - t * 0.9)) * k)
   g.lineTo(x1 * k, (W - 0.1) * k)
   g.closePath()
-  g.fillStyle = rgba('#2F4A3A', 0.55)
+  g.fillStyle = rgba(SEA.skin, 0.1)
   g.fill()
   g.restore()
   g.fillRect((x0 + 0.18) * k, (W + 0.3) * k, 0.1 * k, 0.42 * k)
   g.beginPath()
   g.ellipse((x0 + 0.45) * k, (W + 0.5) * k, 0.06 * k, 0.17 * k, 0, 0, Math.PI * 2)
-  g.fill()
-  // A soft dark under it: its shadow in the light coming down, leaning with the light and lost in the water a little
-  // way under it.
-  const gr = g.createLinearGradient(0, (W + draft) * k, 0, (W + draft + 1.6) * k)
-  gr.addColorStop(0, rgba(SEA.hull, 0.32))
-  gr.addColorStop(1, rgba(SEA.hull, 0))
-  g.fillStyle = gr
-  poly(g, k, [
-    [x0 + 0.4, W + draft],
-    [x0 + len - 1.6, W + draft],
-    [x0 + len - 1, W + draft + 1.6],
-    [x0 + 1, W + draft + 1.6],
-  ])
   g.fill()
 }
 
