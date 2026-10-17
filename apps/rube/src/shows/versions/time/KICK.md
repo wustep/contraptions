@@ -337,8 +337,8 @@ each world, and changed:
 - **The van's sliding door** (70.5 to 89): it opened from just behind the cab back over the rear wheel, so the open
   doorway was cut down through the wheel's arch and its edge sliced the tyre. The door is between the wheels now, as
   a van's is, and Ariadne's place on the bench is a little forward, so with the door shut all three sit in its window.
-  They hop in from the pavement behind it, on the near side of it: until they land on the bench they are drawn in
-  front of its body, so none of them goes behind its rear quarter mid-hop and is lost.
+  They hop in from the pavement behind it and go in behind its near side, glimpsed through the rear quarter's window
+  and then seen in the open door; drawn in front of its body (as they once were) they were painted over its panels.
 - **Across the face under Zoom** (127.5 to 133.5): running left over the fortress's roof and on to the hairpin, the
   camera led them by two cells, and Fischer, at the back, was a cell or two behind Cobb; Zoom tightens on the same
   point, and under it he rode off the right edge for four seconds. The camera leads them by half as much now, closer
