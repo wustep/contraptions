@@ -17,9 +17,12 @@ const HEAD_W = 0.34
 const BLOCK_H = 0.12
 const WEDGE_H = 0.26
 const HALF = HEAD_W / 2
-/** The apex at rest on the anvil, and cocked at the top of the guides. */
+/**
+ * The apex at rest on the anvil, and cocked at the top of the guides: hung
+ * on a short length of cable under the sheave, not jammed up into it.
+ */
 const LOW = FLOOR
-const HIGH = -1.0
+const HIGH = -0.92
 /**
  * The apex's height when the wedge's near face first touches the ball: the
  * face through the apex with slope (HALF, -WEDGE_H) is a radius from the
@@ -27,7 +30,7 @@ const HIGH = -1.0
  */
 const CONTACT = (-AX * WEDGE_H - R * Math.hypot(HALF, WEDGE_H)) / HALF
 const GUIDE = 0.24
-const SHEAVE_Y = HIGH - WEDGE_H - BLOCK_H - 0.06
+const SHEAVE_Y = -1.44
 const ARRIVE = arriveAt(0)
 const WAIT = 0.6
 const DROP = 0.16
