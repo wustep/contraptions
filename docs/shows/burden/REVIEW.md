@@ -1,6 +1,6 @@
 # Burden — Astra review record
 
-Four improvement rounds, with one push per round. One draft PR: #219.
+Five improvement rounds, with one push per round. One draft PR: #219.
 `npm run build` passed before each push: lint, typecheck, the complete test
 suite, and the Vite production build.
 
@@ -54,3 +54,23 @@ The revised pass painted all 11,490 scan frames with no page errors. Reverse
 scrubbing reproduced identical pixels; Zoom, Overview and matte DOM/video
 credit checks passed. The complete 1× confirmation also provides the viewing
 pass used to select round 5's worst moments.
+
+## Continuation · round 5
+
+The complete 1× round-4 confirmation exposed the grove as the noisiest
+passage: six matching trees and 126 leaf shapes filled the space around the
+leaf cradle. Replaced them with three tall trunks and 36 leaves held in high
+crowns. A single bough anchors the pulley. The descent now has a clear field,
+and the tree line no longer intrudes into the bridge's wide frame.
+
+Put the distant mountain planes behind the waterline. The skiff now has open
+river ahead through the final hold and credits, instead of a foreground wedge
+that appeared to close its route. No motion keys, camera keys or cue times
+changed. Lint, typecheck, all tests and the production build passed.
+
+Review: complete 0–383-second wall-clock 1× confirmation, followed by the
+11,490-frame scan and consecutive handoff sheets. Selected images:
+`bridge.png`, `grove.png`, `fellowship.png`. Artifacts: `out/burden/round-5/`.
+The final scan reported zero page errors and identical reverse-scrub pixels.
+Zoom, Overview and matte credit parity passed. This full 1× confirmation is
+also the review used to choose round 6's remaining motion faults.

@@ -126,3 +126,12 @@ and opening hoop clearance checks. Score anchors and camera timing are fixed.
 
 The review script now accepts `--watch` for the complete real-time picture
 pass, alongside `--scan` for all 11,490 frames. Both are recorded separately.
+
+### Round 5
+
+The full 1× pass made the grove's repetition the next edit. Cut six trees and
+126 leaf shapes down to three high crowns with 36 leaves; the leaf cradle,
+counterweight and survivors now move through a clear field. One bough anchors
+the pulley. Moved the distant ridges behind the waterline so the final river
+stays open ahead of the skiff. No camera or motion timing changed. Repeated
+the complete 1× review, 30 fps frame scan and full build gate.

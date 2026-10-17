@@ -71,7 +71,7 @@ function rock(g: G, points: Pt[], color: string, salt: number): void {
   }
   g.restore()
 }
-function branch(g: G, x: number, y: number, h: number, color: string, salt: number): void {
+function branch(g: G, x: number, y: number, h: number, color: string, salt: number, crown = 0.25, tiers = 7): void {
   const sway = (hash(salt) - 0.5) * h * 0.2
   g.beginPath(); g.moveTo(x - h * 0.055, y)
   g.bezierCurveTo(x + h * 0.025, y - h * 0.28, x - h * 0.04, y - h * 0.53, x + sway, y - h)
@@ -80,8 +80,9 @@ function branch(g: G, x: number, y: number, h: number, color: string, salt: numb
   g.beginPath(); g.moveTo(x - h * 0.015, y - 0.2)
   g.bezierCurveTo(x + h * 0.04, y - h * 0.3, x - h * 0.025, y - h * 0.47, x + sway, y - h * 0.8)
   g.strokeStyle = mixHex(color, '#C1C3A0', 0.22); g.lineWidth = 0.035; g.stroke()
-  for (let i = 0; i < 7; i++) {
-    const s = i % 2 ? -1 : 1, by = y - h * (0.25 + i * 0.085), bx = x + sway * (0.25 + i * 0.085)
+  for (let i = 0; i < tiers; i++) {
+    const height = crown + i * (0.76 - crown) / (tiers - 1)
+    const s = i % 2 ? -1 : 1, by = y - h * height, bx = x + sway * height
     g.beginPath(); g.moveTo(bx, by)
     g.bezierCurveTo(bx + s * h * 0.19, by, bx + s * h * 0.12, by - h * 0.18, bx + s * h * 0.3, by - h * 0.2)
     g.strokeStyle = color; g.lineWidth = h * (0.021 - i * 0.0015); g.stroke()
@@ -159,21 +160,29 @@ export const landscape = piece('burden-landscape', (g, t) => {
   rock(g, [[132, 5.24], [139, 5.24], [141, 5.6], [141, 35], [131, 35], [133, 18], [130.5, 14]], '#59665B', 31)
   line(g, [[132, 5.215], [139, 5.215], [142.65, 5.715], [144, 5.715]], EDGE, 0.09)
 
-  // Lothlórien's woven roots lower the travellers to the Anduin.
-  for (let i = 0; i < 6; i++) branch(g, 140 + i * 3.1, 12, 19 + hash(i, 45) * 5, i % 2 ? '#72836B' : '#65785F', 50 + i)
+  // Three high crowns leave a quiet clearing around the survivors. The trees
+  // measure the descent; the leaf and its one counterweight carry the action.
+  branch(g, 140.5, 12, 23, '#60755F', 51, 0.6, 4)
+  branch(g, 149.5, 12, 25, '#6D8066', 52, 0.6, 4)
+  branch(g, 158, 12, 21, '#78896D', 55, 0.6, 4)
+  g.beginPath(); g.moveTo(149.3, -3.4)
+  g.bezierCurveTo(147.8, -2.1, 146.1, -2.2, 144.4, -1.8)
+  g.strokeStyle = '#6D8066'; g.lineWidth = 0.18; g.stroke()
   rock(g, [[137.5, 5.215], [139, 5.215], [142.65, 5.715], [145.35, 5.715], [145, 15], [138, 19]], '#707E66', 34)
   rock(g, [[149, 10.94], [155, 10.94], [154.6, 13], [149, 16]], '#777F68', 39)
   line(g, [[149.5, 10.94], [155, 10.94]], '#C2BC99', 0.1)
 
+  // Distant ridges sit behind the waterline. No foreground wedge closes the
+  // river in front of the skiff during the long final hold.
+  shape(g, [[171, 10], [183, -4], [189, 2], [197, -12], [202, -6], [209, -1], [220, -9], [230, 15]], '#57665A')
+  shape(g, [[181, 14], [197, -12], [194, -1], [200, 6], [207, 2], [224, 17]], '#46564C')
+  line(g, [[197, -12], [195, -5], [197, -3]], '#8B9380', 0.04)
   // The river has no specular reflection: cut horizontal lines in a matte sheet.
   rect(g, 145, 11.2, 100, 50, mixHex('#8D9F93', '#566F65', smooth(t, 325, 353)))
   for (let i = 0; i < 85; i++) {
     const x = 145 + hash(i, 70) * 60 - (t * 0.018 % 2), y = 11.6 + hash(i, 74) * 18
     line(g, [[x, y], [x + 0.45 + hash(i, 80) * 2.2, y]], '#9DAA92', 0.025)
   }
-  shape(g, [[171, 10], [183, -4], [189, 2], [197, -12], [202, -6], [209, -1], [220, -9], [230, 15]], '#57665A')
-  shape(g, [[181, 14], [197, -12], [194, -1], [200, 6], [207, 2], [224, 17]], '#46564C')
-  line(g, [[197, -12], [195, -5], [197, -3]], '#8B9380', 0.04)
 })
 
 export const bagEnd = piece('burden-round-door-latch', (g, t) => {
