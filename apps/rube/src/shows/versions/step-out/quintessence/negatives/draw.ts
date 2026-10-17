@@ -388,8 +388,8 @@ function drawDoor(ctx: C2, k: number, t: number, light: number, pane_: boolean):
 /**
  * The picture the enlarger throws on the far wall: the water and the ship, out of focus and then in. It is projected
  * light, so it is never quite still: the lamp's flicker in it, and its light falling off a little toward its edges.
- * The defocus is drawn, not filtered: the horizon spread into a band, the ripples gone, the ship laid over itself,
- * spread, until the focus finds it.
+ * The defocus is drawn, not filtered: the horizon spread into a band, the ripples gone, the ship and its reflection
+ * swollen and pale, until the focus finds them.
  */
 function drawPicture(ctx: C2, k: number, t: number): void {
   const on = lampAt(t)
@@ -448,18 +448,18 @@ function drawPicture(ctx: C2, k: number, t: number): void {
   const wake = new Path2D()
   wake.rect((sx - 0.5) * k, (horizon + 0.1) * k, 1.0 * k, 0.07 * k)
   wake.rect((sx - 0.3) * k, (horizon + 0.32) * k, 0.6 * k, 0.05 * k)
-  const b = 0.16 * blur * k
-  const copies: [number, number][] = blur > 0.01 ? [[-b, 0], [b, 0], [0, -b * 0.7], [0, b * 0.7], [0, 0]] : [[0, 0]]
-  const each = blur > 0.01 ? 0.32 + 0.68 * sharp * sharp : 1
-  for (const [dx, dy] of copies) {
-    ctx.save()
-    ctx.translate(dx, dy)
-    ctx.globalAlpha = each
-    ctx.fillStyle = tone(0.14 + 0.2 * blur)
-    ctx.fill(ship)
-    ctx.fillStyle = tone(0.3 + 0.15 * blur)
-    ctx.fill(wake)
-    ctx.restore()
+  // Out of focus each is one paler shape, swollen past its edges (its outline drawn wide and round), and it narrows to
+  // its own edges as the focus finds it.
+  const b = 0.1 * blur * k
+  ctx.lineJoin = 'round'
+  for (const [path, v] of [[wake, 0.3 + 0.25 * blur], [ship, 0.14 + 0.5 * blur]] as const) {
+    ctx.fillStyle = tone(v)
+    ctx.fill(path)
+    if (b > 0.5) {
+      ctx.strokeStyle = tone(v)
+      ctx.lineWidth = 2 * b
+      ctx.stroke(path)
+    }
   }
   ctx.restore()
   // The picture's light on its own edges: the throw's falloff.
