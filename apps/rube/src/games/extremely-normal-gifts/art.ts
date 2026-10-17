@@ -33,6 +33,14 @@ export function drawParcel(p: p5, x: number, y: number, size: number, t: number,
   p.push(); p.translate(x, y)
   const lift = over(t, 0.25, 0.9)
   const s = size
+  // Each return leaves more forwarding slips. Escalation is visible without making the run longer.
+  for (let i = Math.min(hop, 4); i > 0; i--) {
+    p.push(); p.translate(s * (0.22 + i * 0.09), s * (0.1 - i * 0.09)); p.rotate(i * 0.09)
+    solid(p, INK, 1.5, PAPER); p.rect(0, 0, s * 0.65, s * 0.72)
+    p.noStroke(); p.fill(GREEN); p.textFont('monospace'); p.textSize(s * 0.055); p.textAlign(p.CENTER, p.CENTER)
+    p.text('FORWARDED', 0, -s * 0.24)
+    p.pop()
+  }
   const nested = finale === 'boxes' ? 3 : 1
   for (let i = 0; i < nested; i++) {
     const k = s * (1 - i * 0.24)

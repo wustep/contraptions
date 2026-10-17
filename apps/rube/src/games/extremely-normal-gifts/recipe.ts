@@ -38,12 +38,15 @@ export const MAX_MESSAGE = 80
 export const MAX_NAME = 28
 export const DEFAULT_MESSAGE = 'nice socks.'
 
+/** Keep short notes portable across text fields, URLs, printed slips and PNGs. */
+export const cleanText = (text: string): string => Array.from(text).map(c => c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127 ? ' ' : c).join('').replace(/\s+/g, ' ').trim()
+
 export function newRecipe(): Recipe {
   return { v: 1, to: '', from: '', message: DEFAULT_MESSAGE, picks: [0, 0, 0], finale: 'fanfare', seed: crypto.randomUUID().slice(0, 8), hop: 0 }
 }
 
 export function encodeRecipe(recipe: Recipe): string {
-  const bytes = new TextEncoder().encode(JSON.stringify(recipe))
+  const bytes = new TextEncoder().encode(JSON.stringify({ ...recipe, to: cleanText(recipe.to), from: cleanText(recipe.from), message: cleanText(recipe.message) }))
   return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
@@ -70,4 +73,21 @@ export const sender = (recipe: Recipe): string => recipe.from.trim() || 'someone
 /** Replies keep the original joke and change exactly one mechanism. */
 export function replyRecipe(recipe: Recipe): Recipe {
   return { ...recipe, to: recipe.from, from: recipe.to, picks: [...recipe.picks], hop: Math.min(999, recipe.hop + 1) }
+}
+
+const DRAFT_KEY = 'extremely-normal-gifts:draft:1'
+export function saveDraft(recipe: Recipe, parent: Recipe | null): void {
+  try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ gift: encodeRecipe(recipe), parent: parent ? encodeRecipe(parent) : null })) }
+  catch { /* Private browsing and storage limits must never block a gift. */ }
+}
+
+export function loadDraft(): { recipe: Recipe; parent: Recipe | null } | null {
+  try {
+    const data = JSON.parse(sessionStorage.getItem(DRAFT_KEY) ?? 'null')
+    if (!data || typeof data.gift !== 'string') return null
+    const recipe = decodeRecipe(data.gift)
+    const parent = typeof data.parent === 'string' ? decodeRecipe(data.parent) : null
+    if (!recipe || (parent && (recipe.message !== parent.message || recipe.picks.filter((p, i) => p !== parent.picks[i]).length > 1))) return null
+    return { recipe, parent }
+  } catch { return null }
 }

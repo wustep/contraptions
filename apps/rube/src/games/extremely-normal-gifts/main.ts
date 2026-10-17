@@ -2,7 +2,7 @@ import './style.css'
 import { icon } from './art'
 import { GiftAudio } from './audio'
 import { GiftPerformance } from './performance'
-import { decodeRecipe, FINALS, giftUrl, MAX_MESSAGE, MAX_NAME, newRecipe, OPTIONS, recipient, replyRecipe, sender, type Opening, type Recipe } from './recipe'
+import { cleanText, decodeRecipe, FINALS, giftUrl, loadDraft, saveDraft, MAX_MESSAGE, MAX_NAME, newRecipe, OPTIONS, recipient, replyRecipe, sender, type Opening, type Recipe } from './recipe'
 import { GiftStage } from './stage'
 import { saveSouvenir } from './souvenir'
 
@@ -11,13 +11,14 @@ const audio = new GiftAudio()
 const esc = (text: string): string => text.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!))
 const hashRecipe = (): string | null => new URLSearchParams(location.hash.slice(1)).get('gift')
 const initialLink = hashRecipe()
-let recipe = (initialLink && decodeRecipe(initialLink)) || newRecipe()
+const draft = initialLink ? null : loadDraft()
+let recipe = (initialLink && decodeRecipe(initialLink)) || draft?.recipe || newRecipe()
 let received = !!initialLink && !!decodeRecipe(initialLink)
 let invalid = !!initialLink && !received
 let mode: 'compose' | 'received' | 'playing' | 'result' | 'shared' = received ? 'received' : 'compose'
 let opening: Opening = 'deluxe'
 let stage: GiftStage | null = null
-let replyingTo: Recipe | null = null
+let replyingTo: Recipe | null = draft?.parent ?? null
 let preview = false
 let statusTimer = 0
 let lastCaption = ''
@@ -73,7 +74,8 @@ function receivedPanel(): string {
 }
 
 function keepsake(): string {
-  return `<article class="keepsake" aria-label="Your personalized gift"><div class="keepsake-top"><span class="eyebrow">DELIVERY COMPLETE</span><span class="mono">NO. ${String(recipe.hop + 1).padStart(3, '0')}</span></div><p class="eyebrow to-line">FOR ${esc(recipient(recipe))}</p><h2 class="gift-message">${esc(recipe.message)}</h2><div class="portraits" aria-label="Before, during, and after portraits of your gift">${['BEFORE', 'DURING', 'STILL YOU'].map((label, i) => `<div class="portrait"><span class="portrait-ball portrait-${i}" style="--ball:${i === 0 ? '#c95336' : recipe.picks[1] === 0 ? '#fff' : recipe.picks[1] === 1 ? '#41776b' : '#e9b64f'}"></span><span>${label}</span></div>`).join('')}</div><p class="signature">with unnecessary effort,<br><strong>${esc(sender(recipe))}</strong></p><div class="keepsake-route">${recipe.picks.map((pick, i) => OPTIONS[i][pick].name).join('<span>→</span>')}</div><div class="keepsake-bottom">${recipe.hop ? `REGIFTED ${recipe.hop} ${recipe.hop === 1 ? 'TIME' : 'TIMES'}. THE JOKE CONTINUES.` : 'A SMALL COMPLIMENT, PROPERLY OVERDELIVERED.'}</div></article>`
+  const finalColor = performance().at(Infinity).ball.color
+  return `<article class="keepsake" aria-label="Your personalized gift"><div class="keepsake-top"><span class="eyebrow">DELIVERY COMPLETE</span><span class="mono">NO. ${String(recipe.hop + 1).padStart(3, '0')}</span></div><p class="eyebrow to-line">FOR ${esc(recipient(recipe))}</p><h2 class="gift-message">${esc(recipe.message)}</h2><div class="portraits" aria-label="Before, during, and after portraits of your gift">${['BEFORE', 'DURING', 'STILL YOU'].map((label, i) => `<div class="portrait"><span class="portrait-ball portrait-${i}" style="--ball:${i === 0 ? '#c95336' : finalColor}"></span><span>${label}</span></div>`).join('')}</div><p class="signature">with unnecessary effort,<br><strong>${esc(sender(recipe))}</strong></p><div class="keepsake-route">${recipe.picks.map((pick, i) => OPTIONS[i][pick].name).join('<span>→</span>')}</div><div class="keepsake-bottom">${recipe.hop ? `REGIFTED ${recipe.hop} ${recipe.hop === 1 ? 'TIME' : 'TIMES'}. THE JOKE CONTINUES.` : 'A SMALL COMPLIMENT, PROPERLY OVERDELIVERED.'}</div></article>`
 }
 
 function result(): string {
@@ -127,11 +129,14 @@ function syncNote(): void {
   const message = document.querySelector('#slip-message'); if (message) message.textContent = `“${recipe.message}”`
   const to = document.querySelector('#slip-to'); if (to) to.textContent = recipient(recipe)
   hasPreviewed = false
+  saveDraft(recipe, replyingTo)
 }
 
 function canPreview(): boolean {
   syncNote()
-  recipe.message = recipe.message.trim()
+  recipe.message = cleanText(recipe.message)
+  recipe.to = cleanText(recipe.to)
+  recipe.from = cleanText(recipe.from)
   if (!recipe.message) { toast('A tiny compliment is required. Even “nice socks.” will do.'); document.querySelector<HTMLTextAreaElement>('#message')?.focus(); return false }
   if (replyingTo && recipe.picks.every((pick, i) => pick === replyingTo!.picks[i])) { toast('Swap one mechanism before sending this one back.'); return false }
   return true
@@ -164,8 +169,12 @@ app.addEventListener('click', async event => {
   }
   if (button.dataset.slot !== undefined) {
     const slot = Number(button.dataset.slot); const pick = Number(button.dataset.pick)
-    if (replyingTo) recipe.picks = [...replyingTo.picks]
-    recipe.picks[slot] = pick; hasPreviewed = false
+    if (replyingTo) {
+      const previous = recipe.picks.findIndex((p, i) => p !== replyingTo!.picks[i])
+      if (previous >= 0 && previous !== slot) toast('Swapping a different department. The other two stay with the original joke.')
+      recipe.picks = [...replyingTo.picks]
+    }
+    recipe.picks[slot] = pick; hasPreviewed = false; saveDraft(recipe, replyingTo)
     document.querySelectorAll<HTMLButtonElement>('[data-slot]').forEach(b => { const selected = recipe.picks[Number(b.dataset.slot)] === Number(b.dataset.pick); b.classList.toggle('selected', selected); b.setAttribute('aria-pressed', String(selected)) })
     recipe.picks.forEach((p, i) => { document.querySelector(`#choice-note-${i}`)!.textContent = OPTIONS[i][p].line })
     stage?.setPerformance(performance())
@@ -178,6 +187,7 @@ app.addEventListener('click', async event => {
   }
   if (button.dataset.finale) {
     recipe.finale = button.dataset.finale as Recipe['finale']
+    saveDraft(recipe, replyingTo)
     document.querySelectorAll<HTMLButtonElement>('[data-finale]').forEach(b => { const selected = b.dataset.finale === recipe.finale; b.classList.toggle('selected', selected); b.setAttribute('aria-pressed', String(selected)) })
     return
   }
@@ -193,10 +203,10 @@ app.addEventListener('click', async event => {
     case 'pause': stage?.pause(); button.innerHTML = icon(stage?.paused ? 'play' : 'pause') + (stage?.paused ? 'Resume' : 'Pause'); break
     case 'reveal': stage?.reveal(); break
     case 'replay': play(preview); break
-    case 'edit': mode = 'compose'; received = false; render(true); break
+    case 'edit': mode = 'compose'; received = false; history.replaceState(null, '', location.pathname); saveDraft(recipe, replyingTo); render(true); break
     case 'seal': if (hasPreviewed) document.querySelector<HTMLDialogElement>('#finale-dialog')!.showModal(); break
     case 'close-dialog': document.querySelector<HTMLDialogElement>('#finale-dialog')!.close(); break
-    case 'finish-seal': mode = 'shared'; render(true); break
+    case 'finish-seal': saveDraft(recipe, replyingTo); mode = 'shared'; render(true); break
     case 'copy': {
       const field = document.querySelector<HTMLInputElement>('#gift-link')!
       try { await navigator.clipboard.writeText(giftUrl(recipe)); button.textContent = 'Copied ✓'; document.querySelector('#copy-status')!.textContent = 'Gift link copied. Send it to your person.' }
@@ -204,12 +214,12 @@ app.addEventListener('click', async event => {
       break
     }
     case 'recipient-view': history.pushState(null, '', `#gift=${giftUrl(recipe).split('#gift=')[1]}`); received = true; mode = 'received'; opening = 'deluxe'; render(true); break
-    case 'reply': replyingTo = structuredClone(recipe); recipe = replyRecipe(recipe); received = false; preview = false; hasPreviewed = false; opening = 'gentle'; mode = 'compose'; history.pushState(null, '', location.pathname); render(true); break
+    case 'reply': replyingTo = structuredClone(recipe); recipe = replyRecipe(recipe); received = false; preview = false; hasPreviewed = false; opening = 'gentle'; mode = 'compose'; saveDraft(recipe, replyingTo); history.pushState(null, '', location.pathname); render(true); break
     case 'save':
       button.disabled = true
-      try { await saveSouvenir(recipe); toast('Your keepsake is ready to keep.') } catch { toast('The keepsake could not be saved. Please try again.') }
+      try { await saveSouvenir(recipe, performance().at(Infinity).ball.color); toast('Your keepsake is ready to keep.') } catch { toast('The keepsake could not be saved. Please try again.') }
       button.disabled = false; break
-    case 'new': recipe = newRecipe(); replyingTo = null; received = false; hasPreviewed = false; mode = 'compose'; history.pushState(null, '', location.pathname); render(true); break
+    case 'new': recipe = newRecipe(); replyingTo = null; received = false; hasPreviewed = false; mode = 'compose'; saveDraft(recipe, null); history.pushState(null, '', location.pathname); render(true); break
     case 'dismiss': invalid = false; history.replaceState(null, '', location.pathname); render(); break
   }
 })
@@ -217,7 +227,8 @@ app.addEventListener('click', async event => {
 function readLocation(): void {
   const encoded = hashRecipe()
   const linked = encoded ? decodeRecipe(encoded) : null
-  invalid = !!encoded && !linked; received = !!linked; recipe = linked ?? newRecipe(); replyingTo = null; hasPreviewed = false; mode = received ? 'received' : 'compose'; render(true)
+  const saved = encoded ? null : loadDraft()
+  invalid = !!encoded && !linked; received = !!linked; recipe = linked ?? saved?.recipe ?? newRecipe(); replyingTo = saved?.parent ?? null; hasPreviewed = false; mode = received ? 'received' : 'compose'; render(true)
 }
 window.addEventListener('popstate', readLocation)
 window.addEventListener('hashchange', readLocation)

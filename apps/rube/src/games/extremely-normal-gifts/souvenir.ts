@@ -1,8 +1,8 @@
-import { GOLD, GREEN, INK, PAPER, RED } from './performance'
+import { GREEN, INK, PAPER, RED } from './performance'
 import { OPTIONS, recipient, sender, type Recipe } from './recipe'
 
 /** A real personalized keepsake, independent of the stock booth's miniature strip. */
-export async function saveSouvenir(recipe: Recipe): Promise<void> {
+export async function saveSouvenir(recipe: Recipe, finalColor: string): Promise<void> {
   const canvas = document.createElement('canvas')
   canvas.width = 1200; canvas.height = 900
   const c = canvas.getContext('2d')!
@@ -32,7 +32,7 @@ export async function saveSouvenir(recipe: Recipe): Promise<void> {
   for (let i = 0; i < 3; i++) {
     const x = 430 + i * 170
     c.fillStyle = i === 1 ? '#e5eade' : '#ebe5d6'; c.fillRect(x - 65, portraitY - 70, 130, 135)
-    c.fillStyle = i === 0 ? RED : recipe.picks[1] === 0 ? '#ffffff' : recipe.picks[1] === 2 ? GOLD : GREEN
+    c.fillStyle = i === 0 ? RED : finalColor
     c.strokeStyle = INK; c.lineWidth = 3; c.beginPath(); c.arc(x, portraitY - 5, 32, 0, Math.PI * 2); c.fill(); c.stroke()
     c.fillStyle = INK; c.beginPath(); c.arc(x + 9, portraitY - 13 + i * 8, 4, 0, Math.PI * 2); c.fill()
     c.font = '12px monospace'; c.fillText(['BEFORE', 'DURING', 'STILL YOU'][i], x, portraitY + 48)

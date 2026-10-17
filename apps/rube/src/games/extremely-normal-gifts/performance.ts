@@ -49,6 +49,7 @@ export class GiftPerformance extends Show {
     const choices: { piece: Piece<any>; option: { id: string; name: string; verb: string } }[] = recipe.picks.map((pick, i) => ({ piece: cast[i][pick], option: OPTIONS[i][pick] }))
     if (opening === 'deluxe') choices.push({ piece: affectionStamp, option: { id: 'stamp', name: 'Extra paperwork', verb: 'Deluxe requires a second signature.' } })
     for (const [i, { piece, option }] of choices.entries()) {
+      const theme = option.id === 'snow' ? { ...THEME, colors: [...THEME.colors, '#ffffff'] } : THEME
       const placed: Placed[] = []
       let start = 0
       const add = (actor: Piece<any>, placement: Placement<unknown>, col: number, row: number): void => {
@@ -60,13 +61,13 @@ export class GiftPerformance extends Show {
         start += span
       }
       add(portal, portalPlacement('in', GREEN), -1, 0)
-      const placement = piece.place({ rng: makeRng(`${recipe.seed}:${i}`), color: [GOLD, GREEN, RED, GOLD][i], theme: THEME, taste: { weights: {} }, ball: incoming, earned: 0, fits: () => true })
+      const placement = piece.place({ rng: makeRng(`${recipe.seed}:${i}`), color: [GOLD, GREEN, RED, GOLD][i], theme, taste: { weights: {} }, ball: incoming, earned: 0, fits: () => true })
       if (!placement) throw new Error(`Gift piece ${piece.name} could not be placed`)
       add(piece, placement, 0, 0)
       add(portal, portalPlacement('out', GREEN), placement.exit.at[0], placement.exit.at[1])
       const bounds = placed.flatMap(p => p.cells).reduce((b, [x, y]) => ({ x0: Math.min(b.x0, x), x1: Math.max(b.x1, x), y0: Math.min(b.y0, y), y1: Math.max(b.y1, y) }), { x0: 0, y0: 0, x1: 0, y1: 0 })
-      const world = { name: 'gifts', label: 'Gift office', note: '', themes: [THEME], backdrops: ['plain'] as ['plain'], pieces: [], tastes: {} }
-      const universe: Universe = { index: i, seed: recipe.seed, world, theme: THEME, taste: '', ballColor: placed[0].ballIn.color, backdrop: 'plain', pieces: placed, box: bounds, journey: start, bounds }
+      const world = { name: 'gifts', label: 'Gift office', note: '', themes: [theme], backdrops: ['plain'] as ['plain'], pieces: [], tastes: {} }
+      const universe: Universe = { index: i, seed: recipe.seed, world, theme, taste: '', ballColor: placed[0].ballIn.color, backdrop: 'plain', pieces: placed, box: bounds, journey: start, bounds }
       const duration = i === 3 ? 2.3 : 3.1
       const pace = start / (duration - 0.3)
       this.departments.push({ universe, extent: extentOf(universe), start: acc, duration, pace, title: option.name, caption: option.verb, id: option.id, fire: acc + (placed[1].start + placed[1].lane.fire) / pace })

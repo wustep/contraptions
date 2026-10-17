@@ -13,3 +13,11 @@ Made a gift from Alex to Juniper, ran cannon → snow day → photo booth, previ
 **Changed:** Put a readable single-department inspection view above the mobile form, added department tabs and a persistent mobile preview action, and retained the three-bay overview on wide screens. Sender previews end on a closed parcel. Recipient headings remain personal through the reveal.
 
 **Replayed:** Full mobile composer → preview → official-approval finale → seal → fresh recipe URL → gentle opening → keepsake. Verified the preview parcel stays closed, the actual recipient gets the chosen ending, pause freezes the clock, and the phone has no horizontal overflow.
+
+## Improve pass 2 — gifts that survive the trip
+
+**Found:** A line break in the note made a sender-created link fail recipient validation. Reloading discarded the draft. The keepsake guessed a transformation color instead of using the engine's result. Snow inherited the office palette's lightest ink (yellow), rather than white. Changing a different department during a reply silently restored the previous one.
+
+**Changed:** Normalize short-note whitespace before encoding, preserve validated drafts and reply ancestry in tab-local session storage, and use the actual final ball color for both the on-page keepsake and exported PNG. Give the local snow scene a white ink. Explain the one-swap reply behavior, and accumulate visible forwarding slips with return gifts.
+
+**Replayed:** Made a multiline gift to Zoë 🎁 from 蒼, refreshed, confirmed the draft and selected mechanisms survived, then completed preview → nested-box finale → fresh link → deluxe opening → PNG download. Confirmed the message remains absent from the unopened page and sent a one-mechanism reply. Added checks for all 162 combinations of mechanisms, openings and finales, portal continuity, ball identity/color, Unicode round trips, and malformed/versioned input.
