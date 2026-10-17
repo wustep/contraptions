@@ -94,8 +94,9 @@ interface Band {
   /** Sheet coordinates. */
   y0: number
   y1: number
-  /** Where the world's name goes. */
+  /** Where the world's name goes: down the sheet, and in from the left, the same margin for every band. */
   title: number
+  left: number
   slots: Slot[]
 }
 
@@ -205,18 +206,21 @@ function layout(W: number, H: number, groups: Group[]): Sheet {
     const rows = Math.ceil(n / cols)
     const y0 = y
     const slots: Slot[] = []
-    for (let i = 0; i < n; i++) {
-      const row = Math.floor(i / cols)
-      const inRow = Math.min(cols, n - row * cols)
-      // A short last row sits centred.
-      const x = area.x + ((cols - inRow) * cw) / 2 + (i - row * cols) * cw
-      const sy = y0 + title + row * ch
-      const box = { x: x + gap, y: sy + gap, w: cw - 2 * gap, h: ch - 2 * gap - band }
-      const shelf = box.y + box.h
-      slots.push({ x, y: sy, w: cw, h: ch, box, shelf, label: shelf + font * 0.7 })
+    // The band's pieces shared out evenly over its rows, the longer rows
+    // first: nineteen in nine columns is seven, six and six, not nine, nine
+    // and one left on its own. A row with room to spare sits centred.
+    for (let row = 0; row < rows; row++) {
+      const inRow = Math.floor(n / rows) + (row < n % rows ? 1 : 0)
+      for (let k = 0; k < inRow; k++) {
+        const x = area.x + ((cols - inRow) * cw) / 2 + k * cw
+        const sy = y0 + title + row * ch
+        const box = { x: x + gap, y: sy + gap, w: cw - 2 * gap, h: ch - 2 * gap - band }
+        const shelf = box.y + box.h
+        slots.push({ x, y: sy, w: cw, h: ch, box, shelf, label: shelf + font * 0.7 })
+      }
     }
     y = y0 + title + rows * ch
-    bands.push({ group, y0, y1: y, title: y0 + title * 0.42, slots })
+    bands.push({ group, y0, y1: y, title: y0 + title * 0.42, left: area.x + 6, slots })
   }
   return { bands, font, header, footer, top, bottom, height: y }
 }
@@ -504,7 +508,7 @@ function drawBandCaptions(p: p5, band: Band, shift: number, hover: Cell | null):
   p.textAlign(p.LEFT, p.CENTER)
   p.textSize(font * 0.95)
   ctx.letterSpacing = '0.14em'
-  const x = band.slots.length ? Math.min(...band.slots.map((s) => s.x)) + 6 : 20
+  const x = band.left
   const order = WORLDS.indexOf(world)
   // As much of the caption as the band is wide enough for: the name first.
   const clauses = [world.label, `${cells.length} ${cells.length === 1 ? 'piece' : 'pieces'}`, order >= 0 ? `${ORDINAL[order]} in the loop` : world.staged ?? 'a build, beside the loop', world.note]
