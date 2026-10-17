@@ -168,22 +168,11 @@ export const inkwell = definePiece<{ color: string; ink: string; feather: string
   over: (p, s, { k, t, since }) => {
     // While the ball is under, the ink is between us and it: a wash of ink over what of it is under.
     const under = over(t, T_IN - 0.02, T_IN + 0.1) * (1 - over(t, T_OUT - 0.04, T_OUT + 0.06))
-    if (under > 0) {
-      const wash = p.color(s.ink)
-      wash.setAlpha(150 * under)
-      p.noStroke()
-      p.fill(wash)
-      inkShape(p, k, slopAt(since), liftAt(t))
-    }
-    // The splash where it went in, and a smaller one where it comes out: drops of ink on short arcs.
-    for (const [at, x, size] of [[T_IN, lineAt(0.2)[0], 1], [T_OUT, lineAt(0.82)[0], 0.6]] as const) {
-      const f = over(t, at, at + 0.34)
-      if (f <= 0 || f >= 1) continue
-      p.noStroke()
-      p.fill(s.ink)
-      for (const [dx, up] of [[-1, 0.8], [-0.4, 1.25], [0.45, 1.2], [1, 0.7]]) {
-        p.circle((x + dx * 0.13 * size * f) * k, (INK_Y - up * 0.5 * size * f * (1 - f) - 0.01) * k, 0.036 * size * (1 - f * 0.5) * k)
-      }
-    }
+    if (under <= 0) return
+    const wash = p.color(s.ink)
+    wash.setAlpha(150 * under)
+    p.noStroke()
+    p.fill(wash)
+    inkShape(p, k, slopAt(since), liftAt(t))
   },
 })
