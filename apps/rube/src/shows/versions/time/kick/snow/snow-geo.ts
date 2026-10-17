@@ -782,7 +782,8 @@ export function kickTears(): { x: number; y: number; t: number; who: 'c' | 'a' |
     ['f', FISCHER_VAULT],
   ]
   for (const [who, m] of list) {
-    for (const surface of [FORT.ceil + DROP, FORT.roof + DROP]) {
+    // Up through the ceiling only: the roof's slit stood in the open sky over the roof as the fortress came down.
+    for (const surface of [FORT.ceil + DROP]) {
       let lo = T.kick
       let hi = T.vOut
       if (m.at(hi)[1] > surface) continue

@@ -1782,7 +1782,8 @@ function drawSnowfall(ctx: C2D, k: number, f: ReturnType<typeof frame>, st: numb
         const drift = (((h1 * S + st * 0.12) % S) + S) % S
         const x = i * S + drift + Math.sin(st * (0.5 + h2) + h1 * 9) * 0.25
         const y = j * S + ((h2 * S + st * speed) % S)
-        if (indoors && x > FORT.x0 && x < FORT.x1 && y > FORT.ceil && y < FORT.foot + 1.5) continue
+        // Not in the ground floor while the fortress stands, nor in the slab over it (seen cut in the vault).
+        if (indoors && x > FORT.x0 && x < FORT.x1 && y > FORT.upper && y < FORT.foot + 1.5) continue
         // None in the ground: the valley's cut rock, the knoll and the cut rock under the apron (they fell on through
         // the rock and into the dark of sleep as he sank into the mountain); the open air beside them still has its snow.
         if (inGround(x, y)) continue
