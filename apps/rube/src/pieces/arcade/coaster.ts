@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { clamp, lerp } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, definePiece, fly, laneAt, over, post, rail, ramp, segTime, wait, type Lane, type Pt, type Seg } from '../../parts'
-import { flash } from './neon'
+import { flash, litColor } from './neon'
 
 /**
  * A roller coaster. A car waits at the station, its seat a little under
@@ -117,19 +117,16 @@ function carAt(t: number): number {
   return X_BRAKE + V_BRAKE * s - ((V_BRAKE / STOP_T) * s * s) / 2
 }
 
-/** A tube along a path, lit by `f`, laid as one line. */
-function tubePath(p: p5, k: number, ink: string, weight: number, color: string, pts: Pt[], f: number): void {
-  if (pts.length < 2) return
-  const path = () => {
-    p.beginShape()
-    for (const [x, y] of pts) p.vertex(x * k, y * k)
-    p.endShape()
-  }
+/** A tube along the path's points from `i0` to `i1` (inclusive), lit by `f`, laid as one line. */
+function tubePath(p: p5, k: number, ink: string, weight: number, color: string, pts: Pt[], f: number, i0 = 0, i1 = pts.length - 1): void {
+  if (i1 - i0 < 1) return
   p.push()
   p.noFill()
-  p.stroke(p.lerpColor(p.color(ink), p.color(color), clamp(f)))
+  p.stroke(litColor(ink, color, clamp(f)))
   p.strokeWeight(weight * 1.3)
-  path()
+  p.beginShape()
+  for (let i = i0; i <= i1; i++) p.vertex(pts[i][0] * k, pts[i][1] * k)
+  p.endShape()
   p.pop()
 }
 
@@ -192,10 +189,14 @@ export const coaster = definePiece<{ color: string }>({
     outline(p, ink, weight)
     p.line(-0.38 * k, 1.5 * k, 2.3 * k, 1.5 * k)
 
-    // The track: one rail, lit behind the car wherever it has been, going out a while after the ride.
+    // The track: one rail, lit behind the car wherever it has been, going
+    // out a while after the ride. Each stretch is laid once, the lit one up
+    // to the car and the dark one on from it: the lit one laid over the whole
+    // dark rail doubled its edges, and they thinned in a frame when it went out.
     const glowing = t > T_GO ? 1 - over(since, 1.2, 2.2) : 0
-    tubePath(p, k, ink, weight, s.color, pts, 0)
-    if (glowing > 0) tubePath(p, k, ink, weight, s.color, pts.filter((_, i) => X_TRACK0 + i * 0.02 <= x), glowing)
+    const lit = glowing > 0 ? Math.min(pts.length - 1, Math.floor((x - X_TRACK0) / 0.02 + 1e-9)) : 0
+    if (lit > 0) tubePath(p, k, ink, weight, s.color, pts, glowing, 0, lit)
+    tubePath(p, k, ink, weight, s.color, pts, 0, lit)
     // The brake fins on the run-out, closed on the car once it is in them.
     const gripped = t > T_BRAKE ? 1 : 0
     solid(p, ink, weight * 0.8, s.color)
