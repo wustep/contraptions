@@ -420,30 +420,13 @@ export function drawFarRocks(pen: Pen, t: number): void {
  * across it, shorter as the sun climbs. The pair of choughs wheel over it.
  */
 /** The summits standing out of the cloud: x, how far into the sea (below its far edge), width, height. */
-const ISLANDS: [number, number, number, number][] = [[22.6, 0.25, 2.6, 0.9], [30.2, 0.62, 3.4, 1.1], [16.6, 1.1, 2.6, 0.85], [26.0, 1.3, 4.4, 1.5], [13.3, 2.5, 3.6, 1.2]]
+const ISLANDS: [number, number, number, number][] = [[26.0, 1.3, 4.4, 1.5], [13.3, 2.5, 3.6, 1.2]]
 /**
- * The masses of cloud in the sea, past the far edge's small heaps: x, how far into the sea, and how big. Each is a big
- * heap with a lesser one behind it on its left and another before it on its right, so the sea is lumped in masses with
- * open floor between them, not dotted with heaps.
+ * The heaps of cloud: x, how far into the sea, how big, and how much taller than the rest. A few big ones with open
+ * floor between them, so the sea is a calm floor and not dotted with heaps; and the one welling up in the gorge under
+ * the ledge, which stays where it is.
  */
-const MASSES: [number, number, number][] = [
-  [21.0, 0.4, 1.3], [35.6, 0.5, 1.4], [13.6, 0.7, 1.0], [27.2, 0.8, 1.5], [23.8, 1.1, 1.0], [17.6, 1.4, 1.5], [31.6, 1.7, 1.7],
-  [11.8, 1.8, 1.2], [39.4, 2.0, 1.7], [27.8, 2.2, 1.3], [20.0, 2.4, 1.2], [23.6, 2.6, 2.4], [36.4, 2.9, 1.5], [14.0, 3.4, 2.2],
-  [33.4, 3.6, 2.6], [20.4, 4.3, 1.8], [26.6, 5.0, 2.8], [17.4, 6.2, 3.2], [38.8, 6.4, 3.4], [27.6, 8.4, 3.6],
-  // Close under the face, the gorge packed with them.
-  [16.6, 2.4, 1.4], [13.4, 5.0, 2.0], [19.8, 7.4, 2.6], [14.0, 8.6, 2.8],
-]
-/** The heaps of cloud: x, how far into the sea, how big, and how much taller than the rest (the two welling up in the gorge under the ledge, which stay where they are). */
-const HEAPS: [number, number, number, number?][] = [
-  [10.9, 0.25, 0.8, 2.4], [11.75, 0.12, 0.5, 2],
-  // The far edge: small and flat, close together, as the sea goes away from the lens.
-  [13.4, 0.15, 0.55], [15.2, 0.2, 0.7], [17.6, 0.12, 0.6], [21.6, 0.18, 0.75], [24.0, 0.1, 0.5], [29.4, 0.15, 0.7], [31.5, 0.25, 1.0],
-  ...MASSES.flatMap(([x, d, r], i): [number, number, number][] => [
-    [x - (0.8 + 0.2 * hash(i, 1, 79)) * r, d - 0.06 * r, r * (0.5 + 0.15 * hash(i, 2, 79))],
-    [x, d, r],
-    [x + (0.75 + 0.2 * hash(i, 3, 79)) * r, d + 0.08 * r, r * (0.45 + 0.15 * hash(i, 4, 79))],
-  ]),
-]
+const HEAPS: [number, number, number, number?][] = [[10.9, 0.25, 0.8, 2.4], [21.0, 0.4, 1.3], [17.6, 1.4, 1.5], [31.6, 1.7, 1.7], [23.6, 2.6, 2.4], [14.0, 3.4, 2.2], [26.6, 5.0, 2.8]]
 /** Everything standing up out of the sea, furthest first: so each lies over the feet of what is behind it. */
 const STANDING = [...HEAPS.map((h, i) => ({ d: h[1], i, heap: true })), ...ISLANDS.map((h, i) => ({ d: h[1], i, heap: false }))].sort((a, b) => a.d - b.d)
 
