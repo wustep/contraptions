@@ -81,7 +81,8 @@ try {
   await click('[data-kind="triangle"]')
   const board = await page.locator('#machine').boundingBox()
   const vp = await page.locator('#viewport').boundingBox()
-  await page.mouse.click(vp.x + 240, vp.y + 220)
+  await page.locator('#viewport').evaluate(el => el.scrollTo({ top: el.scrollHeight, behavior: 'instant' }))
+  await page.mouse.click(vp.x + 240, vp.y + vp.height - 110)
   assert.equal(await page.locator('[data-note]').count(), 13)
   assert.equal((await take()).notes.at(-1).track, (await take()).tracks[3].id)
   assert.ok(board.width > 0)
@@ -97,6 +98,11 @@ try {
   assert.equal(await recipient.locator('#length').textContent(), '16 beats'); await recipient.close()
   await click('#fit'); await page.evaluate(() => scrollTo(0, 0))
   await page.screenshot({ path: join(shots, `${pass}-edited.png`), fullPage: true })
+  await page.locator('#presets').selectOption('blank')
+  await click('[data-kind="harp"]'); await page.locator('#viewport').focus(); await page.keyboard.press('Enter')
+  assert.equal(await page.locator('[data-note]').count(), 1, 'keyboard placement on an empty machine')
+  await page.keyboard.press('ArrowDown'); await page.keyboard.press('Space'); await page.waitForTimeout(300); await page.keyboard.press('Space')
+  await click('#open-shelf'); await click('[data-load="0"]')
   console.log('Desktop: play, three simultaneous audio strikes, exact contact scrub, pitch, octave, size, drag, keyboard, undo, duplicate/delete, loop length, parallel track, mute, save, share and reload passed.')
 
   for (const width of [768, 390, 320]) {
@@ -104,7 +110,12 @@ try {
     phone.on('pageerror', e => errors.push(e.message))
     await phone.goto(`${base}/games/pocket-orchestra/`); await phone.waitForSelector('#machine'); await phone.evaluate(() => document.fonts.ready)
     assert.equal(await phone.evaluate(() => document.documentElement.scrollWidth), width, `${width}px: no page overflow`)
-    await phone.locator('#play').tap(); await phone.waitForTimeout(850); await phone.locator('#play').tap()
+    await phone.locator('#play').tap()
+    if (width < 600) {
+      await phone.waitForFunction(() => document.querySelector('#viewport').scrollLeft > 40)
+      assert.equal(await phone.locator('#follow').getAttribute('aria-pressed'), 'true')
+    } else await phone.waitForTimeout(850)
+    await phone.locator('#play').tap()
     await phone.locator('[data-note="n0-0"]').tap(); await phone.waitForSelector('#note-beat')
     await phone.locator('[data-pitch="3"]').tap()
     assert.match(await phone.locator('[data-note="n0-0"]').getAttribute('aria-label'), /G5/)
@@ -117,6 +128,7 @@ try {
       for (let dx = 10; dx <= 160; dx += 10) { await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x - dx, y }] }); await phone.waitForTimeout(15) }
       await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await phone.waitForTimeout(200)
       assert.ok(await phone.locator('#viewport').evaluate(el => el.scrollLeft) > 40, `${width}px: touch pan works`)
+      assert.equal(await phone.locator('#follow').getAttribute('aria-pressed'), 'false', 'manual pan takes control from follow')
       await phone.locator('#fit').tap()
       await phone.screenshot({ path: join(shots, `${pass}-${width}-fit.png`), fullPage: true })
     }
@@ -124,4 +136,7 @@ try {
   }
   console.log('768/390/320px: touch playback, tuning, real touch panning, whole-machine fit and layouts passed.')
   assert.deepEqual(errors, []); console.log(`No browser errors. Screenshots: ${shots}`)
+} catch (error) {
+  await browser.contexts()[0]?.pages()[0]?.screenshot({ path: join(shots, `${pass}-failure.png`), fullPage: true })
+  throw error
 } finally { await browser.close() }

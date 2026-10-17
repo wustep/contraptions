@@ -11,8 +11,9 @@ export interface Take { title: string; tempo: number; length: number; tracks: Tr
 export const copy = (t: Take): Take => ({ ...t, tracks: t.tracks.map(v => ({ ...v })), notes: t.notes.map(v => ({ ...v })) })
 export const clamp = (n: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, n))
 export const mod = (n: number, d: number): number => ((n % d) + d) % d
-export const trackY = (i: number): number => 85 + i * 160
-export const boardHeight = (take: Take): number => 100 + take.tracks.length * 160
+export const TRACK_GAP = 132
+export const trackY = (i: number): number => 65 + i * TRACK_GAP
+export const boardHeight = (take: Take): number => 71 + take.tracks.length * TRACK_GAP
 export const beatX = (beat: number): number => 84 + beat * 86
 export const boardWidth = (take: Take): number => beatX(take.length) + 38
 export function pitchName(degree: number): string { return NOTES[mod(degree, 5)] + (4 + Math.floor(degree / 5)) }

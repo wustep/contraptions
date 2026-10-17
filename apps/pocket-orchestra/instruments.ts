@@ -18,12 +18,22 @@ export function routesFor(take: Take): Route[] {
     const y = trackY(index), home = { x: 64, y }, end = beatX(take.length - .6)
     const notes = take.notes.filter(n => n.track === track.id).sort((a, b) => a.beat - b.beat || a.id.localeCompare(b.id))
     const knots: Knot[] = [{ ...home, beat: 0 }, ...notes.map(n => ({ x: beatX(n.beat), y: n.y, beat: n.beat, note: n })),
-      { x: end, y, beat: take.length - 1.4 }, { x: end, y: y + 82, beat: take.length - 1.15 },
-      { x: 36, y: y + 82, beat: take.length - .3 }, { x: 36, y, beat: take.length - .08 }, { ...home, beat: take.length }]
+      { x: end - 18, y, beat: take.length - 1.55 }, { x: end, y: y + 18, beat: take.length - 1.45 },
+      { x: end, y: y + 82, beat: take.length - 1.15 }, { x: end - 18, y: y + 100, beat: take.length - 1.05 },
+      { x: 54, y: y + 100, beat: take.length - .32 }, { x: 36, y: y + 82, beat: take.length - .22 },
+      { x: 36, y: y + 18, beat: take.length - .06 }, { ...home, beat: take.length }]
     const segments: Segment[] = []
     for (let i = 1; i < knots.length; i++) {
       const a = knots[i - 1], b = knots[i], vertical = a.x === b.x, dx = (b.x - a.x) * .5
-      segments.push({ a, b, c1: vertical ? { x: a.x, y: a.y + (b.y - a.y) * .4 } : { x: a.x + dx, y: a.y }, c2: vertical ? { x: b.x, y: b.y - (b.y - a.y) * .4 } : { x: b.x - dx, y: b.y }, lift: b.y < a.y - 12, returning: i > notes.length + 1 })
+      let c1 = vertical ? { x: a.x, y: a.y + (b.y - a.y) * .4 } : { x: a.x + dx, y: a.y }
+      let c2 = vertical ? { x: b.x, y: b.y - (b.y - a.y) * .4 } : { x: b.x - dx, y: b.y }
+      // Rounded chute corners turn the marble and its supporting rail together.
+      const turn = i - notes.length
+      if (turn === 2) { c1 = { x: b.x, y: a.y }; c2 = { x: b.x, y: a.y } }
+      if (turn === 4) { c1 = { x: a.x, y: b.y }; c2 = { x: a.x, y: b.y } }
+      if (turn === 6) { c1 = { x: b.x, y: a.y }; c2 = { x: b.x, y: a.y } }
+      if (turn === 8) { c1 = { x: a.x, y: b.y }; c2 = { x: a.x, y: b.y } }
+      segments.push({ a, b, c1, c2, lift: b.y < a.y - 12, returning: i > notes.length + 1 })
     }
     return { track: track.id, segments, home }
   })
@@ -35,7 +45,15 @@ export function onSegment(s: Segment, u: number): Point {
 export function routeAt(route: Route, beat: number, length: number): Point {
   const t = mod(beat, length)
   const segment = route.segments.find(s => t >= s.a.beat && t < s.b.beat) || route.segments[0]
-  return onSegment(segment, (t - segment.a.beat) / Math.max(.00001, segment.b.beat - segment.a.beat))
+  const point = onSegment(segment, (t - segment.a.beat) / Math.max(.00001, segment.b.beat - segment.a.beat))
+  // An impact briefly lifts the ball off the supporting rail. It starts at the
+  // exact contact and settles onto the same rail, without a second sound.
+  if (segment.a.note) {
+    const age = t - segment.a.beat, span = Math.min(.42, (segment.b.beat - segment.a.beat) * .4)
+    const height = { timpani: 22, xylophone: 14, keys: 10, triangle: 8, harp: 7, musicbox: 8 }[segment.a.note.kind]
+    if (age < span) point.y -= height * Math.sin(Math.PI * age / span)
+  }
+  return point
 }
 export function segmentPath(s: Segment): string { return `M${s.a.x} ${s.a.y}C${s.c1.x} ${s.c1.y} ${s.c2.x} ${s.c2.y} ${s.b.x} ${s.b.y}` }
 

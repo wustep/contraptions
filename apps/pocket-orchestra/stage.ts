@@ -1,4 +1,4 @@
-import { beatX, boardHeight, boardWidth, mod, NAMES, pitchName, STEP, trackY, type Take } from './model'
+import { beatX, boardHeight, boardWidth, mod, NAMES, pitchName, STEP, TRACK_GAP, trackY, type Take } from './model'
 import { mechanism, onSegment, routeAt, routesFor, segmentPath, type Point, type Route } from './instruments'
 
 export interface StageState { take: Take; selected: string | null; activeTrack: string; armed: boolean; zoom: number }
@@ -28,18 +28,17 @@ export class OrchestraStage {
         }
         return `<path class="rail ${s.returning ? 'return-rail' : ''}" d="${d}" transform="translate(0 9)"/>${belt}`
       }).join('')
-      const teeth = Array.from({ length: 5 }, (_, k) => `<path class="fine" d="M28 ${y + k * 17 + 6}h16"/>`).join('')
+      const teeth = Array.from({ length: 6 }, (_, k) => `<path class="fine" d="M28 ${y + k * 17 + 6}h16"/>`).join('')
       return `<g class="track ${track.muted ? 'muted' : ''}" data-route="${track.id}" style="--track:${track.color}">
-        ${rails}<path class="fine" d="M16 ${y}h20M16 ${y + 82}h20M28 ${y}v82m16-82v82"/>${teeth}
+        ${rails}<path class="fine" d="M16 ${y}h20M16 ${y + 100}h20M28 ${y}v100m16-100v100"/>${teeth}
         <g class="gear" data-cx="36" data-cy="${y}"><circle class="paper" cx="36" cy="${y}" r="12"/><path d="M36 ${y - 8}v16m-8-8h16"/><circle class="track-fill" cx="36" cy="${y}" r="3"/></g>
-        <circle class="paper" cx="36" cy="${y + 82}" r="9"/><circle class="track-fill" cx="36" cy="${y + 82}" r="3"/>
-        <path class="direction" d="m${w * .56} ${y + 85} -7 6 7 6m-12-6h38"/>
-        <text class="lane-number" x="63" y="${y + 112}">0${i + 1}</text>
+        <circle class="paper" cx="36" cy="${y + 90}" r="9"/><circle class="track-fill" cx="36" cy="${y + 90}" r="3"/>
+        <path class="direction" d="m${w * .56} ${y + 103} -7 6 7 6m-12-6h38"/>
       </g>`
     }).join('')
     const notes = take.notes.map(n => {
       const track = take.tracks.find(t => t.id === n.track)!
-      return `<g class="piece ${n.id === selected ? 'selected' : ''} ${track.muted ? 'muted' : ''}" data-note="${n.id}" data-beat="${n.beat}" role="button" tabindex="0" aria-pressed="${n.id === selected}" aria-label="${NAMES[n.kind]}, ${pitchName(n.pitch)}, beat ${n.beat.toFixed(2)}, track ${take.tracks.indexOf(track) + 1}" transform="translate(${beatX(n.beat)} ${n.y})" style="--track:${track.color}">
+      return `<g class="piece ${n.id === selected ? 'selected' : ''} ${track.muted ? 'muted' : ''}" data-note="${n.id}" data-beat="${n.beat}" role="button" tabindex="0" aria-pressed="${n.id === selected}" aria-label="${NAMES[n.kind]}, ${pitchName(n.pitch)}, beat ${(n.beat + 1).toFixed(2)}, track ${take.tracks.indexOf(track) + 1}" transform="translate(${beatX(n.beat)} ${n.y})" style="--track:${track.color}">
         <rect class="selection" x="${-48 * n.size}" y="-25" width="${96 * n.size}" height="105" rx="8"/>
         <g class="mechanism" transform="scale(${n.size} 1)">${mechanism(n.kind)}</g>
         <text class="note-label" y="96" text-anchor="middle">${pitchName(n.pitch)}</text>
@@ -48,7 +47,7 @@ export class OrchestraStage {
       </g>`
     }).join('')
     const ruler = Array.from({ length: take.length }, (_, i) => `<path class="ruler-tick" d="M${beatX(i)} 12v${i % 4 === 0 ? 10 : 5}"/>${i % 2 === 0 ? `<text class="ruler-label" x="${beatX(i)}" y="38" text-anchor="middle">${i + 1}</text>` : ''}`).join('')
-    this.svg.innerHTML = `<rect class="board-paper" width="${w}" height="${h}"/><g class="ruler">${ruler}</g><path class="chassis" d="M16 65v${take.tracks.length * 160 - 40}m-7 0h23"/>
+    this.svg.innerHTML = `<rect class="board-paper" width="${w}" height="${h}"/><g class="ruler">${ruler}</g><path class="chassis" d="M16 65v${(take.tracks.length - 1) * TRACK_GAP + 120}m-7 0h23"/>
       ${lines}${notes}${take.tracks.map(t => `<g class="marble ${t.muted ? 'muted' : ''}" data-ball="${t.id}" style="--track:${t.color}"><circle class="track-fill" r="8"/><path d="M-3-3h1" class="ball-shine"/></g>`).join('')}
       <circle id="playhead" cy="17" r="4"/>`
     this.setTime(0)
