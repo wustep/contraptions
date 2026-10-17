@@ -586,6 +586,57 @@ the picture is a cut or the train's lamp stabbing on). It found light still hang
 - **Home's hedges** (251 to 265) were the last flat cut-outs in the garden once the glare had gone: their crowns catch
   the morning now and their feet sit in their own shade.
 
+Glitch passes (Opus 5.5, fixes only: a section at a time, frame by frame at 60 fps, with Stephen's notes on the waves,
+the city, an orange circle and the balls' rolling):
+- **Every ball's mark rolls with it** (`marks.ts`): by the distance it rolls over its radius, round the hotel's drum
+  as the drum turns, and not at all where nothing turns it (the van and Fischer's taxi, weightless, on skis, afloat,
+  under the river); carried across the match cuts, so it no longer jumps at 30.9, 61.3 and 213.7. A look a part sets
+  (Mal's eye, Fischer's and Ariadne's on the plane, the children's faces) is kept while the ball stands and rolled on
+  as it moves; the children play whole turns of a roll from him, so they still come to rest facing him. No trail
+  behind them as they sit in the van driving off.
+- **Limbo's breakers** stand up as water, darker toward the crest, not a hairline; the glint and lace lines, the puff
+  past the crest, the haze of spray, the splash blobs, the wet sand's shine and lamp streak are gone; the foam is under
+  him; one beach under them, its bands one depth and cross-faded over a cell. The annex front is open before he
+  reaches it, the slot's dark starts at the floor, and Mal has no dark halo on the ladder.
+- **Limbo's city**: a tower's great top goes down behind its own stump and its spray rises behind it (it slid over
+  the stump, the floors through each other, under a white column of spray); it keeps its speed into the sea, and a
+  slab keeps its tower's glass.
+- **The spark** in the wides and Overview is his own size (it was an orange disc two and a half times his width).
+- **The snow**: the guards ride facing the way they go; skis swing under the ball at the hairpin and turn through the
+  lower branch's corner; no snow falls under the apron.
+- **Paris**: the near mirror's post fades as it swings away, a shard comes down flat, the reflections come up out of
+  the glass, the crowd parts round Mal without a figure jumping, the Seine's slosh and the dust gather.
+- **The rain, the plane, home**: the case's beads run the whole line; the van keeps its near wheels as they sink; the
+  river's mist thins to nothing; the landing gear comes down out of the wings and the bay; the glass door's foot
+  swings behind him; the children ease to rest in the embrace.
+
+A second glitch pass read every section again for the first pass's regressions and what it missed:
+- **The children** held before the embrace with their faces turned up and away from him (their roll was counted to
+  the embrace); it is counted to half way, the space they close is smaller, and they face him from first to last.
+  The face is there from the first moment of their turn, ink in the dark ball.
+- **Limbo's breakers** lost the last of their stray foam: the collapse cloud hanging over the break and the dash at
+  the wash's edge are gone, and the wash fades in at its seaward end (it began as a box under the water).
+- **Limbo's city**: the great tops' spray stands up beside their stumps, where it shows (behind the stumps' middles it
+  was hidden); a slab off the broken tower keeps the roof's slope, and its stump no longer loses a strip.
+- **The snow** falls only in the air (not through the cut rock under the fortress, nor out of the open air beside it),
+  its sky comes up out of the dark with no ruled line, and the skis come on under them as they land.
+- **Pops**: the fold's knuckles grow out of the slot, the van's underside fades as the floor goes soft, the patches
+  through the cabin's roof are his width (one bar wider than the cabin), and the hotel's ceiling plaster stays to the
+  frame's edge.
+
+A third glitch pass read every section again:
+- **Into limbo's sea** (156 to 159.8): the undertow drew Cobb and Ariadne in at a fixed depth, their whole balls inside
+  the beach under the water for three seconds; he is drawn along the bottom, and she passes over him.
+- **The waves carry him**: with the stray foam gone nothing showed a break, so the crest goes over onto the sand as
+  it breaks, and the wash is the breaker's own water on the sand under him (in the sea's paler tone over him it was
+  lost against the far sea, and a stain on him). He lies until the wash reaches him and is taken up with it. The beach
+  runs on down under the sea, with no seabed's skin cross-faded in at the waterline (a smudge down every shore frame).
+- **Pops**: the wreckage off the shore is afloat before it is seen (it came on in a frame at 156.6), the great plumes'
+  crowns come up with them, and the children's faces come on where face and ball are as light as each other (pass 2's
+  start had a pale dot on the dark ball).
+- **The fortress and the vault**: no slits in the sky over the roof at the snow's kick, and no snow in the vault's
+  ceiling slab; the hotel's ceilings keep their plaster as they sink through the floors.
+
 ## Inception nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

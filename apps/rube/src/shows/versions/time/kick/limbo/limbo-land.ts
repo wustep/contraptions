@@ -50,7 +50,6 @@ const SKY_LOW = mixHex(LIMBO.sky, LIMBO.skyWarm, 0.55)
 const FAR_SEA = mixHex(LIMBO.sky, LIMBO.sea, 0.4)
 const NEAR_SEA = mixHex(LIMBO.sea, LIMBO.seaDeep, 0.3)
 const CLOUD = mixHex(LIMBO.sky, LIMBO.foam, 0.45)
-const SEABED_TOP = mixHex(LIMBO.sandWet, LIMBO.seaDeep, 0.55)
 const EARTH = mixHex(LIMBO.sandWet, LIMBO.concreteDark, 0.45)
 const EARTH_DEEP = mixHex(LIMBO.concreteDark, SLEEP.mid, 0.55)
 const CITY_NEAR = mixHex(LIMBO.concreteDark, LIMBO.sky, 0.2)
@@ -192,8 +191,10 @@ function slabAt(e: Calving, t: number): { gone: boolean; hinge: Pt; theta: numbe
       const v = (u - 0.42) / 0.58
       return { gone: true, hinge: [xSide + s * 0.35 * v, h0[1] + drop * v * v], theta: s * (0.13 + 0.17 * v), dust: 1 }
     }
+    // On down into the sea at the speed it hit it (it came to a dead stop on the water, then sank from rest).
     const after = t - e.hit
-    return { gone: true, hinge: [xSide + s * (0.35 + 0.2 * sm(after / 2.4)), h0[1] + drop + e.h * 1.15 * sm(after / 2.6)], theta: s * (0.3 + 0.08 * sm(after / 2.4)), dust: 1 }
+    const vHit = (2 * drop) / (0.58 * e.fall)
+    return { gone: true, hinge: [xSide + s * (0.35 + 0.2 * sm(after / 2.4)), h0[1] + drop + vHit * after], theta: s * (0.3 + 0.08 * sm(after / 2.4)), dust: 1 }
   }
   if (u < 0.55) {
     const v = u / 0.55
@@ -205,7 +206,8 @@ function slabAt(e: Calving, t: number): { gone: boolean; hinge: Pt; theta: numbe
     return { gone: true, hinge: [xSide + s * 0.7 * v, h0[1] + drop * v * v], theta: s * (0.4 + 0.7 * Math.pow(v, 1.4)), dust: 1 }
   }
   const after = t - e.hit
-  return { gone: true, hinge: [xSide + s * (0.7 + 0.25 * sm(after / 2)), h0[1] + drop + after * 1.1], theta: s * (1.1 + 0.15 * sm(after / 2)), dust: 1 }
+  const vHit = (2 * drop) / (0.45 * e.fall)
+  return { gone: true, hinge: [xSide + s * (0.7 + 0.25 * sm(after / 2)), h0[1] + drop + vHit * after], theta: s * (1.1 + 0.15 * sm(after / 2)), dust: 1 }
 }
 
 /** The prologue's one sign: the cracked slab on tower 4 slips a little on bar 3 and hangs there, leaning. */
@@ -221,6 +223,20 @@ function towerColor(tw: Tower): string {
   return tw.mid ? mixHex(MID_NEAR, CITY_NEAR, tw.far * 2) : mixHex(CITY_NEAR, CITY_FAR, tw.far)
 }
 const towerInk = (pen: Pen, tw: Tower, col: string): [number, string] => (tw.mid ? [0.7, mixHex(pen.ink, col, 0.25)] : [0.45, mixHex(pen.ink, col, 0.55)])
+
+/** A tower's glass, in one of three manners (bands of floors, tall fins, a grid), over its whole face (clip it). */
+function towerGlass(pen: Pen, tw: Tower, i: number, xl: number, xr: number, col: string): void {
+  const glass = mixHex(LIMBO.glass, col, 0.45)
+  const top = tw.top
+  const manner = i % 3
+  if (manner === 1) {
+    for (let x = xl + 0.14; x < xr - 0.1; x += 0.34) box(pen, x, top + 0.25, x + 0.15, tw.base - 0.25, glass, 0)
+  } else {
+    const gap = manner === 0 ? 0.62 : 0.5
+    for (let y = top + 0.3; y < tw.base - 0.3; y += gap) box(pen, xl + 0.12, y, xr - 0.12, y + (manner === 0 ? 0.2 : 0.26), glass, 0)
+    if (manner === 2) for (let x = xl + 0.4; x < xr - 0.2; x += 0.4) box(pen, x, top, x + 0.05, tw.base, col, 0)
+  }
+}
 
 function drawTower(pen: Pen, tw: Tower, i: number, t: number, f: Frame): void {
   const col = towerColor(tw)
@@ -254,13 +270,14 @@ function drawTower(pen: Pen, tw: Tower, i: number, t: number, f: Frame): void {
     pts.push([xl, yb], ...jag([xl, yb], [xr, yb], 7, i * 10 + 5), [xr, yb])
   } else if (nl) {
     const yb = nl.top + nl.h
-    pts.push([xl, yb], ...jag([xl, yb], [xl + nl.w, yb], 4, i * 10 + 1), [xl + nl.w, yb], ...jag([xl + nl.w, yb], [xl + nl.w, top], 5, i * 10 + 2))
+    // Broken along the break; the wall left standing is straight (its edge wobbled, as wavy as the break, close to).
+    pts.push([xl, yb], ...jag([xl, yb], [xl + nl.w, yb], 4, i * 10 + 1), [xl + nl.w, yb])
     pts.push([xl + nl.w, nl.top > top + 0.05 ? nl.top : top])
   } else pts.push([xl, top])
   if (nr && !whole(nr) && !whole(nl)) {
     const yb = nr.top + nr.h
     const xn = xr - nr.w
-    pts.push([xn, lerp(top, topR, (xn - xl) / (xr - xl))], ...jag([xn, top], [xn, yb], 5, i * 10 + 3), [xn, yb], ...jag([xn, yb], [xr, yb], 4, i * 10 + 4), [xr, yb])
+    pts.push([xn, lerp(top, topR, (xn - xl) / (xr - xl))], [xn, yb], ...jag([xn, yb], [xr, yb], 4, i * 10 + 4), [xr, yb])
   } else if (!nr && !whole(nl)) pts.push([xr, topR])
   pts.push([xr, tw.base])
   const ctx = ctxOf(pen.p)
@@ -273,9 +290,8 @@ function drawTower(pen: Pen, tw: Tower, i: number, t: number, f: Frame): void {
   }
   const [lw, ink] = towerInk(pen, tw, col)
   shape(pen, pts, col, lw, ink)
-  // Its glass, in one of three manners (bands of floors, tall fins, a grid), clipped to what is left of it.
+  // Its glass, clipped to what is left of it.
   if (pen.k * 0.5 > 3) {
-    const glass = mixHex(LIMBO.glass, col, 0.45)
     const k = pen.k
     ctx.save()
     ctx.beginPath()
@@ -283,14 +299,7 @@ function drawTower(pen: Pen, tw: Tower, i: number, t: number, f: Frame): void {
     for (let j = 1; j < pts.length; j++) ctx.lineTo(pts[j][0] * k, pts[j][1] * k)
     ctx.closePath()
     ctx.clip()
-    const manner = i % 3
-    if (manner === 1) {
-      for (let x = xl + 0.14; x < xr - 0.1; x += 0.34) box(pen, x, top + 0.25, x + 0.15, tw.base - 0.25, glass, 0)
-    } else {
-      const gap = manner === 0 ? 0.62 : 0.5
-      for (let y = top + 0.3; y < tw.base - 0.3; y += gap) box(pen, xl + 0.12, y, xr - 0.12, y + (manner === 0 ? 0.2 : 0.26), glass, 0)
-      if (manner === 2) for (let x = xl + 0.4; x < xr - 0.2; x += 0.4) box(pen, x, top, x + 0.05, tw.base, col, 0)
-    }
+    towerGlass(pen, tw, i, xl, xr, col)
     ctx.restore()
   }
   ctx.restore()
@@ -308,12 +317,17 @@ function drawSlab(pen: Pen, e: Calving, t: number, f: Frame): void {
   const col = towerColor(tw)
   const xSide = tw.x + (e.side * tw.w) / 2 - e.side * (e.off ?? 0) + dx
   if (xSide < f.x0 - 8 || xSide > f.x1 + 8) return
-  // The slab as a box from the hinge (its bottom outer corner), turned about it.
+  // The slab as a box from the hinge (its bottom outer corner), turned about it; one that reaches the roof has the
+  // roof's own line for its top (a broken roof's slope went flat in the frame the slab came away).
+  const xo = tw.x + (e.side * tw.w) / 2 - e.side * (e.off ?? 0)
+  const roofAt = (x: number) => tw.top + (tw.broken ?? 0) * ((x - (tw.x - tw.w / 2)) / tw.w)
+  const reaches = e.top <= Math.max(roofAt(xo), roofAt(xo - e.side * e.w)) + 0.05
+  const topAt = (x: number) => (reaches ? roofAt(x) : e.top) - (e.top + e.h)
   const local: Pt[] = [
     [0, 0],
     [-e.side * e.w, 0],
-    [-e.side * e.w, -e.h],
-    [0, -e.h],
+    [-e.side * e.w, topAt(xo - e.side * e.w)],
+    [0, topAt(xo)],
   ]
   let hinge: Pt
   let theta: number
@@ -344,18 +358,23 @@ function drawSlab(pen: Pen, e: Calving, t: number, f: Frame): void {
   clipped(pen, f.x0 - 10, TOP_OF_SKY, f.x1 + 10, tw.base, () => {
     const [lw, ink] = towerInk(pen, tw, col)
     shape(pen, pts, col, lw, ink)
-    // Its glass floors, turned with it.
+    // Its glass, the tower's own where it broke from, carried with it (it was always bands of floors, so a slab off a
+    // tower of fins or a grid changed its face in the frame it came away).
     if (pen.k * 0.5 > 3) {
-      const glass = mixHex(LIMBO.glass, col, 0.45)
-      for (let y = -e.h + 0.3; y < -0.2; y += 0.62) {
-        const band: Pt[] = [
-          [-e.side * 0.1, y],
-          [-e.side * (e.w - 0.1), y],
-          [-e.side * (e.w - 0.1), y + 0.2],
-          [-e.side * 0.1, y + 0.2],
-        ].map(([x, yy]): Pt => [hinge[0] + x * Math.cos(theta) - yy * Math.sin(theta), hinge[1] + x * Math.sin(theta) + yy * Math.cos(theta)])
-        shape(pen, band, glass, 0)
-      }
+      const { k } = pen
+      const ctx = ctxOf(pen.p)
+      ctx.save()
+      ctx.beginPath()
+      ctx.moveTo(pts[0][0] * k, pts[0][1] * k)
+      for (let j = 1; j < pts.length; j++) ctx.lineTo(pts[j][0] * k, pts[j][1] * k)
+      ctx.closePath()
+      ctx.clip()
+      const h0: Pt = [xSide, e.top + e.h]
+      ctx.translate(hinge[0] * k, hinge[1] * k)
+      ctx.rotate(theta)
+      ctx.translate(-h0[0] * k, -h0[1] * k)
+      towerGlass(pen, tw, e.tower, tw.x - tw.w / 2 + dx, tw.x + tw.w / 2 + dx, col)
+      ctx.restore()
     }
   })
   // The crack: a dark gap behind the slab that slipped in the prologue, opening wider before it goes.
@@ -384,8 +403,9 @@ function drawPlume(pen: Pen, e: Calving, t: number, f: Frame): void {
   const base = tw.base
   if (e.big) {
     if (u < 0 || u > 8) return
-    // Where the face went in: under the tower, a little out on the side it leaned to.
-    const x = tw.x + e.side * 0.3 + dx
+    // Where the face went in, behind the stump and out past its side it leaned to, so the column stands up beside what
+    // is left standing (on the stump's middle, now behind it, it was hidden).
+    const x = tw.x + e.side * (tw.w / 2 + 0.5) + dx
     if (x < f.x0 - 12 || x > f.x1 + 12) return
     const H = Math.min(9, 0.95 * e.h + 1.4)
     const W = e.w * 0.7 + 0.7
@@ -407,13 +427,15 @@ function drawPlume(pen: Pen, e: Calving, t: number, f: Frame): void {
     // The crown: spreading like a fountain's, and coming back down in two curtains of spray at its edges.
     const crownY = base - top
     const spread = W * (0.55 + 1.15 * sm(u / 1.8))
-    soft(pen, x, crownY + 0.25, spread, 0.75 + 0.3 * u, SPRAY_NEAR, 0.78 * fade)
+    // Its crown and its foot come up with it (at full strength from the hit's first frame, a white blob beside the stump).
+    const up = sm(u / 0.1)
+    soft(pen, x, crownY + 0.25, spread, 0.75 + 0.3 * u, SPRAY_NEAR, 0.78 * fade * up)
     if (u > 0.5) {
       const len = Math.min(top * 0.95, 2.2 * (u - 0.5) ** 1.2)
       for (const side of [-1, 1]) soft(pen, x + side * spread * 0.78, crownY + 0.3 + len / 2, W * 0.32, len / 2 + 0.35, SPRAY, 0.6 * fade)
     }
     // White water boiling at its foot.
-    soft(pen, x, base - 0.3, W * (0.9 + 1.4 * sm(u / 1.2)), 0.55, SPRAY_NEAR, 0.8 * fade)
+    soft(pen, x, base - 0.3, W * (0.9 + 1.4 * sm(u / 1.2)), 0.55, SPRAY_NEAR, 0.8 * fade * up)
     // The mist it leaves hanging, lingering.
     soft(pen, x, base - 1.0, W * (1.4 + 2.4 * sm(u / 3.5)), 1.2 + 0.45 * u, SPRAY, 0.5 * Math.exp(-u / 3.2) * sm(u / 0.3))
     // The swell running out from it across the water, both ways: a foaming crest, and the water stirred behind it.
@@ -448,11 +470,19 @@ export function drawCity(pen: Pen, t: number, f: Frame): void {
   if (f.y0 > SEA + 1 || f.y1 < 68) return
   // The far towers first (paler), then nearer ones over them.
   const order = CITY.map((_, i) => i).sort((a, b) => CITY[b].far - CITY[a].far)
+  // A great one, the tower's whole top, goes down behind what is left standing of it, and its spray goes up behind it
+  // (in front, the top slid down over its own stump, the two sets of floors through each other, and the spray stood
+  // over the stump as a white tower of its own).
   for (const i of order) {
+    for (const e of CALVING) {
+      if (e.tower !== i || !e.big) continue
+      drawSlab(pen, e, t, f)
+      drawPlume(pen, e, t, f)
+    }
     drawTower(pen, CITY[i], i, t, f)
-    for (const e of CALVING) if (e.tower === i) drawSlab(pen, e, t, f)
+    for (const e of CALVING) if (e.tower === i && !e.big) drawSlab(pen, e, t, f)
   }
-  for (const e of CALVING) drawPlume(pen, e, t, f)
+  for (const e of CALVING) if (!e.big) drawPlume(pen, e, t, f)
 }
 
 /* ------------------------------------------------------------------ the near sea */
@@ -475,8 +505,9 @@ export function surface(x: number, t: number): number {
       h = crestH(tk) * (0.2 + 0.8 * sm(1 - ahead / 5.5))
       wf = lerp(0.62, 0.24, sm(1 - ahead / 2.5))
     } else {
+      // Going over, its water slumps forward onto the beach as the wash (in place, it only sank away).
       const u = -ahead / 0.6
-      xc = BREAK_X + 0.3 * u
+      xc = BREAK_X + 0.9 * u
       h = crestH(tk) * (1 - u) * (1 - u)
       wf = 0.24
     }
@@ -502,7 +533,8 @@ const WRECKAGE: [number, number, number, number][] = [
   [-12.6, 0.8, 0.3, -0.3],
 ]
 function drawWreckage(pen: Pen, t: number, xa: number, xb: number): void {
-  if (t < Q.under) return
+  // Afloat from the return's first moment, before the sea is in view (from going under, it came on in a frame).
+  if (t < Q.begin) return
   const ctx = pen.p.drawingContext as CanvasRenderingContext2D
   const { k } = pen
   WRECKAGE.forEach(([x, w, h, tilt], i) => {
@@ -533,12 +565,16 @@ export function drawSea(pen: Pen, t: number, f: Frame): void {
   if (f.x0 > SHORE_END || f.y0 > BOTTOM || f.y1 < SEA - 2) return
   const xa = f.x0 - 1
   const xb = Math.min(f.x1 + 1, SHORE_END)
-  const step = Math.max(0.12, (xb - xa) / 160)
+  // Fine enough for a breaker's face, half a cell wide (at 0.12 it was drawn in three or four straight pieces, with
+  // a corner at its shoulder and its foot).
+  const step = Math.max(0.035, (xb - xa) / 320)
   const top: Pt[] = []
   for (let x = xa; x <= xb + 1e-9; x += step) top.push([x, surface(x, t)])
   const body: Pt[] = [...top, [xb, BOTTOM], [xa, BOTTOM]]
+  // A breaker's water stands up out of the sea into its own shade, darker toward its crest: in the far sea's tone, as
+  // it was, it was lost against the water behind it and only its skin showed, a hairline with a hook in it.
   gradFill(pen, body, SEA - 0.7, SEA + 7, [
-    [0, mixHex(NEAR_SEA, LIMBO.sky, 0.15), 1],
+    [0, mixHex(NEAR_SEA, LIMBO.seaDeep, 0.6), 1],
     [0.1, NEAR_SEA, 1],
     [0.45, mixHex(NEAR_SEA, LIMBO.seaDeep, 0.7), 1],
     [1, LIMBO.seaDeep, 1],
@@ -550,17 +586,7 @@ export function drawSea(pen: Pen, t: number, f: Frame): void {
     [0.6, LIMBO.sky, 0.45],
     [1, LIMBO.sky, 0.3],
   ])
-  const glint: Pt[] = [...top, ...top.slice().reverse().map(([x, y]): Pt => [x, y + 0.035])]
-  wash(pen, glint, LIMBO.foam, 0.45)
   drawWreckage(pen, t, xa, xb)
-  // Foam on the breakers' crests as they rise to break.
-  for (const tk of WAVES) {
-    const ahead = tk - t
-    if (ahead > 1.4 || ahead < 0) continue
-    const xc = BREAK_X - CREST_V * ahead
-    const y = surface(xc + 0.08, t)
-    soft(pen, xc + 0.1, y + 0.03, 0.3 + 0.4 * crestH(tk), 0.1, LIMBO.foam, 0.75 * sm(1 - ahead / 1.4))
-  }
 }
 
 /** The ground: the seabed under the sea, the shore, and the earth down to the level's bottom. */
@@ -578,7 +604,7 @@ export function drawGround(pen: Pen, f: Frame): void {
     [0.8, EARTH_DEEP, 1],
     [1, SLEEP.deep, 1],
   ])
-  // The surface: sand on the shore (wet near the water), the seabed under the sea.
+  // The surface: sand on the shore, wet near the water, and on under the sea.
   const band = (x0: number, x1: number, col: string, a: number, th: number) => {
     const lo = Math.max(xa, x0)
     const hi = Math.min(xb, x1)
@@ -589,8 +615,9 @@ export function drawGround(pen: Pen, f: Frame): void {
     wash(pen, [...pts, ...pts.slice().reverse().map(([x, y]): Pt => [x, y + th])], col, a)
   }
   // The seabed's skin and the sand's cross-fade under the water's edge, so the shore runs down into the sea and is
-  // not cut off square at the waterline (the sea over it is clear enough to show a square end).
-  const M = 0.35
+  // not cut off square at the waterline (the sea over it is clear enough to show a square end); over a cell either side
+  // of it, as over a third of one the change from the dark seabed to the pale sand read as a seam down the beach.
+  const M = 1
   const fade = (x0: number, x1: number, col: string, th: number, a0: number, a1: number) => {
     const lo = Math.max(xa, x0)
     const hi = Math.min(xb, x1)
@@ -603,11 +630,12 @@ export function drawGround(pen: Pen, f: Frame): void {
       [1, col, a1],
     ])
   }
-  band(-200, WATERLINE - M + 0.06, SEABED_TOP, 1, 0.45)
-  fade(WATERLINE - M, WATERLINE + M, SEABED_TOP, 0.45, 1, 0)
-  band(WATERLINE + M - 0.06, 200, LIMBO.sand, 1, 0.34)
-  fade(WATERLINE - M, WATERLINE + M, LIMBO.sand, 0.34, 0, 1)
-  fade(WATERLINE - M - 0.1, WATERLINE - 0.1, LIMBO.sandWet, 0.36, 0, 0.9)
+  // One depth for all three, so no strip of one is left showing under another (a dark band under the beach).
+  const TH = 0.36
+  // The sand runs on down under the sea, which darkens it as it deepens (a darker seabed's skin cross-faded into it
+  // across the waterline stood there as a smudge down the beach).
+  band(-200, 200, LIMBO.sand, 1, TH)
+  fade(WATERLINE - M - 0.1, WATERLINE - 0.1, LIMBO.sandWet, TH, 0, 0.9)
   {
     const lo = Math.max(xa, WATERLINE - 0.1)
     const hi = Math.min(xb, -3.6)
@@ -615,70 +643,28 @@ export function drawGround(pen: Pen, f: Frame): void {
       const pts: Pt[] = []
       for (let x = lo; x <= hi + 1e-9; x += step) pts.push([x, sandY(x)])
       pts.push([hi, sandY(hi)])
-      hgradFill(pen, [...pts, ...pts.slice().reverse().map(([x, y]): Pt => [x, y + 0.36])], WATERLINE - 0.1, -3.6, [
+      hgradFill(pen, [...pts, ...pts.slice().reverse().map(([x, y]): Pt => [x, y + TH])], WATERLINE - 0.1, -3.6, [
         [0, LIMBO.sandWet, 0.9],
         [0.45, LIMBO.sandWet, 0.6],
         [1, LIMBO.sandWet, 0],
       ])
     }
   }
-  // The wet sand holds the sky: a faint shine, and far off the warmth of the lit window high up.
-  {
-    const pts: Pt[] = []
-    for (let x = Math.max(xa, WATERLINE); x <= Math.min(xb, -4.2); x += step) pts.push([x, sandY(x)])
-    if (pts.length > 1)
-      hgradFill(pen, [...pts, ...pts.slice().reverse().map(([x, y]): Pt => [x, y + 0.05])], WATERLINE, -4.2, [
-        [0, LIMBO.sky, 0.35],
-        [1, LIMBO.sky, 0],
-      ])
-  }
-  soft(pen, -5.0, sandY(-5.0) + 0.02, 0.9, 0.05, LIMBO.lamp, 0.28)
   // The shore's edge, lightly inked above the water.
   const edge = top.filter(([x]) => x > WATERLINE - 0.05)
   if (edge.length > 1) polyline(pen, edge, mixHex(pen.ink, LIMBO.sand, 0.5), 0.5)
 }
 
-/** Drawn over the balls: the sea's body (so what is under the water is seen through it), the wash, the foam. */
-export function drawSeaOver(pen: Pen, t: number, f: Frame): void {
+/**
+ * The wash running up the sand, under the balls, in the breaker's own water: in the sea's paler tone over them, it was
+ * lost against the far sea behind it (nothing seemed to carry him up the beach) and showed only as a stain on him.
+ */
+export function drawWash(pen: Pen, t: number, f: Frame): void {
   if (f.x0 > SHORE_END + 3 || f.y0 > BOTTOM || f.y1 < SEA - 2) return
-  const xa = f.x0 - 1
-  const xb = Math.min(f.x1 + 1, SHORE_END)
-  if (xb > xa) {
-    const step = Math.max(0.12, (xb - xa) / 160)
-    const top: Pt[] = []
-    const bed: Pt[] = []
-    for (let x = xa; x <= xb + 1e-9; x += step) {
-      const s = surface(x, t)
-      const b = Math.max(s, sandY(x))
-      top.push([x, s])
-      bed.push([x, b])
-    }
-    gradFill(pen, [...top, ...bed.reverse()], SEA - 0.5, SEA + 4, [
-      [0, LIMBO.sea, 0.28],
-      [0.2, LIMBO.sea, 0.5],
-      [1, LIMBO.seaDeep, 0.72],
-    ])
-  }
-  // A haze of spray hangs in the air over the surf.
-  const lv = roughness(t)
-  soft(pen, BREAK_X + 0.9, SEA - 0.45, 2.6, 0.75, LIMBO.foam, 0.07 + 0.1 * lv)
-  // The breakers' foam as they collapse, and the wash running up the sand.
+  const water = mixHex(NEAR_SEA, LIMBO.seaDeep, 0.6)
   for (const tk of WAVES) {
     const u = t - tk
     if (u < 0 || u > UPRUSH + BACKWASH) continue
-    const r = crestH(tk)
-    if (u < 1.6) {
-      const grow = sm(u / 0.5)
-      const a = 0.75 * Math.exp(-u / 0.55) * (0.6 + r)
-      soft(pen, BREAK_X + 0.25 + 0.55 * grow, SEA - 0.1 - 0.22 * sm(u / 0.25) * (1 - sm((u - 0.25) / 0.9)), 0.45 + 0.75 * grow, 0.2 + 0.14 * grow, LIMBO.foam, a)
-      for (let j = 0; j < 3; j++) {
-        const v = u / 0.9
-        if (v > 1) break
-        const sx = BREAK_X + 0.3 + (0.4 + 0.3 * j) * v
-        const sy = SEA - 0.2 - (0.25 + 0.12 * j) * Math.sin(Math.PI * v) * (0.5 + r)
-        soft(pen, sx, sy, 0.12 + 0.05 * j, 0.08, LIMBO.foam, 0.5 * (1 - v))
-      }
-    }
     const front = washFront(tk, t)
     if (front === null) continue
     const x0 = Math.max(BREAK_X, WATERLINE - 0.35)
@@ -697,11 +683,35 @@ export function drawSeaOver(pen: Pen, t: number, f: Frame): void {
       const x = x0 + ((front - x0) * j) / n
       bottom.push([x, sandY(x) + 0.01])
     }
-    wash(pen, [...pts, ...bottom], LIMBO.sea, up ? 0.55 : 0.4)
-    // The lace of foam on it, and at its running edge.
-    const lace: Pt[] = [...pts, ...pts.slice().reverse().map(([x, y]): Pt => [x, y + 0.035])]
-    wash(pen, lace, LIMBO.foam, up ? 0.5 : 0.25)
-    soft(pen, front - 0.1, sandY(front) - 0.035, 0.28, 0.055, LIMBO.foam, up ? 0.7 : 0.3)
+    // Coming in out of the sea's body over its seaward end (it began there square, a box under the water).
+    const a = up ? 0.9 : 0.9 * (1 - sm((u - UPRUSH) / BACKWASH))
+    hgradFill(pen, [...pts, ...bottom], x0, x0 + 0.35, [
+      [0, water, 0],
+      [1, water, a],
+    ])
+  }
+}
+
+/** Drawn over the balls: the sea's body (so what is under the water is seen through it). */
+export function drawSeaOver(pen: Pen, t: number, f: Frame): void {
+  if (f.x0 > SHORE_END + 3 || f.y0 > BOTTOM || f.y1 < SEA - 2) return
+  const xa = f.x0 - 1
+  const xb = Math.min(f.x1 + 1, SHORE_END)
+  if (xb > xa) {
+    const step = Math.max(0.035, (xb - xa) / 320)
+    const top: Pt[] = []
+    const bed: Pt[] = []
+    for (let x = xa; x <= xb + 1e-9; x += step) {
+      const s = surface(x, t)
+      const b = Math.max(s, sandY(x))
+      top.push([x, s])
+      bed.push([x, b])
+    }
+    gradFill(pen, [...top, ...bed.reverse()], SEA - 0.5, SEA + 4, [
+      [0, LIMBO.sea, 0.28],
+      [0.2, LIMBO.sea, 0.5],
+      [1, LIMBO.seaDeep, 0.72],
+    ])
   }
 }
 

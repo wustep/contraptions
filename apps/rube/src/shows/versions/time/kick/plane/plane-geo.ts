@@ -340,12 +340,15 @@ export function fischerAt(t: number): { x: number; y: number; spin: number } {
   spin = turnTo(spin, 2.2, sm(t, STIR + 0.6, STIR + 1.3))
   spin = turnTo(spin, 0.2, sm(t, STIR + 1.3, SHADE - 0.5))
   spin = turnTo(spin, -0.4, sm(t, SHADE - 0.1, SHADE + 0.6))
-  // Cobb goes by below him, out of the door: his eyes follow him, a moment, and go back to the window.
+  // Cobb goes by below him, out of the door: his eyes follow him, a moment, and go back to the window. Down and round
+  // after him one way all the while: the short way round flips over as Cobb passes under him (a snap of the eyes).
   if (t > OUT) {
     const c = cobbAt(t)
-    const look = Math.atan2(c[1] - y, c[0] - x)
+    let d = Math.atan2(c[1] - y, c[0] - x) - spin
+    while (d < -Math.PI / 2) d += TAU2
+    while (d >= (3 * Math.PI) / 2) d -= TAU2
     const w = sm(t, OUT + 0.9, OUT + 1.5) * (1 - sm(t, OUT + 2.6, OUT + 3.4))
-    spin = turnTo(spin, look, w)
+    spin += d * w
   }
   return { x, y: y + jolt(t), spin }
 }

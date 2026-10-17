@@ -1741,6 +1741,23 @@ function drawCollapseDust(ctx: C2D, c: Ctx, t: number): void {
   }
 }
 
+/** Whether a point is in the ground the cut shows: under the valley floor, in the fortress's knoll, under the apron. */
+function inGround(x: number, y: number): boolean {
+  if (y > VALLEY_Y - 0.3) return true
+  const lerp = (a: number, b: number, u: number) => a + (b - a) * Math.max(0, Math.min(1, u))
+  const kTop = FORT.foot - 0.1
+  if (y > kTop) {
+    const q = (y - kTop) / (VALLEY_Y + 0.1 - kTop)
+    if (x > lerp(FORT.x0 - 0.5, FORT.x0 - 2.2, q) && x < lerp(FORT.x1 + 0.6, FORT.x1 + 2.4, q)) return true
+  }
+  if (y > FLOOR_Y) {
+    const left = y < FLOOR_Y + 1.3 ? lerp(LEDGE.lip - 2.4, LEDGE.lip - 3.4, (y - FLOOR_Y) / 1.3) : lerp(LEDGE.lip - 3.4, LEDGE.lip - 4.8, (y - FLOOR_Y - 1.3) / (VALLEY_Y - 0.3 - FLOOR_Y - 1.3))
+    const right = y < FORT.foot + 0.4 ? GATE_X + 0.05 : lerp(GATE_X + 0.05, GATE_X - 1.6, (y - FORT.foot - 0.4) / (VALLEY_Y - 0.3 - FORT.foot - 0.4))
+    if (x > left && x < right) return true
+  }
+  return false
+}
+
 /**
  * The snow falling, on the snow's own clock (while he is in limbo it hangs in the air): flakes of many sizes, sparse,
  * drifting; in `near` a few bigger ones close to us and falling faster, in front of everything. While the fortress stands
@@ -1765,9 +1782,14 @@ function drawSnowfall(ctx: C2D, k: number, f: ReturnType<typeof frame>, st: numb
         const drift = (((h1 * S + st * 0.12) % S) + S) % S
         const x = i * S + drift + Math.sin(st * (0.5 + h2) + h1 * 9) * 0.25
         const y = j * S + ((h2 * S + st * speed) % S)
-        if (indoors && x > FORT.x0 && x < FORT.x1 && y > FORT.ceil && y < FORT.foot + 1.5) continue
+        // Not in the ground floor while the fortress stands, nor in the slab over it (seen cut in the vault).
+        if (indoors && x > FORT.x0 && x < FORT.x1 && y > FORT.upper && y < FORT.foot + 1.5) continue
+        // None in the ground: the valley's cut rock, the knoll and the cut rock under the apron (they fell on through
+        // the rock and into the dark of sleep as he sank into the mountain); the open air beside them still has its snow.
+        if (inGround(x, y)) continue
         const r = near ? 0.035 + 0.03 * h1 : 0.018 + 0.04 * h3 * h3
-        const a = near ? 0.8 : 0.35 + 0.45 * h1
+        // Out of the dark over the level, over its first cell (at the band's top they were cut flat in half).
+        const a = (near ? 0.8 : 0.35 + 0.45 * h1) * Math.max(0, Math.min(1, y - TOP))
         if (r * k < 0.5 && !near) continue
         ctx.fillStyle = rgba(SNOW.snow, a)
         ctx.beginPath()

@@ -295,7 +295,8 @@ export function hatch(t: number): number {
 }
 /** How far the tower's front is cut away (the doll's house), 0 closed, 1 open. */
 export function cutaway(t: number): number {
-  if (t < 100) return window4(t, 6.3, 7.3, 38, 40)
+  // Open before he reaches the annex's wall (still half there as he rolled in, its edge cut a line through him).
+  if (t < 100) return window4(t, 6.0, 6.75, 38, 40)
   return window4(t, 161.5, 162.6, 178.6, 180.2)
 }
 
@@ -419,7 +420,7 @@ export const CALVING: Calving[] = [
   // Behind the roof: the slab that slipped on its crack in the prologue goes at last, then the rest of that tower's
   // top, on the kick.
   { tower: 3, hit: bar(47), top: 74.7, h: 4.8, w: 1.3, side: 1, fall: 3.0 },
-  { tower: 3, hit: bar(48), top: 74.0, h: 6.4, w: 1.5, side: 1, off: 1.3, fall: 3.4 },
+  { tower: 3, hit: bar(48), top: 74.0, h: 5.5, w: 1.5, side: 1, off: 1.3, fall: 3.4 },
 ]
 /** The prologue's one sign: a slab on the broken tower slips on its crack (bar 3), and hangs there leaning. */
 export const CRACK = { tower: 3, at: P.crack, slab: 6 }
@@ -623,16 +624,18 @@ export function ariadneAt(t: number, cobb: (t: number) => Pt): Pt {
     return [DOWN.limbo.at[0] + A_OFF[0], DOWN.limbo.at[1] + A_OFF[1] + DOWN.limbo.v[1] * u + 0.5 * FALL_G * u * u]
   }
   if (t < Q.circle) {
-    // Under the water with him, carried in by the same sea: she goes in beside him, passes under him in the undertow,
-    // and comes up a little ahead of him, nearer the shore.
+    // Under the water with him, carried in by the same sea: she goes in beside him, passes over him in the undertow
+    // (he is on the bottom), and comes up a little ahead of him, nearer the shore; never in the beach under the water
+    // (under him, she was a cell down in the sand).
     const c = cobb(t)
     const u = t - A_SPLASH
     const across = sm((u - 0.4) / 2.2)
-    const under = Math.sin(Math.PI * across) * 0.42
+    const over = Math.sin(Math.PI * across) * 0.42
     const start: Pt = [DOWN.limbo.at[0] + A_OFF[0], SEA]
     const into = sm(u / 0.6)
-    const here: Pt = [c[0] + lerp(-0.55, 0.52, across), c[1] + under + 0.12]
-    return lerpPt(start, here, into)
+    const here: Pt = [c[0] + lerp(-0.55, 0.52, across), c[1] - over + 0.12]
+    const p = lerpPt(start, here, into)
+    return [p[0], Math.min(p[1], sandY(p[0]) - R)]
   }
   if (t < Q.gateOpen) {
     const inCabin: Pt = [CABIN.x + 0.22, GROUND - R]
