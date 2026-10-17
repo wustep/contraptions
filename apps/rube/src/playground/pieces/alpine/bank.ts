@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../../src/core/draw'
 import { FLOOR, R, ROLL, definePiece, fly, rail, ramp, trace, type Lane, type Pt } from '../../../parts'
 import { body, ride, rounded, trackOf } from './parts-b'
-import { gearColor, powder, snow, snowWhite, wand } from './snow'
+import { gearColor, powder, snow, snowAt, snowWhite, wand } from './snow'
 
 /**
  * A bank. The rail runs onto a roll-in: a plank that tips over and down to
@@ -75,11 +75,10 @@ export const bank = definePiece<{ color: string; white: string }>({
     return { cells, exit: { at: [-1, 1], dir: -1 }, lane: LANE, state: { color: gearColor(theme, color, ball.color), white: snowWhite(theme) } }
   },
   draw: (p, s, { k, ink, weight }) => {
-    // The roll-in's one leg and its brace, behind everything: the ball comes back under the lip in front of the leg.
+    // The roll-in's one leg, stood in the snow, and its brace, behind everything: the ball comes back under the lip in front of the leg.
     const under = (x: number): Pt => RAMP.at(RAMP.reach(x), -PLANK).at
     outline(p, ink, weight)
-    p.line(LEG * k, under(LEG)[1] * k, LEG * k, 1.5 * k)
-    p.line((LEG - 0.06) * k, 1.5 * k, (LEG + 0.06) * k, 1.5 * k)
+    p.line(LEG * k, under(LEG)[1] * k, LEG * k, (snowAt(LEG, 1.36) + 0.03) * k)
     p.line(LEG * k, 0.72 * k, under(0.2)[0] * k, under(0.2)[1] * k)
     // The snow: its own line from the cell's edge, then the flat and the wall, one body.
     snow(p, k, ink, weight, -0.5, -0.12, 1.36)

@@ -106,14 +106,25 @@ export function fir(p: p5, k: number, ink: string, weight: number, color: string
   p.endShape(p.CLOSE)
 }
 
-/** A puff of powder at (x, y): lumps of white on short arcs, `f` from 0 (the instant) to 1 (gone). */
+/**
+ * A puff of powder thrown up where something lands on the snow at (x, y):
+ * one low cloud of three lumps, drawn twice over like `puff` so it has one
+ * outline and not three, that bursts up, spreads, and sinks back into the
+ * snow it came from. `f` from 0 (the instant) to 1 (gone).
+ */
 export function powder(p: p5, k: number, ink: string, weight: number, white: string, x: number, y: number, f: number, size = 1): void {
   if (f <= 0 || f >= 1) return
-  const lumps: [number, number, number][] = [[-1, 0.9, 0.05], [-0.45, 1.3, 0.04], [0.35, 1.4, 0.045], [0.95, 0.85, 0.035]]
-  solid(p, ink, weight * 0.7, white)
-  for (const [dx, up, r] of lumps) {
-    const lx = x + dx * 0.16 * size * f
-    const ly = y - up * 0.16 * size * 4 * f * (1 - f)
-    p.circle(lx * k, ly * k, r * 2 * size * (1 - f * 0.6) * k)
+  const r = 0.065 * size * (f < 0.2 ? Math.sin((Math.PI / 2) * (f / 0.2)) : 1 - ((f - 0.2) / 0.8) ** 2)
+  if (r < 0.03 * size) return
+  const spread = 0.065 * size * (0.8 + 0.7 * Math.sqrt(f))
+  const lumps: [number, number][] = [[-1, 0.72], [0, 1], [1, 0.66]]
+  const at = (dx: number, f2: number): [number, number, number] => [(x + dx * spread) * k, (y - r * f2 * 0.6) * k, r * f2 * 2 * k]
+  solid(p, ink, weight * 0.8, white)
+  for (const [dx, f2] of lumps) p.circle(...at(dx, f2))
+  p.noStroke()
+  p.fill(white)
+  for (const [dx, f2] of lumps) {
+    const [cx, cy, d] = at(dx, f2)
+    p.circle(cx, cy, Math.max(0, d - weight * 0.8))
   }
 }
