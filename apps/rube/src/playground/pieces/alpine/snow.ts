@@ -107,24 +107,33 @@ export function fir(p: p5, k: number, ink: string, weight: number, color: string
 }
 
 /**
- * A puff of powder thrown up where something lands on the snow at (x, y):
- * one low cloud of three lumps, drawn twice over like `puff` so it has one
- * outline and not three, that bursts up, spreads, and sinks back into the
- * snow it came from. `f` from 0 (the instant) to 1 (gone).
+ * Powder thrown up where something lands on the snow at (x, y): one low,
+ * wide body, a mound of three lobes outlined once like `puff`, flung out
+ * along the ground and settling flat into it, gone well before `f`, from
+ * 0 (the instant) to 1, runs out.
  */
 export function powder(p: p5, k: number, ink: string, weight: number, white: string, x: number, y: number, f: number, size = 1): void {
   if (f <= 0 || f >= 1) return
-  const r = 0.065 * size * (f < 0.15 ? 0.55 + 0.45 * Math.sin((Math.PI / 2) * (f / 0.15)) : 1 - ((f - 0.15) / 0.85) ** 2)
-  if (r < 0.03 * size) return
-  const spread = r * (0.9 + 0.5 * Math.sqrt(f))
-  const lumps: [number, number][] = [[-1, 0.72], [0, 1], [1, 0.66]]
-  const at = (dx: number, f2: number): [number, number, number] => [(x + dx * spread) * k, (y - r * f2 * 0.6) * k, r * f2 * 2 * k]
+  const r = 0.07 * size
+  // Up at once, then sinking back flatter than it spreads.
+  const grown = f < 0.12 ? 0.6 + 0.4 * Math.sin((Math.PI / 2) * (f / 0.12)) : 1
+  const sink = f < 0.12 ? 1 : 1 - ((f - 0.12) / 0.88) ** 1.2
+  if (sink < 0.35) return
+  const out = (0.9 + 0.9 * f) * r
+  const lobes: [dx: number, w: number, h: number][] = [
+    [-out, 1.6 * r, 0.75 * r],
+    [0, 2.4 * r, 1.15 * r],
+    [out, 1.6 * r, 0.75 * r],
+  ]
+  const at = (dx: number, w: number, h: number, inset: number): [number, number, number, number] => [
+    (x + dx) * k,
+    (y - (h * grown * sink) / 2) * k,
+    Math.max(0, w * grown * k - inset),
+    Math.max(0, h * grown * sink * k - inset),
+  ]
   solid(p, ink, weight * 0.8, white)
-  for (const [dx, f2] of lumps) p.circle(...at(dx, f2))
+  for (const [dx, w, h] of lobes) p.ellipse(...at(dx, w, h, 0))
   p.noStroke()
   p.fill(white)
-  for (const [dx, f2] of lumps) {
-    const [cx, cy, d] = at(dx, f2)
-    p.circle(cx, cy, Math.max(0, d - weight * 0.8))
-  }
+  for (const [dx, w, h] of lobes) p.ellipse(...at(dx, w, h, weight * 0.8))
 }
