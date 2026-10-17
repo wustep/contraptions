@@ -34,14 +34,14 @@ export const DIG_START: Pt = [-0.5, 0]
 export const DIG_AT_BONE: Pt = [3.38, 0]
 export const DIG_IN_CRATE: Pt = [8.22, 0]
 
-/** The brush's one job: one sweep, left to right, across the first phrase. */
+/** The brush's one job: one sweep, left to right, across the first phrase. It stops beside him, short of the bone. */
 export function brushX(t: number): number {
-  return -1.7 + smooth(t, 0.3, 6.05) * 6.3
+  return -1.7 + smooth(t, 0.3, 6.05) * 4.25
 }
 
 /** The bone's one job: it stands up on the second phrase. Angle 0 lies to the right; negative lifts the tip. */
 export const BONE_PIVOT: Pt = [3.72, 0.07]
-export const BONE_LEN = 4.15
+export const BONE_LEN = 2.95
 export function boneAng(t: number): number {
   const u = smooth(t, BONE, BONE + 0.95)
   return 0.04 + (u + ring(t - (BONE + 0.95), 1.3, 0.42) * 0.015) * (-1.22 - 0.04)

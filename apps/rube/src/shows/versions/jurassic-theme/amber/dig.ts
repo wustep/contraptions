@@ -42,23 +42,22 @@ function bone(ctx: C2D, k: number, t: number): void {
   const dy = Math.sin(a)
   const px = -dy
   const py = dx
-  const w0 = 0.2
-  const w1 = 0.13
   const top: [number, number][] = []
   const bot: [number, number][] = []
-  const n = 6
+  const n = 8
   for (let i = 0; i <= n; i++) {
     const f = i / n
-    const w = w0 + (w1 - w0) * f
+    const w = 0.1 + Math.sin(f * Math.PI) * 0.16
     const x = BONE_PIVOT[0] + dx * BONE_LEN * f
     const y = BONE_PIVOT[1] + dy * BONE_LEN * f
     top.push([x + px * w, y + py * w])
     bot.push([x - px * w, y - py * w])
   }
-  shape(ctx, k, [...top, ...bot.reverse()], DIG.bone, DIG.boneDark, k * 0.012)
-  ellipse(ctx, k, BONE_PIVOT[0] + dx * BONE_LEN, BONE_PIVOT[1] + dy * BONE_LEN, 0.22, 0.16, DIG.bone, a)
-  // The knob at the buried end.
-  ellipse(ctx, k, BONE_PIVOT[0], BONE_PIVOT[1], 0.16, 0.16, mixHex(DIG.bone, DIG.boneDark, 0.35))
+  shape(ctx, k, [...top, ...bot.reverse()], DIG.bone)
+  const tipX = BONE_PIVOT[0] + dx * BONE_LEN
+  const tipY = BONE_PIVOT[1] + dy * BONE_LEN
+  ellipse(ctx, k, tipX, tipY, 0.28, 0.2, DIG.bone, a)
+  ellipse(ctx, k, BONE_PIVOT[0], BONE_PIVOT[1], 0.22, 0.2, mixHex(DIG.bone, DIG.boneDark, 0.35), a)
 }
 
 function crate(ctx: C2D, k: number, front: boolean): void {
@@ -72,42 +71,48 @@ function crate(ctx: C2D, k: number, front: boolean): void {
     line(ctx, k, [x0, -0.15], [x1, -0.15], DIG.woodDark, k * 0.015)
     return
   }
-  // The near slat, so he sits in the crate rather than on it.
-  fillBox(ctx, k, x0, 0.02, x1, y1, DIG.woodDark)
-  line(ctx, k, [x0, 0.02], [x1, 0.02], DIG.ink, k * 0.012)
+  // The near slat sits low, so he reads as in the crate.
+  fillBox(ctx, k, x0, 0.1, x1, y1, DIG.woodDark)
+  line(ctx, k, [x0, 0.1], [x1, 0.1], DIG.ink, k * 0.012)
 }
 
 function brush(ctx: C2D, k: number, t: number): void {
   const x = brushX(t)
-  const y = -0.55
-  fillBox(ctx, k, x - 0.08, y, x + 0.08, GROUND - 0.02, DIG.wood)
-  // Bristles, a row, touching the dust. One sweep; they do not flap.
+  shape(ctx, k, [
+    [x - 0.62, -1.22],
+    [x - 0.48, -1.34],
+    [x + 0.04, -0.46],
+    [x - 0.1, -0.36],
+  ], DIG.wood)
+  fillBox(ctx, k, x - 0.24, -0.5, x + 0.24, -0.34, DIG.woodDark)
   for (let i = -3; i <= 3; i++) {
-    line(ctx, k, [x + i * 0.045, GROUND - 0.55], [x + i * 0.055, GROUND + 0.02], DIG.ink, k * 0.012)
+    line(ctx, k, [x + i * 0.055, -0.36], [x + i * 0.06, GROUND + 0.01], DIG.ink, Math.max(1, k * 0.012))
   }
-  fillBox(ctx, k, x - 0.22, y - 0.08, x + 0.22, y + 0.06, DIG.woodDark)
+}
+
+function hill(ctx: C2D, k: number, x0: number, x1: number, peak: number): void {
+  if (x1 - x0 < 0.08) return
+  ctx.beginPath()
+  ctx.moveTo(x0 * k, GROUND * k)
+  const steps = 14
+  for (let i = 1; i < steps; i++) {
+    const u = i / steps
+    const x = x0 + (x1 - x0) * u
+    const hump = Math.sin(u * Math.PI)
+    ctx.lineTo(x * k, (GROUND - hump * peak) * k)
+  }
+  ctx.lineTo(x1 * k, GROUND * k)
+  ctx.closePath()
+  ctx.fillStyle = DIG.dust
+  ctx.fill()
 }
 
 function dust(ctx: C2D, k: number, t: number): void {
   const edge = brushX(t)
-  const x1 = 4.55
-  if (edge >= x1) return
-  const x0 = Math.max(-1.35, edge)
-  ctx.beginPath()
-  ctx.moveTo(x0 * k, GROUND * k)
-  const steps = 10
-  for (let i = 0; i <= steps; i++) {
-    const u = i / steps
-    const x = x0 + (x1 - x0) * u
-    const hump = Math.sin(u * Math.PI)
-    const y = GROUND - hump * 0.72
-    ctx.lineTo(x * k, y * k)
-  }
-  ctx.lineTo(x1 * k, (GROUND + 0.9) * k)
-  ctx.lineTo(x0 * k, (GROUND + 0.9) * k)
-  ctx.closePath()
-  ctx.fillStyle = DIG.dust
-  ctx.fill()
+  // What still covers him, until the brush has passed.
+  if (edge < 3.05) hill(ctx, k, Math.max(-1.45, edge), 3.15, 0.55)
+  // The spoil the bone stands out of. The brush never reaches it.
+  hill(ctx, k, 3.2, 7.05, 0.9)
 }
 
 function drawDig(p: p5, s: Clock, c: Ctx, over: boolean): void {
