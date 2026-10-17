@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
-import { FLOOR, R, ROLL, definePiece, fly, rail, ramp, roll, trace, type Lane, type Pt, type Seg } from '../../parts'
+import { FLOOR, R, ROLL, definePiece, fly, laneAt, rail, ramp, roll, trace, type Lane, type Pt, type Seg } from '../../parts'
 import { gardenWater, soil, tuft, waterHue } from './green'
 
 /**
@@ -75,7 +75,15 @@ const LANE: Lane = (() => {
 /** Pad `i`'s tilt and duck at piece time `t`: level and afloat, set by the ball while it is on it, bobbing up and rocking itself still after. */
 function padAt(i: number, t: number): { tilt: number; sink: number } {
   const r = RIDES[i]
-  if (t < r.on) return { tilt: 0, sink: 0 }
+  if (t < r.on) {
+    // Coming down onto it, the ball meets the leaf before the moment it is on it: from there the leaf gives under
+    // it, ducking and tipping just as far as keeps its top under the ball, into how it lies when the ball is on it.
+    const b = laneAt(LANE, t)
+    const dx = b.x - XS[i]
+    if (Math.abs(dx) > HW) return { tilt: 0, sink: 0 }
+    const g = Math.min(1, Math.max(0, (b.y + R - FLOOR) / (duck(0) + (TILT * dx * dx) / HW)))
+    return { tilt: (g * TILT * dx) / HW, sink: g * duck(0) }
+  }
   if (t <= r.off) {
     const x = r.x0 + V * (t - r.on)
     return { tilt: (TILT * (x - XS[i])) / HW, sink: duck(t - r.on) }

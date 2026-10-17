@@ -64,9 +64,9 @@ export const vine = definePiece<VineState>({
     const y = up * (top - HOLD)
     // At the top the leaf droops toward the rail, and the ball rolls down it.
     const droop = since < grow + DROOP_AT ? 0 : DROOP * easeInOutSine(over(since, grow + DROOP_AT, grow + DROOP_AT + DROOP_T))
-    // The leaf sags under the ball, and quivers before the vine wakes.
+    // The leaf sags under the ball, and quivers before the vine wakes: in and out again, so the wake starts from still.
     const sag = t < ARRIVE ? 0 : 0.02 * Math.min(1, over(t, ARRIVE, ARRIVE + 0.1))
-    const quiver = t > ARRIVE + 0.1 && since < 0 ? 0.03 * Math.sin(t * 40) * over(t, ARRIVE + 0.1, ARRIVE + WAKE) : 0
+    const quiver = t > ARRIVE + 0.1 && since < 0 ? 0.03 * Math.sin(t * 40) * Math.sin(Math.PI * over(t, ARRIVE + 0.1, ARRIVE + WAKE)) : 0
 
     // The trellis: an open lattice behind everything, from the pot to above
     // the top rail — wide diamonds, light lines, so the vine reads over it.
@@ -90,33 +90,47 @@ export const vine = definePiece<VineState>({
     // The rails: in, to the leaf; out, from the stem at the top.
     rail(p, k, ink, weight, -0.5, -0.24)
     rail(p, k, ink, weight, turn * 0.16, turn * 0.5, top + FLOOR)
-    // The pot, and the stem growing out of it up to the leaf.
+    // The pot, and the stem growing out of it up to the leaf. It sways as it
+    // climbs and comes to rest once it is grown.
     pot(p, k, ink, weight, s.color, 0, 0.5, 0.34, 0.2)
     const stemTop = y + R + 0.04 + sag
-    stem(p, k, ink, weight * 1.3, 0.02, 0.3, 0, stemTop, 0.06 * Math.sin(t * 2) * (1 + up))
+    const bow = since < 0 ? 0 : 0.06 * Math.sin(since * 2) * (1 + up) * (1 - easeInOutSine(over(since, grow, grow + 0.8)))
+    stem(p, k, ink, weight * 1.3, 0.02, 0.3, 0, stemTop, bow)
+    // Where the stem is at height `ly`: the leaves and tendrils grow from it, so they go where it sways.
+    const stemX = (ly: number) => {
+      const u = (0.3 - ly) / (0.3 - stemTop)
+      return (1 - u) * (1 - u) * 0.02 + 2 * u * (1 - u) * (0.01 + bow)
+    }
     // Side leaves along the stem, unfurling as the stem passes them.
     for (let ly = 0.05; ly > top + 0.25; ly -= 0.28) {
       const side = Math.round((0.05 - ly) / 0.28) % 2 ? -1 : 1
       const open = ly > stemTop ? Math.min(1, (ly - stemTop) / 0.2) : 0
       if (open <= 0) continue
       const len = 0.18 * easeOutBack(open)
-      leaf(p, k, ink, weight, s.color, 0.01, ly, len, side > 0 ? -0.6 : Math.PI + 0.6)
+      leaf(p, k, ink, weight, s.color, stemX(ly) - 0.01, ly, len, side > 0 ? -0.6 : Math.PI + 0.6)
     }
-    // Tendrils curling off the stem.
-    if (up > 0.2) {
-      outline(p, ink, weight * 0.8)
-      p.noFill()
-      for (const [ly, side] of [
-        [top + 0.5, 1],
-        [top + 0.9, -1],
-      ] as [number, number][]) {
-        if (ly < stemTop) continue
-        p.arc((0.03 + side * 0.06) * k, ly * k, 0.1 * k, 0.1 * k, side > 0 ? Math.PI : 0, side > 0 ? Math.PI * 2.6 : Math.PI * 1.6)
-      }
+    // Tendrils curling off the stem, coiling out as the stem passes them.
+    outline(p, ink, weight * 0.8)
+    p.noFill()
+    for (const [ly, side] of [
+      [top + 0.5, 1],
+      [top + 0.9, -1],
+    ] as [number, number][]) {
+      const coil = ly > stemTop ? Math.min(1, (ly - stemTop) / 0.2) : 0
+      if (coil < 0.05) continue
+      const a0 = side > 0 ? Math.PI : 0
+      p.arc((stemX(ly) + 0.02 + side * 0.06) * k, ly * k, 0.1 * k, 0.1 * k, a0, a0 + Math.PI * 1.6 * coil)
     }
-    // The flower at the top, opening once the ball is up.
-    const opened = since > grow ? over(since, grow, grow + 0.5) : 0
-    if (opened > 0) bloom(p, k, ink, weight, s.color, bg, -0.08 * turn, top - 0.2, 0.09, 6, opened, since)
+    // The flower at the top, on a stalk the stem puts up behind the leaf as the ball gets there, opening once it is up.
+    const stalk = over(since, grow - 0.25, grow)
+    if (stalk > 0) {
+      const fx = -0.08 * turn
+      const fy = top - 0.2
+      stem(p, k, ink, weight, 0, stemTop, fx * stalk, stemTop + (fy - stemTop) * stalk, -0.03 * turn * stalk)
+      const opened = over(since, grow, grow + 0.5)
+      const bud = over(since, grow - 0.1, grow + 0.1)
+      if (bud > 0) bloom(p, k, ink, weight, s.color, bg, fx, fy, 0.09 * bud, 6, opened, 0.4 * opened)
+    }
     // The big leaf the ball rides: under the ball, sagging, in front of the
     // stem; it lies with its tip toward the way out, and droops there.
     p.push()

@@ -1,5 +1,5 @@
 import { outline, solid } from '../../../../../src/core/draw'
-import { FAST, R, ROLL, burst, definePiece, laneAt, over, rail, ramp, roll, type Lane, type Pt } from '../../parts'
+import { FAST, R, ROLL, definePiece, laneAt, over, rail, ramp, roll, type Lane, type Pt } from '../../parts'
 import { drop, tuft } from './green'
 
 /**
@@ -9,8 +9,7 @@ import { drop, tuft } from './green'
  * hose is a thin tube, and where the ball is it fattens round it, a bulge
  * the ball's size in the hose's own skin that travels with the ball — up
  * into the loop, round it two and a half times, gathering pace, and down to
- * the nozzle, where the ball shoots out onto the path with a spit of water
- * behind it. The hose drips.
+ * the nozzle, where the ball shoots out onto the path. The hose drips.
  *
  * The tube is drawn in front of the ball, and cut off at the mouth's plane
  * and the nozzle's, so going in and coming out are one motion: the part of
@@ -181,15 +180,7 @@ export const hose = definePiece<{ color: string }>({
     tuft(p, k, ink, weight, -0.3, 0.5, 0.1, 0.02)
     tuft(p, k, ink, weight, 1.3, 0.5, 0.08, -0.02)
 
-    // The spit out of the nozzle, and drips after.
-    if (since > 0 && since < 0.25) {
-      const g = over(since, 0, 0.25)
-      p.push()
-      p.stroke(s.color)
-      p.strokeWeight(weight)
-      burst(p, (NOZZLE + 0.04) * k, 0, (0.08 + 0.12 * g) * k, (0.14 + 0.18 * g) * k, 4, -0.6)
-      p.pop()
-    }
+    // The nozzle drips after the ball is out.
     if (since > 0.2 && since < 1.6) {
       const g = ((since - 0.2) * 1.4) % 1
       drop(p, k, s.color, NOZZLE - 0.02, 0.16 + 0.3 * g, 0.02)

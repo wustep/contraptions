@@ -204,6 +204,9 @@ const CLACKS: Clack[] = []
   }
 }
 
+/** The knocks that ring: the ones that send an end tube off, hard enough to be more than a tap. */
+const RINGS = CLACKS.filter((c) => (c.dir > 0 ? c.tube === LENGTHS.length - 1 : c.tube === 0) && c.hard >= 0.1)
+
 /** Every tube's angle at piece time `t`. */
 function tubesAt(t: number): number[] {
   if (t <= 0) return LENGTHS.map(() => 0)
@@ -239,8 +242,9 @@ export const windchime = definePiece<{ color: string }>({
       p.rect(0, (STRING + LENGTHS[i] / 2) * k, W * k, LENGTHS[i] * k, W * 0.4 * k)
       p.pop()
     }
-    // Every knock rings off the end of the row it is running toward: down the row, and back up it.
-    for (const c of CLACKS) {
+    // The chime rings off the end of the row when a clack running along it gets there: down the row, and back up
+    // it. A knock midway along the row is the tubes' own motion, and a knock too soft to swing a tube is not heard.
+    for (const c of RINGS) {
       const f = over(t, c.at, c.at + 0.4)
       const end = c.dir > 0 ? LENGTHS.length - 1 : 0
       if (f > 0 && f < 1) rings(p, k, ink, weight * Math.min(1, 0.4 + c.hard / 0.6), XS[end] + c.dir * 0.06, BEAM + STRING + LENGTHS[end] - 0.08, f, c.dir)

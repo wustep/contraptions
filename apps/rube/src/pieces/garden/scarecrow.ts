@@ -180,8 +180,9 @@ function crow(p: p5, { k, t, since, ink, bg, weight }: PieceCtx, turn: number): 
   const x = lerp(perch[0], HOVER[0], up) + AWAY[0] * away
   const y = lerp(perch[1], HOVER[1] + bob, up) - 0.045 + AWAY[1] * away
   const flying = up > 0.02
-  // It faces away down the path; perched, it looks back at the scarecrow now and then.
-  const look = !flying && Math.sin(t * 0.9) > 0.7 ? -1 : 1
+  // It faces away down the path; perched, it turns to look back at the scarecrow now and then, and back again —
+  // round through side on, as the figure turns, rather than flipping in a frame.
+  const look = flying ? 1 : Math.cos(Math.PI * easeInOutSine(over(Math.sin(t * 0.9), 0.65, 0.75)))
 
   p.push()
   p.translate(x * k, y * k)
