@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../../src/core/draw'
 import { easeInQuad, easeOutCubic } from '../../../../../../src/core/ease'
 import { FLOOR, R, ROLL, definePiece, over, rail, ramp, roll, segTime, type Lane, type Seg } from '../../../parts'
-import { display, flash, glow, lamp, score } from '../../../pieces/arcade/neon'
+import { display, flash, lamp, score } from '../../../pieces/arcade/neon'
 
 /**
  * A bank of three drop targets. Three plates stand on the lane, each in a
@@ -96,7 +96,6 @@ export const targets = definePiece<{ color: string }>({
     p.noStroke()
     p.fill(bg)
     p.rect(((PANE.x0 + PANE.x1) / 2) * k, ((PANE.y0 + PANE.y1) / 2) * k, (PANE.x1 - PANE.x0) * k, (PANE.y1 - PANE.y0) * k, 0.012 * k)
-    glow(p, k, s.color, COUNTER.x, COUNTER.y, 0.14, down === 3 ? blink * 0.8 : 0)
     display(p, k, ink, weight, bg, COUNTER.x, COUNTER.y, COUNTER.w, COUNTER.h, `${down}`, s.color, down > 0)
     // The reset bar across the pane's foot.
     const barY = FLOOR + TALL + TAIL + 0.015 - bar * TALL
@@ -113,20 +112,8 @@ export const targets = definePiece<{ color: string }>({
       p.noStroke()
       p.rect(x * k, (y + TALL * 0.5) * k, THICK * k, 0.03 * k)
     })
-    // The hits, and the thump of the reset.
+    // The hits.
     XS.forEach((x, i) => flash(p, k, s.color, weight, x - THICK / 2, 0, t - hits[i], 0.16, 0.05, 0.16))
-    if (t > RESET && t < RESET + 0.2) {
-      const f = over(t, RESET, RESET + 0.2)
-      p.push()
-      p.stroke(ink)
-      p.strokeWeight(weight)
-      for (const x of [BOX.x0 - 0.03, BOX.x1 + 0.03]) {
-        const side = x < 0.4 ? -1 : 1
-        p.line(x * k, (BOX.y0 + 0.05) * k, (x + side * (0.04 + 0.04 * f)) * k, (BOX.y0 + 0.01 - 0.03 * f) * k)
-        p.line(x * k, (BOX.y0 + 0.14) * k, (x + side * (0.05 + 0.05 * f)) * k, (BOX.y0 + 0.14) * k)
-      }
-      p.pop()
-    }
   },
   scores: (p, s, { k, since, bg }) => score(p, k, s.color, bg, XS[1], HEAD.y + 0.09, '+300', since, 1),
 })
