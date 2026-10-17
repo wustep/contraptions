@@ -6,7 +6,7 @@ import { FLOOR, LAID, STAIR, TABLE, UP } from './press-plan'
 /**
  * Ted's office (the PRESS builder's): the conference room on the mezzanine at the hall's left end. Floor-to-ceiling
  * windows behind the long table, Manhattan at dawn through them; the pier at the room's end with two of the magazine's
- * old covers framed on it; the pendant over the table. Under the mezzanine, the paper store: reels on their sides.
+ * old covers framed on it; the pendant over the table. Under the mezzanine, a rack of bundles by the stair's foot.
  * Ted is drawn with the table (`press-draw.ts`), dark against the window.
  */
 
@@ -14,7 +14,7 @@ type C2 = CanvasRenderingContext2D
 
 export const OFFICE = { top: -3.6, x1: 2.15 }
 /** The windows, each its left and right edge; from the ceiling's cornice to just over the floor. */
-export const PANES: [number, number][] = [
+const PANES: [number, number][] = [
   [-7.4, -5.6],
   [-5.2, -3.4],
   [-3.0, -1.2],
@@ -28,11 +28,9 @@ export const OP = {
   ceiling: '#171413',
   mullion: '#0E0D0D',
   frame: '#1E1C1B',
-  lamp: '#F4BE72',
   slab: '#1F272B',
   under: '#0F1316',
   reel: '#B7AF9C',
-  reelEdge: '#8F8878',
 }
 
 export function drawOffice(ctx: C2, v: View, t: number, cover: (g: C2, k: number, x: number, y: number, w: number, h: number) => void): void {
@@ -56,12 +54,8 @@ export function drawOffice(ctx: C2, v: View, t: number, cover: (g: C2, k: number
   for (const [a, b] of PANES) if (b > x0) wall.rect(a, WIN.y0, b - a, WIN.y1 - WIN.y0)
   ctx.fillStyle = OP.wall
   ctx.fill(wall, 'evenodd')
-  // Walnut boards between the panes, a dado rail, a skirting; the cornice.
+  // A rail over the panes, a dado rail, a skirting; the cornice.
   const panel = new Path2D()
-  for (let x = Math.ceil(x0 / 0.13) * 0.13; x < x1; x += 0.13) {
-    if (PANES.some(([a, b]) => x > a - 0.05 && x < b + 0.05)) continue
-    panel.rect(x, WIN.y0, 0.016, WIN.y1 - WIN.y0)
-  }
   panel.rect(x0, WIN.y0 - 0.06, x1 - x0, 0.02)
   panel.rect(x0, OFFICE.top, x1 - x0, 0.14)
   panel.rect(x0, UP - 1.0, x1 - x0, 0.035)
@@ -79,8 +73,6 @@ export function drawOffice(ctx: C2, v: View, t: number, cover: (g: C2, k: number
     bars.rect(b - 0.02, WIN.y0, 0.07, WIN.y1 - WIN.y0)
     bars.rect((a + b) / 2 - 0.02, WIN.y0, 0.04, WIN.y1 - WIN.y0)
     bars.rect(a, WIN.transom - 0.025, b - a, 0.05)
-    // Glazing bars across, a pane every half cell or so.
-    for (let y = WIN.transom + 0.62; y < WIN.y1 - 0.3; y += 0.62) bars.rect(a, y - 0.012, b - a, 0.024)
     bars.rect(a - 0.05, WIN.y1 - 0.02, b - a + 0.12, 0.09)
     edge.rect(a + 0.02, WIN.y0, 0.025, WIN.y1 - WIN.y0)
   }
@@ -134,34 +126,6 @@ export function drawOffice(ctx: C2, v: View, t: number, cover: (g: C2, k: number
   ctx.fillRect(x0, UP + 0.28, sx1 - x0, 0.04)
   ctx.fillStyle = OP.under
   ctx.fillRect(x0, UP + 0.32, sx1 - x0, FLOOR - UP - 0.32)
-  // Reels on their sides, two high, and a caged lamp over them.
-  const faces = new Path2D()
-  const rings = new Path2D()
-  const cores = new Path2D()
-  const r = 0.5
-  for (let i = Math.floor((x0 + 1) / 1.05); i * 1.05 < -0.45; i++) {
-    const cx = i * 1.05 + 0.1 * hash(i, 1)
-    const rows = hash(i, 2) < 0.7 ? 2 : 1
-    for (let j = 0; j < rows; j++) {
-      const cy = FLOOR - r - j * 2 * r * 0.98
-      if (cy - r < UP + 0.36) continue
-      faces.moveTo(cx + r, cy)
-      faces.arc(cx, cy, r, 0, Math.PI * 2)
-      for (const q of [0.45, 0.62, 0.8]) {
-        rings.moveTo(cx + r * q, cy)
-        rings.arc(cx, cy, r * q, 0, Math.PI * 2)
-      }
-      cores.moveTo(cx + 0.11, cy)
-      cores.arc(cx, cy, 0.11, 0, Math.PI * 2)
-    }
-  }
-  ctx.fillStyle = rgbaOf(OP.reel, 0.55)
-  ctx.fill(faces)
-  ctx.strokeStyle = rgbaOf(OP.reelEdge, 0.5)
-  ctx.lineWidth = 0.012
-  ctx.stroke(rings)
-  ctx.fillStyle = '#252B2E'
-  ctx.fill(cores)
   // A rack of bundles waiting for the vans, by the stair's foot; a caged lamp over it, its light on the bundles' tops
   // and in a pool on the floor; the pipes along the slab.
   const rack = new Path2D()
@@ -180,7 +144,6 @@ export function drawOffice(ctx: C2, v: View, t: number, cover: (g: C2, k: number
       bundles.rect(bx, y - bh, bw, bh)
       tops.rect(bx, y - bh, bw, 0.03)
       straps.rect(bx + bw / 2 - 0.012, y - bh, 0.024, bh)
-      for (let c = y - 0.05; c > y - bh; c -= 0.05) straps.rect(bx, c, bw, 0.006)
     }
   }
   rack.rect(x0, UP + 0.36, sx1 - x0, 0.06)
