@@ -35,6 +35,21 @@ const HINGE: Pt = [-0.34, BOARD_Y]
 const CATCH: Pt = [0.07, 0.01]
 const BAR = Math.hypot(CATCH[0] - HINGE[0], CATCH[1] - HINGE[1])
 const HELD = Math.atan2(CATCH[1] - HINGE[1], CATCH[0] - HINGE[0])
+/** Slipped, it is thrown up short of upright, stalls, and falls back across the top of the catch's hook, where it comes to rest. */
+const PEAK = HELD + 1.45
+const LAID = HELD - Math.atan2(CATCH[1] - 0.042 - HINGE[1], CATCH[0] - HINGE[0])
+const RISE = 0.15
+const SPIN = (2 * PEAK) / (RISE * RISE)
+const DOWN = RISE + Math.sqrt((2 * (PEAK - LAID)) / SPIN)
+
+/** How far the bar has turned up off its hold, `since` seconds after it slips: one gravity up and down, and a rattle on the hook. */
+function barAt(since: number): number {
+  if (since <= 0) return 0
+  if (since < RISE) return PEAK * (1 - (1 - since / RISE) ** 2)
+  if (since < DOWN) return PEAK - (SPIN * (since - RISE) ** 2) / 2
+  const u = since - DOWN
+  return LAID + 0.09 * Math.exp(-u * 10) * Math.abs(Math.sin(u * 22))
+}
 /** The bar's tip creeps out from under the catch and slips this long after the ball beds down. */
 const TENSE = 0.34
 const FIRE = ARRIVE + TENSE
@@ -140,14 +155,12 @@ export const mousetrap = definePiece<{ color: string; kind: Throw }>({
     p.line(CATCH[0] * k, BOARD_Y * k, CATCH[0] * k, (CATCH[1] - 0.03) * k)
     p.line(CATCH[0] * k, (CATCH[1] - 0.03) * k, (CATCH[0] - 0.05) * k, (CATCH[1] - 0.03) * k)
     // The hold-down bar: hinged on a staple at the board's near end, over the hammer's shaft, to the catch. Slipped,
-    // the shaft throws it up past upright, and with the hammer gone it falls forward and lies along the board.
+    // the shaft throws it up, and with the hammer gone it falls back onto the catch.
     const creep = t < ARRIVE || since >= 0 ? 0 : over(t, ARRIVE, FIRE)
     const tremble = 0.02 * creep * Math.sin(t * 80)
-    const thrown = since < 0 ? 0 : since < 0.1 ? 1.35 * over(since, 0, 0.1) : since < 0.3 ? 1.35 : 1.35 - (1.35 - HELD) * Math.min(1, ((since - 0.3) / 0.32) ** 2)
-    const settle = since < 0.62 ? 0 : 0.12 * Math.exp(-(since - 0.62) * 9) * Math.abs(Math.sin((since - 0.62) * 16))
     p.push()
     p.translate(HINGE[0] * k, HINGE[1] * k)
-    p.rotate(HELD - thrown - settle + tremble)
+    p.rotate(HELD - barAt(since) + tremble)
     outline(p, ink, weight)
     p.line(0, 0, (BAR - 0.035 * creep) * k, 0)
     p.pop()
