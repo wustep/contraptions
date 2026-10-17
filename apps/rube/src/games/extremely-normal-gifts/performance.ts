@@ -20,7 +20,14 @@ export const INK = '#292e2a'
 export const RED = '#c95336'
 export const GREEN = '#41776b'
 export const GOLD = '#e9b64f'
-export const THEME: Theme = { name: 'gift-office', label: 'Gift office', bg: PAPER, ink: INK, colors: [RED, GREEN, GOLD, '#8eafbf'], weight: 0.72 }
+export const THEME: Theme = {
+  name: 'gift-office',
+  label: 'Gift office',
+  bg: PAPER,
+  ink: INK,
+  colors: [RED, GREEN, GOLD, '#8eafbf'],
+  weight: 0.72,
+}
 
 export interface Department {
   universe: Universe
@@ -39,38 +46,113 @@ export class GiftPerformance extends Show {
   readonly departments: Department[] = []
   readonly duration: number
   readonly finaleStart: number
-  override trailOff(): boolean { return true }
+  override trailOff(): boolean {
+    return true
+  }
 
-  constructor(readonly recipe: Recipe, readonly opening: Opening, snow: Piece<any>) {
+  constructor(
+    readonly recipe: Recipe,
+    readonly opening: Opening,
+    snow: Piece<any>,
+  ) {
     super(recipe.seed)
-    const cast: Piece<any>[][] = [[cannon, seesaw, toaster], [snow, painter, appletree], [booth, affectionStamp, bell]]
+    const cast: Piece<any>[][] = [
+      [cannon, seesaw, toaster],
+      [snow, painter, appletree],
+      [booth, affectionStamp, bell],
+    ]
     let incoming: BallState = { color: RED, ghost: false, id: 0 }
     let acc = 0
-    const choices: { piece: Piece<any>; option: { id: string; name: string; verb: string } }[] = recipe.picks.map((pick, i) => ({ piece: cast[i][pick], option: OPTIONS[i][pick] }))
-    if (opening === 'deluxe') choices.push({ piece: affectionStamp, option: { id: 'stamp', name: 'Extra paperwork', verb: 'Deluxe requires a second signature.' } })
+    const choices: { piece: Piece<any>; option: { id: string; name: string; verb: string } }[] = recipe.picks.map(
+      (pick, i) => ({ piece: cast[i][pick], option: OPTIONS[i][pick] }),
+    )
+    if (opening === 'deluxe')
+      choices.push({
+        piece: affectionStamp,
+        option: { id: 'stamp', name: 'Extra paperwork', verb: 'Deluxe requires a second signature.' },
+      })
     for (const [i, { piece, option }] of choices.entries()) {
       const theme = option.id === 'snow' ? { ...THEME, colors: [...THEME.colors, '#ffffff'] } : THEME
       const placed: Placed[] = []
       let start = 0
       const add = (actor: Piece<any>, placement: Placement<unknown>, col: number, row: number): void => {
         const span = laneTime(placement.lane)
-        placed.push({ piece: { ...actor, scores: undefined, points: 0 }, state: placement.state, col, row, mirror: 1,
-          cells: worldCells(placement.cells, col, row, 1), lane: placement.lane, start, span,
-          ballIn: { ...incoming }, changes: placement.changes ?? [], points: 0 })
+        placed.push({
+          piece: { ...actor, scores: undefined, points: 0 },
+          state: placement.state,
+          col,
+          row,
+          mirror: 1,
+          cells: worldCells(placement.cells, col, row, 1),
+          lane: placement.lane,
+          start,
+          span,
+          ballIn: { ...incoming },
+          changes: placement.changes ?? [],
+          points: 0,
+        })
         incoming = ballAt(incoming, placement.changes ?? [], span)
         start += span
       }
       add(portal, portalPlacement('in', GREEN), -1, 0)
-      const placement = piece.place({ rng: makeRng(`${recipe.seed}:${i}`), color: [GOLD, GREEN, RED, GOLD][i], theme, taste: { weights: {} }, ball: incoming, earned: 0, fits: () => true })
+      const placement = piece.place({
+        rng: makeRng(`${recipe.seed}:${i}`),
+        color: [GOLD, GREEN, RED, GOLD][i],
+        theme,
+        taste: { weights: {} },
+        ball: incoming,
+        earned: 0,
+        fits: () => true,
+      })
       if (!placement) throw new Error(`Gift piece ${piece.name} could not be placed`)
       add(piece, placement, 0, 0)
       add(portal, portalPlacement('out', GREEN), placement.exit.at[0], placement.exit.at[1])
-      const bounds = placed.flatMap(p => p.cells).reduce((b, [x, y]) => ({ x0: Math.min(b.x0, x), x1: Math.max(b.x1, x), y0: Math.min(b.y0, y), y1: Math.max(b.y1, y) }), { x0: 0, y0: 0, x1: 0, y1: 0 })
-      const world = { name: 'gifts', label: 'Gift office', note: '', themes: [theme], backdrops: ['plain'] as ['plain'], pieces: [], tastes: {} }
-      const universe: Universe = { index: i, seed: recipe.seed, world, theme, taste: '', ballColor: placed[0].ballIn.color, backdrop: 'plain', pieces: placed, box: bounds, journey: start, bounds }
+      const bounds = placed
+        .flatMap((p) => p.cells)
+        .reduce(
+          (b, [x, y]) => ({
+            x0: Math.min(b.x0, x),
+            x1: Math.max(b.x1, x),
+            y0: Math.min(b.y0, y),
+            y1: Math.max(b.y1, y),
+          }),
+          { x0: 0, y0: 0, x1: 0, y1: 0 },
+        )
+      const world = {
+        name: 'gifts',
+        label: 'Gift office',
+        note: '',
+        themes: [theme],
+        backdrops: ['plain'] as ['plain'],
+        pieces: [],
+        tastes: {},
+      }
+      const universe: Universe = {
+        index: i,
+        seed: recipe.seed,
+        world,
+        theme,
+        taste: '',
+        ballColor: placed[0].ballIn.color,
+        backdrop: 'plain',
+        pieces: placed,
+        box: bounds,
+        journey: start,
+        bounds,
+      }
       const duration = i === 3 ? 2.3 : 3.1
       const pace = start / (duration - 0.3)
-      this.departments.push({ universe, extent: extentOf(universe), start: acc, duration, pace, title: option.name, caption: option.verb, id: option.id, fire: acc + (placed[1].start + placed[1].lane.fire) / pace })
+      this.departments.push({
+        universe,
+        extent: extentOf(universe),
+        start: acc,
+        duration,
+        pace,
+        title: option.name,
+        caption: option.verb,
+        id: option.id,
+        fire: acc + (placed[1].start + placed[1].lane.fire) / pace,
+      })
       acc += duration
     }
     this.finaleStart = acc
@@ -78,7 +160,12 @@ export class GiftPerformance extends Show {
   }
 
   departmentAt(t: number): number {
-    return Math.min(this.departments.length - 1, this.departments.findIndex(d => t < d.start + d.duration) < 0 ? this.departments.length - 1 : this.departments.findIndex(d => t < d.start + d.duration))
+    return Math.min(
+      this.departments.length - 1,
+      this.departments.findIndex((d) => t < d.start + d.duration) < 0
+        ? this.departments.length - 1
+        : this.departments.findIndex((d) => t < d.start + d.duration),
+    )
   }
 
   atDepartment(index: number, t: number): ShowPoint {
@@ -87,5 +174,7 @@ export class GiftPerformance extends Show {
     return { ...universeAt(d.universe, local), universe: d.universe, local, begin: d.start }
   }
 
-  override at(t: number): ShowPoint { return this.atDepartment(this.departmentAt(t), t) }
+  override at(t: number): ShowPoint {
+    return this.atDepartment(this.departmentAt(t), t)
+  }
 }

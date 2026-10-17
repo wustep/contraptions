@@ -3,10 +3,16 @@ import { arrive, arriveAt, definePiece, over, rail, ramp, ROLL, wait } from '../
 
 /** A real timed piece, kept local to the game and never registered on a shelf. */
 export const affectionStamp = definePiece<{ color: string }>({
-  name: 'affection-stamp', weight: 0,
+  name: 'affection-stamp',
+  weight: 0,
   place: ({ color }) => ({
-    cells: [[0, 0]], exit: { at: [1, 0], dir: 1 }, state: { color },
-    lane: { segs: [...arrive([-0.5, 0], [0, 0]), wait([0, 0], 0.85), ramp([0, 0], [0.5, 0], 0, ROLL)], fire: arriveAt(0) + 0.38 },
+    cells: [[0, 0]],
+    exit: { at: [1, 0], dir: 1 },
+    state: { color },
+    lane: {
+      segs: [...arrive([-0.5, 0], [0, 0]), wait([0, 0], 0.85), ramp([0, 0], [0.5, 0], 0, ROLL)],
+      fire: arriveAt(0) + 0.38,
+    },
   }),
   draw: (p, s, { k, since, ink, bg, weight }) => {
     rail(p, k, ink, weight, -0.5, 0.5)
@@ -22,7 +28,11 @@ export const affectionStamp = definePiece<{ color: string }>({
     p.rect(0, y * k, 0.36 * k, 0.1 * k, 0.02 * k)
     solid(p, ink, weight * 0.6, bg)
     p.rect(0, 0.32 * k, 0.48 * k, 0.16 * k, 0.01 * k)
-    p.noStroke(); p.fill(ink); p.textAlign(p.CENTER, p.CENTER); p.textSize(k * 0.075); p.textFont('monospace')
+    p.noStroke()
+    p.fill(ink)
+    p.textAlign(p.CENTER, p.CENTER)
+    p.textSize(k * 0.075)
+    p.textFont('monospace')
     p.text(since > 0 ? 'NICE ✓' : 'PENDING', 0, 0.32 * k)
     if (since > 0 && since < 0.24) {
       outline(p, ink, weight * 0.7)
