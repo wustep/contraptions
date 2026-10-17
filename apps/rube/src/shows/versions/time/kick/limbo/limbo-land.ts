@@ -318,12 +318,17 @@ function drawSlab(pen: Pen, e: Calving, t: number, f: Frame): void {
   const col = towerColor(tw)
   const xSide = tw.x + (e.side * tw.w) / 2 - e.side * (e.off ?? 0) + dx
   if (xSide < f.x0 - 8 || xSide > f.x1 + 8) return
-  // The slab as a box from the hinge (its bottom outer corner), turned about it.
+  // The slab as a box from the hinge (its bottom outer corner), turned about it; one that reaches the roof has the
+  // roof's own line for its top (a broken roof's slope went flat in the frame the slab came away).
+  const xo = tw.x + (e.side * tw.w) / 2 - e.side * (e.off ?? 0)
+  const roofAt = (x: number) => tw.top + (tw.broken ?? 0) * ((x - (tw.x - tw.w / 2)) / tw.w)
+  const reaches = e.top <= Math.max(roofAt(xo), roofAt(xo - e.side * e.w)) + 0.05
+  const topAt = (x: number) => (reaches ? roofAt(x) : e.top) - (e.top + e.h)
   const local: Pt[] = [
     [0, 0],
     [-e.side * e.w, 0],
-    [-e.side * e.w, -e.h],
-    [0, -e.h],
+    [-e.side * e.w, topAt(xo - e.side * e.w)],
+    [0, topAt(xo)],
   ]
   let hinge: Pt
   let theta: number
