@@ -113,6 +113,11 @@ export function seabed(p: p5, k: number, ink: string, weight: number, x0: number
  * `f` from 0 (the instant) to 1 (gone). In the colour, so it reads as water.
  * With `ring`, a ring spreads on the water where it went in; a splash off
  * the head of a jet, up in the air, has no water to ring.
+ *
+ * The drops and the ring come up out of the water small and thin and are
+ * full size a few frames later: at full size from the instant, the four
+ * drops and a fat ring lay on top of one another at the water, a blob of
+ * the colour over whatever was behind it.
  */
 export function splash(p: p5, k: number, color: string, weight: number, x: number, y: number, f: number, size = 1, ring = true): void {
   if (f <= 0 || f >= 1) return
@@ -127,7 +132,7 @@ export function splash(p: p5, k: number, color: string, weight: number, x: numbe
   ]) {
     const px = x + dx * size * (0.6 + 0.6 * f)
     const py = y - h * size * 4 * f * (1 - f)
-    p.circle(px * k, py * k, r * 2 * k * (1 - f * 0.5))
+    p.circle(px * k, py * k, r * 2 * k * Math.min(1, 0.3 + f * 7) * (1 - f * 0.5))
   }
   p.pop()
   if (!ring) return
@@ -135,7 +140,7 @@ export function splash(p: p5, k: number, color: string, weight: number, x: numbe
   p.push()
   p.noFill()
   p.stroke(color)
-  p.strokeWeight(weight * (1 - f))
+  p.strokeWeight(weight * (1 - f) * Math.min(1, 0.3 + f * 7))
   p.ellipse(x * k, y * k, (0.1 + 0.36 * f) * size * k, (0.03 + 0.1 * f) * size * k)
   p.pop()
 }
