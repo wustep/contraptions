@@ -2,7 +2,7 @@ import p5 from 'p5'
 import { canvasOf, savePng, saveWebm } from '../../../src/core/capture'
 import { FPS } from '../../../src/core/constants'
 import { clamp, easeInOutCubic, easeInOutSine } from '../../../src/core/ease'
-import { R, TRANSIT, ball, laneAt, type PieceCtx } from './parts'
+import { FAST, R, ROLL, TRANSIT, ball, laneAt, type PieceCtx } from './parts'
 import { score } from './pieces/arcade/neon'
 import type { Placed } from './plan'
 import type { Show, ShowBall, ShowPoint } from './show'
@@ -72,6 +72,12 @@ export interface Viewport {
 }
 
 const strokeFor = (k: number, weight = 1): number => Math.max(0.75, k * 0.037) * weight
+
+/** The disc trail: seconds between its samples; the speeds, cells a second, it starts at and is full at; its reach in cells. */
+const TRAIL_DT = 0.022
+const TRAIL_FROM = ROLL * 1.25
+const TRAIL_FULL = FAST * 1.2
+const TRAIL_MAX = 2.6 * R
 
 /** A cheap stable hash to scatter stars by cell. */
 const hash = (a: number, b: number, s: number): number => {
@@ -355,15 +361,21 @@ export function drawWorld(
       pts.push({ x: here.x, y: here.y, scale: here.scale })
       smear(p, pts, here.ball.color, sx, sy, k)
     } else if (!here.ball.ghost) {
-      for (let i = 4; i >= 1; i--) {
-        const back = show.at(t - i * 0.022)
+      // Only a fast ball leaves a trail: a ball rolling at the rail's pace is followed by the eye and needs none, and
+      // the soft discs behind it read as a glow. It comes in with the speed, so it never pops on, and it is never
+      // longer than TRAIL_MAX: at a fall the oldest discs stood clear of the ball, a string of fainter balls.
+      const was = show.at(t - TRAIL_DT)
+      const speed = was.universe === u && was.ball.id === here.ball.id ? Math.hypot(here.x - was.x, here.y - was.y) / TRAIL_DT : 0
+      const fast = clamp((speed - TRAIL_FROM) / (TRAIL_FULL - TRAIL_FROM))
+      for (let i = 4; i >= 1 && fast > 0; i--) {
+        const back = show.at(t - i * TRAIL_DT)
         if (back.universe !== u || back.ball.id !== here.ball.id || back.hidden) continue
         const d = Math.hypot(back.x - here.x, back.y - here.y)
-        if (d < 0.08) continue
+        if (d < 0.08 || d > TRAIL_MAX) continue
         p.push()
         p.noStroke()
         const c = p.color(here.ball.color)
-        c.setAlpha(90 - i * 18)
+        c.setAlpha((90 - i * 18) * fast)
         p.fill(c)
         p.circle(sx(back.x), sy(back.y), 2 * R * k * back.scale * (1 - i * 0.12))
         p.pop()
