@@ -1,7 +1,7 @@
 import p5 from 'p5'
 import { canvasOf, savePng, saveWebm } from '../../../src/core/capture'
 import { FPS } from '../../../src/core/constants'
-import { clamp, easeInOutCubic, easeInOutSine } from '../../../src/core/ease'
+import { clamp, easeInOutSine } from '../../../src/core/ease'
 import { R, TRANSIT, ball, laneAt, type PieceCtx } from './parts'
 import { score } from './pieces/arcade/neon'
 import type { Placed } from './plan'
@@ -42,8 +42,8 @@ export interface Stage {
   /**
    * The world the clock is in as a WebM, from the cut that opens it to the
    * cut that closes it. Both are the iris shut, and for the recording both
-   * are shut in this world's own ink, so the file begins and ends on the
-   * same flat frame: one world is the show's loop.
+   * are shut in this world's own ink, so the file's end closes onto the
+   * flat frame it begins on: one world is the show's loop.
    */
   saveLoop(filename: string, progress?: (done: number) => void): Promise<void>
   /** Pixel size of a PNG saved at `scale`. */
@@ -625,8 +625,8 @@ function drawBackdrop(
 
 /**
  * The cut between worlds: an iris that closes on the portal the ball went
- * into, in the ink of the world being left, holds shut for a beat, and
- * opens on the portal it comes out of. A door, not a glitch.
+ * into, in the ink of the world being left, and opens on the portal it
+ * comes out of. A door, not a glitch.
  */
 function drawTransitions(
   p: p5,
@@ -643,14 +643,13 @@ function drawTransitions(
   const { w: W, h: H } = view
 
   if (here.placed.piece.name === 'portal' && seg.portal) {
-    // How far into the transit, by the clock rather than the eased path:
-    // 0 at the cut for 'in', 1 at the cut for 'out'.
+    // How near the cut, by the clock rather than the eased path: 1 at the
+    // cut, 0 where the transit starts going in or ends coming out.
     const f = seg.portal === 'out' ? here.raw : 1 - here.raw
     const shade = seg.portal === 'in' && u.index > 0 && !alone ? show.universe(u.index - 1).theme.ink : u.theme.ink
-    // The iris closes over the second half of the way in and opens after
-    // the first half of the way out, so it holds shut for a beat at the cut.
-    const shut = seg.portal === 'out' ? clamp((f - 0.35) / 0.55) : clamp((f - 0.1) / 0.45)
-    const radius = Math.hypot(W, H) * 0.6 * (1 - easeInOutCubic(shut))
+    // The iris closes over the whole way in and opens over the whole way
+    // out, at an even pace: shut only at the cut, never held there.
+    const radius = Math.hypot(W, H) * 0.6 * (1 - f)
     const rim = Math.hypot(W, H)
     p.push()
     p.noFill()
