@@ -3,9 +3,9 @@ import { layer, rgbaOf, view, type View } from '../depth'
 import { tubeAt } from './draw'
 
 /**
- * What stands between the camera and the machine in this place, and the light over all of it: the near plane, the
- * air, the grade. Drawn after the set and the parts and before Walter (`depth.ts`), so nothing here hides him or
- * changes his colour. It is handed show time as `t`.
+ * What stands between the camera and the machine in this place, and the light over all of it: the near plane and the
+ * grade. Drawn after the set and the parts and before Walter (`depth.ts`), so nothing here hides him or changes his
+ * colour. It is handed show time as `t`.
  *
  * Nearest of all, in silhouette along the bottom of the frame, the desk's edge and what is left on it: a mug, short
  * stacks of film cans. Over everything, a cold teal and the top of the frame falling away into the dark.
