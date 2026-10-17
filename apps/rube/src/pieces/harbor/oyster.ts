@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInQuad, easeOutCubic } from '../../../../../src/core/ease'
 import { FLOOR, ROLL, definePiece, over, rail, ramp, roll, wait, type BallChange, type Lane } from '../../parts'
-import { bubbles, luminance, piling, water } from './sea'
+import { luminance, piling, water } from './sea'
 
 /**
  * An oyster in the deck. The rail dips into the open lower shell; the
@@ -39,9 +39,7 @@ export const oyster = definePiece<{ color: string; pearl: string }>({
     const changes: BallChange[] = [{ at: FIRE, relay: true, color: pearl }]
     return { cells: [[0, 0]], exit: { at: [1, 0], dir: 1 }, lane, state: { color, pearl }, changes }
   },
-  draw: (p, s, { k, since, ink, bg, weight }) => {
-    const shut = since > 0.06 && since < SHUT
-
+  draw: (p, s, { k, ink, bg, weight }) => {
     water(p, k, ink, bg, weight, -0.5, 0.5)
     piling(p, k, ink, weight, -0.36)
     piling(p, k, ink, weight, 0.4)
@@ -49,31 +47,23 @@ export const oyster = definePiece<{ color: string; pearl: string }>({
     rail(p, k, ink, weight, 0.24, 0.5)
     // The lower shell: a scalloped cup the ball sits in, hinged at the back.
     shell(p, k, ink, weight, s.color, HINGE, FLOOR + 0.02, 0, false)
-    // The pearl's glint as the lid comes off it.
-    if (since > SHUT && since < SHUT + 0.5) {
-      const f = 1 - over(since, SHUT, SHUT + 0.5)
-      p.push()
-      p.stroke(s.pearl)
-      p.strokeWeight(weight)
-      for (const a of [-1.2, -0.6, -2.0, -2.6]) {
-        const r0 = 0.15 + 0.08 * (1 - f)
-        p.line(Math.cos(a) * r0 * k, Math.sin(a) * r0 * k, Math.cos(a) * (r0 + 0.07 * f) * k, Math.sin(a) * (r0 + 0.07 * f) * k)
-      }
-      p.pop()
-    }
-    // Bubbles up from the shell while it is shut.
-    if (shut) bubbles(p, k, ink, weight, bg, 0.12, FLOOR, -0.3, since, 3)
+    // Nothing else: the beat is the shell shut and still, and the pearl shows
+    // itself as the lid comes off it. Bubbles out of a shell on a pier deck,
+    // in the air, and a ring of glint ticks round the pearl were clutter.
   },
   over: (p, s, { k, since, ink, weight }) => {
-    // The upper shell stands in front: open, snapped shut at the fire, opening again after the beat.
+    // The upper shell stands in front: open, snapped shut on the ball by the
+    // fire, when the ball is gone inside, and opening again after the beat.
+    // Shut at the fire and not after it, or the ball went out of the open
+    // shell a few frames before the lid came down on it.
     const lid =
-      since < 0 ? -1.5
-      : since < 0.06 ? -1.5 * (1 - easeInQuad(over(since, 0, 0.06)))
+      since < -0.06 ? -1.5
+      : since < 0 ? -1.5 * (1 - easeInQuad(over(since, -0.06, 0)))
       : since < SHUT ? 0
       : -1.3 * easeOutCubic(over(since, SHUT, SHUT + 0.3))
     shell(p, k, ink, weight, s.color, HINGE, FLOOR + 0.02, lid, true)
     // The snap: a clack of lines.
-    if (since > 0.06 && since < 0.2) {
+    if (since > 0 && since < 0.14) {
       p.push()
       p.stroke(ink)
       p.strokeWeight(weight)
