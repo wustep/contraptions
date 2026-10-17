@@ -323,7 +323,9 @@ export const IRISES: Partial<Record<WorldKey, Iris[]>> = {
 export function irisAt(iris: Iris, t: number): number | null {
   if (t < iris.from || t > iris.to) return null
   const u = (t - iris.from) / (iris.to - iris.from)
-  // Opening: quick from her and slowing to the frame. Closing: slow from the frame, quickening onto her.
+  // Opening: quick from her and slowing to the frame. Closing: slow from the frame, quickening onto her. The heart is
+  // scaled, not grown (`paintIris`), so it closes at an even pace.
+  if (iris.shape === 'heart') return 1 - u
   return iris.open ? 1 - (1 - u) ** 3 : 1 - u * u * u
 }
 
@@ -346,8 +348,11 @@ function heartPath(ctx: CanvasRenderingContext2D, x: number, y: number, r: numbe
 function paintIris(ctx: CanvasRenderingContext2D, iris: Iris, open: number, x: number, y: number, w: number, h: number, cx: number, cy: number, k: number): void {
   // Wide open is past the frame's far corner from her.
   const far = Math.max(Math.hypot(cx - x, cy - y), Math.hypot(cx - x - w, cy - y), Math.hypot(cx - x, cy - y - h), Math.hypot(cx - x - w, cy - y - h))
-  const big = iris.shape === 'heart' ? far * 1.5 : far * 1.05
-  const r = iris.small * k + (big - iris.small * k) * open
+  const small = iris.small * k
+  // A heart's cleft dips to a sixth of it above her: wide open, that is over the frame's top too, so nothing of it is
+  // in the frame until it starts to close; and it shrinks by the same ratio each moment, or the cleft hangs in the
+  // frame alone and the rest of it comes in all at once.
+  const r = iris.shape === 'heart' ? small * (Math.max(far * 1.5, (cy - y) / 0.15) / small) ** open : small + (far * 1.05 - small) * open
   ctx.save()
   ctx.beginPath()
   ctx.rect(x - 2, y - 2, w + 4, h + 4)
