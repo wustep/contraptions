@@ -274,7 +274,7 @@ export const shooter = definePiece<ShooterState>({
     coil(p, x * k, (cup + R + 0.04) * k, x * k, (HOUSING - HOUSING_H / 2) * k, 3, 0.085 * k)
     solid(p, ink, weight, ink)
     p.rect(x * k, HOUSING * k, 0.46 * k, HOUSING_H * k, 0.01 * k)
-    solid(p, ink, weight, sensed > 0.5 ? s.color : bg)
+    solid(p, ink, weight, mixHex(bg, s.color, sensed))
     p.circle(x * k, (KNOB + cup - SEAT) * k, 0.08 * k)
     // The cup: a shallow dish on the rod's tip, the ball's seat.
     solid(p, ink, weight, s.color)

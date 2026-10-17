@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine } from '../../../../../src/core/ease'
-import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, over, post, rail, ramp, trace, wait, type Lane, type Pt } from '../../parts'
+import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, mixHex, over, post, rail, ramp, trace, wait, type Lane, type Pt } from '../../parts'
 import { lamp, score } from './neon'
 
 /**
@@ -151,8 +151,8 @@ export const ferris = definePiece<{ color: string }>({
       const [lx, ly] = pivotAt(a + ((i + 0.5) * Math.PI) / GONDOLAS)
       lamp(p, k, ink, weight, s.color, bg, lx, ly, 0.03, Math.floor(t * 5 + i) % 3 === 0 ? 1 : 0)
     }
-    // The hub, lit while there is a rider.
-    solid(p, ink, weight, running > 0.5 ? s.color : bg)
+    // The hub, lit while there is a rider, and dimming once the ride is over.
+    solid(p, ink, weight, mixHex(bg, s.color, running))
     p.circle(HUB[0] * k, HUB[1] * k, 0.15 * k)
     p.fill(ink)
     p.noStroke()
