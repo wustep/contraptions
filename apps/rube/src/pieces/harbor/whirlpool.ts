@@ -45,6 +45,9 @@ function swirl(): Seg[] {
   return chain(pts, ORBIT).map((seg) => ({ ...seg, dur: ORBIT / n }))
 }
 const speedOf = (seg: Seg) => Math.hypot(seg.to[0] - seg.from[0], seg.to[1] - seg.from[1]) / seg.dur
+/** For the drawing: how long after the fire the ball, dropping down the drain pipe, reaches the bend at its foot. */
+const LAST = swirl().at(-1)!
+const T_BEND = ramp(LAST.to, [0, 1 - ARC], speedOf(LAST), Math.sqrt(2 * (1 - ARC - LAST.to[1]) * 24)).dur
 
 export const whirlpool = definePiece<{ color: string }>({
   name: 'whirlpool',
@@ -121,8 +124,10 @@ export const whirlpool = definePiece<{ color: string }>({
     p.endShape()
     // A gurgle of bubbles up the drain after the ball has gone down it.
     if (since > 0) bubbles(p, k, ink, weight, bg, 0, DRAIN_Y + 0.4, DRAIN_Y - 0.02, since, 4, 0.9)
-    // The catch: a quarter-pipe onto the deck out, facing back.
-    const squash = since < 0 ? 0 : 1 - over(since, 0.15, 0.5)
+    // The catch: a quarter-pipe onto the deck out, facing back. Its pad
+    // gives as the ball comes round the bend, not at the fire, when the ball
+    // is still at the top of the pipe.
+    const squash = over(since, T_BEND - 0.04, T_BEND) * (1 - over(since, T_BEND + 0.1, T_BEND + 0.45))
     p.push()
     p.translate(0, 1 * k)
     catchBend(p, k, ink, weight, s.color, -1, ARC, squash)
