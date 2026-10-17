@@ -1770,7 +1770,8 @@ function drawSnowfall(ctx: C2D, k: number, f: ReturnType<typeof frame>, st: numb
         // of sleep (they fell on through both as he sank into the mountain). The fortress's ground is the vault's.
         if (y > FLOOR_Y && (x < FORT.x0 || x > FORT.x1)) continue
         const r = near ? 0.035 + 0.03 * h1 : 0.018 + 0.04 * h3 * h3
-        const a = near ? 0.8 : 0.35 + 0.45 * h1
+        // Out of the dark over the level, over its first cell (at the band's top they were cut flat in half).
+        const a = (near ? 0.8 : 0.35 + 0.45 * h1) * Math.max(0, Math.min(1, y - TOP))
         if (r * k < 0.5 && !near) continue
         ctx.fillStyle = rgba(SNOW.snow, a)
         ctx.beginPath()

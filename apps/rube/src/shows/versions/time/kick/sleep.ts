@@ -47,13 +47,15 @@ export const sleep = scenery<null>({
       if (bottom < f.y0 - 1 || top > f.y1 + 1) continue
       const g = ctx.createLinearGradient(0, top * k, 0, bottom * k)
       const at = (y: number) => (y - top) / (bottom - top)
+      // Whole at the band's edges, where a level's sky or ground begins (at 0.96 the first line of the snow's bright sky,
+      // and limbo's, showed through as a ruled line across the dark on the way down).
       if (sealed) g.addColorStop(0, rgba(SLEEP.deep, 1))
       else {
         g.addColorStop(0, rgba(SLEEP.mid, 0))
-        g.addColorStop(at(band.top), rgba(SLEEP.mid, 0.96))
+        g.addColorStop(at(band.top), rgba(SLEEP.mid, 1))
       }
       g.addColorStop(at(band.mid), rgba(SLEEP.deep, 1))
-      g.addColorStop(at(band.bottom), rgba(SLEEP.mid, 0.96))
+      g.addColorStop(at(band.bottom), rgba(SLEEP.mid, 1))
       g.addColorStop(1, rgba(SLEEP.mid, 0))
       ctx.save()
       ctx.fillStyle = g
