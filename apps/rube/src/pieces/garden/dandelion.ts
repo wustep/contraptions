@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
-import { easeInOutSine, easeOutCubic } from '../../../../../src/core/ease'
+import { easeInOutSine, easeOutCubic, lerp } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, over, post, rail, ramp, rankBy, trace, wait, type Lane, type PieceCtx, type Pt } from '../../parts'
 import { tuft } from './green'
 
@@ -140,7 +140,9 @@ export const dandelion = definePiece<DandelionState>({
       const life = rise + 1.2 + i * 0.3
       if (u <= 0 || u >= life) continue
       const f = u / life
-      const x = CLOCK[0] - 0.05 - 0.1 * i + 0.06 * Math.sin(u * 2.6 + i * 2) * (0.3 + f)
+      // Off the clock's head first, then out to its own line of drift.
+      const off = easeOutCubic(over(u, 0, 0.5))
+      const x = CLOCK[0] - (0.05 + 0.1 * i) * off + 0.06 * Math.sin(u * 2.6 + i * 2) * (0.3 + f) * off
       const y = CLOCK[1] - (floors + 0.55 - 0.12 * i) * f
       seedling(p, c, x, y, 0.3 * Math.cos(u * 2.6 + i * 2), 1 - over(f, 0.75, 1))
     }
@@ -148,18 +150,22 @@ export const dandelion = definePiece<DandelionState>({
     // The seed: down, stalk, threads, and the back of the cup; the ball goes in front of these.
     const pose = poseAt(t, s)
     seed(p, s.color, c, pose, false)
-    // The tether: taut to the peg, then slipped and trailing under the seed.
+    // The tether: taut to the peg, then slipped and trailing under the seed. Its loop comes up off the peg and
+    // swings in under the seed, rather than the line jumping there.
     const [px, py] = pose.point
     outline(p, ink, weight * 0.7)
     p.noFill()
     if (!slipped) p.line(px * k, py * k, (PEG[0] + 0.03) * k, (PEG[1] - 0.085) * k)
     else {
+      const free = easeOutCubic(over(t, ARRIVE + GIVE, ARRIVE + GIVE + 0.15))
       const trail = 0.05 * Math.sin(t * 3.1) - pose.lean * 0.3
+      const ex = lerp(PEG[0] + 0.03, px + trail, free)
+      const ey = lerp(PEG[1] - 0.085, py + 0.15, free)
       p.beginShape()
       p.vertex(px * k, py * k)
-      p.quadraticVertex((px + trail * 0.4) * k, (py + 0.08) * k, (px + trail) * k, (py + 0.15) * k)
+      p.quadraticVertex(lerp((px + ex) / 2, px + trail * 0.4, free) * k, lerp((py + ey) / 2, py + 0.08, free) * k, ex * k, ey * k)
       p.endShape()
-      p.circle((px + trail) * k, (py + 0.165) * k, 0.03 * k)
+      p.circle(ex * k, (ey + 0.015 * free) * k, 0.03 * free * k)
     }
   },
   over: (p, s, c) => seed(p, s.color, c, poseAt(c.t, s), true),
