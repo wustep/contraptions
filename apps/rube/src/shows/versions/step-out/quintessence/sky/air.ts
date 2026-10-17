@@ -106,8 +106,9 @@ export function drawDeck(g: C2, k: number, e: Eye, t: number): void {
     const yRow = e.hz - D * s + shake * 0.5 * s
     if (yRow - gap > e.y1 || yRow + gap < e.y0 - 0.5) continue
     // A layer above the sun arches over it, one below bows under it; one passing its height as the camera moves goes
-    // from the one to the other by degrees.
-    const above = smooth(sy - yRow, -0.3 * gap, 0.3 * gap)
+    // from the one to the other by degrees. The nearest, the ceiling, always arches over it, even where the horizon is
+    // high in the frame (the sea's, from under the water) and the sun higher than its row.
+    const above = r === 0 ? 1 : smooth(sy - yRow, -0.3 * gap, 0.3 * gap)
     const path = new Path2D()
     const top: Pt[] = []
     const low: Pt[] = []
@@ -180,12 +181,13 @@ export function drawRanges(g: C2, k: number, e: Eye, t: number): void {
     const scale = e.fh / 6.6
     const h = R.h * Math.min(1.6, Math.max(0.8, scale))
     const xa = Math.floor((e.x0 - 1 - e.cx * R.par) / R.step) * R.step
-    const ridge: [number, number][] = []
+    // Each point keeps its place along the range (`i`), so its snow is its own however the frame cuts the range.
+    const ridge: [number, number, number][] = []
     for (let u = xa; u <= e.x1 + 1 - e.cx * R.par + R.step; u += R.step) {
       const i = Math.round(u / R.step)
       const big = Math.max(0, Math.sin(i * 0.11 + R.seed) * 0.6 + Math.sin(i * 0.047 + R.seed * 2) * 0.5)
       const y = h * (0.18 + 0.75 * big * (0.6 + 0.4 * hash(i >> 2, R.seed)) + 0.1 * hash(i, R.seed + 1))
-      ridge.push([u + e.cx * R.par, e.hz - y + shake])
+      ridge.push([u + e.cx * R.par, e.hz - y + shake, i])
     }
     const foot = e.hz + 0.05
     const rock = new Path2D()
@@ -197,8 +199,8 @@ export function drawRanges(g: C2, k: number, e: Eye, t: number): void {
     const snow = new Path2D()
     snow.moveTo(ridge[0][0] * k, ridge[0][1] * k)
     for (const [x, y] of ridge) snow.lineTo(x * k, y * k)
-    for (let i = ridge.length - 1; i >= 0; i--) {
-      const [x, y] = ridge[i]
+    for (let j = ridge.length - 1; j >= 0; j--) {
+      const [x, y, i] = ridge[j]
       const depth = Math.max(0, foot - y) * (R.line + 0.3 * hash(i, R.seed + 5))
       snow.lineTo(x * k, (y + depth) * k)
     }
