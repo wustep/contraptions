@@ -51,22 +51,19 @@ const DOOR_L = DOOR_X - DOOR_W / 2
 /* ------------------------------------------------------------------ the cloth */
 
 /**
- * The painted cloth: its bottom batten hangs at CLOTH_UP in the flies, falls
- * from DROP to land on the burst, and bounces once on the floor. Everything
- * painted on it moves with it: `clothDrop(t)` is how far above its landing it
- * is, and the Hollywood part lights the sign with the same offset.
+ * The painted cloth: its bottom batten hangs at CLOTH_UP in the flies, and
+ * flies in from DROP, slowing as it comes, to land on the burst, as the dark
+ * cloth flies in after the number (`transitions.ts`). Everything painted on
+ * it moves with it: `clothDrop(t)` is how far above its landing it is, and the
+ * Hollywood part lights the sign with the same offset.
  */
 const CLOTH_UP = -11
-const DROP = BURST - 0.46
+const DROP = BURST - 0.8
 export function clothDrop(t: number): number {
   if (t < DROP) return Y_CLOTH - CLOTH_UP
-  if (t < BURST) {
-    const u = (t - DROP) / (BURST - DROP)
-    return (Y_CLOTH - CLOTH_UP) * (1 - u * u)
-  }
-  const s = t - BURST
-  // The batten's bounce: up off the floor and down again, twice, dying.
-  return 0.16 * Math.exp(-s / 0.11) * Math.abs(Math.sin((Math.PI * s) / 0.13))
+  if (t >= BURST) return 0
+  const u = (t - DROP) / (BURST - DROP)
+  return (Y_CLOTH - CLOTH_UP) * (1 - u) ** 2.2
 }
 /** The cloth's extent, in this frame (landed). */
 const CLOTH_X0 = -9

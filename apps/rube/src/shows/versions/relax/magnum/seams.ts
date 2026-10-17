@@ -16,9 +16,8 @@ import { SEAM } from './music'
  * - `hansel`, `mugatu`: where they are from him at the seam, on the side they are on (`what` says which), at rest
  *   with him; null where they are not in the picture on either side. They may come or go at a cut: the whole place
  *   changes.
- * - `flash`: the cut happens inside a press camera's flash the director draws over both places (white up in a tenth
- *   of a second, down over the next two thirds): the frame is white for a moment, and his place in it still holds.
- *   The part before may show the camera that fires it.
+ *
+ * Every cut dissolves (`dissolve.ts`): for a moment both places are on the screen, and his place in them holds.
  */
 export interface Seam {
   t: number
@@ -28,7 +27,6 @@ export interface Seam {
   frame: Pt
   hansel: Pt | null
   mugatu: Pt | null
-  flash?: boolean
   /** What he is doing, in words, for whoever builds either side. */
   what: string
 }
@@ -40,18 +38,16 @@ export const SEAMS: Record<keyof typeof SEAM, Seam> = {
   spa: {
     t: SEAM.spa,
     cut: true,
-    flash: true,
     v: [0, 0],
     cells: 3.6,
     frame: [0.3, -0.55],
     hansel: null,
     mugatu: [0.42, 0],
-    what: 'at rest, Mugatu beside him on his right. Awards side: in the dark of the wings after losing, Mugatu come to him out of the shadow (a press camera in the wings fires the flash). Spa side: at the spa\'s door, at the head of its line of treatments, Mugatu showing him in.',
+    what: 'at rest, Mugatu beside him on his right. Awards side: in the dark of the wings after losing, Mugatu come to him out of the shadow (a press camera in the wings fires). Spa side: at the spa\'s door, at the head of its line of treatments, Mugatu showing him in.',
   },
   club: {
     t: SEAM.club,
     cut: true,
-    flash: true,
     v: [1.2, 0],
     cells: 4.2,
     frame: [0.9, -0.6],
@@ -72,12 +68,11 @@ export const SEAMS: Record<keyof typeof SEAM, Seam> = {
   center: {
     t: SEAM.center,
     cut: true,
-    flash: true,
     v: [0, 0],
     cells: 4,
     frame: [0.4, -0.7],
     hansel: [0.42, 0],
     mugatu: null,
-    what: 'at rest, Hansel beside him on his right. Derelicte side: side by side on the floor below the runway\'s end, posing for the press, the flashes going (one fires the cut). Center side: side by side on the path before the Center\'s plinth, the model under its white sheet.',
+    what: 'at rest, Hansel beside him on his right. Derelicte side: side by side on the floor below the runway\'s end, posing for the press, the flashes going. Center side: side by side on the path before the Center\'s plinth, the model under its white sheet.',
   },
 }

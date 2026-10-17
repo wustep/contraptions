@@ -185,12 +185,12 @@ export const DURATION = 263
  * between places is a cut (`seams.ts`). Each is on a downbeat.
  */
 export const SEAM = {
-  /** Cut: the awards' wings into the spa, in a flash, on the hook's first downbeat. */
+  /** Cut: the awards' wings into the spa, on the hook's first downbeat. */
   spa: HOOK1,
-  /** Cut: out of the spa's door into the club, in a flash, on the verse's first downbeat. */
+  /** Cut: out of the spa's door into the club, on the verse's first downbeat. */
   club: VERSE,
   /** Cut: the club into Derelicte's wings, on the break's first downbeat (the count-in). */
   derelicte: BREAK,
-  /** Cut: the runway into the Center, in a flash, on the finale's first downbeat. */
+  /** Cut: the runway into the Center, on the finale's first downbeat. */
   center: FINALE,
 } as const

@@ -82,7 +82,7 @@ export const PRESS_SCALE = 1.1
 
 /** The cut (in a flash) from Derelicte. */
 export const CUT = SEAM.center
-/** Derek bumps the bell-pull: the sheet goes up into the tree. The camera cuts to the model on it. */
+/** Derek bumps the bell-pull: the sheet goes up into the tree. The picture dissolves to the model on it. */
 export const BUMP = bar(98)
 /** He comes up beside it, and it is the size of a center for ants. */
 export const BESIDE = bar(100)
