@@ -1,6 +1,6 @@
 import { easeInOutSine } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, definePiece, mixHex, over, post, rail, ramp, rankBy, roll, type Lane, type Pt, type Seg } from '../../parts'
-import { digits, flash, glow, score } from './neon'
+import { digits, flash, score } from './neon'
 import { BEZEL, doorway, screen } from './screen'
 
 /**
@@ -118,7 +118,6 @@ export const pong = definePiece<PongState>({
     const rally = rallyFor(floors, turn)
     const y0 = -floors - TOP
     const scored = since > 0 && since < RESET + 0.6
-    const pulse = since < 0 ? 0 : 1 - over(since, 0.1, 1.2)
 
     // The posts the court stands on, and the court: a screen, a doorway in
     // its side at each end of the rally, the lane to one and the rail from the other.
@@ -138,7 +137,6 @@ export const pong = definePiece<PongState>({
     p.pop()
     // The board: a nought a side, and the server's point when the other misses.
     const won = -turn
-    glow(p, k, s.color, won * 0.13, -floors - 0.3, 0.1, pulse)
     for (const side of [-1, 1]) digits(p, k, s.color, side * 0.13, -floors - 0.3, scored && side === won ? '1' : '0', 0.026)
     // The paddles.
     p.noStroke()

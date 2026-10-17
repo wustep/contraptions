@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { FLOOR, R, ROLL, definePiece, laneAt, laneReach, over, post, rail, ramp, roll, type BallChange, type Lane, type Pt } from '../../parts'
-import { flash, glow, lamp, score } from './neon'
+import { flash, lamp, score } from './neon'
 
 /**
  * A phase gate, and a wall to prove it on. A wall of bricks stands on the
@@ -88,7 +88,6 @@ export const phaser = definePiece<{ color: string; courses: string[] }>({
       p.line((px - 0.06) * k, 0.5 * k, (px + 0.06) * k, 0.5 * k)
       p.line(px * k, (HEAD_Y - 0.06) * k, gate * k, (HEAD_Y - 0.06) * k)
       p.line(gate * k, (HEAD_Y - 0.06) * k, gate * k, HEAD_Y * k)
-      glow(p, k, s.color, gate, HEAD_Y, 0.12, lit > 0.6 ? lit : 0)
       solid(p, ink, weight, s.color)
       p.rect(gate * k, HEAD_Y * k, 0.17 * k, 0.08 * k, 0.015 * k)
       lamp(p, k, ink, weight, s.color, bg, px, HEAD_Y - 0.06, 0.03, lit > 0.6 ? 1 : 0)
@@ -146,8 +145,8 @@ export const phaser = definePiece<{ color: string; courses: string[] }>({
 
 /**
  * A curtain of scanlines at `x`, from the head down to the rail, always
- * falling; `since` the ball crossed it. Fine lines, each with its halo:
- * light, not slats.
+ * falling; `since` the ball crossed it. Fine lines in the colour: light,
+ * not slats.
  */
 function curtain(p: p5, k: number, weight: number, color: string, x: number, t: number, since: number): void {
   const hit = since < 0 ? over(since, -0.12, 0) : 1 - over(since, 0.1, 0.5)
@@ -155,16 +154,11 @@ function curtain(p: p5, k: number, weight: number, color: string, x: number, t: 
   const span = FLOOR - CURTAIN_TOP
   const n = Math.floor(span / gap)
   const w = CURTAIN_W * (1 + 0.5 * hit)
-  const halo = p.color(color)
-  halo.setAlpha(30 + 50 * hit)
   p.push()
   p.strokeCap(p.SQUARE)
   for (let i = 0; i < n; i++) {
     const y = CURTAIN_TOP + ((((i * gap + t * 0.25) % (n * gap)) + n * gap) % (n * gap))
     if (y > FLOOR - 0.015) continue
-    p.stroke(halo)
-    p.strokeWeight(weight * 1.5)
-    p.line((x - w / 2) * k, y * k, (x + w / 2) * k, y * k)
     p.stroke(color)
     p.strokeWeight(weight * (0.35 + 0.2 * hit))
     p.line((x - w / 2) * k, y * k, (x + w / 2) * k, y * k)

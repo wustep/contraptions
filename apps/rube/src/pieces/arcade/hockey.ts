@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInQuad, easeOutCubic, easeOutQuad } from '../../../../../src/core/ease'
 import { FAST, FLOOR, R, ROLL, arrive, arriveAt, definePiece, over, rail, ramp, roll, wait, type Lane, type Pt } from '../../parts'
-import { display, flash, glow, score } from './neon'
+import { display, flash, score } from './neon'
 
 /**
  * An air-hockey table. The rail runs onto the table's surface; the ball
@@ -72,7 +72,6 @@ export const hockey = definePiece<{ color: string }>({
       : since < 0.6 ? THROUGH
       : THROUGH * (1 - over(since, 0.6, 1.4))
     const goal = since - T_GOAL
-    const scored = goal > 0 ? 1 - over(goal, 2, 3) : 0
 
     rail(p, k, ink, weight, -0.5, -0.2)
     rail(p, k, ink, weight, GOAL + 0.16, 2.5)
@@ -102,11 +101,9 @@ export const hockey = definePiece<{ color: string }>({
     p.rect(0, (ROD - 0.03) * k, 0.06 * k, 0.06 * k)
     p.pop()
     // The scoreboard on a post over the goal, under the cell's roof: a dark
-    // window with a dim 0 in it, that lights to 1 in the colour on the goal
-    // and glows a while.
+    // window with a dim 0 in it, that lights to 1 in the colour on the goal.
     outline(p, ink, weight)
     p.line((GOAL + 0.1) * k, -0.1 * k, (GOAL + 0.1) * k, BOARD_Y * k)
-    glow(p, k, s.color, GOAL + 0.1, BOARD_Y, 0.16, scored)
     display(p, k, ink, weight, bg, GOAL + 0.1, BOARD_Y, 0.26, 0.15, goal > 0 ? '1' : '0', s.color, goal > 0)
     // The slap, and the goal.
     flash(p, k, s.color, weight, SEAT + 0.1, 0, since)

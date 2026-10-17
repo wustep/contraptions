@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, laneReach, over, rail, ramp, wait, type Lane } from '../../parts'
-import { flash, glow, lamp, score } from './neon'
+import { flash, lamp, score } from './neon'
 
 /**
  * A photo booth across the lane: a cabinet with a lamp in its header, a
@@ -116,7 +116,6 @@ export const booth = definePiece<BoothState>({
     // The light out of the gap and under the hem: the flash itself, and its afterglow.
     if (since >= 0 && since < 0.5) {
       const f = 1 - over(since, 0.05, 0.5)
-      glow(p, k, ink, 0, 0.02, 0.3, f)
       p.noStroke()
       p.fill(ink)
       p.rect(0, ((TOP + HEADER + HEM) / 2) * k, (GAP * 2 + 0.03 * f) * k, (HEM - TOP - HEADER) * k)

@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeOutCubic, easeOutQuad } from '../../../../../src/core/ease'
 import { FLOOR, ROLL, arrive, arriveAt, definePiece, over, rail, ramp, rankBy, wait, type Lane, type Pt } from '../../parts'
-import { flash, glow, score, tube } from './neon'
+import { flash, score, tube } from './neon'
 
 /**
  * A high striker. The lane runs onto the puck at the foot of the tower;
@@ -96,7 +96,6 @@ export const striker = definePiece<StrikerState>({
     // The puck: sinks under the ball, shoots up, latches at the top and cants.
     const puckY = puckAt(t, floors)
     const cant = since < CANT_AT ? 0 : turn * CANT * easeOutCubic(over(since, CANT_AT, CANT_AT + 0.1))
-    const ding = since < 0 ? 0 : Math.exp(-since * 2.5)
     const rock = since < 0 ? 0 : 0.14 * Math.sin(since * 26) * Math.exp(-since * 4)
 
     rail(p, k, ink, weight, -0.5, -TOWER)
@@ -143,7 +142,6 @@ export const striker = definePiece<StrikerState>({
     p.pop()
     // The bell at the top, hung in a hood under the roof with its lip where
     // the ball's top comes to it; it rocks on the ding, and one ring goes out.
-    glow(p, k, s.color, 0, top - HOOD + BELL / 2, 0.2, ding)
     solid(p, ink, weight, s.color)
     p.arc(0, (top - HOOD) * k, 0.4 * k, 0.3 * k, Math.PI, Math.PI * 2, p.CHORD)
     p.push()

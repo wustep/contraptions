@@ -1,7 +1,7 @@
 import { solid } from '../../../../../src/core/draw'
 import { easeInOutSine, easeOutCubic, easeOutQuad } from '../../../../../src/core/ease'
 import { FLOOR, ROLL, arrive, arriveAt, definePiece, mixHex, over, rail, ramp, rankBy, trace, wait, type Lane, type Pt } from '../../parts'
-import { glow, lamp, score } from './neon'
+import { lamp, score } from './neon'
 
 /**
  * A stacker: a light tower one or two floors tall, rows of dark blocks up
@@ -114,12 +114,10 @@ export const stacker = definePiece<StackerState>({
     for (let j = 1; j <= rows; j++) {
       const ry = -j * PITCH + FLOOR + BLOCK_H / 2
       const lit = level >= j - 0.02 ? 1 : 0
-      if (lit) glow(p, k, s.color, 0, ry, 0.16, 0.6 * (since < RESET - 0.6 ? 1 : won))
       solid(p, lit ? ink : dim, weight * 0.8, lit ? s.color : bg)
       p.rect(0, ry * k, (TOWER - FRAME - 0.03) * 2 * k, BLOCK_H * k, 0.012 * k)
     }
     // The head: the major-prize lamp, flaring at the top.
-    glow(p, k, s.color, 0, top + 0.16, 0.22, won)
     lamp(p, k, ink, weight, s.color, bg, 0, top + 0.16, 0.07, won)
     // The platform, and the ball on it: a plank in the slot, tilting toward the rail at the top.
     p.push()

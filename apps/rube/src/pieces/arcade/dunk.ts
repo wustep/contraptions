@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine, easeInQuad, easeOutCubic, easeOutQuad } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, fly, laneAt, over, post, rail, ramp, wait, type Lane, type Pt } from '../../parts'
-import { arcadeWater, flash, glow, lamp, score } from './neon'
+import { arcadeWater, flash, lamp, score } from './neon'
 
 /**
  * A dunk tank two floors tall. A glass tank of water stands on a plinth,
@@ -191,7 +191,6 @@ export const dunk = definePiece<DunkState>({
     p.line(UP_L * k, BAR_Y * k, UP_L * k, TANK_FLOOR * k)
     p.line(UP_R * k, BAR_Y * k, UP_R * k, FLAP_TOP * k)
     p.line(UP_L * k, BAR_Y * k, UP_R * k, BAR_Y * k)
-    glow(p, k, s.color, (UP_L + UP_R) / 2, BAR_Y, 0.16, dunked)
     lamp(p, k, ink, weight, s.color, bg, (UP_L + UP_R) / 2, BAR_Y, 0.04, dunked)
     // The drain flap, hinged at its top, swung out by the ball and shut behind it.
     p.push()

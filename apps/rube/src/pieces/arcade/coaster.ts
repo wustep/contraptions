@@ -117,7 +117,7 @@ function carAt(t: number): number {
   return X_BRAKE + V_BRAKE * s - ((V_BRAKE / STOP_T) * s * s) / 2
 }
 
-/** A tube along a path, lit by `f`, its halo laid once. */
+/** A tube along a path, lit by `f`, laid as one line. */
 function tubePath(p: p5, k: number, ink: string, weight: number, color: string, pts: Pt[], f: number): void {
   if (pts.length < 2) return
   const path = () => {
@@ -127,13 +127,6 @@ function tubePath(p: p5, k: number, ink: string, weight: number, color: string, 
   }
   p.push()
   p.noFill()
-  if (f > 0.02) {
-    const halo = p.color(color)
-    halo.setAlpha(40 * f)
-    p.stroke(halo)
-    p.strokeWeight(weight * 3.2)
-    path()
-  }
   p.stroke(p.lerpColor(p.color(ink), p.color(color), clamp(f)))
   p.strokeWeight(weight * 1.3)
   path()

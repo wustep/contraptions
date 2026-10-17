@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { coil, outline, solid } from '../../../../../src/core/draw'
 import { clamp, lerp } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, fly, laneAt, over, post, rail, ramp, segTime, trace, wait, type Lane, type Pt } from '../../parts'
-import { display, flash, glow, score } from './neon'
+import { display, flash, score } from './neon'
 
 /**
  * Arcade basketball. The rail ends at the cup on the tip of a sprung arm,
@@ -190,10 +190,8 @@ export const hoops = definePiece<{ color: string }>({
     outline(p, ink, weight)
     p.line((RIM[0] + RIM_HALF) * k, RIM[1] * k, 1.23 * k, RIM[1] * k)
     p.line((RIM[0] + RIM_HALF) * k, RIM[1] * k, 1.23 * k, (RIM[1] + 0.1) * k)
-    glow(p, k, s.color, 1.22, -1.24, 0.17, made)
     display(p, k, ink, weight, bg, 1.22, -1.24, 0.3, 0.17, since > 0 ? '300' : '0', s.color, since > 0, 0.02)
     // The rim's far half, behind the ball: a lit ring when the shot is made.
-    glow(p, k, s.color, RIM[0], RIM[1], 0.2, made)
     p.push()
     p.noFill()
     p.stroke(made > 0.5 ? s.color : ink)

@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine, lerp } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, mixHex, over, rail, ramp, wait, type Lane, type Pt } from '../../parts'
-import { glow, lamp, marquee, score } from './neon'
+import { lamp, marquee, score } from './neon'
 
 /**
  * A claw machine. The lane runs in through the side of a glass cabinet
@@ -201,13 +201,11 @@ export const claw = definePiece<{ color: string; prizes: string[] }>({
     // The chute: walls either side of the drop, a wedge at its foot that
     // turns the drop into a roll, and a lamp on the far wall's top that
     // comes on at the drop — beside the ball's line, where it can be seen;
-    // over the drop it hung exactly where the ball hangs, hidden behind it,
-    // its halo blurring the ball's edge.
+    // over the drop it hung exactly where the ball hangs, hidden behind it.
     outline(p, ink, weight)
     for (const x of [DROP_X - 0.24, DROP_X + 0.24]) p.line(x * k, (FLOOR - 0.1) * k, x * k, -0.4 * k)
     solid(p, ink, weight, s.color)
     p.triangle((DROP_X - 0.24) * k, FLOOR * k, WEDGE_TOP[0] * k, WEDGE_TOP[1] * k, WEDGE_FOOT * k, FLOOR * k)
-    glow(p, k, s.color, DROP_X + 0.24, -0.44, 0.1, lit)
     lamp(p, k, ink, weight, s.color, bg, DROP_X + 0.24, -0.44, 0.035, lit)
     // The gantry and the trolley on it, the cable, and the claw.
     solid(p, ink, weight, s.color)

@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInQuad } from '../../../../../src/core/ease'
 import { FLOOR, ROLL, definePiece, over, rail, ramp, type Lane, type Pt, type Seg } from '../../parts'
-import { flash, glow, lamp, marquee, score } from './neon'
+import { flash, lamp, marquee, score } from './neon'
 
 /**
  * A pachinko field two floors deep. The lane stops at a lip; the ball
@@ -103,8 +103,6 @@ export const pachinko = definePiece<PachinkoState>({
     p.line(turn * WALL * k, 0.16 * k, turn * WALL * k, (POCKET_Y - 0.3) * k)
     p.line(turn * WALL * k, (POCKET_Y + FLOOR) * k, turn * WALL * k, (POCKET_Y + 0.5) * k)
     p.line(-WALL * k, (POCKET_Y + 0.5) * k, WALL * k, (POCKET_Y + 0.5) * k)
-    // The jackpot's glow behind the board when it pays.
-    glow(p, k, s.color, 0, POCKET_Y - 0.1, 0.28, jackpot)
     // The pins: staggered rows, each struck one lighting and staying lit a while.
     for (let r = 0; r < ROWS; r++) {
       const y = ROW0 + r * ROW_GAP
@@ -114,7 +112,6 @@ export const pachinko = definePiece<PachinkoState>({
         const hit = path[r]
         const struck = hit && Math.abs(hit.x - x) < 0.07 && t > hit.at
         const lit = struck ? 1 - over(t - hit.at, 0.2, 1.4) : 0
-        if (lit > 0.05) glow(p, k, s.color, x, y, PIN_R * 3, lit)
         solid(p, ink, weight * 0.8, lit > 0.5 ? s.color : bg)
         p.circle(x * k, y * k, PIN_R * 2 * k)
         if (struck) flash(p, k, s.color, weight, x, y, t - hit.at, 0.18, 0.05, 0.12)

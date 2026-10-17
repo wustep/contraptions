@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { coil, outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine, easeOutCubic, lerp } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, arcPts, arrive, arriveAt, definePiece, laneAt, over, post, rail, ramp, rankBy, segTime, wait, type Lane, type Pt, type Seg } from '../../parts'
-import { flash, glow, score } from './neon'
+import { flash, score } from './neon'
 
 /**
  * A pinball shooter lane. The rail ends at a wire lane that stands a floor
@@ -186,7 +186,7 @@ function falling(s: number, from: number): number {
   return after < 0.3 ? from * 0.2 * Math.abs(Math.sin((Math.PI * after) / 0.1)) * Math.exp(-after * 10) : 0
 }
 
-/** A lit tube along a path: the halo laid once along the whole of it, so the joints do not bead. */
+/** A lit tube along a path, laid as one line so the joints do not bead. */
 function tubePath(p: p5, k: number, ink: string, weight: number, color: string, pts: Pt[], f: number): void {
   const path = () => {
     p.beginShape()
@@ -195,13 +195,6 @@ function tubePath(p: p5, k: number, ink: string, weight: number, color: string, 
   }
   p.push()
   p.noFill()
-  if (f > 0.02) {
-    const halo = p.color(color)
-    halo.setAlpha(40 * f)
-    p.stroke(halo)
-    p.strokeWeight(weight * 3.2)
-    path()
-  }
   p.stroke(f > 0.5 ? color : ink)
   p.strokeWeight(weight * 1.3)
   path()
@@ -281,7 +274,6 @@ export const shooter = definePiece<ShooterState>({
     coil(p, x * k, (cup + R + 0.04) * k, x * k, (HOUSING - HOUSING_H / 2) * k, 3, 0.085 * k)
     solid(p, ink, weight, ink)
     p.rect(x * k, HOUSING * k, 0.46 * k, HOUSING_H * k, 0.01 * k)
-    glow(p, k, s.color, x, KNOB + cup - SEAT, 0.07, sensed)
     solid(p, ink, weight, sensed > 0.5 ? s.color : bg)
     p.circle(x * k, (KNOB + cup - SEAT) * k, 0.08 * k)
     // The cup: a shallow dish on the rod's tip, the ball's seat.

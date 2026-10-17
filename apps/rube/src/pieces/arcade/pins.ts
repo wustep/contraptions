@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine, easeOutQuad } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, definePiece, over, post, rail, ramp, roll, segTime, type Lane, type Pt } from '../../parts'
-import { flash, glow, lamp, score, tube } from './neon'
+import { flash, lamp, score, tube } from './neon'
 
 /**
  * A bowling lane two cells long. The rail becomes a polished alley and the
@@ -288,7 +288,6 @@ export const pins = definePiece<PinsState>({
     // The hood over the deck on its post, which stands on the pit's back wall, and the strike lamp in it.
     outline(p, ink, weight)
     p.line((BIN1 - WALL) * k, HOOD.y1 * k, (BIN1 - WALL) * k, FLOOR * k)
-    glow(p, k, s.color, LAMP[0], LAMP[1], 0.24, struck)
     solid(p, ink, weight, s.color)
     p.rect(((HOOD.x0 + HOOD.x1) / 2) * k, ((HOOD.y0 + HOOD.y1) / 2) * k, (HOOD.x1 - HOOD.x0) * k, (HOOD.y1 - HOOD.y0) * k, 0.02 * k)
     lamp(p, k, ink, weight, s.color, bg, LAMP[0], LAMP[1], 0.045, struck)

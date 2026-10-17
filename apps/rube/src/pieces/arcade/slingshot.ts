@@ -109,13 +109,6 @@ function band(p: p5, k: number, ink: string, weight: number, color: string, a: P
   }
   p.push()
   p.noFill()
-  if (lit > 0.02) {
-    const halo = p.color(color)
-    halo.setAlpha(40 * lit)
-    p.stroke(halo)
-    p.strokeWeight(weight * 3.2)
-    curve()
-  }
   p.stroke(lit > 0.5 ? color : ink)
   p.strokeWeight(weight * 1.3)
   curve()

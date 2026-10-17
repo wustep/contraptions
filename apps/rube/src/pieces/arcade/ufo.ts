@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine, lerp } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, over, post, rail, ramp, rankBy, wait, type Lane, type Pt } from '../../parts'
-import { flash, glow, lamp, marquee, score, tube } from './neon'
+import { flash, lamp, marquee, score, tube } from './neon'
 
 /**
  * A flying saucer, hovering one or two floors up, bobbing, its rim lamps
@@ -148,7 +148,6 @@ export const ufo = definePiece<UfoState>({
       }
       p.pop()
     }
-    glow(p, k, s.color, x, y + 0.04, 0.2, down * (1 - up))
 
     // The saucer: a disc in the colour with a dark band of lamps round it, a glass dome with the pilot in it, the hatch underneath.
     solid(p, ink, weight, bg)
