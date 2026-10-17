@@ -5,10 +5,10 @@ import { SHADE } from './home-draw'
 import { fillPoly, line, mix, rgba, vgrad, type Pen } from './pen'
 
 /**
- * His mother's room at evening, behind the piano: the wall in its old striped paper, the lamp's light on it and the
- * shadows the lamp throws there (hers the largest, playing); two windows onto the city at dusk, the far blocks'
- * windows coming on one by one, a train going over, a plane's lights, soft snow; sheer curtains moving in the
- * draught; the clock on the wall; the floorboards and the rug the piano stands on; the boxes not yet opened.
+ * His mother's room at evening, behind the piano: the wall in its old striped paper and the lamp's light on it; two
+ * windows onto the city at dusk, the far blocks' windows coming on one by one, a train going over, soft snow; sheer
+ * curtains moving in the draught; the clock on the wall; the floorboards and the rug the piano stands on; the boxes
+ * not yet opened.
  *
  * The wall with its paper and the lamp's light, and the floor with its boards and rug, are each painted once into a
  * picture (they are the same at every frame) and laid on; the city's planes slide behind the glass at their own
@@ -24,7 +24,6 @@ const R = {
   rail: '#3A2C22',
   floor: '#241A15',
   board: '#1B1310',
-  grain: '#3B2A1F',
   sill: '#191210',
   box: '#5E4B38',
   boxTop: '#76604A',
@@ -36,7 +35,6 @@ const R = {
   far: '#2A2F4C',
   near: '#1C2036',
   lit: '#F2C27A',
-  tv: '#9FB4E0',
   train: '#F6DFA8',
   snow: '#DCE0EE',
   sheer: '#E8DCC6',
@@ -45,7 +43,6 @@ const R = {
   rugOchre: '#5E4A2E',
   rugUmber: '#3A2A1E',
   rugCream: '#9C8460',
-  shadow: '#0A0706',
   clock: '#C8B58F',
 }
 
@@ -71,7 +68,7 @@ const cache = <T>(make: () => T): (() => T) => {
 
 /* ------------------------------------------------------------------ the paper */
 
-/** The paper: a pinstripe in pairs, and a small sprig between each pair, made once as a pattern a few cells wide. */
+/** The paper: a pinstripe in pairs, made once as a pattern a few cells wide. */
 const PAPER_W = 0.36
 const PAPER_H = 0.42
 const PAPER_PPC = 260
@@ -85,42 +82,19 @@ function paper(ctx: CanvasRenderingContext2D): CanvasPattern | null {
   const g = c.getContext('2d')
   if (!g) return null
   g.scale(PAPER_PPC, PAPER_PPC)
-  g.lineCap = 'round'
-  // The stripes: a light one and a dark one, close together, and a fainter one between the pairs.
-  g.strokeStyle = rgba(R.paperLight, 0.5)
+  // A light stripe and a dark one, close together.
+  g.strokeStyle = rgba(R.paperLight, 0.35)
   g.lineWidth = 0.012
   g.beginPath()
   g.moveTo(0.02, 0)
   g.lineTo(0.02, PAPER_H)
-  g.moveTo(0.2, 0)
-  g.lineTo(0.2, PAPER_H)
   g.stroke()
-  g.strokeStyle = rgba(R.paperDark, 0.55)
+  g.strokeStyle = rgba(R.paperDark, 0.45)
   g.lineWidth = 0.014
   g.beginPath()
   g.moveTo(0.045, 0)
   g.lineTo(0.045, PAPER_H)
   g.stroke()
-  // The sprig: a stem and four leaves, between the stripes.
-  const sprig = (x: number, y: number, s: number) => {
-    g.beginPath()
-    g.moveTo(x, y + 0.05 * s)
-    g.quadraticCurveTo(x + 0.01 * s, y, x, y - 0.05 * s)
-    g.stroke()
-    for (const [dx, dy, a] of [[-0.025, -0.01, -0.6], [0.025, -0.02, 0.6], [-0.02, 0.025, -0.9], [0.02, 0.015, 0.9]] as const) {
-      g.beginPath()
-      g.ellipse(x + dx * s, y + dy * s, 0.018 * s, 0.008 * s, a, 0, Math.PI * 2)
-      g.fill()
-    }
-  }
-  g.strokeStyle = rgba(R.paperLight, 0.45)
-  g.fillStyle = rgba(R.paperLight, 0.4)
-  g.lineWidth = 0.008
-  sprig(0.12, 0.1, 1)
-  sprig(0.28, 0.31, 0.9)
-  g.fillStyle = rgba(R.paperDark, 0.45)
-  g.fillRect(0.11, 0.3, 0.02, 0.02)
-  g.fillRect(0.27, 0.09, 0.02, 0.02)
   const pattern = ctx.createPattern(c, 'repeat')
   pattern?.setTransform(new DOMMatrix().scale(1 / PAPER_PPC))
   papers.set(ctx, pattern)
@@ -129,11 +103,10 @@ function paper(ctx: CanvasRenderingContext2D): CanvasPattern | null {
 
 /* ------------------------------------------------------------------ the floor */
 
-/** The boards: their seams running away from us, closer together as they go back; their ends; their grain. */
+/** The boards: their seams running away from us, closer together as they go back, and their ends. */
 const BOARDS = cache(() => {
   const seams = new Path2D()
   const ends = new Path2D()
-  const grain = new Path2D()
   let y = WALL_FOOT
   for (let i = 0; y < 2.4; i++) {
     const next = y + 0.09 + i * 0.035
@@ -146,19 +119,9 @@ const BOARDS = cache(() => {
       ends.lineTo(x + 0.01 * (next - y), next)
       x += 1.1 + 1.3 * hash(i, Math.round(x * 10), 802)
     }
-    // Grain: long fine streaks along the row, more of them on the wide boards near to.
-    const h = next - y
-    const n = 30 + Math.round(h * 420)
-    for (let g = 0; g < n; g++) {
-      const gx = -8 + 20 * hash(i, g, 803)
-      const gy = y + h * (0.12 + 0.76 * hash(i, g, 804))
-      const len = 0.25 + 0.9 * hash(i, g, 805)
-      grain.moveTo(gx, gy)
-      grain.quadraticCurveTo(gx + len / 2, gy + h * 0.08 * (hash(i, g, 806) - 0.5), gx + len, gy + h * 0.04 * (hash(i, g, 807) - 0.5))
-    }
     y = next
   }
-  return { seams, ends, grain }
+  return { seams, ends }
 })
 
 /** The rug under the piano and the bench: a border of bands, a field of small diamonds, laid flat on the boards. */
@@ -272,9 +235,6 @@ function floorPicture(lamp: Pt): HTMLCanvasElement | null {
   c.fillRect(FLOOR.x0, FLOOR.y0, FLOOR.x1 - FLOOR.x0, FLOOR.y1 - FLOOR.y0)
   const b = BOARDS()
   c.lineCap = 'butt'
-  c.strokeStyle = rgba(R.grain, 0.9)
-  c.lineWidth = 0.009
-  c.stroke(b.grain)
   c.strokeStyle = rgba(R.board, 0.95)
   c.lineWidth = 0.012
   c.stroke(b.seams)
@@ -326,7 +286,7 @@ const FAR_BLOCKS = blocks(-9, 14, 811, 0.35, 1.1)
 const NEAR_BLOCKS = blocks(-9, 14, 812, 0.18, 0.5)
 /** The blocks' windows, each with the moment its light comes on (some are on already, some never). */
 const LIGHTS = cache(() => {
-  const out: { x: number; y: number; w: number; h: number; on: number; tv: boolean }[] = []
+  const out: { x: number; y: number; w: number; h: number; on: number }[] = []
   FAR_BLOCKS.forEach((b, i) => {
     const cols = Math.max(2, Math.floor(b.w / 0.07))
     const rows = Math.max(2, Math.floor(b.h / 0.09))
@@ -340,7 +300,6 @@ const LIGHTS = cache(() => {
           w: 0.03,
           h: 0.04,
           on: 133 + 16 * hash(i * 31 + c, r, 814) - (h < 0.2 ? 20 : 0),
-          tv: hash(i * 31 + c, r, 815) < 0.12,
         })
       }
   })
@@ -349,7 +308,6 @@ const LIGHTS = cache(() => {
 const SKYLINE = cache(() => {
   const far = new Path2D()
   for (const b of FAR_BLOCKS) far.rect(b.x, FAR_BASE - b.h, b.w, b.h + 1)
-  // A mast on one of them, its light blinking.
   const near = new Path2D()
   for (const b of NEAR_BLOCKS) {
     near.rect(b.x, NEAR_BASE - b.h, b.w, b.h + 1)
@@ -363,7 +321,6 @@ const SKYLINE = cache(() => {
   }
   return { far, near }
 })
-const MAST: Pt = [FAR_BLOCKS[12].x + FAR_BLOCKS[12].w / 2, FAR_BASE - FAR_BLOCKS[12].h]
 
 /** Where the city is true behind the glass: about where the camera is through the place. */
 const CITY_X = 1.6
@@ -378,7 +335,7 @@ function behind(ctx: CanvasRenderingContext2D, v: View, z: number, draw: () => v
   ctx.restore()
 }
 
-/** The city at dusk in one window, through its glass: sky, far blocks, their lights, the train, a plane, the snow. */
+/** The city at dusk in one window, through its glass: sky, far blocks, their lights, the train, the snow. */
 function city(ctx: CanvasRenderingContext2D, v: View, t: number, g: Glass): void {
   const k = v.k
   if (g.x1 < v.x0 || g.x0 > v.x1 || g.y1 < v.y0 || g.y0 > v.y1) return
@@ -393,16 +350,6 @@ function city(ctx: CanvasRenderingContext2D, v: View, t: number, g: Glass): void
   sky.addColorStop(1, R.dusk)
   ctx.fillStyle = sky
   ctx.fillRect(g.x0 * k, g.y0 * k, (g.x1 - g.x0) * k, (g.y1 - g.y0) * k)
-  // A plane's lights, high, going over slowly: a white strobe and a green light.
-  behind(ctx, v, 0.06, () => {
-    const px = -1.4 + 0.42 * (t - 133.3)
-    const py = -3.25 - 0.02 * (t - 133.3)
-    const strobe = (t * 1.1) % 1 < 0.08 ? 1 : 0.15
-    ctx.fillStyle = rgba('#FFFFFF', 0.9 * strobe)
-    ctx.fillRect((px - 0.012) * k, (py - 0.012) * k, 0.024 * k, 0.024 * k)
-    ctx.fillStyle = rgba('#8FE0A0', 0.8)
-    ctx.fillRect((px + 0.03) * k, (py + 0.005) * k, 0.014 * k, 0.014 * k)
-  })
   // The far blocks, and their windows coming on one by one as it gets dark.
   behind(ctx, v, 0.16, () => {
     ctx.save()
@@ -410,23 +357,9 @@ function city(ctx: CanvasRenderingContext2D, v: View, t: number, g: Glass): void
     ctx.fillStyle = R.far
     ctx.fill(SKYLINE().far)
     const warm = new Path2D()
-    const cold = new Path2D()
-    const dim = new Path2D()
-    for (const w of LIGHTS()) {
-      if (t < w.on) continue
-      // A few are televisions, their light going from one picture to the next every second or so.
-      const bright = w.tv && hash(Math.floor(t * 0.8 + w.x * 7), Math.round(w.x * 100), 816) < 0.5
-      ;(w.tv ? (bright ? cold : dim) : warm).rect(w.x, w.y, w.w, w.h)
-    }
-    ctx.fillStyle = rgba(R.lit, 0.85)
+    for (const w of LIGHTS()) if (t >= w.on) warm.rect(w.x, w.y, w.w, w.h)
+    ctx.fillStyle = rgba(R.lit, 0.8)
     ctx.fill(warm)
-    ctx.fillStyle = rgba(R.tv, 0.8)
-    ctx.fill(cold)
-    ctx.fillStyle = rgba(R.tv, 0.55)
-    ctx.fill(dim)
-    const blink = (t * 0.8) % 1 < 0.12 ? 1 : 0.2
-    ctx.fillStyle = rgba('#FFFFFF', blink)
-    ctx.fillRect(MAST[0] - 0.006, MAST[1] - 0.2, 0.012, 0.2)
     ctx.restore()
   })
   // The nearer roofs, and the line the train runs on over them: a train going by every few seconds, lit.
@@ -448,36 +381,16 @@ function city(ctx: CanvasRenderingContext2D, v: View, t: number, g: Glass): void
     for (let c = 0; c < 4; c++) for (let w = 0; w < 6; w++) ctx.fillRect(tx + c * 0.6 + 0.05 + w * 0.085, lineY - 0.075, 0.05, 0.035)
     ctx.restore()
   })
-  // Soft snow, far and near.
-  ctx.globalAlpha = 0.7
-  motes(ctx, v, t, { n: 40, seed: 821, tile: [2, 2], r: [0.006, 0.012], v: [0.05, 0.22], spread: 0.4, sway: [0.05, 0.4], color: R.snow, square: true, within: g })
-  ctx.globalAlpha = 0.85
-  motes(ctx, v, t, { n: 10, seed: 822, tile: [2, 2], r: [0.012, 0.02], v: [0.08, 0.35], spread: 0.4, sway: [0.07, 0.3], color: R.snow, within: g })
+  // Soft snow.
+  ctx.globalAlpha = 0.6
+  motes(ctx, v, t, { n: 12, seed: 822, tile: [2, 2], r: [0.01, 0.016], v: [0.08, 0.3], spread: 0.4, sway: [0.07, 0.3], color: R.snow, within: g })
   ctx.globalAlpha = 1
   ctx.restore()
 }
 
-/* ------------------------------------------------------------------ the shadows the lamp throws */
-
-/** The lamp's light, as it falls on the wall: where it comes from. */
-export interface Light {
-  at: Pt
-}
-/**
- * A shadow on the wall: `pts` pushed away from the lamp and up the wall, larger the farther from it. What stands in the
- * room throws one: the boxes, the piano, and her, playing.
- */
-function cast(pts: readonly Pt[], light: Light, reach: number): Pt[] {
-  return pts.map(([x, y]) => {
-    const dx = x - light.at[0]
-    const dy = y - light.at[1]
-    return [x + dx * reach, Math.min(WALL_FOOT, y + dy * reach * 0.6 - 0.15 * reach)]
-  })
-}
-
 /* ------------------------------------------------------------------ drawing */
 
-export function drawRoom(pen: Pen, f: { x0: number; y0: number; x1: number; y1: number }, t: number, light: Light, her: Pt[][]): void {
+export function drawRoom(pen: Pen, f: { x0: number; y0: number; x1: number; y1: number }, t: number): void {
   const { c, k } = pen
   const v: View = { ...f, cx: (f.x0 + f.x1) / 2, cy: (f.y0 + f.y1) / 2, w: f.x1 - f.x0, h: f.y1 - f.y0, k }
   c.save()
@@ -488,12 +401,6 @@ export function drawRoom(pen: Pen, f: { x0: number; y0: number; x1: number; y1: 
   const wallPic = wallPicture(SHADE)
   if (wallPic) lay(pen, wallPic, WALL, f)
   else fillPoly(pen, [[x0, wallTop], [x1, wallTop], [x1, WALL_FOOT], [x0, WALL_FOOT]], R.wall)
-
-  // The shadows the lamp throws on the wall: hers, playing; the piano's; the boxes'.
-  const shade = rgba(R.shadow, 0.3)
-  for (const part of her) fillPoly(pen, cast(part, light, 0.55), shade)
-  fillPoly(pen, cast([[1.6, -1.2], [2.04, -2.08], [5.5, -2.08], [5.8, -1.86], [5.4, -1.2]], light, 0.35), rgba(R.shadow, 0.22))
-  for (const b of BOXES) fillPoly(pen, cast([[b.x, b.y + b.h], [b.x, b.y - b.dp], [b.x + b.w + b.dp * 0.5, b.y - b.dp], [b.x + b.w + b.dp * 0.5, b.y + b.h]], light, 0.3), shade)
 
   // The windows: the city at dusk behind the glass, the sills and the bars, the curtains moving in the draught.
   for (const [i, g] of WINDOWS.entries()) {
@@ -536,7 +443,7 @@ const BOXES = [
   { x: -1.95, y: -0.62, w: 0.95, h: 0.58, dp: 0.4 },
 ]
 
-/** A taped carton: its front face from (x, y) (top left), w wide, h tall, and its top going back `dp`; its card's lines. */
+/** A taped carton: its front face from (x, y) (top left), w wide, h tall, and its top going back `dp`. */
 function drawBox(pen: Pen, b: { x: number; y: number; w: number; h: number; dp: number }): void {
   const { x, y, w, h, dp } = b
   const ox = dp * 0.5
@@ -544,14 +451,6 @@ function drawBox(pen: Pen, b: { x: number; y: number; w: number; h: number; dp: 
   fillPoly(pen, [[x, y], [x + w, y], [x + w + ox, y + oy], [x + ox, y + oy]], R.boxTop, rgba('#0E0A08', 0.8), 0.015)
   fillPoly(pen, [[x + w, y], [x + w + ox, y + oy], [x + w + ox, y + oy + h], [x + w, y + h]], mix(R.box, '#000000', 0.25), rgba('#0E0A08', 0.8), 0.015)
   fillPoly(pen, [[x, y], [x + w, y], [x + w, y + h], [x, y + h]], vgrad(pen, y, y + h, [[0, R.box], [1, mix(R.box, '#000000', 0.2)]]), rgba('#0E0A08', 0.8), 0.015)
-  // The card's corrugation showing, its scuffs, and a scrawl in marker on the front.
-  for (let i = 1; i < 14; i++) line(pen, [[x + 0.03, y + (h * i) / 14], [x + w - 0.03, y + (h * i) / 14]], rgba(i % 2 ? '#3E3024' : '#7A6550', 0.45), 0.006)
-  for (let i = 0; i < 6; i++) {
-    const sx = x + w * (0.1 + 0.8 * hash(i, Math.round(x * 10), 831))
-    const sy = y + h * (0.1 + 0.8 * hash(i, Math.round(y * 10), 832))
-    line(pen, [[sx, sy], [sx + 0.06 + 0.08 * hash(i, 3, 833), sy + 0.01]], rgba('#2A1F17', 0.5), 0.01)
-  }
-  line(pen, [[x + w * 0.15, y + h * 0.55], [x + w * 0.22, y + h * 0.5], [x + w * 0.3, y + h * 0.58], [x + w * 0.38, y + h * 0.5], [x + w * 0.45, y + h * 0.56]], rgba('#1A120D', 0.6), 0.012)
   const m = x + w / 2
   line(pen, [[m, y], [m + ox, y + oy]], rgba(R.tape, 0.9), 0.07, 'butt')
   line(pen, [[m, y], [m, y + h * 0.3]], rgba(R.tape, 0.9), 0.07, 'butt')
@@ -574,17 +473,6 @@ function curtain(pen: Pen, g: Glass, t: number, i: number): void {
   }
   sheer.push([edge - dir * 0.15, foot])
   fillPoly(pen, sheer, rgba(R.sheer, 0.18))
-  // Its folds.
-  for (let f = 1; f < 4; f++) {
-    const pts: Pt[] = []
-    for (let j = 0; j <= n; j++) {
-      const u = j / n
-      const y = top + (foot - top) * u
-      const blow = (0.05 + 0.1 * u) * (0.5 + 0.5 * Math.sin(t * 0.9 + i * 2 + u * 2.4 + f * 0.4)) * (f / 4)
-      pts.push([edge + dir * (0.1 * f + blow), y])
-    }
-    line(pen, pts, rgba(R.sheer, 0.16), 0.012)
-  }
   fillPoly(pen, [[edge - dir * 0.32, top], [edge - dir * 0.02, top], [edge - dir * 0.06 + dir * 0.02 * Math.sin(t * 0.7 + i), foot + 0.3], [edge - dir * 0.36, foot + 0.3]], R.drape)
   line(pen, [[edge - dir * 0.04, top], [edge - dir * 0.07, foot + 0.3]], rgba(R.paperLight, 0.3), 0.012)
 }

@@ -2,9 +2,9 @@ import type p5 from 'p5'
 import type { Pt } from '../../../../../parts'
 import { frame, hash, lastOf, smooth } from '../kit'
 import { drawBoatAbove } from '../sea/boat'
-import { beatPhase, BEGIN, END, H, heli, JUMP, LIFT, LOOK, NO, onHeli, PARCEL_OFF, PARCEL_SEAT, QUAY_X, STEP, STROBES, SURF, WIDE_FROM } from './sky-plan'
+import { beatPhase, BEGIN, END, H, heli, JUMP, LIFT, LOOK, NO, onHeli, PARCEL_OFF, PARCEL_SEAT, QUAY_X, STEP, STROBES, SURF } from './sky-plan'
 import { ctxOf, mix, oval, poly, rgba, rrect, vgrad, type C2 } from './paint'
-import { drawBanks, drawBergs, drawDeck, drawRanges, drawSkein, drawSun, drawSwell, drawTown, F, type Eye } from './air'
+import { drawBergs, drawDeck, drawRanges, drawSun, drawTown, F, type Eye } from './air'
 
 /**
  * How the sky is drawn (B3's): the harbour and its pad, the overcast, the grey-green sea going away to the ice and
@@ -45,9 +45,6 @@ export const SKY = {
   pilot: '#11181C',
 }
 
-/** When the skein of birds comes in from ahead, flying the other way. */
-const SKEIN = LIFT + 3.4
-
 /** The camera's eye: where the horizon is (cells), from the frame; never under the water's near edge. */
 export const horizon = (cy: number): number => Math.min(cy, SURF - 0.9)
 
@@ -77,7 +74,6 @@ export function drawSkySet(p: p5, k: number, t: number, under = false): void {
     g.fillRect(x0 * k, y0 * k, (x1 - x0) * k, (hz - y0 + 0.05) * k)
     drawSun(g, k, e, t)
     drawDeck(g, k, e, t)
-    drawBanks(g, k, e, t)
     drawRanges(g, k, e, t)
   }
   // The sea, from the horizon to the near water.
@@ -96,11 +92,9 @@ export function drawSkySet(p: p5, k: number, t: number, under = false): void {
     [1, rgba(SKY.seaFar, 0)],
   ])
   g.fillRect(x0 * k, (hz - 0.35) * k, (x1 - x0) * k, 0.8 * k)
-  drawTown(g, k, e, t, SURF, SKY.seaFar)
+  drawTown(g, k, e, SURF, SKY.seaFar)
   drawBergs(g, k, e, t, SURF, SKY.seaFar)
-  drawSwell(g, k, e, t, SURF)
   drawFloes(g, k, f, hz, t)
-  drawSkein(g, k, e, t, SKEIN, WIDE_FROM, 30, -8.4, heli(SKEIN).x + 26, -3, 15)
   if (!under) drawNearWater(g, k, f, t)
   drawQuay(g, k, f, t)
   if (t < END) drawGulls(g, k, f, t, QUAY_Y)
@@ -111,19 +105,19 @@ const QUAY_Y = -0.095
 
 function drawFloes(g: C2, k: number, f: ReturnType<typeof frame>, hz: number, t: number): void {
   const e = SURF - hz
-  // From the far ones in: layer by layer, each a row of floes at its own distance. They are gathered by how lost in
-  // the haze they are, five bands, and each band is two fills (the slabs' shaded edges, then their lit tops).
-  const BANDS = 5
+  // From the far ones in: row by row, each a few floes at its own distance, fewer the farther. They are gathered by
+  // how lost in the haze they are, three bands, and each band is two fills (the slabs' shaded edges, then their tops).
+  const BANDS = 3
   const shades = Array.from({ length: BANDS }, () => new Path2D())
   const tops = Array.from({ length: BANDS }, () => new Path2D())
   const ring = (path: Path2D, pts: [number, number][], dy: number) => {
     pts.forEach(([x, y], i) => (i ? path.lineTo(x * k, (y + dy) * k) : path.moveTo(x * k, (y + dy) * k)))
     path.closePath()
   }
-  for (let L = 44; L >= 1; L--) {
-    const z = F * Math.pow(1.09, L) + 0.4
+  for (let L = 16; L >= 1; L--) {
+    const z = F * Math.pow(1.2, L) + 0.4
     const s = F / z
-    const spacing = 1.9 / s
+    const spacing = 2.6 / s
     const halfW = (f.x1 - f.x0) / 2 + 2
     const n0 = Math.floor((f.cx - halfW / s) / spacing)
     const n1 = Math.ceil((f.cx + halfW / s) / spacing)
@@ -131,17 +125,13 @@ function drawFloes(g: C2, k: number, f: ReturnType<typeof frame>, hz: number, t:
     if (y < f.y0 - 1 || y > f.y1 + 1) continue
     const fog = Math.pow(1 - s, 1.6)
     const band = Math.min(BANDS - 1, Math.floor(fog * BANDS))
-    // The ice is fewer near than toward the far ice, and far off it lies in a few long streams with open water between.
-    const density = 0.22 + 0.4 * (1 - s)
+    const density = 0.36 * Math.pow(s, 0.7)
     const squash = Math.max(0.07, Math.min(0.6, e / z))
     for (let n = n0; n <= n1; n++) {
-      const q = hash(n, L, 21)
-      if (q > density * (s + (1 - s) * 1.4)) continue
+      if (hash(n, L, 21) > density) continue
       const gx = (n + hash(n, L, 22)) * spacing + Math.sin(t * 0.15 + n) * 0.05
-      const stream = Math.sin(gx * 0.09 - z * 0.12 + 1.3) + 0.6 * Math.sin(gx * 0.031 + z * 0.05)
-      if (q > density * (s + (1 - s) * smooth(stream, -0.5, 0.6) * 1.4)) continue
       const x = f.cx + (gx - f.cx) * s
-      const w = (0.35 + 1.4 * Math.pow(hash(n, L, 23), 2)) * s
+      const w = (0.55 + 1.8 * Math.pow(hash(n, L, 23), 2)) * s
       if (x + w < f.x0 - 0.5 || x - w > f.x1 + 0.5) continue
       const h = w * squash
       // An uneven slab: its top lit, its near edge in shadow.
@@ -166,7 +156,7 @@ function drawFloes(g: C2, k: number, f: ReturnType<typeof frame>, hz: number, t:
 
 function drawNearWater(g: C2, k: number, f: ReturnType<typeof frame>, t: number): void {
   if (f.y1 < SURF - 0.5) return
-  // The water at the plane of action and nearer: darker, the long pale crests of its swell.
+  // The water at the plane of action and nearer: darker, a few long pale crests of its swell.
   g.fillStyle = vgrad(g, k, SURF, SURF + 3, [
     [0, SKY.sea],
     [0.4, SKY.seaNear],
@@ -176,49 +166,22 @@ function drawNearWater(g: C2, k: number, f: ReturnType<typeof frame>, t: number)
   // The swell's crests running by at the near water's own pace, the nearer the quicker.
   const crests = new Path2D()
   const span = f.x1 - f.x0 + 4
-  for (let i = 0; i < 70; i++) {
-    const v = Math.pow(hash(i, 41), 1.5)
-    const y = SURF + 0.06 + v * 2.6 + 0.02 * Math.sin(t * 1.5 + i)
+  for (let i = 0; i < 8; i++) {
+    const v = (i + 0.5) / 8
+    const y = SURF + 0.15 + v * v * 2.6 + 0.02 * Math.sin(t * 1.5 + i)
     const x = f.x0 - 2 + ((((hash(i, 42) * span + t * (0.3 + 0.6 * v) * (i % 3 ? 1 : -1)) % span) + span) % span)
-    const w = 0.3 + hash(i, 43) * 0.9 * (1 + (y - SURF))
+    const w = 0.8 + hash(i, 43) * 1.1
     crests.moveTo(x * k, y * k)
     crests.lineTo((x + w) * k, y * k)
   }
-  g.strokeStyle = rgba(SKY.low, 0.28)
+  g.strokeStyle = rgba(SKY.low, 0.2)
   g.lineWidth = Math.max(0.8, 0.02 * k)
   g.stroke(crests)
 }
 
-/**
- * The quay's face: its courses of stone and their joints, old tyres hung on chains for fenders, an iron ladder down to
- * the water, and the wet dark of it running down from the top. One stroke for the joints, one fill for the tyres.
- */
+/** The quay's face: old tyres hung on chains for fenders, and an iron ladder down to the water. */
 function drawQuayFace(g: C2, k: number, xa: number, xb: number, top: number, t: number): void {
   if (xb <= xa) return
-  const foot = SURF + 0.3
-  const joints = new Path2D()
-  let row = 0
-  for (let y = top + 0.3; y < foot; y += 0.3, row++) {
-    joints.moveTo(xa * k, y * k)
-    joints.lineTo(xb * k, y * k)
-    for (let x = Math.floor(xa / 1.1) * 1.1 + (row % 2) * 0.55; x < xb; x += 1.1) {
-      joints.moveTo(x * k, (y - 0.3) * k)
-      joints.lineTo(x * k, y * k)
-    }
-  }
-  g.strokeStyle = rgba('#3E4744', 0.32)
-  g.lineWidth = Math.max(0.8, 0.018 * k)
-  g.stroke(joints)
-  // Wet streaks down from the edge.
-  const wet = new Path2D()
-  for (let i = Math.floor(xa / 0.45); i * 0.45 < xb; i++) {
-    if (hash(i, 111) < 0.55) continue
-    const x = i * 0.45 + hash(i, 112) * 0.3
-    wet.rect(x * k, (top + 0.04) * k, (0.03 + 0.05 * hash(i, 113)) * k, (0.2 + 0.7 * hash(i, 114)) * k)
-  }
-  g.fillStyle = rgba('#2F3735', 0.22)
-  g.fill(wet)
-  // Tyres on chains, and the ladder.
   const tyres = new Path2D()
   const chains = new Path2D()
   for (let x = Math.ceil((xa - 1.75) / 3.5) * 3.5 + 1.75; x < xb; x += 3.5) {
@@ -279,29 +242,17 @@ function drawLapping(g: C2, k: number, f: ReturnType<typeof frame>, xa: number, 
   g.stroke(foam)
 }
 
-/** Rain lying on the quay's top in puddles that hold the sky; the rotor's wash shivers them into rings as it lifts. */
-function drawPuddles(g: C2, k: number, f: ReturnType<typeof frame>, top: number, back: number, t: number): void {
-  const wash = smooth(t, LIFT - 1.6, LIFT - 0.2) * (1 - smooth(t, LIFT + 1.5, LIFT + 3.5))
+/** Rain lying on the quay's top in a few puddles that hold the sky. */
+function drawPuddles(g: C2, k: number, f: ReturnType<typeof frame>, top: number, back: number): void {
   const pools = new Path2D()
-  const rings = new Path2D()
   const y = (top + back) / 2 + 0.03
-  for (const [x, w] of [[-8.6, 0.9], [-6.1, 0.6], [-1.6, 1.1], [6.9, 0.35], [-11.8, 0.8]] as [number, number][]) {
+  for (const [x, w] of [[-8.6, 0.9], [-1.6, 1.1], [-11.8, 0.8]] as [number, number][]) {
     if (x + w < f.x0 || x - w > f.x1) continue
     pools.moveTo((x + w) * k, y * k)
     pools.ellipse(x * k, y * k, w * k, 0.06 * k, 0, 0, Math.PI * 2)
-    // Rings going out from the middle of each, quicker as the wash comes on; a slow few from the drizzle anyway.
-    for (let j = 0; j < 3; j++) {
-      const u = (((t * (0.5 + 1.6 * wash) + j / 3 + x * 0.37) % 1) + 1) % 1
-      const r = 0.08 + u * w * 0.85
-      rings.moveTo((x + r) * k, y * k)
-      rings.ellipse(x * k, y * k, r * k, r * 0.07 * k, 0, 0, Math.PI * 2)
-    }
   }
   g.fillStyle = rgba(SKY.low, 0.7)
   g.fill(pools)
-  g.strokeStyle = rgba('#7F8A89', 0.35 + 0.3 * wash)
-  g.lineWidth = Math.max(0.6, 0.012 * k)
-  g.stroke(rings)
 }
 
 /** The quay at the harbour's edge, the pad on it, the windsock. */
@@ -331,7 +282,7 @@ function drawQuay(g: C2, k: number, f: ReturnType<typeof frame>, t: number): voi
   g.fillRect(xa * k, top * k, (QUAY_X - xa) * k, 0.04 * k)
   drawQuayFace(g, k, Math.max(xa, f.x0 - 1), Math.min(QUAY_X, f.x1 + 1), top, t)
   drawLapping(g, k, f, Math.max(xa, f.x0 - 1), Math.min(QUAY_X, f.x1 + 1), t)
-  drawPuddles(g, k, f, top, back, t)
+  drawPuddles(g, k, f, top, back)
   // Bollards on the edge.
   for (const bx of [-9.5, -4.5, 6.6]) {
     rrect(g, k, bx - 0.11, top - 0.3, bx + 0.11, top + 0.01, 0.06)
@@ -586,14 +537,7 @@ export function drawHeli(p: p5, k: number, t: number): void {
   // The cabin and the nose.
   const body = () => {
     g.beginPath()
-    g.moveTo((b.x0 + 0.05) * k, -1.08 * k)
-    g.quadraticCurveTo((b.x0 + 0.2) * k, b.top * k, (b.x0 + 0.55) * k, b.top * k)
-    g.lineTo(0.75 * k, b.top * k)
-    g.bezierCurveTo(1.55 * k, (b.top - 0.02) * k, 2.2 * k, -0.95 * k, 2.3 * k, -0.35 * k)
-    g.bezierCurveTo(2.35 * k, 0.1 * k, 1.9 * k, b.bottom * k, 1.35 * k, b.bottom * k)
-    g.lineTo(-1.0 * k, b.bottom * k)
-    g.bezierCurveTo((b.x0 + 0.02) * k, b.bottom * k, (b.x0 - 0.02) * k, 0.1 * k, b.x0 * k, -0.45 * k)
-    g.closePath()
+    cabin(g, k)
   }
   body()
   g.fillStyle = SKY.white
@@ -682,6 +626,19 @@ export function drawHeli(p: p5, k: number, t: number): void {
   const s = lastOf(STROBES, t)
   oval(g, k, H.boom.x1 - 0.2, -1.78, 0.055, 0.055, s.ago < 0.16 ? '#FFFFFF' : '#9EA7AA')
   g.restore()
+}
+
+/** The outline of the cabin and the nose, in the helicopter's own frame, onto `g` (the canvas's path or a clip). */
+export function cabin(g: CanvasPath, k: number): void {
+  const b = H.body
+  g.moveTo((b.x0 + 0.05) * k, -1.08 * k)
+  g.quadraticCurveTo((b.x0 + 0.2) * k, b.top * k, (b.x0 + 0.55) * k, b.top * k)
+  g.lineTo(0.75 * k, b.top * k)
+  g.bezierCurveTo(1.55 * k, (b.top - 0.02) * k, 2.2 * k, -0.95 * k, 2.3 * k, -0.35 * k)
+  g.bezierCurveTo(2.35 * k, 0.1 * k, 1.9 * k, b.bottom * k, 1.35 * k, b.bottom * k)
+  g.lineTo(-1.0 * k, b.bottom * k)
+  g.bezierCurveTo((b.x0 + 0.02) * k, b.bottom * k, (b.x0 - 0.02) * k, 0.1 * k, b.x0 * k, -0.45 * k)
+  g.closePath()
 }
 
 /** The parcel: a small box in brown paper, tied with twine. Its foot at (x, y) in whatever frame is current. */
@@ -800,21 +757,21 @@ export function drawWash(p: p5, k: number, t: number): void {
   // On the pad: dust and spray thrown out flat along the quay, round the lift.
   if (t > LIFT - 1.5 && t < LIFT + 3) {
     const a = smooth(t, LIFT - 1.5, LIFT) * (1 - smooth(t, LIFT + 1, LIFT + 3))
-    for (let i = 0; i < 18; i++) {
+    for (let i = 0; i < 8; i++) {
       const u = ((t * 1.3 + hash(i, 51)) % 1)
       const dir = i % 2 ? 1 : -1
       const x = h.x + 0.4 + dir * (0.6 + u * 3.2)
       oval(g, k, x, 0.04 - u * 0.12, 0.25 + u * 0.4, 0.03 + u * 0.05, rgba('#DDE2E0', a * 0.35 * (1 - u)))
     }
   }
-  // Over the water, when it is low: rings going out on the sea.
+  // Over the water, when it is low: two rings going out on the sea.
   if (height < 4.5 && t > BEGIN + 10) {
     const a = smooth(-height, -4.5, -2.0)
     g.lineWidth = Math.max(1, 0.03 * k)
-    for (let i = 0; i < 4; i++) {
-      const u = ((t * 0.7 + i / 4) % 1)
+    for (let i = 0; i < 2; i++) {
+      const u = ((t * 0.5 + i / 2) % 1)
       const r = 0.6 + u * 3.6
-      g.strokeStyle = rgba('#DCE3E0', a * 0.5 * (1 - u))
+      g.strokeStyle = rgba('#DCE3E0', a * 0.35 * Math.min(1, u * 5) * (1 - u))
       g.beginPath()
       g.ellipse((h.x + 0.4) * k, (SURF + 0.06) * k, r * k, r * 0.07 * k, 0, 0, Math.PI * 2)
       g.stroke()

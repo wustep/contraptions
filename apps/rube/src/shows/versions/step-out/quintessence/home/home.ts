@@ -2,7 +2,7 @@ import type { Pt } from '../../../../../parts'
 import { box, frame, part, scenery, type PartShot } from '../kit'
 import { SEAMS } from '../seams'
 import { BENCH, HOP1, KEY, NOTES, REST_PT, RIM, SOLVED, homeLane } from './home-plan'
-import { drawBench, drawLamp, drawLandings, drawMother, drawNegative, drawPianoBody, drawStrings, lampLight, motherShadow } from './home-draw'
+import { drawBench, drawLamp, drawMother, drawNegative, drawPianoBody, drawStrings } from './home-draw'
 import { drawRoom } from './room'
 import { penOf } from './pen'
 
@@ -21,12 +21,13 @@ export const HOME_AT: Pt = [0, 0]
 /** Everything the place's standing set draws, claimed coarsely so the stage draws it wherever the camera is. */
 export const HOME_CELLS = box(-8, -7, 12, 4, 2)
 
-/** The room, the piano and his mother: drawn first, wherever the camera is. */
+/** The room, the lamp behind the piano, the piano and his mother: drawn first, wherever the camera is. */
 export const homeSet = scenery<null>({
   name: 'home-set',
   draw: (p, _s, c) => {
     const pen = penOf(p, c.k)
-    drawRoom(pen, frame(p, c.k), c.t, lampLight(c.t), motherShadow(c.t))
+    drawRoom(pen, frame(p, c.k), c.t)
+    drawLamp(pen, c.t)
     drawBench(pen)
     drawMother(pen, c.t)
     drawPianoBody(pen, c.t)
@@ -45,8 +46,6 @@ export const piano = part<HomeState>(
       const pen = penOf(p, c.k)
       const t = s.begin + c.t
       drawStrings(pen, t)
-      drawLamp(pen, t)
-      drawLandings(pen, t)
     },
     over: (p, s, c) => {
       drawNegative(penOf(p, c.k), s.begin + c.t)

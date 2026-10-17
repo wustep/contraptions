@@ -3,7 +3,7 @@ import { hash, smooth } from '../kit'
 import { level } from '../music'
 import { ellipse, fillPoly, line, mix, rgba, type Pen } from '../home/pen'
 import { litY, tone, wind, type Tone } from './dawn'
-import { DECK, drawChoughs, plumes, type Plume } from './far'
+import { DECK, drawChoughs } from './far'
 import { along, bands, billow, cut, lobe, ROWS, rowOutline, SAMPLES, sunOn } from './paint'
 import {
   CAT_LOOK,
@@ -12,7 +12,6 @@ import {
   CAT_STEPS_IN,
   CAT_STEPS_OUT,
   FAR_Y,
-  GUST,
   LANDINGS,
   LEDGE_Y,
   R,
@@ -24,7 +23,7 @@ import {
 } from './himalaya-plan'
 
 /**
- * The Himalayas, drawn on the machine's plane: the face he climbs, its snow wind-rippled and its rock in bands, its
+ * The Himalayas, drawn on the machine's plane: the face he climbs, its snow calm and a few bands of rock through it, its
  * steps capped with snow; the ledge at the top with Sean's tripod and long lens on it; across the valley, the far
  * spur and the mountain behind it, and on the spur, if you look, the snow leopard; and the sea of cloud filling the
  * valley between them, the spur standing out of it. Beyond the valley is `far.ts`.
@@ -77,7 +76,7 @@ const FOOT: Pt[] = [
 ]
 
 /** The boulder over the foot, up to his left: the gust takes the snow off its top. */
-const BOULDER: Pt = [-1.6, -1.75]
+export const BOULDER: Pt = [-1.6, -1.75]
 
 /** The face's outline: off to the left and down, its right flank down into the cloud, the ledge's lip, the summit ridge. */
 const FACE: Pt[] = [
@@ -114,8 +113,6 @@ const FACE: Pt[] = [
   [-17, -10.9],
   [-22, -9.6],
 ]
-/** The summit ridge's high points the spindrift streams off: a few, the summit first. */
-const CRESTS: Pt[] = [[4.2, -13.3], [-3.2, -12.3]]
 
 /** Each polygon's bounding box, for a quick no. */
 const boxes = new WeakMap<readonly Pt[], [number, number, number, number]>()
@@ -136,165 +133,50 @@ function inside(poly: readonly Pt[], x: number, y: number): boolean {
   return hit
 }
 
-/** A snowfield: its outline, and its rock in bands (made once); the ripples on it are made as they come into view. */
-interface Field {
-  spec: FieldSpec
-  outline: Path2D
-  /** The rock in bands: each band, its snow-lit top, the snow's lip along it, and the blue drift-shadow under it. */
-  rock: Path2D
-  tops: Path2D
-  lips: Path2D
-  under: Path2D
+/** A closed outline as a path, in cells. */
+function shape(pts: readonly Pt[]): Path2D {
+  const path = new Path2D()
+  pts.forEach(([x, y], i) => (i ? path.lineTo(x, y) : path.moveTo(x, y)))
+  path.closePath()
+  return path
 }
 
-interface FieldSpec {
-  outline: Pt[]
-  x0: number
-  y0: number
-  x1: number
-  y1: number
-  seed: number
-  /** How the strata tilt: y per x. */
-  tilt: number
-  rows: number
-  /** How thick the ripples lie, 1 for the face. */
-  density: number
-}
+/**
+ * The rock showing through the face's snow: a few long bands, where they hold the picture together. One beside the
+ * first leg, one in the bend of the switchback, one under the ledge, and one high on the left under the summit ridge.
+ * Each is where its left end is, how long it runs along the strata, and how thick it stands out of the snow.
+ */
+const BANDS: [number, number, number, number][] = [
+  [3.1, -1.3, 2.9, 0.4],
+  [3.4, -5.4, 3.2, 0.45],
+  [7.6, -7.9, 2.0, 0.35],
+  [-5.6, -8.6, 3.6, 0.5],
+]
+/** How the strata tilt: y per x. */
+const TILT = -0.09
 
-function field(fs: FieldSpec): Field {
-  const outline = new Path2D()
-  fs.outline.forEach(([x, y], i) => (i ? outline.lineTo(x, y) : outline.moveTo(x, y)))
-  outline.closePath()
-  const rock = new Path2D()
-  const tops = new Path2D()
-  const lips = new Path2D()
-  const under = new Path2D()
-  const poly = (path: Path2D, pts: Pt[]) => {
-    pts.forEach(([x, y], i) => (i ? path.lineTo(x, y) : path.moveTo(x, y)))
-    path.closePath()
-  }
-  const h = (a: number, b: number, c = 0) => hash(a * 31 + c, b, fs.seed)
-  const W = fs.x1 - fs.x0
-  const H = fs.y1 - fs.y0
-  // The rock showing through the snow in bands, tilted with the strata, ragged along their tops where the snow lies.
-  const cols = Math.ceil(W / 3.9)
-  for (let j = 0; j < fs.rows; j++) {
-    const y0 = fs.y0 + (j + h(j, 41) * 0.4) * (H / fs.rows)
-    for (let q = 0; q < cols; q++) {
-      if (h(j, q, 46) < 0.3) continue
-      const xa = fs.x0 + q * 3.9 + h(j, q, 42) * 2.6 + (j % 2) * 1.7 - 1
-      const len = 0.7 + h(j, q, 43) ** 1.5 * 3.2
-      if (![0, 0.5, 1].every((u) => inside(fs.outline, xa + len * u, y0 + (xa + len * u - fs.x0) * fs.tilt))) continue
-      const th = 0.12 + h(j, q, 44) * 0.32
+/** The face's outline, and its bands of rock, each with the snow lying on its top (made once). */
+let faceGeo: { outline: Path2D; bands: { rock: Path2D; top: Path2D; y: number }[] } | null = null
+function faceOf() {
+  return (faceGeo ??= {
+    outline: shape(FACE),
+    bands: BANDS.map(([xa, y0, len, th], j) => {
+      // Tilted with the strata, ragged along its top where the snow lies.
       const top: Pt[] = []
       const low: Pt[] = []
       const n = Math.max(4, Math.round(len / 0.25))
       for (let i = 0; i <= n; i++) {
         const u = i / n
         const x = xa + len * u
-        const tilt = (x - fs.x0) * fs.tilt
+        const y = y0 + len * u * TILT
         const taper = Math.sin(Math.PI * u) ** 0.6
-        top.push([x, y0 + tilt - th * taper * (0.55 + 0.45 * h(j, q, i + 100))])
-        low.push([x, y0 + tilt + th * 0.25 * taper])
+        top.push([x, y - th * taper * (0.55 + 0.45 * hash(j * 31, i + 100, 41))])
+        low.push([x, y + th * 0.25 * taper])
       }
-      poly(rock, [...top, ...[...low].reverse()])
-      poly(tops, [...top, ...top.map(([x, y], i): Pt => [x, y + th * 0.3 * Math.sin((Math.PI * i) / n) ** 0.6]).reverse()])
-      top.forEach(([x, y], i) => (i ? lips.lineTo(x, y) : lips.moveTo(x, y)))
-      // The drift's shadow in the lee of the band.
-      const sh = 0.12 + 0.16 * h(j, q, 45)
-      poly(under, [...low, ...[...low].reverse().map(([x, y], i): Pt => [x - 0.2, y + sh * Math.sin((Math.PI * (n - i)) / n) ** 0.8])])
-    }
-  }
-  return { spec: fs, outline, rock, tops, lips, under }
-}
-
-let faceGeo: Field | null = null
-const faceOf = (): Field => (faceGeo ??= field({ outline: FACE, x0: -21, y0: -13.4, x1: 11.6, y1: 8, seed: 41, tilt: -0.09, rows: 18, density: 1 }))
-
-/**
- * The wind's ripples on a snowfield, made for what is in view: on a grid that is finer the closer the camera is (each
- * finer grid fading in as it comes), so the snow has grain at every distance and only what is seen is drawn. Each grid
- * square's ripples are its own, by hash, so they stay put.
- */
-const LEVELS = [2, 1, 0.5, 0.25, 0.125]
-/** Grid squares to a tile: the grain is made a tile at a time, the first time the tile is seen, and kept. */
-const TILE = 8
-const tiles = new Map<string, Path2D>()
-function tileOf(fs: FieldSpec, li: number, g: number, tx: number, ty: number): Path2D {
-  const key = `${fs.seed}:${li}:${tx}:${ty}`
-  let tile = tiles.get(key)
-  if (tile) return tile
-  tile = new Path2D()
-  for (let gx = tx * TILE; gx < (tx + 1) * TILE; gx++) {
-    for (let gy = ty * TILE; gy < (ty + 1) * TILE; gy++) {
-      if (!inside(fs.outline, (gx + 0.5) * g, (gy + 0.5) * g)) continue
-      const h = (i: number) => hash(gx * 7 + li, gy * 13 + i, fs.seed)
-      for (let i = 0; i < 2; i++) {
-        const x = (gx + h(i * 3)) * g
-        const y = (gy + h(i * 3 + 1)) * g
-        const len = g * 0.75 * (0.5 + h(i * 3 + 2))
-        const bow = (h(i + 9) - 0.5) * 0.12 * len
-        tile.moveTo(x, y)
-        tile.lineTo(x + len / 2, y + (fs.tilt * len) / 2 + bow)
-        tile.lineTo(x + len, y + fs.tilt * len)
-      }
-    }
-  }
-  tiles.set(key, tile)
-  return tile
-}
-
-function grain(c: C2, fs: FieldSpec, f: Frame, tn: Tone): void {
-  const x0 = Math.max(fs.x0, f.x0 - 0.5)
-  const x1 = Math.min(fs.x1, f.x1 + 0.5)
-  const y0 = Math.max(fs.y0, f.y0 - 0.5)
-  const y1 = Math.min(fs.y1, f.y1 + 0.5)
-  if (x1 <= x0 || y1 <= y0) return
-  // How far apart a level's grid squares are on the screen: each level is drawn while that is between 18 and 28
-  // pixels or more, fading in over that, so the grain on the snow is about as fine wherever the camera is.
-  const kpx = c.getTransform().d
-  c.lineWidth = 1 / c.getTransform().a
-  c.lineCap = 'butt'
-  LEVELS.forEach((lv, li) => {
-    const g = lv / Math.max(0.35, fs.density)
-    const a = smooth(g * kpx, 18, 28)
-    if (a < 0.05 || g * kpx > 260) return
-    const ripples = new Path2D()
-    const span = g * TILE
-    for (let tx = Math.floor(x0 / span); tx <= Math.floor(x1 / span); tx++) {
-      for (let ty = Math.floor(y0 / span); ty <= Math.floor(y1 / span); ty++) ripples.addPath(tileOf(fs, li, g, tx, ty))
-    }
-    // Hairlines: one pixel wide, which the canvas draws fastest.
-    c.strokeStyle = rgba(tn.faceShade, 0.5 * a)
-    c.stroke(ripples)
+      const cap = top.map(([x, y], i): Pt => [x, y + th * 0.3 * Math.sin((Math.PI * i) / n) ** 0.6])
+      return { rock: shape([...top, ...[...low].reverse()]), top: shape([...top, ...cap.reverse()]), y: y0 - th }
+    }),
   })
-}
-
-/**
- * What is on a snowfield, in the hour's light: the wind's ripples, the drift-shadows, the rock in bands (a value
- * lighter than the steps' slabs, so the climb reads against them), and the snow's lip along each band, which catches
- * the sun where it has reached.
- */
-function paintField(c: C2, g: Field, tn: Tone, t: number, f: Frame, rock: string): void {
-  const ly = litY(t, 'world')
-  grain(c, g.spec, f, tn)
-  c.fillStyle = rgba(tn.faceShade, 0.4)
-  c.fill(g.under)
-  c.fillStyle = rock
-  c.fill(g.rock)
-  c.fillStyle = rgba(mix(rock, tn.faceRockTop, 0.4), 0.85)
-  c.fill(g.tops)
-  c.strokeStyle = rgba(tn.faceRockTop, 0.75)
-  c.lineWidth = 0.025
-  c.stroke(g.lips)
-  if (ly > -14) {
-    const rg = c.createLinearGradient(8.1, ly - 0.6, 7.95, ly + 0.4)
-    rg.addColorStop(0, rgba(tn.faceLit, 0.9))
-    rg.addColorStop(1, rgba(tn.faceLit, 0))
-    c.strokeStyle = rg
-    c.lineWidth = 0.03
-    c.stroke(g.lips)
-  }
 }
 
 export function drawFace(pen: Pen, f: Frame, t: number): void {
@@ -305,26 +187,28 @@ export function drawFace(pen: Pen, f: Frame, t: number): void {
     // Snow over all of it, bluer low down, and the sun on it down to where the light has reached.
     bands(c, f.x0 - 1, f.x1 + 1, -14, 10, (y) => mix(tn.faceSnow, tn.faceLow, Math.max(0, Math.min(1, (y + 13.5) / 22.5))), g.outline)
     if (ly > -14.5) sunOn(c, FACE, ly, mix(tn.faceSnow, tn.faceLit, 0.95))
-    paintField(c, g, tn, t, f, mix(tn.faceRock, tn.faceShade, 0.42))
+    // The bands of rock (a value lighter than the steps' slabs, so the climb reads against them), and the snow on their
+    // tops, which catches the sun once the light is down to it.
+    c.fillStyle = mix(tn.faceRock, tn.faceShade, 0.42)
+    for (const b of g.bands) c.fill(b.rock)
+    const snow = mix(tn.faceSnow, '#FFFFFF', 0.4)
+    for (const b of g.bands) {
+      c.fillStyle = litSnow(tn, t, b.y, snow)
+      c.fill(b.top)
+    }
     // The snow the climb starts in, along the foot.
     if (f.y1 > R - 0.5) {
-      const foot = new Path2D()
-      FOOT.forEach(([x, y], i) => (i ? foot.lineTo(x, y) : foot.moveTo(x, y)))
-      foot.closePath()
-      const top = mix(tn.faceSnow, '#FFFFFF', 0.25)
-      bands(c, f.x0 - 1, f.x1 + 1, R - 0.1, 9, (y) => mix(top, tn.faceLow, Math.max(0, Math.min(1, (y - R) / 3))), foot)
+      c.fillStyle = mix(tn.faceSnow, '#FFFFFF', 0.25)
+      c.fill(shape(FOOT))
     }
-    // Spindrift streaming off the summit ridge, downwind.
-    const w = wind(t)
-    const list: Plume[] = CRESTS.map(([x, y], i) => ({ x: x - 0.05, y: y + 0.06, len: (0.8 + 1.5 * w) * (1 - i * 0.1), thick: (0.12 + 0.12 * w) * (1 - i * 0.1), seed: i * 5 + 3 }))
-    plumes(c, list, mix('#FFFFFF', tn.faceLit, smooth(ly, -13.6, -12.5) * 0.6), 0.6, t)
   })
   // The boulder over the foot, whose snow the gust tears off.
   fillPoly(pen, [[BOULDER[0] - 0.8, BOULDER[1] + 0.05], [BOULDER[0], BOULDER[1] - 0.25], [BOULDER[0] + 0.65, BOULDER[1] - 0.05], [BOULDER[0] + 0.8, BOULDER[1] + 0.4], [BOULDER[0] - 0.9, BOULDER[1] + 0.45]], tn.faceRock)
   fillPoly(pen, [[BOULDER[0] - 0.84, BOULDER[1] + 0.06], [BOULDER[0], BOULDER[1] - 0.3], [BOULDER[0] + 0.68, BOULDER[1] - 0.06], [BOULDER[0] + 0.1, BOULDER[1] - 0.12], [BOULDER[0] - 0.5, BOULDER[1] + 0.12]], mix(tn.faceSnow, '#FFFFFF', 0.4))
-  // The band of rock over the ledge, its lip of snow, from which it sifts down by them.
+  // The band of rock over the ledge, its lip of snow, from which it sifts down by them: the bands' rock, not the
+  // darker rock of the steps, the ledge and the boulder that he and Sean are on.
   const by = LEDGE_Y - 1.2
-  fillPoly(pen, [[SIFT_X - 2.6, by - 0.2], [SIFT_X - 1.2, by - 0.36], [SIFT_X - 0.1, by - 0.42], [SIFT_X + 0.12, by - 0.08], [SIFT_X + 0.05, by + 0.02], [SIFT_X - 0.8, by + 0.1], [SIFT_X - 2.5, by + 0.15]], tn.faceRock)
+  fillPoly(pen, [[SIFT_X - 2.6, by - 0.2], [SIFT_X - 1.2, by - 0.36], [SIFT_X - 0.1, by - 0.42], [SIFT_X + 0.12, by - 0.08], [SIFT_X + 0.05, by + 0.02], [SIFT_X - 0.8, by + 0.1], [SIFT_X - 2.5, by + 0.15]], mix(tn.faceRock, tn.faceShade, 0.42))
   fillPoly(pen, [[SIFT_X - 2.65, by - 0.2], [SIFT_X - 1.2, by - 0.4], [SIFT_X - 0.1, by - 0.47], [SIFT_X + 0.16, by - 0.08], [SIFT_X + 0.02, by - 0.15], [SIFT_X - 0.15, by - 0.32], [SIFT_X - 1.2, by - 0.28], [SIFT_X - 2.5, by - 0.12]], litSnow(tn, t, by - 0.4, mix(tn.faceSnow, '#FFFFFF', 0.45)))
 }
 
@@ -354,10 +238,6 @@ export function drawSteps(pen: Pen, f: Frame, t: number): void {
   const a = STEPS[STEPS.length - 1].p[0] - 0.4
   fillPoly(pen, [[a, y], [9.95, y], [9.9, y + 0.12], [9.4, y + 0.32], [8.2, y + 0.45], [a + 0.2, y + 0.4]], tn.faceRock)
   fillPoly(pen, [[a - 0.05, y + 0.02], [a + 0.3, y - 0.05], [9.0, y - 0.05], [9.98, y + 0.01], [9.8, y + 0.07], [a + 0.1, y + 0.07]], litSnow(tn, t, y, cap))
-  // The ledge's underside: a few ribs of rock, the snow's lip over them.
-  line(pen, [[a + 0.5, y + 0.2], [a + 0.9, y + 0.38]], rgba(tn.ink, 0.35), 0.02)
-  line(pen, [[8.6, y + 0.12], [8.9, y + 0.36]], rgba(tn.ink, 0.35), 0.02)
-  line(pen, [[9.3, y + 0.1], [9.5, y + 0.26]], rgba(tn.ink, 0.35), 0.02)
   drawRope(pen, f, t, tn)
 }
 
@@ -417,16 +297,14 @@ const BEHIND: Pt[] = [[12.0, FY - 0.05], [12.4, FY - 0.66], [12.9, FY - 1.05], [
  */
 const SPUR: Pt[] = [[11.2, 2], [11.5, -3.6], [11.66, -7.4], [11.6, -7.75], [11.8, -8.1], [11.72, -8.42], [11.9, -8.72], [11.85, -8.98], [12.0, FY - 0.05], [13.1, FY - 0.1], [14.4, FY], [16.2, FY - 0.25], [16.9, FY + 0.1], [18.0, FY + 0.55], [19.4, FY + 1.3], [20.8, FY + 2.3], [22.6, FY + 3.8], [24.6, FY + 5.6], [26.5, 2]]
 
-let farGeo: { behind: Field; spur: Field; snowTop: Path2D } | null = null
+/** The spur and the mountain behind it are all snow, but for the two rocks on its top: the cat is pale on pale. */
+let farGeo: { behind: Path2D; spur: Path2D; snowTop: Path2D } | null = null
 function farOf() {
   if (farGeo) return farGeo
-  const snowTop = new Path2D()
-  ;([[11.95, FY + 0.02], [12.0, FY - 0.06], [13.1, FY - 0.12], [14.4, FY - 0.03], [16.2, FY - 0.28], [16.9, FY + 0.08], [18.0, FY + 0.52], [17.9, FY + 0.62], [16.8, FY + 0.2], [16.2, FY - 0.15], [14.4, FY + 0.06], [12.6, FY + 0.05]] as Pt[]).forEach(([x, y], i) => (i ? snowTop.lineTo(x, y) : snowTop.moveTo(x, y)))
-  snowTop.closePath()
   farGeo = {
-    behind: field({ outline: BEHIND, x0: 11.6, y0: FY - 2, x1: 26.5, y1: FY - 1.2, seed: 43, tilt: 0.03, rows: 2, density: 0.3 }),
-    spur: field({ outline: SPUR, x0: 11.2, y0: FY + 0.4, x1: 26.5, y1: 2, seed: 47, tilt: 0.05, rows: 13, density: 0.9 }),
-    snowTop,
+    behind: shape(BEHIND),
+    spur: shape(SPUR),
+    snowTop: shape([[11.95, FY + 0.02], [12.0, FY - 0.06], [13.1, FY - 0.12], [14.4, FY - 0.03], [16.2, FY - 0.28], [16.9, FY + 0.08], [18.0, FY + 0.52], [17.9, FY + 0.62], [16.8, FY + 0.2], [16.2, FY - 0.15], [14.4, FY + 0.06], [12.6, FY + 0.05]]),
   }
   return farGeo
 }
@@ -486,19 +364,16 @@ export function drawFarSide(pen: Pen, f: Frame, t: number): void {
   const lit = (y: number, shadow: string) => mix(shadow, tn.faceLit, smooth(ly - y, -0.2, 0.4) * 0.85)
   // Only what stands out of the sea of cloud is drawn.
   const low = Math.min(f.y1, DECK + 0.3)
-  const above = { ...f, y1: low }
   inCells(pen, (c) => {
     // The mountain behind the spur, a little paler for the air between.
     const hi = mix(tn.faceSnow, tn.haze, 0.3)
     const lo = mix(tn.faceLow, tn.haze, 0.3)
-    bands(c, Math.max(11.5, f.x0 - 1), f.x1 + 1, FY - 2.2, low, (y) => mix(hi, lo, Math.max(0, Math.min(1, (y - FY + 2) / 4))), g.behind.outline)
+    bands(c, Math.max(11.5, f.x0 - 1), f.x1 + 1, FY - 2.2, low, (y) => mix(hi, lo, Math.max(0, Math.min(1, (y - FY + 2) / 4))), g.behind)
     if (ly > FY - 2.5) sunOn(c, cut(BEHIND, [0, 1], DECK + 0.3), ly, mix(hi, tn.faceLit, 0.85))
-    paintField(c, g.behind, tn, t, above, mix(mix(tn.faceRock, tn.faceShade, 0.6), tn.haze, 0.3))
     // The spur, its flank in its own shadow going down into the cloud, the sun coming down it.
     const flank: [number, string][] = [[0, mix(tn.faceSnow, tn.faceShade, 0.25)], [0.12, mix(tn.faceSnow, tn.faceShade, 0.5)], [1, mix(tn.faceShade, tn.cloud, 0.45)]]
-    bands(c, Math.max(11, f.x0 - 1), f.x1 + 1, FY - 0.5, low, (y) => along(flank, (y - FY + 0.5) / 9.5), g.spur.outline)
+    bands(c, Math.max(11, f.x0 - 1), f.x1 + 1, FY - 0.5, low, (y) => along(flank, (y - FY + 0.5) / 9.5), g.spur)
     if (ly > FY - 0.5) sunOn(c, cut(SPUR, [0, 1], DECK + 0.3), ly, mix(flank[0][1], tn.faceLit, 0.85))
-    paintField(c, g.spur, tn, t, above, mix(tn.faceRock, tn.faceShade, 0.3))
     // Snow along its top, where the cat will walk.
     c.fillStyle = lit(FY - 0.1, mix(tn.faceSnow, '#FFFFFF', 0.35))
     c.fill(g.snowTop)
@@ -518,36 +393,19 @@ export function drawFarRocks(pen: Pen, t: number): void {
 /**
  * The sea of cloud filling the valley, on the machine's plane, its far edge a little under the ledge: the spur and the
  * mountain behind it stand out of it, and the face goes down into it. Seen from above, it is a level floor of cloud,
- * its far edge billowed, with a few heaps standing up out of it: low and flat far off, big and round near, each lit on
- * its crown and in shadow on its flank away from the sun, drifting slowly with the wind. It is lit when the light is
- * down to it. Lesser summits stand out of it here and there, catching the sun on their tops and throwing long shadows
- * across it, shorter as the sun climbs. The pair of choughs wheel over it.
+ * its far edge billowed, with a few big heaps standing up out of it, flatter far off and rounder near, each lit on its
+ * crown and in shadow on its flank away from the sun, drifting slowly with the wind. It is lit when the light is down
+ * to it. Two lesser summits stand out of it, catching the sun on their tops and throwing long shadows across it,
+ * shorter as the sun climbs. The pair of choughs wheel over it.
  */
 /** The summits standing out of the cloud: x, how far into the sea (below its far edge), width, height. */
-const ISLANDS: [number, number, number, number][] = [[22.6, 0.25, 2.6, 0.9], [30.2, 0.62, 3.4, 1.1], [16.6, 1.1, 2.6, 0.85], [26.0, 1.3, 4.4, 1.5], [13.3, 2.5, 3.6, 1.2]]
+const ISLANDS: [number, number, number, number][] = [[26.0, 1.3, 4.4, 1.5], [13.3, 2.5, 3.6, 1.2]]
 /**
- * The masses of cloud in the sea, past the far edge's small heaps: x, how far into the sea, and how big. Each is a big
- * heap with a lesser one behind it on its left and another before it on its right, so the sea is lumped in masses with
- * open floor between them, not dotted with heaps.
+ * The heaps of cloud: x, how far into the sea, how big, and how much taller than the rest. A few big ones with open
+ * floor between them, so the sea is a calm floor and not dotted with heaps; and the one welling up in the gorge under
+ * the ledge, which stays where it is.
  */
-const MASSES: [number, number, number][] = [
-  [21.0, 0.4, 1.3], [35.6, 0.5, 1.4], [13.6, 0.7, 1.0], [27.2, 0.8, 1.5], [23.8, 1.1, 1.0], [17.6, 1.4, 1.5], [31.6, 1.7, 1.7],
-  [11.8, 1.8, 1.2], [39.4, 2.0, 1.7], [27.8, 2.2, 1.3], [20.0, 2.4, 1.2], [23.6, 2.6, 2.4], [36.4, 2.9, 1.5], [14.0, 3.4, 2.2],
-  [33.4, 3.6, 2.6], [20.4, 4.3, 1.8], [26.6, 5.0, 2.8], [17.4, 6.2, 3.2], [38.8, 6.4, 3.4], [27.6, 8.4, 3.6],
-  // Close under the face, the gorge packed with them.
-  [16.6, 2.4, 1.4], [13.4, 5.0, 2.0], [19.8, 7.4, 2.6], [14.0, 8.6, 2.8],
-]
-/** The heaps of cloud: x, how far into the sea, how big, and how much taller than the rest (the two welling up in the gorge under the ledge, which stay where they are). */
-const HEAPS: [number, number, number, number?][] = [
-  [10.9, 0.25, 0.8, 2.4], [11.75, 0.12, 0.5, 2],
-  // The far edge: small and flat, close together, as the sea goes away from the lens.
-  [13.4, 0.15, 0.55], [15.2, 0.2, 0.7], [17.6, 0.12, 0.6], [21.6, 0.18, 0.75], [24.0, 0.1, 0.5], [29.4, 0.15, 0.7], [31.5, 0.25, 1.0],
-  ...MASSES.flatMap(([x, d, r], i): [number, number, number][] => [
-    [x - (0.8 + 0.2 * hash(i, 1, 79)) * r, d - 0.06 * r, r * (0.5 + 0.15 * hash(i, 2, 79))],
-    [x, d, r],
-    [x + (0.75 + 0.2 * hash(i, 3, 79)) * r, d + 0.08 * r, r * (0.45 + 0.15 * hash(i, 4, 79))],
-  ]),
-]
+const HEAPS: [number, number, number, number?][] = [[10.9, 0.25, 0.8, 2.4], [21.0, 0.4, 1.3], [17.6, 1.4, 1.5], [31.6, 1.7, 1.7], [23.6, 2.6, 2.4], [14.0, 3.4, 2.2], [26.6, 5.0, 2.8]]
 /** Everything standing up out of the sea, furthest first: so each lies over the feet of what is behind it. */
 const STANDING = [...HEAPS.map((h, i) => ({ d: h[1], i, heap: true })), ...ISLANDS.map((h, i) => ({ d: h[1], i, heap: false }))].sort((a, b) => a.d - b.d)
 
@@ -792,7 +650,7 @@ function strapSwing(t: number): number {
 
 /* ------------------------------------------------------------------ what moves on the beats */
 
-/** His landings: a small kick of snow off each step. The gust off the boulder on the downbeat of the build. */
+/** His landings: a small kick of snow off each step. */
 export function drawKicks(pen: Pen, t: number): void {
   for (let i = 0; i < STEPS.length; i++) {
     const g = t - LANDINGS[i]
@@ -806,51 +664,33 @@ export function drawKicks(pen: Pen, t: number): void {
       ellipse(pen, x + vx * g, Math.min(y + R - 0.01, y + R + vy * g + 3 * g * g), 0.022, 0.022, rgba('#FFFFFF', 0.9 * fade))
     }
   }
-  const gg = t - GUST
-  if (gg > -0.05 && gg < 3.5) {
-    // The plume: torn off the boulder's top and streamed away right, thinning.
-    const path = new Path2D()
-    const k = pen.k
-    for (let i = 0; i < 70; i++) {
-      const delay = hash(i, 81) * 0.5
-      const g = gg - delay
-      if (g < 0 || g > 1.6 + hash(i, 86)) continue
-      const x = BOULDER[0] - 0.6 + hash(i, 82) * 1.2 + g * (2.0 + hash(i, 83) * 1.6)
-      const y = BOULDER[1] - 0.15 - hash(i, 84) * 0.15 - g * (0.3 + hash(i, 85) * 0.2) + Math.sin(g * 4 + i) * 0.05
-      const r = (0.02 + g * 0.01) * k
-      path.moveTo(x * k + r, y * k)
-      path.ellipse(x * k, y * k, r, 0.016 * k, 0, 0, Math.PI * 2)
-    }
-    pen.c.fillStyle = rgba('#FFFFFF', 0.6 * (1 - smooth(gg, 1, 3.5)))
-    pen.c.fill(path)
-  }
 }
 
-/** Snow sifting from the rock over them: a thin fall, its front landing on the ledge on the beat. */
+/**
+ * Snow sifting from the rock over them: one thin stream, drifting a little downwind and widening as it falls, thickest
+ * at its front, which lands on the ledge on the beat, and thinning to nothing up toward its tail, which follows it down.
+ */
 const SIFT_FALL = 1.5
+/** How long the stream runs off the lip. */
+const SIFT_RUN = 1.1
 export function drawSifts(pen: Pen, t: number): void {
   const top = LEDGE_Y - 1.2 + 0.02
-  const h = LEDGE_Y - top
-  const dur = h / SIFT_FALL
-  const k = pen.k
-  const path = new Path2D()
+  const dur = (LEDGE_Y - top) / SIFT_FALL
+  const x = (y: number) => SIFT_X + ((y - top) / SIFT_FALL) * 0.14
+  const w = (y: number) => 0.012 + (0.03 * (y - top)) / (LEDGE_Y - top)
   for (const s of SIFTS) {
     const g = t - (s - dur)
-    if (g < 0 || g > dur + 1.2) continue
-    for (let i = 0; i < 40; i++) {
-      const lag = i * 0.028
-      const gi = g - lag
-      if (gi < 0) continue
-      const y = top + gi * SIFT_FALL
-      if (y > LEDGE_Y) continue
-      const x = SIFT_X + (hash(i, 91) - 0.5) * 0.12 + Math.sin(gi * 3 + i) * 0.025 + gi * 0.14
-      const r = (0.01 + 0.008 * hash(i, 92)) * k
-      path.moveTo(x * k + r, y * k)
-      path.arc(x * k, y * k, r, 0, Math.PI * 2)
+    if (g < 0 || g > dur + SIFT_RUN) continue
+    const y0 = top + Math.max(0, g - SIFT_RUN) * SIFT_FALL
+    const y1 = Math.min(LEDGE_Y, top + g * SIFT_FALL)
+    if (y1 > y0) {
+      const k = pen.k
+      const fall = pen.c.createLinearGradient(x(y0) * k, y0 * k, x(y1) * k, y1 * k)
+      fall.addColorStop(0, rgba('#FFFFFF', 0))
+      fall.addColorStop(1, rgba('#FFFFFF', 0.75 * Math.min(1, (y1 - y0) / 0.4)))
+      fillPoly(pen, [[x(y0) - w(y0), y0], [x(y0) + w(y0), y0], [x(y1) + w(y1), y1], [x(y1) - w(y1), y1]], fall)
     }
     const land = t - s
     if (land >= 0 && land < 0.6) ellipse(pen, SIFT_X + 0.1, LEDGE_Y - 0.01, 0.06 + land * 0.25, 0.022, rgba('#FFFFFF', 0.8 * (1 - land / 0.6)))
   }
-  pen.c.fillStyle = rgba('#FFFFFF', 0.88)
-  pen.c.fill(path)
 }

@@ -2,7 +2,7 @@ import type { Pt } from '../../../../../parts'
 import { hash } from '../kit'
 import type { View } from '../depth'
 import { drawHarbour } from './harbour'
-import { drawDoorDetail, drawGrain, drawSkirt, drawUnderFloor, drawWallThings, drawWindowRain, lampAt, WIN } from './room'
+import { drawDoorDetail, drawSkirt, drawUnderFloor, drawWallThings, lampAt, WIN } from './room'
 import { blob, ctxOf, ellipse, flash, line, mix, path, rect, rgba, ring, shape, type Pen } from '../dream/pen'
 import {
   BELL,
@@ -66,7 +66,6 @@ const C = {
   h4: '#A8B4B6',
   pilot: '#0F0A08',
   coat: '#2A1E17',
-  rim: '#8E9BA1',
   ring: '#F5D27A',
   stage: '#3A2820',
   stageTop: '#5E4330',
@@ -102,7 +101,7 @@ export function drawRoom(pen: Pen, t: number, f: { x0: number; y0: number; x1: n
   g.restore()
   quay(pen, v, t, -12, DOOR_IN[0])
   quay(pen, v, t, WALL_OUT[1], EXIT_X + 12)
-  // The back wall: vertical boards, their grain.
+  // The back wall: vertical boards.
   g.fillStyle = C.wall
   g.fillRect(x0 * k, CEIL * k, (x1 - x0) * k, (FLOOR - CEIL) * k)
   const seams = new Path2D()
@@ -115,8 +114,7 @@ export function drawRoom(pen: Pen, t: number, f: { x0: number; y0: number; x1: n
   g.fill(planks)
   g.fillStyle = C.seam
   g.fill(seams)
-  drawGrain(g, k, x0, x1, CEIL, FLOOR, WIN)
-  // The window on the water, behind the stage: the harbour through it, rain on its glass, its frame.
+  // The window on the water, behind the stage: the harbour through it, its frame.
   const { x0: wx0, x1: wx1, y0: wy0, y1: wy1 } = WIN
   rect(pen, wx0 - 0.08, wy0 - 0.08, wx1 + 0.08, wy1 + 0.1, C.beam)
   g.save()
@@ -125,7 +123,6 @@ export function drawRoom(pen: Pen, t: number, f: { x0: number; y0: number; x1: n
   g.clip()
   drawHarbour(g, v, t)
   g.restore()
-  drawWindowRain(g, k, t)
   rect(pen, (wx0 + wx1) / 2 - 0.03, wy0, (wx0 + wx1) / 2 + 0.03, wy1, C.beam)
   rect(pen, wx0, (wy0 + wy1) / 2 - 0.03, wx1, (wy0 + wy1) / 2 + 0.03, C.beam)
   drawWallThings(g, k, t)
@@ -167,7 +164,7 @@ export function drawDoorIn(pen: Pen, t: number): void {
   shape(pen, [[x, HEAD + 0.05], [x + w, HEAD + 0.12], [x + w, FLOOR - 0.06], [x, FLOOR]], C.door, 0.5, C.doorDark)
   rect(pen, x + w * 0.2, HEAD + 0.35, x + w * 0.8, -1.2, C.sky)
   rect(pen, x + w * 0.2, -0.9, x + w * 0.8, -0.2, C.doorDark)
-  drawDoorDetail(ctxOf(pen.p), pen.k, t, x, w)
+  drawDoorDetail(ctxOf(pen.p), pen.k, x, w)
   // The bell on its bracket.
   const b: Pt = [DOOR_IN[1] + 0.1, HEAD + 0.02]
   const swing = 0.5 * ring(t - BELL, 3, 0.5)
@@ -214,7 +211,7 @@ export function drawCounter(pen: Pen): void {
 }
 
 /**
- * The pilot: a big man hunched over his glass on a stool, a hard dark shape with a cold edge of the window's light.
+ * The pilot: a big man hunched over his glass on a stool, a hard dark shape against the boards.
  * His right hand on the counter, its thumb out; on the thumb the ring, which the lamp lights as the hand comes up.
  */
 export function drawPilot(pen: Pen, t: number): void {
@@ -257,9 +254,7 @@ function pilot(pen: Pen, t: number): void {
   path(pen, [[sh[0] - 0.2, sh[1] + 0.02], [sh[0] - 0.3, sh[1] + 0.45], [hip[0] - 0.22, hip[1] - 0.2], [hip[0] - 0.2, hip[1] + 0.02]], C.coat, 0.9)
   path(pen, [[hip[0] - 0.02, hip[1] - 0.35], [hip[0] + 0.2, hip[1] - 0.38], [hip[0] + 0.2, hip[1] - 0.22]], C.coat, 0.8)
   path(pen, [[hip[0] - 0.26, hip[1] + 0.06], [hip[0] + 0.05, hip[1] + 0.02], [hip[0] + 0.32, hip[1] - 0.06]], C.coat, 0.9)
-  // A cold rim of daylight along his back, from the window.
-  path(pen, [[sh[0] - 0.33, sh[1] + 0.08], [sh[0] - 0.05, sh[1] - 0.17]], C.rim, 0.5)
-  // And the lamp hanging over him catching the top of his head, more as it swings over: inside its edge, thin.
+  // The lamp hanging over him catching the top of his head, more as it swings over: inside its edge, thin.
   const ctx = ctxOf(pen.p)
   const lamp = lampAt(1, t).p
   const warm = 0.12 + 0.3 * Math.max(0, 1 - Math.abs(lamp[0] - head[0]) / 0.5)

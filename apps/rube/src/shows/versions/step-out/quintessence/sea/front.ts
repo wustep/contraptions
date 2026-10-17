@@ -1,7 +1,5 @@
 import { view } from '../depth'
 import { scenery } from '../kit'
-import { drawDeepFront } from './deep'
-import { W } from './sea-plan'
 import { drawTopside } from './topside'
 
 /**
@@ -9,25 +7,13 @@ import { drawTopside } from './topside'
  * air, the grade. Drawn after the set and the parts and before Walter (`depth.ts`), so nothing here hides him or
  * changes his colour. It is handed show time as `t`.
  *
- * Under: a jellyfish nearer than he is (the dark below is the water's own gradient). Above, once he is out: gulls
- * and spray.
+ * Under, nothing: the water in front of him is left open for him and the shark. Above, once he is out: gulls.
  */
 export const seaFront = scenery<null>({
   name: 'sea-front',
   draw: (p, _s, c) => {
     const g = p.drawingContext as CanvasRenderingContext2D
-    const v = view(p, c.k)
-    const t = c.t
-    if (v.y1 > W) {
-      g.save()
-      // Only under the skin.
-      g.beginPath()
-      g.rect((v.x0 - 1) * c.k, W * c.k, (v.w + 2) * c.k, (v.y1 - W + 1) * c.k)
-      g.clip()
-      drawDeepFront(g, v, t)
-      g.restore()
-    }
-    // Above: the gulls and the spray (`topside.ts`).
-    drawTopside(g, v, t)
+    // Above: the gulls (`topside.ts`).
+    drawTopside(g, view(p, c.k), c.t)
   },
 })

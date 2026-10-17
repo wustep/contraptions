@@ -9,9 +9,8 @@ import { IN, KERB, PAVE } from './plan'
  * whitens. Everything the street draws asks this file what the light is at `t`, so the sky, the fronts, the shade
  * and the grade all move together.
  *
- * The buildings across the street, behind the camera, put the foot of every front in a long cool shade; the sun
- * comes through where they stop (a cross street, a low roof) in bands, one of them on the newsstand. As the sun
- * climbs the shade goes down the fronts.
+ * The buildings across the street, behind the camera, put the road and the near side of the pavement in one cool
+ * shade, with one clean edge; as the sun climbs it goes back toward the kerb.
  */
 
 /** 0 at the cut in, 1 at the end. */
@@ -54,7 +53,6 @@ export const S = {
   photo: '#2F3337',
   iron: '#3A3E40',
   awning: '#4F7A62',
-  leaf: '#5E7A4E',
 }
 
 /** The sky at the top and at the horizon at `t`: pale blue over gold, warming, then white. */
@@ -71,65 +69,11 @@ export function skyAt(t: number): { high: string; low: string; sun: string } {
 /* ------------------------------------------------------------------ the shade from across the street */
 
 /**
- * The buildings behind the camera, as the shade they cast: for each stretch of the street, how far down the fronts
- * the sun reaches (its top edge, cells), or null where they stop and the sun comes all the way down. Read with the
- * sun's own drop and drift (`shadeAt`). Each `tank` is a water tower on that roof, whose shadow stands on the edge.
+ * The shade of the buildings behind the camera, as its one edge on the ground (cells): the road and the near side of
+ * the pavement are in it, the back of the pavement where the two of them roll and the fronts are in the sun. As the
+ * sun climbs the edge goes back toward the kerb.
  */
-const ACROSS: { x0: number; x1: number; top: number | null; tank?: number }[] = [
-  { x0: -14, x1: -6.2, top: -4.6 },
-  { x0: -6.2, x1: -3.9, top: -3.4, tank: -5.0 },
-  { x0: -3.9, x1: -1.0, top: -3.9 },
-  { x0: -1.0, x1: 1.7, top: null },
-  { x0: 1.7, x1: 4.55, top: -3.1, tank: 3.1 },
-  { x0: 4.55, x1: 8.35, top: null },
-  { x0: 8.35, x1: 10.1, top: -2.9 },
-  { x0: 10.1, x1: 11.2, top: -3.3 },
-  { x0: 11.2, x1: 12.4, top: -2.7 },
-  { x0: 12.4, x1: 40, top: null },
-]
-
-/** How far the ground's lit bands lean: cells to the right for each cell down from the fronts' foot. */
-export const LEAN = 0.85
-
-/**
- * The shade over the street at `t`, as paths in cells: on the fronts below the edge, and on the ground (the pavement
- * and the road), the sun's bands left out of both. The sun climbing lowers it; its swing round to the south moves it
- * a little to the left.
- */
-export function shadeAt(t: number, x0: number, x1: number, y1: number): { walls: Path2D; ground: Path2D } {
-  const m = morning(t)
-  const drop = 2.1 * m
-  const dx = -0.45 * m
-  const walls = new Path2D()
-  const ground = new Path2D()
-  const foot = (x: number, y: number) => x + (y - PAVE) * LEAN
-  for (const s of ACROSS) {
-    if (s.top === null) continue
-    const a = s.x0 + dx
-    const b = s.x1 + dx
-    if (b < x0 - 4 || a > x1 + 1) continue
-    const top = Math.min(PAVE - 0.05, s.top + drop)
-    walls.rect(a, top, b - a, PAVE - top)
-    ground.moveTo(a, PAVE)
-    ground.lineTo(b, PAVE)
-    ground.lineTo(foot(b, y1), y1)
-    ground.lineTo(foot(a, y1), y1)
-    ground.closePath()
-    if (s.tank !== undefined) {
-      // A water tower's shadow on the edge: its barrel and cone, on legs.
-      const c = s.tank + dx
-      const lt = top - 0.35
-      walls.moveTo(c - 0.42, lt)
-      walls.lineTo(c - 0.42, lt - 0.85)
-      walls.lineTo(c, lt - 1.2)
-      walls.lineTo(c + 0.42, lt - 0.85)
-      walls.lineTo(c + 0.42, lt)
-      walls.closePath()
-      for (const lx of [-0.34, 0.3]) walls.rect(c + lx, lt - 0.01, 0.06, 0.37)
-    }
-  }
-  return { walls, ground }
-}
+export const shadeEdge = (t: number): number => (PAVE + KERB) / 2 + (KERB - (PAVE + KERB) / 2) * morning(t)
 
 /** The shade's colour, laid over what it falls on: a cool blue, thinning as the sky fills with light; lighter on the ground. */
 export const shadeTint = (t: number, ground = false): string => {

@@ -1,9 +1,8 @@
 import type { Pt } from '../../../../../parts'
 import { sway } from '../depth'
-import { knock } from '../kit'
-import { frontTo, BENCH, CURVE_PT, KEY, NOTES, OUTLINE, PX, REST_PT, RIM_Y, rimAt, scr, SOLVED, stringEnd, W, WALL, KEY_DROP, KEY_LEN, EARLY_NOTES, LAST_NOTE, RIM } from './home-plan'
+import { smooth } from '../kit'
+import { frontTo, CURVE_PT, KEY, NOTES, OUTLINE, PX, REST_PT, RIM_Y, rimAt, scr, SOLVED, stringEnd, W, WALL, KEY_DROP, KEY_LEN, EARLY_NOTES, LAST_NOTE } from './home-plan'
 import { bez, ellipse, fillPoly, glow, line, mix, rgba, trace, vgrad, type Pen } from './pen'
-import type { Light } from './room'
 
 /**
  * Home, drawn: the baby grand seen from its curved side, his mother at the bench, and the lamp with the negative hung
@@ -24,7 +23,6 @@ export const C = {
   keysShade: '#9C9282',
   black: '#0C0908',
   mother: '#16110F',
-  motherRim: '#C08A52',
   shade: '#E7C48A',
   brass: '#7A6040',
   film: '#3A2414',
@@ -37,11 +35,12 @@ export const NEG_H = 0.42
 export const NEG_C: Pt = [REST_PT[0] + 0.13 + NEG_W / 2 + 0.004, CURVE_PT[1] - 0.02]
 export const SHADE: Pt = [NEG_C[0] + 0.32, NEG_C[1] - 1.18]
 const STEM_X = SHADE[0] + 0.04
-const LAMP_FOOT: Pt = [STEM_X, 0.42]
+/** The lamp stands behind the piano: its foot and most of its stem are hidden by the case. */
+const LAMP_FOOT: Pt = [STEM_X, -1.35]
 
 /* ------------------------------------------------------------------ the piano */
 
-const STRINGS = 56
+const STRINGS = 28
 const stringU = (i: number) => 0.16 + (i / (STRINGS - 1)) * (W - 0.2)
 const STRING_H = RIM_Y + 0.04
 const HAMMER_D = 0.12
@@ -65,46 +64,15 @@ function noteString(n: number): number {
 }
 export const NOTE_STRINGS = NOTES.map((n) => [n, noteString(n)] as const)
 
-/**
- * The piano's body (its case, the plate, the strings at rest, the keys) is the same at every frame: painted once into a
- * picture and laid on, with only the keys going down drawn live over it.
- */
-const BODY = { x0: 0.9, x1: 6.8, y0: -2.25, y1: 0.35, ppc: 300 }
-let bodyCanvas: HTMLCanvasElement | null | undefined
-function bodyPicture(): HTMLCanvasElement | null {
-  if (bodyCanvas !== undefined) return bodyCanvas
-  if (typeof document === 'undefined') return null
-  const cv = document.createElement('canvas')
-  cv.width = Math.round((BODY.x1 - BODY.x0) * BODY.ppc)
-  cv.height = Math.round((BODY.y1 - BODY.y0) * BODY.ppc)
-  const c = cv.getContext('2d')
-  if (!c) return (bodyCanvas = null)
-  c.translate(-BODY.x0 * BODY.ppc, -BODY.y0 * BODY.ppc)
-  paintPianoBody({ c, k: BODY.ppc })
-  return (bodyCanvas = cv)
-}
-
+/** The piano's body: its case, the plate, the strings at rest, and the keys, his and hers going down. */
 export function drawPianoBody(pen: Pen, t: number): void {
-  const pic = bodyPicture()
-  const k = pen.k
-  if (pic) pen.c.drawImage(pic, BODY.x0 * k, BODY.y0 * k, (BODY.x1 - BODY.x0) * k, (BODY.y1 - BODY.y0) * k)
-  else paintPianoBody(pen)
-  drawKeyPresses(pen, t)
-}
-
-function paintPianoBody(pen: Pen): void {
   const { c } = pen
   c.save()
-  // Under it: the shadow on the floor.
-  glow(pen, PX + 2.2, -0.35, 2.9, [[0, rgba('#000000', 0.55)], [1, rgba('#000000', 0)]], 0.22)
-  // The legs: the tail's and the bass's behind, the treble's in front; the lyre and its pedals.
+  // Under it: its shadow on the rug.
+  glow(pen, PX + 2.2, -0.35, 2.9, [[0, rgba('#000000', 0.5)], [1, rgba('#000000', 0)]], 0.22)
+  // The tail's leg, behind (the bass's is hidden by the case).
   leg(pen, scr(3.35, 0.72, RIM_Y + WALL), 0.13 - 0.4 * (W - 0.72))
-  leg(pen, scr(0.12, 0.25, RIM_Y + WALL), 0.13 - 0.4 * (W - 0.25))
-  const lyre = scr(-0.05, 1.15, RIM_Y + KEY_DROP + 0.16)
-  const lyreFoot = 0.13 - 0.4 * (W - 1.15)
-  fillPoly(pen, [[lyre[0] - 0.07, lyre[1]], [lyre[0] + 0.07, lyre[1]], [lyre[0] + 0.05, lyreFoot - 0.06], [lyre[0] - 0.05, lyreFoot - 0.06]], C.lacquer)
-  for (const dx of [-0.07, 0, 0.07]) line(pen, [[lyre[0] + dx, lyreFoot - 0.05], [lyre[0] + dx + 0.08, lyreFoot - 0.04]], C.brass, 0.025)
-  // The interior, open: the dark well, the plate, the strings at rest.
+  // The interior, open: the dark well, the plate in the lamp's light, the strings at rest.
   const top = OUTLINE.map(([d, u]) => scr(d, u))
   fillPoly(pen, top, C.lacquer)
   const plate = OUTLINE.map(([d, u]): Pt => {
@@ -116,13 +84,7 @@ function paintPianoBody(pen: Pen): void {
   trace(pen, top)
   c.clip()
   fillPoly(pen, plate, vgrad(pen, RIM_Y - 1, RIM_Y, [[0, mix(C.plate, '#000000', 0.35)], [1, C.plate]]))
-  // The lamp's light on the plate, nearest the curve.
-  glow(pen, CURVE_PT[0] + 0.2, CURVE_PT[1] - 0.25, 1.6, [[0, rgba(C.plateLit, 0.55)], [1, rgba(C.plateLit, 0)]], 0.6)
-  // The plate's holes: a few dark rounds.
-  for (const [d, u] of [[1.1, 1.0], [1.9, 0.7], [2.6, 0.55], [0.9, 0.35]] as Pt[]) {
-    const [x, y] = scr(d, u, RIM_Y + 0.1)
-    ellipse(pen, x, y, 0.1, 0.04, rgba('#0A0706', 0.3))
-  }
+  glow(pen, CURVE_PT[0] + 0.2, CURVE_PT[1] - 0.25, 1.6, [[0, rgba(C.plateLit, 0.4)], [1, rgba(C.plateLit, 0)]], 0.6)
   const rest = new Path2D()
   for (let i = 0; i < STRINGS; i++) {
     const u = stringU(i)
@@ -131,67 +93,28 @@ function paintPianoBody(pen: Pen): void {
     rest.moveTo(a[0] * pen.k, a[1] * pen.k)
     rest.lineTo(b[0] * pen.k, b[1] * pen.k)
   }
-  c.strokeStyle = rgba(C.string, 0.32)
-  c.lineWidth = 0.008 * pen.k
+  c.strokeStyle = rgba(C.string, 0.24)
+  c.lineWidth = 0.009 * pen.k
   c.stroke(rest)
-  // The tuning pins in their row, the hammers' felts, and the dampers lying on every other string.
-  const pins = new Path2D()
-  const felts = new Path2D()
-  const dampers = new Path2D()
-  const k = pen.k
-  for (let i = 0; i < STRINGS; i++) {
-    const u = stringU(i)
-    const [px, py] = scr(0.035, u, STRING_H - 0.01)
-    pins.rect((px - 0.008) * k, (py - 0.008) * k, 0.016 * k, 0.016 * k)
-    const [x, y] = scr(HAMMER_D, u, STRING_H + 0.025)
-    felts.rect((x - 0.034) * k, (y - 0.014) * k, 0.068 * k, 0.028 * k)
-    if (i % 2 === 0) {
-      const [dx, dy] = scr(0.32, u, STRING_H - 0.03)
-      dampers.rect((dx - 0.03) * k, (dy - 0.012) * k, 0.06 * k, 0.024 * k)
-    }
-  }
-  c.fillStyle = rgba('#B8A27E', 0.6)
-  c.fill(pins)
-  c.fillStyle = rgba(C.felt, 0.55)
-  c.fill(felts)
-  c.fillStyle = rgba('#2A1E17', 0.85)
-  c.fill(dampers)
   c.restore()
-  // The case's wall under the rim, along the curved side, lit along its top by the lamp.
+  // The fallboard's back above the keys, and the keys: behind the case's wall where they go into it.
+  fillPoly(pen, [scr(0, W, RIM_Y + KEY_DROP), scr(0, W, RIM_Y), scr(0, 0, RIM_Y), scr(0, 0, RIM_Y + KEY_DROP)], mix(C.lacquer, C.lacquerLit, 0.3))
+  drawKeys(pen)
+  drawKeyPresses(pen, t)
+  // The case's wall under the rim, along the curved side, lit by the lamp near the curve.
   const front = frontTo(3.9)
   const rim = front.map(([d, u]) => scr(d, u))
   const foot = front.map(([d, u]) => scr(d, u, RIM_Y + WALL)).reverse()
-  const wall = [...rim, ...foot]
-  c.save()
   const wg = c.createLinearGradient(rim[0][0] * pen.k, 0, rim[rim.length - 1][0] * pen.k, 0)
   wg.addColorStop(0, C.lacquer)
   const lit = (CURVE_PT[0] - rim[0][0]) / (rim[rim.length - 1][0] - rim[0][0])
   wg.addColorStop(Math.max(0, lit - 0.25), C.lacquer)
   wg.addColorStop(Math.min(1, Math.max(0, lit + 0.05)), C.lacquerLit)
   wg.addColorStop(1, C.lacquer)
-  fillPoly(pen, wall, wg)
-  // The window behind, and the room, in the lacquer: cold soft bands down the curved side.
-  c.save()
-  trace(pen, wall)
-  c.clip()
-  for (const [x, w, a] of [[2.25, 0.32, 0.1], [2.75, 0.12, 0.08], [1.85, 0.08, 0.06], [3.4, 0.18, 0.06], [4.6, 0.26, 0.07], [5.2, 0.08, 0.05]] as const) fillPoly(pen, [[x, RIM_Y - 0.6], [x + w, RIM_Y - 0.6], [x + w + 0.05, RIM_Y + WALL], [x + 0.05, RIM_Y + WALL]], rgba('#6E78A8', a))
-  // The rug's border and the boards, faintly, low in the lacquer.
-  for (let i = 0; i < 4; i++) line(pen, foot.map(([x, y]): Pt => [x, y - 0.05 - i * 0.06]), rgba(i % 2 ? '#5E4A2E' : '#2A2433', 0.35), 0.012)
-  c.restore()
-  c.restore()
-  // The rim's top edge: the line of the curve.
-  line(pen, rim, rgba(C.rimLit, 0.32), 0.035)
-  c.save()
-  trace(pen, wall)
-  c.clip()
-  glow(pen, CURVE_PT[0] + 0.15, CURVE_PT[1], 1.5, [[0, rgba(C.rimLit, 0.5)], [1, rgba(C.rimLit, 0)]], 0.5)
-  c.restore()
-  line(pen, rim.filter(([x]) => x > CURVE_PT[0] - 1.6 && x < CURVE_PT[0] + 1.6), rgba(C.rimLit, 0.6), 0.022)
-  // The tail's last leg in front, under the wall.
+  fillPoly(pen, [...rim, ...foot], wg)
+  // The treble leg, in front, under the wall.
   leg(pen, scr(0.25, W - 0.05, RIM_Y + WALL), 0.13)
-  // The fallboard's back above the keys, the keys, the keybed under them.
-  fillPoly(pen, [scr(0, W, RIM_Y + KEY_DROP), scr(0, W, RIM_Y), scr(0, 0, RIM_Y), scr(0, 0, RIM_Y + KEY_DROP)], mix(C.lacquer, C.lacquerLit, 0.3))
-  drawKeys(pen)
+  // The keybed under the keys' front.
   const k0 = scr(-KEY_LEN, W, RIM_Y + KEY_DROP)
   const k1 = scr(0, W, RIM_Y + KEY_DROP)
   fillPoly(pen, [[k0[0] - 0.03, k0[1]], [k1[0], k1[1]], [k1[0], k1[1] + 0.16], [k0[0] - 0.03, k0[1] + 0.16]], C.lacquer)
@@ -200,10 +123,10 @@ function paintPianoBody(pen: Pen): void {
   c.restore()
 }
 
+/** A leg, tapering to the floor, its foot the case's own black. */
 function leg(pen: Pen, top: Pt, footY: number): void {
   const [x, y] = top
   fillPoly(pen, [[x - 0.08, y], [x + 0.08, y], [x + 0.045, footY - 0.03], [x - 0.045, footY - 0.03]], C.lacquer)
-  ellipse(pen, x, footY - 0.02, 0.06, 0.03, C.brass)
 }
 
 /** Which key his landing or her note is on, and how far down it is now. */
@@ -224,7 +147,7 @@ function drawKeys(pen: Pen): void {
   const quad = keyQuad
   fillPoly(pen, quad(-KEY_LEN, 0, 0.05, W - 0.05), C.keys)
   // The white keys' seams, and their shading toward the back.
-  const n = 36
+  const n = 26
   for (let i = 1; i < n; i++) {
     const u = 0.05 + (i / n) * (W - 0.1)
     line(pen, [scr(-KEY_LEN, u, h), scr(0, u, h)], rgba(C.keysShade, 0.7), 0.006)
@@ -248,49 +171,13 @@ function drawKeyPresses(pen: Pen, t: number): void {
   if (hers > 0) fillPoly(pen, keyQuad(-KEY_LEN, 0, 0.42, 0.5, 0.03 * hers), rgba('#000000', 0.35 * hers))
 }
 
-/** The strings she strikes, ringing, and the hammers under them. Drawn over the body, under him. */
+/** The strings she strikes, ringing. Drawn over the body, under him. */
 export function drawStrings(pen: Pen, t: number): void {
-  const { c } = pen
-  c.save()
-  const k = pen.k
-  // The hammers and the dampers that are moving: each lifted for its note (the rest are in the body's picture).
-  const felts = new Path2D()
-  const dampers = new Path2D()
-  for (const [n, i] of NOTE_STRINGS) {
-    const a = t - n
-    if (a < -0.05 || a > 0.8) continue
-    const u = stringU(i)
-    const lift = a < 0 ? 0 : knock(a, 0.09) * (a < 0.04 ? a / 0.04 : 1)
-    const [x, y] = scr(HAMMER_D, u, STRING_H + 0.025 - 0.05 * lift)
-    felts.rect((x - 0.034) * k, (y - 0.014) * k, 0.068 * k, 0.028 * k)
-    const [dx, dy] = scr(0.32, u, STRING_H - 0.07)
-    dampers.rect((dx - 0.03) * k, (dy - 0.012) * k, 0.06 * k, 0.024 * k)
-  }
-  c.fillStyle = rgba(C.felt, 0.95)
-  c.fill(felts)
-  c.fillStyle = rgba('#2A1E17', 0.9)
-  c.fill(dampers)
-  // While a note rings the strings either side of it take it up, the nearest the most.
-  for (const [n, s] of NOTE_STRINGS) {
-    const age = t - n
-    if (age < 0 || age > 1.6) continue
-    for (const nb of [-2, -1, 1, 2]) {
-      const i = s + nb
-      if (i < 0 || i >= STRINGS) continue
-      const u = stringU(i)
-      const d0 = HAMMER_D + 0.04
-      const d1 = stringEnd(u) - 0.04
-      const amp = (0.012 / Math.abs(nb)) * Math.exp(-age / 0.45)
-      const pts: Pt[] = []
-      for (let j = 0; j <= 16; j++) {
-        const f = j / 16
-        const [x, y] = scr(d0 + (d1 - d0) * f, u, STRING_H)
-        pts.push([x, y + amp * Math.sin(Math.PI * f) * Math.sin(age * 64 + f * 2 + nb)])
-      }
-      line(pen, pts, rgba('#F6D79A', (0.5 / Math.abs(nb)) * Math.exp(-age / 0.6)), 0.008)
-    }
-  }
-  // Each note: its string shivers from the hammer to its end, catching the lamp, and dies away.
+  // Each note: its string shivers from the hammer to its end, catching the lamp, and settles back into the rest. Inside
+  // the case only.
+  pen.c.save()
+  trace(pen, OUTLINE.map(([d, u]) => scr(d, u)))
+  pen.c.clip()
   for (const [n, s] of NOTE_STRINGS) {
     const age = t - n
     if (age < 0 || age > 2.2) continue
@@ -305,9 +192,9 @@ export function drawStrings(pen: Pen, t: number): void {
       const [x, y] = scr(d0 + (d1 - d0) * f, u, STRING_H)
       pts.push([x, y + amp * Math.sin(Math.PI * f) * Math.sin(age * 70 + f * 2)])
     }
-    line(pen, pts, rgba('#F6D79A', 0.8 * lit), 0.012)
+    line(pen, pts, rgba(mix(C.string, '#F6D79A', 0.5 * lit), 0.24 + 0.5 * lit), 0.009 + 0.003 * lit)
   }
-  c.restore()
+  pen.c.restore()
   drawRimBand(pen)
 }
 
@@ -324,8 +211,17 @@ function drawRimBand(pen: Pen): void {
   g.addColorStop(1, '#16100D')
   fillPoly(pen, [...rim, ...[...lip].reverse()], g)
   line(pen, lip, rgba('#000000', 0.6), 0.01)
-  line(pen, rim, rgba(C.rimLit, 0.35), 0.016)
-  line(pen, rim.filter(([x]) => x > CURVE_PT[0] - 1.5 && x < CURVE_PT[0] + 1.5), rgba(C.rimLit, 0.55), 0.016)
+  // Its edge catches the lamp most at the curve, under it.
+  const edge = pen.c.createLinearGradient((CURVE_PT[0] - 2) * pen.k, 0, (CURVE_PT[0] + 2) * pen.k, 0)
+  edge.addColorStop(0, rgba(C.rimLit, 0.3))
+  edge.addColorStop(0.5, rgba(C.rimLit, 0.6))
+  edge.addColorStop(1, rgba(C.rimLit, 0.3))
+  pen.c.strokeStyle = edge
+  trace(pen, rim, false)
+  pen.c.lineWidth = 0.016 * pen.k
+  pen.c.lineCap = 'round'
+  pen.c.lineJoin = 'round'
+  pen.c.stroke()
 }
 
 /* ------------------------------------------------------------------ his mother */
@@ -357,7 +253,6 @@ export function drawBench(pen: Pen): void {
   for (const x of [s0[0] + 0.05, s1[0] - 0.05]) fillPoly(pen, [[x - 0.035, s0[1] + 0.12], [x + 0.035, s0[1] + 0.12], [x + 0.03, 0.13], [x - 0.03, 0.13]], C.lacquer)
 }
 
-/** Her: a soft dark figure at the bench, in profile toward the keys, the lamp's light along her front. */
 /** How far she leans into the keys: a little before each note, the most on it, easing back after. */
 function noteLean(t: number): number {
   let v = 0
@@ -369,7 +264,7 @@ function noteLean(t: number): number {
   return v * v * (3 - 2 * v)
 }
 
-/** Her shape at `t`: what is drawn, and what throws her shadow on the wall. */
+/** Her shape at `t`. */
 function motherAt(t: number) {
   const dip = handDip(t)
   // She breathes with the playing: slowly, and in with each note as she leans into it.
@@ -393,29 +288,17 @@ function motherAt(t: number) {
   return { dip, hip, sh, head, hand, elbow, body }
 }
 
-/** Her outline for the shadow the lamp throws of her: her body, her head, her far arm reaching to the keys. */
-export function motherShadow(t: number): Pt[][] {
-  const m = motherAt(t)
-  const head: Pt[] = []
-  for (let i = 0; i < 10; i++) {
-    const a = (i / 10) * Math.PI * 2
-    head.push([m.head[0] + Math.cos(a) * 0.13, m.head[1] + Math.sin(a) * 0.15])
-  }
-  const arm: Pt[] = [[m.sh[0], m.sh[1] + 0.02], m.elbow, m.hand, [m.hand[0], m.hand[1] + 0.07], [m.elbow[0], m.elbow[1] + 0.08], [m.sh[0], m.sh[1] + 0.12]]
-  return [m.body, head, arm]
-}
-
-/** Her: a soft dark figure at the bench, in profile toward the keys, the lamp's light along her front. */
+/** Her: a soft dark figure at the bench, in profile toward the keys. */
 export function drawMother(pen: Pen, t: number): void {
-  const { c } = pen
-  c.save()
   const { hip, sh, head, hand, elbow, body } = motherAt(t)
   // The far arm, to the bass at the back, the hand falling on her notes.
   line(pen, [[sh[0] + 0.04, sh[1] + 0.06], elbow, hand], mix(C.mother, '#000000', 0.2), 0.09)
   ellipse(pen, hand[0], hand[1] + 0.01, 0.06, 0.03, mix(C.mother, '#000000', 0.2))
   fillPoly(pen, body, C.mother)
-  // The shins, down to the pedals.
-  line(pen, [[hip[0] + 0.62, hip[1] + 0.05], [hip[0] + 0.74, hip[1] + 0.6]], C.mother, 0.1)
+  // The shins, down to her foot on the floor under the keys.
+  const ankle: Pt = [hip[0] + 0.74, hip[1] + 0.6]
+  line(pen, [[hip[0] + 0.62, hip[1] + 0.05], ankle], C.mother, 0.1)
+  ellipse(pen, ankle[0] + 0.05, ankle[1] + 0.02, 0.09, 0.035, C.mother)
   // The neck and the head, the hair up.
   line(pen, [[sh[0] + 0.02, sh[1] - 0.02], [head[0] - 0.01, head[1] + 0.08]], C.mother, 0.08)
   ellipse(pen, head[0], head[1], 0.125, 0.14, C.mother)
@@ -424,36 +307,17 @@ export function drawMother(pen: Pen, t: number): void {
   const nearHand: Pt = [1.6, -1.34]
   line(pen, [[sh[0] + 0.1, sh[1] + 0.08], [1.18, -1.28], nearHand], C.mother, 0.085)
   ellipse(pen, nearHand[0], nearHand[1], 0.06, 0.028, C.mother)
-  // The lamp's light along her front: face, the near arm, the lap.
-  c.save()
-  const rim = rgba(C.motherRim, 0.3)
-  c.beginPath()
-  c.ellipse(head[0] * pen.k, head[1] * pen.k, 0.125 * pen.k, 0.14 * pen.k, 0, -1.2, 1.0)
-  c.strokeStyle = rim
-  c.lineWidth = 0.022 * pen.k
-  c.stroke()
-  line(pen, [[sh[0] + 0.12, sh[1] + 0.02], [sh[0] + 0.19, sh[1] + 0.22]], rim, 0.02)
-  line(pen, [[1.2, -1.31], nearHand], rgba(C.motherRim, 0.18), 0.02)
-  c.restore()
-  c.restore()
 }
 
 /* ------------------------------------------------------------------ the lamp and the negative */
 
-/** The lamp's light at `t`: where it comes from (the shade stirs a little on its stem). */
-export function lampLight(t: number): Light {
-  return { at: [SHADE[0] + 0.014 * sway(t, 0.11, 4), SHADE[1] + 0.3] }
-}
-
+/** The floor lamp: its stem up from behind the piano, and its shade, which stirs a little on the stem. */
 export function drawLamp(pen: Pen, t: number): void {
   const { c } = pen
-  const light = lampLight(t)
   c.save()
-  // Its foot on the floor, the stem, the shade.
-  ellipse(pen, LAMP_FOOT[0], LAMP_FOOT[1], 0.24, 0.07, '#1A1310')
   const sw = 0.38
   const sh = 0.36
-  const sx = light.at[0]
+  const sx = SHADE[0] + 0.014 * sway(t, 0.11, 4)
   const sy = SHADE[1]
   line(pen, [LAMP_FOOT, [STEM_X, sy + 0.2], [sx + 0.04, sy + 0.1]], C.brass, 0.035)
   // The shade, lit through.
@@ -497,7 +361,8 @@ export function drawNegative(pen: Pen, t: number): void {
   trace(pen, frame)
   c.clip()
   // The picture: everything in the frame inverted. Where the piano's wall is (dark), the film is clear, lit through.
-  const solved = t >= SOLVED ? knock(t - SOLVED, 1.4) : 0
+  // When he stops it, the curve in it comes up to full, over half a second, and stays.
+  const solved = smooth(t, SOLVED, SOLVED + 0.5)
   const img = (x: number, y: number): Pt => [cx + (x - cx) * sx, y]
   const rimLine: Pt[] = []
   for (let x = cx - NEG_W; x <= cx + NEG_W; x += 0.02) {
@@ -530,17 +395,4 @@ export function rimYAt(x: number): number {
     if ((x0 <= x && x <= x1) || (x1 <= x && x <= x0)) return y0 + (y1 - y0) * ((x - x0) / Math.max(1e-9, x1 - x0))
   }
   return x < RIM_LINE[0][0] ? RIM_LINE[0][1] : RIM_LINE[RIM_LINE.length - 1][1]
-}
-
-/** A puff of dust off the bench where he lands, and off the rim: small and warm in the lamp light. */
-export function drawLandings(pen: Pen, t: number): void {
-  for (const [at, p] of [[BENCH, [0.66, -0.53]], [RIM, [rimAt(RIM)[0], rimYAt(rimAt(RIM)[0])]]] as [number, Pt][]) {
-    const a = t - at
-    if (a < 0 || a > 0.6) continue
-    for (let i = 0; i < 5; i++) {
-      const dir = (i - 2) * 0.5
-      const r = a * 0.5
-      ellipse(pen, p[0] + dir * r * 0.4, p[1] - r * 0.15 - 0.01, 0.02, 0.02, rgba('#CDB58E', 0.35 * (1 - a / 0.6)))
-    }
-  }
 }
