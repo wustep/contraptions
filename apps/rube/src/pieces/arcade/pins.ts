@@ -285,12 +285,12 @@ export const pins = definePiece<PinsState>({
     rail(p, k, ink, weight, -0.5, 1.5)
     // The lane's light along the slab's side, on as the ball goes down it: in the pins' colour, since the slab's own is lost on it.
     tube(p, k, ink, weight, s.pin, LANE0 + 0.06, FLOOR + SLAB / 2, 0.68, FLOOR + SLAB / 2, lit)
-    // The hood over the deck on its post, which stands on the pit's back wall, and the strike lamp in it.
+    // The hood over the deck on its post, which stands on the pit's back wall, and the strike lamp in it, lit in the pins' colour as the lane's light is: in the hood's own it was lost in the hood.
     outline(p, ink, weight)
     p.line((BIN1 - WALL) * k, HOOD.y1 * k, (BIN1 - WALL) * k, FLOOR * k)
     solid(p, ink, weight, s.color)
     p.rect(((HOOD.x0 + HOOD.x1) / 2) * k, ((HOOD.y0 + HOOD.y1) / 2) * k, (HOOD.x1 - HOOD.x0) * k, (HOOD.y1 - HOOD.y0) * k, 0.02 * k)
-    lamp(p, k, ink, weight, s.color, bg, LAMP[0], LAMP[1], 0.045, struck)
+    lamp(p, k, ink, weight, s.pin, bg, LAMP[0], LAMP[1], 0.045, struck)
     // The strike.
     flash(p, k, s.color, weight, PIN0, 0, since, 0.22, 0.12, 0.28)
   },
