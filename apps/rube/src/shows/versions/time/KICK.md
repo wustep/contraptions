@@ -624,6 +624,19 @@ A second glitch pass read every section again for the first pass's regressions a
   through the cabin's roof are his width (one bar wider than the cabin), and the hotel's ceiling plaster stays to the
   frame's edge.
 
+A third glitch pass read every section again:
+- **Into limbo's sea** (156 to 159.8): the undertow drew Cobb and Ariadne in at a fixed depth, their whole balls inside
+  the beach under the water for three seconds; he is drawn along the bottom, and she passes over him.
+- **The waves carry him**: with the stray foam gone nothing showed a break, so the crest goes over onto the sand as
+  it breaks, and the wash is the breaker's own water on the sand under him (in the sea's paler tone over him it was
+  lost against the far sea, and a stain on him). He lies until the wash reaches him and is taken up with it. The beach
+  runs on down under the sea, with no seabed's skin cross-faded in at the waterline (a smudge down every shore frame).
+- **Pops**: the wreckage off the shore is afloat before it is seen (it came on in a frame at 156.6), the great plumes'
+  crowns come up with them, and the children's faces come on where face and ball are as light as each other (pass 2's
+  start had a pale dot on the dark ball).
+- **The fortress and the vault**: no slits in the sky over the roof at the snow's kick, and no snow in the vault's
+  ceiling slab; the hotel's ceilings keep their plaster as they sink through the floors.
+
 ## Inception nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
