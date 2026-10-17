@@ -174,8 +174,14 @@ function facing(m: Motion, t: number): number {
 function skis(ctx: C2D, c: Ctx, at: Pt, a: number, front: number): void {
   const { k } = c
   const L = 0.62
-  const nx = -Math.sin(a)
-  const ny = Math.cos(a)
+  // The side they lie on, under the ball: near upright the line's two sides are both level, and as the line passed
+  // upright they jumped from one to the other in a frame; there they swing round under the ball instead.
+  const up = Math.max(0, 1 - Math.abs(Math.cos(a)) / 0.3)
+  const n0x = -Math.sin(a)
+  const n0y = Math.cos(a) + 3 * up * up
+  const nl = Math.hypot(n0x, n0y)
+  const nx = n0x / nl
+  const ny = n0y / nl
   const tx = Math.cos(a)
   const ty = Math.sin(a)
   ctx.save()
@@ -318,7 +324,10 @@ function drawGuards(p: p5, ctx: C2D, c: Ctx, t: number): void {
   GUARDS.forEach((m, i) => {
     if (t < m.t0) return
     const at = m.at(t)
-    const h = m.ski(t) ?? 0
+    // Facing the way it goes: its skis' line alone (a heading left folded onto one right) had it ride backwards, and
+    // turn round in a frame where the line gave way to its heading.
+    let h = m.ski(t) ?? 0
+    if (facing(m, t) < 0 && Math.cos(h) > 0) h += Math.PI
     // The first goes into the crevasse: half in, its tail up out of the snow (the crevasse's lip hides the rest).
     const lit = i === 0 ? 1 - ss((t - GUARD_DOWN) / 0.4) * 0.8 : 1 - ss((t - (T.gate + 1)) / 2) * 0.5
     snowmobile(p, ctx, c, at, h, lit)

@@ -1766,6 +1766,9 @@ function drawSnowfall(ctx: C2D, k: number, f: ReturnType<typeof frame>, st: numb
         const x = i * S + drift + Math.sin(st * (0.5 + h2) + h1 * 9) * 0.25
         const y = j * S + ((h2 * S + st * speed) % S)
         if (indoors && x > FORT.x0 && x < FORT.x1 && y > FORT.ceil && y < FORT.foot + 1.5) continue
+        // None under the snow: the apron by the gate is the lowest snow there is, and under it is cut rock and the dark
+        // of sleep (they fell on through both as he sank into the mountain). The fortress's ground is the vault's.
+        if (y > FLOOR_Y && (x < FORT.x0 || x > FORT.x1)) continue
         const r = near ? 0.035 + 0.03 * h1 : 0.018 + 0.04 * h3 * h3
         const a = near ? 0.8 : 0.35 + 0.45 * h1
         if (r * k < 0.5 && !near) continue
