@@ -11,10 +11,10 @@ It is an experiment: no stock pieces, no ball, no worlds. A Rube Goldberg machin
 
 ## The toy
 
-A walnut tray, nine cubes long and five deep, with a rim a cube wide round it. In it, five maple planks seven long, one
-to a row, each sliding along its row. Each plank has one pocket at its middle, a cube deep and lined in the paint of the
-cube it belongs to. When the planks stand flush in the middle of the tray their pockets make one column. Five cubes in
-milk paint: black, red, yellow, blue and green.
+A tray painted grey-green, nine cubes long and five deep, with a rim a cube wide round it, on a pale table. In it, five
+maple planks seven long, one to a row, each sliding along its row. Each plank has one pocket at its middle, a cube deep
+and lined in the paint of the cube it belongs to. When the planks stand flush in the middle of the tray their pockets
+make one column. Five cubes in milk paint: black, red, yellow, blue and green.
 
 A cube only ever moves by tipping over one of its bottom edges into the next cell: a quarter turn. Into an open pocket it
 tips and drops, and its top is then part of the plank, so another cube can walk over it. A plank only slides along its

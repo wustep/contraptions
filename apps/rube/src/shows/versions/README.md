@@ -180,7 +180,7 @@ onto its own attack); `check:shows` holds every landing, tip, knock, stroke and 
 `goldberg/opus55` (in the picker, **Quarter Turn**, on the Machine shelf, one take, **Opus 5.5**) is Bach's first
 Goldberg variation, whole, on Kimiko Ishizaka's CC0 recording from the Open Goldberg Variations (it ships with the
 show): a wooden toy, an experiment with no stock pieces and no ball. Five painted cubes tip a quarter turn at a time
-across five maple planks in a walnut tray; the planks slide along their rows and turn over at the phrases, and each
+across five maple planks in a painted tray; the planks slide along their rows and turn over at the phrases, and each
 plank's pocket, lined in its cube's paint, takes its cube home on a half's last note, until the planks come flush and
 the black cube, which has walked the rim on every downbeat, steps into the last pocket on the last note. The code is
 `goldberg/tumble/`, its toy built from cues and checked as it is built (`machine.ts`). Its clock is measured by
