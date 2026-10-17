@@ -63,7 +63,13 @@ export function contentRect(size: FrameSize): { x: number; y: number; w: number;
   return { x: 0, y: Math.floor((size.h - h) / 2), w, h }
 }
 
-/** One frame of a show into `dest` (defaults to the whole of `p`). */
+/** A canvas the frame on the other side of a dissolve is kept in while the live one is painted. */
+let kept: HTMLCanvasElement | null = null
+
+/**
+ * One frame of a show into `dest` (defaults to the whole of `p`). Where the show asks for a dissolve
+ * (`Performance.blend`), the other moment is painted first and kept, and laid over the live frame as it asks.
+ */
 export function paintShow(
   p: p5,
   perf: Performance,
@@ -73,6 +79,56 @@ export function paintShow(
   dest?: { x: number; y: number; w: number; h: number },
 ): void {
   const time = Math.max(0, Math.min(perf.duration, t))
+  const blend = perf.blend?.(time)
+  if (!blend || blend.a <= 0.002) {
+    paintFrame(p, perf, time, overview, zoom, dest)
+    return
+  }
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const canvas = ctx.canvas
+  paintFrame(p, perf, Math.max(0, Math.min(perf.duration, blend.from)), overview, zoom, dest)
+  kept ??= document.createElement('canvas')
+  if (kept.width !== canvas.width || kept.height !== canvas.height) {
+    kept.width = canvas.width
+    kept.height = canvas.height
+  }
+  const g = kept.getContext('2d') as CanvasRenderingContext2D
+  g.globalCompositeOperation = 'copy'
+  g.drawImage(canvas, 0, 0)
+  g.globalCompositeOperation = 'source-over'
+  const view = paintFrame(p, perf, time, overview, zoom, dest)
+  if (blend.iris) {
+    // The opening, in device pixels: its middle and radius taken through the live frame's camera.
+    const { x, y, r, soft, out } = blend.iris
+    const d = p.pixelDensity()
+    const cx = (view.x + view.w / 2 + (x - view.cam.x) * view.k) * d
+    const cy = (view.y + view.h / 2 + (y - view.cam.y) * view.k) * d
+    const inner = Math.max(0, (r - soft / 2) * view.k * d)
+    const outer = Math.max(inner + 1, (r + soft / 2) * view.k * d)
+    const ramp = g.createRadialGradient(cx, cy, inner, cx, cy, outer)
+    ramp.addColorStop(0, out ? 'rgba(0,0,0,0)' : 'rgba(0,0,0,1)')
+    ramp.addColorStop(1, out ? 'rgba(0,0,0,1)' : 'rgba(0,0,0,0)')
+    g.globalCompositeOperation = 'destination-in'
+    g.fillStyle = ramp
+    g.fillRect(0, 0, kept.width, kept.height)
+    g.globalCompositeOperation = 'source-over'
+  }
+  ctx.save()
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.globalAlpha = Math.min(1, blend.a)
+  ctx.drawImage(kept, 0, 0)
+  ctx.restore()
+}
+
+/** One frame, alone; what its camera was, for anything laid over it. */
+function paintFrame(
+  p: p5,
+  perf: Performance,
+  time: number,
+  overview: boolean,
+  zoom: boolean,
+  dest?: { x: number; y: number; w: number; h: number },
+): { x: number; y: number; w: number; h: number; cam: { x: number; y: number }; k: number } {
   const here = perf.show.at(time)
   const cam: Framing = perf.camera?.(time) ?? followCamera(perf.show, time, here)
   // Zoom is a tighter follow. Overview is the whole world and wins if both are asked.
@@ -90,6 +146,7 @@ export function paintShow(
   if (below) follow = { ...follow, y: follow.y - below / k }
   const full = overview ? overviewCamera(perf.overview?.(time) ?? here.universe.bounds, W, H) : null
   drawWorld(p, perf.show, time, here, full ?? follow, full?.scale ?? k, { x, y, w: W, h: H }, perf.cuts ? perf.cuts(time) : true)
+  return { x, y, w: W, h: H, cam: full ?? follow, k: full?.scale ?? k }
 }
 
 /** No glyph reaches this canvas. The arcade's digits are drawn as pixels and are picture; lettering is not. */

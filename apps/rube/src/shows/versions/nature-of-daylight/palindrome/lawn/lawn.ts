@@ -121,10 +121,14 @@ export const sees = part<State>(
     const k = (t: number, cells: number, x: number, y: number): PartShot => ({ t, cells, hold: [x - o[0], y - o[1]], w: 1 })
     const end = slot.end
     return [
-      k(250.7, 4.65, SEES_FROM[0] + 1.08, SEES_FROM[1] - 0.98),
+      // Held as the cut left it while the vision opens out of the ring (`score.ts`, the dissolves): a frame laid over
+      // a moving one doubles whatever moves.
+      k(251.6, 4.6, SEES_FROM[0] + 1.05, SEES_FROM[1] - 0.95),
       // Close: her and Hannah large, the arc and the leaves at its front.
-      k(252.6, 5.3, 60.2, -1.2),
-      k(255.9, 5.4, 60.15, -1.2),
+      k(252.9, 5.3, 60.2, -1.2),
+      k(255.0, 5.4, 60.15, -1.2),
+      // And still again, her at rest, before it closes back into the ring.
+      k(end - 1.5, 4.6, SEES_TO[0] + 1.05, SEES_TO[1] - 0.95),
       k(end, 4.6, SEES_TO[0] + 1.05, SEES_TO[1] - 0.95),
     ]
   },

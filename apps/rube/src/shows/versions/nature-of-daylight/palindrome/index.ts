@@ -3,7 +3,7 @@ import { creditsAt } from './credits'
 import { DURATION } from './music'
 import { compose } from './score'
 
-const { show, camera } = compose()
+const { show, camera, blend } = compose()
 
 export { show }
 
@@ -13,6 +13,8 @@ export const performance: Performance = {
   camera,
   // No portal anywhere: every change of place is a cut (a match cut on Louise, one on the shell, one in a white-out).
   cuts: () => false,
+  // Out of the white beyond the glass and back to it, the other side dissolves in round her (`score.ts`).
+  blend,
   // The end credits' words, which the page sets over the lake house.
   titles: creditsAt,
   soundtrack: {

@@ -353,7 +353,7 @@ let lanes: { swing: Seg[]; sees: Seg[] } | null = null
 export function louiseLanes(): { swing: Seg[]; sees: Seg[] } {
   lanes ??= {
     swing: louiseLane(HERE, SEAM.swing, SWING_TOUCHES, HERE, SEAM.bed, SEAM.bed - 0.75),
-    sees: louiseLane(SEES_FROM, SEAM.sees, SEES_TOUCHES, SEES_TO, SEAM.fog2, SEAM.fog2 - 0.35),
+    sees: louiseLane(SEES_FROM, SEAM.sees, SEES_TOUCHES, SEES_TO, SEAM.fog2, SEAM.fog2 - 1.6),
   }
   return lanes
 }
