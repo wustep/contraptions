@@ -139,7 +139,7 @@ function renderPlan(): void {
         ${HAND.map(card => `<button class="prank-card ${draft.card === card ? 'selected' : ''}" data-card="${card}" aria-pressed="${draft.card === card}" ${!available(driver, card) ? 'disabled' : ''}><span class="card-top"><span>${CARDS[card].label}</span><span>${available(driver, card) ? '01' : 'SPENT'}</span></span>${icon(card)}<strong>${CARDS[card].name}</strong><span class="card-effect">${CARDS[card].effect}</span><span class="card-description">${CARDS[card].description}</span><span class="card-select-label">${!available(driver, card) ? 'Used this derby' : draft.card === card ? '✓ Selected' : 'Choose card'}</span></button>`).join('')}
       </div><button class="clean-choice ${draft.card === 'clean' ? 'selected' : ''}" data-card="clean" aria-pressed="${draft.card === 'clean'}">${icon('clean')}<strong>Or play it clean.</strong><span>Save your cards. No effect this heat.</span><span class="selection-dot"></span></button></fieldset>
     </div>
-    <div class="commit-bar"><div><span class="eyebrow">YOUR SECRET PLAN</span><strong>${draft.route === 'rocket' ? 'Rocket shortcut' : 'Covered conveyor'} <span>+</span> ${draft.card ? CARDS[draft.card].name : 'choose a card below'}</strong><small>${draft.card && draft.card !== 'clean' ? 'This card will be spent for the rest of the derby.' : 'Lock it in when you’re ready.'}</small></div><button class="primary" data-action="lock" ${draft.card ? '' : 'disabled'}>${icon('lock')}Lock in my plan${icon('arrow')}</button></div>`
+    <div class="commit-bar"><div><span class="eyebrow">YOUR SECRET PLAN</span><strong>${draft.route === 'rocket' ? 'Rocket shortcut' : 'Covered conveyor'} <span>+</span> ${draft.card ? CARDS[draft.card].name : 'pick a card or play it clean'}</strong><small>${draft.card && draft.card !== 'clean' ? 'This card will be spent for the rest of the derby.' : 'Lock it in when you’re ready.'}</small></div><button class="primary" data-action="lock" ${draft.card ? '' : 'disabled'}>${icon('lock')}Lock in my plan${icon('arrow')}</button></div>`
 }
 
 function renderHandoff(): void {
@@ -170,11 +170,12 @@ function resultRows(): string {
 }
 
 function renderResult(): void {
+  stage.state.photo = true
   const winner = result!.winner
   const margin = Math.abs(result!.outcomes[0].time - result!.outcomes[1].time)
-  intro.innerHTML = `<div class="result-heading"><div><p class="eyebrow">HEAT ${round + 1} · THE FINISH PHOTO</p><h1 tabindex="-1" data-focus>${winner === null ? 'A dead heat.<br>How suspicious.' : `${escape(names()[winner])} takes it.`}</h1><p>${winner === null ? 'Identical plans, identical times. Two points apiece.' : `By ${margin.toFixed(2)} seconds. ${result!.outcomes[1 - winner].penalty ? 'Somebody knows what they did.' : 'A beautifully small victory.'}`}</p></div><div class="result-stamp">${icon('flag')}<span>OFFICIAL<br>ISH.</span></div></div>`
+  intro.innerHTML = `<div class="result-heading"><div><p class="eyebrow">HEAT ${round + 1} · THE FINISH PHOTO</p><h1 tabindex="-1" data-focus>${winner === null ? 'A dead heat.<br>How suspicious.' : `${escape(names()[winner])} takes it.`}</h1><p>${winner === null ? 'Different schemes can land on the same time. Two points apiece.' : `By ${margin.toFixed(2)} seconds. ${result!.outcomes[1 - winner].penalty ? 'Somebody knows what they did.' : 'A beautifully small victory.'}`}</p></div><div class="result-stamp">${icon('flag')}<span>OFFICIAL<br>ISH.</span></div></div>`
   panel.innerHTML = `<div class="results-table">${resultRows()}</div><div class="blame-notes">${([0, 1] as const).map(i => `<p>${icon(result!.outcomes[i].blocked ? 'shield' : result!.outcomes[i].incoming ?? result!.choices[i].card)}${escape(consequence(result!, i, names()))}</p>`).join('')}</div><div class="result-actions"><button class="secondary" data-action="replay">${icon('replay')}You did this. Replay.</button><button class="primary" data-action="next">${round === 2 ? 'Bring out the tiny trophy' : `On to heat ${round + 2}`}${icon(round === 2 ? 'trophy' : 'arrow')}</button></div>`
-  trackComment.textContent = winner === null ? 'Too close? Exactly close. This one is a tie.' : `${names()[winner]} wins heat ${round + 1}.`
+  trackComment.textContent = `Both lanes, at the instant ${winner === null ? 'the racers crossed' : `${names()[winner]} crossed`}. ${winner === null ? 'Exactly tied.' : `A ${margin.toFixed(2)}s lead.`}`
   announce(`Heat ${round + 1} finished. ${winner === null ? 'A dead heat.' : `${names()[winner]} wins.`} ${names()[0]} ${result!.outcomes[0].time.toFixed(2)} seconds, ${names()[1]} ${result!.outcomes[1].time.toFixed(2)} seconds.`)
 }
 
@@ -231,6 +232,7 @@ function race(isReplay: boolean): void {
   paused = false
   phase = 'race'
   stage.state.time = -2.4
+  stage.state.photo = false
   stage.state.demo = false
   stage.state.playing = true
   fired.clear()

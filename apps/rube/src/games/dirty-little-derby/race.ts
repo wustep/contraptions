@@ -14,7 +14,7 @@ import { COLORS, type Outcome, type Racer, type Result } from './model'
 
 export const PAPER = '#e9eddf'
 export const INK = '#282c27'
-export const ROWS = [1.65, 5.8] as const
+export const ROWS = [1.25, 4.25] as const
 export const FINISH = 11.8
 export const THEME: Theme = { name: 'derby', label: 'Backyard ink', bg: PAPER, ink: INK, colors: [...COLORS, '#d9b746'], weight: 0.64 }
 const WORLD: World = { name: 'derby', label: 'The backyard circuit', note: '', themes: [THEME], backdrops: ['plain'], pieces: [], tastes: { derby: {} } }
@@ -154,11 +154,11 @@ export class DerbyShow extends Show {
 }
 
 /** Sparse, flat scenery. Everything important is still drawn by engine.drawWorld. */
-export function drawTrackFurniture(p: p5, show: DerbyShow, time: number, camera: { x: number; y: number }, k: number, width: number, height: number, names: [string, string]): void {
+export function drawTrackFurniture(p: p5, show: DerbyShow, time: number, camera: { x: number; y: number }, k: number, width: number, height: number, names: [string, string], detailed = true): void {
   const x = (value: number) => width / 2 + (value - camera.x) * k
   const y = (value: number) => height / 2 + (value - camera.y) * k
   p.push()
-  p.textFont('Arial, sans-serif')
+  p.textFont('Arial')
   p.textAlign(p.LEFT, p.CENTER)
   p.stroke(INK)
   p.strokeWeight(Math.max(1, k * 0.018))
@@ -193,9 +193,11 @@ export function drawTrackFurniture(p: p5, show: DerbyShow, time: number, camera:
     // Route labels live above the machines; the cause is printed under the detour.
     p.fill('#636c5e')
     p.textSize(Math.max(9, k * 0.135))
-    p.text(outcome.choice.route === 'rocket' ? 'ROCKET SHORTCUT' : 'COVERED CONVEYOR', x(1.5), y(row - 1.38))
-    p.text('MISCHIEF JUNCTION', x(6), y(row - 1.38))
-    p.text('HOME STRETCH', x(9.3), y(row - 1.38))
+    if (detailed) {
+      p.text(outcome.choice.route === 'rocket' ? 'ROCKET SHORTCUT' : 'COVERED CONVEYOR', x(1.5), y(row - 1.38))
+      p.text('MISCHIEF JUNCTION', x(6), y(row - 1.38))
+      p.text('HOME STRETCH', x(9.3), y(row - 1.38))
+    }
     // A literal roof makes the covered route legible.
     if (outcome.choice.route === 'covered') {
       p.stroke('#8b9580')
@@ -229,11 +231,11 @@ export function drawTrackFurniture(p: p5, show: DerbyShow, time: number, camera:
     p.fill(INK)
     p.textSize(Math.max(10, k * 0.18))
     const caption = before ? names[racer] : time >= runner.finish ? `${names[racer]} · ${runner.finish.toFixed(2)}s` : time >= runner.junction && outcome.incoming ? (outcome.blocked ? 'A very satisfying NO.' : `${names[1 - racer]} did this. +${outcome.penalty.toFixed(1)}s`) : names[racer]
-    p.text(caption, x(time >= runner.junction && time < runner.finish && outcome.incoming ? 6 : 0), y(row + 1.1))
-    if (outcome.protected && time >= runner.junction && time < runner.finish) {
+    if (detailed) p.text(caption, x(time >= runner.junction && time < runner.finish && outcome.incoming ? 6 : 0), y(row + (outcome.incoming === 'dunk' && outcome.penalty ? 1.45 : 0.9)))
+    if (detailed && outcome.protected && time >= runner.junction && time < runner.finish) {
       p.fill('#636c5e')
       p.textSize(Math.max(9, k * 0.14))
-      p.text('Cover halved the delay.', x(6), y(row + 1.4))
+      p.text('Cover halved the delay.', x(8.1), y(row + 1.2))
     }
   }
   p.pop()
