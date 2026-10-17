@@ -218,10 +218,11 @@ function shots(begin: number): PartShot[] {
     on(TAP, 1.98, -4.02, -0.36),
     on(BOUNCES[0] - 1.1, 1.9, -3.95, -0.3),
     on(BOUNCES[0], 2.15, -4.0, -0.42),
-    on(BOUNCES[BOUNCES.length - 1], 3.1, -4.35, -0.95),
+    // Low enough that the old tree's crown, whose trunk stands just past the right edge, stays above the frame.
+    on(BOUNCES[BOUNCES.length - 1], 3.1, -4.35, -0.8),
     // The first call in this frame; on the second it dissolves out to the whole lawn (`dissolve.ts`), and the third
     // fills it.
-    on(STOMPS[0], 3.25, -4.25, -0.9),
+    on(STOMPS[0], 3.25, -4.25, -0.75),
     on(STOMPS[1], 15.5, 3.55, -5.2, true),
     on(OFF + 0.1, 15.4, 3.5, -5.1),
     // In to the door as the kids come.
