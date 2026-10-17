@@ -195,29 +195,11 @@ export const rain = part<State>(
 
 /* ------------------------------------------------------------------ river */
 
-/** When each of them passes up through the van's floor: its underside crossed going up. */
-function throughFloor(fn: (t: number) => Pt): number {
-  let a = SURFACE_AT.cobb
-  let b = T_LAND
-  const below = (t: number) => {
-    const pose = vanAt(t)
-    const [x, y] = fn(t)
-    const dx = x - pose.x
-    const dy = y - pose.y
-    return -Math.sin(pose.angle) * dx + Math.cos(pose.angle) * dy - 0.575
-  }
-  for (let i = 0; i < 40; i++) {
-    const m = (a + b) / 2
-    if (below(m) > 0) a = m
-    else b = m
-  }
-  return (a + b) / 2
-}
 const RIVER_WHO = [
   { fn: cobbRiver, surf: SURFACE_AT.cobb, bed: BED_AT.cobb },
   { fn: ariadneRiver, surf: SURFACE_AT.ariadne, bed: BED_AT.ariadne },
   { fn: fischerRiver, surf: SURFACE_AT.fischer, bed: BED_AT.fischer },
-].map((w) => ({ ...w, floor: throughFloor(w.fn) }))
+]
 const TEAR = '#FFF6E4'
 
 const RIVER_BREAKS = [RISE, T_LAND, SPLASH, T_C_OUT, WAKE]
@@ -234,11 +216,11 @@ export const river = part<State>(
       const P = penOf(p, c)
       let seed = 61
       for (const w of RIVER_WHO) {
-        // Where the kick brings them up through the bed, the surface and the van's floor: the tears.
+        // Where the kick brings them up through the bed and the surface: the tears. (Not at the van's floor: it is tilted
+        // and falling, and a flat tear there hangs off its underside.)
         tear(p, c.k, [w.fn(w.bed)[0], RAIN_GEO.bed], t - w.bed, 0.9, TEAR)
         tear(p, c.k, [w.fn(w.surf)[0], RAIN_GEO.river], t - w.surf, 1.0, TEAR)
         plume(P, [w.fn(w.surf)[0], RAIN_GEO.river], t - w.surf, 0.22, seed++)
-        tear(p, c.k, w.fn(w.floor), t - w.floor, 0.8, TEAR)
       }
       // The door bursting open, and Ariadne and Fischer coming up after the splash.
       const door = vanPoint(vanAt(T_BURST), -0.3, 0.1)
