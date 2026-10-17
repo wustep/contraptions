@@ -112,13 +112,17 @@ interface State {
   begin: number
 }
 /** A patch of a slab drawn over the ball where it is inside it, so it goes into the surface and comes out of the other. */
-function patch(g: Pen, x: number, y0: number, y1: number, fill: string, top: string | null, hw = 0.5): void {
+function patch(g: Pen, x: number, y0: number, y1: number, fill: string, top: string | null, hw = 0.5, bottom: string | null = null): void {
   const { c, k } = g
   c.fillStyle = fill
   c.fillRect((x - hw) * k, y0 * k, 2 * hw * k, (y1 - y0) * k)
   if (top) {
     c.fillStyle = top
     c.fillRect((x - hw) * k, y0 * k, 2 * hw * k, 0.09 * k)
+  }
+  if (bottom) {
+    c.fillStyle = bottom
+    c.fillRect((x - hw) * k, (y1 - 0.09) * k, 2 * hw * k, 0.09 * k)
   }
   feather(g, x - hw, x + hw, y0, y1)
   c.strokeStyle = g.ink
@@ -142,7 +146,8 @@ function feather(g: Pen, x0: number, x1: number, y0: number, y1: number): void {
     if (b <= a) continue
     const gr = c.createLinearGradient(0, from * k, 0, to * k)
     gr.addColorStop(0, rgba(SLEEP.mid, 0))
-    gr.addColorStop(1, rgba(SLEEP.mid, 0.96))
+    // As the director's dark is at its edge (whole), so a patch is as dark as the slab round it.
+    gr.addColorStop(1, rgba(SLEEP.mid, 1))
     c.fillStyle = gr
     c.fillRect(x0 * k, a * k, (x1 - x0) * k, (b - a) * k)
   }
@@ -163,10 +168,11 @@ function whenAt(f: (t: number) => number, y: number, t0: number, t1: number): nu
 }
 
 /** The slabs they sink through on the way down, and when each passes each face. */
-const SLABS: { y0: number; y1: number; fill: string; top: string | null }[] = [
-  { y0: B.top, y1: B.slab, fill: C.concrete, top: HOTEL.carpet },
-  { y0: B.mid, y1: B.slab2, fill: C.concrete, top: HOTEL.carpetDark },
-  { y0: B.lobby, y1: B.foot, fill: C.concreteDark, top: HOTEL.marble },
+const SLABS: { y0: number; y1: number; fill: string; top: string | null; bottom: string | null }[] = [
+  // The floors' ceilings have their plaster under them (painted over, it left a gap in the ceiling's line under them).
+  { y0: B.top, y1: B.slab, fill: C.concrete, top: HOTEL.carpet, bottom: C.plaster },
+  { y0: B.mid, y1: B.slab2, fill: C.concrete, top: HOTEL.carpetDark, bottom: C.plaster },
+  { y0: B.lobby, y1: B.foot, fill: C.concreteDark, top: HOTEL.marble, bottom: null },
 ]
 const DOWN_TIMES = WHO.map((who) => {
   const y = (t: number) => hotelAt(who, t)[1]
@@ -193,7 +199,7 @@ function hotelOver(g: Pen, t: number): void {
     d.slabs.forEach((s, i) => {
       const sl = SLABS[i]
       const px = hotelAt(d.who, s.enter)[0]
-      if (t > s.enter - 0.1 && t < s.out + 0.05) patch(g, hotelAt(d.who, t)[0], sl.y0, sl.y1, sl.fill, sl.top)
+      if (t > s.enter - 0.1 && t < s.out + 0.05) patch(g, hotelAt(d.who, t)[0], sl.y0, sl.y1, sl.fill, sl.top, 0.5, sl.bottom)
       sink(g.p, g.k, [px, sl.y0], t - s.enter, s.through - s.enter, 0.75)
       if (i < 2) sink(g.p, g.k, [px, sl.y1], t - s.under, s.out - s.under, 0.6)
     })

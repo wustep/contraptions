@@ -1741,11 +1741,6 @@ function drawCollapseDust(ctx: C2D, c: Ctx, t: number): void {
   }
 }
 
-/**
- * The snow falling, on the snow's own clock (while he is in limbo it hangs in the air): flakes of many sizes, sparse,
- * drifting; in `near` a few bigger ones close to us and falling faster, in front of everything. While the fortress stands
- * (`indoors`), none falls in its ground floor: the antechamber, the vault and the footing under them are inside.
- */
 /** Whether a point is in the ground the cut shows: under the valley floor, in the fortress's knoll, under the apron. */
 function inGround(x: number, y: number): boolean {
   if (y > VALLEY_Y - 0.3) return true
@@ -1763,6 +1758,11 @@ function inGround(x: number, y: number): boolean {
   return false
 }
 
+/**
+ * The snow falling, on the snow's own clock (while he is in limbo it hangs in the air): flakes of many sizes, sparse,
+ * drifting; in `near` a few bigger ones close to us and falling faster, in front of everything. While the fortress stands
+ * (`indoors`), none falls in its ground floor: the antechamber, the vault and the footing under them are inside.
+ */
 function drawSnowfall(ctx: C2D, k: number, f: ReturnType<typeof frame>, st: number, near: boolean, indoors: boolean): void {
   const S = 4
   const per = near ? (k > 70 ? 5 : k > 40 ? 2 : 1) : k < 8 ? 3 : 7
