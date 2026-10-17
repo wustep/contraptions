@@ -35,3 +35,15 @@ Replayed a full local derby as Miso and Bean. A snail reversed the faster route 
 Completed a phone derby at 390 × 844, including a 0.10-second final. Found a wrapped title overlapping its description and too much scrolling before decisions. Fixed the title, made course scouting expandable on phones, kept the lock-in control within reach, enlarged touch targets, and stopped clipping course captions at the camera edge. Fixed the replay scoreboard so earned points remain visible. Hidden stages now stop drawing; browser history restoration preserves the stage.
 
 Replayed another complete phone derby, including an instant replay. Verified Space pause/resume, rules pausing the clock, Escape resuming, unchanged replay results and scores, disabled spent cards, course expansion, and the shared-trophy outcome at 6–6. Downloaded and inspected the 1200 × 900 grudge receipt. No browser console errors.
+
+### Improvement pass 3 — strategy, resilience, and final polish
+
+The later heats needed a clearer memory of what each racer could still play. Added public remaining-card icons, with spent marks and accessible labels; a sealed current choice does not change them before the reveal. Made points-tie victories explicitly explain the total-time tiebreak. Self-hosted the variable font with its OFL license, improved finish-photo labels, and formatted the new source for review.
+
+Played a complete local derby with a 6–6 points tie: Miso won on 30.20 seconds total. Verified that a first player's secret choice leaves the public inventory unchanged, rematch restores all cards, the reduced-motion lobby stays still, sound starts only after a user gesture, mute stops new notes, and the page requests no external resources. Tested widths 320, 375, 390, 768, 1024, and 1440, including long and HTML-like player names. Confirmed names remain text and do not introduce markup.
+
+## Validation
+
+`npm run check:derby` is included in the normal `npm test` / `npm run build` pipeline. It exhausts 300 route/card/heat combinations and 300 seeded complete house derbies. Browser play-tests cover complete solo and local sessions, all four cards, both routes, blocks, halved attacks, ties, the time tiebreak, replay, pause, rules, private handoff, rematch, and PNG downloads.
+
+The static route is emitted as `dist/games/dirty-little-derby/index.html`, so it uses the existing Vercel static directory routing. The new route is also handled by the development and preview server's trailing-slash redirect. No existing page, navigation registry, or show is changed.

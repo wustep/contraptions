@@ -1,5 +1,18 @@
 import assert from 'node:assert/strict'
-import { available, champion, commitHeat, HAND, HEATS, houseChoice, newMatch, resolveHeat, totals, type Card, type Choice, type Racer } from '../src/games/dirty-little-derby/model'
+import {
+  available,
+  champion,
+  commitHeat,
+  HAND,
+  HEATS,
+  houseChoice,
+  newMatch,
+  resolveHeat,
+  totals,
+  type Card,
+  type Choice,
+  type Racer,
+} from '../src/games/dirty-little-derby/model'
 import { DerbyShow, FINISH, ROWS } from '../src/games/dirty-little-derby/race'
 import { laneAt, laneTime } from '../src/parts'
 
@@ -9,50 +22,62 @@ const clean = choice('rocket', 'clean')
 
 // Exhaust every pairing: rules, stock-machine clock scaling, continuity, replay and finish agreement.
 let combinations = 0
-const choices = (['rocket', 'covered'] as const).flatMap(route => [...HAND, 'clean' as Card].map(card => choice(route, card)))
+const choices = (['rocket', 'covered'] as const).flatMap((route) => [...HAND, 'clean' as Card].map((card) => choice(route, card)))
 for (let heat = 0; heat < HEATS.length; heat++) {
-  for (const a of choices) for (const b of choices) {
-    const resolved = resolveHeat(heat, [a, b])
-    const show = new DerbyShow(resolved)
-    const reversed = resolveHeat(heat, [b, a])
-    assert.deepEqual(resolved.outcomes, [...reversed.outcomes].reverse(), 'No lane advantage')
-    assert.equal(resolved.points[0] + resolved.points[1], 4)
-    for (const racer of [0, 1] as const) {
-      const runner = show.runners[racer]
-      near(runner.finish, resolved.outcomes[racer].time)
-      for (const [index, piece] of runner.pieces.entries()) {
-        near(laneTime(piece.lane), piece.span)
-        assert.ok(piece.lane.segs.every(s => s.dur > 0 && Number.isFinite(s.dur)))
-        const next = runner.pieces[index + 1]
-        if (next) {
-          const end = laneAt(piece.lane, piece.span)
-          const start = laneAt(next.lane, 0)
-          near(piece.col + end.x, next.col + start.x)
-          near(piece.row + end.y, next.row + start.y)
-          near(next.start, piece.start + piece.span)
+  for (const a of choices)
+    for (const b of choices) {
+      const resolved = resolveHeat(heat, [a, b])
+      const show = new DerbyShow(resolved)
+      const reversed = resolveHeat(heat, [b, a])
+      assert.deepEqual(resolved.outcomes, [...reversed.outcomes].reverse(), 'No lane advantage')
+      assert.equal(resolved.points[0] + resolved.points[1], 4)
+      for (const racer of [0, 1] as const) {
+        const runner = show.runners[racer]
+        near(runner.finish, resolved.outcomes[racer].time)
+        for (const [index, piece] of runner.pieces.entries()) {
+          near(laneTime(piece.lane), piece.span)
+          assert.ok(piece.lane.segs.every((s) => s.dur > 0 && Number.isFinite(s.dur)))
+          const next = runner.pieces[index + 1]
+          if (next) {
+            const end = laneAt(piece.lane, piece.span)
+            const start = laneAt(next.lane, 0)
+            near(piece.col + end.x, next.col + start.x)
+            near(piece.row + end.y, next.row + start.y)
+            near(next.start, piece.start + piece.span)
+          }
+        }
+        const finish = show.position(racer, runner.finish).point
+        near(finish.x, FINISH)
+        near(finish.y, ROWS[racer])
+        for (let t = 0; t <= runner.finish; t += 0.12) {
+          const before = show.position(racer, t)
+          assert.ok(Number.isFinite(before.point.x) && Number.isFinite(before.point.y))
+          // A backwards scrub and another racer cannot mutate the timeline.
+          show.at(t + 2)
+          show.at(t - 1)
+          assert.deepEqual(show.position(racer, t), before)
         }
       }
-      const finish = show.position(racer, runner.finish).point
-      near(finish.x, FINISH)
-      near(finish.y, ROWS[racer])
-      for (let t = 0; t <= runner.finish; t += 0.12) {
-        const before = show.position(racer, t)
-        assert.ok(Number.isFinite(before.point.x) && Number.isFinite(before.point.y))
-        // A backwards scrub and another racer cannot mutate the timeline.
-        show.at(t + 2)
-        show.at(t - 1)
-        assert.deepEqual(show.position(racer, t), before)
-      }
+      const hasSnail = resolved.outcomes.some((o) => o.incoming === 'snail' && o.penalty)
+      const hasDunk = resolved.outcomes.some((o) => o.incoming === 'dunk' && o.penalty)
+      assert.equal(
+        show.arena.pieces.some((p) => p.piece.name === 'snail'),
+        hasSnail,
+      )
+      assert.equal(
+        show.arena.pieces.some((p) => p.piece.name === 'dunk'),
+        hasDunk,
+      )
+      assert.ok(
+        show.arena.pieces.every((p) => p.points === 0 && !p.piece.scores),
+        'Stock arcade points never count',
+      )
+      combinations++
     }
-    const hasSnail = resolved.outcomes.some(o => o.incoming === 'snail' && o.penalty)
-    const hasDunk = resolved.outcomes.some(o => o.incoming === 'dunk' && o.penalty)
-    assert.equal(show.arena.pieces.some(p => p.piece.name === 'snail'), hasSnail)
-    assert.equal(show.arena.pieces.some(p => p.piece.name === 'dunk'), hasDunk)
-    assert.ok(show.arena.pieces.every(p => p.points === 0 && !p.piece.scores), 'Stock arcade points never count')
-    combinations++
-  }
 }
-console.log(`  ok   ${combinations} route/card/heat pairings: finite paths, continuous handoffs, independent pieces, exact finish times, repeatable replay`)
+console.log(
+  `  ok   ${combinations} route/card/heat pairings: finite paths, continuous handoffs, independent pieces, exact finish times, repeatable replay`,
+)
 
 assert.equal(resolveHeat(0, [clean, choice('covered', 'clean')]).winner, 0)
 assert.equal(resolveHeat(0, [clean, choice('covered', 'snail')]).winner, 1, 'A prank reverses the result')

@@ -1,12 +1,33 @@
 import './style.css'
 import { DerbyAudio } from './audio'
 import { icon } from './icons'
-import { available, CARDS, champion, COLORS, commitHeat, consequence, HAND, HEATS, houseChoice, newMatch, resolveHeat, totals, type Card, type Choice, type Match, type Mode, type Racer, type Result, type Route } from './model'
+import {
+  available,
+  CARDS,
+  champion,
+  COLORS,
+  commitHeat,
+  consequence,
+  HAND,
+  HEATS,
+  houseChoice,
+  newMatch,
+  resolveHeat,
+  totals,
+  type Card,
+  type Choice,
+  type Match,
+  type Mode,
+  type Racer,
+  type Result,
+  type Route,
+} from './model'
 import { DerbyStage } from './stage'
 
 type Phase = 'lobby' | 'plan' | 'handoff' | 'reveal' | 'race' | 'result' | 'podium'
 const app = document.querySelector<HTMLDivElement>('#app')!
-const escape = (value: string): string => value.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!)
+const escape = (value: string): string =>
+  value.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!)
 let phase: Phase = 'lobby'
 let mode: Mode = 'solo'
 let match: Match | null = null
@@ -59,7 +80,10 @@ const trackLabel = document.querySelector<HTMLElement>('#track-label')!
 const trackComment = document.querySelector<HTMLElement>('#track-comment')!
 const countdown = document.querySelector<HTMLElement>('#countdown')!
 const dialog = document.querySelector<HTMLDialogElement>('#dialog')!
-const demo = resolveHeat(0, [{ route: 'rocket', card: 'clean' }, { route: 'covered', card: 'snail' }])
+const demo = resolveHeat(0, [
+  { route: 'rocket', card: 'clean' },
+  { route: 'covered', card: 'snail' },
+])
 const stage = new DerbyStage(document.querySelector<HTMLElement>('#track')!, demo, tick)
 
 function announce(message: string): void {
@@ -75,11 +99,22 @@ function focusHeading(): void {
   })
 }
 
-function names(): [string, string] { return match ? [match.drivers[0].name, match.drivers[1].name] : playerNames }
+function names(): [string, string] {
+  return match ? [match.drivers[0].name, match.drivers[1].name] : playerNames
+}
 
 function visiblePoints(): [number, number] {
-  const completed = match?.results.slice(0, phase === 'result' || phase === 'podium' || (phase === 'race' && replay) ? round + 1 : round) ?? []
-  return [0, 1].map(i => completed.reduce((sum, heat) => sum + heat.points[i], 0)) as [number, number]
+  const completed =
+    match?.results.slice(0, phase === 'result' || phase === 'podium' || (phase === 'race' && replay) ? round + 1 : round) ?? []
+  return [0, 1].map((i) => completed.reduce((sum, heat) => sum + heat.points[i], 0)) as [number, number]
+}
+
+function remainingHand(racer: Racer): string {
+  return `<span class="score-inventory" role="group" aria-label="${escape(names()[racer])}’s remaining cards">${HAND.map((card) => {
+    const spent = !available(match!.drivers[racer], card)
+    const label = `${CARDS[card].name}: ${spent ? 'spent' : 'available'}`
+    return `<span class="inventory-card ${spent ? 'spent' : ''}" role="img" aria-label="${label}" title="${label}">${icon(card)}${spent ? '<i>×</i>' : ''}</span>`
+  }).join('')}</span>`
 }
 
 function renderScore(): void {
@@ -87,9 +122,9 @@ function renderScore(): void {
   if (!match || phase === 'lobby') return
   const points = visiblePoints()
   scoreboard.innerHTML = `
-    <div class="score-driver" style="--racer:${COLORS[0]}"><span class="ball-avatar">••</span><span><strong>${escape(names()[0])}</strong><small>${mode === 'solo' ? 'YOU' : 'PLAYER 1'}</small></span><b>${points[0]}<small>PTS</small></b></div>
+    <div class="score-driver" style="--racer:${COLORS[0]}"><span class="ball-avatar">••</span><span><strong>${escape(names()[0])}</strong><small>${mode === 'solo' ? 'YOU' : 'PLAYER 1'}</small></span><b>${points[0]}<small>PTS</small></b>${remainingHand(0)}</div>
     <div class="heat-counter"><span>THE DERBY</span><div>${HEATS.map((_h, i) => `<span class="heat-dot ${i < round || ((phase === 'result' || phase === 'podium') && i === round) ? 'done' : i === round ? 'current' : ''}" aria-label="Heat ${i + 1}${i === round ? ', current' : ''}">${i + 1}</span>`).join('')}</div></div>
-    <div class="score-driver second" style="--racer:${COLORS[1]}"><span class="ball-avatar">••</span><span><strong>${escape(names()[1])}</strong><small>${mode === 'solo' ? 'THE HOUSE' : 'PLAYER 2'}</small></span><b>${points[1]}<small>PTS</small></b></div>
+    <div class="score-driver second" style="--racer:${COLORS[1]}"><span class="ball-avatar">••</span><span><strong>${escape(names()[1])}</strong><small>${mode === 'solo' ? 'THE HOUSE' : 'PLAYER 2'}</small></span><b>${points[1]}<small>PTS</small></b>${remainingHand(1)}</div>
   `
 }
 
@@ -102,7 +137,12 @@ function render(): void {
   renderScore()
   intro.innerHTML = ''
   trackLabel.textContent = phase === 'lobby' ? 'TWO LANES. NO HARD FEELINGS.' : `HEAT ${round + 1} / 3 · ${HEATS[round].name.toUpperCase()}`
-  trackComment.textContent = phase === 'lobby' ? 'A short race through some questionable engineering.' : phase === 'plan' ? 'Scout the course. Your route is a secret until the reveal.' : 'Your choices. Their consequences.'
+  trackComment.textContent =
+    phase === 'lobby'
+      ? 'A short race through some questionable engineering.'
+      : phase === 'plan'
+        ? 'Scout the course. Your route is a secret until the reveal.'
+        : 'Your choices. Their consequences.'
   if (phase === 'lobby') renderLobby()
   if (phase === 'plan') renderPlan()
   if (phase === 'handoff') renderHandoff()
@@ -134,10 +174,10 @@ function renderPlan(): void {
     <div class="planning-header"><div><span class="player-pip" style="--racer:${driver.color}"></span><strong>${escape(driver.name)}’s secret plan</strong><span class="muted">${mode === 'solo' ? 'Pip has already sealed a choice.' : `Only ${escape(driver.name)} should look.`}</span></div><span class="inventory-count">${4 - driver.used.length} / 4 CARDS LEFT</span></div>
     <div class="decision-layout">
       <fieldset class="route-field"><legend><span>01</span> Pick a route</legend><div class="route-options">
-        ${(['rocket', 'covered'] as const).map(route => `<button class="route-card ${draft.route === route ? 'selected' : ''}" data-route="${route}" aria-pressed="${draft.route === route}">${icon(route)}<span><strong>${route === 'rocket' ? 'Rocket shortcut' : 'Covered conveyor'}</strong><small>${route === 'rocket' ? 'Fast. Fully exposed to pranks.' : 'Slower. Half the prank delay.'}</small></span><b>${course[route].toFixed(1)}<small>SEC</small></b><span class="selection-dot"></span></button>`).join('')}
+        ${(['rocket', 'covered'] as const).map((route) => `<button class="route-card ${draft.route === route ? 'selected' : ''}" data-route="${route}" aria-pressed="${draft.route === route}">${icon(route)}<span><strong>${route === 'rocket' ? 'Rocket shortcut' : 'Covered conveyor'}</strong><small>${route === 'rocket' ? 'Fast. Fully exposed to pranks.' : 'Slower. Half the prank delay.'}</small></span><b>${course[route].toFixed(1)}<small>SEC</small></b><span class="selection-dot"></span></button>`).join('')}
       </div><p class="field-note">Same route? Same time. Your cards make the difference.</p></fieldset>
       <fieldset class="card-field"><legend><span>02</span> Play a little dirty <small>ONE USE EACH, ALL DERBY</small></legend><div class="hand">
-        ${HAND.map(card => `<button class="prank-card ${draft.card === card ? 'selected' : ''}" data-card="${card}" aria-pressed="${draft.card === card}" ${!available(driver, card) ? 'disabled' : ''}><span class="card-top"><span>${CARDS[card].label}</span><span>${available(driver, card) ? '01' : 'SPENT'}</span></span>${icon(card)}<strong>${CARDS[card].name}</strong><span class="card-effect">${CARDS[card].effect}</span><span class="card-description">${CARDS[card].description}</span><span class="card-select-label">${!available(driver, card) ? 'Used this derby' : draft.card === card ? '✓ Selected' : 'Choose card'}</span></button>`).join('')}
+        ${HAND.map((card) => `<button class="prank-card ${draft.card === card ? 'selected' : ''}" data-card="${card}" aria-pressed="${draft.card === card}" ${!available(driver, card) ? 'disabled' : ''}><span class="card-top"><span>${CARDS[card].label}</span><span>${available(driver, card) ? '01' : 'SPENT'}</span></span>${icon(card)}<strong>${CARDS[card].name}</strong><span class="card-effect">${CARDS[card].effect}</span><span class="card-description">${CARDS[card].description}</span><span class="card-select-label">${!available(driver, card) ? 'Used this derby' : draft.card === card ? '✓ Selected' : 'Choose card'}</span></button>`).join('')}
       </div><button class="clean-choice ${draft.card === 'clean' ? 'selected' : ''}" data-card="clean" aria-pressed="${draft.card === 'clean'}">${icon('clean')}<strong>Or play it clean.</strong><span>Save your cards. No effect this heat.</span><span class="selection-dot"></span></button></fieldset>
     </div>
     <div class="commit-bar"><div><span class="eyebrow">YOUR SECRET PLAN</span><strong>${draft.route === 'rocket' ? 'Rocket shortcut' : 'Covered conveyor'} <span>+</span> ${draft.card ? CARDS[draft.card].name : 'pick a card or play it clean'}</strong><small>${draft.card && draft.card !== 'clean' ? 'This card will be spent for the rest of the derby.' : 'Lock it in when you’re ready.'}</small></div><button class="primary" data-action="lock" ${draft.card ? '' : 'disabled'}>${icon('lock')}Lock in my plan${icon('arrow')}</button></div>`
@@ -155,19 +195,24 @@ function choiceTicket(racer: Racer): string {
 function renderReveal(): void {
   intro.innerHTML = `<div class="compact-heading"><span class="eyebrow">HEAT ${round + 1} · THE REVEAL</span><h1 tabindex="-1" data-focus>Well, well, well.</h1><p>Cards on the table. Let the machines do the talking.</p></div>`
   panel.innerHTML = `<div class="reveal-layout">${choiceTicket(0)}<span class="versus">vs.</span>${choiceTicket(1)}<button class="primary" data-action="race">Release the racers${icon('flag')}</button></div>`
-  announce(`${names()[0]} chose ${result!.choices[0].route} and ${CARDS[result!.choices[0].card].name}. ${names()[1]} chose ${result!.choices[1].route} and ${CARDS[result!.choices[1].card].name}.`)
+  announce(
+    `${names()[0]} chose ${result!.choices[0].route} and ${CARDS[result!.choices[0].card].name}. ${names()[1]} chose ${result!.choices[1].route} and ${CARDS[result!.choices[1].card].name}.`,
+  )
 }
 
 function renderRace(): void {
   intro.innerHTML = `<div class="race-heading"><div><p class="eyebrow">${replay ? 'THE INSTANT REPLAY' : `HEAT ${round + 1} OF 3 · ${HEATS[round].name.toUpperCase()}`}</p><h1 tabindex="-1" data-focus>${replay ? 'You did this.' : 'Off to no good.'}</h1></div><div class="race-tools"><span id="race-time">0.00<span>s</span></span><button class="secondary" data-action="pause" aria-label="Pause race">Ⅱ Pause</button></div></div>`
-  panel.innerHTML = `<div class="live-lanes">${([0, 1] as const).map(i => `<div class="live-lane" style="--racer:${COLORS[i]}"><div><span class="player-pip"></span><strong>${escape(names()[i])}</strong><span>${CARDS[result!.choices[i].card].name}</span><b id="finish-${i}">READY</b></div><div class="progress-track"><span id="progress-${i}"></span></div><p id="event-${i}">The ${result!.choices[i].route === 'rocket' ? 'rocket' : 'covered'} route. A plan. A dream.</p></div>`).join('')}</div><p class="race-hint">The choices are made. Enjoy the consequences.<span>SPACE TO PAUSE · M FOR SOUND</span></p>`
+  panel.innerHTML = `<div class="live-lanes">${([0, 1] as const).map((i) => `<div class="live-lane" style="--racer:${COLORS[i]}"><div><span class="player-pip"></span><strong>${escape(names()[i])}</strong><span>${CARDS[result!.choices[i].card].name}</span><b id="finish-${i}">READY</b></div><div class="progress-track"><span id="progress-${i}"></span></div><p id="event-${i}">The ${result!.choices[i].route === 'rocket' ? 'rocket' : 'covered'} route. A plan. A dream.</p></div>`).join('')}</div><p class="race-hint">The choices are made. Enjoy the consequences.<span>SPACE TO PAUSE · M FOR SOUND</span></p>`
 }
 
 function resultRows(): string {
-  return ([0, 1] as Racer[]).sort((a, b) => result!.outcomes[a].time - result!.outcomes[b].time).map(i => {
-    const outcome = result!.outcomes[i]
-    return `<div class="result-row" style="--racer:${COLORS[i]}"><span class="result-place">${result!.winner === null ? '=' : result!.winner === i ? '01' : '02'}</span><span class="player-pip"></span><div class="result-driver"><strong>${escape(names()[i])}</strong><span>${outcome.choice.route === 'rocket' ? 'Rocket shortcut' : 'Covered conveyor'} · ${CARDS[outcome.choice.card].name}</span></div><div class="time-math"><span>${outcome.base.toFixed(1)}s route${outcome.penalty ? ` + ${outcome.penalty.toFixed(1)}s prank` : ''}${outcome.boost ? ' − 1.2s boost' : ''}</span><b>${outcome.time.toFixed(2)}<small>s</small></b></div><strong class="earned">+${result!.points[i]}<small>PTS</small></strong></div>`
-  }).join('')
+  return ([0, 1] as Racer[])
+    .sort((a, b) => result!.outcomes[a].time - result!.outcomes[b].time)
+    .map((i) => {
+      const outcome = result!.outcomes[i]
+      return `<div class="result-row" style="--racer:${COLORS[i]}"><span class="result-place">${result!.winner === null ? '=' : result!.winner === i ? '01' : '02'}</span><span class="player-pip"></span><div class="result-driver"><strong>${escape(names()[i])}</strong><span>${outcome.choice.route === 'rocket' ? 'Rocket shortcut' : 'Covered conveyor'} · ${CARDS[outcome.choice.card].name}</span></div><div class="time-math"><span>${outcome.base.toFixed(1)}s route${outcome.penalty ? ` + ${outcome.penalty.toFixed(1)}s prank` : ''}${outcome.boost ? ' − 1.2s boost' : ''}</span><b>${outcome.time.toFixed(2)}<small>s</small></b></div><strong class="earned">+${result!.points[i]}<small>PTS</small></strong></div>`
+    })
+    .join('')
 }
 
 function renderResult(): void {
@@ -175,17 +220,24 @@ function renderResult(): void {
   const winner = result!.winner
   const margin = Math.abs(result!.outcomes[0].time - result!.outcomes[1].time)
   intro.innerHTML = `<div class="result-heading"><div><p class="eyebrow">HEAT ${round + 1} · THE FINISH PHOTO</p><h1 tabindex="-1" data-focus>${winner === null ? 'A dead heat.<br>How suspicious.' : `${escape(names()[winner])} takes it.`}</h1><p>${winner === null ? 'Different schemes can land on the same time. Two points apiece.' : `By ${margin.toFixed(2)} seconds. ${result!.outcomes[1 - winner].penalty ? 'Somebody knows what they did.' : 'A beautifully small victory.'}`}</p></div><div class="result-stamp">${icon('flag')}<span>OFFICIAL<br>ISH.</span></div></div>`
-  panel.innerHTML = `<div class="results-table">${resultRows()}</div><div class="blame-notes">${([0, 1] as const).map(i => `<p>${icon(result!.outcomes[i].blocked ? 'shield' : result!.outcomes[i].incoming ?? result!.choices[i].card)}${escape(consequence(result!, i, names()))}</p>`).join('')}</div><div class="result-actions"><button class="secondary" data-action="replay">${icon('replay')}You did this. Replay.</button><button class="primary" data-action="next">${round === 2 ? 'Bring out the tiny trophy' : `On to heat ${round + 2}`}${icon(round === 2 ? 'trophy' : 'arrow')}</button></div>`
+  panel.innerHTML = `<div class="results-table">${resultRows()}</div><div class="blame-notes">${([0, 1] as const).map((i) => `<p>${icon(result!.outcomes[i].blocked ? 'shield' : (result!.outcomes[i].incoming ?? result!.choices[i].card))}${escape(consequence(result!, i, names()))}</p>`).join('')}</div><div class="result-actions"><button class="secondary" data-action="replay">${icon('replay')}You did this. Replay.</button><button class="primary" data-action="next">${round === 2 ? 'Bring out the tiny trophy' : `On to heat ${round + 2}`}${icon(round === 2 ? 'trophy' : 'arrow')}</button></div>`
   trackComment.textContent = `Both lanes, at the instant ${winner === null ? 'the racers crossed' : `${names()[winner]} crossed`}. ${winner === null ? 'Exactly tied.' : `A ${margin.toFixed(2)}s lead.`}`
-  announce(`Heat ${round + 1} finished. ${winner === null ? 'A dead heat.' : `${names()[winner]} wins.`} ${names()[0]} ${result!.outcomes[0].time.toFixed(2)} seconds, ${names()[1]} ${result!.outcomes[1].time.toFixed(2)} seconds.`)
+  announce(
+    `Heat ${round + 1} finished. ${winner === null ? 'A dead heat.' : `${names()[winner]} wins.`} ${names()[0]} ${result!.outcomes[0].time.toFixed(2)} seconds, ${names()[1]} ${result!.outcomes[1].time.toFixed(2)} seconds.`,
+  )
 }
 
 function renderPodium(): void {
   const winner = champion(match!)
   const points = totals(match!)
+  const timeTiebreak = winner !== null && points[0] === points[1]
+  const totalTime = match!.results.reduce((sum, heat) => sum + heat.outcomes[winner ?? 0].time, 0)
   trackPanel.hidden = true
   intro.innerHTML = `<div class="podium"><p class="eyebrow">THREE HEATS. ONE QUESTIONABLE CHAMPION.</p><div class="trophy-illustration">${icon('trophy')}<span>EST. JUST NOW</span></div><h1 tabindex="-1" data-focus>${winner === null ? 'Share the glory.<br>Split the grudge.' : `${escape(names()[winner])},<br>you little menace.`}</h1><p>${winner === null ? 'Equal points. Equal time. A very rare shared trophy.' : `${points[winner]} points. One tiny trophy. Absolutely no moral high ground.`}</p><div class="podium-score"><span style="--racer:${COLORS[0]}"><i></i>${escape(names()[0])} <b>${points[0]}</b></span><em>—</em><span style="--racer:${COLORS[1]}"><i></i>${escape(names()[1])} <b>${points[1]}</b></span></div></div>`
-  panel.innerHTML = `<div class="derby-receipt"><div class="receipt-heading"><strong>THE OFFICIAL GRUDGE RECORD</strong><span>KEEP THIS FOR THE ARGUMENT</span></div>${match!.results.map(heat => `<div class="receipt-row"><span>0${heat.heat + 1} <b>${HEATS[heat.heat].name}</b></span><span>${heat.winner === null ? 'Dead heat' : `${escape(names()[heat.winner])} +3`}</span><span>${heat.outcomes[0].time.toFixed(2)}s / ${heat.outcomes[1].time.toFixed(2)}s</span></div>`).join('')}<p>3 points for first, 1 for second, 2 each for a tie. Equal points? Lowest total race time wins.</p></div><div class="result-actions podium-actions"><button class="secondary" data-action="receipt">${icon('flag')}Save the grudge</button><button class="primary" data-action="rematch">Demand a rematch${icon('arrow')}</button><button class="text-button" data-action="lobby">Back to the clubhouse</button></div><p class="download-status" id="download-status" role="status"></p>`
+  panel.innerHTML = `<div class="derby-receipt"><div class="receipt-heading"><strong>THE OFFICIAL GRUDGE RECORD</strong><span>KEEP THIS FOR THE ARGUMENT</span></div>${match!.results.map((heat) => `<div class="receipt-row"><span>0${heat.heat + 1} <b>${HEATS[heat.heat].name}</b></span><span>${heat.winner === null ? 'Dead heat' : `${escape(names()[heat.winner])} +3`}</span><span>${heat.outcomes[0].time.toFixed(2)}s / ${heat.outcomes[1].time.toFixed(2)}s</span></div>`).join('')}<p>3 points for first, 1 for second, 2 each for a tie. Equal points? Lowest total race time wins.</p></div><div class="result-actions podium-actions"><button class="secondary" data-action="receipt">${icon('flag')}Save the grudge</button><button class="primary" data-action="rematch">Demand a rematch${icon('arrow')}</button><button class="text-button" data-action="lobby">Back to the clubhouse</button></div><p class="download-status" id="download-status" role="status"></p>`
+  if (timeTiebreak)
+    intro.querySelector('.podium>p:not(.eyebrow)')!.textContent =
+      `Level on points. ${names()[winner!]} wins on total time: ${totalTime.toFixed(2)}s.`
   sounds.play('win')
   announce(winner === null ? 'The derby is a tie. A shared trophy.' : `${names()[winner]} wins the derby with ${points[winner]} points.`)
 }
@@ -196,7 +248,13 @@ function beginHeat(): void {
   draft = { route: 'rocket', card: null }
   sealed = [null, mode === 'solo' ? houseChoice(match!) : null]
   result = null
-  stage.setRace(resolveHeat(round, [{ route: 'rocket', card: 'clean' }, { route: 'covered', card: 'clean' }]), names())
+  stage.setRace(
+    resolveHeat(round, [
+      { route: 'rocket', card: 'clean' },
+      { route: 'covered', card: 'clean' },
+    ]),
+    names(),
+  )
   render()
   focusHeading()
   window.scrollTo({ top: 0, behavior: 'instant' })
@@ -250,9 +308,18 @@ function setPaused(value: boolean): void {
   stage.state.playing = !value
   lastFrame = performance.now()
   const button = document.querySelector<HTMLButtonElement>('[data-action="pause"]')
-  if (button) { button.textContent = value ? '▶ Resume' : 'Ⅱ Pause'; button.setAttribute('aria-label', value ? 'Resume race' : 'Pause race') }
-  if (value) { countdown.hidden = false; countdown.textContent = 'Paused'; countdown.classList.add('is-paused') }
-  else { countdown.classList.remove('is-paused'); countdown.hidden = true }
+  if (button) {
+    button.textContent = value ? '▶ Resume' : 'Ⅱ Pause'
+    button.setAttribute('aria-label', value ? 'Resume race' : 'Pause race')
+  }
+  if (value) {
+    countdown.hidden = false
+    countdown.textContent = 'Paused'
+    countdown.classList.add('is-paused')
+  } else {
+    countdown.classList.remove('is-paused')
+    countdown.hidden = true
+  }
   announce(value ? 'Race paused.' : 'Race resumed.')
 }
 
@@ -275,13 +342,18 @@ function tick(): void {
     const runner = stage.state.show.runners[i]
     const outcome = result!.outcomes[i]
     const position = stage.state.show.position(i, time).point
-    document.querySelector<HTMLElement>(`#progress-${i}`)!.style.width = `${Math.max(0, Math.min(100, position.x / 11.8 * 100))}%`
-    document.querySelector(`#finish-${i}`)!.textContent = time >= runner.finish ? `${runner.finish.toFixed(2)}s` : time < 0 ? 'READY' : 'RACING'
+    document.querySelector<HTMLElement>(`#progress-${i}`)!.style.width = `${Math.max(0, Math.min(100, (position.x / 11.8) * 100))}%`
+    document.querySelector(`#finish-${i}`)!.textContent =
+      time >= runner.finish ? `${runner.finish.toFixed(2)}s` : time < 0 ? 'READY' : 'RACING'
     if (time >= runner.junction && !fired.has(`prank:${i}`)) {
       fired.add(`prank:${i}`)
       const message = consequence(result!, i, names())
       document.querySelector(`#event-${i}`)!.textContent = message
-      if (outcome.incoming) { sounds.play(outcome.blocked ? 'lock' : 'prank'); trackComment.textContent = message; announce(message) }
+      if (outcome.incoming) {
+        sounds.play(outcome.blocked ? 'lock' : 'prank')
+        trackComment.textContent = message
+        announce(message)
+      }
     }
     if (time >= runner.home && outcome.boost && !fired.has(`boost:${i}`)) {
       fired.add(`boost:${i}`)
@@ -308,8 +380,12 @@ function openDialog(kind: 'rules' | 'restart'): void {
     resumeAfterDialog = phase === 'race' && !paused
     if (resumeAfterDialog) setPaused(true)
   }
-  dialog.innerHTML = kind === 'rules' ? `<button class="dialog-close" data-action="close-dialog" aria-label="Close instructions">×</button><p class="eyebrow">THE VERY SHORT RULEBOOK</p><h2 id="dialog-title">Be quick.<br>Be a little awful.</h2><ol class="rules-list"><li><strong>Pick your route.</strong> The rocket is faster. The covered conveyor halves any prank delay.</li><li><strong>Choose one secret card.</strong> Snail mail adds 2.6s to your rival. Dunk tank adds 1.8s. A shield blocks either. Hot wheels saves you 1.2s.</li><li><strong>Watch the race.</strong> No steering or timing needed. Your choices decide the race before the gate opens.</li></ol><div class="rules-callout">Each card works <strong>once per three-heat derby.</strong> Play it clean any time to save a card. Your prank always targets the other racer.</div><p>First place: <strong>3 points.</strong> Second: <strong>1.</strong> Dead heat: <strong>2 each.</strong> Most points takes the trophy; equal points are settled by total race time. Equal time means a shared trophy.</p><p class="muted">Pass & play: choose in private, then hand over the device. In solo, the house commits before you choose.</p><button class="primary" data-action="close-dialog">Sounds suitably unfair.${icon('arrow')}</button>` : `<button class="dialog-close" data-action="close-dialog" aria-label="Keep racing">×</button><p class="eyebrow">BACK TO THE CLUBHOUSE</p><h2 id="dialog-title">Call it a truce?</h2><p>This will end the current derby and reset both players’ cards.</p><div class="dialog-actions"><button class="secondary" data-action="close-dialog">Keep racing</button><button class="primary" data-action="abandon">New derby${icon('arrow')}</button></div>`
-  if (kind === 'rules' && phase !== 'lobby') dialog.insertAdjacentHTML('beforeend', '<button class="text-button dialog-restart" data-action="restart">Start a new derby</button>')
+  dialog.innerHTML =
+    kind === 'rules'
+      ? `<button class="dialog-close" data-action="close-dialog" aria-label="Close instructions">×</button><p class="eyebrow">THE VERY SHORT RULEBOOK</p><h2 id="dialog-title">Be quick.<br>Be a little awful.</h2><ol class="rules-list"><li><strong>Pick your route.</strong> The rocket is faster. The covered conveyor halves any prank delay.</li><li><strong>Choose one secret card.</strong> Snail mail adds 2.6s to your rival. Dunk tank adds 1.8s. A shield blocks either. Hot wheels saves you 1.2s.</li><li><strong>Watch the race.</strong> No steering or timing needed. Your choices decide the race before the gate opens.</li></ol><div class="rules-callout">Each card works <strong>once per three-heat derby.</strong> Play it clean any time to save a card. Your prank always targets the other racer.</div><p>First place: <strong>3 points.</strong> Second: <strong>1.</strong> Dead heat: <strong>2 each.</strong> Most points takes the trophy; equal points are settled by total race time. Equal time means a shared trophy.</p><p class="muted">Pass & play: choose in private, then hand over the device. In solo, the house commits before you choose.</p><button class="primary" data-action="close-dialog">Sounds suitably unfair.${icon('arrow')}</button>`
+      : `<button class="dialog-close" data-action="close-dialog" aria-label="Close new derby dialog">×</button><p class="eyebrow">BACK TO THE CLUBHOUSE</p><h2 id="dialog-title">Call it a truce?</h2><p>This will end the current derby and reset both players’ cards.</p><div class="dialog-actions"><button class="secondary" data-action="close-dialog">Keep racing</button><button class="primary" data-action="abandon">New derby${icon('arrow')}</button></div>`
+  if (kind === 'rules' && phase !== 'lobby')
+    dialog.insertAdjacentHTML('beforeend', '<button class="text-button dialog-restart" data-action="restart">Start a new derby</button>')
   if (!dialog.open) dialog.showModal()
 }
 
@@ -353,7 +429,10 @@ function saveReceipt(): void {
   match.results.forEach((heat, i) => {
     const y = 455 + i * 95
     ctx.strokeStyle = '#c7c9be'
-    ctx.beginPath(); ctx.moveTo(75, y - 35); ctx.lineTo(1125, y - 35); ctx.stroke()
+    ctx.beginPath()
+    ctx.moveTo(75, y - 35)
+    ctx.lineTo(1125, y - 35)
+    ctx.stroke()
     ctx.fillStyle = '#282c27'
     ctx.font = 'bold 24px Arial'
     ctx.fillText(`0${i + 1}  ${HEATS[i].name}`, 75, y)
@@ -365,42 +444,86 @@ function saveReceipt(): void {
   })
   ctx.font = 'bold 18px Arial'
   ctx.fillText('SMALL BALLS. LOW BLOWS.  /  games/dirty-little-derby/', 75, 817)
-  canvas.toBlob(blob => {
+  canvas.toBlob((blob) => {
     const status = document.querySelector('#download-status')
-    if (!blob) { if (status) status.textContent = 'The receipt could not be saved. Try again.'; return }
+    if (!blob) {
+      if (status) status.textContent = 'The receipt could not be saved. Try again.'
+      return
+    }
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
-    link.href = url; link.download = 'dirty-little-derby-grudge.png'; link.click()
+    link.href = url
+    link.download = 'dirty-little-derby-grudge.png'
+    link.click()
     window.setTimeout(() => URL.revokeObjectURL(url), 10000)
     if (status) status.textContent = 'Grudge saved. Keep the receipt.'
   }, 'image/png')
 }
 
-app.addEventListener('input', event => {
+app.addEventListener('input', (event) => {
   const target = event.target as HTMLInputElement
   if (target.id === 'name-0') playerNames[0] = target.value
   if (target.id === 'name-1') playerNames[1] = target.value
 })
 
-app.addEventListener('click', event => {
+app.addEventListener('click', (event) => {
   const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button')
   if (!button || button.disabled) return
-  if (button.id === 'sound') { void toggleSound(); return }
-  if (button.id === 'rules') { openDialog('rules'); return }
-  if (button.id === 'new-game') { openDialog('restart'); return }
-  if (button.dataset.mode) { mode = button.dataset.mode as Mode; sounds.play('click'); renderLobby(); return }
-  if (button.dataset.route && phase === 'plan') { draft.route = button.dataset.route as Route; sounds.play('click'); renderPlan(); document.querySelector<HTMLButtonElement>(`[data-route="${draft.route}"]`)?.focus({ preventScroll: true }); return }
-  if (button.dataset.card && phase === 'plan') { draft.card = button.dataset.card as Card; sounds.play('click'); renderPlan(); document.querySelector<HTMLButtonElement>(`[data-card="${draft.card}"]`)?.focus({ preventScroll: true }); return }
+  if (button.id === 'sound') {
+    void toggleSound()
+    return
+  }
+  if (button.id === 'rules') {
+    openDialog('rules')
+    return
+  }
+  if (button.id === 'new-game') {
+    openDialog('restart')
+    return
+  }
+  if (button.dataset.mode) {
+    mode = button.dataset.mode as Mode
+    sounds.play('click')
+    renderLobby()
+    return
+  }
+  if (button.dataset.route && phase === 'plan') {
+    draft.route = button.dataset.route as Route
+    sounds.play('click')
+    renderPlan()
+    document.querySelector<HTMLButtonElement>(`[data-route="${draft.route}"]`)?.focus({ preventScroll: true })
+    return
+  }
+  if (button.dataset.card && phase === 'plan') {
+    draft.card = button.dataset.card as Card
+    sounds.play('click')
+    renderPlan()
+    document.querySelector<HTMLButtonElement>(`[data-card="${draft.card}"]`)?.focus({ preventScroll: true })
+    return
+  }
   const action = button.dataset.action
   if (action === 'start' || action === 'rematch') start()
   if (action === 'lock') lock()
-  if (action === 'ready') { picker = 1; phase = 'plan'; draft = { route: 'rocket', card: null }; render(); focusHeading() }
+  if (action === 'ready') {
+    picker = 1
+    phase = 'plan'
+    draft = { route: 'rocket', card: null }
+    render()
+    focusHeading()
+  }
   if (action === 'race') race(false)
   if (action === 'replay') race(true)
   if (action === 'pause') setPaused(!paused)
   if (action === 'next') {
-    if (round === 2) { phase = 'podium'; render(); focusHeading(); window.scrollTo({ top: 0, behavior: 'instant' }) }
-    else { round++; beginHeat() }
+    if (round === 2) {
+      phase = 'podium'
+      render()
+      focusHeading()
+      window.scrollTo({ top: 0, behavior: 'instant' })
+    } else {
+      round++
+      beginHeat()
+    }
   }
   if (action === 'lobby') lobby()
   if (action === 'receipt') saveReceipt()
@@ -411,7 +534,11 @@ app.addEventListener('click', event => {
     button.textContent = expanded ? 'Close course −' : 'Scout course +'
   }
   if (action === 'close-dialog') dialog.close()
-  if (action === 'abandon') { resumeAfterDialog = false; dialog.close(); lobby() }
+  if (action === 'abandon') {
+    resumeAfterDialog = false
+    dialog.close()
+    lobby()
+  }
 })
 
 async function toggleSound(): Promise<void> {
@@ -422,13 +549,28 @@ async function toggleSound(): Promise<void> {
   button.innerHTML = `${icon(sounds.enabled ? 'sound' : 'mute')}<span>Sound ${sounds.enabled ? 'on' : 'off'}</span>`
 }
 
-dialog.addEventListener('close', () => { if (resumeAfterDialog) setPaused(false); resumeAfterDialog = false })
-dialog.addEventListener('click', event => { if (event.target === dialog) { const r = dialog.getBoundingClientRect(); if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) dialog.close() } })
-document.addEventListener('keydown', event => {
+dialog.addEventListener('close', () => {
+  if (resumeAfterDialog) setPaused(false)
+  resumeAfterDialog = false
+})
+dialog.addEventListener('click', (event) => {
+  if (event.target === dialog) {
+    const r = dialog.getBoundingClientRect()
+    if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) dialog.close()
+  }
+})
+document.addEventListener('keydown', (event) => {
   if ((event.target as HTMLElement).closest('input, textarea, select') || dialog.open || event.repeat) return
-  if (event.code === 'Space' && phase === 'race' && !(event.target as HTMLElement).closest('button, a')) { event.preventDefault(); setPaused(!paused) }
+  if (event.code === 'Space' && phase === 'race' && !(event.target as HTMLElement).closest('button, a')) {
+    event.preventDefault()
+    setPaused(!paused)
+  }
   if (event.key.toLowerCase() === 'm' && !event.metaKey && !event.ctrlKey && !event.altKey) void toggleSound()
 })
-document.addEventListener('visibilitychange', () => { if (document.hidden && phase === 'race') setPaused(true) })
-window.addEventListener('pagehide', event => { if (!event.persisted) stage.destroy() })
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && phase === 'race') setPaused(true)
+})
+window.addEventListener('pagehide', (event) => {
+  if (!event.persisted) stage.destroy()
+})
 render()

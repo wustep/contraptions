@@ -17,7 +17,15 @@ export const INK = '#282c27'
 export const ROWS = [1.25, 4.25] as const
 export const FINISH = 11.8
 export const THEME: Theme = { name: 'derby', label: 'Backyard ink', bg: PAPER, ink: INK, colors: [...COLORS, '#d9b746'], weight: 0.64 }
-const WORLD: World = { name: 'derby', label: 'The backyard circuit', note: '', themes: [THEME], backdrops: ['plain'], pieces: [], tastes: { derby: {} } }
+const WORLD: World = {
+  name: 'derby',
+  label: 'The backyard circuit',
+  note: '',
+  themes: [THEME],
+  backdrops: ['plain'],
+  pieces: [],
+  tastes: { derby: {} },
+}
 
 export interface Runner {
   pieces: Placed[]
@@ -35,7 +43,15 @@ function buildRunner(outcome: Outcome, racer: Racer): Runner {
   const color = COLORS[racer]
   let clock = 0
   const add = <S>(piece: Piece<S>, col: number, y: number, duration: number): void => {
-    const placement = piece.place({ rng: makeRng(`derby:${racer}:${pieces.length}`), color, theme: THEME, taste: { weights: {} }, ball: { id: racer, color, ghost: false }, earned: 0, fits: () => true })
+    const placement = piece.place({
+      rng: makeRng(`derby:${racer}:${pieces.length}`),
+      color,
+      theme: THEME,
+      taste: { weights: {} },
+      ball: { id: racer, color, ghost: false },
+      earned: 0,
+      fits: () => true,
+    })
     if (!placement) throw new Error(`Could not place derby machine: ${piece.name}`)
     const factor = duration / laneTime(placement.lane)
     const retime = (ctx: PieceCtx): PieceCtx => ({ ...ctx, t: ctx.t / factor, since: ctx.since / factor })
@@ -48,18 +64,27 @@ function buildRunner(outcome: Outcome, racer: Racer): Runner {
       scores: undefined,
     }
     pieces.push({
-      piece: timed, state: placement.state, col, row: y, mirror: 1,
+      piece: timed,
+      state: placement.state,
+      col,
+      row: y,
+      mirror: 1,
       cells: placement.cells.map(([x, py]) => [col + x, y + py]),
-      lane: { segs: placement.lane.segs.map(s => ({ ...s, dur: s.dur * factor })), fire: placement.lane.fire * factor },
-      start: clock, span: duration, ballIn: { id: racer, color, ghost: false }, changes: [], points: 0,
+      lane: { segs: placement.lane.segs.map((s) => ({ ...s, dur: s.dur * factor })), fire: placement.lane.fire * factor },
+      start: clock,
+      span: duration,
+      ballIn: { id: racer, color, ghost: false },
+      changes: [],
+      points: 0,
     })
     clock += duration
   }
   const track = (name: string, segs: Seg[], flights = false): void => {
     const lane: Lane = { segs, fire: 0 }
     const piece: Piece<null> = {
-      name, weight: 0,
-      place: () => ({ state: null, cells: segs.flatMap(s => [s.from, s.to]), exit: { at: segs.at(-1)!.to, dir: 1 }, lane }),
+      name,
+      weight: 0,
+      place: () => ({ state: null, cells: segs.flatMap((s) => [s.from, s.to]), exit: { at: segs.at(-1)!.to, dir: 1 }, lane }),
       draw: (p, _s, { k, weight, ink }) => {
         p.noFill()
         p.stroke(ink)
@@ -72,7 +97,10 @@ function buildRunner(outcome: Outcome, racer: Racer): Runner {
             p.beginShape()
             for (let i = 0; i <= 24; i++) {
               const f = i / 24
-              p.vertex((s.from[0] + (s.to[0] - s.from[0]) * f) * k, (s.from[1] + (s.to[1] - s.from[1]) * f - s.arc * 4 * f * (1 - f) + 0.13) * k)
+              p.vertex(
+                (s.from[0] + (s.to[0] - s.from[0]) * f) * k,
+                (s.from[1] + (s.to[1] - s.from[1]) * f - s.arc * 4 * f * (1 - f) + 0.13) * k,
+              )
             }
             p.endShape()
             ctx.setLineDash([])
@@ -109,11 +137,15 @@ function buildRunner(outcome: Outcome, racer: Racer): Runner {
   } else track('clear junction', [segment([6, 0], [8, 0], 1)])
   const home = clock
   const homeTime = 3.7 - outcome.boost
-  track('home stretch', [
-    segment([8, 0], [8.65, -0.22], homeTime * 0.22),
-    fly([8.65, -0.22], [9.85, 0], homeTime * 0.27, 0.62),
-    segment([9.85, 0], [FINISH, 0], homeTime * 0.51),
-  ], true)
+  track(
+    'home stretch',
+    [
+      segment([8, 0], [8.65, -0.22], homeTime * 0.22),
+      fly([8.65, -0.22], [9.85, 0], homeTime * 0.27, 0.62),
+      segment([9.85, 0], [FINISH, 0], homeTime * 0.51),
+    ],
+    true,
+  )
   return { pieces, finish: clock, junction, home }
 }
 
@@ -125,19 +157,30 @@ export class DerbyShow extends Show {
   constructor(readonly result: Result) {
     super('dirty-little-derby')
     this.runners = result.outcomes.map((outcome, i) => buildRunner(outcome, i as Racer)) as [Runner, Runner]
-    this.duration = Math.max(...this.runners.map(r => r.finish))
+    this.duration = Math.max(...this.runners.map((r) => r.finish))
     const bounds = { x0: -1.4, y0: -0.6, x1: 13.0, y1: 7.5 }
     this.arena = {
-      index: 0, seed: this.seed, world: WORLD, theme: THEME, taste: 'derby', ballColor: COLORS[0], backdrop: 'plain',
-      pieces: this.runners.flatMap(r => r.pieces), box: bounds, bounds, journey: this.duration,
+      index: 0,
+      seed: this.seed,
+      world: WORLD,
+      theme: THEME,
+      taste: 'derby',
+      ballColor: COLORS[0],
+      backdrop: 'plain',
+      pieces: this.runners.flatMap((r) => r.pieces),
+      box: bounds,
+      bounds,
+      journey: this.duration,
     }
   }
 
-  override trailOff(): boolean { return true }
+  override trailOff(): boolean {
+    return true
+  }
 
   position(racer: Racer, time: number): { placed: Placed; point: ReturnType<typeof laneAt> } {
     const runner = this.runners[racer]
-    const placed = runner.pieces.find(piece => piece.start + piece.span >= Math.max(0, time)) ?? runner.pieces.at(-1)!
+    const placed = runner.pieces.find((piece) => piece.start + piece.span >= Math.max(0, time)) ?? runner.pieces.at(-1)!
     const point = laneAt(placed.lane, Math.max(0, time) - placed.start)
     return { placed, point: { ...point, x: placed.col + point.x, y: placed.row + point.y } }
   }
@@ -154,7 +197,17 @@ export class DerbyShow extends Show {
 }
 
 /** Sparse, flat scenery. Everything important is still drawn by engine.drawWorld. */
-export function drawTrackFurniture(p: p5, show: DerbyShow, time: number, camera: { x: number; y: number }, k: number, width: number, height: number, names: [string, string], detailed = true): void {
+export function drawTrackFurniture(
+  p: p5,
+  show: DerbyShow,
+  time: number,
+  camera: { x: number; y: number },
+  k: number,
+  width: number,
+  height: number,
+  names: [string, string],
+  detailed = true,
+): void {
   const x = (value: number) => width / 2 + (value - camera.x) * k
   const y = (value: number) => height / 2 + (value - camera.y) * k
   const label = (text: string, atX: number, atY: number): void => {
@@ -229,13 +282,32 @@ export function drawTrackFurniture(p: p5, show: DerbyShow, time: number, camera:
     }
     if (outcome.boost && time >= runner.home && time < runner.finish) {
       p.stroke(COLORS[racer])
-      for (let n = 0; n < 3; n++) p.line(x(current.x - 0.22 - n * 0.08), y(current.y - 0.07 + n * 0.07), x(current.x - 0.4 - n * 0.08), y(current.y - 0.07 + n * 0.07))
+      for (let n = 0; n < 3; n++)
+        p.line(
+          x(current.x - 0.22 - n * 0.08),
+          y(current.y - 0.07 + n * 0.07),
+          x(current.x - 0.4 - n * 0.08),
+          y(current.y - 0.07 + n * 0.07),
+        )
     }
     p.noStroke()
     p.fill(INK)
     p.textSize(Math.max(10, k * 0.18))
-    const caption = before ? names[racer] : time >= runner.finish ? `${names[racer]} · ${runner.finish.toFixed(2)}s` : time >= runner.junction && outcome.incoming ? (outcome.blocked ? 'A very satisfying NO.' : `${names[1 - racer]} did this. +${outcome.penalty.toFixed(1)}s`) : names[racer]
-    if (detailed) label(caption, time >= runner.junction && time < runner.finish && outcome.incoming ? 6 : 0, row + (outcome.incoming === 'dunk' && outcome.penalty ? 1.45 : 0.9))
+    const caption = before
+      ? names[racer]
+      : time >= runner.finish
+        ? `${names[racer]} · ${runner.finish.toFixed(2)}s`
+        : time >= runner.junction && outcome.incoming
+          ? outcome.blocked
+            ? 'A very satisfying NO.'
+            : `${names[1 - racer]} did this. +${outcome.penalty.toFixed(1)}s`
+          : names[racer]
+    if (detailed)
+      label(
+        caption,
+        time >= runner.junction && time < runner.finish && outcome.incoming ? 6 : 0,
+        row + (outcome.incoming === 'dunk' && outcome.penalty ? 1.45 : 0.9),
+      )
     if (detailed && outcome.protected && time >= runner.junction && time < runner.finish) {
       p.fill('#636c5e')
       p.textSize(Math.max(9, k * 0.14))
