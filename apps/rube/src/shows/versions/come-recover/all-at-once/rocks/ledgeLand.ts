@@ -3,7 +3,7 @@ import { mixHex, type Pt } from '../../../../../parts'
 import { hash, type frame } from '../kit'
 import { ROCKS, ROCKS_THEME, VOID, VOID_THEME } from '../worlds'
 import { NOON, type Light } from './ledgeLight'
-import { groundAt, LIP, Q, RI, RIM, RO, SLAB, SLAB_BACK, TOP, type Ledge, type Plan } from './ledgePath'
+import { groundAt, LIP, LIP_OVER, Q, RI, RO, SLAB, SLAB_BACK, TOP, type Ledge, type Plan } from './ledgePath'
 
 /**
  * The canyon, as it is painted: the sky, the canyon going away into the distance in slices that pale as they go,
@@ -559,110 +559,298 @@ export function paintWall(p: p5, k: number, f: Frame, land: Land, weight: number
   ctx.stroke()
 }
 
-/* ------------------------------------------------------------------ the ring */
+/* ------------------------------------------------------------------ the bagel */
+
+/** The bagel's body: a fat round of crust, the tube of it `BODY_X` across and `BODY_Y` deep from its middle. */
+const BODY_X = 0.3
+const BODY_Y = 0.28
+/** The round through the middle of its tube. */
+const CORE = RO - BODY_X
+/** How far the upper and lower rounds of its tube sit under the lip: the lower comes out a little under the floor's edge, settled in the sand. */
+const UPPER = 0.1
+const LOWER = 0.16
+
+/** A risen round: its upper and lower rounds (`rx` across, `ry` deep, at `y0` and `y1`), and its shoulders (`ax` × `ay`). */
+type Pill = { x: number; y0: number; y1: number; rx: number; ry: number; ax: number; ay: number }
+
+/** A risen round seen a little from above: the hull of its two rounds, rounded out by its shoulders, and grown by `grow`. */
+function pillPath(ctx: Ctx2D, k: number, s: Pill, grow = 0): void {
+  const n = 72
+  const ax = s.ax + grow
+  const ay = s.ay + grow
+  // The point of the outline whose outward normal is at angle `a`, on the round at `y`.
+  const at = (a: number, y: number): [number, number] => {
+    const ux = Math.cos(a)
+    const uy = Math.sin(a)
+    const d = Math.hypot(s.rx * ux, s.ry * uy)
+    const e = Math.hypot(ax * ux, ay * uy)
+    // Rolled by hand: a little fuller here and there round it.
+    const lump = 1 + 0.009 * Math.sin(3 * a + 1.1) + 0.006 * Math.sin(5 * a + 2.3)
+    const px = ((s.rx * s.rx * ux) / d + (ax * ax * ux) / e) * lump
+    const py = (s.ry * s.ry * uy) / d + (ay * ay * uy) / e
+    return [(s.x + px) * k, (y + py * lump) * k]
+  }
+  ctx.beginPath()
+  for (let i = 0; i < n; i++) {
+    const a = (Math.PI * 2 * i) / n
+    // Down the right side from the upper round to the lower, and up the left.
+    const pts = i === 0 ? [at(a, s.y0), at(a, s.y1)] : i === n / 2 ? [at(a, s.y1), at(a, s.y0)] : [at(a, Math.sin(a) > 0 ? s.y1 : s.y0)]
+    for (const [px, py] of pts) {
+      if (i === 0 && px === pts[0][0] && py === pts[0][1]) ctx.moveTo(px, py)
+      else ctx.lineTo(px, py)
+    }
+  }
+  ctx.closePath()
+}
+
+function ellipsePath(ctx: Ctx2D, k: number, x: number, y: number, rx: number, ry: number): void {
+  ctx.beginPath()
+  ctx.ellipse(x * k, y * k, rx * k, ry * k, 0, 0, Math.PI * 2)
+}
 
 /**
- * The dark ring lying in the sand: the everything bagel, come through into a world with nothing in it. Its far half
- * and its hole behind the rocks; its near half (`front`) over them, so what falls in goes down behind its lip and
- * under the sand.
+ * The bagel's shapes about the middle of its hole's lip `(x, y)`: its body, and its crust's shade turning up to the
+ * light, a round inside a round, each a little higher and narrower than the last.
  */
-export function paintRing(p: p5, k: number, f: Frame, land: Land, weight: number, front: boolean, t: number, edgeWeight = weight): void {
+function bagelOf(x: number, y: number) {
+  const ry = CORE * Q
+  const round = (lift: number, f: number, g: number): Pill => ({ x, y0: y + UPPER - lift, y1: y + UPPER - lift, rx: CORE, ry, ax: BODY_X * f, ay: BODY_Y * g })
+  return {
+    body: { x, y0: y + UPPER, y1: y + LOWER, rx: CORE, ry, ax: BODY_X, ay: BODY_Y },
+    shoulder: round(0.06, 0.9, 0.78),
+    top: round(0.12, 0.72, 0.5),
+  }
+}
+
+/** The seasoning on its crust, worked out once: where on the crust (radius and angle) each one lies, and what it is. */
+const SEASONING = Array.from({ length: 170 }, (_, i) => {
+  const kind = hash(i, 2, 13)
+  // Thickest along the crest, thinning toward the hole and down the sides.
+  const across = hash(i, 3, 13) + hash(i, 7, 13) - 1
+  return {
+    r: Math.max(RI + 0.06, Math.min(CORE + 0.2, CORE - 0.04 + across * 0.36)),
+    a: Math.PI * 2 * hash(i, 4, 13),
+    turn: Math.PI * hash(i, 5, 13),
+    size: 0.8 + 0.4 * hash(i, 6, 13),
+    // Mostly sesame; then poppy, dried onion, garlic and salt.
+    kind: kind < 0.5 ? 'sesame' : kind < 0.7 ? 'poppy' : kind < 0.82 ? 'onion' : kind < 0.92 ? 'garlic' : 'salt',
+  } as const
+})
+
+/** The bagel drawn once a frame, to be laid down whole behind the stones and again, in part, over them. */
+let held: HTMLCanvasElement | null = null
+let heldAt: [number, number] = [0, 0]
+
+/** The device pixel the drawing's point `(x, y)` (in cells) falls on, whole. */
+const deviceOf = (ctx: Ctx2D, k: number, x: number, y: number): [number, number] => {
+  const m = ctx.getTransform()
+  return [Math.round(m.a * x * k + m.c * y * k + m.e), Math.round(m.b * x * k + m.d * y * k + m.f)]
+}
+
+/** Clip to a rectangle given in cells, its edges on whole device pixels, so what is painted again inside it meets what was there exactly. */
+function clipWhole(ctx: Ctx2D, k: number, x0: number, y0: number, x1: number, y1: number): void {
+  const [a, b] = deviceOf(ctx, k, x0, y0)
+  const [c, d] = deviceOf(ctx, k, x1, y1)
+  const m = ctx.getTransform()
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.beginPath()
+  ctx.rect(Math.min(a, c), Math.min(b, d), Math.abs(c - a), Math.abs(d - b))
+  ctx.clip()
+  ctx.setTransform(m)
+}
+
+/** Lay down the bagel as drawn this frame, on the same device pixels it was drawn for. */
+function layHeld(ctx: Ctx2D): void {
+  if (!held) return
+  const m = ctx.getTransform()
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.drawImage(held, heldAt[0], heldAt[1])
+  ctx.setTransform(m)
+}
+
+/**
+ * The everything bagel, lying in the sand at the bottom of the canyon: Jobu's, come through into a world with nothing
+ * in it, in the same black crust and seeds as in her dark. A fat, risen round seen a little from above and settled a
+ * little into the sand: its crust turning up from its own shade to the sky's light on its top, a warm streak along
+ * its far crest from the low sun behind the far wall, and its everything (sesame, poppy, onion, garlic and salt)
+ * over the top. In its hole the far inner wall goes down into the dark. No glow comes up out of it.
+ *
+ * It is drawn once a frame and laid down whole behind the stones (`front` false). Over them (`front` true), the part
+ * of it nearer than its hole's lip is laid down again from the same drawing, and the ground under it is painted
+ * again by the wall's own painter, so what drops in goes down behind its near lip and under the sand, and nothing
+ * shows where the two meet.
+ */
+export function paintRing(p: p5, k: number, f: Frame, land: Land, weight: number, front: boolean, light: Light, edgeWeight = weight): void {
   const ctx = p.drawingContext as Ctx2D
   const { x, y } = land.ring
   const floor = land.floor
-  const qo = RO * Q
-  const qi = RI * Q
-  const X = (v: number) => v * k
-  ctx.lineWidth = weight
-  ctx.strokeStyle = INK
-  ctx.lineJoin = 'round'
+  if (x + RO + 1.5 < f.x0 || x - RO - 1.5 > f.x1 || y - 1 > f.y1 || floor + 0.5 < f.y0) return
   if (!front) {
-    // Its top, all round, and the hole.
-    ctx.beginPath()
-    ctx.ellipse(X(x), X(y), X(RO), X(qo), 0, 0, Math.PI * 2)
-    ctx.fillStyle = VOID.bagel
-    ctx.fill()
-    ctx.stroke()
-    // The sky's light on its far crust.
-    ctx.beginPath()
-    ctx.ellipse(X(x), X(y), X(RO - 0.06), X(qo - 0.03), 0, Math.PI * 1.08, Math.PI * 1.92)
-    ctx.strokeStyle = rgba(VOID.rimLight, 0.28)
-    ctx.lineWidth = Math.max(1, weight * 0.9)
-    ctx.stroke()
-    ctx.strokeStyle = INK
-    ctx.lineWidth = weight
-    ctx.beginPath()
-    ctx.ellipse(X(x), X(y), X(RI), X(qi), 0, 0, Math.PI * 2)
-    ctx.fillStyle = VOID_THEME.bg
-    ctx.fill()
-    // The cold light down in the hole, breathing slowly.
-    const breathe = 0.5 + 0.5 * Math.sin(t * 0.8)
-    const g = ctx.createRadialGradient(X(x), X(y + qi * 0.35), 0, X(x), X(y + qi * 0.35), X(RI * 0.95))
-    g.addColorStop(0, rgba(VOID.glow, 0.34 + 0.12 * breathe))
-    g.addColorStop(1, rgba(VOID.glow, 0))
-    ctx.fillStyle = g
-    ctx.fill()
-    ctx.stroke()
-    seeds(ctx, k, x, y, false)
+    hold(ctx, k, x, y, weight, light)
+    paintShadow(ctx, k, x, floor, light)
+    ctx.save()
+    clipWhole(ctx, k, x - RO - 1, y - 2, x + RO + 1, floor)
+    layHeld(ctx)
+    ctx.restore()
     return
   }
-  // The near half: the ground under it (so what went in is under the sand), then its outer side down to the sand,
-  // then the near half of its top, between the outer round and the hole.
+  // The ground under it, as the wall has it, and its shadow on the sand.
   ctx.save()
-  ctx.beginPath()
-  ctx.rect(X(x - RO - 0.1), X(floor), X(2 * RO + 0.2), X(4))
-  ctx.clip()
-  paintBands(ctx, k, x - RO - 0.3, x + RO + 0.3, floor, floor + 4, beddingStep(f), undefined, undefined, Math.max(0.6, weight * 0.4))
-  const sandFrom = Math.max(x - RO - 0.3, land.sand[land.sand.length - 1][0][0])
-  ctx.fillStyle = ROCKS.sand
-  ctx.fillRect(X(sandFrom), X(floor), X(x + RO + 0.3 - sandFrom), X(SAND))
+  clipWhole(ctx, k, x - RO - 0.3, floor, x + RO + 0.3, floor + 4)
+  paintWall(p, k, f, land, edgeWeight, light)
+  paintShadow(ctx, k, x, floor, light)
   ctx.restore()
-  // The floor's own line, which the ground just painted over by half.
+  // Its near part: inside its outline (and the inner half of the line round it), under the lip of its hole and level
+  // with it out to either side, down to the floor's edge.
+  ctx.save()
+  clipWhole(ctx, k, x - RO - 1, y, x + RO + 1, floor)
+  pillPath(ctx, k, bagelOf(x, y).body, (weight * 0.3) / k)
+  ctx.clip()
   ctx.beginPath()
-  ctx.moveTo(X(x - RO - 0.1), X(floor))
-  ctx.lineTo(X(x + RO + 0.1), X(floor))
-  ctx.lineWidth = edgeWeight
-  ctx.lineCap = 'butt'
-  ctx.stroke()
-  ctx.lineCap = 'round'
-  ctx.lineWidth = weight
-  ctx.beginPath()
-  ctx.moveTo(X(x - RO), X(y))
-  ctx.lineTo(X(x - RO), X(y + RIM))
-  ctx.ellipse(X(x), X(y + RIM), X(RO), X(qo), 0, Math.PI, 0, true)
-  ctx.lineTo(X(x + RO), X(y))
-  ctx.ellipse(X(x), X(y), X(RO), X(qo), 0, 0, Math.PI, false)
+  ctx.moveTo((x - RO - 1) * k, (y - 1) * k)
+  ctx.lineTo((x - RI) * k, (y - 1) * k)
+  ctx.lineTo((x - RI) * k, y * k)
+  ctx.ellipse(x * k, y * k, RI * k, RI * Q * k, 0, Math.PI, 0, true)
+  ctx.lineTo((x + RI) * k, (y - 1) * k)
+  ctx.lineTo((x + RO + 1) * k, (y - 1) * k)
+  ctx.lineTo((x + RO + 1) * k, (floor + 1) * k)
+  ctx.lineTo((x - RO - 1) * k, (floor + 1) * k)
   ctx.closePath()
-  ctx.fillStyle = mixHex(VOID.bagel, VOID.bagelRim, 0.7)
-  ctx.fill()
-  ctx.stroke()
-  ctx.beginPath()
-  ctx.moveTo(X(x - RO), X(y))
-  ctx.ellipse(X(x), X(y), X(RO), X(qo), 0, Math.PI, 0, true)
-  ctx.lineTo(X(x + RI), X(y))
-  ctx.ellipse(X(x), X(y), X(RI), X(qi), 0, 0, Math.PI, false)
-  ctx.closePath()
-  ctx.fillStyle = VOID.bagel
-  ctx.fill()
-  // Its lines: the near edge of the hole only (the outer round was drawn with the side).
-  ctx.beginPath()
-  ctx.ellipse(X(x), X(y), X(RI), X(qi), 0, 0, Math.PI, false)
-  ctx.stroke()
-  seeds(ctx, k, x, y, true)
+  ctx.clip()
+  layHeld(ctx)
+  ctx.restore()
 }
 
-/** Seeds on its crust, the far half's or the near half's: sesame, and a fleck or two of salt. */
-function seeds(ctx: Ctx2D, k: number, x: number, y: number, near: boolean): void {
-  for (let i = 0; i < 16; i++) {
-    const a = Math.PI * 2 * hash(i, 3, 3)
-    const isNear = Math.sin(a) > 0
-    if (isNear !== near) continue
-    const r = RI + (RO - RI) * (0.2 + 0.6 * hash(i, 4, 4))
-    const sx = x + Math.cos(a) * r
-    const sy = y + Math.sin(a) * r * Q
-    ctx.fillStyle = i % 5 === 0 ? VOID.salt : VOID.sesame
+/** Draw the bagel for this frame into its own canvas, on the device pixels the stage will lay it on. */
+function hold(ctx: Ctx2D, k: number, x: number, y: number, weight: number, light: Light): void {
+  if (typeof document === 'undefined') return
+  const W = ctx.canvas.width
+  const H = ctx.canvas.height
+  const [a, b] = deviceOf(ctx, k, x - RO - 0.2, y - 0.8)
+  const [c, d] = deviceOf(ctx, k, x + RO + 0.2, y + LIP_OVER + 0.5)
+  const x0 = Math.max(0, Math.min(a, c))
+  const y0 = Math.max(0, Math.min(b, d))
+  const w = Math.min(W, Math.max(a, c)) - x0
+  const h = Math.min(H, Math.max(b, d)) - y0
+  if (w <= 0 || h <= 0) {
+    if (held) held.width = 0
+    return
+  }
+  held ??= document.createElement('canvas')
+  if (held.width !== w || held.height !== h) {
+    held.width = w
+    held.height = h
+  }
+  heldAt = [x0, y0]
+  const g = held.getContext('2d')
+  if (!g) return
+  const m = ctx.getTransform()
+  g.setTransform(1, 0, 0, 1, 0, 0)
+  g.clearRect(0, 0, w, h)
+  g.setTransform(m.a, m.b, m.c, m.d, m.e - x0, m.f - y0)
+  paintBagel(g, k, x, y, weight, light)
+}
+
+/** Its shadow on the sand at its foot, thrown back from the low sun as the stones' are, flat. */
+function paintShadow(ctx: Ctx2D, k: number, x: number, floor: number, light: Light): void {
+  const sh = light.shadow
+  const stretch = 1 + 0.35 * (sh.stretch - 1)
+  const w = RO * 1.02 * stretch
+  ctx.fillStyle = rgba(ROCKS.stoneDeep, 0.42 * sh.a)
+  ctx.beginPath()
+  ctx.ellipse((x - (w - RO) * 0.85 + sh.dx) * k, floor * k, w * k, 0.075 * k, 0, 0, Math.PI * 2)
+  ctx.fill()
+}
+
+/** The bagel itself, whole. */
+function paintBagel(ctx: Ctx2D, k: number, x: number, y: number, weight: number, light: Light): void {
+  const shape = bagelOf(x, y)
+  const ri = RI * Q
+  // The crust: Jobu's black, baked, warmed by the evening; its sides in their own shade, turning up to the sky's light
+  // on its top.
+  const crust = mixHex(VOID.bagel, ROCKS.canyonShade, 0.16)
+  pillPath(ctx, k, shape.body)
+  ctx.fillStyle = mixHex(crust, light.sky[2], 0.04)
+  ctx.fill()
+  pillPath(ctx, k, shape.shoulder)
+  ctx.fillStyle = mixHex(mixHex(crust, VOID.bagelRim, 0.5), light.sky[2], 0.12)
+  ctx.fill()
+  pillPath(ctx, k, shape.top)
+  ctx.fillStyle = mixHex(mixHex(crust, VOID.bagelRim, 0.5), light.sky[1], 0.24)
+  ctx.fill()
+  // The low sun, behind the far wall, along the far crest: a warm streak, as the light lies along it in Jobu's dark.
+  ctx.beginPath()
+  ctx.ellipse(x * k, (y + UPPER - 0.2) * k, CORE * k, CORE * Q * k, 0, Math.PI * 1.55, Math.PI * 1.88)
+  ctx.strokeStyle = rgba(mixHex(VOID.rimLight, light.sun.warm, 0.5), 0.5)
+  ctx.lineWidth = 0.03 * k
+  ctx.lineCap = 'round'
+  ctx.stroke()
+  // The hole: its far inner wall going down, darker as it goes, and under it Jobu's dark.
+  ctx.save()
+  ellipsePath(ctx, k, x, y, RI, ri)
+  ctx.clip()
+  ctx.fillStyle = mixHex(crust, light.sky[1], 0.1)
+  ctx.fill()
+  ellipsePath(ctx, k, x, y + 0.05, RI * 0.94, ri * 0.82)
+  ctx.fillStyle = mixHex(crust, VOID_THEME.bg, 0.5)
+  ctx.fill()
+  ellipsePath(ctx, k, x, y + 0.1, RI * 0.84, ri * 0.66)
+  ctx.fillStyle = VOID_THEME.bg
+  ctx.fill()
+  ctx.restore()
+  // The everything, on the crust and not in the hole.
+  ctx.save()
+  pillPath(ctx, k, shape.body)
+  ctx.ellipse(x * k, y * k, (RI + 0.02) * k, (ri + 0.02) * k, 0, 0, Math.PI * 2)
+  ctx.clip('evenodd')
+  paintSeasoning(ctx, k, x, y, light)
+  ctx.restore()
+  // Its lines: the round of it, and the lip of its hole.
+  ctx.lineJoin = 'round'
+  ctx.strokeStyle = INK
+  ctx.lineWidth = weight
+  pillPath(ctx, k, shape.body)
+  ctx.stroke()
+  ellipsePath(ctx, k, x, y, RI, ri)
+  ctx.lineWidth = weight * 0.85
+  ctx.stroke()
+}
+
+/** The seasoning: each seed or flake lying on the crust, turned its own way, foreshortened as the crust is. */
+function paintSeasoning(ctx: Ctx2D, k: number, x: number, y: number, light: Light): void {
+  const colors = {
+    sesame: light.lit(VOID.sesame),
+    poppy: mixHex(VOID.poppy, light.sky[0], 0.3),
+    onion: light.lit(VOID.onion),
+    garlic: light.lit(VOID.garlic),
+    salt: light.lit(VOID.salt),
+  }
+  const sizes = { sesame: [0.034, 0.015], poppy: [0.016, 0.014], onion: [0.032, 0.02], garlic: [0.022, 0.017], salt: [0.012, 0.011] }
+  for (const kind of Object.keys(colors) as (keyof typeof colors)[]) {
     ctx.beginPath()
-    ctx.ellipse(sx * k, sy * k, (i % 5 === 0 ? 0.018 : 0.034) * k, 0.014 * k, Math.cos(a) * 0.5 + 0.3 * (hash(i, 5) - 0.5), 0, Math.PI * 2)
+    for (const s of SEASONING) {
+      if (s.kind !== kind) continue
+      // On the crust's round: up on its crest, and squashed as the round is.
+      const crest = Math.max(0, 1 - ((s.r - CORE) / BODY_X) ** 2)
+      const cx = x + s.r * Math.cos(s.a)
+      const cy = y + UPPER + s.r * Math.sin(s.a) * Q - (BODY_Y * 0.62 + 0.04) * crest
+      const [l, w] = sizes[kind]
+      const c = Math.cos(s.turn)
+      const sn = Math.sin(s.turn)
+      for (let j = 0; j < 8; j++) {
+        const u = (Math.PI * 2 * j) / 8
+        // A flake of onion is ragged; the rest are round.
+        const rough = kind === 'onion' ? 0.75 + 0.5 * hash(j, Math.round(s.turn * 100), 5) : 1
+        const lx = l * s.size * rough * Math.cos(u)
+        const ly = w * s.size * rough * Math.sin(u)
+        const px = (cx + lx * c - ly * sn) * k
+        const py = (cy + (lx * sn + ly * c) * 0.55) * k
+        if (j === 0) ctx.moveTo(px, py)
+        else ctx.lineTo(px, py)
+      }
+      ctx.closePath()
+    }
+    ctx.fillStyle = colors[kind]
     ctx.fill()
   }
 }
