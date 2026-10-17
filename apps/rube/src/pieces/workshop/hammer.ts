@@ -98,15 +98,9 @@ export const hammer = definePiece<{ color: string }>({
     p.noStroke()
     p.rect(AX * k, (FLOOR + 0.04) * k, (GUIDE * 2 + 0.12) * k, 0.08 * k, 0.015 * k)
 
-    // The head, with a motion streak on the way down.
-    if (since > -DROP * 0.6 && since < 0) {
-      p.push()
-      p.stroke(s.color)
-      p.strokeWeight(weight)
-      const f = over(since, -DROP, 0)
-      for (const dx of [-0.1, 0.1]) p.line((AX + dx) * k, (top - 0.02) * k, (AX + dx) * k, (top - 0.02 - 0.3 * f) * k)
-      p.pop()
-    }
+    // The head. (No motion streak over it on the way down: two sticks of
+    // colour standing on the block for six frames, across the cable, on top
+    // of a fall already seen.)
     // A block on top and the wedge below it, one outline; the wedge's bit is ink.
     solid(p, ink, weight, s.color)
     p.beginShape()
