@@ -60,21 +60,18 @@ export interface Tone {
   high: string
   low: string
   horizon: string
-  /** The far ranges: snow in shadow, the shadowed flanks, rock, and the light where it has reached. */
+  /** The far ranges: snow in shadow, the shadowed flanks, and the light where it has reached. */
   snow: string
   shade: string
-  rock: string
   lit: string
-  litRock: string
   /** The sea of cloud: its tops and its undersides. */
   cloud: string
   cloudUnder: string
-  /** The face he climbs: its snow high and low, its shadows, its rock, the rock's snow-lit tops. */
+  /** The face he climbs: its snow high and low, its shadows, its rock. */
   faceSnow: string
   faceLow: string
   faceShade: string
   faceRock: string
-  faceRockTop: string
   /** The light on the face. */
   faceLit: string
   /** The air's tint for distance. */
@@ -101,16 +98,13 @@ export function tone(t: number): Tone {
     horizon: ramp(t, ['#8A86A8', '#B994A0', '#E2AE96', '#F0C095', '#F7D39C', '#FBE3B8', '#FFF2DA']),
     snow: ramp(t, ['#7E89AE', '#8892B4', '#97A0BE', '#A7AFC9', '#B9C3D8', '#CBD5E4', '#DCE5EF']),
     shade: ramp(t, ['#47517C', '#4E5882', '#5A6489', '#64709A', '#6E7FAE', '#7C8FBC', '#8DA1C9']),
-    rock: ramp(t, ['#353D62', '#3B4468', '#454E70', '#525C7B', '#616C88', '#717D97', '#8290A8']),
     lit: ramp(t, ['#A99CB8', '#C9A6AE', '#F0BFAB', '#F4C9A8', '#F8D8A2', '#FCE6BE', '#FFF5E2']),
-    litRock: ramp(t, ['#5E5A78', '#7A6676', '#9C7F84', '#A98C82', '#B39E80', '#C2AF90', '#D2C4A8']),
     cloud: ramp(t, ['#8E95B6', '#9AA0BD', '#ACAEC6', '#C7C1CF', '#E6D9CF', '#F7EBDC', '#FFF7EC']),
     cloudUnder: ramp(t, ['#5E6790', '#68709A', '#757CA2', '#838BAD', '#98A3BE', '#AEBACE', '#C3CEDD']),
     faceSnow: ramp(t, ['#A9B4CC', '#B0BAD0', '#B9C1D4', '#C4CBDB', '#D2D8E4', '#E3E7EE', '#F0F2F5']),
     faceLow: ramp(t, ['#8E9AB6', '#96A1BC', '#A0AAC2', '#ABB5CA', '#BCC5D5', '#CDD5E1', '#DCE2EB']),
     faceShade: ramp(t, ['#6F7C9C', '#7683A2', '#808CA9', '#8C97B1', '#9AA6BE', '#AAB6CB', '#BAC5D7']),
     faceRock: ramp(t, ['#3C4762', '#414C67', '#47526C', '#4F5A73', '#58637B', '#626D84', '#6D788E']),
-    faceRockTop: ramp(t, ['#C4CDDE', '#C9D1E0', '#D2D7E3', '#DCDDE4', '#EDE5DD', '#F8EEDF', '#FFF8EA']),
     faceLit: ramp(t, ['#C6BCD0', '#D8C0C4', '#F2CDB8', '#F8D7B6', '#FCE3BA', '#FFEFCF', '#FFF8E8']),
     haze: ramp(t, ['#7378A0', '#8A86A6', '#B29CAB', '#CDB2AE', '#E3CDB6', '#F0E0CA', '#F8EEDF']),
     ink: ramp(t, ['#232A40', '#262D44', '#2A3147', '#2F354B', '#353A4F', '#3B4054', '#42475A']),
