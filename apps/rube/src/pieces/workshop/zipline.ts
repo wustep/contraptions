@@ -96,10 +96,21 @@ export const zipline = definePiece<{ color: string }>({
     p.line(0, 0.02 * k, 0, (HANG - R - 0.06) * k)
     solid(p, ink, weight, s.color)
     p.rect(0, floor * k, 0.3 * k, 0.05 * k)
+    // The walls, and the bail they hang from: the bar under the hanger, its ends brought down to the walls' tops.
+    // The bar alone floated over the empty cup.
+    const bar = HANG - R - 0.06
+    const left = HANG - R * 0.5
+    const right = HANG - R * 0.1
     outline(p, ink, weight)
-    p.line(-0.15 * k, floor * k, -0.15 * k, (HANG - R * 0.5) * k)
-    p.line(0.15 * k, floor * k, 0.15 * k, (HANG - R * 0.1) * k)
-    p.line(-0.09 * k, (HANG - R - 0.06) * k, 0.09 * k, (HANG - R - 0.06) * k)
+    p.noFill()
+    p.beginShape()
+    p.vertex(-0.15 * k, floor * k)
+    p.vertex(-0.15 * k, left * k)
+    p.vertex(-0.09 * k, bar * k)
+    p.vertex(0.09 * k, bar * k)
+    p.vertex(0.15 * k, right * k)
+    p.vertex(0.15 * k, floor * k)
+    p.endShape()
     p.pop()
 
     // The hit: dust off the stop.
