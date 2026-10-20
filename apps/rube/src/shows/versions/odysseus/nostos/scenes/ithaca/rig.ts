@@ -1,6 +1,8 @@
 import { ring, smooth, smoother } from '../../draw'
 import type { Pt } from '../../path'
-import { AXES, BOW, CRANK, HOIST, HOME, TRIAL } from './geo'
+import { AXES, BOW, CRANK, HALL, HOIST, HOME, TRIAL } from './geo'
+
+const HALL_FLOOR = HALL.floor
 
 /**
  * The machines of Ithaca as functions of show time: the hoist's two baskets, the twelve axes, the bow's crank, the bow
@@ -67,7 +69,7 @@ export function armTip(t: number): Pt {
 export const NOCK0 = BOW.x + 0.09
 /** The arrow's length, and its speed off the string (cells a second). */
 export const ARROW = 0.46
-const SPEED = 9
+const SPEED = 7.9
 
 /** How far the string is drawn west of its rest, at `t`: the arm's swing, and the string's ring when it sings. */
 export function drawOf(t: number): number {
@@ -80,14 +82,41 @@ export function drawOf(t: number): number {
 /** How far the string is drawn as it looses. */
 const DRAWN = CRANK.arm * Math.sin(CRANK.cocked)
 
-/** The arrow's nock (its tail), x: on the string until the loose, then flying east. */
+/** The arrow's flight: its nock (its tail) flying east from the string at the loose. */
+const flying = (t: number): number => NOCK0 + DRAWN - SPEED * (t - TRIAL.loose)
+
+/**
+ * Where it takes Antinous: his middle, as the point reaches it, at the height the arrow flies. He comes down where it
+ * throws him, a little on east, and lies there.
+ */
+export const STRUCK: Pt = [flying(TRIAL.strike) - ARROW - 0.02, BOW.y]
+const DOWN: Pt = [STRUCK[0] - 0.53, HALL_FLOOR - 0.13]
+const DOWN_T = TRIAL.strike + Math.sqrt((2 * (DOWN[1] - STRUCK[1])) / 26)
+const LIES: Pt = [DOWN[0] - 0.12, DOWN[1]]
+
+/** Antinous from the moment the arrow takes him: thrown on, down onto the floor, a short roll, and still. */
+export function antinousStruck(t: number): Pt {
+  if (t <= DOWN_T) {
+    const u = (t - TRIAL.strike) / (DOWN_T - TRIAL.strike)
+    const s = t - TRIAL.strike
+    return [STRUCK[0] + (DOWN[0] - STRUCK[0]) * u, STRUCK[1] + 0.5 * 26 * s * s]
+  }
+  const u = smoother(t, DOWN_T, DOWN_T + 0.7)
+  return [DOWN[0] + (LIES[0] - DOWN[0]) * (1 - (1 - u) * (1 - u)), DOWN[1]]
+}
+
+/** The arrow's nock (its tail), x: on the string until the loose, flying east, then standing in him where he lies. */
 export function arrowTail(t: number): number {
   if (t <= TRIAL.loose) return NOCK0 + drawOf(t)
-  return NOCK0 + DRAWN - SPEED * (t - TRIAL.loose)
+  if (t < TRIAL.strike) return flying(t)
+  return antinousStruck(t)[0] + 0.02 + ARROW
 }
+
+/** The arrow's height at `t`: the bow's, and then his as he falls with it in him. */
+export const arrowY = (t: number): number => (t < TRIAL.strike ? BOW.y : antinousStruck(t)[1])
 
 /** Show time the arrow's point passes x (east of the bow). */
 export const arrowPasses = (x: number): number => TRIAL.loose + (NOCK0 + DRAWN - ARROW - x) / SPEED
 
-/** Whether the arrow is on the stage: laid on the string through the trial, gone into the dark over the cliff after it. */
-export const arrowShown = (t: number): boolean => t >= TRIAL.inside && arrowTail(t) > 795
+/** Whether the arrow is on the stage: laid on the string through the trial, and in Antinous after it. */
+export const arrowShown = (t: number): boolean => t >= TRIAL.inside

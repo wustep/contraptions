@@ -1,4 +1,6 @@
-import { fill, mix, poly, rect, stroke, type Paint } from '../../draw'
+import { fill, mix, poly, rect, rgba, stroke, type Paint } from '../../draw'
+import { M } from '../../music'
+import { skyAt } from '../../world/sky'
 import type { Pt } from '../../path'
 import { glide } from '../../voyage'
 import { smoother } from '../../draw'
@@ -9,8 +11,9 @@ import { CLOTH, MADDER, TIMBER, outdoors } from './look'
 /**
  * The west: a skiff at the harbour's jetty, and in it, after everything, the two of them, going out under a small sail
  * towards where the sun is going down; their son on the cliff's edge above them. The camera holds still on it all, and the
- * skiff goes away from us into the sun: smaller and smaller, up the sea's surface towards the horizon under the sun,
- * the way a boat goes when it is going west and we are staying. The film ends on that sail; so do we.
+ * skiff goes away from us into the sun: smaller and smaller, up the sun's path on the water towards the horizon under
+ * it, the way a boat goes when it is going west and we are staying, while the sun goes down into the sea ahead of it.
+ * Nolan's last image is the two of them chasing the escaping sun; so is ours.
  */
 
 /** The last shot, held: the olive on the west cliff at its left, their son on the edge under it, the sun ahead. */
@@ -24,16 +27,16 @@ const SUN_X = WEST_CAM.x + ((0.8 - 0.5) * WEST_CAM.cells * 16) / 9
 const L = 1.25
 const SEATS: Pt[] = [[-0.22, -0.2], [0.07, -0.2]]
 
-/** Along the sea, near: moored until the dissolve, then out from the jetty, gathering a little way. */
+/** Along the sea, near: moored until the dissolve, then out from the jetty and round into the sun's path. */
 const track = glide([
   [TRIAL.fade, MOORING, 0],
   [TRIAL.fade + 6, MOORING + 1.4, 0.36],
-  [549, MOORING + 1.4 + 0.36 * (549 - TRIAL.fade - 6), 0.36],
+  [549, SUN_X + 0.4, 0.04],
 ])
 
 /** How far off it has gone, as the share of its size it is seen at: 1 at the jetty, less and less as it goes west. */
 export function skiffScale(t: number): number {
-  return 1 - 0.8 * smoother(t, TRIAL.fade + 4.5, 549)
+  return 1 - 0.86 * smoother(t, TRIAL.fade + 4.5, 549)
 }
 
 export interface Skiff {
@@ -64,9 +67,46 @@ export function skiffSeat(t: number, i: number): Pt {
   return [k.x + px * c - py * n, k.y + px * n + py * c]
 }
 
+/**
+ * The sun's path on the water, under it to the horizon, that the skiff goes up: the low sun's light laid on the sea as
+ * one flat, paler band, narrowing away from us, and warmer as the sun goes down. Light where it falls, nothing more.
+ */
+function drawSunPath(g: Paint): void {
+  const { ctx, t, view } = g
+  if (t < TRIAL.fade - 3) return
+  const d = skyAt(t).disc
+  if (!d || d.a < 0.01) return
+  const hy = horizonOf(view)
+  const x = view.x0 + (view.x1 - view.x0) * d.x
+  const r = d.r * view.h
+  const low = smoother(t, M.fade, 549)
+  const near = Math.min(view.y1, 0.1)
+  // Broken by the swell into flat slivers, as light on water is: each a little longer and thicker nearer us, and fewer
+  // and fainter as they come, so it is the sea lit, not a beam.
+  ctx.fillStyle = rgba(d.color, 0.2 + 0.1 * low)
+  ctx.beginPath()
+  const n = 11
+  for (let i = 0; i < n; i++) {
+    const u = (i + 0.5) / n
+    const v = u * u
+    const y = hy + (near - hy) * v
+    const half = r * (0.5 + 2.2 * v) * (0.55 + 0.45 * Math.sin(i * 2.3 + t * 0.5) ** 2)
+    const h = Math.max(2.5 * g.px, (0.03 + 0.08 * v) * (1 - 0.4 * u))
+    if (u > 0.85) continue
+    const cx = x + r * 0.25 * Math.sin(i * 1.7 + t * 0.3)
+    ctx.moveTo(cx - half, y)
+    ctx.lineTo(cx + half, y)
+    ctx.lineTo(cx + half * 0.92, y + h)
+    ctx.lineTo(cx - half * 0.92, y + h)
+    ctx.closePath()
+  }
+  ctx.fill()
+}
+
 /** The skiff: a small hull, a mast and a square sail with a madder band, lifting a little in the evening wind. */
 export function drawSkiff(g: Paint): void {
   const { ctx, t, view } = g
+  drawSunPath(g)
   const s = skiffAt(t)
   if (s.x < view.x0 - 3 || s.x > view.x1 + 3) return
   const ink = outdoors('#2A2420', t)

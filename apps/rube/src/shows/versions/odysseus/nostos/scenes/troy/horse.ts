@@ -18,10 +18,12 @@ export const BU = 0.3
 /** The four heaves up the beach: when each starts, how far it hauls the horse (cells), and how long it takes. */
 export const HEAVES: [number, number, number][] = [
   [5.71, 1.7, 3.4],
-  [16.2, 2.0, 3.6],
+  [16.2, 2.0, 2.8],
   [26.97, 2.1, 3.4],
   [31.58, 2.4, 3.6],
 ]
+/** Between the second heave and the third, the Trojans test it with their spears: a thrust on each of these notes. */
+export const THRUSTS = [19.78, 20.23, 20.65, 25.2]
 /** Where it stands at dusk before the first heave (in the surf), and where the last leaves it. */
 export const HORSE_START = -1.6
 const HAULED = HEAVES.reduce((s, h) => s + h[1], 0)
@@ -124,10 +126,11 @@ export const HATCH_HINGE: Pt = [1.12, -5.22]
 export const HATCH_TIP: Pt = [1.72, -5.82]
 export const ROPE_TOP: Pt = [1.45, -5.42]
 
-/** How the packed men are thrown about by the heaves: a share of a man's width, damped. */
+/** How the packed men are thrown about by the heaves, and pressed forward from the spears: a share of a man's width. */
 export function slosh(t: number): number {
   let s = 0
   for (const [at] of HEAVES) s += 0.35 * ring(t, at + 0.1, 0.6, 0.8)
+  for (const at of THRUSTS) s += 0.09 * smoother(t, at, at + 0.2) * (1 - smoother(t, at + 1.0, at + 1.9))
   return s
 }
 
@@ -239,6 +242,8 @@ export interface HorseLook {
   hatch: number
   /** The slivers of light through its seams, inside: 0 to 1. */
   slivers: number
+  /** Anything that comes into the hollow from outside, drawn over its timber: given the way from the world to its units. */
+  inside?: (toLocal: (p: Pt) => Pt) => void
 }
 
 /** Draw the horse at `p`. */
@@ -310,6 +315,19 @@ export function drawHorse(g: Paint, p: HorsePose, look: HorseLook): void {
       poly(ctx, [[x0, -7.9], [x1, -7.9], [x1 + 0.9, FLOOR_Y], [x0 + 0.9, FLOOR_Y]])
       ctx.fill()
     }
+    ctx.restore()
+  }
+  if (look.inside) {
+    ctx.save()
+    blob(ctx, HOLLOW)
+    ctx.clip()
+    const c = Math.cos(p.a)
+    const s = Math.sin(p.a)
+    look.inside(([wx, wy]) => {
+      const dx = wx - p.x
+      const dy = wy - p.y
+      return [(dx * c + dy * s) / BU, (-dx * s + dy * c) / BU]
+    })
     ctx.restore()
   }
   blob(ctx, HOLLOW)

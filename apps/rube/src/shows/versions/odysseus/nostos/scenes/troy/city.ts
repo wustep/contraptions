@@ -1,4 +1,4 @@
-import { blob, clamp01, fill, hash, mix, poly, rect, rgba, smooth, smoother, stroke, type Paint } from '../../draw'
+import { blob, clamp01, fill, hash, mix, poly, rect, rgba, smooth, stroke, type Paint } from '../../draw'
 import { M } from '../../music'
 import type { Pt } from '../../path'
 import { layer } from '../../world/depth'
@@ -625,50 +625,8 @@ export function drawBucketFront(g: Paint): void {
 
 /* ------------------------------------------------------------------ the sack */
 
-/**
- * The torches of the army: waiting in a column on the hill outside the gate while it goes up (come there in the dark,
- * before the camera is on the gate), then in under it, along the street, and up into the city, away from us.
- */
-const TORCHES = 9
-const MARCH = 1.25
-const WAIT_GAP = 0.42
-export function torchAt(i: number, t: number): { x: number; y: number; s: number; a: number } | null {
-  if (t < 100) return null
-  // Each moves off when the one ahead has made room, so it comes to the gate on its old time, gathering way gently.
-  const wait = WALL.x1 + 0.9 + i * WAIT_GAP
-  const go = 114.45 + i * 0.62 - (i * WAIT_GAP) / MARCH
-  const ease = 0.4
-  const u = t < go ? 0 : t < go + ease ? ((t - go) * (t - go)) / (2 * ease) : t - go - ease / 2
-  const x = wait - u * MARCH
-  const away = smoother(x, -29.4, -31.6)
-  const s = 1 - 0.6 * away
-  const y = (x > WALL.x1 ? ground(x) : STREET.y) - away * 1.1
-  const a = 1 - smooth(t - go, 4.5 + (i * WAIT_GAP) / MARCH, 6 + (i * WAIT_GAP) / MARCH)
-  if (a <= 0.01 || x < -33.5) return null
-  return { x, y, s, a }
-}
-
 /** How much of the army's torchlight is at the gate: gathering outside it, then gone in past it. */
-export const torchlight = (t: number): number => smooth(t, 104, 109) * (1 - smooth(t, 119, 123))
-
-export function drawTorches(g: Paint): void {
-  const { ctx, t, view } = g
-  if (t < 100 || t > 128 || view.x0 > WALL.x1 + 6 || view.x1 < -34) return
-  for (let i = 0; i < TORCHES; i++) {
-    const p = torchAt(i, t)
-    if (!p) continue
-    const bob = Math.sin((t - i) * 7.5) * 0.02
-    const top = p.y - 0.4 * p.s + bob
-    ctx.save()
-    ctx.globalAlpha = p.a
-    ctx.beginPath()
-    ctx.moveTo(p.x, p.y - 0.05 * p.s + bob)
-    ctx.lineTo(p.x + 0.03 * p.s, top)
-    stroke(g, tone('#1A120C', t), 1.6)
-    flame(ctx, p.x + 0.03 * p.s, top, 0.1 * p.s, 0.18 * p.s, t, i * 5.1)
-    ctx.restore()
-  }
-}
+export const torchlight = (t: number): number => smooth(t, 104, 109) * (1 - smooth(t, 123, 128))
 
 /** The fires and the smoke over the near town (the town behind burns in its own ranks, `drawTownBehind`). */
 export function drawFires(g: Paint): void {

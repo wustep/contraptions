@@ -1,5 +1,7 @@
 import type { TitleCard } from '../../../registry'
-import { MAN, ODYSSEUS, PENELOPE, SUITOR, TELEMACHUS } from './cast'
+import { ANTINOUS, CALYPSO, MAN, ODYSSEUS, PENELOPE, SUITOR, TELEMACHUS } from './cast'
+import { AGAMEMNON } from './scenes/troy/host'
+import { TROJAN } from './scenes/troy/crowd'
 import { M } from './music'
 import { END } from './voyage'
 
@@ -28,13 +30,13 @@ export interface Card {
 const FORM = 1.3
 const GO = 0.95
 const OVERLAP = 0.25
-/** When the first card comes up: as the skiff's sail is set, in the last of the fade. */
-export const CREDITS_AT = M.fade + 5.4
+/** When the first card comes up: as the skiff's sail fills, in the last of the fade. */
+export const CREDITS_AT = M.fade + 3.0
 
 const script: Omit<Card, 'at'>[] = [
-  { hold: 2.8, role: 'Directed by', names: ['Claude Opus 5.5'] },
+  { hold: 2.6, role: 'Directed by', names: ['Claude Opus 5.5'] },
   {
-    hold: 4.4,
+    hold: 3.8,
     scale: 0.9,
     role: 'With',
     names: [
@@ -42,17 +44,28 @@ const script: Omit<Card, 'at'>[] = [
       ['Penelope', 'the red ball', PENELOPE],
       ['Telemachus', 'the small bronze one', TELEMACHUS],
       ['His men', 'the clay balls', MAN],
-      ['The suitors', 'the slate balls', SUITOR],
     ],
   },
   {
-    hold: 4.0,
+    hold: 3.8,
+    scale: 0.9,
+    role: 'And',
+    names: [
+      ['Agamemnon', 'the gold one', AGAMEMNON],
+      ['Calypso', 'the sea-glass one', CALYPSO],
+      ['Antinous', 'the dark slate one', ANTINOUS],
+      ['The suitors', 'the slate balls', SUITOR],
+      ['The Trojans', 'the terracotta', TROJAN],
+    ],
+  },
+  {
+    hold: 3.6,
     role: 'Music',
     names: ['Ludwig Göransson'],
     notes: ['“Odysseus”, from The Odyssey (Original Motion Picture Soundtrack)', 'Back Lot Music (2026)'],
   },
-  { hold: 3.6, role: 'After', names: ['The Odyssey'], notes: ['a film by Christopher Nolan (2026), after Homer'] },
-  { hold: 2.6, role: 'Drawn with', names: ['p5.js'] },
+  { hold: 3.0, role: 'After', names: ['The Odyssey'], notes: ['a film by Christopher Nolan (2026), after Homer'] },
+  { hold: 2.2, role: 'Drawn with', names: ['p5.js'] },
 ]
 
 export const CARDS: Card[] = (() => {
@@ -73,6 +86,12 @@ export const LAST_GONE = (() => {
 
 /** High and centred, in the sky over the harbour. */
 const AT: [number, number] = [0.5, 0.05]
+/**
+ * On a phone held upright the stage shows sky over the 16:9 frame: the cards go up into it, clear of the picture. And a
+ * floor on their type that keeps them read on a phone's small frame without growing them over the whole picture.
+ */
+const LIFT = 0.6
+const LEAST = 4.5
 
 const ease = (u: number) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2)
 const clamp = (v: number) => Math.max(0, Math.min(1, v))
@@ -94,9 +113,12 @@ export function creditsAt(t: number): TitleCard[] {
       light,
       rise: (1 - ease(up)) * 0.8,
       at: AT,
+      lift: LIFT,
       scale: card.scale,
-      least: 9,
-      shade: 0.35,
+      least: LEAST,
+      // The cast lists come down into the sunset's band, where gold is lost: cream there, over a little more of the dark.
+      plain: card.names.length > 1,
+      shade: card.names.length > 1 ? 0.4 : 0.25,
     })
   })
   return out

@@ -45,7 +45,7 @@ import {
   nightness,
   outdoors,
 } from './look'
-import { ARROW, armTip, arrowShown, arrowTail, axeShiver, axeUp, drawOf, NOCK0, plateEnd } from './rig'
+import { ARROW, armTip, arrowShown, arrowTail, arrowY, axeShiver, axeUp, drawOf, NOCK0, plateEnd } from './rig'
 
 /**
  * The palace, cut open like a doll's house: its front wall taken away, so the hall, the stairs, Penelope's room and the
@@ -428,7 +428,7 @@ function drawArrow(g: Paint): void {
   if (!arrowShown(t)) return
   const tail = arrowTail(t)
   const head = tail - ARROW
-  const y = BOW.y
+  const y = arrowY(t)
   ctx.beginPath()
   ctx.moveTo(tail, y)
   ctx.lineTo(head + 0.04, y)

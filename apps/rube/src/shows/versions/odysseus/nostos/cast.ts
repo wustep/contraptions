@@ -7,7 +7,10 @@
  *   none after the storm.
  * - Penelope: madder red, the colour of the thread on her loom; only ever in Ithaca.
  * - Telemachus: his father's bronze, paler, and smaller.
- * - The suitors: slate, in the hall.
+ * - Calypso: sea-glass, only ever on Ogygia.
+ * - The suitors: slate, in the hall; Antinous, their first, darker and bigger.
+ * - At Troy, the Trojans: terracotta, Troy's own clay; Agamemnon, gold and bigger than any man, and his host, the same
+ *   clay as Odysseus's men (drawn by their scenes, `troy/crowd.ts` and `troy/host.ts`).
  */
 
 /** Odysseus. */
@@ -33,8 +36,19 @@ export const TELEMACHUS_RIM = '#5A3D18'
 export const TELEMACHUS_ID = 3
 export const TELEMACHUS_SIZE = 0.8
 
+/** Calypso, on Ogygia: sea-glass, the colour of her water; she keeps him seven years, and lets him go. */
+export const CALYPSO = '#9CC9B8'
+export const CALYPSO_RIM = '#2C5249'
+export const CALYPSO_ID = 4
+export const CALYPSO_SIZE = 0.96
+
 /** The suitors: one id each, from SUITORS_ID up. */
 export const SUITOR = '#6B7280'
 export const SUITOR_RIM = '#262A31'
 export const SUITORS_ID = 200
 export const SUITOR_SIZE = 0.92
+
+/** Antinous, the first of them: the last suitor, a darker slate and bigger than the rest. */
+export const ANTINOUS = '#4F5663'
+export const ANTINOUS_RIM = '#1C1F25'
+export const ANTINOUS_SIZE = 1.0

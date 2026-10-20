@@ -9,6 +9,8 @@ import { CARDS, CREDITS_AT, CREDITS_OK, creditsAt } from '../src/shows/versions/
 import { END, SEAMS } from '../src/shows/versions/odysseus/nostos/voyage'
 import { AXES, HOME, SHUTTLE, TRIAL } from '../src/shows/versions/odysseus/nostos/scenes/ithaca/geo'
 import { arrowPasses, axeTime } from '../src/shows/versions/odysseus/nostos/scenes/ithaca/rig'
+import { HEAVES, THRUSTS } from '../src/shows/versions/odysseus/nostos/scenes/troy/horse'
+import { SURGE } from '../src/shows/versions/odysseus/nostos/scenes/troy/host'
 import type { NostosShow } from '../src/shows/versions/odysseus/nostos/show'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -48,6 +50,10 @@ export function checkNostos(perf: Performance, version: ShowVersion, check: Chec
     ['Argos', HOME.dies],
     ['the bow sings', TRIAL.sing],
     ['the loose', TRIAL.loose],
+    ['the arrow takes Antinous', TRIAL.strike],
+    ['the host goes in', SURGE],
+    ...HEAVES.map(([t], i): [string, number] => [`heave ${i}`, t]),
+    ...THRUSTS.map((t, i): [string, number] => [`spear ${i}`, t]),
     ['they meet', TRIAL.meet],
     ...SHUTTLE.map((t, i): [string, number] => [`shuttle ${i}`, t]),
     ...AXES.map((_, i): [string, number] => [`axe ${i}`, axeTime(i)]),
@@ -56,8 +62,8 @@ export function checkNostos(perf: Performance, version: ShowVersion, check: Chec
   ]
   const off = strikes.filter(([, t]) => !onOnset(t))
   check('nostos: every strike the story turns on lands on a measured onset or beat', off.length === 0, off.map(([n, t]) => `${n} ${t.toFixed(3)}`).join(', '))
-  check('nostos: the arrow goes through the twelve eyes in order, east, between the loose and the east door',
-    AXES.every((x, i) => arrowPasses(x) > TRIAL.loose && (i === 0 || arrowPasses(x) > arrowPasses(AXES[i - 1]))) && arrowPasses(AXES[AXES.length - 1]) < TRIAL.through + 0.1)
+  check('nostos: the arrow goes through the twelve eyes in order, east, between the loose and Antinous',
+    AXES.every((x, i) => arrowPasses(x) > TRIAL.loose && (i === 0 || arrowPasses(x) > arrowPasses(AXES[i - 1]))) && arrowPasses(AXES[AXES.length - 1]) < TRIAL.strike)
 
   // The seams: where a scene hands the hero on at rest, he is there.
   const rests = SEAMS.filter((s) => s.hero).map((s) => {

@@ -1,14 +1,16 @@
 import type { Key } from '../camera'
-import { region, standing } from '../draw'
+import { region, smoother, standing } from '../draw'
 import { M } from '../music'
 import { R } from '../../../../../parts'
-import { fly, rest, ride, roll, type Move, type Pt } from '../path'
+import { CALYPSO, CALYPSO_ID, CALYPSO_RIM, CALYPSO_SIZE } from '../cast'
+import { Path, fly, rest, ride, roll, type Move, type Pt } from '../path'
+import type { Actor } from '../show'
 import type { Scene } from '../scene'
 import { END, WINDOWS } from '../voyage'
 import { horizonOf } from '../world/sea'
 import type { SkyKey } from '../world/sky'
 import { FIRST_DUSK, LAST_DAWN, extremes } from './ogygia/days'
-import { BED, drawDiscs, drawDrift, drawDunes, drawLotus, drawSand, drawStone, onSand } from './ogygia/island'
+import { BED, CAVE, drawDiscs, drawDrift, drawDunes, drawLotus, drawSand, drawStone, onSand } from './ogygia/island'
 import { HIT, LAUNCH, SEAT, onRaft, raftAt } from './raft/raft'
 
 /**
@@ -16,7 +18,7 @@ import { HIT, LAUNCH, SEAT, onRaft, raftAt } from './raft/raft'
  *
  * He lies where the sea left him on the west beach through the hush. At the rise's first attack (358.70) the first
  * dawn comes up, a lotus opens on the low rise above him, and he goes up over it to the cave's mouth, where five more
- * open round him as he comes (362.39 to 364.37). Then seven days and nights go over him (`days.ts`): the sun and the
+ * open round him as he comes (362.39 to 364.37), and Calypso comes out of its shade to him. Then seven days and nights go over him (`days.ts`): the sun and the
  * moon arc across, the lotus open by day and close by night, the sand drifts against him. Twice the picture goes to
  * Ithaca, to Penelope at her loom keeping the same days (366.12 and 377.28, the third and sixth dawns), and comes back
  * (371.35, 380.96). On the cloudless eighth morning the thunder (384.66) wakes him: the lotus shiver and shut, the net
@@ -100,6 +102,37 @@ const HERO: Move[] = [
   ride((t) => onRaft(t, SEAT), ABOARD, LAUNCH, (t) => raftAt(t).a),
 ]
 
+/* ------------------------------------------------------------------ Calypso */
+
+/**
+ * Calypso: in the mouth of her cave from the first, in its shade; as he comes up over the rise to it she comes to meet
+ * him, and she is beside him there through the seven years. When the thunder wakes him she lets him go: she goes back
+ * into the dark of her cave, smaller and smaller, and is not seen again.
+ */
+const CALYPSO_R = R * CALYPSO_SIZE
+const HER_WAIT: Pt = [CAVE.x + 0.55, onSand(CAVE.x + 0.55)[1] + R - CALYPSO_R]
+const HER_BESIDE: Pt = [BED[0] + R + CALYPSO_R + 0.004, onSand(BED[0] + R + CALYPSO_R)[1] + R - CALYPSO_R]
+const HER_BACK: Pt = [CAVE.x + 0.4, HER_WAIT[1] - 0.06]
+const HER: Actor = {
+  id: CALYPSO_ID,
+  color: CALYPSO,
+  rim: CALYPSO_RIM,
+  size: CALYPSO_SIZE,
+  turn: 2.6,
+  path: new Path(
+    [
+      rest(HER_WAIT, FROM, 362.39),
+      roll([HER_WAIT, HER_BESIDE], 362.39, ARRIVE, 'inout'),
+      rest(HER_BESIDE, ARRIVE, LAST_DAWN + 0.5),
+      roll([HER_BESIDE, HER_BACK], LAST_DAWN + 0.5, SETS_OFF - 0.1, 'inout'),
+      rest(HER_BACK, SETS_OFF - 0.1, TO),
+    ],
+    'calypso',
+  ),
+  on: (t) => t >= FROM && t < SETS_OFF,
+  fade: (t) => 1 - 0.78 * smoother(t, LAST_DAWN + 0.5, SETS_OFF - 0.1),
+}
+
 /* ------------------------------------------------------------------ the camera */
 
 /** Penelope's room in Ithaca: the loom, framed close (the cross-cuts). */
@@ -160,6 +193,7 @@ export const ogygia: Scene = {
     [393, 0.1],
   ],
   hero: HERO,
+  actors: [HER],
   shots: SHOTS,
   dissolves: [
     [366.12, 1.6],

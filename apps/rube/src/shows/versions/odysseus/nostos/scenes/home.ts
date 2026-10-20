@@ -20,9 +20,11 @@ import { WEST_CAM } from './ithaca/west'
  * - 458, 467.6, 476.6   three suitors climb into her room, out onto the terrace, drop through the light well onto the
  *            bow's plate, and it does not give: seen close, then whole, then past her.
  * - 485.45   he climbs the stairs a step a note, comes up into her room beside her (489.26), and goes out past her.
- * - 494.74   the swell: he drops onto the plate, it goes down, and the bow sings. Antinous runs.
- * - 500.79   he rolls off the plate: the bow looses, and the arrow goes through all twelve eyes and out of the door.
- * - 503.15   the hall empties into the dark; Penelope comes down the stairs a step a note; they meet (508.96).
+ * - 494.74   the swell: he drops onto the plate, it goes down, and the bow sings. Antinous goes for the son.
+ * - 500.79   he rolls off the plate: the bow looses, and the arrow goes through all twelve eyes and takes Antinous in
+ *            the air as he leaps at Telemachus in the doorway (501.5).
+ * - 503.15   the rest of them give in, drawn together on the dais; Penelope comes down the stairs a step a note; they
+ *            meet (508.96).
  * - 512.68   the west: the skiff, the two of them, the sun going down ahead; their son on the cliff's edge behind.
  */
 export const home: Scene = {
@@ -63,9 +65,9 @@ export const home: Scene = {
     // The swell: the drop, the bow drawn, her at her door.
     { t: M.last + 0.4, cells: 3.3, at: [824.6, -9.95] },
     { t: TRIAL.loose - 1.4, cells: 3.4, at: [824.5, -9.95] },
-    // The arrow's whole flight, bow to door.
-    { t: TRIAL.loose - 0.2, cells: 5.2, at: [822.6, -10.5] },
-    { t: TRIAL.erupts + 1.5, cells: 5.1, at: [822.5, -10.45] },
+    // The arrow's whole flight, from the bow through the twelve eyes to Antinous in the air before the son.
+    { t: TRIAL.loose - 0.2, cells: 5.6, at: [822.5, -10.2] },
+    { t: TRIAL.erupts + 1.5, cells: 5.4, at: [822.3, -10.1] },
     // The two of them.
     { t: TRIAL.meet + 0.6, cells: 2.5, at: [820.7, -9.55] },
     { t: TRIAL.fade - 0.1, cells: 2.3, at: [820.65, -9.5] },

@@ -111,12 +111,15 @@ explainers. Claims resting on one secondhand source are marked *(uncertain)*. So
   structure stays in the frame: it opens on his first image, the black horse half-sunk in the surf. It cuts to Ithaca
   during the theme's second statement, as his film does in its first half hour. Every person who will be there at the
   end is set out there before he leaves Troy.
-- **Locked cast.** People are balls; everything else is drawn.
+- **Locked cast.** People are balls; everything else is drawn. Key figures of the film are each one legible ball.
   - **Odysseus** is bronze, for the age that ends with him.
   - **His men** are clay. They are lost trial by trial, and the dead on the black sand are many like them.
   - **Penelope** is madder red, the colour of her thread.
   - **Telemachus** is paler bronze and smaller.
-  - **The suitors** are slate.
+  - **The suitors** are slate; **Antinous**, who sent Sinon to die and will not try the bow, is darker and bigger.
+  - **Calypso** is sea-glass: beside him on Ogygia through the seven years, and gone into her cave when he wakes.
+  - **Agamemnon** is gold and bigger than any man, at the head of his host when Troy's gate goes up.
+  - **The Trojans** are terracotta, Troy's own clay: they haul the horse in, cheering, and test it with their spears.
   - **Argos**, the horse, the Cyclops, the giants, the Sirens, the loom and the bow are drawn.
   - **No gods**, as in the film: Zeus is the bolt and Poseidon is the sea.
 - **One job per prop.**
@@ -127,10 +130,11 @@ explainers. Claims resting on one secondhand source are marked *(uncertain)*. So
   - **The fishermen's hoist** brings him up Ithaca's cliff.
   - **The bow** is the trial: strung with Penelope's red thread and drawn by a crank only a drop from the terrace will
     move. Its note on the swell is the lyre's pluck, and the arrow goes through the twelve eyes.
-- **Kept from Nolan's choices.** Three ships, two lost to giants in fog. The Cyclops' vertical eye. Hands rising from
+- **Kept from Nolan's choices.** The prologue's horse: dragged ashore by cheering Trojans, spears driven into it among
+  the men, the gate opened from inside and the army pouring in. Three ships, two lost to giants in fog. The Cyclops' vertical eye. Hands rising from
   black sand and the dead charging. The unheard Sirens and the man who jumps. Apollo's cattle. The lotus and seven
-  years. The raft given to the storm. Argos's one wag. The bow's pluck as recognition, with no bed test. The exile west
-  into the sun with Telemachus left behind. Circe and Scylla are left out for clarity at this length.
+  years. The raft given to the storm. Argos's one wag. The bow's pluck as recognition, with no bed test. Antinous killed,
+  the rest of the suitors surrendering. The exile west into the sun with Telemachus left behind to rule. Circe and Scylla are left out for clarity at this length.
 
 ## Sources
 

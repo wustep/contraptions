@@ -8,6 +8,7 @@ import { SHORE, WALL, ground } from './geo'
 import { BU, HORSE_START, LOGS, LOG_R, SLEDGE, TAUT, hauled, horseAt, toWorld } from './horse'
 import { FLAME, MAT, burning, firelight, night, tone } from './tone'
 import { smoke } from './city'
+import { ropeEnd } from './crowd'
 
 /**
  * Troy's land: the plain going away inland behind the coast, Mount Ida on the horizon, the ground itself cut open
@@ -165,7 +166,7 @@ export function drawLogs(g: Paint): void {
   }
 }
 
-/** The ropes, from the sledge up the beach and the hill into the open gate: lying slack in the surf until they are taken up. */
+/** The ropes, from the sledge up the beach to the Trojans hauling on them: lying slack in the surf until they are taken up. */
 export function drawRopes(g: Paint): void {
   const { ctx, t, view } = g
   if (t > M.second + 1) return
@@ -175,7 +176,8 @@ export function drawRopes(g: Paint): void {
     const start = toWorld(p, [-2.75, -0.18 - r * 0.12])
     const pts: Pt[] = [start]
     const off = 0.025 + r * 0.025
-    const gate = WALL.x1 + 0.05
+    // To the last hauler's hands, and a little on past them, lying on the sand.
+    const gate = ropeEnd(t) - 0.5 - 0.3 * r
     if (start[0] - 0.4 < view.x0 - 2 && gate > view.x1 + 2) continue
     // Off the sledge and down to the sand, then along it.
     for (let x = start[0] - 0.45; x > gate; x -= 0.3) {
@@ -183,7 +185,7 @@ export function drawRopes(g: Paint): void {
       const wiggle = slack * 0.07 * Math.sin(d * 3.1 + r * 1.7) * Math.exp(-d / 3)
       pts.push([x, ground(x) - off + wiggle])
     }
-    pts.push([gate, ground(gate) - off - 0.03])
+    pts.push([gate, ground(gate) - off])
     curve(ctx, pts)
     stroke(g, tone(r ? '#4C3A2A' : '#3B2C20', t), 1.7)
   }

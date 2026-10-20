@@ -26,9 +26,9 @@ in twelve-beat phrases of 9 s.
 
 | From | Stretch | What the music does | What the show does there |
 |---|---|---|---|
-| 0 | theme | The theme alone over the drone, very quiet, no low voices; first statement. | Troy's beach at dusk: the black horse half-sunk in the surf, hauled ashore. |
+| 0 | theme | The theme alone over the drone, very quiet, no low voices; first statement. | Troy's beach at dusk: the black horse half-sunk in the surf, hauled ashore by the Trojans; their spears into its belly on four notes. |
 | 36.06 | (theme) | The second statement of the theme, a strong attack at its start. | Ithaca that night: the island, the palace cut open, Penelope's shuttle crossing on the theme's notes. |
-| 71.42 | answer | The theme answered, fuller and higher, still no low voices; held breaths at about 99.5 and 119.3. | Troy at night: the men down the horse's rope, the gate's gears, the fire, Athena's statue; away at dawn. |
+| 71.42 | answer | The theme answered, fuller and higher, still no low voices; held breaths at about 99.5 and 119.3. | Troy at night: the men down the horse's rope, Athena's statue, the gate's gears; Agamemnon's host pours in (114.32); the fire; away at dawn. |
 | 151.22 | ground | The low voices come in under it (a thud); a swell at 169.23. | The Cyclops' cave: the boulder shuts on the thud; the stake into the eye on the swell. |
 | 187.23 | pulse | A beat arrives, 80 a minute, and everything climbs on it. | Telepylus: oars on the beat; chrome giants in the fog; two ships sunk on hard beats. |
 | 222.4 | tutti | Everything, on the beat, the loudest stretch of the cue. | The shore of the dead; the Sirens; Apollo's cattle; the storm. |
@@ -37,7 +37,7 @@ in twelve-beat phrases of 9 s.
 | 353.5 | rise | The theme again from almost nothing, building. | Seven years on Ogygia, with the loom's cross-cuts; thunder on a clear day; the raft built. |
 | 395.51 | return | Everything again, without the beat. | The raft given to the storm; Ithaca at dawn; ashore. |
 | 431.57 | quiet | The low voices gone, the high ones slowly climbing; a breath at 494.45. | Argos dies on the drop; the hall; the axes rise; the suitors fail; he climbs. |
-| 494.74 | last | The last swell, one great attack. | The bow sings on the attack; the arrow at 500.79; the hall empties; the two meet (508.96). |
+| 494.74 | last | The last swell, one great attack. | The bow sings on the attack; the arrow at 500.79 takes Antinous (501.60); the suitors give in; the two meet (508.96). |
 | 512.8 | fade | The swell dying away to the end at 521.46. | The west: the skiff, the sun; the credits, and the quiet after them. |
 
 ## The comb
@@ -50,8 +50,10 @@ the Sirens at 251.36 and Apollo's island at 278.36.
 ## Free time
 
 Outside the comb, every strike is on a measured onset (`onsetsIn` and `strongest` in `music.ts`):
+- the four heaves of the horse and the four spears into it;
 - the shuttle's eleven passes in the prologue;
 - the men down the horse's rope;
+- Agamemnon's host going in under the gate at 114.32;
 - the boulder door at 151.22;
 - the stake at 169.23;
 - Argos at 431.57;
@@ -59,6 +61,6 @@ Outside the comb, every strike is on a measured onset (`onsetsIn` and `strongest
 - the three suitors' landings at 458.07, 467.64 and 476.64;
 - his six steps up the stairs, from 485.45 to 489.26;
 - the bow at 494.74;
-- the loose at 500.79;
+- the loose at 500.79, and the arrow taking Antinous at 501.60;
 - Penelope's six steps down, from 504.26 to 507.79;
 - the meeting at 508.96.

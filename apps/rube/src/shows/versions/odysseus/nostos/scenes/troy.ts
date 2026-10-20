@@ -2,6 +2,7 @@ import type { Key } from '../camera'
 import { M } from '../music'
 import type { Scene } from '../scene'
 import { WINDOWS } from '../voyage'
+import { SURGE } from './troy/host'
 import { SHIP0, SHIP1, SHIP2 } from './troy/plan'
 
 /**
@@ -11,9 +12,10 @@ import { SHIP0, SHIP1, SHIP2 } from './troy/plan'
  * He comes last, and his weight stops him halfway down and holds him there while her neck gives, note by note; the
  * rope slips, he drops, and on the music's held breath her head comes off and rolls to him. He goes down the steps a
  * step a note, along the street, and into the Trojans' own counterweight bucket with his men: the seventh weight takes
- * it down, the great wheels turn, the gate goes up, and the army's torches come in under it. The city burns from the
- * gate up, roof by roof, while they come out of the drain under the hill, run down to the ships, and put out at first
- * light. (Every move is in `troy/plan.ts`; the horse scene carries them.)
+ * it down, the great wheels turn, the gate goes up, and Agamemnon's host, massed down the hill to the sea with its
+ * torches, pours in under it behind him, the gold one (`troy/host.ts`). The city burns from the gate up, roof by roof,
+ * while they come out of the drain under the hill, run down to the ships through the host the other way, and put out at
+ * first light. (Every move is in `troy/plan.ts`; the horse scene carries them.)
  */
 
 const shots: Key[] = [
@@ -35,9 +37,14 @@ const shots: Key[] = [
   // The gate tower: the bucket full of men, the wheels, the gate.
   { t: 108.9, cells: 3.9, at: [-28.75, -4.35] },
   { t: 113.6, cells: 4.3, at: [-28.6, -3.95] },
-  { t: 116.4, cells: 4.8, at: [-28.45, -3.35] },
-  // Wide: the city burning, the drain under the hill, him coming out of it.
-  { t: 119.3, cells: 12, at: [-30.5, -5.3] },
+  // On the note the king goes in, out wide: the gate going up in its tower, Agamemnon's host massed down the hill to
+  // the sea, their torches, and the surge running back down the column as they pour up into the city; the fire takes
+  // the town from the gate up, and under it all the men come along the drain.
+  { t: SURGE - 0.05, cells: 4.5, at: [-28.45, -3.75] },
+  { t: SURGE, cells: 11.5, at: [-24.4, -3.4], cut: true },
+  { t: 120.6, cells: 11, at: [-23.9, -3.2] },
+  // On the next note, down to the drain's mouth: him out of it and down the hill through them, the other way.
+  { t: 120.73, cells: 6.5, at: [-21.2, -2.3], cut: true },
   { t: 122.6, cells: 7, off: [1.2, -0.75] },
   // Down to the ships and aboard.
   { t: 125.6, cells: 5.6, off: [0.9, -0.6] },

@@ -136,6 +136,8 @@ export const TRIAL = {
   drawn: 495.72,
   loose: 500.79,
   through: 501.6,
+  /** The arrow, through the twelve eyes, takes Antinous in the air as he leaps at Telemachus in the doorway. */
+  strike: 501.6,
   erupts: 503.15,
   meet: 508.96,
   fade: 512.68,

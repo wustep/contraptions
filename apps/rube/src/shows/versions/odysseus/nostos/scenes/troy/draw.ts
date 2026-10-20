@@ -3,9 +3,11 @@ import { M } from '../../music'
 import type { Placed } from '../../../../../../plan'
 import type { Pt } from '../../path'
 import { END } from '../../voyage'
-import { brazierLight, drawBrazier, drawBucketBack, drawBucketFront, drawFires, drawStatue, drawSteps, drawTemple, drawTorches, drawTower, drawTownBehind } from './city'
+import { brazierLight, drawBrazier, drawBucketBack, drawBucketFront, drawFires, drawStatue, drawSteps, drawTemple, drawTower, drawTownBehind } from './city'
 import { FORECOURT, PLINTH } from './geo'
 import { BRAZIER } from './city'
+import { drawCrowd, drawTrojans, spearsInside } from './crowd'
+import { drawHost } from './host'
 import { drawHorse, horseAt } from './horse'
 import { drawGround, drawInland, drawLogs, drawRopes, drawTroyFar } from './land'
 import { HATCH_OPENS, LAUNCH, PLANK_FOOT, PLANK_TOP, ROPE_ENDS, ROPE_SET, ROPE_THROWN, SLIPS, headAt, onRope, ropeLoad, statueTilt } from './plan'
@@ -37,6 +39,7 @@ function drawTheHorse(g: Paint): void {
     wet: t < M.answer ? 1 - 0.4 * smooth(t, 8, 34) : 0.35,
     hatch: smooth(t, HATCH_OPENS, HATCH_OPENS + 0.45) + 0.06 * Math.max(0, ring(t, HATCH_OPENS + 0.45, 2.2, 0.3)),
     slivers: fire ? 0.25 + 0.4 * brazierLight(t) : sun(t) * 1.8,
+    inside: fire ? undefined : (toLocal) => spearsInside(g, toLocal),
   })
 }
 
@@ -109,7 +112,6 @@ function drawPlank(g: Paint): void {
 /** The brazier's fire and the fires of the sack: drawn among the city. */
 function drawSack(g: Paint): void {
   drawFires(g)
-  drawTorches(g)
 }
 
 export function troyPieces(): { back: Placed[]; mid: Placed[]; front: Placed[] } {
@@ -119,6 +121,10 @@ export function troyPieces(): { back: Placed[]; mid: Placed[]; front: Placed[] }
       drawTroyFar(g)
     }),
     standing('troy-town', TROY, END, (g) => drawTownBehind(g)),
+    standing('troy-crowd', TROY, END, (g) => {
+      drawCrowd(g)
+      drawHost(g)
+    }),
     standing('troy-ground', TROY, END, (g) => drawGround(g)),
     standing('troy-height', TROY, END, (g) => {
       drawTemple(g)
@@ -131,6 +137,7 @@ export function troyPieces(): { back: Placed[]; mid: Placed[]; front: Placed[] }
     standing('troy-beach', TROY, END, (g) => {
       drawLogs(g)
       drawRopes(g)
+      drawTrojans(g)
     }),
     standing('troy-horse', TROY, END, (g) => {
       drawTheHorse(g)
