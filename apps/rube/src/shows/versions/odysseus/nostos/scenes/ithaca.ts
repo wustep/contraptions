@@ -22,8 +22,9 @@ export const ithaca: Scene = {
     { t: 43.2, cells: 17, at: [820.0, -10.3] },
     // The palace, cut open: everyone at once.
     { t: 50.4, cells: 4.6, at: [822.7, -10.45] },
-    // The hall's west end: the bow on its stand, the axes lying in their trench, the suitors at the bench.
-    { t: 56.1, cells: 3.0, at: [824.2, -9.75] },
+    // The hall's west end: the suitors at the bench, the bow on its stand, the axes lying in their trench; and over
+    // them, alone on the terrace, the son looking out to sea.
+    { t: 56.1, cells: 3.3, at: [825.0, -10.1] },
     // Up into her room.
     { t: SHUTTLE[7] + 0.3, cells: 2.5, at: [820.25, -11.45] },
     { t: M.answer - 0.4, cells: 2.2, at: [820.0, -11.42] },
