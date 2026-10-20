@@ -86,6 +86,7 @@ export function drawIsland(g: Paint): void {
   far.push([L.x(523), L.y(0.3)], [L.x(499), L.y(0.3)])
   poly(ctx, far)
   fill(ctx, mix(GRASS_SHADE, air, 0.55))
+  drawRidge(g, air)
   // The land: grass over the whole hill, darkening towards the water; under the water it goes on down and out, a
   // mound that the cut sea darkens.
   const pts: Pt[] = []
@@ -103,6 +104,15 @@ export function drawIsland(g: Paint): void {
     const top = pts.filter(([x]) => x >= a && x <= b)
     poly(ctx, [...top, ...[...top].reverse().map(([x, y]): Pt => [x, y + 0.22])])
     fill(ctx, SAND)
+  }
+  // Dry scrub on the near slope, below the pasture's edge: a few low dark clumps, bigger as they come down towards us.
+  for (const [x, dy, w] of [[501.2, 0.55, 0.42], [505.0, 0.95, 0.55], [510.6, 0.7, 0.5], [515.2, 1.1, 0.6], [520.4, 0.6, 0.4]] as const) {
+    const y = ground(x) + dy
+    ctx.beginPath()
+    ctx.ellipse(x, y, w, w * 0.42, 0, Math.PI, 0)
+    ctx.ellipse(x + w * 0.55, y + 0.02, w * 0.55, w * 0.3, 0, Math.PI, 0)
+    ctx.closePath()
+    fill(ctx, mix(OLIVE, GRASS_SHADE, 0.35))
   }
   poly(ctx, pts, false)
   stroke(g, INK, 2)
@@ -126,6 +136,35 @@ export function drawIsland(g: Paint): void {
       stroke(g, BARK, 2.2)
     }
     flame(ctx, FIRE.x, fy - 0.02, 0.24 * burn, 0.34 * burn, t, 5)
+  }
+}
+
+/**
+ * The island's own hills behind the pasture: a long ridge of dry grass with a crown of bare limestone and dark scrub in
+ * its folds, hazier than the near ground, so the cattle graze on a shoulder of land with more of it going back. Faded
+ * by the camera's place as it comes and goes, so the piece's edge never cuts it off.
+ */
+function drawRidge(g: Paint, air: string): void {
+  const { ctx, view } = g
+  const a = smooth(view.cx, 478, 490) * (1 - smooth(view.cx, 523, 533))
+  if (a <= 0.01) return
+  const L = layer(view, 9)
+  const P = (x: number, y: number): Pt => [L.x(x), L.y(y)]
+  const ridge: Pt[] = [
+    [495.8, 0.05], [497.6, -0.7], [499.8, -1.7], [502.5, -2.6], [505.5, -3.3], [507.8, -4.1], [509.6, -4.5],
+    [511.2, -4.2], [513.4, -3.7], [515.8, -3.9], [518.4, -3.2], [521.0, -2.0], [523.6, 0.05],
+  ]
+  poly(ctx, ridge.map(([x, y]) => P(x, y)))
+  fill(ctx, rgba(mix(GRASS_SHADE, air, 0.35), a))
+  // Bare limestone breaking through below its highest shoulder: a grey scar of rock, not a cap.
+  poly(ctx, [P(507.2, -3.55), P(508.6, -3.95), P(510.4, -4.05), P(511.6, -3.7), P(510.9, -3.3), P(509.0, -3.45)])
+  fill(ctx, rgba(mix('#8F8672', air, 0.35), a))
+  // Scrub in its folds: a few broad dark masses, not a scatter.
+  for (const [x, y, w, h] of [[503.6, -2.85, 1.3, 0.38], [513.9, -3.6, 1.6, 0.34], [518.9, -2.95, 1.1, 0.3]] as const) {
+    ctx.beginPath()
+    ctx.ellipse(L.x(x), L.y(y), w * L.s, h * L.s, 0, Math.PI, 0)
+    ctx.closePath()
+    fill(ctx, rgba(mix(OLIVE, air, 0.4), a))
   }
 }
 
