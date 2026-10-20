@@ -1,0 +1,21 @@
+Odysseus — Ludwig Göransson
+From The Odyssey (Original Motion Picture Soundtrack), Back Lot Music, a division of Universal Studios Music LLLP,
+released 17 July 2026. Composed and produced by Ludwig Göransson.
+Film: The Odyssey, written and directed by Christopher Nolan, Universal Pictures, 2026.
+
+The recording is the label's own, as uploaded to YouTube by Back Lot Music ("Odysseus", provided to YouTube by Back Lot
+Music, The Odyssey (Original Motion Picture Soundtrack), ℗ 2026 Back Lot Music, a division of Universal Studios Music
+LLLP), video WCxx_OVOVUw:
+https://www.youtube.com/watch?v=WCxx_OVOVUw
+Duration 8:41. Copyrighted; no rights are claimed.
+
+Playback: YouTube only. No recording of the cue is shipped, and none is committed, in this branch or its history.
+
+Files:
+- scripts/shows/odysseus-onsets.py — measures the cue once from a local analysis copy of the video's audio (fetched
+  with yt-dlp into the git-ignored out/odyssey/, never committed): its stretches, its landmarks, the beat's one comb
+  with every beat on its own attack, every onset, and its loudness.
+- scripts/shows/plans/odysseus-onsets.json — what it measured: the show is timed to it and check:shows holds the show
+  to it. It holds times and numbers only, no audio.
+
+Every picture in the show is drawn for it. Nothing from the film's frames, posters, trailers or titles is used.
