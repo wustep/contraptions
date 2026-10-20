@@ -1,8 +1,10 @@
 import { M } from '../music'
 import type { Scene } from '../scene'
 import { END, WINDOWS } from '../voyage'
+import type { Pt } from '../path'
 import { HOME, TRIAL } from './ithaca/geo'
 import { heroMoves, ithacaActors } from './ithaca/people'
+import { ARROW, arrowTail } from './ithaca/rig'
 import { ITHACA_SET } from './ithaca/set'
 import { WEST_CAM } from './ithaca/west'
 
@@ -21,8 +23,8 @@ import { WEST_CAM } from './ithaca/west'
  *            bow's plate, and it does not give: seen close, then whole, then past her.
  * - 485.45   he climbs the stairs a step a note, comes up into her room beside her (489.26), and goes out past her.
  * - 494.74   the swell: he drops onto the plate, it goes down, and the bow sings. Antinous goes for the son.
- * - 500.79   he rolls off the plate: the bow looses, and the arrow goes through all twelve eyes and takes Antinous in
- *            the air as he leaps at Telemachus in the doorway (501.5).
+ * - 500.79   he rolls off the plate: the bow looses, and the camera goes with the arrow through all twelve eyes until
+ *            it takes Antinous in the air as he leaps at Telemachus in the doorway (501.6).
  * - 503.15   the rest of them give in, drawn together on the dais; Penelope comes down the stairs a step a note; they
  *            meet (508.96).
  * - 512.68   the west: the skiff, the two of them, the sun going down ahead; their son on the cliff's edge behind.
@@ -65,11 +67,12 @@ export const home: Scene = {
     // The swell: the drop, the bow drawn, her at her door.
     { t: M.last + 0.4, cells: 3.3, at: [824.6, -9.95] },
     { t: TRIAL.loose - 1.4, cells: 3.4, at: [824.5, -9.95] },
-    // The arrow's whole flight, the hall from the bow to the door, through the twelve eyes to Antinous in the air.
-    { t: TRIAL.loose - 0.2, cells: 4.7, at: [822.0, -9.8] },
-    { t: TRIAL.strike - 0.05, cells: 4.65, at: [821.95, -9.78] },
-    // On its note, in close: he comes down at the son's feet with the arrow in him.
-    { t: TRIAL.strike, cells: 1.75, at: [818.8, -9.38], cut: true },
+    // On the loose, in close on the string; then along with the arrow, a little ahead of it, through the twelve eyes,
+    // each axe shivering as it goes through, to Antinous in the air. It takes him on its note, and the camera comes to
+    // rest on him as he comes down at the son's feet with it in him.
+    { t: TRIAL.loose, cells: 2.3, at: [825.2, -9.6], cut: true },
+    ...[0.27, 0.54].map((s) => ({ t: TRIAL.loose + s, cells: 2.3 - 0.4 * s, at: [arrowTail(TRIAL.loose + s) - ARROW - 0.4, -9.58] as Pt })),
+    { t: TRIAL.strike + 0.4, cells: 1.75, at: [818.8, -9.38] },
     { t: TRIAL.erupts - 0.05, cells: 1.62, at: [818.75, -9.35] },
     // On the next, the hall: the rest of them give in, and she comes down to him.
     { t: TRIAL.erupts, cells: 5.0, at: [822.2, -10.05], cut: true },
