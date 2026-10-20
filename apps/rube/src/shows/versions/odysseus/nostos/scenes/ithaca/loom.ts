@@ -43,27 +43,25 @@ export function shuttleAt(t: number): number {
 const passesBy = (t: number): number => PASSES.filter((p) => p <= t).length
 
 let table: Float32Array | null = null
+let built = 0
 /**
- * How much of the warp is woven at `t`, 0 to 1. Integrated once over the whole show from the sky (`nightness`): it
- * grows by day and comes back by night while she is at the loom, and stays as she left it after.
+ * How much of the warp is woven at `t`, 0 to 1. Integrated over the show from the sky (`nightness`), as far as it has
+ * been asked for: it grows by day and comes back by night while she is at the loom, and stays as she left it after.
  */
 export function woven(t: number): number {
   if (!table) {
-    const n = Math.ceil(END / STEP) + 2
-    table = new Float32Array(n)
-    let v = 0.46
-    for (let i = 0; i < n; i++) {
-      const s = i * STEP
-      table[i] = v
-      if (atLoom(s)) {
-        const night = nightness(s)
-        v += (night > 0.5 ? -0.0035 : 0.005) * STEP
-        v = Math.max(0.22, Math.min(0.72, v))
-      }
-    }
+    table = new Float32Array(Math.ceil(END / STEP) + 2)
+    table[0] = 0.46
+    built = 1
   }
   const f = Math.max(0, t) / STEP
   const i = Math.min(table.length - 2, Math.floor(f))
+  for (; built <= i + 1; built++) {
+    const s = (built - 1) * STEP
+    let v = table[built - 1]
+    if (atLoom(s)) v = Math.max(0.22, Math.min(0.72, v + (nightness(s) > 0.5 ? -0.0035 : 0.005) * STEP))
+    table[built] = v
+  }
   return table[i] + (table[i + 1] - table[i]) * (f - i)
 }
 

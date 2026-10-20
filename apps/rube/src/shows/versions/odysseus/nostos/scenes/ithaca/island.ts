@@ -1,4 +1,5 @@
-import { blob, circle, fill, hash, mix, poly, rgba, stroke, type Paint } from '../../draw'
+import { blob, circle, fill, hash, mix, poly, rgba, smooth, stroke, type Paint } from '../../draw'
+import { skyAt } from '../../world/sky'
 import type { Pt } from '../../path'
 import { BEACH, CLIFF_E, CLIFF_W, JETTY, TOP } from './geo'
 import { BARK, OLIVE, OLIVE_DARK, ROCK, ROCK_DEEP, SAND_C, SCRUB, SCRUB_DARK, STONE, STONE_DEEP, STONE_SHADE, outdoors } from './look'
@@ -25,6 +26,7 @@ const OUTLINE: Pt[] = [
   [807.1, -8.2],
   [CLIFF_E.top, TOP],
   [CLIFF_W.top, TOP],
+  [831.0, -8.85],
   [831.5, -8.1],
   [832.0, -6.6],
   [833.4, -5.7],
@@ -73,6 +75,9 @@ export function drawIsland(g: Paint): void {
   if (view.x1 < 792 || view.x0 > 844) return
   const stone = outdoors(STONE, t)
   const shade = outdoors(STONE_SHADE, t)
+  // Whichever face the sun or the moon is on is the lit one; the other is in its own shadow.
+  const disc = skyAt(t).disc
+  const fromWest = disc ? smooth(disc.x, 0.35, 0.65) * Math.min(1, disc.a * 1.5) : 0.5
   const deep = outdoors(STONE_DEEP, t)
   const ink = outdoors('#2B261F', t)
   // The rock under the sea, and the mass itself.
@@ -80,9 +85,9 @@ export function drawIsland(g: Paint): void {
   fill(ctx, stone)
   // The faces in shade: the east face and the west face, a darker plane each.
   poly(ctx, SHADE_E)
-  fill(ctx, shade)
+  fill(ctx, mix(stone, shade, 0.35 + 0.65 * fromWest))
   poly(ctx, SHADE_W)
-  fill(ctx, shade)
+  fill(ctx, mix(stone, shade, 1 - 0.65 * fromWest))
   for (const s of STRATA) {
     poly(ctx, [[s.x0, s.y], [s.x1, s.y - 0.1], [s.x1, s.y + s.h], [s.x0 + 0.1, s.y + s.h * 1.1]])
     fill(ctx, rgba(deep, 0.45))

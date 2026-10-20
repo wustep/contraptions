@@ -92,7 +92,7 @@ export const CRANK = { x: 826.36, y: HALL.floor - 0.06, plate: 0.38, arm: 0.36, 
 /** The twelve axes along the floor's trench, east of the bow, their eyes at the arrow's height. */
 export const AXES = Array.from({ length: 12 }, (_, i) => 825.15 - i * 0.44)
 /** An axe: its haft, its head, and how deep its foot sits in the trench (lying, it is hidden there). */
-export const AXE = { haft: 0.36, head: 0.1, sunk: 0.1 }
+export const AXE = { haft: 0.37, head: 0.1, sunk: 0.11 }
 
 /** The harbour's jetty on the west side, and the skiff's mooring. */
 export const JETTY = { x0: 836.4, x1: 840.6, top: -0.42 }

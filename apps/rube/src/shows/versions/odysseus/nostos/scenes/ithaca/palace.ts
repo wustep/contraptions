@@ -355,8 +355,9 @@ export function overPalace(g: Paint): void {
   const stone = outdoors(STONE, t)
   const shade = outdoors(STONE_SHADE, t)
   drawAxes(g)
-  // The floor's cut face over the trench, so a lying axe is down in it, out of sight, until it swings up.
-  rect(ctx, AXES[AXES.length - 1] - 0.5, HALL.floor, AXES[0] - AXES[AXES.length - 1] + 1.0, SLAB)
+  // The floor's cut face over the trench, deep enough there that a lying axe is down in it, out of sight, until it
+  // swings up.
+  rect(ctx, AXES[AXES.length - 1] - 0.5, HALL.floor, AXES[0] - AXES[AXES.length - 1] + 1.0, SLAB + 0.08)
   fill(ctx, shade)
   drawArrow(g)
   // The hall's walls' cut ends: over each door, the wall to the slab.

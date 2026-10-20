@@ -170,10 +170,16 @@ export function drawShip(g: Paint, pose: Pose, look: ShipLook): void {
       ctx.fillRect(-1.3, yard + (foot - yard) * 0.42, 2.6, (foot - yard) * 0.16)
       ctx.restore()
     } else {
+      // Furled: the sail bundled up along the yard, a slim roll in the canvas's own shadow, not a white disc.
+      const roll = mix(canvas, ink, 0.3)
       ctx.beginPath()
-      ctx.ellipse(0, yard + 0.06, 1.0, 0.07, 0, 0, Math.PI * 2)
-      fill(ctx, canvas)
-      stroke(g, ink, lw * 0.8)
+      ctx.moveTo(-0.98, yard + 0.02)
+      ctx.quadraticCurveTo(0, yard + 0.14, 0.98, yard + 0.02)
+      ctx.lineTo(0.98, yard + 0.07)
+      ctx.quadraticCurveTo(0, yard + 0.19, -0.98, yard + 0.07)
+      ctx.closePath()
+      fill(ctx, roll)
+      stroke(g, ink, lw * 0.7)
     }
     // Stays from the masthead to the bow and the stern.
     ctx.beginPath()

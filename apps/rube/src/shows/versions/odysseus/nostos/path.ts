@@ -221,56 +221,70 @@ export class Path {
   }
 
   /**
-   * The mark's angle at `t`. Built once at 1/120 s: a roll turns it by the signed distance rolled over the radius (to
-   * the right is clockwise on the screen), a ride turns it with what carries it, a flight keeps the spin it left with
-   * (slowly letting it go), a rest holds it.
+   * The mark's angle at `t`. Built at 1/120 s, as far as it has been asked for and no further, so a ball that first
+   * comes on late in the show costs its first frame nothing: a roll turns it by the signed distance rolled over the
+   * radius (to the right is clockwise on the screen), a ride turns it with what carries it, a flight keeps the spin it
+   * left with (slowly letting it go), a rest holds it.
    */
   spin(t: number, r = R): number {
-    if (!this.spins) this.spins = this.buildSpins(r)
     const f = (t - this.t0) / this.step
-    const i = Math.max(0, Math.min(this.spins.length - 2, Math.floor(f)))
-    const u = Math.max(0, Math.min(1, f - i))
-    return this.spins[i] + (this.spins[i + 1] - this.spins[i]) * u
+    const i = Math.max(0, Math.floor(f))
+    this.buildTo(i + 1, r)
+    const n = this.spinsLen
+    const j = Math.max(0, Math.min(n - 2, i))
+    const u = Math.max(0, Math.min(1, f - j))
+    return this.spins![j] + (this.spins![j + 1] - this.spins![j]) * u
   }
 
-  private buildSpins(r: number): Float32Array {
-    const n = Math.max(2, Math.ceil((this.t1 - this.t0) / this.step) + 2)
-    const out = new Float32Array(n)
-    let angle = 0
-    let omega = 0
-    let prev = this.where(this.t0)
-    let prevMove = this.moveAt(this.t0)
-    let prevTurn = prevMove.turn ? prevMove.turn(this.t0) : 0
-    out[0] = 0
-    for (let i = 1; i < n; i++) {
+  private spinsLen = 0
+  private built = 0
+  private sAngle = 0
+  private sOmega = 0
+  private sPrev: Pt = [0, 0]
+  private sPrevMove: Move | null = null
+  private sPrevTurn = 0
+
+  private buildTo(want: number, r: number): void {
+    if (!this.spins) {
+      this.spinsLen = Math.max(2, Math.ceil((this.t1 - this.t0) / this.step) + 2)
+      this.spins = new Float32Array(this.spinsLen)
+      this.sPrev = this.where(this.t0)
+      this.sPrevMove = this.moveAt(this.t0)
+      this.sPrevTurn = this.sPrevMove.turn ? this.sPrevMove.turn(this.t0) : 0
+      this.spins[0] = 0
+      this.built = 1
+    }
+    const out = this.spins
+    const end = Math.min(this.spinsLen, want + 1)
+    for (let i = this.built; i < end; i++) {
       const t = this.t0 + i * this.step
       const m = this.moveAt(t)
       const p = this.where(t)
-      const dx = p[0] - prev[0]
-      const dy = p[1] - prev[1]
+      const dx = p[0] - this.sPrev[0]
+      const dy = p[1] - this.sPrev[1]
       if (m.kind === 'roll') {
         const d = Math.hypot(dx, dy)
-        // Rolling along the ground under it: rightwards turns it clockwise. Straight down a chute, by its lean.
+        // Rolling along the ground under it: rightwards turns it clockwise.
         const sign = Math.abs(dx) > 1e-9 ? Math.sign(dx) : 0
         const dTheta = (sign * d) / r
-        angle += dTheta
-        omega = dTheta / this.step
+        this.sAngle += dTheta
+        this.sOmega = dTheta / this.step
       } else if (m.kind === 'ride') {
         const turn = m.turn ? m.turn(t) : 0
-        if (m === prevMove) angle += turn - prevTurn
-        prevTurn = turn
-        omega = 0
+        if (m === this.sPrevMove) this.sAngle += turn - this.sPrevTurn
+        this.sPrevTurn = turn
+        this.sOmega = 0
       } else if (m.kind === 'fly') {
-        angle += omega * this.step
-        omega *= Math.exp(-this.step / 2.5)
+        this.sAngle += this.sOmega * this.step
+        this.sOmega *= Math.exp(-this.step / 2.5)
       } else {
-        omega = 0
+        this.sOmega = 0
       }
-      if (m !== prevMove && m.turn) prevTurn = m.turn(t)
-      prevMove = m
-      prev = p
-      out[i] = angle
+      if (m !== this.sPrevMove && m.turn) this.sPrevTurn = m.turn(t)
+      this.sPrevMove = m
+      this.sPrev = p
+      out[i] = this.sAngle
     }
-    return out
+    this.built = Math.max(this.built, end)
   }
 }
