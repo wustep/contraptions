@@ -16,7 +16,8 @@ import { WEST_CAM } from './ithaca/west'
  *            down past him; out onto the top beside an old dog on his straw.
  * - 428.8    Argos lifts his head; at 430.23 his tail goes once; where the music drops to nothing (431.57) he lays
  *            his head down and does not breathe again.
- * - 432.6    Telemachus comes out of the gate to the stranger beside the dog: they touch (437.26), and go in.
+ * - 429.75   Telemachus, out of the gate at a run, stops under the olive and sees the dog know the beggar and die;
+ *            then he comes to the dog's other side (437.26), and leads his father in.
  * - 441.12   Penelope leaves her loom and watches from the head of the stairs.
  * - 450.58   Telemachus trips the first axe; the twelve come upright one from the next, east to west.
  * - 458, 467.6, 476.6   three suitors climb into her room, out onto the terrace, drop through the light well onto the
@@ -41,10 +42,10 @@ export const home: Scene = {
     // Up the cliff with him.
     { t: 420.9, cells: 6.5, off: [0.6, -1.4] },
     { t: HOME.top, cells: 5.0, off: [0.8, -0.9] },
-    // Argos.
-    { t: HOME.sees, cells: 2.5, at: [809.75, -9.62] },
-    { t: HOME.dies + 2.5, cells: 2.3, at: [809.75, -9.58] },
-    // His son comes out to him.
+    // Argos, the beggar beside him, and the son stopped under the olive, watching.
+    { t: HOME.sees, cells: 2.6, at: [810.1, -9.62] },
+    { t: HOME.dies + 2.5, cells: 2.45, at: [810.05, -9.58] },
+    // His son comes to the dog's other side, the dead dog between them.
     { t: TRIAL.touch, cells: 2.6, at: [809.9, -9.6] },
     // In through the gate, the courtyard, to the hall's threshold.
     { t: TRIAL.inside, cells: 3.4, at: [819.2, -9.75] },

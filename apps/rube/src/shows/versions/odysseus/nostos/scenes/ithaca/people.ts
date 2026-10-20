@@ -144,23 +144,30 @@ function telemachusPath(): Path {
   const ground = on(-9, s)
   // On the terrace's west end through the years, looking out to sea.
   const lookout: Pt = [827.0, ty]
-  m.push(rest(lookout, 0, 424.0))
-  // Down to meet the stranger: through the room, down the stairs, out of the hall and the gate (mostly out of shot).
+  m.push(rest(lookout, 0, 422.0))
+  // He sees the basket coming up the cliff, and goes down to meet it: through the room, down the stairs, out of the hall
+  // and the gate (out of shot), running.
   const head = stepAt(STAIRS.steps - 1)
   const top: Pt = [head[0], ty]
-  m.push(roll([lookout, [TERRACE.x0 + 0.1, ty], top], 424.0, 426.6))
+  m.push(roll([lookout, [TERRACE.x0 + 0.1, ty], top], 422.0, 424.6))
   const down = [4, 3, 2, 1, 0].map((i) => {
     const p = stepAt(i)
     return [p[0], p[1] + R - R * s] as Pt
   })
   const floorFoot: Pt = [STAIRS.x0 - 0.25, fy]
-  m.push(...hops([top, ...down, floorFoot], [426.6, 427.0, 427.4, 427.8, 428.2, 428.6, 429.0], 0.05))
-  const byFather: Pt = [809.45 + R + R * s, ground]
-  m.push(roll([floorFoot, [HALL.x0 + 0.1, fy], [GATE.x, ground], byFather], 429.0, TRIAL.touch))
-  // Into the hall ahead of his father, and to the first axe's foot.
+  m.push(...hops([top, ...down, floorFoot], [424.6, 425.0, 425.4, 425.8, 426.2, 426.6, 427.0], 0.05))
+  // Out of the gate he stops under the olive at what he sees: the old dog lifting his head to the beggar. He watches the
+  // tail go once and the dog die (that is how he knows him, as in the film), and only then comes, slowly, to the dog's
+  // other side: the two of them with the dead dog between them.
+  const watch: Pt = [811.15, ground]
+  const across: Pt = [810.62, ground]
+  m.push(roll([floorFoot, [HALL.x0 + 0.1, fy], [GATE.x, ground], watch], 427.0, 429.75))
+  m.push(rest(watch, 429.75, 434.2))
+  m.push(roll([watch, across], 434.2, TRIAL.touch, 'inout'))
+  // He leads his father in, into the hall ahead of him, and to the first axe's foot.
   const inHall: Pt = [818.18 + 0.8, fy]
-  m.push(rest(byFather, TRIAL.touch, TRIAL.touch + 0.3))
-  m.push(roll([byFather, [GATE.x, ground], inHall], TRIAL.touch + 0.3, TRIAL.inside - 0.2))
+  m.push(rest(across, TRIAL.touch, TRIAL.touch + 0.6))
+  m.push(roll([across, [GATE.x, ground], inHall], TRIAL.touch + 0.6, TRIAL.inside - 0.2))
   m.push(rest(inHall, TRIAL.inside - 0.2, 448.6))
   const atAxe: Pt = [820.31 - 0.24, fy]
   m.push(roll([inHall, atAxe], 448.6, 450.58))
