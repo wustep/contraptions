@@ -61,8 +61,8 @@ export const home: Scene = {
     { t: TRIAL.out + 0.6, cells: 2.6, at: [823.6, -10.95] },
     { t: TRIAL.edge, cells: 3.0, at: [825.6, -10.3] },
     // The swell: the drop, the bow drawn, her at her door.
-    { t: M.last + 0.4, cells: 3.3, at: [825.0, -9.95] },
-    { t: TRIAL.loose - 1.4, cells: 3.4, at: [824.6, -9.95] },
+    { t: M.last + 0.4, cells: 3.3, at: [824.6, -9.95] },
+    { t: TRIAL.loose - 1.4, cells: 3.4, at: [824.5, -9.95] },
     // The arrow's whole flight, bow to door.
     { t: TRIAL.loose - 0.2, cells: 5.2, at: [822.6, -10.5] },
     { t: TRIAL.erupts + 1.5, cells: 5.1, at: [822.5, -10.45] },

@@ -104,7 +104,6 @@ export const giants: Scene = {
       drawFogBand(g, TOP - 7.0, 3.6, 0.5 * fogAt(g.t) * (1 - 0.6 * smooth(g.t, 199, 210)), 0.04, 4.2)
       for (let i = 0; i < GIANTS.length; i++) drawGiant(g, i)
       drawPines(g, 'front')
-      drawFogBand(g, TOP + 0.3, 2.0, 0.55 * fogAt(g.t), 0.06, 2.7)
     }),
   ],
   mid: [

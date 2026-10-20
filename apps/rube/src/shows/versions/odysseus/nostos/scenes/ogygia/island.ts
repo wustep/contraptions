@@ -148,18 +148,28 @@ export function drawDunes(g: Paint): void {
   if (seen <= 0.002) return
   const sky = skyAt(t)
   const l = lightAt(t)
-  ctx.globalAlpha = seen
+  // The haze takes them by colour, solid, so the storm's swell is never seen through them; only at the last, when they
+  // are all but the haze's own colour, do they thin away. The near rank is laid first and the far one only where the
+  // near one is not, and each face only where its own slip face is not.
+  ctx.globalAlpha = smooth(seen, 0.04, 0.3)
+  const hazed = (c: string) => mix(sky.low, c, seen)
   const ranks: { d: number; peak: number; at: number; left: number; right: number; air: number }[] = [
-    { d: 90, peak: -10, at: 714, left: 640, right: 742, air: 0.55 },
     { d: 32, peak: -13.5, at: 689, left: 640, right: 706, air: 0.18 },
+    { d: 90, peak: -10, at: 714, left: 640, right: 742, air: 0.55 },
   ]
+  const frame = (): Path2D => {
+    const f = new Path2D()
+    f.rect(view.x0 - 2, view.y0 - 2, view.x1 - view.x0 + 4, view.y1 - view.y0 + 4)
+    return f
+  }
+  const covered = frame()
   for (const r of ranks) {
     const L = layer(view, r.d)
     if (L.x(r.right) < view.x0 - 1 || L.x(r.left) > view.x1 + 1) continue
     const day = r.d > 60 ? '#E9E3D4' : '#F3EEE2'
     const shade = r.d > 60 ? '#D5CEC0' : '#DCD5C6'
-    const face = mix(lit(day, NIGHT_SAND, l), sky.low, r.air)
-    const slip = mix(lit(shade, '#33485E', l), sky.low, r.air * 0.9)
+    const face = hazed(mix(lit(day, NIGHT_SAND, l), sky.low, r.air))
+    const slip = hazed(mix(lit(shade, '#33485E', l), sky.low, r.air * 0.9))
     // The windward back: a long, smooth rise from the west to the crest; the slip face falls steep to the east.
     const pts: Pt[] = []
     const n = 36
@@ -175,22 +185,31 @@ export function drawDunes(g: Paint): void {
       slipPts.push([L.x(x), L.y(r.peak * (1 - Math.pow(v, 0.8)) * (1 - 0.15 * v))])
     }
     const base = L.y(0)
-    ctx.beginPath()
-    ctx.moveTo(pts[0][0], base)
-    for (const p of pts) ctx.lineTo(p[0], p[1])
-    for (const p of slipPts) ctx.lineTo(p[0], p[1])
-    ctx.lineTo(slipPts[slipPts.length - 1][0], base)
-    ctx.closePath()
-    fill(ctx, face)
+    const whole = new Path2D()
+    whole.moveTo(pts[0][0], base)
+    for (const p of pts) whole.lineTo(p[0], p[1])
+    for (const p of slipPts) whole.lineTo(p[0], p[1])
+    whole.lineTo(slipPts[slipPts.length - 1][0], base)
+    whole.closePath()
     // The slip face in its own shade, from the crest down.
-    ctx.beginPath()
-    ctx.moveTo(slipPts[0][0], slipPts[0][1])
-    for (const p of slipPts) ctx.lineTo(p[0], p[1])
-    ctx.lineTo(slipPts[slipPts.length - 1][0], base)
-    ctx.lineTo(L.x(r.at - 3), base)
-    ctx.quadraticCurveTo(L.x(r.at - 1.2), L.y(r.peak * 0.45), slipPts[0][0], slipPts[0][1])
-    ctx.closePath()
-    fill(ctx, slip)
+    const slipFace = new Path2D()
+    slipFace.moveTo(slipPts[0][0], slipPts[0][1])
+    for (const p of slipPts) slipFace.lineTo(p[0], p[1])
+    slipFace.lineTo(slipPts[slipPts.length - 1][0], base)
+    slipFace.lineTo(L.x(r.at - 3), base)
+    slipFace.quadraticCurveTo(L.x(r.at - 1.2), L.y(r.peak * 0.45), slipPts[0][0], slipPts[0][1])
+    slipFace.closePath()
+    ctx.save()
+    ctx.clip(covered, 'evenodd')
+    ctx.fillStyle = slip
+    ctx.fill(slipFace)
+    const besideSlip = frame()
+    besideSlip.addPath(slipFace)
+    ctx.clip(besideSlip, 'evenodd')
+    ctx.fillStyle = face
+    ctx.fill(whole)
+    ctx.restore()
+    covered.addPath(whole)
   }
   ctx.globalAlpha = 1
 }

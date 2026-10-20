@@ -462,13 +462,35 @@ export function drawTower(g: Paint): void {
   // The tower's inner wall, cut: down to a lintel over the way in from the street.
   rect(ctx, TOWER.x0, TOWER.roof, 0.18, STREET.y - 0.95 - TOWER.roof)
   fill(ctx, clay)
-  // The gate in its slot: timber, up as far as the train has lifted it, with its rack along its inner face.
+  // The passage through the wall at the street's level: a dark way under the chamber's floor. Outside the gate the army's
+  // torches light its floor and walls, and the light comes in along the floor under the gate as it goes up.
   const up = gateUp(t)
+  const vault = tone('#16100D', t)
+  rect(ctx, WALL.x0, WALL.passage, TOWER.x1 - WALL.x0, STREET.y - WALL.passage)
+  fill(ctx, vault)
+  const lit = torchlight(t)
+  if (lit > 0.01) {
+    const warm = mix(vault, FLAME.body, 0.24 * lit)
+    rect(ctx, GATE.x1, WALL.passage, TOWER.x1 - GATE.x1, STREET.y - WALL.passage)
+    fill(ctx, warm)
+    if (up > 0.01) {
+      poly(ctx, [[GATE.x1, STREET.y - up], [GATE.x1, STREET.y], [GATE.x0 - Math.min(1.6, up * 2.4), STREET.y]])
+      fill(ctx, mix(vault, FLAME.body, 0.2 * lit))
+    }
+  }
+  // The gate in its slot: a timber leaf bound with three iron bands and shod with spikes, up as far as the train has
+  // lifted it, with its rack along its inner face.
   const gy0 = GATE.bottom - up
   const gy1 = GATE.top - up
-  rect(ctx, GATE.x0, gy1, GATE.x1 - GATE.x0, gy0 - gy1)
+  const shod = 0.07
+  const gw = GATE.x1 - GATE.x0
+  poly(ctx, [[GATE.x0, gy1], [GATE.x1, gy1], [GATE.x1, gy0 - shod], [GATE.x1 - gw * 0.25, gy0], [GATE.x0 + gw * 0.5, gy0 - shod], [GATE.x0 + gw * 0.25, gy0], [GATE.x0, gy0 - shod]])
   fill(ctx, timber)
   stroke(g, ink, 1.4)
+  for (const f of [0.18, 0.52, 0.86]) {
+    rect(ctx, GATE.x0, gy1 + (gy0 - shod - gy1) * f - 0.03, gw, 0.06)
+    fill(ctx, ink)
+  }
   ctx.beginPath()
   for (let y = gy1 + 0.05; y < GATE.bottom - 0.6 - up; y += 0.07) {
     ctx.moveTo(GATE.x0, y)
@@ -476,11 +498,6 @@ export function drawTower(g: Paint): void {
     ctx.lineTo(GATE.x0, y + 0.04)
   }
   stroke(g, ink, 1.2)
-  // The passage's far side: the night outside, through the gate as it goes up.
-  if (up > 0.01) {
-    rect(ctx, GATE.x0, STREET.y - up, GATE.x1 - GATE.x0, up)
-    fill(ctx, tone('#0C0D12', t, { fire: fire * 0.5 }))
-  }
   // The train: the drum and its pinion, the great wheel and its pinion on the rack.
   const wheelLight = Math.max(fire, lamp) * 1.1
   gear(g, AXLE_B, R_B, 15, turnB(t), tone(mix(MAT.timber, MAT.stone, 0.25), t, { lit: 0.5, fire: wheelLight }), ink)
@@ -608,25 +625,35 @@ export function drawBucketFront(g: Paint): void {
 
 /* ------------------------------------------------------------------ the sack */
 
-/** The torches of the army, coming in under the gate as it rises and going on up into the city, away from us. */
+/**
+ * The torches of the army: waiting in a column on the hill outside the gate while it goes up (come there in the dark,
+ * before the camera is on the gate), then in under it, along the street, and up into the city, away from us.
+ */
 const TORCHES = 9
+const MARCH = 1.25
+const WAIT_GAP = 0.42
 export function torchAt(i: number, t: number): { x: number; y: number; s: number; a: number } | null {
-  const start = 114.45 + i * 0.62
-  if (t < start) return null
-  const u = t - start
-  // In under the gate, along the street, then turning up into the town, going away (smaller, paler) and gone.
-  const x = WALL.x1 + 0.9 - u * 1.25
+  if (t < 100) return null
+  // Each moves off when the one ahead has made room, so it comes to the gate on its old time, gathering way gently.
+  const wait = WALL.x1 + 0.9 + i * WAIT_GAP
+  const go = 114.45 + i * 0.62 - (i * WAIT_GAP) / MARCH
+  const ease = 0.4
+  const u = t < go ? 0 : t < go + ease ? ((t - go) * (t - go)) / (2 * ease) : t - go - ease / 2
+  const x = wait - u * MARCH
   const away = smoother(x, -29.4, -31.6)
   const s = 1 - 0.6 * away
-  const y = STREET.y - away * 1.1
-  const a = 1 - smooth(u, 4.5, 6)
+  const y = (x > WALL.x1 ? ground(x) : STREET.y) - away * 1.1
+  const a = 1 - smooth(t - go, 4.5 + (i * WAIT_GAP) / MARCH, 6 + (i * WAIT_GAP) / MARCH)
   if (a <= 0.01 || x < -33.5) return null
   return { x, y, s, a }
 }
 
+/** How much of the army's torchlight is at the gate: gathering outside it, then gone in past it. */
+export const torchlight = (t: number): number => smooth(t, 104, 109) * (1 - smooth(t, 119, 123))
+
 export function drawTorches(g: Paint): void {
   const { ctx, t, view } = g
-  if (t < 114 || t > 128 || view.x0 > WALL.x1 + 2 || view.x1 < -34) return
+  if (t < 100 || t > 128 || view.x0 > WALL.x1 + 6 || view.x1 < -34) return
   for (let i = 0; i < TORCHES; i++) {
     const p = torchAt(i, t)
     if (!p) continue

@@ -212,7 +212,7 @@ export function drawRanks(g: Paint): void {
   // the thousands behind them are the haze itself.
   let crowd = Math.min(DEPTHS.length, 9)
   for (let r = 0; r < crowd; r++) {
-    if (R * 0.86 * layer(view, DEPTHS[r]).s < view.h / 220) {
+    if (R * 0.86 * layer(view, DEPTHS[r]).s < view.h / 260) {
       crowd = r
       break
     }
@@ -229,28 +229,32 @@ export function drawRanks(g: Paint): void {
     // Where the crowd is thin: a slow rise and fall of density along the rank, its own for each rank.
     const thin = (lx: number) => 0.5 + 0.5 * Math.sin(lx * 0.19 + r * 2.3) * Math.sin(lx * 0.07 + r)
     // Each rank back sinks further into the colour of the sand at its distance: the far ones a low pale murmur, not specks.
-    const sink = Math.min(0.85, 0.1 * r)
+    // And a rank too small in the frame to read as heads goes down into the sand's colour as the camera goes out, rather
+    // than leaving a line of specks (or dropping out at once).
+    const small = 1 - smooth(radius / view.h, 1 / 260, 1 / 150)
+    const sink = Math.min(0.9, 0.1 * r + small)
     const ground_c = mix(SAND, haze, 0.06 + 0.02 * r)
     ctx.save()
     ctx.beginPath()
     ctx.rect(view.x0 - 1, view.y0 - 1, view.x1 - view.x0 + 2, ground - view.y0 + 1)
     ctx.clip()
-    // Shoulder to shoulder, every other rank offset by half a place.
-    const gap = 0.3
+    // Shoulder to shoulder, close enough that a rank is one row of heads and never a scatter; every other rank offset by
+    // half a place.
+    const gap = 0.21
     ctx.beginPath()
     let any = false
     for (let j = Math.floor(x0 / gap); j <= Math.ceil(x1 / gap); j++) {
-      const lx = j * gap + (r % 2 ? gap / 2 : 0) + (hash(j, r, 61) - 0.5) * gap * 0.7
-      // Gaps where the crowd thins.
-      if (hash(j, r, 65) < 0.35 * thin(lx)) continue
+      const lx = j * gap + (r % 2 ? gap / 2 : 0) + (hash(j, r, 61) - 0.5) * gap * 0.3
+      // A rare gap where the crowd thins.
+      if (hash(j, r, 65) < 0.08 * thin(lx)) continue
       // Each surges a little after or before the rank as a whole.
-      const x = L.x(lx + shiftOf(r, 0.18 * hash(j, r, 66)))
+      const x = L.x(lx + shiftOf(r, 0.03 * hash(j, r, 66)))
       if (x < view.x0 - 1 || x > view.x1 + 1) continue
       const up = keep * smooth(t, riseOf(r, lx), riseOf(r, lx) + 0.7 + 0.3 * hash(j, r, 62))
       if (up <= 0.001) continue
       const size = radius * (0.9 + 0.2 * hash(j, r, 63))
       // Not on a ruled line: each a little nearer or further than its rank.
-      const y = ground - size * (2 * up - 1) + 0.16 * L.s * (hash(j, r, 64) - 0.5)
+      const y = ground - size * (2 * up - 1) + 0.04 * L.s * (hash(j, r, 64) - 0.5)
       ctx.moveTo(x + size, y)
       ctx.arc(x, y, size, 0, Math.PI * 2)
       any = true
@@ -258,7 +262,7 @@ export function drawRanks(g: Paint): void {
     // The rims first and the fills over them, so where two overlap only the outside of the pair is outlined; the far
     // ranks have no rims at all, which at their size are only more marks.
     if (any) {
-      if (r < 3) stroke(g, mix(ASH_RIM, ground_c, sink), 4.2 * scale)
+      if (r < 3) stroke(g, mix(ASH_RIM, ground_c, Math.min(1, sink + small)), 4.2 * scale)
       fill(ctx, mix(mix(ASH, haze, 0.12), ground_c, sink))
     }
     ctx.restore()

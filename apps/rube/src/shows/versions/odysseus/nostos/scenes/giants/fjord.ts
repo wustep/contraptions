@@ -18,8 +18,8 @@ import { CLIFF, FLIGHT, GIANTS, THROWS, TOP, sideOf, type Giant, type Throw } fr
  */
 
 const INK = '#15191B'
-/** Steel: the lit plane, the plane turned away, the deep shade, and the one bright edge each plate has. */
-const STEEL = { lit: '#A7AFB3', side: '#79838A', deep: '#4A5359', edge: '#D9DEE0', slit: '#14181B' }
+/** Steel: the lit plane, the plane turned away, the deep shade, and the dark of the helmet's T. */
+const STEEL = { lit: '#A7AFB3', side: '#79838A', deep: '#4A5359', slit: '#14181B' }
 const ROCK = { face: '#353F3D', lit: '#4A5552', dark: '#222A29', wet: '#182020' }
 const PINE = '#1A2420'
 
@@ -79,8 +79,8 @@ export function drawFar(g: Paint): void {
 /* ------------------------------------------------------------------ the cliff */
 
 /**
- * The cliff: one dark face with its upper part catching the fog's light, a shadow down each gully, a few long cracks,
- * some short ledges, and its wet foot at the water.
+ * The cliff: one dark face with its upper part catching the fog's light, a few long cracks, and its wet foot at the
+ * water.
  */
 export function drawCliff(g: Paint): void {
   const { ctx, t, view } = g
@@ -110,18 +110,6 @@ export function drawCliff(g: Paint): void {
   for (let x = b + 1; x >= a - 1; x -= 0.8) ctx.lineTo(x, cliffTop(x) + 2.2 + 0.9 * Math.sin(x * 0.33 + 1.2) + 0.5 * Math.sin(x * 0.9))
   ctx.closePath()
   fill(ctx, mix(ROCK.lit, fog, 0.3))
-  // A shadow down each gully, deepest at the top and gone by halfway down the face.
-  for (const [gx, w] of GULLIES) {
-    if (gx + w < a - 2 || gx - w > b + 2) continue
-    const top = cliffTop(gx)
-    const half = (top + CLIFF.foot) / 2
-    poly(ctx, [[gx - w * 0.5, top - 0.4], [gx + w * 0.35, top - 0.4], [gx + w * 0.1 + 0.3, half], [gx - w * 0.4 - 0.2, half]])
-    const sh = ctx.createLinearGradient(0, top, 0, half)
-    sh.addColorStop(0, rgba(mix(ROCK.dark, fog, 0.2), 0.65))
-    sh.addColorStop(1, rgba(mix(ROCK.dark, fog, 0.2), 0))
-    ctx.fillStyle = sh
-    ctx.fill()
-  }
   // A few long cracks, slanting.
   ctx.beginPath()
   for (let i = Math.floor(a / 13); i <= Math.ceil(b / 13); i++) {
@@ -133,17 +121,6 @@ export function drawCliff(g: Paint): void {
     ctx.lineTo(x + 0.2, y0 + len)
   }
   stroke(g, rgba(mix(ROCK.dark, fog, 0.15), 0.8), 2.4)
-  // Short ledges, each a lighter lip with a darker shadow under it.
-  for (let i = Math.floor(a / 11); i <= Math.ceil(b / 11); i++) {
-    if (hash(i, 24) < 0.35) continue
-    const x = i * 11 + 4 * hash(i, 25)
-    const y = TOP + 3.5 + 3.5 * hash(i, 26)
-    const w = 2.5 + 2.5 * hash(i, 27)
-    poly(ctx, [[x, y], [x + w, y - 0.15], [x + w - 0.3, y + 0.28], [x + 0.2, y + 0.35]])
-    fill(ctx, mix(ROCK.lit, fog, 0.25))
-    poly(ctx, [[x + 0.2, y + 0.35], [x + w - 0.3, y + 0.28], [x + w - 0.8, y + 0.9], [x + 0.6, y + 0.8]])
-    fill(ctx, rgba(mix(ROCK.dark, fog, 0.15), 0.6))
-  }
   // The wet foot of it, at the water.
   ctx.fillStyle = mix(ROCK.wet, fog, 0.12)
   ctx.fillRect(a, CLIFF.foot - 0.6, b - a, 0.7)
@@ -230,9 +207,10 @@ export function drawFogBand(g: Paint, y: number, h: number, a: number, drift: nu
   const bottom = (x: number) => y + h * 0.6 * (0.75 + 0.25 * Math.sin(x * 0.045 - t * drift * 0.7 + seed * 2))
   // The fog is gone before either edge of the shape is reached, wherever the edges wander to.
   const gr = ctx.createLinearGradient(0, y - h * 0.5, 0, y + h * 0.3)
+  // A broad bank, thickest through its middle: never a thin bright line, which reads as light and not as fog.
   gr.addColorStop(0, rgba(fog, 0))
-  gr.addColorStop(0.55, rgba(fog, a))
-  gr.addColorStop(0.68, rgba(fog, a))
+  gr.addColorStop(0.35, rgba(fog, a * 0.85))
+  gr.addColorStop(0.78, rgba(fog, a * 0.85))
   gr.addColorStop(1, rgba(fog, 0))
   ctx.save()
   ctx.fillStyle = gr
@@ -363,10 +341,10 @@ function elbow(sh: Pt, hand: Pt, a: number, b: number, side: 1 | -1): Pt {
   return (one[0] - sh[0]) * side >= (two[0] - sh[0]) * side ? one : two
 }
 
-/** A limb from `p` to `q`, `w` wide, with rounded ends. */
-function limb(ctx: CanvasRenderingContext2D, p: Pt, q: Pt, w: number): void {
+/** A limb from `p` to `q`, `w` wide, with rounded ends, added to the path as its own shape. */
+function limbTo(ctx: CanvasRenderingContext2D, p: Pt, q: Pt, w: number): void {
   const a = Math.atan2(q[1] - p[1], q[0] - p[0])
-  ctx.beginPath()
+  ctx.moveTo(p[0] + Math.cos(a + Math.PI / 2) * (w / 2), p[1] + Math.sin(a + Math.PI / 2) * (w / 2))
   ctx.arc(p[0], p[1], w / 2, a + Math.PI / 2, a - Math.PI / 2)
   ctx.arc(q[0], q[1], w / 2, a - Math.PI / 2, a + Math.PI / 2)
   ctx.closePath()
@@ -394,7 +372,7 @@ export function drawGiant(g: Paint, gi: number): void {
   const veil = veilOf(G, t)
   if (veil >= 0.995) return
   const fog = fogOf(t)
-  const c = (hex: string) => mix(hex, fog, 0.12 + veil * 0.8)
+  const c = (hex: string) => mix(hex, fog, 0.12 + veil * 0.88)
   const base = TOP + sunkOf(G, t)
   // A slow breath in the chest and shoulders.
   const breath = 0.07 * Math.sin(t * 1.25 + gi * 1.7)
@@ -405,8 +383,12 @@ export function drawGiant(g: Paint, gi: number): void {
   const side = cur ? sideOf(cur.th) : 1
   // The head turns a little to where it is throwing.
   const look = cur ? side * 0.16 * smoother(t, cur.tr - 2.0, cur.tr - 1.2) * (1 - smoother(t, cur.tr + 0.6, cur.tr + 2.0)) : 0
+  // The fog takes it by colour alone, all of it at once, so no part of it is ever seen through another; and nothing of
+  // it is ever below the cliff's top, where the wood stands.
   ctx.save()
-  ctx.globalAlpha = clamp01(1.25 * (1 - veil))
+  ctx.beginPath()
+  ctx.rect(view.x0 - 1, view.y0 - 1, view.x1 - view.x0 + 2, TOP - view.y0 + 1)
+  ctx.clip()
   const lw = 3.2
   const ink = c(INK)
   // The throwing arm, from its shoulder to its hand, the elbow out.
@@ -418,16 +400,17 @@ export function drawGiant(g: Paint, gi: number): void {
   }
   const [tsh, tel, thd] = throwArm()
   const raised = thd[1] < tsh[1]
+  // An arm is one bent shape, upper arm, forearm and fist outlined together (the ink laid first and the steel over it,
+  // so no joint is drawn), not a chain of parts.
   const drawArm = ([sh, el, hd]: [Pt, Pt, Pt]) => {
-    limb(ctx, sh, el, 0.95 * s)
+    ctx.beginPath()
+    limbTo(ctx, sh, el, 0.95 * s)
+    limbTo(ctx, el, hd, 0.84 * s)
+    const rot = Math.atan2(hd[1] - el[1], hd[0] - el[0])
+    ctx.moveTo(hd[0] + 0.46 * s * Math.cos(rot), hd[1] + 0.46 * s * Math.sin(rot))
+    ctx.ellipse(hd[0], hd[1], 0.46 * s, 0.4 * s, rot, 0, Math.PI * 2)
+    stroke(g, ink, 2 * lw)
     fill(ctx, c(STEEL.side))
-    stroke(g, ink, lw)
-    limb(ctx, el, hd, 0.82 * s)
-    fill(ctx, c(STEEL.lit))
-    stroke(g, ink, lw)
-    circle(ctx, hd[0], hd[1], 0.5 * s)
-    fill(ctx, c(STEEL.deep))
-    stroke(g, ink, lw)
   }
   // The other arm: its hand on the pommel of a great sword stood point down at its side, the blade into the wood.
   const off = -side as 1 | -1
@@ -458,30 +441,16 @@ export function drawGiant(g: Paint, gi: number): void {
   poly(ctx, [P([-1.45, -3.7]), P([1.45, -3.7]), P([1.35, -3.05]), P([-1.35, -3.05])])
   fill(ctx, c(STEEL.deep))
   stroke(g, ink, lw)
-  // The plates over the shoulders, two to a side.
+  // A plate over each shoulder.
   for (const w of [-1, 1] as const) {
-    for (const [dy, rx, ry] of [
-      [0.25, 1.0, 0.62],
-      [-0.15, 1.1, 0.72],
-    ] as const) {
-      ctx.beginPath()
-      const c0 = P([w * 1.95, -7.0 + dy])
-      ctx.ellipse(c0[0], c0[1], rx * s, ry * s, w * 0.28, 0, Math.PI * 2)
-      fill(ctx, c(w < 0 ? STEEL.lit : STEEL.side))
-      stroke(g, ink, lw)
-    }
+    ctx.beginPath()
+    const c0 = P([w * 1.95, -7.1])
+    ctx.ellipse(c0[0], c0[1], 1.1 * s, 0.7 * s, w * 0.28, 0, Math.PI * 2)
+    fill(ctx, c(w < 0 ? STEEL.lit : STEEL.side))
+    stroke(g, ink, lw)
   }
   // The arm on the sword, over the body.
-  limb(ctx, P(osh), P(oel), 0.95 * s)
-  fill(ctx, c(STEEL.side))
-  stroke(g, ink, lw)
-  limb(ctx, P(oel), P(pommel), 0.82 * s)
-  fill(ctx, c(STEEL.lit))
-  stroke(g, ink, lw)
-  const ph = P(pommel)
-  circle(ctx, ph[0], ph[1], 0.5 * s)
-  fill(ctx, c(STEEL.deep))
-  stroke(g, ink, lw)
+  drawArm([P(osh), P(oel), P(pommel)])
   // The helmet: a dome coming down into cheek guards, a crest standing up off it, and a T cut through the front for
   // the eyes and the mouth, dark all the way in.
   const hx = look
@@ -514,18 +483,6 @@ export function drawGiant(g: Paint, gi: number): void {
   // The T.
   poly(ctx, [hp([-0.62, -9.1]), hp([0.62, -9.1]), hp([0.6, -8.82]), hp([0.13, -8.82]), hp([0.11, -7.55]), hp([-0.11, -7.55]), hp([-0.13, -8.82]), hp([-0.6, -8.82])])
   fill(ctx, c(STEEL.slit))
-  // The one bright edge: down the lit side of the cuirass and over the dome.
-  ctx.beginPath()
-  const e0 = P([-2.0, -7.15])
-  const e1 = P([-1.22, -3.8])
-  ctx.moveTo(e0[0], e0[1])
-  ctx.lineTo(e1[0], e1[1])
-  const d0 = hp([-0.82, -9.4])
-  const d1 = hp([-0.6, -10.0])
-  const d2 = hp([-0.1, -10.25])
-  ctx.moveTo(d0[0], d0[1])
-  ctx.quadraticCurveTo(d1[0], d1[1], d2[0], d2[1])
-  stroke(g, c(STEEL.edge), 2.6)
   // The raised arm in front of the helmet, and the boulder in its hand until it is let go.
   if (raised) drawArm([tsh, tel, thd])
   const held = heldAt(gi, t)
