@@ -81,10 +81,11 @@ export function drawSeaPlane(g: Paint, x0: number, x1: number): void {
     [1, L.near],
   ])
   ctx.fillRect(a, top, b - a, span + 0.6)
-  // Bands of swell going away: each a long, low shape, nearer ones wider apart and slower.
+  // Bands of swell going away: a few long, low shapes, nearer ones wider apart and slower, faint enough to read as the
+  // light on the water and not as stripes.
   const w = weather(t)
-  for (let i = 0; i < 7; i++) {
-    const f = (i + 0.5) / 7
+  for (let i = 0; i < 5; i++) {
+    const f = (i + 0.5) / 5
     const depth = f * f
     const y = top + span * depth
     const amp = (0.04 + 0.22 * w) * (0.25 + depth) * Math.min(1, span / 6)
@@ -104,7 +105,7 @@ export function drawSeaPlane(g: Paint, x0: number, x1: number): void {
       ctx.lineTo(x, yy)
     }
     ctx.closePath()
-    ctx.fillStyle = rgba(L.lit, 0.07 + 0.08 * depth)
+    ctx.fillStyle = rgba(L.lit, 0.045 + 0.05 * depth)
     ctx.fill()
   }
 }
@@ -127,9 +128,12 @@ export function drawSeaBody(g: Paint, x0: number, x1: number, bed: (x: number) =
   ctx.lineTo(b + step, deepest)
   ctx.lineTo(a, deepest)
   ctx.closePath()
+  // Translucent near the top, so a hull, a sinking man or a spar is seen through the cut for a while; darkening as it
+  // goes down until nothing is seen.
   ctx.fillStyle = vgrad(ctx, -0.6, Math.max(6, Math.min(deepest, 40)), [
-    [0, rgba(L.body, 0.72)],
-    [0.18, rgba(L.body, 0.86)],
+    [0, rgba(L.body, 0.5)],
+    [0.16, rgba(L.body, 0.74)],
+    [0.45, rgba(mix(L.body, L.deep, 0.5), 0.9)],
     [1, rgba(L.deep, 0.97)],
   ])
   ctx.fill()
