@@ -2,6 +2,7 @@ import { blob, clamp01, fill, hash, mix, poly, rect, rgba, smooth, stroke, type 
 import { M } from '../../music'
 import type { Pt } from '../../path'
 import { layer } from '../../world/depth'
+import { skyAt } from '../../world/sky'
 import { DRAIN, FORECOURT, GATE, HEAD, HEAD_R, NECK, PLINTH, SHAFT, STEPS, STREET, TEMPLE, TOWER, WALL, ground, step } from './geo'
 import {
   AXLE_A,
@@ -186,9 +187,11 @@ export function drawTownBehind(g: Paint): void {
     }
     ctx.lineTo(L.x(houses[houses.length - 1].x + houses[houses.length - 1].w), L.y(1.5))
     ctx.closePath()
-    // At night the ranks behind are dark against the sky's glow over the city, darker the further; the fire reddens them.
+    // At night the ranks behind are dark against the sky's glow over the city, the nearest darkest and each further one
+    // a step into the haze towards the sky, so the hill reads going back; the fire reddens them.
     const body = tone(r === 0 ? MAT.clay : MAT.clayDark, t, { lit: 0.7 - r * 0.2, deep: 0.4 + r * 0.35 })
-    fill(ctx, mix(mix(body, '#0D0F16', 0.45 * night(t) * (1 + r * 0.25)), '#B4542C', 0.3 * fire))
+    const dark = mix(body, '#0D0F16', 0.55 * night(t))
+    fill(ctx, mix(mix(dark, skyAt(t).low, (0.13 + 0.03 * r) * r * night(t)), '#B4542C', 0.3 * fire))
     // The sun on each house's seaward face, where it stands over the one after it (at dusk only).
     if (sun(t) > 0.01) {
       ctx.fillStyle = rgba('#F2C48C', 0.35 * sun(t) * (1 - r * 0.3))
