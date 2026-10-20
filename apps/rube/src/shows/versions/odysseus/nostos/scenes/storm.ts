@@ -110,9 +110,11 @@ export const storm: Scene = {
   shots: [
     { t: 280.2, cells: 15, off: [3.4, -2.4] },
     { t: 283.2, cells: 11, at: [500.2, -1.5] },
-    { t: 286.6, cells: 9.5, at: [502.6, -1.6] },
-    { t: KNEEL[0] - 0.3, cells: 6.5, at: [506.6, -2.1] },
-    { t: 292.6, cells: 10, at: [502.6, -1.5] },
+    { t: 286.6, cells: 8.5, at: [503.6, -1.7] },
+    // In close on the cow among the men as she kneels and does not get up.
+    { t: KNEEL[0] - 0.4, cells: 3.8, at: [DOWN_COW - 0.2, -2.4] },
+    { t: KNEEL[1] + 0.3, cells: 3.6, at: [DOWN_COW - 0.2, -2.4] },
+    { t: 294.6, cells: 10, at: [502.6, -1.5] },
     { t: 296.4, cells: 13, off: [2.4, -1.8] },
     { t: 299.8, cells: 17, off: [3.2, -3.0] },
     { t: 303.0, cells: 11, off: [0.6, -1.7] },

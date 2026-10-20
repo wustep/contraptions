@@ -5,7 +5,7 @@ import type { Scene } from '../scene'
 import { END, HELM, WINDOWS, glide, seat } from '../voyage'
 import { floatAt, onShip, type ShipLook } from '../world/ship'
 import { drawArm, drawBody, drawEye, drawRidge, drawRock, PREY, SPLASH_AT, thrownRock, type GiantLight } from './cyclops/giant'
-import { drawFace, drawFire, drawIsland, drawSplash, EMBER, FIRELIT, fireAt, INK, openAt } from './cyclops/island'
+import { drawFire, drawIsland, drawSplash, EMBER, FIRELIT, fireAt, INK, openAt } from './cyclops/island'
 import { FLOOR, LEDGE, MOOR, PILLAR, RIDGE, STEP, T, ground } from './cyclops/plan'
 import { carries, drawSheep, FLOCK, REST_X, setCarrying, under } from './cyclops/sheep'
 import { drawClub, onClub } from './cyclops/stake'
@@ -253,11 +253,10 @@ const flock = standing(
       if (carries(i, g.t)) drawSheep(g, FLOCK[i], g.t, '#D8D0BD', '#2F2925', INK)
       drawSheep(g, FLOCK[i], g.t, '#D8D0BD', '#2F2925', INK, true)
     }
-    if (open > 0.001) {
+    if (open) {
       drawArm(g, g.t, light(g.t))
       drawEye(g, g.t, g.t < T.look ? [PREY[0], PREY[1]] : [PREY[0] + 0.4, PREY[1] - 0.2], { white: '#D9D0B4', iris: '#7A6337', pupil: '#120D0A', skin: '#1E1916' })
     }
-    if (open > 0.001 && open < 0.999) drawFace(g, g.t, 1 - open)
   },
 )
 
@@ -309,6 +308,9 @@ export const cyclops: Scene = {
     { t: 141.6, cells: 24, off: [7, -5] },
     { t: 143.4, cells: 40, at: [78, -9.5] },
     { t: 146.6, cells: 36, at: [84, -8.4] },
+    { t: T.cutIn - 0.05, cells: 34, at: [86, -8.0] },
+    // On a soft accent, in at the mouth: the cave cut open.
+    { t: T.cutIn, cells: 6.2, at: [98.4, -3.7], cut: true },
     { t: 149.4, cells: 5.6, at: [98.6, -3.7] },
     { t: 151.0, cells: 5.4, at: [99.6, -3.8] },
     { t: 152.3, cells: 5.4, at: [99.8, -3.8] },
@@ -326,7 +328,10 @@ export const cyclops: Scene = {
     { t: 176.0, cells: 4.6, at: [98.6, -3.4] },
     { t: 179.2, cells: 5.0, at: [97.4, -2.9] },
     { t: 180.4, cells: 8, at: [99, -3.0] },
-    // Out, up the island to him on the ridge with the rock over his head, and down with the rock to the sea.
+    { t: T.cutOut - 0.05, cells: 8.2, at: [99.3, -3.0] },
+    // As he lands aboard, out on a cut: the island whole, and up it to him on the ridge with the rock over his head,
+    // and down with the rock to the sea.
+    { t: T.cutOut, cells: 32, at: [110.5, -11.5], cut: true },
     { t: 181.7, cells: 34, at: [112, -12.5] },
     { t: 182.6, cells: 30, at: [116.5, -24.5] },
     { t: 183.05, cells: 30, at: [116.8, -24.0] },

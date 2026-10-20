@@ -67,7 +67,7 @@ export const BASE_SKY: SkyKey[] = [
   // The hall at evening; the bow at night.
   key(M.quiet + 6, '#2A3142', '#A86E58', '#5A4A4C', 0.3, SEA_EVE, { x: 0.86, y: 0.74, r: 0.04, color: '#E9A27A', a: 0.7 }),
   key(M.last - 2, '#151A24', '#40323A', '#2E2A34', 0.25, SEA_NIGHT),
-  // The west: the sun going down ahead of them.
-  key(M.fade, '#3E4A63', '#EDB574', '#C9946E', 0.25, SEA_WEST, { x: 0.74, y: 0.66, r: 0.055, color: '#F7DCA6', a: 1 }),
-  key(549, '#2E3650', '#D9925E', '#A87458', 0.25, SEA_WEST, { x: 0.74, y: 0.72, r: 0.055, color: '#F2C48E', a: 1 }),
+  // The west: the sun going down ahead of them, touching the sea, half gone by the end.
+  key(M.fade, '#3E4A63', '#EDB574', '#C9946E', 0.25, SEA_WEST, { x: 0.8, y: 0.84, r: 0.05, color: '#F5D29C', a: 1 }),
+  key(549, '#2E3650', '#D9925E', '#A87458', 0.25, SEA_WEST, { x: 0.8, y: 0.99, r: 0.05, color: '#EDB07C', a: 1 }),
 ]

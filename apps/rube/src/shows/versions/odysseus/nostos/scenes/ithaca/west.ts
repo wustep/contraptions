@@ -8,17 +8,17 @@ import { CLOTH, MADDER, TIMBER, outdoors } from './look'
 
 /**
  * The west: a skiff at the harbour's jetty, and in it, after everything, the two of them, going out under a small sail
- * towards where the sun is going down; their son on the jetty behind them. The camera holds still on it all, and the
+ * towards where the sun is going down; their son on the cliff's edge above them. The camera holds still on it all, and the
  * skiff goes away from us into the sun: smaller and smaller, up the sea's surface towards the horizon under the sun,
  * the way a boat goes when it is going west and we are staying. The film ends on that sail; so do we.
  */
 
-/** The last shot, held: the jetty at its left edge, the sun's path ahead. */
-export const WEST_CAM = { x: 846.0, y: -3.8, cells: 9.6 }
+/** The last shot, held: the olive on the west cliff at its left, their son on the edge under it, the sun ahead. */
+export const WEST_CAM = { x: 839.0, y: -5.35, cells: 12.2 }
 /** Its horizon (`horizonOf` for that frame), where the skiff goes. */
 const HORIZON_Y = horizonOf({ cy: WEST_CAM.y, h: WEST_CAM.cells })
-/** Where on the horizon it heads: under the sun (the sky's disc is three quarters across that frame). */
-const SUN_X = WEST_CAM.x + ((0.74 - 0.5) * WEST_CAM.cells * 16) / 9
+/** Where on the horizon it heads: under the sun (the sky's disc is four fifths across that frame). */
+const SUN_X = WEST_CAM.x + ((0.8 - 0.5) * WEST_CAM.cells * 16) / 9
 
 /** The skiff's length, and where the two sit in it (its own frame, the waterline under its middle at 0). */
 const L = 1.25

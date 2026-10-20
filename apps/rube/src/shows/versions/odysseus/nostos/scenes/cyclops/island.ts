@@ -1,4 +1,4 @@
-import { blob, clamp01, mix, poly, rgba, smooth, smoother, stroke, type Paint } from '../../draw'
+import { blob, clamp01, mix, poly, rgba, smooth, stroke, type Paint } from '../../draw'
 import type { Pt } from '../../path'
 import { skyAt } from '../../world/sky'
 import { boulderAt, boulderTurn } from './giant'
@@ -29,9 +29,8 @@ export const EMBER = '#E07A2E'
 const FLAME = ['#B4501E', '#E0893A', '#F3C770']
 export const FIRELIT = '#C8723A'
 
-/** How far the cave is cut open at `t`: open while the camera is inside, closed outside. */
-export const openAt = (t: number): number =>
-  smoother(t, T.openFrom, T.openTo) * (1 - smoother(t, T.closeFrom, T.closeTo))
+/** Whether the cave is cut open at `t`: from the cut that takes the camera in to the one that takes it out. */
+export const openAt = (t: number): boolean => t >= T.cutIn && t < T.cutOut
 
 /** The island's outline, west at the waterline round over the ridge to the east, and down under the water. */
 const OUTLINE: Pt[] = [
@@ -139,8 +138,7 @@ export function drawIsland(g: Paint, t: number, inside: () => void): void {
   ctx.beginPath()
   OUTLINE.slice(0, 20).forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
   stroke(g, INK, 2.6)
-  const open = openAt(t)
-  if (open <= 0.001) drawFace(g, t, 1)
+  if (!openAt(t)) drawFace(g, t)
   else {
     drawInside(g, t)
     inside()
@@ -157,12 +155,9 @@ export function drawIsland(g: Paint, t: number, inside: () => void): void {
 }
 
 /** The face over the cave, as it is from outside: the island's own rock, and the mouth's dark arch. */
-export function drawFace(g: Paint, t: number, a: number): void {
-  if (a <= 0.001) return
+function drawFace(g: Paint, t: number): void {
   const { ctx } = g
   const sky = skyAt(t)
-  ctx.save()
-  ctx.globalAlpha = a
   ctx.beginPath()
   CAVE.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
   ctx.closePath()
@@ -193,7 +188,6 @@ export function drawFace(g: Paint, t: number, a: number): void {
   ctx.fillStyle = MOUTH_DARK
   ctx.fill()
   stroke(g, INK, 2.4)
-  ctx.restore()
 }
 
 /**
@@ -306,7 +300,7 @@ function drawInside(g: Paint, t: number): void {
 
 /** The fire: a ring of stones and flames, as flat tongues of three colours, low as embers and high once he stirs it. */
 export function drawFire(g: Paint, t: number): void {
-  if (openAt(t) <= 0.001) return
+  if (!openAt(t)) return
   const { ctx } = g
   const f = fireAt(t)
   const [x, y] = FIRE

@@ -39,9 +39,9 @@ const shots: Key[] = [
   { t: HANDS, cells: 7.5, at: [(TRENCH.x0 + TRENCH.x1) / 2 + 0.2, -1.75] },
   // The dead up, rank on rank behind him; he runs, and they come.
   { t: k(69), cells: 10, at: [TRENCH.x1 - 3, -2.3] },
-  { t: RUN, cells: 11, off: [-2.6, -1.9], w: 0 },
-  { t: CHARGE, cells: 11.5, off: [-3.2, -2.0], w: 0 },
-  { t: ABOARD, cells: 12, off: [-3.6, -2.0], w: 0 },
+  { t: RUN, cells: 10.5, off: [-2.6, -2.5], w: 0 },
+  { t: CHARGE, cells: 10.5, off: [-3.0, -2.7], w: 0 },
+  { t: ABOARD, cells: 11, off: [-3.4, -2.6], w: 0 },
   // The shore lined with them at the water's edge, watching him go.
   { t: STOP, cells: 13.5, at: [SHIP(STOP) - 5.5, -2.4] },
   { t: TO - 1.05, cells: 14.5, off: [1.4, -1.9], w: 0 },

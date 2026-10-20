@@ -238,13 +238,6 @@ function drawRoomInside(g: Paint): void {
   const { ctx, t } = g
   rect(ctx, ROOM.x0, ROOM.ceil, ROOM.x1 - ROOM.x0, ROOM.floor - ROOM.ceil)
   fill(ctx, indoors(PLASTER, t))
-  // A petrol-blue hanging edged in madder, over the chest.
-  rect(ctx, ROOM.x0 + 2.55, ROOM.ceil + 0.3, 0.8, 0.58)
-  fill(ctx, indoors(mix(PETROL, PLASTER, 0.18), t))
-  rect(ctx, ROOM.x0 + 2.55, ROOM.ceil + 0.3, 0.8, 0.05)
-  fill(ctx, indoors(MADDER, t))
-  rect(ctx, ROOM.x0 + 2.55, ROOM.ceil + 0.83, 0.8, 0.05)
-  fill(ctx, indoors(MADDER, t))
   rect(ctx, ROOM.x0, ROOM.ceil, ROOM.x1 - ROOM.x0, 0.05)
   fill(ctx, indoors(TIMBER, t))
   // The window east, over the sea towards Troy; the door west, onto the terrace.

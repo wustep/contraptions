@@ -18,12 +18,12 @@ import { WEST_CAM } from './ithaca/west'
  * - 441.12   Penelope leaves her loom and watches from the head of the stairs.
  * - 450.58   Telemachus trips the first axe; the twelve come upright one from the next, east to west.
  * - 458, 467.6, 476.6   three suitors climb into her room, out onto the terrace, drop through the light well onto the
- *            bow's plate, and it does not give.
+ *            bow's plate, and it does not give: seen close, then whole, then past her.
  * - 485.45   he climbs the stairs a step a note, comes up into her room beside her (489.26), and goes out past her.
  * - 494.74   the swell: he drops onto the plate, it goes down, and the bow sings. Antinous runs.
  * - 500.79   he rolls off the plate: the bow looses, and the arrow goes through all twelve eyes and out of the door.
  * - 503.15   the hall empties into the dark; Penelope comes down the stairs a step a note; they meet (508.96).
- * - 512.68   the west: the skiff, the two of them, the sun going down ahead; their son on the cliff behind.
+ * - 512.68   the west: the skiff, the two of them, the sun going down ahead; their son on the cliff's edge behind.
  */
 export const home: Scene = {
   key: 'home',
@@ -44,12 +44,17 @@ export const home: Scene = {
     { t: TRIAL.touch, cells: 2.6, at: [809.9, -9.6] },
     // In through the gate, the courtyard, to the hall's threshold.
     { t: TRIAL.inside, cells: 3.4, at: [819.2, -9.75] },
-    // The hall: the axes come up.
+    // The hall: the axes come up; on the last one's note, in close on the plate, with the first suitor at the well's lip.
     { t: 449.6, cells: 3.4, at: [821.6, -9.7] },
-    { t: 457.6, cells: 3.4, at: [823.4, -9.7] },
-    // The whole house, cut open, for the tries.
-    { t: 460.5, cells: 4.8, at: [823.1, -10.4] },
-    { t: 481.5, cells: 4.6, at: [823.0, -10.35] },
+    { t: 457.3, cells: 3.4, at: [823.3, -9.7] },
+    { t: TRIAL.axes[11], cells: 2.5, at: [825.3, -10.05], cut: true },
+    { t: 460.4, cells: 2.55, at: [825.2, -10.05] },
+    // The second: the whole house, cut open, his whole way round, the beggar by the door.
+    { t: 462.6, cells: 5.15, at: [822.5, -10.6] },
+    { t: 468.6, cells: 5.1, at: [822.5, -10.58] },
+    // The third: in on her room and the terrace as he goes past her.
+    { t: 473.6, cells: 3.65, at: [823.65, -10.45] },
+    { t: 478.4, cells: 3.6, at: [823.7, -10.43] },
     // His climb, and her room.
     { t: 485.2, cells: 3.2, at: [820.9, -10.1] },
     { t: 489.4, cells: 2.4, at: [821.5, -11.15] },
@@ -59,12 +64,12 @@ export const home: Scene = {
     { t: M.last + 0.4, cells: 3.3, at: [825.0, -9.95] },
     { t: TRIAL.loose - 1.4, cells: 3.4, at: [824.6, -9.95] },
     // The arrow's whole flight, bow to door.
-    { t: TRIAL.loose - 0.2, cells: 4.9, at: [822.4, -9.75] },
-    { t: TRIAL.erupts + 1.5, cells: 4.9, at: [822.6, -9.8] },
+    { t: TRIAL.loose - 0.2, cells: 5.2, at: [822.6, -10.5] },
+    { t: TRIAL.erupts + 1.5, cells: 5.1, at: [822.5, -10.45] },
     // The two of them.
     { t: TRIAL.meet + 0.6, cells: 2.5, at: [820.7, -9.55] },
     { t: TRIAL.fade - 0.1, cells: 2.3, at: [820.65, -9.5] },
-    // The west, held: their son on the jetty, the skiff casting off and going away from us into the sun.
+    // The west, held: their son on the cliff's edge, the skiff casting off and going away from us into the sun.
     { t: TRIAL.fade, cells: WEST_CAM.cells, at: [WEST_CAM.x, WEST_CAM.y], cut: true },
     { t: END, cells: WEST_CAM.cells, at: [WEST_CAM.x, WEST_CAM.y] },
   ],

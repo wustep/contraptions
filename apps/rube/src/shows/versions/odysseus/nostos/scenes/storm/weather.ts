@@ -20,11 +20,14 @@ import { lazy, shipPose, STRIKE } from '../sirens/course'
  * back, and lie down when they go.
  */
 export function farSeasAt(t: number): number {
-  return 1.9 * smooth(t, 296, 303.5) - 0.5 * smooth(t, STRIKE + 1, STRIKE + 8) + 2.6 * smooth(t, M.lowBack - 0.5, M.lowBack + 3.5) - 4.0 * smooth(t, M.lowGone - 1, M.lowGone + 4.5)
+  return 1.9 * smooth(t, 296, 303.5) - 0.5 * smooth(t, STRIKE + 1, STRIKE + 8) + 3.6 * smooth(t, M.lowBack - 0.5, M.lowBack + 4) - 5.0 * smooth(t, M.lowGone - 1, M.lowGone + 4.5)
 }
 export function frontSeasAt(t: number): number {
-  return 1.0 * smooth(t, 296, 303.5) - 0.25 * smooth(t, STRIKE + 1, STRIKE + 8) + 1.6 * smooth(t, M.lowBack - 0.5, M.lowBack + 3.5) - 2.35 * smooth(t, M.lowGone - 1, M.lowGone + 4.5)
+  return 1.0 * smooth(t, 296, 303.5) - 0.25 * smooth(t, STRIKE + 1, STRIKE + 8) + 3.4 * smooth(t, M.lowBack - 0.5, M.lowBack + 4) - 4.15 * smooth(t, M.lowGone - 1, M.lowGone + 4.5)
 }
+/** The front rank's crests: long and slow, a great back of water every three seconds or so, as the open sea's are. */
+const FRONT_WL = 14
+const FRONT_SPEED = 4.2
 
 /** A rank's crest shape at x, 0 to 1: sharper crests than troughs, and a slow swell under them. */
 function crest(x: number, t: number, wl: number, sp: number, k: number): number {
@@ -35,7 +38,7 @@ function crest(x: number, t: number, wl: number, sp: number, k: number): number 
 }
 
 /** How far the front rank stands above the waterline at x: what a thing riding it is lifted by. */
-export const frontLift = (x: number, t: number): number => Math.max(0, frontSeasAt(t)) * crest(x, t, 7.3, 6, 0.62)
+export const frontLift = (x: number, t: number): number => Math.max(0, frontSeasAt(t)) * crest(x, t, FRONT_WL, FRONT_SPEED, 0.62)
 
 /** How hard it rains, 0 to 1. */
 export function rainAt(t: number): number {
@@ -65,8 +68,9 @@ export function drawSeas(g: Paint): void {
     for (let x = a; x <= b + step; x += step) (x === a ? ctx.moveTo(x, top(x)) : ctx.lineTo(x, top(x)))
     stroke(g, rgba(L.lit, lit), 1.6)
   }
-  if (far > 0.02) rank((x) => -far * crest(x, t, 11.5, 2.2, 1), mix(L.near, L.far, 0.22), 0.16 * Math.min(1, far))
-  if (front > 0.02) rank((x) => surface(x, t) - front * crest(x, t, 7.3, 6, 0.62), mix(L.near, L.body, 0.2), 0.22 * Math.min(1, front))
+  // The far rank lighter (the air between), the front rank near black: two clear silhouettes, the man on the nearer.
+  if (far > 0.02) rank((x) => -far * crest(x, t, 11.5, 2.2, 1), mix(L.near, L.far, 0.38), 0.16 * Math.min(1, far))
+  if (front > 0.02) rank((x) => surface(x, t) - front * crest(x, t, FRONT_WL, FRONT_SPEED, 0.62), mix(L.body, '#050708', 0.4), 0.26 * Math.min(1, front))
 }
 
 /** The storm's ceiling: one low mass of cloud over everything, its underside in long slow lobes. */

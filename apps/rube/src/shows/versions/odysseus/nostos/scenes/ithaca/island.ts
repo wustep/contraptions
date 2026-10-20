@@ -2,7 +2,7 @@ import { blob, circle, fill, hash, mix, poly, rgba, smooth, stroke, type Paint }
 import { skyAt } from '../../world/sky'
 import type { Pt } from '../../path'
 import { BEACH, CLIFF_E, CLIFF_W, JETTY, TOP } from './geo'
-import { BARK, OLIVE, OLIVE_DARK, ROCK, ROCK_DEEP, SAND_C, SCRUB, SCRUB_DARK, STONE, STONE_DEEP, STONE_SHADE, outdoors } from './look'
+import { BARK, OLIVE, OLIVE_DARK, ROCK, ROCK_DEEP, SAND_C, SCRUB, SCRUB_DARK, STONE, STONE_DEEP, STONE_SHADE, nightness, outdoors } from './look'
 
 /**
  * The island, outside: one mass of limestone standing out of the sea, its east face sheer over a little beach, its west
@@ -67,18 +67,22 @@ const SCRUBS: [number, number, number][] = [
 /** The olive trees on the top: where each stands, how tall, and how it leans. */
 const OLIVES: [number, number, number][] = [
   [811.3, 1.9, -0.1],
-  [828.7, 2.2, 0.08],
+  [829.7, 1.5, -0.06],
 ]
+
+/** The rock by night: down nearer the dark than the rest of the outdoors, so the lit house is the one bright thing on it. */
+const NIGHT_ROCK = '#151A22'
+const rock = (hex: string, t: number): string => mix(outdoors(hex, t), NIGHT_ROCK, 0.5 * nightness(t))
 
 export function drawIsland(g: Paint): void {
   const { ctx, t, view } = g
   if (view.x1 < 792 || view.x0 > 844) return
-  const stone = outdoors(STONE, t)
-  const shade = outdoors(STONE_SHADE, t)
+  const stone = rock(STONE, t)
+  const shade = rock(STONE_SHADE, t)
   // Whichever face the sun or the moon is on is the lit one; the other is in its own shadow.
   const disc = skyAt(t).disc
   const fromWest = disc ? smooth(disc.x, 0.35, 0.65) * Math.min(1, disc.a * 1.5) : 0.5
-  const deep = outdoors(STONE_DEEP, t)
+  const deep = rock(STONE_DEEP, t)
   const ink = outdoors('#2B261F', t)
   // The rock under the sea, and the mass itself.
   blob(ctx, OUTLINE)
@@ -94,9 +98,9 @@ export function drawIsland(g: Paint): void {
   }
   // The island's foot under the water: rock, darker, going down out of sight.
   poly(ctx, [[795.6, 2.2], [797.0, 0.4], [836.9, 0.6], [839.0, 3.5], [842.0, 8], [793.5, 8]])
-  fill(ctx, outdoors(ROCK, t))
+  fill(ctx, rock(ROCK, t))
   poly(ctx, [[794.8, 4.4], [840.6, 5.4], [842.0, 8], [793.5, 8]])
-  fill(ctx, outdoors(ROCK_DEEP, t))
+  fill(ctx, rock(ROCK_DEEP, t))
   // The beach: the sand where he comes ashore, flat, running into the water.
   poly(ctx, [[797.0, 0.45], [BEACH.x0, BEACH.sand], [BEACH.x1, BEACH.sand], [805.5, -0.42], [805.7, 0.6]])
   fill(ctx, outdoors(SAND_C, t))

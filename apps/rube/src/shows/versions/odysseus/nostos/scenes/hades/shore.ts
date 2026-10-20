@@ -1,4 +1,4 @@
-import { clamp01, fill, hash, mix, poly, rgba, smooth, stroke, type Paint } from '../../draw'
+import { clamp01, fill, hash, mix, poly, smooth, stroke, type Paint } from '../../draw'
 import { layer } from '../../world/depth'
 import { horizonOf } from '../../world/sea'
 import { skyAt } from '../../world/sky'
@@ -207,15 +207,16 @@ export function drawRanks(g: Paint): void {
   const shiftOf = (r: number, lag = 0) => (CHARGE_BY_ROW[1] - 0.25 * r) * charged(t, 0.05 * r + lag)
   // When a rank comes up: the near ranks first, then back and back, each from the trench outwards.
   const riseOf = (r: number, x: number) => k(68) + 0.28 * r + 1.4 * Math.min(1, Math.abs(x - trench) / 30)
-  // The ranks that are drawn one by one, and the nearest that is not: where the crowd begins.
-  let crowd = DEPTHS.length
-  for (let r = 0; r < DEPTHS.length; r++) {
-    if (R * 0.86 * layer(view, DEPTHS[r]).s < view.h / 280) {
+  // Only the ranks whose heads are big enough to read as people, no more than nine, each going further into the haze
+  // than the one in front, so the far ones are a low murmur of pale against the dark and never a field of bright specks:
+  // the thousands behind them are the haze itself.
+  let crowd = Math.min(DEPTHS.length, 9)
+  for (let r = 0; r < crowd; r++) {
+    if (R * 0.86 * layer(view, DEPTHS[r]).s < view.h / 220) {
       crowd = r
       break
     }
   }
-  if (crowd < DEPTHS.length) drawCrowd(g, DEPTHS[crowd], spanOf(crowd, DEPTHS[DEPTHS.length - 1]), shiftOf(crowd), riseOf(crowd, trench), haze)
   for (let r = crowd - 1; r >= 0; r--) {
     const d = DEPTHS[r]
     const L = layer(view, d)
@@ -227,7 +228,9 @@ export function drawRanks(g: Paint): void {
     const [x0, x1] = spanOf(r, d)
     // Where the crowd is thin: a slow rise and fall of density along the rank, its own for each rank.
     const thin = (lx: number) => 0.5 + 0.5 * Math.sin(lx * 0.19 + r * 2.3) * Math.sin(lx * 0.07 + r)
-    const pale = Math.min(0.55, 0.08 + 0.045 * r)
+    // Each rank back sinks further into the colour of the sand at its distance: the far ones a low pale murmur, not specks.
+    const sink = Math.min(0.85, 0.1 * r)
+    const ground_c = mix(SAND, haze, 0.06 + 0.02 * r)
     ctx.save()
     ctx.beginPath()
     ctx.rect(view.x0 - 1, view.y0 - 1, view.x1 - view.x0 + 2, ground - view.y0 + 1)
@@ -252,52 +255,13 @@ export function drawRanks(g: Paint): void {
       ctx.arc(x, y, size, 0, Math.PI * 2)
       any = true
     }
-    // The rims first and the fills over them, so where two overlap only the outside of the pair is outlined.
+    // The rims first and the fills over them, so where two overlap only the outside of the pair is outlined; the far
+    // ranks have no rims at all, which at their size are only more marks.
     if (any) {
-      stroke(g, mix(ASH_RIM, haze, pale), 4.2 * scale)
-      fill(ctx, mix(ASH, haze, pale))
+      if (r < 3) stroke(g, mix(ASH_RIM, ground_c, sink), 4.2 * scale)
+      fill(ctx, mix(mix(ASH, haze, 0.12), ground_c, sink))
     }
     ctx.restore()
   }
 }
 
-/**
- * The rest of them, too far back to tell apart: one pale crowd from the ground of the nearest of those ranks back to the
- * horizon, palest and thickest at its front and gone into the haze at its back, its top edge a little uneven, coming
- * up out of the ground with the rest and going forward with them.
- */
-function drawCrowd(g: Paint, d: number, [x0, x1]: [number, number], shift: number, rise: number, haze: string): void {
-  const { ctx, t, view } = g
-  const up = smooth(t, rise, rise + 1.6)
-  if (up <= 0.002) return
-  const L = layer(view, d)
-  const ground = L.y(0)
-  const hy = L.hy
-  const a = Math.max(L.x(x0 + shift), view.x0 - 1)
-  const b = Math.min(L.x(x1 + shift), view.x1 + 1)
-  if (b <= a || ground <= hy + 0.01) return
-  // How far up it stands: from its front's ground, most of the way to the horizon, and a little over it.
-  const height = (ground - hy) * (0.9 + 0.25 * up) * up
-  const step = Math.max(0.3, (b - a) / 60)
-  const ends = (x: number) => smooth(x, a, a + Math.min(4, (b - a) / 4)) * (1 - smooth(x, b - Math.min(6, (b - a) / 3), b))
-  // It comes forward behind the ranks drawn one by one, thinning to nothing there, so it has no front edge.
-  const base = Math.min(LIMIT, ground + 0.45 * (ground - hy))
-  ctx.beginPath()
-  ctx.moveTo(a, base)
-  for (let x = a; x <= b + step; x += step) {
-    const xx = Math.min(b, x)
-    const lx = view.cx + (xx - view.cx) / L.s
-    const top = ground - height * ends(xx) * (0.82 + 0.18 * Math.sin(lx * 0.31 + 1.3) * Math.sin(lx * 0.11))
-    ctx.lineTo(xx, top)
-  }
-  ctx.lineTo(b, base)
-  ctx.closePath()
-  const gr = ctx.createLinearGradient(0, base, 0, ground - height)
-  const front = Math.max(0, Math.min(0.85, (base - ground) / Math.max(1e-6, base - (ground - height))))
-  gr.addColorStop(0, rgba(mix(ASH, haze, 0.5), 0))
-  gr.addColorStop(Math.min(0.9, front + 0.02), rgba(mix(ASH, haze, 0.5), 0.8))
-  gr.addColorStop(Math.min(0.95, front + 0.5 * (1 - front)), rgba(mix(ASH, haze, 0.72), 0.45))
-  gr.addColorStop(1, rgba(haze, 0))
-  ctx.fillStyle = gr
-  ctx.fill()
-}

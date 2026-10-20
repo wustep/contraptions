@@ -21,8 +21,8 @@ import { PLAN, SHIP0, SHIP1, SHIP2, consortDepth } from './troy/plan'
 
 const shots: Key[] = [
   // Wide: the beach, the horse small in the surf, the walls on the hill, the sun going down over the sea.
-  { t: 0, cells: 22, at: [-10, -6.6] },
-  { t: 4.5, cells: 21, at: [-9.4, -6.2] },
+  { t: 0, cells: 22, at: [-11.9, -6.6] },
+  { t: 4.5, cells: 21.3, at: [-11.3, -6.3] },
   // In on the first heaves.
   { t: 11, cells: 12, at: [-5.4, -3.6] },
   { t: 16, cells: 7, at: [-4.6, -2.5] },

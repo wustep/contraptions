@@ -119,7 +119,8 @@ function drawClouds(g: Paint, s: SkyKey, hy: number): void {
     ctx.fillStyle = rgba(s.cloud, Math.min(1, s.cover) * [0.5, 0.62, 0.75][r])
     for (let i = first; i <= last; i++) {
       const seed = hash(i, r, 7)
-      if (seed > 0.2 + 0.8 * s.cover) continue
+      // Past half cover the sky is one overcast and its clouds fewer, not more: a storm's sky is not a field of lumps.
+      if (seed > 0.2 + 0.8 * Math.min(s.cover, 0.5) - 0.5 * Math.max(0, s.cover - 0.5)) continue
       const cx = L.x(i * spacing + drift + (seed - 0.5) * spacing * 0.6)
       const cy = Math.min(hy - 0.4, L.y(-[16, 12, 9][r] - 10 * hash(i, r, 3)))
       const w = (18 + 26 * seed) * L.s

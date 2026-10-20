@@ -25,6 +25,9 @@ const HELM_AT: Pt = [-1.15, -0.35]
 const TO_MAST: [number, number] = [253.0, 255.2]
 const TO_HELM: [number, number] = [RELEASE + 0.3, RELEASE + 2.5]
 
+/** The beat the camera goes out from him to the rocks. */
+const SEEN = beatNear(259.6).t
+
 /** Man 3's leap: from the bow's top on a strong beat, into the sea ahead, and down. */
 const LEAP = beatNear(265.6).t
 const LEAP_LAND = LEAP + 0.78
@@ -101,14 +104,18 @@ export const sirens: Scene = {
   deaths: { 3: LOST },
   shots: [
     { t: 253.6, cells: 10.5, off: [0.7, -1.3] },
-    { t: 256.4, cells: 7.5, off: [0.15, -1.0] },
-    { t: 259.4, cells: 9, off: [0.5, -1.4] },
-    { t: 262.2, cells: 17, off: [3.2, -3.0] },
+    // In close on the mast as the turns close over him, and his first strains.
+    { t: 255.5, cells: 5.2, off: [0.1, -1.0] },
+    { t: SEEN - 0.05, cells: 5.0, off: [0.1, -1.0] },
+    // On a beat, out to the rocks: the Sirens, and the ship going by them.
+    { t: SEEN, cells: 15, off: [2.6, -2.6], cut: true },
+    { t: 262.6, cells: 14, off: [2.4, -2.4] },
     { t: 265.0, cells: 11, off: [1.7, -1.4] },
     { t: 267.4, cells: 10.5, off: [1.0, -0.5] },
-    { t: 270.4, cells: 8, off: [0.1, -1.05] },
-    { t: 274.0, cells: 11, off: [0.9, -1.4] },
-    { t: 276.6, cells: 13, off: [1.6, -1.6] },
+    // In on him again as they pass nearest, straining after them on every beat; out as the turns come off.
+    { t: 270.6, cells: 6.4, off: [0.3, -1.85] },
+    { t: 273.8, cells: 6.2, off: [0.3, -1.7] },
+    { t: 277.0, cells: 12, off: [1.5, -1.5] },
   ],
   back: [rocks],
   mid: [binding],

@@ -105,9 +105,8 @@ export const T = {
   /** The flock goes in off the shelf; the men follow. */
   sheepIn: 146.2,
   ashore: 148.75,
-  /** The cave is cut open as the camera goes in at its mouth. */
-  openFrom: 145.2,
-  openTo: 147.8,
+  /** The cave is cut open on the cut that takes the camera in at its mouth. */
+  cutIn: 147.859,
   /** The hand reaches out of the dark and drags the boulder into the mouth on the low voices' entry; it settles. */
   reachDoor: 150.35,
   shut: M.ground,
@@ -142,9 +141,8 @@ export const T = {
   under: 179.2,
   away: 180.0,
   aboard: 181.15,
-  /** The cave closes again as the camera comes out. */
-  closeFrom: 180.3,
-  closeTo: 181.4,
+  /** The cave is closed again on the cut that takes the camera out to the island (as he lands aboard). */
+  cutOut: 181.145,
   /** On the ridge, the throw, the rock into the sea short of them. */
   rise: 181.4,
   hurl: 182.87,

@@ -38,9 +38,9 @@ const shots: Key[] = [
   { t: 116.4, cells: 4.8, at: [-28.45, -3.35] },
   // Wide: the city burning, the drain under the hill, him coming out of it.
   { t: 119.3, cells: 12, at: [-30.5, -5.3] },
-  { t: 122.6, cells: 9, off: [1.4, -1.1] },
+  { t: 122.6, cells: 7, off: [1.2, -0.75] },
   // Down to the ships and aboard.
-  { t: 125.6, cells: 6.2, off: [1.0, -0.8] },
+  { t: 125.6, cells: 5.6, off: [0.9, -0.6] },
   { t: 128.6, cells: 7.2, off: [1.6, -1.1] },
   // Put out at first light, Troy smoking behind.
   { t: 134, cells: 11.5, off: [2.1, -1.7] },

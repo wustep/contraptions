@@ -2,7 +2,7 @@ import { PENELOPE, PENELOPE_ID, PENELOPE_RIM, PENELOPE_SIZE, SUITOR, SUITORS_ID,
 import { END } from '../../voyage'
 import { Path, fly, flightFor, rest, ride, roll, type Move, type Pt } from '../../path'
 import type { Actor } from '../../show'
-import { BEACH, DAIS, GATE, HALL, HOIST, HOME, JETTY, ON_TOP, R, ROOM, STAIRS, TERRACE, TRIAL, CLIFF_W } from './geo'
+import { BEACH, DAIS, GATE, HALL, CLIFF_W, HOIST, HOME, ON_TOP, R, ROOM, STAIRS, TERRACE, TRIAL } from './geo'
 import { stepAt } from './palace'
 import { heroBasketY, plateEnd } from './rig'
 import { weaverX } from './loom'
@@ -173,15 +173,19 @@ function telemachusPath(): Path {
   const beside: Pt = [820.66 - R - 2 * R * PENELOPE_SIZE - R * s, fy]
   m.push(roll([corner, [HALL.x0 + 0.1, fy], beside], 507.6, 510.4))
   m.push(rest(beside, 510.4, TRIAL.fade))
-  // The west: on the jetty's end, watching them go.
-  m.push(rest([JETTY.x1 - 0.4, JETTY.top - R * s], TRIAL.fade, END))
+  // The west: on the cliff's edge over the harbour, and a little nearer it as they cast off, watching them go.
+  const back: Pt = [CLIFF_W.top - 0.55, ground]
+  const brink: Pt = [CLIFF_W.top - 0.25, ground]
+  m.push(rest(back, TRIAL.fade, TRIAL.fade + 4))
+  m.push(roll([back, brink], TRIAL.fade + 4, TRIAL.fade + 6.5))
+  m.push(rest(brink, TRIAL.fade + 6.5, END))
   return new Path(m, 'telemachus')
 }
 
 /* ------------------------------------------------------------------ the suitors */
 
-/** Where each suitor sits on the dais, east to west; the last (westmost, by the bow) is Antinous. */
-const SEATS = Array.from({ length: 7 }, (_, i) => DAIS.x0 + 0.2 + i * 0.41)
+/** Where each suitor sits on the dais, east to west, in twos and threes; the last, apart by the bow, is Antinous. */
+const SEATS = [0, 0.29, 0.82, 1.1, 1.38, 1.9, 2.5].map((d) => DAIS.x0 + 0.18 + d)
 const SEAT_Y = DAIS.top - R * SUITOR_SIZE
 
 /** A suitor feasting: a small bob now and then, never in step with the others. */
