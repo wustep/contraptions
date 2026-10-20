@@ -180,9 +180,13 @@ function coastAt(y: number, hy: number): number {
   return (1 - s) * (1 - s) * SHORE + 2 * (1 - s) * s * (SHORE - 3.5) + s * s * (SHORE - 24)
 }
 
+/** The depths the crowd's ranks fill between (cells behind the haulers' line): rank r stands between bounds r and r + 1. */
+const BANDS = [0.8, 1.5, 2.5, 3.9, 5.8, 8.2]
+
 /**
- * The crowd behind: ranks of them back up the beach, smaller and paler the further, each rank on its own sand; they
- * cheer on the heaves, a hop that runs through them. The thousands further back are the dusk itself.
+ * The crowd behind: ranks of them back up the beach, smaller and paler the further; they cheer on the heaves, a hop
+ * that runs through them. Within its rank every man stands at his own depth, so the crowd is never rows of dots: it
+ * thickens up the beach. The thousands further back are the dusk itself.
  */
 export function drawCrowd(g: Paint): void {
   const { ctx, t, view } = g
@@ -206,16 +210,19 @@ export function drawCrowd(g: Paint): void {
       // Thinning towards their ends, and a gap here and there.
       const edge = smooth(lx, x0, x0 + 3) * (1 - smooth(lx, x1 - 1.6, x1))
       if (hash(j, r, 12) > 0.15 + 0.85 * edge) continue
-      const x = L.x(lx)
+      // His own depth in the rank's band.
+      const Lh = layer(view, BANDS[r] + (BANDS[r + 1] - BANDS[r]) * hash(j, r, 16))
+      const rh = R_T * Lh.s
+      const x = Lh.x(lx)
       if (x < view.x0 - 1 || x > view.x1 + 1) continue
       let hop = 0
       for (const [at, , dur] of HEAVES) hop += Math.max(0, ring(t, at + dur * 0.65 + 0.5 * hash(j, r, 13) + 0.04 * Math.abs(lx + 9), 1.6, 0.4))
-      const y = L.y(Math.min(0, ground(lx))) - radius - 0.05 * L.s * hop + 0.05 * L.s * (hash(j, r, 14) - 0.5)
+      const y = Lh.y(Math.min(0, ground(lx))) - rh - 0.05 * Lh.s * hop
       // Only on the land: thinning out towards the coast as it curves away, never out on the water.
-      const coast = coastAt(y + radius, L.hy)
+      const coast = coastAt(y + rh, Lh.hy)
       if (x > coast - 0.4 - 1.2 * hash(j, r, 15)) continue
-      ctx.moveTo(x + radius, y)
-      ctx.arc(x, y, radius, 0, Math.PI * 2)
+      ctx.moveTo(x + rh, y)
+      ctx.arc(x, y, rh, 0, Math.PI * 2)
       any = true
     }
     if (!any) continue
