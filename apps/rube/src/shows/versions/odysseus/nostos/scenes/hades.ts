@@ -14,7 +14,7 @@ import { drawHands, drawRanks, drawShore, drawTrench } from './hades/shore'
  * water's edge and stand, all of them, as the ship goes (`hades/plan.ts` has the clock, `hades/shore.ts` the drawing).
  */
 
-const ALL = region(BEACH.x0 - 30, -24, BEACH.x1 + 20, 16, 3)
+const ALL = region(BEACH.x0 - 30, -24, BEACH.x1 + 45, 16, 3)
 const END = 300
 
 /**

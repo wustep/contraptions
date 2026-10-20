@@ -32,16 +32,28 @@ const hazeOf = (t: number): string => mix(skyAt(t).low, '#716C63', 0.35)
 const along = (x: number): number => clamp01((x - BEACH.x0) / 10) * clamp01((BEACH.x1 - x) / 10)
 
 /**
- * The beach: its ground from the water's edge back to the horizon, its two ends curving away from the water to the
- * horizon so it reads as a long coast going off into the haze; the far hills and dunes; the rocks at its ends.
+ * The shore: the beach, its ground from the water's edge back to the horizon, its two ends going away from the water to
+ * the horizon so it reads as a long coast; the ridge standing on it far back, and the stacks in the sea off its end.
  */
 export function drawShore(g: Paint): void {
-  const { ctx, t, view } = g
+  const haze = hazeOf(g.t)
+  drawBeach(g, haze)
+  // Left behind, the ridge and the stacks go into the haze as the ship goes on, so nothing far is cut off at once.
+  const left = smooth(g.view.cx, BEACH.x1 + 2, BEACH.x1 + 20)
+  if (left >= 1) return
+  g.ctx.globalAlpha = 1 - left
+  drawRidge(g, haze)
+  drawStacks(g, haze)
+  g.ctx.globalAlpha = 1
+}
+
+/** The beach: its ground from the water's edge back to the horizon, and the wet sand along the water. */
+function drawBeach(g: Paint, haze: string): void {
+  const { ctx, view } = g
   const a = Math.max(BEACH.x0 - 2, view.x0 - 1)
   const b = Math.min(BEACH.x1 + 2, view.x1 + 1)
   if (b <= a) return
   const hy = horizonOf(view)
-  const haze = hazeOf(t)
   // The front edge: the water's edge along the beach, going back to the horizon at both ends.
   const front = (x: number) => hy + (EDGE - hy) * along(x)
   const step = Math.max(0.25, (b - a) / 120)
@@ -69,8 +81,6 @@ export function drawShore(g: Paint): void {
   }
   ctx.closePath()
   fill(ctx, WET)
-  drawRidge(g, haze)
-  drawStacks(g, haze)
 }
 
 /** The ridge behind the beach: how far back it stands, and its skyline as [layer x, height] (cells). */
