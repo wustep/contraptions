@@ -3,15 +3,15 @@ import { region, smooth, standing } from '../draw'
 import { BEAT } from '../music'
 import type { Scene } from '../scene'
 import { k, strokeAt } from './giants/beats'
-import { ABOARD, ASHORE, BEACH, CHARGE, FROM, HANDS, RUN, SHADE_ACTORS, SHIP, STOP, TO, TRENCH, heroMoves } from './hades/plan'
+import { ABOARD, ARRIVE, ASHORE, BEACH, CHARGE, FROM, HANDS, SHADE_ACTORS, SHIP, STOP, TO, TRENCH, heroMoves } from './hades/plan'
 import { drawHands, drawRanks, drawShore, drawTrench } from './hades/shore'
 
 /**
- * The shore of the dead (222.4 → 251.36), on the tutti: his ship comes down from Telepylus to a beach of black sand
- * under a low sun that never sets; he leaps ashore and cuts a trench along the water's edge; the dead come up out of
- * it, and out of the whole shore behind, rank on rank into the haze; they charge him a surge a beat; he runs and
- * leaps back aboard, and they stop at the water's edge and stand, all of them, as the ship goes (`hades/plan.ts` has
- * the clock, `hades/shore.ts` the drawing).
+ * The shore of the dead (222.4 → 251.36), on the tutti: on its attack the fog is cut away to a beach of black sand
+ * under a low sun that never sets, and his ship comes down it; he leaps ashore and cuts a trench along the water's
+ * edge; hands break the sand all along it on one beat, and the dead come up between them and out of the whole shore
+ * behind, back into the dark; they charge him a surge a beat; he runs and leaps back aboard, and they stop at the
+ * water's edge and stand, all of them, as the ship goes (`hades/plan.ts` has the clock, `hades/shore.ts` the drawing).
  */
 
 const ALL = region(BEACH.x0 - 30, -24, BEACH.x1 + 20, 16, 3)
@@ -29,21 +29,20 @@ const look = (t: number) => {
 }
 
 const shots: Key[] = [
-  // Out of the fog and down the coast: the black shore ahead, the low sun.
-  { t: 225.9, cells: 16, off: [6, -2.6], w: 0 },
-  { t: k(55), cells: 15, at: [SHIP(k(55)) + 8, -2.6] },
-  // Ashore: close on him, and the trench he cuts.
-  { t: ASHORE, cells: 8.5, off: [0.8, -1.7], w: 0, cut: true },
-  { t: k(64), cells: 8, off: [0.5, -1.6], w: 0 },
-  // The hands, coming up out of it behind him.
-  { t: HANDS, cells: 7.5, at: [(TRENCH.x0 + TRENCH.x1) / 2 + 0.2, -1.75] },
-  // The dead up, rank on rank behind him; he runs, and they come.
-  { t: k(69), cells: 10, at: [TRENCH.x1 - 3, -2.3] },
-  { t: RUN, cells: 10.5, off: [-2.6, -2.5], w: 0 },
-  { t: CHARGE, cells: 10.5, off: [-3.0, -2.7], w: 0 },
-  { t: ABOARD, cells: 11, off: [-3.4, -2.6], w: 0 },
+  // The tutti's attack: cut from the fog to the whole shore, wide and nearly still, the ship coming down it.
+  { t: ARRIVE, cells: 21, at: [297, -4.6], cut: true },
+  { t: k(59), cells: 19, at: [311, -4.2] },
+  // Ashore: close on him, and the trench he cuts, behind him.
+  { t: ASHORE, cells: 5.5, off: [0.9, -0.9], w: 0, cut: true },
+  { t: k(63), cells: 5.5, off: [-1.2, -0.9], w: 0 },
+  // The hands, all along it at once; then back, and back, as the dead come up behind them.
+  { t: HANDS, cells: 5.6, at: [(TRENCH.x0 + TRENCH.x1) / 2 + 0.6, -1.0] },
+  { t: k(71), cells: 10, at: [TRENCH.x1 - 0.5, -3.6] },
+  // He runs, and they come.
+  { t: CHARGE, cells: 9.5, off: [-4.2, -3.0], w: 0 },
+  { t: ABOARD, cells: 10.5, off: [-4.4, -3.0], w: 0 },
   // The shore lined with them at the water's edge, watching him go.
-  { t: STOP, cells: 13.5, at: [SHIP(STOP) - 5.5, -2.4] },
+  { t: STOP, cells: 12.5, at: [SHIP(STOP) - 8.5, -3.6] },
   { t: TO - 1.05, cells: 14.5, off: [1.4, -1.9], w: 0 },
 ]
 

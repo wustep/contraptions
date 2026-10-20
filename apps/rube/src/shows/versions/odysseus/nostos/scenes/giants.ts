@@ -1,6 +1,7 @@
 import type { Key } from '../camera'
 import { region, smooth, smoother, standing } from '../draw'
 import type { Move } from '../path'
+import { TUTTI_ATTACK } from '../music'
 import type { Scene } from '../scene'
 import { k, strokeAt } from './giants/beats'
 import { drawCliff, drawFar, drawFlights, drawFogBand, drawGiant, drawLowFog, drawPines, drawSplashes, fogAt } from './giants/fjord'
@@ -92,14 +93,19 @@ export const giants: Scene = {
   men,
   deaths,
   shots,
+  // Gone on the cut to the shore of the dead.
   back: [
-    standing('giants-far', ALL, END, drawFar),
+    standing('giants-far', ALL, END, (g) => {
+      if (g.t < TUTTI_ATTACK) drawFar(g)
+    }),
     standing('giants-cliff', ALL, END, (g) => {
+      if (g.t >= TUTTI_ATTACK) return
       drawCliff(g)
       drawPines(g, 'back')
       drawLowFog(g, 0.75 * fogAt(g.t))
     }),
     standing('giants-giants', ALL, END, (g) => {
+      if (g.t >= TUTTI_ATTACK) return
       // The fog that hides them until they come out of it, high over the cliff.
       drawFogBand(g, TOP - 7.0, 3.6, 0.5 * fogAt(g.t) * (1 - 0.6 * smooth(g.t, 199, 210)), 0.04, 4.2)
       for (let i = 0; i < GIANTS.length; i++) drawGiant(g, i)

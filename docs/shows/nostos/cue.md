@@ -31,7 +31,7 @@ in twelve-beat phrases of 9 s.
 | 71.42 | answer | The theme answered, fuller and higher, still no low voices; held breaths at about 99.5 and 119.3. | Troy at night: the men down the horse's rope, Athena's statue, the gate's gears; Agamemnon's host pours in (114.32); the fire; away at dawn. |
 | 151.22 | ground | The low voices come in under it (a thud); a swell at 169.23. | The Cyclops' cave: the boulder shuts on the thud; the stake into the eye on the swell. |
 | 187.23 | pulse | A beat arrives, 80 a minute, and everything climbs on it. | Telepylus: oars on the beat; chrome giants in the fog; two ships sunk on hard beats. |
-| 222.4 | tutti | Everything, on the beat, the loudest stretch of the cue. | The shore of the dead; the Sirens; Apollo's cattle; the storm. |
+| 222.4 | tutti | Everything, on the beat, the loudest stretch of the cue; its own attack at 223.60. | The shore of the dead, cut to on the attack; the Sirens; Apollo's cattle; the storm. |
 | 304.61 | after | The tutti cut off at once; the low voices back at 323.34 and gone at 342; the last attack at 350.43. | Zeus's bolt on the cut; the wreck; the spar on the great seas; Ogygia's sand. |
 | 352.6 | hush | Very nearly silence. | He lies still on the beach. |
 | 353.5 | rise | The theme again from almost nothing, building. | Seven years on Ogygia, with the loom's cross-cuts; thunder on a clear day; the raft built. |

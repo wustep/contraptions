@@ -116,6 +116,9 @@ export function strongest(a: number, b: number): number {
   return best ? best.t : (a + b) / 2
 }
 
+/** The tutti's own attack, the hardest onset of its first seconds: where the fog is cut away to the shore of the dead. */
+export const TUTTI_ATTACK = strongest(M.tutti, M.tutti + 2)
+
 /** Onsets between `a` and `b` at least `s` strong and at least `gap` seconds apart (the stronger kept). */
 export function onsetsIn(a: number, b: number, s = 0.6, gap = 0.3): number[] {
   const cand = ONSETS.filter((o) => o.t >= a && o.t <= b && o.s >= s).sort((x, y) => y.s - x.s)

@@ -1,4 +1,4 @@
-import { M } from '../music'
+import { M, TUTTI_ATTACK } from '../music'
 import type { SkyKey } from './sky'
 
 /**
@@ -44,8 +44,9 @@ export const BASE_SKY: SkyKey[] = [
   // Fog at Telepylus.
   key(M.pulse + 3, '#8E9592', '#B7B9B1', '#9EA39F', 0.2, SEA_FOG),
   key(M.tutti - 3, '#7D8582', '#A5A8A0', '#8A8F8B', 0.3, SEA_FOG),
-  // The dead's shore: a low sun in haze that never sets.
-  key(M.tutti + 2, '#383C41', '#8A8376', '#4C4D4E', 0.25, SEA_DEAD, { x: 0.5, y: 0.7, r: 0.035, color: '#D8D0BD', a: 0.55 }),
+  key(TUTTI_ATTACK - 0.02, '#7D8582', '#A5A8A0', '#8A8F8B', 0.3, SEA_FOG),
+  // The dead's shore, cut to on the tutti's attack: a low sun in haze that never sets.
+  key(TUTTI_ATTACK, '#383C41', '#8A8376', '#4C4D4E', 0.25, SEA_DEAD, { x: 0.5, y: 0.7, r: 0.035, color: '#D8D0BD', a: 0.55 }),
   key(249, '#3E4247', '#958C7D', '#55565A', 0.25, SEA_DEAD, { x: 0.52, y: 0.69, r: 0.035, color: '#D8D0BD', a: 0.55 }),
   // White noon at the Sirens' rocks.
   key(254, '#A8B7BB', '#ECE5D4', '#E6E2D6', 0.15, SEA_NOON, { x: 0.62, y: 0.1, r: 0.03, color: '#FBF5E4', a: 1 }),

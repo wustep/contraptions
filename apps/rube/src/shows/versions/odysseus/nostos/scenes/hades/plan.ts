@@ -2,19 +2,21 @@ import { Path, fly, ramp, rest, ride, roll, type Move, type Pt } from '../../pat
 import type { Actor } from '../../show'
 import { HELM, WINDOWS, glide } from '../../voyage'
 import { floatAt, onShip } from '../../world/ship'
+import { TUTTI_ATTACK } from '../../music'
 import { k } from '../giants/beats'
 import { lazy } from '../giants/lazy'
 
 /**
  * The shore of the dead, timed (222.4 → 251.36, the tutti: everything, loudest, on the beat).
  *
- * His ship runs down from Telepylus to a long beach of black sand under a low sun that never sets, and coasts along it.
- * On the sixth phrase's downbeat he leaps ashore and cuts a trench along the water's edge as he rolls. On the hardest
- * beat after it, hands come up out of the trench where he has cut it, and the dead come up after them, beat by beat
- * towards him along the trench (the men he has lost first, nearest), and then rank on rank behind them, across the
- * whole shore, back into the haze. On the strongest beat of the phrase he runs; on the next phrase's downbeat the dead
- * come after him, a surge a beat; he leaps back aboard as his ship comes by, and on the next hard beat they stop at the
- * water's edge and stand, all of them, and watch the ship go.
+ * On the tutti's own attack the fog is gone: a long beach of black sand under a low sun that never sets, a black ridge
+ * behind it and black stacks standing in the sea off its end, and his ship coming down the coast. On the sixth
+ * phrase's downbeat he leaps ashore and cuts a trench along the water's edge as he rolls, and stops at its end on the
+ * hardest beat of the phrase: on that beat hands break the sand all along it at once. The dead come up between them,
+ * from beside him outwards (the men he has lost nearest), and then rank on rank behind them, back over the whole shore
+ * into the dark. On the strongest beat after it he runs; on the next phrase's downbeat the dead come after him, a surge
+ * a beat; he leaps back aboard as his ship comes by, and on the next hard beat they stop at the water's edge and stand,
+ * all of them, and watch the ship go.
  *
  * The beach lies behind the ship's plane: its front edge, the water's edge, a little above the waterline on the
  * screen, and its ground going back to the horizon. The dead stand on it in ranks, each rank on its own ground line;
@@ -38,16 +40,17 @@ export const ROWS = [
 export const SHIP = glide([
   [FROM, 268, 5],
   [227.5, 302, 7],
-  [k(60), 326, 3.3],
-  [k(78), 370.5, 3.3],
+  [k(60), 326, 3],
+  [k(78), 364, 3],
   [TO, 392, 5],
 ])
 
-/** The beats it turns on. */
+/** The beats it turns on. The tutti's own attack (the strongest onset of the stretch) is the cut to the shore. */
+export const ARRIVE = TUTTI_ATTACK
 export const ASHORE = k(60)
 export const LANDED = k(61)
-export const TRENCH_END = k(68)
 export const HANDS = k(67)
+export const TRENCH_END = HANDS
 export const RISEN = k(70)
 export const RUN = k(70)
 export const CHARGE = k(72)
@@ -67,11 +70,13 @@ const helm = (t: number): Pt => onShip(floatAt(SHIP(t), t), HELM)
 export function heroMoves(): Move[] {
   const land: Pt = [TRENCH.x0, heroY(HERO_SCALE)]
   const end: Pt = [TRENCH.x1, heroY(HERO_SCALE)]
-  const runFrom: Pt = end
-  const gathered: Pt = [TRENCH.x1 + 3.5, end[1]]
-  const leapFrom: Pt = [368.0, end[1]]
-  const into = (a: number, b: number, s0: number, s1: number) => (t: number) => s0 + (s1 - s0) * Math.max(0, Math.min(1, (t - a) / (b - a)))
   const leapAt = ABOARD - 0.75
+  const leapFrom: Pt = [helm(ABOARD)[0] - 1.35, end[1]]
+  // His running pace: up to it over the first second from rest, then steady to where he leaps.
+  const pace = (leapFrom[0] - end[0]) / (leapAt - RUN - 0.5)
+  const runFrom: Pt = end
+  const gathered: Pt = [TRENCH.x1 + pace / 2, end[1]]
+  const into = (a: number, b: number, s0: number, s1: number) => (t: number) => s0 + (s1 - s0) * Math.max(0, Math.min(1, (t - a) / (b - a)))
   return [
     // Off his ship's deck, where the sea has it at that moment (worked out when first wanted: `giants/lazy.ts`).
     lazy(ASHORE, LANDED, 'fly', () => fly(helm(ASHORE), land, ASHORE, LANDED, { scale: into(ASHORE, LANDED, 1, HERO_SCALE) })),
@@ -79,7 +84,7 @@ export function heroMoves(): Move[] {
     rest(end, TRENCH_END, RUN, { scale: () => HERO_SCALE }),
     // From rest to his running pace over the first second (the ramp's length is its distance over its mean speed),
     // then steady to where he leaps.
-    ramp([runFrom, gathered], RUN, 0, 7, { scale: () => HERO_SCALE }),
+    ramp([runFrom, gathered], RUN, 0, pace, { scale: () => HERO_SCALE }),
     roll([gathered, leapFrom], RUN + 1, leapAt, 'none', { scale: () => HERO_SCALE }),
     lazy(leapAt, ABOARD, 'fly', () => fly(leapFrom, helm(ABOARD), leapAt, ABOARD, { scale: into(leapAt, ABOARD, HERO_SCALE, 1) })),
   ]
@@ -92,8 +97,11 @@ export const ASH = '#B8B3A9'
 export const ASH_RIM = '#48443F'
 export const SHADES_ID = 300
 
-/** How far the dead come on in the charge, by rank (cells), and how it goes: a surge on each beat. */
-export const CHARGE_BY_ROW = [33, 31.5, 30, 29]
+/**
+ * How far the dead come on in the charge, by rank (cells), and how it goes: a surge on each beat, gaining on him, so
+ * the first of them reach the water's edge where he leaps aboard as he leaps.
+ */
+export const CHARGE_BY_ROW = [29.5, 28.5, 27.5, 26.5]
 
 /** The share of the charge done by `t`: a surge on each of the eight beats from CHARGE, each starting from rest. */
 export function charged(t: number, lag = 0): number {
@@ -108,8 +116,8 @@ export function charged(t: number, lag = 0): number {
   // Each surge: from rest, quick, and settling before the next (a curve that peaks early).
   const v = Math.pow(u, 0.55)
   const f = v * v * (3 - 2 * v)
-  // Bigger surges in the middle of the run than at its ends.
-  const weights = [0.7, 1, 1.15, 1.2, 1.2, 1.15, 1, 0.6]
+  // Hard from the first, and the last two only a settling at the water.
+  const weights = [1.0, 1.2, 1.25, 1.25, 1.2, 1.0, 0.45, 0.15]
   const total = weights.reduce((x, y) => x + y, 0)
   const done = weights.slice(0, n - 72).reduce((x, y) => x + y, 0)
   return (done + weights[n - 72] * f) / total
@@ -119,7 +127,9 @@ export function charged(t: number, lag = 0): number {
 export interface Shade {
   row: 0 | 1
   x: number
-  /** When its hands break the sand; it is up and standing 1.1 s later. */
+  /** When its hands break the sand: all of them on the one beat, near enough. */
+  hands: number
+  /** When its head starts up out of the sand between them; it is up and standing 0.7 s later. */
   rise: number
   /** A little behind the others in the surges. */
   lag: number
@@ -128,17 +138,18 @@ export interface Shade {
 export const SHADES: Shade[] = (() => {
   const out: Shade[] = []
   for (let i = 0; i < 9; i++) {
-    const f = i / 8
+    // From beside him outwards: the nearest first.
+    const f = (8 - i) / 8
     // Not evenly spaced: each a little off its place, so they come up as men, not as a row.
-    out.push({ row: 0, x: 327.0 + 0.86 * i + 0.28 * Math.sin(i * 2.9 + 0.7), rise: HANDS + (RISEN - 0.6 - HANDS) * f, lag: 0.04 * ((i * 7) % 3) })
-    out.push({ row: 1, x: 326.6 + 0.86 * i + 0.3 * Math.sin(i * 2.3 + 2.1), rise: HANDS + 0.45 + (RISEN - 0.6 - HANDS) * f, lag: 0.05 + 0.04 * ((i * 5) % 3) })
+    out.push({ row: 0, x: 327.0 + 0.86 * i + 0.28 * Math.sin(i * 2.9 + 0.7), hands: HANDS + 0.1 * f, rise: HANDS + 0.35 + (RISEN - 1 - HANDS) * f, lag: 0.04 * ((i * 7) % 3) })
+    out.push({ row: 1, x: 326.6 + 0.86 * i + 0.3 * Math.sin(i * 2.3 + 2.1), hands: HANDS + 0.04 + 0.1 * f, rise: HANDS + 0.6 + (RISEN - 1 - HANDS) * f, lag: 0.05 + 0.04 * ((i * 5) % 3) })
   }
   return out
 })()
 
-/** How far up out of the sand a shade is, 0 to 1, `s` seconds after its hands break the sand. */
+/** How far up out of the sand a shade is, 0 to 1, `s` seconds after its head starts up. */
 export const upOf = (s: number): number => {
-  const u = Math.max(0, Math.min(1, (s - 0.45) / 0.7))
+  const u = Math.max(0, Math.min(1, s / 0.7))
   return u * u * (3 - 2 * u)
 }
 
@@ -160,7 +171,7 @@ export function shadeActor(sh: Shade, i: number): Actor {
     rim: ASH_RIM,
     size,
     path: new Path(moves, `shade ${i}`),
-    on: (t) => t >= sh.rise + 0.45,
+    on: (t) => t >= sh.rise,
     fade: (t) => upOf(t - sh.rise),
     mark: null,
   }
