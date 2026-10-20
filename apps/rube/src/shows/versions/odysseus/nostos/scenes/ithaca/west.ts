@@ -73,7 +73,8 @@ export function skiffSeat(t: number, i: number): Pt {
  */
 function drawSunPath(g: Paint): void {
   const { ctx, t, view } = g
-  if (t < TRIAL.fade - 3) return
+  // Only in the west: before the cut to it the camera is in the hall, and the band would lie over the stairs.
+  if (t < TRIAL.fade) return
   const d = skyAt(t).disc
   if (!d || d.a < 0.01) return
   const hy = horizonOf(view)

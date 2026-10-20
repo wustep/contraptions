@@ -78,8 +78,8 @@ export const home: Scene = {
     { t: TRIAL.erupts, cells: 5.0, at: [822.2, -10.05], cut: true },
     { t: TRIAL.erupts + 1.5, cells: 4.9, at: [822.0, -10.0] },
     // The two of them.
-    { t: TRIAL.meet + 0.6, cells: 2.5, at: [820.7, -9.55] },
-    { t: TRIAL.fade - 0.1, cells: 2.3, at: [820.65, -9.5] },
+    { t: TRIAL.meet + 0.6, cells: 2.4, at: [820.6, -9.7] },
+    { t: TRIAL.fade - 0.1, cells: 2.2, at: [820.55, -9.66] },
     // The west, held: their son on the cliff's edge, the skiff casting off and going away from us into the sun.
     { t: TRIAL.fade, cells: WEST_CAM.cells, at: [WEST_CAM.x, WEST_CAM.y], cut: true },
     { t: END, cells: WEST_CAM.cells, at: [WEST_CAM.x, WEST_CAM.y] },

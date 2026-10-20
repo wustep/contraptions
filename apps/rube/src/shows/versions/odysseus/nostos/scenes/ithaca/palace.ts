@@ -75,6 +75,9 @@ export function drawPalace(g: Paint): void {
   drawRoomInside(g)
   drawStairs(g)
   drawRig(g)
+  // Once the arrow is spent (from the cut back to the hall), the axes stand behind whoever comes among them: the three
+  // of them meet there.
+  if (g.t >= TRIAL.erupts) drawAxes(g)
 }
 
 /* ------------------------------------------------------------------ the shell */
@@ -365,7 +368,8 @@ export function overPalace(g: Paint): void {
   const { ctx, t } = g
   const stone = outdoors(STONE, t)
   const shade = outdoors(STONE_SHADE, t)
-  drawAxes(g)
+  // In front of the balls while the arrow goes through them; behind after (`drawPalace`).
+  if (t < TRIAL.erupts) drawAxes(g)
   // The floor's cut face over the trench, deep enough there that a lying axe is down in it, out of sight, until it
   // swings up.
   rect(ctx, AXES[AXES.length - 1] - 0.5, HALL.floor, AXES[0] - AXES[AXES.length - 1] + 1.0, SLAB + 0.08)
