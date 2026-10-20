@@ -1,4 +1,5 @@
-import { circle, fill, mix, poly, rect, rgba, stroke, type Paint } from '../../draw'
+import { circle, fill, mix, poly, rect, rgba, stroke, vgrad, type Paint } from '../../draw'
+import { skyAt } from '../../world/sky'
 import type { Pt } from '../../path'
 import {
   AXE,
@@ -120,11 +121,14 @@ function drawCourtyard(g: Paint): void {
 
 function drawHallInside(g: Paint): void {
   const { ctx, t } = g
-  // The back wall: plaster, a petrol-blue dado, a red frieze under the beams.
+  // The back wall: plaster over a petrol-blue dado as high as the dais, a red frieze under the beams: the colours of
+  // Ithaca.
   rect(ctx, HALL.x0, HALL.ceil, HALL.x1 - HALL.x0, HALL.floor - HALL.ceil)
   fill(ctx, indoors(PLASTER_BACK, t))
-  rect(ctx, HALL.x0, HALL.floor - 0.22, HALL.x1 - HALL.x0, 0.22)
+  rect(ctx, HALL.x0, DAIS.top, HALL.x1 - HALL.x0, HALL.floor - DAIS.top)
   fill(ctx, indoors(PETROL, t))
+  rect(ctx, HALL.x0, DAIS.top - 0.03, HALL.x1 - HALL.x0, 0.03)
+  fill(ctx, indoors(MADDER, t))
   rect(ctx, HALL.x0, HALL.ceil + SLAB + 0.05, HALL.x1 - HALL.x0, 0.08)
   fill(ctx, indoors(MADDER, t))
   rect(ctx, HALL.x0, HALL.ceil + SLAB, HALL.x1 - HALL.x0, 0.05)
@@ -255,12 +259,46 @@ function drawRoomInside(g: Paint): void {
   fill(ctx, outdoors('#A9B6BE', t))
   rect(ctx, ROOM.x1, ROOM.floor - ROOM_DOOR.h, WALL, ROOM_DOOR.h)
   fill(ctx, outdoors('#8D98A3', t))
+  drawWindow(g)
   drawLamp(g, ROOM.x0 + 1.75, ROOM.floor - 0.62)
   rect(ctx, ROOM.x0 + 2.7, ROOM.floor - 0.2, 0.5, 0.2)
   fill(ctx, indoors(TIMBER_LIGHT, t))
   rect(ctx, ROOM.x0 + 2.7, ROOM.floor - 0.2, 0.5, 0.035)
   fill(ctx, indoors(TIMBER, t))
   drawLoom(g)
+}
+
+/**
+ * The window in her room's back wall, beside the loom: the sky and the sea beyond the island as they are at the time,
+ * night or day, framed in timber. She weaves with the sea he went over at her side.
+ */
+function drawWindow(g: Paint): void {
+  const { ctx, t } = g
+  const x0 = ROOM.x0 + 2.05
+  const x1 = x0 + 0.55
+  const y0 = ROOM.floor - 1.15
+  const y1 = ROOM.floor - 0.55
+  const horizon = y0 + (y1 - y0) * 0.68
+  const sky = skyAt(t)
+  rect(ctx, x0, y0, x1 - x0, horizon - y0)
+  ctx.fillStyle = vgrad(ctx, y0, horizon, [
+    [0, sky.top],
+    [1, sky.low],
+  ])
+  ctx.fill()
+  rect(ctx, x0, horizon, x1 - x0, y1 - horizon)
+  ctx.fillStyle = vgrad(ctx, horizon, y1, [
+    [0, sky.far],
+    [1, sky.near],
+  ])
+  ctx.fill()
+  // The wall's thickness in the reveal on the side away from the lamp, and the timber lintel and sill.
+  rect(ctx, x0, y0, 0.05, y1 - y0)
+  fill(ctx, indoors(STONE_SHADE, t))
+  rect(ctx, x0 - 0.05, y0 - 0.05, x1 - x0 + 0.1, 0.06)
+  fill(ctx, indoors(TIMBER, t))
+  rect(ctx, x0 - 0.06, y1, x1 - x0 + 0.12, 0.05)
+  fill(ctx, indoors(TIMBER, t))
 }
 
 /* ------------------------------------------------------------------ the stairs */
@@ -416,7 +454,8 @@ function drawAxes(g: Paint): void {
   const bronze = indoors(BRONZE, t)
   const light = indoors(BRONZE_LIGHT, t)
   const haft = indoors(TIMBER_LIGHT, t)
-  const hole = indoors(PLASTER_BACK, t)
+  // Through each eye, the dado behind it.
+  const hole = indoors(PETROL, t)
   for (let i = 0; i < AXES.length; i++) {
     const up = axeUp(i, t)
     const a = (1 - up) * (Math.PI / 2) + axeShiver(i, t)
