@@ -64,9 +64,9 @@ export const home: Scene = {
     { t: 489.4, cells: 2.4, at: [821.5, -11.15] },
     { t: TRIAL.out + 0.6, cells: 2.6, at: [823.6, -10.95] },
     { t: TRIAL.edge, cells: 3.0, at: [825.6, -10.3] },
-    // The swell: the drop, the bow drawn, her at her door.
+    // The swell: the drop, the bow drawn; and at its note she comes to her door over the hall, and knows him by it.
     { t: M.last + 0.4, cells: 3.3, at: [824.6, -9.95] },
-    { t: TRIAL.loose - 1.4, cells: 3.4, at: [824.5, -9.95] },
+    { t: TRIAL.loose - 1.4, cells: 3.75, at: [824.25, -10.1] },
     // On the loose, in close on the string; then along with the arrow, a little ahead of it, through the twelve eyes,
     // each axe shivering as it goes through, to Antinous in the air. It takes him on its note, and the camera comes to
     // rest on him as he comes down at the son's feet with it in him.
