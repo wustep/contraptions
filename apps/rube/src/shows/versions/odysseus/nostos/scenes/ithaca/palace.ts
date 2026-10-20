@@ -454,8 +454,6 @@ function drawAxes(g: Paint): void {
   const bronze = indoors(BRONZE, t)
   const light = indoors(BRONZE_LIGHT, t)
   const haft = indoors(TIMBER_LIGHT, t)
-  // Through each eye, the dado behind it.
-  const hole = indoors(PETROL, t)
   for (let i = 0; i < AXES.length; i++) {
     const up = axeUp(i, t)
     const a = (1 - up) * (Math.PI / 2) + axeShiver(i, t)
@@ -474,11 +472,13 @@ function drawAxes(g: Paint): void {
     ctx.quadraticCurveTo(0.09, hy + 0.08, 0.05, hy + 0.045)
     ctx.lineTo(-0.035, hy + 0.05)
     ctx.closePath()
-    fill(ctx, bronze)
+    // The eye, a hole through the bronze: whatever stands behind the axe is seen through it.
+    ctx.moveTo(0.026, hy)
+    ctx.arc(0, hy, 0.026, 0, Math.PI * 2, true)
+    ctx.fillStyle = bronze
+    ctx.fill('evenodd')
     rect(ctx, 0.1, hy - 0.09, 0.022, 0.18)
     fill(ctx, light)
-    circle(ctx, 0, hy, 0.026)
-    fill(ctx, hole)
     ctx.restore()
   }
 }
