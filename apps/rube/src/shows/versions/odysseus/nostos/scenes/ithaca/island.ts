@@ -1,7 +1,7 @@
 import { blob, circle, fill, hash, mix, poly, rgba, smooth, stroke, type Paint } from '../../draw'
 import { skyAt } from '../../world/sky'
 import type { Pt } from '../../path'
-import { BEACH, CLIFF_E, CLIFF_W, JETTY, TOP } from './geo'
+import { BEACH, CLIFF_E, CLIFF_W, JETTY, TOP, TRIAL } from './geo'
 import { BARK, OLIVE, OLIVE_DARK, ROCK, ROCK_DEEP, SAND_C, SCRUB, SCRUB_DARK, STONE, STONE_DEEP, STONE_SHADE, againstSun, nightness } from './look'
 
 /**
@@ -70,9 +70,13 @@ const OLIVES: [number, number, number][] = [
   [829.7, 1.5, -0.06],
 ]
 
-/** The rock by night: down nearer the dark than the rest of the outdoors, so the lit house is the one bright thing on it. */
+/**
+ * The rock by night: down nearly to the dark, darker than the sky over it, so the island is one silhouette in its sea
+ * under the moon and the lit house is the one bright thing on it.
+ */
 const NIGHT_ROCK = '#151A22'
-const rock = (hex: string, t: number): string => mix(againstSun(hex, t), NIGHT_ROCK, 0.5 * nightness(t))
+// In the west at the end it is the one warm dark against the sunset (`againstSun`), not the night's.
+const rock = (hex: string, t: number): string => mix(againstSun(hex, t), NIGHT_ROCK, (0.85 - 0.35 * smooth(t, TRIAL.fade - 1.3, TRIAL.fade + 1.0)) * nightness(t))
 
 export function drawIsland(g: Paint): void {
   const { ctx, t, view } = g
