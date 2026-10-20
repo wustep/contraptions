@@ -61,7 +61,8 @@ import { ARROW, armTip, arrowShown, arrowTail, arrowY, axeShiver, axeUp, drawOf,
  */
 
 const ink = (t: number) => mix('#2A231C', '#120E0B', nightness(t))
-const IN_VIEW = (g: Paint) => !(g.view.x1 < 812 || g.view.x0 > 831 || g.view.y0 > -8.4 || g.view.y1 < -13)
+/** Whether any of the house is in the frame: nothing of it stands west of the courtyard's wall (GATE.wall). */
+const IN_VIEW = (g: Paint) => !(g.view.x1 < GATE.wall[0] - 0.1 || g.view.x0 > 831 || g.view.y0 > -8.4 || g.view.y1 < -13)
 
 export function drawPalace(g: Paint): void {
   if (!IN_VIEW(g)) return
