@@ -14,7 +14,8 @@ import { AGROUND, drawSpar, FLOAT, onSpar, POLE, sparAngle, sparX } from './wrec
  * The wreck (the cut at 304.611 → the hush at 352.6: what is left after the tutti). The bolt has cracked the ship at the
  * mast. The mast goes over towards the bow and lies down on the water; the bow half dives, the stern half rears, and
  * its deck tips him forward: he rolls down it, off the broken edge, and drops onto the floating mast. His last three men
- * are thrown into the sea and go down slowly, into the dark under the cutaway, while the halves go after them.
+ * are thrown into the sea; through the quiet after the cut they go down slowly under him, into the dark under the
+ * cutaway, and are gone as the low voices come back.
  *
  * He rides the spar through what is left of the storm; when the low voices come back (323.3) the seas stand up again,
  * at their greatest, and the camera stands back to see one man on a stick on all of it; when they go (342) it calms to
@@ -75,16 +76,30 @@ const hero: Move[] = [
   rest([660, -0.35], TO - 0.12, TO),
 ]
 
-/** A man thrown from his half into the sea at `throwAt`, landing `dx` along, and going down slowly till he is lost. */
-function thrown(man: number, half: (t: number) => Half, throwAt: number, dx: number, flight: number, lost: number): Move[] {
+/**
+ * A man thrown from his half into the sea at `throwAt`, landing `dx` along, and going down slowly till he is lost. The
+ * sea that carries the spar carries him too, a little slower (`carry`), so through the quiet after the cut the three of
+ * them go down into the dark under the cutaway beneath him, falling behind, turning over slowly.
+ */
+function thrown(man: number, half: (t: number) => Half, throwAt: number, dx: number, flight: number, lost: number, carry: number): Move[] {
   const from = lazy(() => onHalf(throwAt, half, seat(man)))
   const splash = lazy((): Pt => [from()[0] + dx, 0.32])
   const land = throwAt + flight
   const way = Math.sign(dx || 1)
+  const span = lost - land
   return [
     onHalfRide(half, seat(man), STRIKE, throwAt),
     later(throwAt, land, 'fly', () => fly(from(), splash(), throwAt, land)),
-    later(land, lost, 'roll', () => roll([splash(), [splash()[0] + 0.3 * way, 3], [splash()[0] + 0.6 * way, 9.5]], land, lost, 'out')),
+    ride(
+      (t) => {
+        const s = Math.max(0, t - land)
+        const [sx, sy] = splash()
+        return [sx + (sparX(t) - sparX(land)) * carry + 0.12 * way * Math.sin(s * 0.5), sy + 4.4 * Math.pow(s / span, 1.7)]
+      },
+      land,
+      lost,
+      (t) => 0.35 * way * Math.max(0, t - land),
+    ),
   ]
 }
 
@@ -121,17 +136,18 @@ export const wreck: Scene = {
   ],
   hero,
   men: {
-    2: thrown(2, bowHalf, STRIKE + 0.45, 1.0, 0.5, LOST[2]),
-    1: thrown(1, sternHalf, STRIKE + 0.7, 0.25, 0.45, LOST[1]),
-    0: thrown(0, sternHalf, STRIKE + 0.85, -1.1, 0.6, LOST[0]),
+    2: thrown(2, bowHalf, STRIKE + 0.45, 1.0, 0.5, LOST[2], 0.985),
+    1: thrown(1, sternHalf, STRIKE + 0.7, 0.25, 0.45, LOST[1], 0.97),
+    0: thrown(0, sternHalf, STRIKE + 0.85, -1.1, 0.6, LOST[0], 0.955),
   },
   deaths: { 0: LOST[0], 1: LOST[1], 2: LOST[2] },
   shots: [
     { t: STRIKE + 0.9, cells: 9.5, at: [533.2, -0.6] },
     { t: 308.6, cells: 9.5, off: [0.3, 0.7] },
-    // In the quiet after the cut, in close: him alone on the spar, the rain, the swell going under him.
-    { t: 313.6, cells: 5.4, off: [0.35, -0.55] },
-    { t: 319.4, cells: 5.6, off: [0.45, -0.6] },
+    // In the quiet after the cut, in close, looking down through the cut: him alone on the spar at the top of the frame,
+    // and under him in the dark water his last three men going down, falling behind, until the dark has them.
+    { t: 313.6, cells: 6.2, off: [-0.6, 1.25] },
+    { t: 319.4, cells: 6.4, off: [-0.9, 1.35] },
     // As the low voices come back, out and out to the seas at their highest.
     { t: 322.4, cells: 6.4, off: [0.6, -0.8] },
     { t: 325.6, cells: 10, off: [1.2, -2.2] },
