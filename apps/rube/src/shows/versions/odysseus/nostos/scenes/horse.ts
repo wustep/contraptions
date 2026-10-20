@@ -22,13 +22,13 @@ import { PLAN, SHIP0, SHIP1, SHIP2, consortDepth } from './troy/plan'
  */
 
 const shots: Key[] = [
-  // Wide: the beach, the horse small in the surf, the Trojans come down to it in their hundreds, the walls on the hill,
-  // the sun going down over the sea.
-  { t: 0, cells: 22, at: [-11.9, -6.6] },
-  { t: 4.5, cells: 21, at: [-11.3, -6.3] },
-  // In on the haul: the ropes, the men on them walking it up out of the surf.
-  { t: 11, cells: 11, at: [-6.9, -3.2] },
-  { t: 16.0, cells: 8.5, at: [-6.6, -2.5] },
+  // Nolan's first image, close: the black horse rearing out of the surf, listing, the sun going down behind it.
+  { t: 0, cells: 5.2, at: [-0.95, -1.05] },
+  { t: 5.71, cells: 5.8, at: [-1.4, -1.2] },
+  // From the first heave, slowly out: the ropes, the men on them, the Trojans come down in their hundreds, the walls
+  // on the hill.
+  { t: 13, cells: 13.5, at: [-8.4, -3.7] },
+  { t: 17.4, cells: 13, at: [-8.2, -3.5] },
   // On a note, close: its flank and its belly, the spearmen at its rump, and the men packed in the dark inside it.
   { t: 18.03, cells: 3.8, at: [-6.35, -1.55], cut: true },
   { t: 22.5, cells: 3.5, at: [-6.15, -1.7] },
