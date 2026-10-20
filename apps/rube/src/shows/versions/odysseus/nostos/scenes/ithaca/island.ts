@@ -1,4 +1,5 @@
 import { blob, circle, fill, hash, mix, poly, rgba, smooth, stroke, type Paint } from '../../draw'
+import { layer } from '../../world/depth'
 import { skyAt } from '../../world/sky'
 import type { Pt } from '../../path'
 import { BEACH, CLIFF_E, CLIFF_W, JETTY, TOP, TRIAL } from './geo'
@@ -42,7 +43,7 @@ const OUTLINE: Pt[] = [
 const SHADE_E: Pt[] = [[805.5, -0.42], [CLIFF_E.foot, -0.9], [806.62, -2.6], [806.95, -3.7], [806.8, -5.3], [807.15, -6.8], [807.1, -8.2], [CLIFF_E.top, TOP], [808.3, TOP], [807.9, -6], [807.7, -2.6], [806.9, 0.3]]
 const SHADE_W: Pt[] = [[CLIFF_W.top, TOP], [831.5, -8.1], [832.0, -6.6], [833.4, -5.7], [833.9, -3.9], [835.3, -3.0], [CLIFF_W.foot, -1.1], [836.9, 0.6], [834.6, 0.6], [833.0, -2.8], [831.2, -6.2], [829.9, TOP]]
 
-/** Bands of the cliff's strata: long, few, each a darker step of the stone. */
+/** Bands of the cliff's strata: long, few, each a darker step of the stone, from a face's edge into the rock. */
 const STRATA: { y: number; x0: number; x1: number; h: number }[] = [
   { y: -2.1, x0: 806.5, x1: 810.5, h: 0.32 },
   { y: -4.6, x0: 806.9, x1: 810.5, h: 0.26 },
@@ -78,9 +79,44 @@ const NIGHT_ROCK = '#151A22'
 // In the west at the end it is the one warm dark against the sunset (`againstSun`), not the night's.
 const rock = (hex: string, t: number): string => mix(againstSun(hex, t), NIGHT_ROCK, (0.85 - 0.35 * smooth(t, TRIAL.fade - 1.3, TRIAL.fade + 1.0)) * nightness(t))
 
+/** The islands off Ithaca to the east, low on the horizon: [middle, width, height], as if in the action's plane. */
+const FAR_ISLANDS: [number, number, number][] = [
+  [781, 15, 2.4],
+  [767, 9, 1.3],
+]
+
+/**
+ * The neighbour islands, far off to the east on the horizon, paled into the air (by night, dark against the sky):
+ * the sea he came over is not empty. Not in the west at the end, where there is nothing ahead but the sun.
+ */
+function drawFar(g: Paint): void {
+  const { ctx, t, view } = g
+  // Out as the camera comes away to the west; in only once it is well over the island, so the piece's edge never cuts
+  // them off in one frame.
+  const gone = Math.max(smooth(t, TRIAL.fade - 1.3, TRIAL.fade), 1 - smooth(view.cx, 790, 799))
+  if (gone >= 1) return
+  const L = layer(view, 80)
+  const air = skyAt(t).low
+  const color = mix(mix(ROCK_DEEP, air, 0.62), NIGHT_ROCK, 0.6 * nightness(t))
+  for (const [x, w, h] of FAR_ISLANDS) {
+    if (L.x(x + w / 2) < view.x0 || L.x(x - w / 2) > view.x1) continue
+    const pts: Pt[] = []
+    for (let k = 0; k <= 10; k++) {
+      const u = k / 10
+      const y = -h * Math.pow(Math.sin(Math.PI * u), 0.6) * (0.85 + 0.15 * hash(k, Math.round(x)))
+      pts.push([L.x(x - w / 2 + w * u), L.hy + y * L.s])
+    }
+    // On the horizon itself: they are far enough off that their shores are down at it, however high the camera is.
+    pts.push([L.x(x + w / 2), L.hy + 0.02 * L.s], [L.x(x - w / 2), L.hy + 0.02 * L.s])
+    poly(ctx, pts)
+    fill(ctx, rgba(color, 1 - gone))
+  }
+}
+
 export function drawIsland(g: Paint): void {
   const { ctx, t, view } = g
   if (view.x1 < 792 || view.x0 > 844) return
+  drawFar(g)
   const stone = rock(STONE, t)
   const shade = rock(STONE_SHADE, t)
   // Whichever face the sun or the moon is on is the lit one; the other is in its own shadow.
@@ -96,9 +132,12 @@ export function drawIsland(g: Paint): void {
   fill(ctx, mix(stone, shade, 0.35 + 0.65 * fromWest))
   poly(ctx, SHADE_W)
   fill(ctx, mix(stone, shade, 1 - 0.65 * fromWest))
+  // Each stratum comes out of the face's edge and thins away into the rock, never ending square.
   for (const s of STRATA) {
-    poly(ctx, [[s.x0, s.y], [s.x1, s.y - 0.1], [s.x1, s.y + s.h], [s.x0 + 0.1, s.y + s.h * 1.1]])
-    fill(ctx, rgba(deep, 0.45))
+    const dir = s.x1 > s.x0 ? 1 : -1
+    const mid = s.x0 + (s.x1 - s.x0) * 0.45
+    poly(ctx, [[s.x0, s.y], [mid, s.y - 0.04 * dir], [s.x1, s.y + s.h * 0.45], [mid, s.y + s.h * 0.9], [s.x0 + 0.1 * dir, s.y + s.h * 1.1]])
+    fill(ctx, rgba(deep, 0.4))
   }
   // The island's foot under the water: rock, darker, going down out of sight.
   poly(ctx, [[795.6, 2.2], [797.0, 0.4], [836.9, 0.6], [839.0, 3.5], [842.0, 8], [793.5, 8]])
