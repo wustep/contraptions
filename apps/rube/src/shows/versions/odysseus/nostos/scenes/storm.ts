@@ -6,14 +6,16 @@ import type { Scene } from '../scene'
 import { seat, WINDOWS } from '../voyage'
 import { onShip } from '../world/ship'
 import { BEACHED, later, onDeck, shipPose, shipX, STRIKE, strokeAt, walk } from './sirens/course'
-import { DOWN_COW, drawIsland, ground, KNEEL } from './storm/island'
+import { DOWN_COW, drawIsland, FIRE, ground, KNEEL } from './storm/island'
 import { drawBolt, drawCeiling, drawFarBolt, drawRain, drawSeas, STRIKE_SKY } from './storm/weather'
 
 /**
  * Thrinacia and the storm (278.36 → the cut at 304.611, the tutti's last phrases). The ship runs onto the beach of
  * Apollo's island in gold light and lies there becalmed. Three of the men go ashore, one after another, up among the
- * god's cattle; he stays at the helm. One cow kneels, and lies down, and does not rise; the men come back aboard and they
- * put out, and the sky closes over them, the seas stand up behind, the rain comes on in sheets. On the cut, the bolt.
+ * god's cattle; he stays at the helm. They close round one cow, and on the phrase's hardest beat she goes down among
+ * them and does not rise, and the herd stands still with its heads up. They light a fire by her and come back aboard,
+ * and they put out with its smoke going up black behind them; the sky closes over them, the seas stand up, the rain
+ * comes on in sheets. On the cut, the bolt.
  */
 
 const [FROM] = WINDOWS.storm
@@ -111,11 +113,12 @@ export const storm: Scene = {
     { t: 280.2, cells: 15, off: [3.4, -2.4] },
     { t: 283.2, cells: 11, at: [500.2, -1.5] },
     { t: 286.6, cells: 8.5, at: [503.6, -1.7] },
-    // In close on the cow among the men as she kneels and does not get up.
-    { t: KNEEL[0] - 0.4, cells: 3.8, at: [DOWN_COW - 0.2, -2.4] },
-    { t: KNEEL[1] + 0.3, cells: 3.6, at: [DOWN_COW - 0.2, -2.4] },
-    { t: 294.6, cells: 10, at: [502.6, -1.5] },
-    { t: 296.4, cells: 13, off: [2.4, -1.8] },
+    // In on the cow among the men as she goes down, the herd either side; held while they light the fire and go.
+    { t: KNEEL[0] - 0.5, cells: 4.8, at: [DOWN_COW + 0.1, -2.5] },
+    { t: FIRE.lit + 0.5, cells: 4.6, at: [DOWN_COW + 0.1, -2.55] },
+    // Back down to the ship with them, the smoke going up behind; out as they put out under it.
+    { t: 294.6, cells: 10, at: [502.6, -2.2] },
+    { t: 296.4, cells: 13, off: [2.4, -2.4] },
     { t: 299.8, cells: 17, off: [3.2, -3.0] },
     { t: 303.0, cells: 11, off: [0.6, -1.7] },
   ],

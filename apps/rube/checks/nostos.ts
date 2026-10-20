@@ -11,6 +11,7 @@ import { AXES, HOME, SHUTTLE, TRIAL } from '../src/shows/versions/odysseus/nosto
 import { arrowPasses, axeTime } from '../src/shows/versions/odysseus/nostos/scenes/ithaca/rig'
 import { HEAVES, THRUSTS } from '../src/shows/versions/odysseus/nostos/scenes/troy/horse'
 import { SURGE } from '../src/shows/versions/odysseus/nostos/scenes/troy/host'
+import { FIRE, KNEEL } from '../src/shows/versions/odysseus/nostos/scenes/storm/island'
 import type { NostosShow } from '../src/shows/versions/odysseus/nostos/show'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -52,6 +53,8 @@ export function checkNostos(perf: Performance, version: ShowVersion, check: Chec
     ['the loose', TRIAL.loose],
     ['the arrow takes Antinous', TRIAL.strike],
     ['the host goes in', SURGE],
+    ['Apollo\'s cow goes down', KNEEL[1]],
+    ['the men\'s fire', FIRE.lit],
     ...HEAVES.map(([t], i): [string, number] => [`heave ${i}`, t]),
     ...THRUSTS.map((t, i): [string, number] => [`spear ${i}`, t]),
     ['they meet', TRIAL.meet],

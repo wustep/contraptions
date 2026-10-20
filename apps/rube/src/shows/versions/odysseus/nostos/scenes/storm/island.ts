@@ -2,11 +2,15 @@ import { blob, fill, mix, poly, rgba, smooth, smoother, stroke, vgrad, type Pain
 import type { Pt } from '../../path'
 import { layer } from '../../world/depth'
 import { skyAt } from '../../world/sky'
+import { flame } from '../troy/city'
 
 /**
  * Thrinacia, Apollo's island: a low gold hill of dry grass over a pale beach, two olive trees, and on its back the god's
- * cattle, cream and calm, with horns like a lyre. The men go up among them while he stays aboard; one cow kneels, and
- * lies down, and does not get up. That is all that is shown.
+ * cattle, cream and calm, with horns like a lyre. The men go up among them while he stays aboard, and close round one;
+ * on the hardest beat of the phrase she goes down among them and does not get up, and the rest of the herd stop
+ * grazing and stand with their heads up. The men light a fire beside her and go back down to the ship; behind them
+ * its smoke goes up black into the gold sky, leaning after them, and the sky closes. That is the crime the bolt
+ * answers.
  */
 
 /** The ground's height over x (cells): the beach, the slope, the pasture, and the far shore. */
@@ -51,8 +55,10 @@ const COWS: { x: number; dir: 1 | -1; ph: number }[] = [
   { x: 514.6, dir: -1, ph: 4.2 },
 ]
 export const DOWN_COW = COWS[1].x
-/** When cow 1 kneels, and when it is down. */
-export const KNEEL: [number, number] = [289.8, 291.6]
+/** When cow 1's legs give, and when she is down: on the phrase's hardest beat, as the last of the men reach her. */
+export const KNEEL: [number, number] = [289.9, 290.36]
+/** The men's fire beside her: lit on the beat after, burning as they put out, and put out by the rain. */
+export const FIRE = { x: DOWN_COW + 0.55, lit: 291.852 }
 
 const GRASS = '#B99A4C'
 const GRASS_SHADE = '#8B7434'
@@ -63,6 +69,8 @@ const HIDE = '#E8D7AC'
 const HIDE_SHADE = '#C8B282'
 const HOOF = '#6A5640'
 const INK = '#2E2A22'
+/** The fire's smoke: green wood and fat, dark against the gold. */
+const SMOKE = '#3A3631'
 
 export function drawIsland(g: Paint): void {
   const { ctx, t, view } = g
@@ -101,7 +109,55 @@ export function drawIsland(g: Paint): void {
   // Two olive trees on the skyline, dark and still.
   drawOlive(g, 517.6, 1.0)
   drawOlive(g, 519.2, 0.75)
-  for (const [i, cow] of COWS.entries()) drawCow(g, cow.x, ground(cow.x), cow.dir, cow.ph, i === 1 ? smoother(t, KNEEL[0], KNEEL[1]) : 0)
+  // The fire's smoke behind everything on the hill, going up and leaning off after the ship with the rising wind.
+  const burn = smooth(t, FIRE.lit, FIRE.lit + 0.6) * (1 - smooth(t, 303.5, 309))
+  const fy = ground(FIRE.x)
+  drawColumn(g, FIRE.x, fy - 0.2, burn)
+  // The herd: all but her grazing, until she goes down; then heads up, and still.
+  const fear = smooth(t, KNEEL[1], KNEEL[1] + 0.7)
+  for (const [i, cow] of COWS.entries()) drawCow(g, cow.x, ground(cow.x), cow.dir, cow.ph, i === 1 ? smoother(t, KNEEL[0], KNEEL[1]) : 0, i === 1 ? 0 : fear)
+  // The fire itself, on the grass beside her: a few sticks and the flames on them.
+  if (burn > 0.01) {
+    for (const d of [-1, 1]) {
+      ctx.beginPath()
+      ctx.moveTo(FIRE.x - 0.14 * d, fy + 0.01)
+      ctx.lineTo(FIRE.x + 0.1 * d, fy - 0.07)
+      ctx.lineCap = 'round'
+      stroke(g, BARK, 2.2)
+    }
+    flame(ctx, FIRE.x, fy - 0.02, 0.24 * burn, 0.34 * burn, t, 5)
+  }
+}
+
+/**
+ * The smoke off the men's fire: one column, going up from the fire and spreading as it goes, bending over downwind
+ * as the wind gets up. Its rounds are filled as one shape, dark at the fire and thinning to nothing at the top, so it
+ * is a column and not a string of puffs; it grows up from the fire after it is lit.
+ */
+function drawColumn(g: Paint, x: number, y: number, burn: number): void {
+  const { ctx, t } = g
+  if (burn <= 0.01) return
+  const age = t - FIRE.lit
+  const H = 8
+  const L = 9
+  const N = 48
+  const lean = 0.05 + 0.2 * smooth(t, 293, 302)
+  ctx.beginPath()
+  for (let i = 0; i < N; i++) {
+    const u = (((t / L + i / N) % 1) + 1) % 1
+    if (u * L > age) continue
+    const h = u * H
+    const px = x + lean * Math.pow(h, 1.6) + Math.sin(t * 0.4 + i * 1.7) * 0.05 * (0.3 + u)
+    const r = 0.17 + 0.7 * u + 0.04 * Math.sin(i * 2.3)
+    ctx.moveTo(px + r, y - h)
+    ctx.ellipse(px, y - h, r, r * 0.85, 0, 0, Math.PI * 2)
+  }
+  ctx.fillStyle = vgrad(ctx, y - H, y, [
+    [0, rgba(SMOKE, 0)],
+    [0.5, rgba(SMOKE, 0.5 * burn)],
+    [1, rgba(SMOKE, 0.82 * burn)],
+  ])
+  ctx.fill()
 }
 
 function drawOlive(g: Paint, x: number, size: number): void {
@@ -130,10 +186,11 @@ function drawOlive(g: Paint, x: number, size: number): void {
 
 /**
  * A cow of Apollo's: about three balls long, cream, with a darker muzzle and hooves and horns curving up like a lyre's
- * arms. She grazes (her head down, lifting now and then, slowly). `down` (0 to 1) is her kneeling: the legs fold under
- * her, her body comes down onto the grass, and her head goes down and stays.
+ * arms. She grazes (her head down, lifting now and then, slowly). `down` (0 to 1) is her going down: the legs fold under
+ * her, her body comes down onto the grass, and her head goes down and stays. `fear` (0 to 1) lifts her head and holds
+ * it up, her tail still.
  */
-function drawCow(g: Paint, x: number, y: number, dir: 1 | -1, ph: number, down: number): void {
+function drawCow(g: Paint, x: number, y: number, dir: 1 | -1, ph: number, down: number, fear = 0): void {
   const { ctx, t } = g
   const L = 0.66
   const legH = 0.21 * (1 - down)
@@ -142,9 +199,10 @@ function drawCow(g: Paint, x: number, y: number, dir: 1 | -1, ph: number, down: 
   ctx.translate(x, 0)
   ctx.scale(dir, 1)
   // Grazing: the head mostly down, lifted for a few seconds every so often; still once she is down.
-  const lift = smooth(Math.sin(t * 0.32 + ph), 0.55, 0.95) * (1 - down)
-  const headDrop = 0.17 * (1 - lift) + 0.08 * down
-  const tail = 0.18 * Math.sin(t * 1.1 + ph * 2) * (1 - down)
+  const graze = smooth(Math.sin(t * 0.32 + ph), 0.55, 0.95)
+  const lift = (graze + (1 - graze) * fear) * (1 - down)
+  const headDrop = 0.17 * (1 - lift) + 0.08 * down - 0.03 * fear
+  const tail = 0.18 * Math.sin(t * 1.1 + ph * 2) * (1 - down) * (1 - 0.85 * fear)
   // Legs: two seen pairs, a little apart; under her when she kneels.
   for (const lx of [-0.25, -0.17, 0.15, 0.24]) {
     const fold = down
