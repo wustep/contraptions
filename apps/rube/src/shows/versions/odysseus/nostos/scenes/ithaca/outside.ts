@@ -1,4 +1,4 @@
-import { circle, fill, poly, rect, ring, smoother, stroke, type Paint } from '../../draw'
+import { circle, fill, poly, rect, smoother, stroke, type Paint } from '../../draw'
 import { ARGOS, HOIST, HOME, TOP } from './geo'
 import { TIMBER, outdoors } from './look'
 import { heroBasketY, pinOut, stonesBasketY } from './rig'
@@ -107,11 +107,12 @@ export function drawArgos(g: Paint): void {
   fill(ctx, outdoors('#B49F6E', t))
   // His breath, slow, and then none.
   const breath = 0.006 * Math.sin(t * 1.6) * (1 - smoother(t, HOME.dies - 0.4, HOME.dies + 0.3))
-  // The tail, lying out behind him to the west, a long feathered sweep; it goes once.
-  const wag = Math.max(0, ring(t, HOME.wag, 1.3, 0.32)) * 0.85
+  // The tail, lying out behind him to the west, a long feathered sweep; it goes once: up off the straw, and down.
+  const w = Math.max(0, Math.min(1, (t - HOME.wag) / 0.75))
+  const wag = Math.pow(Math.sin(Math.PI * w), 1.4)
   ctx.save()
   ctx.translate(x + 0.22, y - 0.05)
-  ctx.rotate(-wag * 0.9)
+  ctx.rotate(-wag * 1.05)
   ctx.beginPath()
   ctx.moveTo(0, -0.02)
   ctx.quadraticCurveTo(0.12, -0.03, 0.2, 0.025)
@@ -119,21 +120,23 @@ export function drawArgos(g: Paint): void {
   ctx.closePath()
   fill(ctx, back)
   ctx.restore()
-  // The haunch, the body (chest high at the front), the line of the back darker.
+  // The haunch, the body (chest high at the front, and up off the straw while he looks), the line of the back darker.
+  const up = argosHead(t)
+  const chest = 0.04 * up
   ctx.beginPath()
   ctx.ellipse(x + 0.15, y - 0.065 - breath * 0.5, 0.1, 0.07, 0, 0, Math.PI * 2)
   fill(ctx, back)
   ctx.beginPath()
   ctx.moveTo(x - 0.14, y - 0.005)
-  ctx.quadraticCurveTo(x - 0.17, y - 0.13 - breath, x - 0.06, y - 0.14 - breath)
+  ctx.quadraticCurveTo(x - 0.17, y - 0.13 - breath - chest, x - 0.06, y - 0.14 - breath - chest * 0.6)
   ctx.quadraticCurveTo(x + 0.08, y - 0.15 - breath, x + 0.2, y - 0.12 - breath * 0.5)
   ctx.quadraticCurveTo(x + 0.27, y - 0.06, x + 0.22, y - 0.005)
   ctx.closePath()
   fill(ctx, coat)
   ctx.beginPath()
-  ctx.moveTo(x - 0.08, y - 0.135 - breath)
+  ctx.moveTo(x - 0.08, y - 0.135 - breath - chest * 0.6)
   ctx.quadraticCurveTo(x + 0.06, y - 0.155 - breath, x + 0.2, y - 0.12 - breath * 0.5)
-  ctx.quadraticCurveTo(x + 0.06, y - 0.13 - breath, x - 0.08, y - 0.12 - breath)
+  ctx.quadraticCurveTo(x + 0.06, y - 0.13 - breath, x - 0.08, y - 0.12 - breath - chest * 0.6)
   ctx.closePath()
   fill(ctx, back)
   // The hind foot tucked under, the forelegs out east along the straw.
@@ -144,12 +147,11 @@ export function drawArgos(g: Paint): void {
   fill(ctx, coat)
   rect(ctx, x - 0.33, y - 0.028, 0.05, 0.028)
   fill(ctx, grey)
-  // The head: down on the paws, or lifted towards the edge.
-  const up = argosHead(t)
+  // The head: down on the paws, or lifted towards the edge, the neck up off them.
   ctx.save()
-  ctx.translate(x - 0.15, y - 0.08)
+  ctx.translate(x - 0.15, y - 0.08 - chest)
   ctx.rotate(-0.42 * up + 0.12 * (1 - up))
-  ctx.translate(0, -0.035 * up)
+  ctx.translate(0, -0.05 * up)
   // Skull, then the long muzzle going east, grey with age; the nose; the eye, open while he looks.
   ctx.beginPath()
   ctx.ellipse(-0.02, -0.01, 0.07, 0.06, 0, 0, Math.PI * 2)
