@@ -2,7 +2,7 @@ import { blob, circle, fill, hash, mix, poly, rgba, smooth, stroke, type Paint }
 import { skyAt } from '../../world/sky'
 import type { Pt } from '../../path'
 import { BEACH, CLIFF_E, CLIFF_W, JETTY, TOP } from './geo'
-import { BARK, OLIVE, OLIVE_DARK, ROCK, ROCK_DEEP, SAND_C, SCRUB, SCRUB_DARK, STONE, STONE_DEEP, STONE_SHADE, nightness, outdoors } from './look'
+import { BARK, OLIVE, OLIVE_DARK, ROCK, ROCK_DEEP, SAND_C, SCRUB, SCRUB_DARK, STONE, STONE_DEEP, STONE_SHADE, againstSun, nightness } from './look'
 
 /**
  * The island, outside: one mass of limestone standing out of the sea, its east face sheer over a little beach, its west
@@ -72,7 +72,7 @@ const OLIVES: [number, number, number][] = [
 
 /** The rock by night: down nearer the dark than the rest of the outdoors, so the lit house is the one bright thing on it. */
 const NIGHT_ROCK = '#151A22'
-const rock = (hex: string, t: number): string => mix(outdoors(hex, t), NIGHT_ROCK, 0.5 * nightness(t))
+const rock = (hex: string, t: number): string => mix(againstSun(hex, t), NIGHT_ROCK, 0.5 * nightness(t))
 
 export function drawIsland(g: Paint): void {
   const { ctx, t, view } = g
@@ -83,7 +83,7 @@ export function drawIsland(g: Paint): void {
   const disc = skyAt(t).disc
   const fromWest = disc ? smooth(disc.x, 0.35, 0.65) * Math.min(1, disc.a * 1.5) : 0.5
   const deep = rock(STONE_DEEP, t)
-  const ink = outdoors('#2B261F', t)
+  const ink = againstSun('#2B261F', t)
   // The rock under the sea, and the mass itself.
   blob(ctx, OUTLINE)
   fill(ctx, stone)
@@ -103,14 +103,14 @@ export function drawIsland(g: Paint): void {
   fill(ctx, rock(ROCK_DEEP, t))
   // The beach: the sand where he comes ashore, flat, running into the water.
   poly(ctx, [[797.0, 0.45], [BEACH.x0, BEACH.sand], [BEACH.x1, BEACH.sand], [805.5, -0.42], [805.7, 0.6]])
-  fill(ctx, outdoors(SAND_C, t))
+  fill(ctx, againstSun(SAND_C, t))
   blob(ctx, OUTLINE)
   stroke(g, ink, 1.6)
   // The top's skin: a band of earth and dry grass along the plateau, so the ground he stands on is ground.
   poly(ctx, [[CLIFF_E.top, TOP], [CLIFF_W.top, TOP], [CLIFF_W.top - 0.4, TOP + 0.16], [CLIFF_E.top + 0.3, TOP + 0.2]])
-  fill(ctx, outdoors('#8C7F5E', t))
+  fill(ctx, againstSun('#8C7F5E', t))
   poly(ctx, [[CLIFF_E.top, TOP], [CLIFF_W.top, TOP], [CLIFF_W.top - 0.2, TOP + 0.05], [CLIFF_E.top + 0.15, TOP + 0.06]])
-  fill(ctx, outdoors('#A8996C', t))
+  fill(ctx, againstSun('#A8996C', t))
   for (const [x, y, r] of SCRUBS) drawScrub(g, x, y, r)
   for (const [x, h, lean] of OLIVES) drawOlive(g, x, TOP, h, lean)
   drawJetty(g)
@@ -122,14 +122,14 @@ function drawScrub(g: Paint, x: number, y: number, r: number): void {
   ctx.ellipse(x, y - r * 0.35, r, r * 0.55, 0, Math.PI, 0)
   ctx.ellipse(x + r * 0.5, y - r * 0.2, r * 0.6, r * 0.4, 0, Math.PI, 0)
   ctx.closePath()
-  fill(ctx, outdoors(hash(Math.round(x * 10)) > 0.5 ? SCRUB : SCRUB_DARK, t))
+  fill(ctx, againstSun(hash(Math.round(x * 10)) > 0.5 ? SCRUB : SCRUB_DARK, t))
 }
 
 /** An olive tree: a twisted trunk and a few silvery-green masses of leaf that sway a little in the wind. */
 export function drawOlive(g: Paint, x: number, ground: number, h: number, lean: number): void {
   const { ctx, t } = g
   const sway = Math.sin(t * 0.7 + x) * 0.03
-  const bark = outdoors(BARK, t)
+  const bark = againstSun(BARK, t)
   ctx.beginPath()
   ctx.moveTo(x - 0.22, ground)
   ctx.quadraticCurveTo(x - 0.05 + lean * h * 0.3, ground - h * 0.35, x + lean * h * 0.55, ground - h * 0.62)
@@ -148,7 +148,7 @@ export function drawOlive(g: Paint, x: number, ground: number, h: number, lean: 
   for (const [dx, dy, rx, ry] of masses) {
     ctx.beginPath()
     ctx.ellipse(cx + dx * h * 0.5, cy + dy * h * 0.5, rx * h * 0.5, ry * h * 0.5, 0, 0, Math.PI * 2)
-    fill(ctx, outdoors(dy < 0 ? OLIVE : OLIVE_DARK, t))
+    fill(ctx, againstSun(dy < 0 ? OLIVE : OLIVE_DARK, t))
   }
 }
 
@@ -156,11 +156,11 @@ export function drawOlive(g: Paint, x: number, ground: number, h: number, lean: 
 function drawJetty(g: Paint): void {
   const { ctx, t } = g
   poly(ctx, [[JETTY.x0, JETTY.top], [JETTY.x1, JETTY.top], [JETTY.x1 + 0.1, 3], [JETTY.x0 - 0.4, 3]])
-  fill(ctx, outdoors(STONE_SHADE, t))
+  fill(ctx, againstSun(STONE_SHADE, t))
   poly(ctx, [[JETTY.x0, JETTY.top], [JETTY.x1, JETTY.top], [JETTY.x1, JETTY.top + 0.2], [JETTY.x0, JETTY.top + 0.2]])
-  fill(ctx, outdoors(STONE, t))
+  fill(ctx, againstSun(STONE, t))
   // A bollard for the skiff's line.
   circle(ctx, JETTY.x1 - 0.5, JETTY.top - 0.14, 0.12)
-  fill(ctx, outdoors(STONE_DEEP, t))
+  fill(ctx, againstSun(STONE_DEEP, t))
   void mix
 }

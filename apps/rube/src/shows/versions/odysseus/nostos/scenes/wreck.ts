@@ -129,8 +129,11 @@ export const wreck: Scene = {
   shots: [
     { t: STRIKE + 0.9, cells: 9.5, at: [533.2, -0.6] },
     { t: 308.6, cells: 9.5, off: [0.3, 0.7] },
-    { t: 313.6, cells: 12, off: [0.6, -1.4] },
-    { t: 319.4, cells: 11, off: [1.0, -1.8] },
+    // In the quiet after the cut, in close: him alone on the spar, the rain, the swell going under him.
+    { t: 313.6, cells: 5.4, off: [0.35, -0.55] },
+    { t: 319.4, cells: 5.6, off: [0.45, -0.6] },
+    // As the low voices come back, out and out to the seas at their highest.
+    { t: 322.4, cells: 6.4, off: [0.6, -0.8] },
     { t: 325.6, cells: 10, off: [1.2, -2.2] },
     { t: 330.4, cells: 13, off: [1.8, -2.8] },
     { t: 335.0, cells: 22, off: [4.0, -4.4] },

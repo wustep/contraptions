@@ -1,4 +1,4 @@
-import { hash, mix, rgba, smooth, stroke, type Paint } from '../../draw'
+import { hash, mix, rgba, smooth, stroke, vgrad, type Paint } from '../../draw'
 import { M } from '../../music'
 import type { Pt } from '../../path'
 import { layer } from '../../world/depth'
@@ -62,7 +62,12 @@ export function drawSeas(g: Paint): void {
     for (let x = a; x <= b + step; x += step) ctx.lineTo(x, top(x))
     ctx.lineTo(b + step, 0.6)
     ctx.closePath()
-    ctx.fillStyle = color
+    // Down into the water it goes off into the sea's own body, so it ends in no line under the surface.
+    ctx.fillStyle = vgrad(ctx, -1, 0.6, [
+      [0, color],
+      [0.55, color],
+      [1, rgba(color, 0)],
+    ])
     ctx.fill()
     ctx.beginPath()
     for (let x = a; x <= b + step; x += step) (x === a ? ctx.moveTo(x, top(x)) : ctx.lineTo(x, top(x)))

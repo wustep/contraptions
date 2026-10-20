@@ -1,5 +1,6 @@
-import { clamp01, mix } from '../../draw'
+import { clamp01, mix, smooth } from '../../draw'
 import { skyAt } from '../../world/sky'
+import { TRIAL } from './geo'
 
 /**
  * Ithaca's colours, and the light on them at any time. The island is limestone and scrub, olive trees on the top; the
@@ -48,6 +49,17 @@ export function outdoors(hex: string, t: number): string {
   const s = skyAt(t)
   const n = nightness(t)
   return mix(mix(hex, s.low, 0.12), mix(s.top, '#0B0F16', 0.35), n * 0.72)
+}
+
+/** The land against the low sun at the end: a warm dark, the colour of a cliff with the sun going down behind the sea. */
+const AGAINST_SUN = '#2C2528'
+
+/**
+ * A colour as it is out of doors at `t`, and at the end, in the west, as it is seen against the setting sun: taken down
+ * to one warm dark across the dissolve, so the cliff, the olive and the jetty are a silhouette framing the sunset.
+ */
+export function againstSun(hex: string, t: number): string {
+  return mix(outdoors(hex, t), AGAINST_SUN, 0.8 * smooth(t, TRIAL.fade - 1.3, TRIAL.fade + 1.0))
 }
 
 /**

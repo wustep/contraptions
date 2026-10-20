@@ -19,6 +19,7 @@ import {
   DAIS,
   TERRACE,
   TOP,
+  TRIAL,
   WALL,
   WELL,
   WINDOW,
@@ -41,6 +42,7 @@ import {
   STONE_SHADE,
   TIMBER,
   TIMBER_LIGHT,
+  againstSun,
   indoors,
   nightness,
   outdoors,
@@ -62,6 +64,11 @@ const IN_VIEW = (g: Paint) => !(g.view.x1 < 812 || g.view.x0 > 831 || g.view.y0 
 
 export function drawPalace(g: Paint): void {
   if (!IN_VIEW(g)) return
+  // In the west, at the end, the house is seen from the sea against the sunset: one dark shape on the cliff, shut.
+  if (g.t >= TRIAL.fade) {
+    drawSilhouette(g)
+    return
+  }
   drawCourtyard(g)
   drawShell(g)
   drawHallInside(g)
@@ -342,8 +349,19 @@ function drawRig(g: Paint): void {
 /* ------------------------------------------------------------------ in front of the balls */
 
 /** The walls' cut ends, the slabs, the axes in their trench, and the arrow: everything the balls pass behind. */
+/** The house as a silhouette: the courtyard wall, the hall, the room over its east half and the terrace's parapet. */
+function drawSilhouette(g: Paint): void {
+  const { ctx, t } = g
+  ctx.beginPath()
+  ctx.rect(GATE.wall[0], TOP - GATE.wallH, HALL.x0 - GATE.wall[0], GATE.wallH)
+  ctx.rect(HALL.x0 - WALL, HALL.ceil - SLAB, HALL.x1 - HALL.x0 + 2 * WALL, HALL.floor - HALL.ceil + SLAB + 0.01)
+  ctx.rect(ROOM.x0 - WALL, ROOM.ceil - SLAB, ROOM.x1 - ROOM.x0 + 2 * WALL, ROOM.floor - ROOM.ceil + SLAB + 0.01)
+  ctx.rect(TERRACE.x0, TERRACE.y - 0.31, TERRACE.x1 - TERRACE.x0 + WALL, 0.32)
+  fill(ctx, againstSun(STONE_SHADE, t))
+}
+
 export function overPalace(g: Paint): void {
-  if (!IN_VIEW(g)) return
+  if (!IN_VIEW(g) || g.t >= TRIAL.fade) return
   const { ctx, t } = g
   const stone = outdoors(STONE, t)
   const shade = outdoors(STONE_SHADE, t)

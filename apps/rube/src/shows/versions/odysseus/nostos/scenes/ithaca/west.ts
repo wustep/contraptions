@@ -128,10 +128,11 @@ export function drawSkiff(g: Paint): void {
     ctx.lineTo(0.04, foot)
     ctx.quadraticCurveTo(0.02 + belly, (foot - 1.0) / 2, 0.02, -1.0)
     ctx.closePath()
-    fill(ctx, outdoors(CLOTH, t))
+    // Seen against the light on the water: the sail goes down to the dusk's dark as they go out into the sun's path.
+    fill(ctx, mix(outdoors(CLOTH, t), '#3A3034', 0.35 + 0.5 * (1 - s.s)))
     stroke(g, ink, 1.4)
     rect(ctx, 0.03, -1.0 + 0.62 * set * 0.45, 0.56, 0.62 * set * 0.12)
-    fill(ctx, outdoors(MADDER, t))
+    fill(ctx, mix(outdoors(MADDER, t), '#2A2024', 0.5 * (1 - s.s)))
   }
   // The hull: low, a little rise at either end.
   poly(ctx, [[-L / 2, -0.2], [-L / 2 + 0.08, 0.06], [L / 2 - 0.12, 0.06], [L / 2, -0.24], [L / 2 - 0.06, -0.16], [-L / 2 + 0.05, -0.15]])

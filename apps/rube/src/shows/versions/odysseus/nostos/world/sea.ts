@@ -80,7 +80,9 @@ export function drawSeaPlane(g: Paint, x0: number, x1: number): void {
     [0.35, mix(L.far, L.near, 0.45)],
     [1, L.near],
   ])
-  ctx.fillRect(a, top, b - a, span + 0.6)
+  // On down behind the cut-open water too, so the translucent top of the water has the same behind it all the way down
+  // (else a camera in close sees a line where this ended).
+  ctx.fillRect(a, top, b - a, Math.max(span + 0.6, view.y1 + 1 - top))
   // Bands of swell going away: a few long, low shapes, nearer ones wider apart and slower, faint enough to read as the
   // light on the water and not as stripes.
   const w = weather(t)

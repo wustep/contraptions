@@ -182,41 +182,29 @@ function hand(ctx: CanvasRenderingContext2D, x: number, ground: number, h: numbe
 
 /* ------------------------------------------------------------------ the army behind */
 
-/** The depths of the ranks behind the front two, nearest first (cells behind the water's edge). */
-const DEPTHS = Array.from({ length: 12 }, (_, r) => 2.4 * Math.pow(1.36, r))
-/** A rank may stand no nearer on the screen than this: the front two ranks' ground is in front of it. */
+/** How far back the dead go behind the front two ranks: the nearest and the furthest depth (cells behind the water's edge). */
+const NEAR = 1.8
+const FAR = 150
+/** The crowd in depth lanes, each its own colour; within a lane every head has its own depth, so there are no rows. */
+const LANES = 16
+/** A head may stand no nearer on the screen than this: the front two ranks' ground is in front of it. */
 const LIMIT = -1.06
+/** Along the shore, a head every this much (in its own depth's terms), in each lane. */
+const SPACING = 0.2
 
 /**
- * The army: rank behind rank of the dead on the receding ground, each rank on its own ground line, smaller and paler
- * the further back. A rank whose heads are big enough in the frame to be told apart is drawn one by one, each with its
- * rim and its own moment to come up out of the ground; behind the last of those the rest of them are one pale crowd
- * going back into the haze to the horizon. Everything goes forward with the surges of the charge, and a rank that would
- * stand in front of the front two (on a camera that sees the beach from low) stays down in the ground.
+ * The army: the dead behind the front two ranks, going back over the black sand to the horizon. Not ranks: every head
+ * stands at its own depth, so in the frame they are a crowd thickening into the distance, each smaller and higher the
+ * further back it is, never lines of marks. The near ones are drawn with their rims, as the front ranks are; further
+ * back they sink into the colour of the sand at their distance, and where a head would be too small to be one they are
+ * not drawn at all: the thousands behind them are the dark of the shore itself. They come up out of the ground near
+ * ones first, from the trench outwards, and go forward with the surges of the charge.
  */
 export function drawRanks(g: Paint): void {
   const { ctx, t, view } = g
   if (t < k(67.5)) return
   const haze = hazeOf(t)
   const trench = (TRENCH.x0 + TRENCH.x1) / 2
-  const spanOf = (r: number, d: number): [number, number] => {
-    const spread = Math.pow(d, 0.8)
-    // Each rank's ends ragged against the next's.
-    return [trench - 13 - 1.1 * spread - 3 * hash(r, 71), trench + 8 + 1.6 * spread + 4 * hash(r, 72)]
-  }
-  const shiftOf = (r: number, lag = 0) => (CHARGE_BY_ROW[1] - 0.25 * r) * charged(t, 0.05 * r + lag)
-  // When a rank comes up: the near ranks first, then back and back, each from the trench outwards.
-  const riseOf = (r: number, x: number) => k(68) + 0.28 * r + 1.4 * Math.min(1, Math.abs(x - trench) / 30)
-  // Only the ranks whose heads are big enough to read as people, no more than nine, each going further into the haze
-  // than the one in front, so the far ones are a low murmur of pale against the dark and never a field of bright specks:
-  // the thousands behind them are the haze itself.
-  let crowd = Math.min(DEPTHS.length, 9)
-  for (let r = 0; r < crowd; r++) {
-    if (R * 0.86 * layer(view, DEPTHS[r]).s < view.h / 260) {
-      crowd = r
-      break
-    }
-  }
   // Only on the land: the beach as it is drawn (its ends curving away to the horizon), and over it, where it runs whole,
   // the sky their heads stand against. Off its ends, out over the water, there is no one.
   const hy = horizonOf(view)
@@ -237,56 +225,54 @@ export function drawRanks(g: Paint): void {
   const w1 = Math.min(b, BEACH.x1 - 7)
   if (w1 > w0) ctx.rect(w0, view.y0 - 1, w1 - w0, hy - view.y0 + 1.01)
   ctx.clip()
-  for (let r = crowd - 1; r >= 0; r--) {
-    const d = DEPTHS[r]
-    const L = layer(view, d)
-    const ground = L.y(0)
-    const keep = 1 - smooth(ground, LIMIT - 0.22, LIMIT)
-    if (keep <= 0.002) continue
-    const scale = 0.86 * L.s
-    const radius = R * scale
-    const [x0, x1] = spanOf(r, d)
-    // Where the crowd is thin: a slow rise and fall of density along the rank, its own for each rank.
-    const thin = (lx: number) => 0.5 + 0.5 * Math.sin(lx * 0.19 + r * 2.3) * Math.sin(lx * 0.07 + r)
-    // Each rank back sinks further into the colour of the sand at its distance: the far ones a low pale murmur, not specks.
-    // And a rank too small in the frame to read as heads goes down into the sand's colour as the camera goes out, rather
-    // than leaving a line of specks (or dropping out at once).
-    const small = 1 - smooth(radius / view.h, 1 / 260, 1 / 150)
-    const sink = Math.min(0.9, 0.1 * r + small)
-    const ground_c = mix(SAND, haze, 0.06 + 0.02 * r)
-    ctx.save()
-    ctx.beginPath()
-    ctx.rect(view.x0 - 1, view.y0 - 1, view.x1 - view.x0 + 2, ground - view.y0 + 1)
-    ctx.clip()
-    // Shoulder to shoulder, close enough that a rank is one row of heads and never a scatter; every other rank offset by
-    // half a place.
-    const gap = 0.21
+  const ln = Math.log(FAR / NEAR)
+  for (let lane = LANES - 1; lane >= 0; lane--) {
+    // The lane's middle depth sets its colour and whether it is drawn at all.
+    const dMid = NEAR * Math.exp(((lane + 0.5) / LANES) * ln)
+    const Lm = layer(view, dMid)
+    const rMid = R * 0.86 * Lm.s
+    if (rMid < view.h / 380) continue
+    const small = 1 - smooth(rMid / view.h, 1 / 380, 1 / 170)
+    const f = (lane + 0.5) / LANES
+    const sink = Math.min(0.94, 1.15 * f + small)
+    const groundC = mix(SAND, haze, 0.06 + 0.25 * f)
+    // Its span along the shore, ragged at the ends, and wider the further back (so the crowd fills the shore going away).
+    const spread = Math.pow(dMid, 0.8)
+    const x0 = trench - 13 - 1.1 * spread - 3 * hash(lane, 71)
+    const x1 = trench + 8 + 1.6 * spread + 4 * hash(lane, 72)
+    // The layer x the frame shows at this depth, so only the heads in view are visited.
+    const lx0 = Math.max(x0, view.cx + (view.x0 - 1 - view.cx) / Lm.s - 2)
+    const lx1 = Math.min(x1, view.cx + (view.x1 + 1 - view.cx) / Lm.s + 2)
+    const surge = (CHARGE_BY_ROW[1] - 4 * f) * charged(t, 0.6 * f)
     ctx.beginPath()
     let any = false
-    for (let j = Math.floor(x0 / gap); j <= Math.ceil(x1 / gap); j++) {
-      const lx = j * gap + (r % 2 ? gap / 2 : 0) + (hash(j, r, 61) - 0.5) * gap * 0.3
-      // A rare gap where the crowd thins.
-      if (hash(j, r, 65) < 0.08 * thin(lx)) continue
-      // Each surges a little after or before the rank as a whole.
-      const x = L.x(lx + shiftOf(r, 0.03 * hash(j, r, 66)))
+    for (let j = Math.floor((lx0 - surge) / SPACING) - 1; j <= Math.ceil((lx1 - surge) / SPACING) + 1; j++) {
+      // Its own depth inside the lane, and its own place along it.
+      const u = (lane + hash(j, lane, 61)) / LANES
+      const d = NEAR * Math.exp(u * ln)
+      const L = layer(view, d)
+      const home = j * SPACING + (hash(j, lane, 62) - 0.5) * SPACING
+      if (home < x0 || home > x1) continue
+      const x = L.x(home + surge * (0.97 + 0.06 * hash(j, lane, 66)))
       if (x < view.x0 - 1 || x > view.x1 + 1) continue
-      const up = keep * smooth(t, riseOf(r, lx), riseOf(r, lx) + 0.7 + 0.3 * hash(j, r, 62))
+      const ground = L.y(0)
+      const keep = 1 - smooth(ground, LIMIT - 0.22, LIMIT)
+      if (keep <= 0.002) continue
+      // Up out of the ground: the near first, then back and back, each from the trench outwards.
+      const rise = k(68) + 2.4 * u + 1.4 * Math.min(1, Math.abs(home - trench) / 30)
+      const up = keep * smooth(t, rise, rise + 0.7 + 0.3 * hash(j, lane, 63))
       if (up <= 0.001) continue
-      const size = radius * (0.9 + 0.2 * hash(j, r, 63))
-      // Not on a ruled line: each a little nearer or further than its rank.
-      const y = ground - size * (2 * up - 1) + 0.04 * L.s * (hash(j, r, 64) - 0.5)
+      const size = R * 0.86 * L.s * (0.9 + 0.2 * hash(j, lane, 64)) * up
+      const y = ground - size
       ctx.moveTo(x + size, y)
       ctx.arc(x, y, size, 0, Math.PI * 2)
       any = true
     }
-    // The rims first and the fills over them, so where two overlap only the outside of the pair is outlined; the far
-    // ranks have no rims at all, which at their size are only more marks.
-    if (any) {
-      if (r < 3) stroke(g, mix(ASH_RIM, ground_c, Math.min(1, sink + small)), 4.2 * scale)
-      fill(ctx, mix(mix(ASH, haze, 0.12), ground_c, sink))
-    }
-    ctx.restore()
+    if (!any) continue
+    // The rims first and the fills over them, so where two overlap only the outside of the pair is outlined; only the
+    // nearest have rims at all, which further back are only more marks.
+    if (lane < 3) stroke(g, mix(ASH_RIM, groundC, Math.min(1, sink + small)), 4.2 * 0.86 * Lm.s)
+    fill(ctx, mix(mix(ASH, haze, 0.12), groundC, sink))
   }
   ctx.restore()
 }
-
