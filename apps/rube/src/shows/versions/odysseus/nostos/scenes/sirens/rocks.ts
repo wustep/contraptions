@@ -5,9 +5,11 @@ import { skyAt } from '../../world/sky'
 import { shipPose } from './course'
 
 /**
- * The Sirens' rocks: three teeth of pale stone standing out of the surf at noon, and on them the Sirens, tall and pale
- * and long in the neck, with no faces. They do not sing (Nolan keeps the song from us, as the wax keeps it from the
- * men): they only turn their heads as the ship comes by, and lean after it, and are still again when it has gone.
+ * The Sirens' rocks: three black teeth of stone standing out of the surf at noon, broken and sharp, wet dark at the
+ * foot where the sea washes them, with a few lesser teeth awash round them; and on them the Sirens, tall and pale and
+ * long in the neck, with no faces, white against the stone. They do not sing (Nolan keeps the song from us, as the wax
+ * keeps it from the men): they only turn their heads as the ship comes by, and lean after it, and are still again when
+ * it has gone.
  *
  * The rocks stand just behind the ship's line, so it passes in front of them close enough to touch.
  */
@@ -21,21 +23,44 @@ interface Rock {
 
 const ROCKS: Rock[] = [
   {
-    pts: [[430.3, 0.55], [430.6, -0.4], [431.4, -1.1], [432.1, -1.9], [432.7, -1.5], [433.3, -2.15], [434.3, -1.2], [435.2, -0.5], [435.5, 0.55]],
+    pts: [
+      [430.3, 0.55], [430.5, -0.3], [431.0, -0.55], [431.3, -1.2], [431.75, -1.05], [432.1, -1.85], [432.45, -1.6],
+      [432.8, -1.8], [433.05, -2.1], [433.45, -2.12], [433.7, -1.45], [434.1, -1.6], [434.5, -0.95], [434.9, -0.7],
+      [435.2, -0.25], [435.5, 0.55],
+    ],
     siren: [433.25, -2.12],
   },
   {
-    pts: [[435.9, 0.6], [436.4, -0.6], [437.5, -1.7], [438.3, -2.4], [439.2, -3.15], [440.0, -3.55], [440.9, -2.9], [441.8, -3.25], [442.9, -2.1], [444.0, -1.2], [445.2, -0.3], [445.7, 0.6]],
+    pts: [
+      [435.9, 0.6], [436.2, -0.3], [436.6, -0.5], [437.0, -1.15], [437.4, -1.0], [437.8, -1.75], [438.2, -1.6],
+      [438.6, -2.45], [439.0, -2.3], [439.5, -3.1], [439.8, -3.5], [440.2, -3.53], [440.5, -3.2], [440.85, -2.75],
+      [441.2, -2.95], [441.55, -3.35], [441.8, -3.1], [442.2, -2.4], [442.6, -2.55], [443.1, -1.8], [443.6, -1.45],
+      [444.1, -1.0], [444.6, -0.75], [445.1, -0.2], [445.7, 0.6],
+    ],
     siren: [440.0, -3.52],
   },
   {
-    pts: [[446.5, 0.55], [447.0, -0.5], [447.9, -1.4], [448.8, -2.45], [449.6, -2.0], [450.3, -2.7], [451.2, -1.5], [452.3, -0.4], [452.7, 0.55]],
+    pts: [
+      [446.5, 0.55], [446.8, -0.25], [447.2, -0.45], [447.6, -1.1], [448.0, -0.95], [448.4, -1.8], [448.8, -2.4],
+      [449.15, -2.0], [449.5, -2.15], [449.9, -2.5], [450.1, -2.68], [450.5, -2.68], [450.75, -2.3], [451.1, -1.65],
+      [451.5, -1.75], [451.9, -0.9], [452.3, -0.5], [452.7, 0.55],
+    ],
     siren: [450.3, -2.66],
   },
 ]
 
-const STONE = '#E2DCCD'
-const STONE_SHADE = '#ADA79A'
+/** The lesser teeth, awash round the three: [middle, half-width, height]. */
+const TEETH: [number, number, number][] = [
+  [429.2, 0.45, 0.75],
+  [435.7, 0.22, 0.45],
+  [446.1, 0.3, 0.6],
+  [453.7, 0.5, 0.95],
+]
+
+const STONE = '#5F5D55'
+const STONE_SHADE = '#3B3C37'
+/** The stone where the sea washes it, dark and wet. */
+const WET = '#2C2E2A'
 const SIREN = '#F0EBDE'
 const SIREN_SHADE = '#C9C2B2'
 const HAIR = '#B4AC9B'
@@ -48,26 +73,54 @@ export function drawRocks(g: Paint): void {
   const air = skyAt(t).low
   drawFar(g, air)
   const ship = shipPose(t)
+  for (const [x, w, h] of TEETH) {
+    const pts: Pt[] = [[x - w, 0.5], [x - w * 0.6, -h * 0.55], [x - w * 0.15, -h], [x + w * 0.2, -h * 0.7], [x + w * 0.55, -h * 0.85], [x + w, 0.5]]
+    poly(ctx, pts)
+    fill(ctx, STONE_SHADE)
+    washed(g, pts)
+    poly(ctx, pts)
+    stroke(g, INK, 1.6)
+    surf(g, x, w * 1.1, 0.1, x * 0.7)
+  }
   for (const [i, rock] of ROCKS.entries()) {
     // The stone: lit on the sun's side (the right), in shade on the left, the shade a flat facet down its middle.
-    blob(ctx, rock.pts)
+    poly(ctx, rock.pts)
     fill(ctx, STONE)
     const top = rock.pts.reduce((a, b) => (b[1] < a[1] ? b : a))
     const foot = rock.pts[0]
     poly(ctx, [foot, ...rock.pts.slice(1, rock.pts.indexOf(top) + 1), [top[0] + 0.15, top[1] + 0.9], [top[0] - 0.3, 0.6]])
-    fill(ctx, rgba(STONE_SHADE, 0.85))
-    blob(ctx, rock.pts)
+    fill(ctx, rgba(STONE_SHADE, 0.92))
+    washed(g, rock.pts)
+    poly(ctx, rock.pts)
     stroke(g, INK, 2)
     // Surf round its foot: two broad lobes of foam that rise and fall with the sea, slowly.
     for (let k = 0; k < 2; k++) {
       const x = k === 0 ? rock.pts[1][0] - 0.2 : rock.pts[rock.pts.length - 2][0] + 0.2
-      const lift = 0.09 * Math.sin(t * 1.3 + i * 1.7 + k * 2.1)
-      ctx.beginPath()
-      ctx.ellipse(x, -0.02 + lift, 0.75, 0.16 + 0.05 * Math.sin(t * 0.9 + k + i), 0, Math.PI, Math.PI * 2)
-      fill(ctx, rgba('#F7F5EE', 0.9))
+      surf(g, x, 0.75, 0.16, i * 1.7 + k * 2.1)
     }
     if (rock.siren) drawSiren(g, rock.siren, i, ship.x)
   }
+}
+
+/** The band of wet stone the swell washes, from just above the water down: the outline's own foot, darker. */
+function washed(g: Paint, pts: Pt[]): void {
+  const { ctx, t } = g
+  const line = -0.22 + 0.05 * Math.sin(t * 1.3)
+  ctx.save()
+  poly(ctx, pts)
+  ctx.clip()
+  ctx.fillStyle = WET
+  ctx.fillRect(pts[0][0] - 1, line, pts[pts.length - 1][0] - pts[0][0] + 2, 2)
+  ctx.restore()
+}
+
+/** A lobe of foam at a rock's foot, rising and falling with the sea. */
+function surf(g: Paint, x: number, w: number, h: number, ph: number): void {
+  const { ctx, t } = g
+  const lift = 0.09 * Math.sin(t * 1.3 + ph)
+  ctx.beginPath()
+  ctx.ellipse(x, -0.02 + lift, w, h + 0.05 * Math.sin(t * 0.9 + ph), 0, Math.PI, Math.PI * 2)
+  fill(ctx, rgba('#F7F5EE', 0.9))
 }
 
 /** Two low islets far off on the sea behind, paler with the haze. */
