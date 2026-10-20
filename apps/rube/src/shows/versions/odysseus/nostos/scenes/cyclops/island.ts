@@ -215,29 +215,30 @@ function drawInside(g: Paint, t: number): void {
   ctx.save()
   inCave(ctx)
   ctx.clip()
-  // Two great masses of the far wall, darker.
-  for (const s of [
-    [[98.8, -2.6], [99.2, -6.9], [101.6, -8.9], [104.2, -9.6], [103.4, -6.2], [102.4, -2.6]],
-    [[109.0, -2.6], [108.4, -7.4], [110.8, -9.2], [113.2, -7.6], [113.9, -2.6]],
-  ] as Pt[][]) {
-    blob(ctx, s)
-    ctx.fillStyle = mix(WALL_DARK, NIGHT, 0.72 * dim)
-    ctx.fill()
-  }
   // The fire's light on the wall round it: one flat warm shape, wavering a little with the flames.
   if (f > 0.01) {
     const w = 0.08 * Math.sin(t * 5.3) + 0.05 * Math.sin(t * 8.9 + 1)
     // Behind him as he sits by it, so it is against this that he is seen: a shape, not a face.
     const cx = FIRE[0] - 1.6
     blob(ctx, [
-      [cx - 1.2 - 3.0 * f - w, FLOOR],
-      [cx - 1.5 - 2.8 * f, FLOOR - 1.4 - 2.2 * f],
-      [cx - 0.4 - 1.4 * f + w, FLOOR - 2.0 - 3.6 * f],
-      [cx + 0.9 + 1.2 * f, FLOOR - 1.8 - 3.2 * f - w],
-      [cx + 1.6 + 1.6 * f, FLOOR - 1.0 - 1.4 * f],
-      [cx + 1.8 + 2.0 * f + w, FLOOR],
+      [cx - 1.4 - 3.4 * f - w, FLOOR],
+      [cx - 1.8 - 3.2 * f, FLOOR - 1.6 - 2.8 * f],
+      [cx - 0.5 - 1.8 * f + w, FLOOR - 2.3 - 4.6 * f],
+      [cx + 1.0 + 1.6 * f, FLOOR - 2.0 - 4.0 * f - w],
+      [cx + 1.9 + 2.2 * f, FLOOR - 1.1 - 1.8 * f],
+      [cx + 2.1 + 2.6 * f + w, FLOOR],
     ])
-    ctx.fillStyle = mix(wall, FIRELIT, 0.05 + 0.1 * f)
+    ctx.fillStyle = mix(wall, FIRELIT, 0.06 + 0.26 * f)
+    ctx.fill()
+  }
+  // Two great masses of the far wall standing out of it, darker, so the firelight lies on rock and breaks round them;
+  // the one by the fire takes a little of it.
+  for (const [s, lit] of [
+    [[[98.8, -2.6], [99.2, -6.9], [101.6, -8.9], [104.2, -9.6], [103.4, -6.2], [102.4, -2.6]], 0.13],
+    [[[109.0, -2.6], [108.4, -7.4], [110.8, -9.2], [113.2, -7.6], [113.9, -2.6]], 0.04],
+  ] as [Pt[], number][]) {
+    blob(ctx, s)
+    ctx.fillStyle = mix(mix(WALL_DARK, NIGHT, 0.72 * dim), FIRELIT, lit * f)
     ctx.fill()
   }
   // The day through the door, while it is open: a pool of it on the floor inside.
