@@ -289,6 +289,7 @@ function drawInside(g: Paint, t: number): void {
     ctx.fillStyle = mix(body, '#9A8E80', 0.35)
     ctx.fill()
   }
+  drawPail(g, near, dim)
   block(PILLAR.x0, PILLAR.x1, PILLAR.top, '#4E4741', 0.05)
   block(LEDGE.x0, LEDGE.x1, LEDGE.top, '#5A524A', -0.06)
   block(STEP.x0, STEP.x1, STEP.top, '#544C45', 0.07)
@@ -297,6 +298,39 @@ function drawInside(g: Paint, t: number): void {
   ctx.fillStyle = mix(mix('#554D45', NIGHT, 0.7 * dim), FIRELIT, 0.2 * near(PIVOT[0]))
   ctx.fill()
   stroke(g, INK, 2)
+}
+
+/**
+ * His milking pail by the back wall, behind the step where the men hide: staved wood with two hoops, as tall as ten of
+ * them, the whey near its brim pale in the dark. It is his size, so the cave is.
+ */
+function drawPail(g: Paint, near: (x: number) => number, dim: number): void {
+  const { ctx } = g
+  const x = STEP.x1 + 1.0
+  const top = FLOOR - 1.55
+  const wb = 0.55
+  const wt = 0.7
+  const wood = mix(mix('#5A4632', NIGHT, 0.55 * dim), FIRELIT, 0.16 * near(x))
+  const hoop = mix(mix('#2C241D', NIGHT, 0.4 * dim), FIRELIT, 0.08 * near(x))
+  poly(ctx, [[x - wb, FLOOR + 0.02], [x - wt, top], [x + wt, top], [x + wb, FLOOR + 0.02]])
+  ctx.fillStyle = wood
+  ctx.fill()
+  ctx.lineJoin = 'round'
+  stroke(g, INK, 2)
+  // Two hoops round it, and the staves' seams between them.
+  for (const u of [0.22, 0.78]) {
+    const y = top + (FLOOR - top) * u
+    const w = wt + (wb - wt) * u
+    poly(ctx, [[x - w, y - 0.06], [x + w, y - 0.06], [x + w, y + 0.06], [x - w, y + 0.06]])
+    ctx.fillStyle = hoop
+    ctx.fill()
+  }
+  // The whey at the brim, and the rim's back edge.
+  ctx.beginPath()
+  ctx.ellipse(x, top + 0.02, wt - 0.06, 0.09, 0, 0, Math.PI * 2)
+  ctx.fillStyle = mix(mix('#CFC6B4', NIGHT, 0.6 * dim), FIRELIT, 0.1 * near(x))
+  ctx.fill()
+  stroke(g, INK, 1.6)
 }
 
 /** The fire: a ring of stones and flames, as flat tongues of three colours, low as embers and high once he stirs it. */
