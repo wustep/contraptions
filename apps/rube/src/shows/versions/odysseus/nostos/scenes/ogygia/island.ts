@@ -142,8 +142,10 @@ export function drawDiscs(g: Paint, hy: number): void {
 export function drawDunes(g: Paint): void {
   const { ctx, t, view } = g
   // Left behind, the island goes into the haze, and into the storm's murk: gone by the time the raft is halfway home.
+  // Coming to it, none of it is seen until the great seas have all but lain down, so it never stands half there over
+  // them, cut off flat at its own sea.
   const away = smooth(Math.abs(view.cx - 688), 28, 90)
-  const murk = 0.85 * smooth(weather(t), 0.4, 0.9)
+  const murk = smooth(weather(t), 0.17, 0.4)
   const seen = (1 - away) * (1 - murk)
   if (seen <= 0.002) return
   const sky = skyAt(t)
