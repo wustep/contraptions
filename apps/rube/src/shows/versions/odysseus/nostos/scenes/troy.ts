@@ -31,9 +31,9 @@ const shots: Key[] = [
   // Her head.
   { t: 99.0, cells: 2.2, at: [-37.25, -5.68] },
   { t: 100.5, cells: 2.3, at: [-37.15, -5.6] },
-  // Down the steps with him, along the street.
-  { t: 102.4, cells: 2.8, off: [0.6, -0.5] },
-  { t: 106.6, cells: 3.0, off: [0.7, -0.45] },
+  // Down the steps with him, along the street: a steady move down the line of the steps, not a bob with each one.
+  { t: 102.4, cells: 3.0, at: [-33.7, -5.35] },
+  { t: 107.6, cells: 3.2, at: [-31.4, -3.7] },
   // The gate tower: the bucket full of men, the wheels, the gate.
   { t: 108.9, cells: 3.9, at: [-28.75, -4.35] },
   { t: 113.6, cells: 4.3, at: [-28.6, -3.95] },

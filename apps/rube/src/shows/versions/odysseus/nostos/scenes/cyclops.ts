@@ -335,9 +335,10 @@ export const cyclops: Scene = {
     { t: 181.7, cells: 34, at: [112, -12.5] },
     { t: 182.6, cells: 30, at: [116.5, -24.5] },
     { t: 183.05, cells: 30, at: [116.8, -24.0] },
-    { t: 184.0, cells: 30, at: [118.5, -9.8] },
-    { t: 184.7, cells: 27, at: [120.5, -7.2] },
-    { t: 185.9, cells: 20, off: [2.5, -2.8] },
+    // Out as the rock comes down, never losing him: the whole of him over the ridge and the ships under him in one frame
+    // as it lands among them.
+    { t: 184.0, cells: 38, at: [118.2, -16.4] },
+    { t: 186.4, cells: 20, off: [2.5, -2.8] },
   ],
   back: [island],
   mid: [flock],

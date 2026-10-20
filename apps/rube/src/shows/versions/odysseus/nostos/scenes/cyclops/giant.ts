@@ -370,8 +370,8 @@ export function drawEye(g: Paint, t: number, look: Pt, colors: { white: string; 
 
 /* ------------------------------------------------------------------ on the ridge */
 
-/** How far up over the ridge he has come (0 hidden behind it, 1 standing over it). */
-export const ridgeRise = (t: number): number => smoother(t, T.rise, T.rise + 1.0) * (1 - smoother(t, T.splash + 0.6, T.splash + 2.4))
+/** How far up over the ridge he has come (0 hidden behind it, 1 standing over it): down again behind it after the throw. */
+export const ridgeRise = (t: number): number => smoother(t, T.rise, T.rise + 1.0) * (1 - smoother(t, T.hurl + 0.9, T.hurl + 2.1))
 
 /** The rock in his hand, raised, thrown, and falling: where it is at `t`, or null when it is not in the air. */
 export function thrownRock(t: number, ridge: Pt): Pt | null {
