@@ -29,9 +29,11 @@ const look = (t: number) => {
 }
 
 const shots: Key[] = [
-  // The tutti's attack: cut from the fog to the whole shore, wide and nearly still, the ship coming down it.
+  // The tutti's attack: cut from the fog to the whole shore, wide, the ship coming down it; then in on the ship as it
+  // rows down the coast on the beat, into his leap ashore.
   { t: ARRIVE, cells: 21, at: [297, -4.6], cut: true },
-  { t: k(59), cells: 19, at: [311, -4.2] },
+  { t: k(52), cells: 20, at: [299.5, -4.4] },
+  { t: k(59), cells: 9.5, at: [SHIP(k(59)) + 2.2, -2.3] },
   // Ashore: close on him, and the trench he cuts, behind him.
   { t: ASHORE, cells: 5.5, off: [0.9, -0.9], w: 0, cut: true },
   { t: k(63), cells: 5.5, off: [-1.2, -0.9], w: 0 },
