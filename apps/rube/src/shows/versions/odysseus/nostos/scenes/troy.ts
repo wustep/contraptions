@@ -3,14 +3,15 @@ import { M } from '../music'
 import type { Scene } from '../scene'
 import { WINDOWS } from '../voyage'
 import { SURGE } from './troy/host'
-import { SHIP0, SHIP1, SHIP2 } from './troy/plan'
+import { HE_STOPS, SHIP0, SHIP1, SHIP2 } from './troy/plan'
 
 /**
  * Troy that night (71.42 → 140), the theme answered. The horse stands on Athena's forecourt before her temple, her
  * white statue before it and a brazier burning by her. On the answer's first notes its hatch drops open and a rope is
  * thrown round Athena's neck; his men come down it one by one, a man a note, and run down the temple steps to the gate.
- * He comes last, and his weight stops him halfway down and holds him there while her neck gives, note by note; the
- * rope slips, he drops, and on the music's held breath her head comes off and rolls to him. He goes down the steps a
+ * He comes last, and his weight stops him halfway down and holds him there while her neck gives, note by note; while
+ * he hangs, the camera goes to his men dropping into the gate's counterweight bucket, and out to Agamemnon's host
+ * waiting in the dark beyond the wall; the rope slips, he drops, and on the music's held breath her head comes off and rolls to him. He goes down the steps a
  * step a note, along the street, and into the Trojans' own counterweight bucket with his men: the seventh weight takes
  * it down, the great wheels turn, the gate goes up, and Agamemnon's host, massed down the hill to the sea with its
  * torches, pours in under it behind him, the gold one (`troy/host.ts`). The city burns from the gate up, roof by roof,
@@ -25,8 +26,18 @@ const shots: Key[] = [
   // The men coming down the rope and away down the steps.
   { t: 78, cells: 4.7, at: [-36.75, -6.3] },
   { t: 83.2, cells: 4.3, at: [-37.15, -6.4] },
-  // Him, last, on the rope; in, slowly, while he hangs.
+  // Him, last, on the rope, till his weight stops him.
   { t: 86.4, cells: 3.2, at: [-37.4, -6.25] },
+  // While he hangs, on the note he stops: the gate tower, where his men drop into the Trojans' counterweight bucket
+  // under the still wheels, and it does not go down for six of them.
+  { t: HE_STOPS, cells: 3.5, at: [-29.0, -4.15], cut: true },
+  { t: 91.5, cells: 3.8, at: [-28.85, -4.2] },
+  // On the next, out past the wall: Agamemnon's host, come back in the dark, waiting with its torches down the hill to
+  // the sea for the gate to open.
+  { t: 91.57, cells: 10, at: [-22.4, -3.4], cut: true },
+  { t: 94.8, cells: 9.4, at: [-22.9, -3.5] },
+  // Back to him on the rope as her neck gives; it slips (96.33).
+  { t: 94.86, cells: 2.75, at: [-37.35, -6.05], cut: true },
   { t: 95.6, cells: 2.6, at: [-37.3, -6.0] },
   // Her head.
   { t: 99.0, cells: 2.2, at: [-37.25, -5.68] },

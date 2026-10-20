@@ -33,8 +33,11 @@ const TAIL = -7.5
 /** The ranks' depths behind the plane. */
 const RANKS = [0.6, 1.4, 2.4, 3.8, 5.8]
 const GAP = 0.27
-/** When they are there: come up in the dark while the camera is in the city, gone into it by the time the ships sail. */
-const FROM = 100
+/**
+ * When they are there: waiting in the dark from the time he hangs on Athena's rope (the camera goes out to them while he
+ * hangs), gone into the city by the time the ships sail.
+ */
+const FROM = 86
 const TO = 131
 
 /** How far one who stood at `lx0` has marched in by `t`: from rest when the surge reaches him, gathering way. */
