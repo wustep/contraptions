@@ -76,10 +76,10 @@ function ashore(man: number, go: number, there: number, back: number): Move[] {
 }
 
 const island = standing('thrinacia', region(486, -8, 530, 4, 3), 600, (g) => drawIsland(g))
-const seas = standing('storm-seas', region(470, -12, 710, 4, 4), 600, (g) => drawSeas(g))
+const seas = standing('storm-seas', region(470, -12, 800, 4, 4), 600, (g) => drawSeas(g))
 const ceiling = standing('storm-ceiling', region(470, -40, 720, 4, 4), 600, (g) => drawCeiling(g))
 const farBolt = standing('storm-far-bolt', region(470, -30, 720, 4, 4), 600, (g) => drawFarBolt(g))
-const rain = standing('storm-rain', region(470, -30, 710, 10, 4), 600, null, (g) => drawRain(g))
+const rain = standing('storm-rain', region(470, -30, 800, 10, 4), 600, null, (g) => drawRain(g))
 const bolt = standing('storm-bolt', region(500, -30, 560, 4, 3), 600, null, (g) => drawBolt(g))
 
 export const storm: Scene = {

@@ -4,14 +4,15 @@ import { rest, ride, roll, type Move, type Pt } from '../path'
 import type { Scene } from '../scene'
 import { END, WINDOWS } from '../voyage'
 import type { SkyKey } from '../world/sky'
-import { AGROUND, LAUNCH, SEAT, drawRaft, drawSwell, onRaft, raftAt } from './raft/raft'
+import { AGROUND, LAUNCH, SEAT, drawRaft, onRaft, raftAt } from './raft/raft'
 
 /**
  * The raft (M.return → 418): everything again, without the beat. Nolan's Calypso tells him to lie back and let the sea
- * take him; a lone raft on a black sea. The storm comes up as it leaves the beach, the camera goes out and out until
- * the raft is a mark on the swell, the swell runs in long black ridges to the horizon; it eases at first light, Ithaca's
- * cliffs come up ahead, the raft drives onto Ithaca's beach (AGROUND, 415.75), and he rolls off it onto the sand and
- * comes to rest at the foot of the cliff on the last attack before the quiet (417.68).
+ * take him; a lone raft on a black sea. The storm comes up as it leaves the beach and the great seas stand up again
+ * (`storm/weather.ts`), and the raft rides them, up their black backs and down into the troughs; the camera goes out
+ * and out until the raft is a mark among them; they lie down at first light, Ithaca's cliffs come up ahead, the raft
+ * drives onto Ithaca's beach (AGROUND, 415.75), and he rolls off it onto the sand and comes to rest at the foot of the
+ * cliff on the last attack before the quiet (417.68).
  */
 
 const [FROM, TO] = WINDOWS.raft
@@ -45,11 +46,12 @@ const HERO: Move[] = [
 ]
 
 const SHOTS: Key[] = [
-  // Off the beach, the storm coming; then in it, close enough to see the sea throw the raft about.
+  // Off the beach, the storm coming; then in it, close enough to see the sea throw the raft about: along with it, but
+  // level, so the seas lift it up the frame and drop it down.
   { t: 397.2, cells: 7.5, off: [1.0, -1.0] },
-  { t: 400.0, cells: 9.5, off: [1.8, -1.4] },
-  { t: 404.5, cells: 10.5, off: [2.0, -1.6] },
-  { t: 406.3, cells: 11, off: [2.2, -1.8] },
+  { t: 400.0, cells: 10, at: [raftAt(400.0).x + 1.8, -2.1] },
+  { t: 403.2, cells: 11, at: [raftAt(403.2).x + 2.0, -2.4] },
+  { t: 406.3, cells: 11.5, at: [raftAt(406.3).x + 2.2, -2.6] },
   // Out and out: the raft a mark on a black sea, the storm passing.
   { t: 410.0, cells: 30, off: [5, -6.5] },
   // First light, Ithaca ahead.
@@ -73,6 +75,5 @@ export const raft: Scene = {
   ],
   hero: HERO,
   shots: SHOTS,
-  back: [standing('raft-swell', region(660, -60, 830, 6, 4), END, (g) => drawSwell(g))],
   mid: [standing('raft', region(668, -6, 806, 3, 2), END, (g) => drawRaft(g))],
 }

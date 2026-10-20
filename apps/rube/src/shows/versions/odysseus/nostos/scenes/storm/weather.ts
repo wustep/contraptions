@@ -17,14 +17,20 @@ import { lazy, shipPose, STRIKE } from '../sirens/course'
 /**
  * How high the great seas stand, cells: the far rank behind, and the front rank, which comes up out of the waterline and
  * which the spar rides. They rise with the storm, ease a little after the strike, stand highest when the low voices come
- * back, and lie down when they go.
+ * back, and lie down when they go. On the music's return they stand up again round the raft (`raftSeas`), and lie down
+ * at first light, before Ithaca.
  */
 export function farSeasAt(t: number): number {
-  return 1.9 * smooth(t, 296, 303.5) - 0.5 * smooth(t, STRIKE + 1, STRIKE + 8) + 3.6 * smooth(t, M.lowBack - 0.5, M.lowBack + 4) - 5.0 * smooth(t, M.lowGone - 1, M.lowGone + 4.5)
+  return 1.9 * smooth(t, 296, 303.5) - 0.5 * smooth(t, STRIKE + 1, STRIKE + 8) + 3.6 * smooth(t, M.lowBack - 0.5, M.lowBack + 4) - 5.0 * smooth(t, M.lowGone - 1, M.lowGone + 4.5) + 4.0 * raftSeas(t)
 }
 export function frontSeasAt(t: number): number {
-  return 1.0 * smooth(t, 296, 303.5) - 0.25 * smooth(t, STRIKE + 1, STRIKE + 8) + 3.4 * smooth(t, M.lowBack - 0.5, M.lowBack + 4) - 4.15 * smooth(t, M.lowGone - 1, M.lowGone + 4.5)
+  return 1.0 * smooth(t, 296, 303.5) - 0.25 * smooth(t, STRIKE + 1, STRIKE + 8) + 3.4 * smooth(t, M.lowBack - 0.5, M.lowBack + 4) - 4.15 * smooth(t, M.lowGone - 1, M.lowGone + 4.5) + 3.4 * raftSeas(t)
 }
+/** The raft's storm: up from just after the return, down at first light. */
+const raftSeas = (t: number): number => smooth(t, M.return + 1, M.return + 5.5) - smooth(t, 408.5, 413.5)
+/** Where along the sea they may stand: from Thrinacia to Ithaca, lying down off Ogygia's east beach and Ithaca's. */
+const SEAS = { x0: 465, x1: 792 }
+const open = (x: number): number => (1 - smooth(x, 664, 679) * (1 - smooth(x, 681, 694))) * (1 - smooth(x, 772, SEAS.x1))
 /** The front rank's crests: long and slow, a great back of water every three seconds or so, as the open sea's are. */
 const FRONT_WL = 14
 const FRONT_SPEED = 4.2
@@ -38,11 +44,11 @@ function crest(x: number, t: number, wl: number, sp: number, k: number): number 
 }
 
 /** How far the front rank stands above the waterline at x: what a thing riding it is lifted by. */
-export const frontLift = (x: number, t: number): number => Math.max(0, frontSeasAt(t)) * crest(x, t, FRONT_WL, FRONT_SPEED, 0.62)
+export const frontLift = (x: number, t: number): number => Math.max(0, frontSeasAt(t)) * open(x) * crest(x, t, FRONT_WL, FRONT_SPEED, 0.62)
 
 /** How hard it rains, 0 to 1. */
 export function rainAt(t: number): number {
-  return 0.75 * smooth(t, 297.5, 301.5) + 0.25 * smooth(t, M.lowBack, M.lowBack + 3) - smooth(t, M.lowGone - 1.5, M.lowGone + 3.5)
+  return 0.75 * smooth(t, 297.5, 301.5) + 0.25 * smooth(t, M.lowBack, M.lowBack + 3) - smooth(t, M.lowGone - 1.5, M.lowGone + 3.5) + 0.8 * raftSeas(t)
 }
 
 /** The great seas: two ranks of long crests standing up from the waterline, the far one paler, the front one the sea's. */
@@ -50,10 +56,10 @@ export function drawSeas(g: Paint): void {
   const { ctx, t, view } = g
   const far = farSeasAt(t)
   const front = frontSeasAt(t)
-  if (Math.max(far, front) <= 0.02 || view.x1 < 470 || view.x0 > 710) return
+  if (Math.max(far, front) <= 0.02 || view.x1 < SEAS.x0 || view.x0 > SEAS.x1) return
   const L = seaLight(t)
-  const a = Math.max(view.x0 - 1, 465)
-  const b = Math.min(view.x1 + 1, 715)
+  const a = Math.max(view.x0 - 1, SEAS.x0)
+  const b = Math.min(view.x1 + 1, SEAS.x1)
   const step = Math.max(0.1, (b - a) / 160)
   // Each rank a filled shape up to its crests, with the light on its backs as one thin line along them.
   const rank = (top: (x: number) => number, color: string, lit: number) => {
@@ -74,8 +80,8 @@ export function drawSeas(g: Paint): void {
     stroke(g, rgba(L.lit, lit), 1.6)
   }
   // The far rank lighter (the air between), the front rank near black: two clear silhouettes, the man on the nearer.
-  if (far > 0.02) rank((x) => -far * crest(x, t, 11.5, 2.2, 1), mix(L.near, L.far, 0.38), 0.16 * Math.min(1, far))
-  if (front > 0.02) rank((x) => surface(x, t) - front * crest(x, t, FRONT_WL, FRONT_SPEED, 0.62), mix(L.body, '#050708', 0.4), 0.26 * Math.min(1, front))
+  if (far > 0.02) rank((x) => -far * open(x) * crest(x, t, 11.5, 2.2, 1), mix(L.near, L.far, 0.38), 0.16 * Math.min(1, far))
+  if (front > 0.02) rank((x) => surface(x, t) - frontLift(x, t), mix(L.body, '#050708', 0.4), 0.26 * Math.min(1, front))
 }
 
 /** The storm's ceiling: one low mass of cloud over everything, its underside in long slow lobes. */
@@ -132,7 +138,7 @@ export function drawFarBolt(g: Paint): void {
 export function drawRain(g: Paint): void {
   const { ctx, t, view } = g
   const r = rainAt(t)
-  if (r <= 0.01 || view.x1 < 480 || view.x0 > 700) return
+  if (r <= 0.01 || view.x1 < 480 || view.x0 > SEAS.x1) return
   const L = layer(view, 18)
   const slant = 0.42
   const spacing = 24

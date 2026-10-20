@@ -2,10 +2,9 @@ import { circle, clamp01, fill, mix, rgba, ring, smooth, stroke, type Paint } fr
 import { M } from '../../music'
 import type { Pt } from '../../path'
 import { glide } from '../../voyage'
-import { layer } from '../../world/depth'
-import { seaLight, slope, surface, weather } from '../../world/sea'
-import { skyAt } from '../../world/sky'
+import { surface } from '../../world/sea'
 import { ground, lightAt } from '../ogygia/island'
+import { frontLift } from '../storm/weather'
 
 /**
  * The raft: three logs of driftwood off Ogygia's beach, seen end on, a hand's breadth more than a ball across, lashed
@@ -105,7 +104,9 @@ export function raftAt(t: number): RaftPose {
   const x = sail(Math.min(t, AGROUND))
   const shore = beached(STOP)
   const onSand: RaftPose = { x, y: ground(x) - LOG_R, a: shore.a }
-  const sea: RaftPose = { x, y: surface(x, t) + 0.035, a: slope(x, t, 1.0) * 0.85 }
+  // On the sea, and on the great seas where they stand (`frontLift`), as the spar rode them.
+  const Y = (u: number) => surface(u, t) - frontLift(u, t)
+  const sea: RaftPose = { x, y: Y(x) + 0.035, a: Math.atan2(Y(x + 0.5) - Y(x - 0.5), 1.0) * 0.85 }
   const w = smooth(x, 676.0, 678.2)
   let pose: RaftPose = { x, y: onSand.y + (sea.y - onSand.y) * w, a: onSand.a + (sea.a - onSand.a) * w }
   // Aground on Ithaca: it settles on the bottom where the beach comes up, its bow a little raised, and stays: wholly at
@@ -256,42 +257,4 @@ export function drawRaft(g: Paint): void {
   const wet = smooth(t, LAUNCH + 0.8, LAUNCH + 2.5)
   for (const { c, turn } of logs(t)) drawLog(g, c, turn, l, wet)
   if (t >= WRAP0) drawWraps(g, t, l)
-}
-
-/* ------------------------------------------------------------------ the storm's swell */
-
-/**
- * The swell the raft is given to, seen going away: long ridges of black water on the horizon, in three ranks, rising
- * and falling with the weather and rolling on ahead of it. A few large shapes; the sea's own colours.
- */
-export function drawSwell(g: Paint): void {
-  const { ctx, t, view } = g
-  const w = weather(t)
-  if (t < LAUNCH || t > 419 || w < 0.2) return
-  const sea = seaLight(t)
-  const sky = skyAt(t)
-  const strength = clamp01((w - 0.2) / 0.6)
-  for (const [r, d] of [[0, 70], [1, 34], [2, 16]] as [number, number][]) {
-    const L = layer(view, d)
-    const spacing = [34, 26, 20][r]
-    const amp = [1.4, 1.9, 2.4][r] * strength
-    const drift = t * [2.0, 3.2, 4.6][r]
-    const lx0 = view.cx + (view.x0 - view.cx) / L.s
-    const lx1 = view.cx + (view.x1 - view.cx) / L.s
-    const base = L.y(0.2)
-    ctx.beginPath()
-    ctx.moveTo(view.x0 - 1, base)
-    const n = 60
-    for (let i = 0; i <= n; i++) {
-      const lx = lx0 + ((lx1 - lx0) * i) / n
-      const phase = ((lx - drift) / spacing) * Math.PI * 2
-      // A long, round-backed ridge with a steeper face ahead of it, and a slower swell under the swell.
-      const ph = phase + 0.35 * Math.sin(phase)
-      const crest = 0.5 + 0.5 * Math.sin(ph) + 0.3 * (0.5 + 0.5 * Math.sin(phase * 0.43 + r * 2))
-      ctx.lineTo(L.x(lx), L.y(-amp * crest))
-    }
-    ctx.lineTo(view.x1 + 1, base)
-    ctx.closePath()
-    fill(ctx, mix(mix(sea.far, sea.near, 0.35 + 0.25 * r), sky.low, 0.12 * (2 - r)))
-  }
 }
