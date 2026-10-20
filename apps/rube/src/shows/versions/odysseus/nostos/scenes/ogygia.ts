@@ -21,8 +21,8 @@ import { HIT, LAUNCH, SEAT, onRaft, raftAt } from './raft/raft'
  * open round him as he comes (362.39 to 364.37), and Calypso comes out of its shade to him. Then seven days and nights go over him (`days.ts`): the sun and the
  * moon arc across, the lotus open by day and close by night, the sand drifts against him. Twice the picture goes to
  * Ithaca, to Penelope at her loom keeping the same days (366.12 and 377.28, the third and sixth dawns), and comes back
- * (371.35, 380.96). On the cloudless eighth morning the thunder (384.66) wakes him: the lotus shiver and shut, the net
- * swings, the drift slumps off him. He rolls down into the first log of driftwood (389.39), which knocks the second
+ * (371.35, 380.96). On the cloudless eighth morning the thunder (384.66) wakes him: the lotus shiver and shut, the drift
+ * slumps off him. He rolls down into the first log of driftwood (389.39), which knocks the second
  * (389.57), the two roll into the third against the stake (392.20, 392.39), the rope winds round them, he hops aboard,
  * and on the music's return (395.511) the raft goes into the sea (`raft/raft.ts`).
  */

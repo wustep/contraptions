@@ -1,4 +1,4 @@
-import { circle, clamp01, curve, fill, hash, mix, poly, rgba, ring, smooth, stroke, type Paint } from '../../draw'
+import { circle, clamp01, fill, hash, mix, poly, rgba, ring, smooth, stroke, type Paint } from '../../draw'
 import type { Pt } from '../../path'
 import { layer } from '../../world/depth'
 import { seaLight, surface, weather } from '../../world/sea'
@@ -7,8 +7,8 @@ import { FIRST_DAWN, LAST_DAWN, daylight, dayOf } from './days'
 
 /**
  * Ogygia: a spit of white sand in a turquoise sea, a great white dune standing behind it, and on the spit a knuckle of
- * pale limestone with a cave in it, Calypso's, a net hung across its mouth. He comes ashore on the west beach, goes over
- * the low rise to the lotus at the cave's mouth, and lies there seven years while the sand drifts against him.
+ * pale limestone with a cave in it, Calypso's. He comes ashore on the west beach, goes over the low rise to the lotus
+ * at the cave's mouth, and lies there seven years while the sand drifts against him.
  *
  * Everything is lit by the sky it stands under: the sand and the stone are white by day and the blue of the night by
  * night (the sky's own horizon colour says which), and the far dune pales into the air.
@@ -280,53 +280,6 @@ export function drawStone(g: Paint): void {
   ctx.closePath()
   fill(ctx, mix('#1B2326', '#060B10', 1 - l))
   stroke(g, ink, 2.4)
-  drawNet(g, l)
-}
-
-/**
- * Calypso's net, hung across the top of her cave's mouth from two pegs: a diamond mesh, sagging deepest in the middle,
- * pale against the dark, swaying a little with the air off the sea, and hard when the thunder comes.
- */
-function drawNet(g: Paint, l: number): void {
-  const { ctx, t } = g
-  const a: Pt = [CAVE.left + 0.12, -1.42]
-  const b: Pt = [CAVE.right - 0.12, -1.42]
-  const thunder = ring(t, LAST_DAWN, 1.3, 0.9)
-  const sway = 0.035 * Math.sin(t * 0.9) + 0.02 * Math.sin(t * 1.7 + 1) + 0.11 * thunder
-  const cord = mix('#D9CDB2', '#7C8C98', 1 - l)
-  // A point of the net: across it (u) and down it (v), its foot sagging into a shallow scallop.
-  const at = (u: number, v: number): Pt => {
-    const top = a[1] + 0.05 * Math.sin(Math.PI * u)
-    const foot = -0.98 - 0.16 * Math.sin(Math.PI * u) + 0.035 * Math.cos(u * Math.PI * 8)
-    const y = top + (foot - top) * v
-    return [a[0] + (b[0] - a[0]) * u + sway * v * v * (0.5 + 0.5 * Math.sin(Math.PI * u)), y]
-  }
-  ctx.lineCap = 'round'
-  const lines = 5
-  // The two runs of cord that cross to make the diamonds: down to the right, and down to the left.
-  for (const dir of [1, -1]) {
-    for (let i = -lines + 1; i < lines; i++) {
-      const pts: Pt[] = []
-      for (let s = 0; s <= 12; s++) {
-        const v = s / 12
-        const u = (i + dir * v * lines * 0.5) / lines + (dir < 0 ? 1 / (lines * 2) : 0)
-        if (u < -1e-6 || u > 1 + 1e-6) continue
-        pts.push(at(u, v))
-      }
-      if (pts.length < 2) continue
-      curve(ctx, pts)
-      stroke(g, rgba(cord, 0.75), 1.5)
-    }
-  }
-  // Its head rope, along the top.
-  const head: Pt[] = []
-  for (let s = 0; s <= 8; s++) head.push(at(s / 8, 0))
-  curve(ctx, head)
-  stroke(g, rgba(cord, 0.9), 2)
-  for (const p of [a, b]) {
-    circle(ctx, p[0], p[1], 0.035)
-    fill(ctx, mix('#6B5A44', '#2A3440', 1 - l))
-  }
 }
 
 /* ------------------------------------------------------------------ the sand */
