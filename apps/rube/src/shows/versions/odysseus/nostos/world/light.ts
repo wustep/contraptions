@@ -69,5 +69,5 @@ export const BASE_SKY: SkyKey[] = [
   key(M.last - 2, '#151A24', '#40323A', '#2E2A34', 0.25, SEA_NIGHT),
   // The west: the sun going down ahead of them.
   key(M.fade, '#3E4A63', '#EDB574', '#C9946E', 0.25, SEA_WEST, { x: 0.74, y: 0.66, r: 0.055, color: '#F7DCA6', a: 1 }),
-  key(545, '#2E3650', '#D9925E', '#A87458', 0.25, SEA_WEST, { x: 0.74, y: 0.72, r: 0.055, color: '#F2C48E', a: 1 }),
+  key(549, '#2E3650', '#D9925E', '#A87458', 0.25, SEA_WEST, { x: 0.74, y: 0.72, r: 0.055, color: '#F2C48E', a: 1 }),
 ]

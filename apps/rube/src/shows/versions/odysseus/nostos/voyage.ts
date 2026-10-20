@@ -27,22 +27,25 @@ export const PLACES = {
   /** Ogygia: a white dune over a turquoise sea, Calypso's cave. */
   ogygia: { x0: 640, x1: 720 },
   /** Ithaca: the beach, the cliff, the palace on top, and the harbour on the west side. */
-  ithaca: { x0: 796, x1: 900 },
+  ithaca: { x0: 796, x1: 850 },
 } as const
 
-/** Ithaca's landmarks (cells): the drawing and every scene that looks at it agree on these. */
+/**
+ * Ithaca's landmarks (cells): the drawing and every scene that looks at it agree on these. The balls are people, as
+ * tokens in a human-scale world, so the palace is small: a doorway is about three and a half balls tall.
+ */
 export const ITHACA = {
   /** The beach on the east side, where the raft comes in. */
   beach: 801,
-  /** The plateau's top (y) and its east edge (x), where the gate is and Argos lies. */
-  top: -14,
-  gate: 816,
-  /** The palace: the hall's floor (y) and its walls (x), the upper room's floor, and the loom at its west window. */
-  hall: { x0: 824, x1: 858, floor: -14, ceil: -19 },
-  room: { x0: 838, x1: 858, floor: -19, ceil: -23.4 },
-  loom: { x: 851.5, floor: -19 },
+  /** The plateau's top (y) and its east edge (x). */
+  top: -9,
+  gate: 814.2,
+  /** The palace: the hall's floor (y) and its walls (x), the upper room over its east half, the loom by its window. */
+  hall: { x0: 818, x1: 827.4, floor: -9, ceil: -10.75 },
+  room: { x0: 818, x1: 822.45, floor: -10.75, ceil: -12.2 },
+  loom: { x: 819.3, floor: -10.75 },
   /** The harbour on the west side, at the cliff's foot. */
-  harbour: 878,
+  harbour: 838,
 } as const
 
 /** When each scene has the stage, show seconds. Scenes may run their drawings past their windows; the hero and the camera are theirs only inside. */
@@ -61,7 +64,7 @@ export const WINDOWS = {
   home: [418, M.quiet],
   hall: [M.quiet, M.last],
   shot: [M.last, M.fade],
-  west: [M.fade, 545],
+  west: [M.fade, 549],
 } as const
 
 /** The show's length: the cue, and the credits after it in the quiet. */

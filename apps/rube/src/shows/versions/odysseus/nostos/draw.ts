@@ -164,10 +164,14 @@ export function fill(ctx: CanvasRenderingContext2D, color: string): void {
   ctx.fill()
 }
 
-/** Stroke the current path `w` CSS pixels wide (never under 1.25, so no hairline flickers between rasterizers). */
+/**
+ * Stroke the current path `w` pixels wide as seen at the reference framing (10 cells tall on a 1080p frame, 108 pixels a
+ * cell), scaling with the camera as the balls' own outlines do, so a line keeps its weight against them at any distance;
+ * never under 1.25 CSS pixels, so no hairline flickers between rasterizers.
+ */
 export function stroke(g: Paint, color: string, w: number): void {
   g.ctx.strokeStyle = color
-  g.ctx.lineWidth = Math.max(1.25, w) * g.px
+  g.ctx.lineWidth = Math.max(1.25 * g.px, w / 108)
   g.ctx.stroke()
 }
 
