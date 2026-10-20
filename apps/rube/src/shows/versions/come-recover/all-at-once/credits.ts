@@ -163,6 +163,8 @@ const SUB_IN_BAR: [number, number] = [0.5, 0.884]
 const SUB_LEAST = 13
 /** The least unit of the chapters and credits on the page, CSS pixels: so their fine print (a role, a note) is read on a phone. */
 const WORDS_LEAST = 4.2
+/** On a phone held upright, how far the end credits go up into the dark over the room, clear of the lit washer they grow into. */
+const CREDITS_LIFT = 0.6
 /**
  * Where a scene's subtitles sit: low, in the widescreen's lower bar in the alley, and at the taxes high on the plain
  * tile wall, as the close two-shot has the family along the frame's foot and nothing over the wall's left.
@@ -333,7 +335,7 @@ export function creditsAt(t: number): TitleCard[] {
   CARDS.forEach((card, n) => {
     const { light, rise } = lightOf(card, t)
     if (light <= 0.001) return
-    out.push({ key: `all-at-once-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: AT, least: WORDS_LEAST, said: true })
+    out.push({ key: `all-at-once-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: AT, lift: CREDITS_LIFT, least: WORDS_LEAST, said: true })
   })
   return out
 }

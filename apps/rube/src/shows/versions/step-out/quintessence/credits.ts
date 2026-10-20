@@ -77,6 +77,8 @@ export const LAST_GONE = (() => {
 const AT: [number, number] = [0.5, 0.1]
 /** The least the cards' unit may be on the page, CSS pixels: so a phone held upright still reads the role and the notes. */
 const LEAST = 4.5
+/** On a phone held upright, how far the cards go up into the pale sky the tall stage shows over the frame, clear of the fronts. */
+const LIFT = 0.6
 
 function lightOf(card: Card, t: number): { light: number; rise: number } {
   const since = t - card.at
@@ -93,7 +95,7 @@ export function creditsAt(t: number): TitleCard[] {
   CARDS.forEach((card, n) => {
     const { light, rise } = lightOf(card, t)
     if (light <= 0.001) return
-    out.push({ key: `quintessence-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: card.place ?? AT, dark: true, least: LEAST })
+    out.push({ key: `quintessence-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: card.place ?? AT, dark: true, lift: LIFT, least: LEAST })
   })
   return out
 }
