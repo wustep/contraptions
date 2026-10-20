@@ -271,7 +271,9 @@ export function drawRanks(g: Paint): void {
     if (lit < 0.03) continue
     const f = (lane + 0.5) / LANES
     const groundC = mix(SAND, haze, 0.06 + 0.2 * f)
-    const sink = 1 - lit * (1 - 0.6 * f)
+    // Back from the front ranks the ash goes quickly into the dark of the shore: the nearest lanes are heads, the rest a
+    // crowd only a little lighter than the sand, so the whole is one dark body going back and never a field of marks.
+    const sink = 1 - lit * Math.pow(1 - f, 3.6)
     // Its span along the shore, ragged at the ends, and wider the further back (so the crowd fills the shore going away),
     // most of it behind him, the way they will come.
     const spread = Math.pow(dMid, 0.8)
