@@ -54,7 +54,9 @@ export const hades: Scene = {
   hero: heroMoves(),
   shots,
   back: [
+    // Nothing of it is seen from the fog: it comes on the cut.
     standing('hades-shore', ALL, END, (g) => {
+      if (g.t < ARRIVE) return
       drawShore(g)
       drawRanks(g)
       drawTrench(g)
