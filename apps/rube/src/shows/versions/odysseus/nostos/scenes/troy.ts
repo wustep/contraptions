@@ -46,9 +46,11 @@ const shots: Key[] = [
   // On the next note, down to the drain's mouth: him out of it and down the hill through them, the other way.
   { t: 120.73, cells: 6.5, at: [-21.2, -2.3], cut: true },
   { t: 122.6, cells: 7, off: [1.2, -0.75] },
-  // Down to the ships and aboard.
-  { t: 125.6, cells: 5.6, off: [0.9, -0.6] },
-  { t: 128.6, cells: 7.2, off: [1.6, -1.1] },
+  { t: 125.0, cells: 6.6, off: [1.1, -0.7] },
+  // On the cue's hardest notes, out to the whole of it from the sea: Troy burning on its hill from end to end, and
+  // them running down to the ships under it.
+  { t: 125.07, cells: 14, at: [-33.5, -6.9], cut: true },
+  { t: 128.9, cells: 14.6, at: [-31.0, -6.6] },
   // Put out at first light, Troy smoking behind.
   { t: 134, cells: 11.5, off: [2.1, -1.7] },
   { t: 138.8, cells: 15.6, off: [2.45, -2.15] },

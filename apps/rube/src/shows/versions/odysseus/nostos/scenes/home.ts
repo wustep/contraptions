@@ -65,9 +65,15 @@ export const home: Scene = {
     // The swell: the drop, the bow drawn, her at her door.
     { t: M.last + 0.4, cells: 3.3, at: [824.6, -9.95] },
     { t: TRIAL.loose - 1.4, cells: 3.4, at: [824.5, -9.95] },
-    // The arrow's whole flight, from the bow through the twelve eyes to Antinous in the air before the son.
-    { t: TRIAL.loose - 0.2, cells: 5.6, at: [822.5, -10.2] },
-    { t: TRIAL.erupts + 1.5, cells: 5.4, at: [822.3, -10.1] },
+    // The arrow's whole flight, the hall from the bow to the door, through the twelve eyes to Antinous in the air.
+    { t: TRIAL.loose - 0.2, cells: 4.7, at: [822.0, -9.8] },
+    { t: TRIAL.strike - 0.05, cells: 4.65, at: [821.95, -9.78] },
+    // On its note, in close: he comes down at the son's feet with the arrow in him.
+    { t: TRIAL.strike, cells: 1.75, at: [818.8, -9.38], cut: true },
+    { t: TRIAL.erupts - 0.05, cells: 1.62, at: [818.75, -9.35] },
+    // On the next, the hall: the rest of them give in, and she comes down to him.
+    { t: TRIAL.erupts, cells: 5.0, at: [822.2, -10.05], cut: true },
+    { t: TRIAL.erupts + 1.5, cells: 4.9, at: [822.0, -10.0] },
     // The two of them.
     { t: TRIAL.meet + 0.6, cells: 2.5, at: [820.7, -9.55] },
     { t: TRIAL.fade - 0.1, cells: 2.3, at: [820.65, -9.5] },

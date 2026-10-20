@@ -217,6 +217,26 @@ export function drawRanks(g: Paint): void {
       break
     }
   }
+  // Only on the land: the beach as it is drawn (its ends curving away to the horizon), and over it, where it runs whole,
+  // the sky their heads stand against. Off its ends, out over the water, there is no one.
+  const hy = horizonOf(view)
+  const a = Math.max(BEACH.x0, view.x0 - 1)
+  const b = Math.min(BEACH.x1, view.x1 + 1)
+  if (b <= a) return
+  const step = Math.max(0.25, (b - a) / 120)
+  ctx.save()
+  ctx.beginPath()
+  ctx.moveTo(a, hy)
+  for (let x = a; x <= b + step; x += step) {
+    const xx = Math.min(b, x)
+    ctx.lineTo(xx, hy + (EDGE - hy) * along(xx))
+  }
+  ctx.lineTo(b, hy)
+  ctx.closePath()
+  const w0 = Math.max(a, BEACH.x0 + 7)
+  const w1 = Math.min(b, BEACH.x1 - 7)
+  if (w1 > w0) ctx.rect(w0, view.y0 - 1, w1 - w0, hy - view.y0 + 1.01)
+  ctx.clip()
   for (let r = crowd - 1; r >= 0; r--) {
     const d = DEPTHS[r]
     const L = layer(view, d)
@@ -267,5 +287,6 @@ export function drawRanks(g: Paint): void {
     }
     ctx.restore()
   }
+  ctx.restore()
 }
 

@@ -169,7 +169,7 @@ function telemachusPath(): Path {
   m.push(roll([atAxe, inHall, doorway], 451.4, 453.6))
   // Antinous comes at him and the arrow takes him at his feet. When his mother is down the stairs he goes in to them,
   // over the dead man.
-  const over: Pt = [819.3, fy]
+  const over: Pt = [819.0, fy]
   const overAt = 507.45
   m.push(rest(doorway, 453.6, overAt - flightFor(doorway, over, 0.3)))
   m.push(hopTo(doorway, over, overAt, 0.3))

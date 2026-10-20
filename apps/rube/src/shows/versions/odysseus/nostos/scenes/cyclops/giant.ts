@@ -445,6 +445,14 @@ export function drawRidge(g: Paint, t: number, ridge: Pt, skin: string, rock: st
     limb(ctx, el, hands, 1.15 * k, 0.9 * k)
   }
   ctx.fill('nonzero')
+  // His one eye, put out: the tall slit in his brow, shut, a pale scar on the dark, so it is him and no other.
+  const eye = P(3.75, -10.05)
+  ctx.beginPath()
+  ctx.moveTo(eye[0], eye[1] - 0.55 * k)
+  ctx.quadraticCurveTo(eye[0] + 0.16 * k, eye[1], eye[0], eye[1] + 0.55 * k)
+  ctx.quadraticCurveTo(eye[0] - 0.1 * k, eye[1], eye[0], eye[1] - 0.55 * k)
+  ctx.fillStyle = mix(skin, '#C9B9A0', 0.55)
+  ctx.fill()
   if (held) drawRock(g, at, rock, ink, 0)
 }
 

@@ -70,7 +70,7 @@ export const STAIRS = { x0: 819.7, x1: 822.1, steps: 6 }
 /** The opening in the room's floor over the stairs' top. */
 export const STAIRWELL = { x0: 821.25, x1: 822.1 }
 /** The hearth by the east door, where the beggar sits; one painted column under the room's wall, Knossos's way. */
-export const HEARTH = { x: 818.98, half: 0.27 }
+export const HEARTH = { x: 819.4, half: 0.25 }
 export const COLUMNS = [822.45]
 /** The dais along the back wall of the west half, where the suitors feast, raised over the axes' heads. */
 export const DAIS = { x0: 822.6, x1: 825.45, top: HALL.floor - 0.42 }

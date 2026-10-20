@@ -12,22 +12,23 @@ import { tone } from './tone'
  * hill and in, out of sight behind the gate tower, into the city that is about to burn. He and his men come out of the
  * drain and go down through them to the ships the other way.
  *
- * Agamemnon is a ball, as everyone is: gold, as Mycenae's death masks are, and bigger than any man; the Greeks are the
- * same clay as his own men. They are drawn here, rank by rank behind the plane of the action (they never touch it).
+ * Agamemnon is a ball, as everyone is: pale gold, as Mycenae's death masks are (not Odysseus's bronze), and half as big
+ * again as any man; the Greeks are the same clay as Odysseus's men. They are drawn here, rank by rank behind the plane of
+ * the action (they never touch it).
  */
 
-export const AGAMEMNON = '#C9A227'
+export const AGAMEMNON = '#E2BE4C'
 const AGAMEMNON_RIM = '#4A3608'
 const R = 0.13
 const R_MAN = R * 0.86
-const R_KING = R * 1.3
+const R_KING = R * 1.5
 
 /** When the king goes in under the gate, and how fast the surge runs back down the column and the host marches. */
 export const SURGE = 114.32
 const WAVE = 7
 const MARCH = 1.7
 /** The head of the column, at the gate, and its tail, on the beach by the ships (cells, in each rank's own terms). */
-const HEAD = WALL.x1 + 0.55
+const HEAD = WALL.x1 + 1.1
 const TAIL = -7.5
 /** The ranks' depths behind the plane. */
 const RANKS = [0.6, 1.4, 2.4, 3.8, 5.8]
@@ -107,7 +108,7 @@ export function drawHost(g: Paint): void {
   }
 }
 
-/** Agamemnon at the head of the column: the gold one, bigger than any of them, and two torches by him. */
+/** Agamemnon at the head of the column, clear of the tower: the gold one, half as big again as any of them. */
 function drawKing(g: Paint, L: ReturnType<typeof layer>): void {
   const { ctx, t, view } = g
   const lx = kingAt(t)
@@ -117,7 +118,8 @@ function drawKing(g: Paint, L: ReturnType<typeof layer>): void {
   const y = L.y(groundAt(lx)) - r
   ctx.beginPath()
   ctx.arc(x, y, r, 0, Math.PI * 2)
-  ctx.fillStyle = tone(AGAMEMNON, t, { fire: 0.75 })
+  // Lit by the torches round him: the night takes less of him than of the clay behind, so the gold is still gold.
+  ctx.fillStyle = mix(mix(AGAMEMNON, '#1B1E2A', 0.28), '#E07A3A', 0.12)
   ctx.fill()
   ctx.lineWidth = Math.max(0.75 * g.px, 0.037 * L.s)
   ctx.strokeStyle = tone(AGAMEMNON_RIM, t)
