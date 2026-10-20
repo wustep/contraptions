@@ -184,6 +184,7 @@ export function compose(): { show: NostosShow; camera: (t: number) => Framing; b
   const keys: Key[] = [...SCENES.flatMap((s) => s.shots), ...SEAMS.map((s): Key => ({ t: s.t, cells: s.cam.cells, off: s.cam.off, at: s.cam.at }))]
   if (!keys.some((k) => k.t <= 0)) keys.unshift({ t: 0, cells: 10, off: [0.6, -1.4] })
   const camera = director(keys, (t) => show.where(t))
+  show.cameraCuts = keys.filter((k) => k.cut).map((k) => k.t).sort((a, b) => a - b)
 
   // Dissolves: a scene may ask for one at a time `at`, over `dur` seconds: the frame before it held, fading off.
   const dissolves = SCENES.flatMap((s) => s.dissolves ?? [])

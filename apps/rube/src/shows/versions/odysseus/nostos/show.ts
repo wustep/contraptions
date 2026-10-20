@@ -41,6 +41,8 @@ export class NostosShow extends Show {
   private readonly anchor: Placed
   /** A slow fall is no streak; a fast one is one tapered streak, not a string of discs. */
   override readonly trail = 'smear' as const
+  /** The camera's cuts (keys marked `cut`), show seconds: the score fills it; the checks hold each to the music. */
+  cameraCuts: number[] = []
 
   constructor(
     world: World,

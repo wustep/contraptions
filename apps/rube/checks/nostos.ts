@@ -72,6 +72,14 @@ export function checkNostos(perf: Performance, version: ShowVersion, check: Chec
     return Math.abs(x - f.x) < (f.cells * 16) / 9 / 2 + 0.3 && Math.abs(y - f.y) < f.cells / 2 + 0.3
   }
   const dissolving = (t: number) => !!perf.blend?.(t) || !!perf.blend?.(t + 0.004)
+  // A cut of the camera is film grammar, not a jump: allowed, and each on the music.
+  const cutting = (t: number) => show.cameraCuts.some((c) => c > t - step - 1e-6 && c <= t + 1e-6)
+  // A bare cut is struck on the music; a cut under a dissolve is a soft change of place and is held to nothing.
+  const cutsOff = show.cameraCuts.filter((c) => !perf.blend?.(c + 0.01) && !onOnset(c, 0.04))
+  check('nostos: every bare cut of the camera is on a measured onset or beat', cutsOff.length === 0, cutsOff.map((c) => c.toFixed(3)).join(', '))
+  // Where someone leaves the stage behind something drawn over them: the Cyclops' fist closing on men 4 and 5.
+  const covered: [number, number[]][] = [[161.6, [104, 105]]]
+  const coveredAt = (t: number, id: number) => covered.some(([at, ids]) => ids.includes(id) && Math.abs(at - t) < 0.01)
   const step = 0.002
   let heroJump = 0
   let heroAt = 0
@@ -87,7 +95,7 @@ export function checkNostos(perf: Performance, version: ShowVersion, check: Chec
     if (!dissolving(t)) {
       const d = Math.hypot(here.x - prev.x, here.y - prev.y)
       if (d > heroJump && (inShot(t, here.x, here.y) || inShot(t - step, prev.x, prev.y))) { heroJump = d; heroAt = t }
-      const dc = Math.hypot(f.x - prevCam.x, f.y - prevCam.y) / f.cells + Math.abs(Math.log(f.cells / prevCam.cells))
+      const dc = cutting(t) ? 0 : Math.hypot(f.x - prevCam.x, f.y - prevCam.y) / f.cells + Math.abs(Math.log(f.cells / prevCam.cells))
       if (dc > camJump) { camJump = dc; camAt = t }
       // The cast: nobody comes or goes in shot, or jumps there.
       const was = new Map((prev.balls ?? []).map((b) => [b.id, b]))
@@ -96,7 +104,7 @@ export function checkNostos(perf: Performance, version: ShowVersion, check: Chec
         const b0 = was.get(a.id)
         const b1 = now.get(a.id)
         if (!b0 && b1 && (b1.scale ?? 1) > 0.3 && inShot(t, b1.x, b1.y)) pops.push(`${a.id} in at ${t.toFixed(3)}`)
-        if (b0 && !b1 && (b0.scale ?? 1) > 0.3 && inShot(t - step, b0.x, b0.y)) pops.push(`${a.id} out at ${t.toFixed(3)}`)
+        if (b0 && !b1 && (b0.scale ?? 1) > 0.3 && inShot(t - step, b0.x, b0.y) && !coveredAt(t, a.id)) pops.push(`${a.id} out at ${t.toFixed(3)}`)
         if (b0 && b1 && Math.hypot(b1.x - b0.x, b1.y - b0.y) > 0.06 && (inShot(t, b1.x, b1.y) || inShot(t - step, b0.x, b0.y))) pops.push(`${a.id} jumps at ${t.toFixed(3)}`)
       }
     }
@@ -104,6 +112,6 @@ export function checkNostos(perf: Performance, version: ShowVersion, check: Chec
     prevCam = f
   }
   check('nostos: the hero never jumps in shot (no more than 0.05 cells in 2 ms) but across a dissolve', heroJump <= 0.05, `${heroJump.toFixed(3)} at ${heroAt.toFixed(3)} s`)
-  check('nostos: the camera never jumps (no more than 1% of the frame in 2 ms) but across a dissolve', camJump <= 0.01, `${camJump.toFixed(4)} at ${camAt.toFixed(3)} s`)
+  check('nostos: the camera never jumps (no more than 1% of the frame in 2 ms) but at a cut or across a dissolve', camJump <= 0.01, `${camJump.toFixed(4)} at ${camAt.toFixed(3)} s`)
   check('nostos: no one comes, goes or jumps in shot', pops.length === 0, pops.slice(0, 10).join(', '))
 }

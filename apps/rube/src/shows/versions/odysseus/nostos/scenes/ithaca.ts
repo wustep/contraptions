@@ -17,7 +17,7 @@ export const ithaca: Scene = {
   // The horse's beach fades into Ithaca's night.
   dissolves: [[M.second, 2.2]],
   shots: [
-    { t: M.second, cells: 24, at: [818.5, -5.6] },
+    { t: M.second, cells: 24, at: [818.5, -5.6], cut: true },
     { t: 43.2, cells: 20, at: [819.6, -6.4] },
     // The palace, cut open: everyone at once.
     { t: 50.4, cells: 4.6, at: [822.7, -10.45] },
