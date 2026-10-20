@@ -1,3 +1,4 @@
+import { MAN, MAN_RIM } from '../../cast'
 import { Path, fly, ramp, rest, ride, roll, type Move, type Pt } from '../../path'
 import type { Actor } from '../../show'
 import { HELM, WINDOWS, glide } from '../../voyage'
@@ -13,10 +14,10 @@ import { lazy } from '../giants/lazy'
  * behind it and black stacks standing in the sea off its end, and his ship coming down the coast. On the sixth
  * phrase's downbeat he leaps ashore and cuts a trench along the water's edge as he rolls, and stops at its end on the
  * hardest beat of the phrase: on that beat hands break the sand all along it at once. The dead come up between them,
- * from beside him outwards (the men he has lost nearest), and then rank on rank behind them, back over the whole shore
- * into the dark. On the strongest beat after it he runs; on the next phrase's downbeat the dead come after him, a surge
- * a beat; he leaps back aboard as his ship comes by, and on the next hard beat they stop at the water's edge and stand,
- * all of them, and watch the ship go.
+ * from beside him outwards (the ten men he has lost nearest, still in their clay among the ash), and then rank on rank
+ * behind them, back over the whole shore into the dark. On the strongest beat after it he runs; on the next phrase's
+ * downbeat the dead come after him, a surge a beat; he leaps back aboard as his ship comes by, and on the next hard
+ * beat they stop at the water's edge and stand, all of them, and watch the ship go.
  *
  * The beach lies behind the ship's plane: its front edge, the water's edge, a little above the waterline on the
  * screen, and its ground going back to the horizon. The dead stand on it in ranks, each rank on its own ground line;
@@ -133,6 +134,8 @@ export interface Shade {
   rise: number
   /** A little behind the others in the surges. */
   lag: number
+  /** One of his own men, lost at the Cyclops' or in the fjord: still in his clay. */
+  lost: boolean
 }
 
 export const SHADES: Shade[] = (() => {
@@ -140,9 +143,11 @@ export const SHADES: Shade[] = (() => {
   for (let i = 0; i < 9; i++) {
     // From beside him outwards: the nearest first.
     const f = (8 - i) / 8
+    // The ten he has lost (two to the Cyclops, eight in the fjord) come up nearest him, first.
+    const lost = i >= 4
     // Not evenly spaced: each a little off its place, so they come up as men, not as a row.
-    out.push({ row: 0, x: 327.0 + 0.86 * i + 0.28 * Math.sin(i * 2.9 + 0.7), hands: HANDS + 0.1 * f, rise: HANDS + 0.35 + (RISEN - 1 - HANDS) * f, lag: 0.04 * ((i * 7) % 3) })
-    out.push({ row: 1, x: 326.6 + 0.86 * i + 0.3 * Math.sin(i * 2.3 + 2.1), hands: HANDS + 0.04 + 0.1 * f, rise: HANDS + 0.6 + (RISEN - 1 - HANDS) * f, lag: 0.05 + 0.04 * ((i * 5) % 3) })
+    out.push({ row: 0, x: 327.0 + 0.86 * i + 0.28 * Math.sin(i * 2.9 + 0.7), hands: HANDS + 0.1 * f, rise: HANDS + 0.35 + (RISEN - 1 - HANDS) * f, lag: 0.04 * ((i * 7) % 3), lost })
+    out.push({ row: 1, x: 326.6 + 0.86 * i + 0.3 * Math.sin(i * 2.3 + 2.1), hands: HANDS + 0.04 + 0.1 * f, rise: HANDS + 0.6 + (RISEN - 1 - HANDS) * f, lag: 0.05 + 0.04 * ((i * 5) % 3), lost })
   }
   return out
 })()
@@ -167,8 +172,8 @@ export function shadeActor(sh: Shade, i: number): Actor {
   const moves: Move[] = [ride(at, sh.rise, 300)]
   return {
     id: SHADES_ID + i,
-    color: ASH,
-    rim: ASH_RIM,
+    color: sh.lost ? MAN : ASH,
+    rim: sh.lost ? MAN_RIM : ASH_RIM,
     size,
     path: new Path(moves, `shade ${i}`),
     on: (t) => t >= sh.rise,
