@@ -32,6 +32,8 @@ export interface Actor {
   fade?(t: number): number
   /** A mark that does not roll (a head, not a wheel): its fixed angle, or null for none. */
   mark?: number | null
+  /** Where its mark starts, radians: which way it is facing before it has rolled at all (a crowd does not all look one way). */
+  turn?: number
 }
 
 export class NostosShow extends Show {
@@ -107,7 +109,7 @@ export class NostosShow extends Show {
       scale,
       stretch: 1,
       angle: 0,
-      spin: a.mark === undefined ? a.path.spin(time, 0.13 * a.size) : a.mark,
+      spin: a.mark === undefined ? a.path.spin(time, 0.13 * a.size) + (a.turn ?? 0) : a.mark,
     }
   }
 

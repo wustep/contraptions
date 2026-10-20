@@ -287,8 +287,9 @@ export function ithacaActors(): Actor[] {
   const suitors = suitorPaths()
   return [
     { id: PENELOPE_ID, color: PENELOPE, rim: PENELOPE_RIM, size: PENELOPE_SIZE, path: penelopePath() },
-    { id: TELEMACHUS_ID, color: TELEMACHUS, rim: TELEMACHUS_RIM, size: TELEMACHUS_SIZE, path: telemachusPath() },
-    ...suitors.map((path, i): Actor => ({ id: SUITORS_ID + i, color: SUITOR, rim: SUITOR_RIM, size: SUITOR_SIZE, path, on: onStage(path) })),
+    { id: TELEMACHUS_ID, color: TELEMACHUS, rim: TELEMACHUS_RIM, size: TELEMACHUS_SIZE, path: telemachusPath(), turn: -0.6 },
+    // Each suitor faces his own way at the feast, a few towards each other, one at his cup.
+    ...suitors.map((path, i): Actor => ({ id: SUITORS_ID + i, color: SUITOR, rim: SUITOR_RIM, size: SUITOR_SIZE, path, on: onStage(path), turn: [0.5, 2.7, -0.4, 3.3, 0.9, 2.2, -0.9][i] })),
   ]
 }
 

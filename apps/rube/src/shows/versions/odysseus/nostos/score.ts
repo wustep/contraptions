@@ -146,6 +146,8 @@ export function compose(): { show: NostosShow; camera: (t: number) => Framing; b
       color: MAN,
       rim: MAN_RIM,
       size: MAN_SIZE,
+      // Each man faces his own way: a crew, not a row of rivets.
+      turn: [0.4, -0.5, 2.6, 0.9, -1.2, 3.4, 0.2, -0.8, 2.2, 1.1, -0.3, 2.9, 0.7, -1.5][m],
       path: pathFor(`man ${m}`, own, seat(m), ship, death),
       on: (t) => t < death,
     })

@@ -37,10 +37,10 @@ export const home: Scene = {
     { t: 420.9, cells: 6.5, off: [0.6, -1.4] },
     { t: HOME.top, cells: 5.0, off: [0.8, -0.9] },
     // Argos.
-    { t: HOME.sees, cells: 2.5, at: [809.75, -9.32] },
-    { t: HOME.dies + 2.5, cells: 2.3, at: [809.75, -9.3] },
+    { t: HOME.sees, cells: 2.5, at: [809.75, -9.62] },
+    { t: HOME.dies + 2.5, cells: 2.3, at: [809.75, -9.58] },
     // His son comes out to him.
-    { t: TRIAL.touch, cells: 2.6, at: [809.9, -9.35] },
+    { t: TRIAL.touch, cells: 2.6, at: [809.9, -9.6] },
     // In through the gate, the courtyard, to the hall's threshold.
     { t: TRIAL.inside, cells: 3.4, at: [819.2, -9.75] },
     // The hall: the axes come up.

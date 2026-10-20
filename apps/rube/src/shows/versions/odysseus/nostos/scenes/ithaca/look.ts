@@ -50,8 +50,11 @@ export function outdoors(hex: string, t: number): string {
   return mix(mix(hex, s.low, 0.12), mix(s.top, '#0B0F16', 0.35), n * 0.72)
 }
 
-/** A colour as it is indoors at `t`: by day the window's light; at night the hearth's, warm and lower. */
+/**
+ * A colour as it is indoors at `t`: by day the window's light; at night the hearth's and the lamps', warm and only a
+ * little lower, so the house is the lit thing in the dark island.
+ */
 export function indoors(hex: string, t: number): string {
   const n = nightness(t)
-  return mix(hex, mix(hex, '#5A3524', 0.55), n * 0.75)
+  return mix(hex, mix(mix(hex, '#C9874E', 0.22), '#3A2216', 0.3), n)
 }

@@ -97,6 +97,11 @@ export function drawIsland(g: Paint): void {
   fill(ctx, outdoors(SAND_C, t))
   blob(ctx, OUTLINE)
   stroke(g, ink, 1.6)
+  // The top's skin: a band of earth and dry grass along the plateau, so the ground he stands on is ground.
+  poly(ctx, [[CLIFF_E.top, TOP], [CLIFF_W.top, TOP], [CLIFF_W.top - 0.4, TOP + 0.16], [CLIFF_E.top + 0.3, TOP + 0.2]])
+  fill(ctx, outdoors('#8C7F5E', t))
+  poly(ctx, [[CLIFF_E.top, TOP], [CLIFF_W.top, TOP], [CLIFF_W.top - 0.2, TOP + 0.05], [CLIFF_E.top + 0.15, TOP + 0.06]])
+  fill(ctx, outdoors('#A8996C', t))
   for (const [x, y, r] of SCRUBS) drawScrub(g, x, y, r)
   for (const [x, h, lean] of OLIVES) drawOlive(g, x, TOP, h, lean)
   drawJetty(g)

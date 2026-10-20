@@ -293,7 +293,7 @@ function drawCrowd(g: Paint, d: number, [x0, x1]: [number, number], shift: numbe
   ctx.lineTo(b, base)
   ctx.closePath()
   const gr = ctx.createLinearGradient(0, base, 0, ground - height)
-  const front = (base - ground) / Math.max(1e-6, base - (ground - height))
+  const front = Math.max(0, Math.min(0.85, (base - ground) / Math.max(1e-6, base - (ground - height))))
   gr.addColorStop(0, rgba(mix(ASH, haze, 0.5), 0))
   gr.addColorStop(Math.min(0.9, front + 0.02), rgba(mix(ASH, haze, 0.5), 0.8))
   gr.addColorStop(Math.min(0.95, front + 0.5 * (1 - front)), rgba(mix(ASH, haze, 0.72), 0.45))
