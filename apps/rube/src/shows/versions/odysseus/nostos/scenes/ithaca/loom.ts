@@ -42,24 +42,33 @@ export function shuttleAt(t: number): number {
 /** How many passes have landed by `t` (for the heddle's turn). */
 const passesBy = (t: number): number => PASSES.filter((p) => p <= t).length
 
+/** One row of weft, as a share of the warp: woven in by a pass by day, picked out by a pass by night. */
+const ROW = 0.024
+
 let table: Float32Array | null = null
 let built = 0
+let next = 0
 /**
- * How much of the warp is woven at `t`, 0 to 1. Integrated over the show from the sky (`nightness`), as far as it has
- * been asked for: it grows by day and comes back by night while she is at the loom, and stays as she left it after.
+ * How much of the warp is woven at `t`, 0 to 1. Integrated over the show pass by pass, as far as it has been asked
+ * for: each pass of the shuttle by day beats in a row, and each by night picks one out, so in the prologue's night the
+ * cloth goes back up the warp a row on each of the theme's notes; it stays as she left it after.
  */
 export function woven(t: number): number {
   if (!table) {
     table = new Float32Array(Math.ceil(END / STEP) + 2)
     table[0] = 0.46
     built = 1
+    next = 0
   }
   const f = Math.max(0, t) / STEP
   const i = Math.min(table.length - 2, Math.floor(f))
   for (; built <= i + 1; built++) {
-    const s = (built - 1) * STEP
+    const s = built * STEP
     let v = table[built - 1]
-    if (atLoom(s)) v = Math.max(0.22, Math.min(0.72, v + (nightness(s) > 0.5 ? -0.0035 : 0.005) * STEP))
+    while (next < PASSES.length && PASSES[next] <= s) {
+      const p = PASSES[next++]
+      if (atLoom(p)) v = Math.max(0.22, Math.min(0.72, v + (nightness(p) > 0.5 ? -ROW : ROW)))
+    }
     table[built] = v
   }
   return table[i] + (table[i + 1] - table[i]) * (f - i)
