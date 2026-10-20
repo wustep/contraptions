@@ -90,8 +90,9 @@ function drawFar(g: Paint, air: string): void {
 }
 
 /**
- * A Siren: a tall pale body like a draped column, a long neck, a small head. Her neck bends towards the ship, which
- * she follows with her head as it passes (eased, never quick), and she leans after it as it goes.
+ * A Siren: a woman sitting on her rock, pale and still, draped to the feet, her long hair down her back, with no face.
+ * She turns her head after the ship as it passes (eased, never quick), and as it comes nearest she leans after it and
+ * reaches out one arm, slowly, and lowers it again when it has gone. Larger than life, as a thing seen from a deck is.
  */
 function drawSiren(g: Paint, foot: Pt, i: number, shipX: number): void {
   const { ctx, t } = g
@@ -99,64 +100,65 @@ function drawSiren(g: Paint, foot: Pt, i: number, shipX: number): void {
   const d = shipX - foot[0]
   const look = Math.tanh(d / 6)
   const near = clamp01(1 - Math.abs(d) / 22)
-  const sway = 0.05 * Math.sin(t * 0.55 + i * 2.3)
-  const lean = -0.1 + 0.16 * look * near + sway
-  const H = 1.35 + 0.12 * i
+  const sway = 0.04 * Math.sin(t * 0.55 + i * 2.3)
+  const lean = -0.06 + 0.14 * look * near + sway
+  const H = 1.7 + 0.12 * i
   ctx.save()
   ctx.translate(foot[0], foot[1] + 0.03)
   ctx.rotate(lean)
-  // The body: a fall of cloth from a narrow foot, fuller at the hip, to sloping shoulders.
+  // Her hair first, behind her: long, from the crown down her back to the rock, stirring a little.
+  const head: Pt = [0.04 * look, -H * 0.86]
+  const stir = 0.05 * Math.sin(t * 0.8 + i)
+  ctx.beginPath()
+  ctx.moveTo(head[0] - 0.1, head[1] - 0.08)
+  ctx.quadraticCurveTo(-0.32 + stir, -H * 0.55, -0.3 + stir, -H * 0.18)
+  ctx.lineTo(-0.16, -H * 0.2)
+  ctx.quadraticCurveTo(-0.12, -H * 0.6, head[0] + 0.06, head[1] - 0.1)
+  ctx.closePath()
+  fill(ctx, HAIR)
+  stroke(g, INK, 1.6)
+  // The body: sitting, the drape pooled on the rock, a narrow waist, sloping shoulders.
   const body: Pt[] = [
-    [-0.2, 0],
-    [-0.27, -H * 0.3],
-    [-0.2, -H * 0.62],
-    [-0.15, -H * 0.86],
-    [-0.06, -H * 0.97],
-    [0.06, -H * 0.98],
-    [0.14, -H * 0.88],
-    [0.19, -H * 0.6],
-    [0.25, -H * 0.28],
-    [0.21, 0],
+    [-0.38, 0],
+    [-0.3, -H * 0.18],
+    [-0.16, -H * 0.36],
+    [-0.13, -H * 0.56],
+    [-0.15, -H * 0.7],
+    [-0.08, -H * 0.76],
+    [0.1, -H * 0.76],
+    [0.16, -H * 0.68],
+    [0.13, -H * 0.5],
+    [0.2, -H * 0.3],
+    [0.4, -H * 0.12],
+    [0.44, 0],
   ]
   blob(ctx, body)
   fill(ctx, SIREN)
-  // The side away from the sun in shade: a long fold down her left.
-  poly(ctx, [[-0.2, 0], [-0.27, -H * 0.3], [-0.2, -H * 0.62], [-0.15, -H * 0.86], [-0.05, -H * 0.94], [-0.06, -H * 0.5], [-0.04, 0]])
-  fill(ctx, rgba(SIREN_SHADE, 0.75))
+  // The side away from the sun in shade: the drape's long fall down her back.
+  poly(ctx, [[-0.38, 0], [-0.3, -H * 0.18], [-0.16, -H * 0.36], [-0.13, -H * 0.56], [-0.12, -H * 0.72], [-0.04, -H * 0.5], [-0.06, -H * 0.2], [0.02, 0]])
+  fill(ctx, rgba(SIREN_SHADE, 0.7))
   blob(ctx, body)
   stroke(g, INK, 1.8)
-  // The neck: long, bending towards the ship; the head at its end, turned along it.
-  const bend = 0.55 * look * (0.4 + 0.6 * near) + 0.08 * Math.sin(t * 0.7 + i)
-  const n0: Pt = [0, -H * 0.95]
-  const n1: Pt = [0.2 * bend, -H - 0.42]
-  const n2: Pt = [0.6 * bend, -H - 0.66 + 0.12 * Math.abs(bend)]
-  // Drawn twice, in cells so it is as thick close up as far off: the ink, then the pale over it.
-  const neck = 0.085
+  // The arm towards the ship: down in her lap while it is far, lifted and reaching after it as it passes nearest.
+  const reach = near * near * (0.5 + 0.5 * Math.max(0, look + 0.3))
+  const shoulder: Pt = [0.1, -H * 0.72]
+  const ang = 1.2 - 1.45 * reach
+  const len = H * 0.4
+  const hand: Pt = [shoulder[0] + Math.cos(ang) * len * 0.95, shoulder[1] + Math.sin(ang) * len]
+  const elbow: Pt = [(shoulder[0] + hand[0]) / 2 + 0.05, (shoulder[1] + hand[1]) / 2 + 0.06 * (1 - reach)]
   ctx.lineCap = 'round'
   ctx.beginPath()
-  ctx.moveTo(n0[0], n0[1])
-  ctx.quadraticCurveTo(n1[0], n1[1], n2[0], n2[1])
+  ctx.moveTo(shoulder[0], shoulder[1])
+  ctx.quadraticCurveTo(elbow[0], elbow[1], hand[0], hand[1])
   ctx.strokeStyle = INK
-  ctx.lineWidth = neck + 3.6 / 108
+  ctx.lineWidth = 0.075 + 3.6 / 108
   ctx.stroke()
   ctx.strokeStyle = SIREN
-  ctx.lineWidth = neck
+  ctx.lineWidth = 0.075
   ctx.stroke()
-  const a = Math.atan2(n2[1] - n1[1], n2[0] - n1[0])
-  // Her hair: from the back of her head, down behind her neck to her shoulders, stirring.
-  const back: Pt = [n2[0] - Math.cos(a) * 0.04, n2[1] - Math.sin(a) * 0.04]
-  const fall: Pt = [-0.14 - 0.06 * bend, -H * 0.72 + 0.04 * Math.sin(t * 0.8 + i)]
+  // The head: no face, turned after the ship.
   ctx.beginPath()
-  ctx.moveTo(back[0], back[1])
-  ctx.quadraticCurveTo(back[0] - 0.12 - 0.1 * bend, (back[1] + fall[1]) / 2, fall[0], fall[1])
-  ctx.strokeStyle = INK
-  ctx.lineWidth = 0.07 + 3.6 / 108
-  ctx.stroke()
-  ctx.strokeStyle = HAIR
-  ctx.lineWidth = 0.07
-  ctx.stroke()
-  ctx.beginPath()
-  ctx.ellipse(n2[0] + Math.cos(a) * 0.05, n2[1] + Math.sin(a) * 0.05, 0.13, 0.075, a, 0, Math.PI * 2)
+  ctx.ellipse(head[0], head[1], 0.13, 0.15, 0.25 * look, 0, Math.PI * 2)
   fill(ctx, SIREN)
   stroke(g, INK, 1.8)
   ctx.restore()

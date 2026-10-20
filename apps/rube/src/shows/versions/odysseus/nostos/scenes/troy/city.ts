@@ -315,7 +315,8 @@ export function drawStatue(g: Paint, head: { at: Pt; turn: number; on: boolean; 
   if (x < view.x0 - 2 || x > view.x1 + 2) return
   const brazier = brazierLight(t)
   const fire = firelight(x, t)
-  const marble = tone(MAT.marble, t, { lit: 0.6, fire: brazier * 0.7 + fire * 0.4 })
+  // She is the one white thing in the dark city: lit by her brazier, and sunk into the night less than the clay round her.
+  const marble = tone(MAT.marble, t, { lit: 0.6, fire: brazier * 0.5 + fire * 0.3, deep: -2.6 })
   const shadow = tone(mix(MAT.marble, '#8A8F98', 0.4), t, { fire: fire * 0.3 })
   const ink = tone('#3A3A40', t)
   // The plinth.
