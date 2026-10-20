@@ -4,6 +4,7 @@ import { END, WINDOWS } from '../voyage'
 import { HOME, TRIAL } from './ithaca/geo'
 import { heroMoves, ithacaActors } from './ithaca/people'
 import { ITHACA_SET } from './ithaca/set'
+import { WEST_CAM } from './ithaca/west'
 
 /**
  * Home (418 to the end): up the cliff, the dog, the hall, the trial of the bow, the reckoning, the two of them; and the
@@ -63,9 +64,8 @@ export const home: Scene = {
     // The two of them.
     { t: TRIAL.meet + 0.6, cells: 2.5, at: [820.7, -9.55] },
     { t: TRIAL.fade - 0.1, cells: 2.3, at: [820.65, -9.5] },
-    // The west: the harbour, their son on the jetty, the skiff casting off; then away with them towards the sun.
-    { t: TRIAL.fade, cells: 5.4, at: [842.9, -1.7], cut: true },
-    { t: 519, cells: 5.4, at: [843.6, -1.75] },
-    { t: END, cells: 6.2, at: [850.0, -2.2] },
+    // The west, held: their son on the jetty, the skiff casting off and going away from us into the sun.
+    { t: TRIAL.fade, cells: WEST_CAM.cells, at: [WEST_CAM.x, WEST_CAM.y], cut: true },
+    { t: END, cells: WEST_CAM.cells, at: [WEST_CAM.x, WEST_CAM.y] },
   ],
 }

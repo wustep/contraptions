@@ -1,45 +1,67 @@
 import { fill, mix, poly, rect, stroke, type Paint } from '../../draw'
 import type { Pt } from '../../path'
 import { glide } from '../../voyage'
-import { slope, surface } from '../../world/sea'
+import { smoother } from '../../draw'
+import { horizonOf, slope, surface } from '../../world/sea'
 import { JETTY, MOORING, TRIAL } from './geo'
 import { CLOTH, MADDER, TIMBER, outdoors } from './look'
 
 /**
  * The west: a skiff at the harbour's jetty, and in it, after everything, the two of them, going out under a small sail
- * towards where the sun is going down; their son on the cliff's top behind them. The film ends on that sail; so do we.
+ * towards where the sun is going down; their son on the jetty behind them. The camera holds still on it all, and the
+ * skiff goes away from us into the sun: smaller and smaller, up the sea's surface towards the horizon under the sun,
+ * the way a boat goes when it is going west and we are staying. The film ends on that sail; so do we.
  */
+
+/** The last shot, held: the jetty at its left edge, the sun's path ahead. */
+export const WEST_CAM = { x: 846.0, y: -3.8, cells: 9.6 }
+/** Its horizon (`horizonOf` for that frame), where the skiff goes. */
+const HORIZON_Y = horizonOf({ cy: WEST_CAM.y, h: WEST_CAM.cells })
+/** Where on the horizon it heads: under the sun (the sky's disc is three quarters across that frame). */
+const SUN_X = WEST_CAM.x + ((0.74 - 0.5) * WEST_CAM.cells * 16) / 9
 
 /** The skiff's length, and where the two sit in it (its own frame, the waterline under its middle at 0). */
 const L = 1.25
 const SEATS: Pt[] = [[-0.22, -0.2], [0.07, -0.2]]
 
-/** Along the sea: moored until the dissolve, then away west, gathering a little way and keeping it. */
+/** Along the sea, near: moored until the dissolve, then out from the jetty, gathering a little way. */
 const track = glide([
   [TRIAL.fade, MOORING, 0],
-  [TRIAL.fade + 6, MOORING + 1.6, 0.42],
-  [549, MOORING + 1.6 + 0.42 * (549 - TRIAL.fade - 6), 0.42],
+  [TRIAL.fade + 6, MOORING + 1.4, 0.36],
+  [549, MOORING + 1.4 + 0.36 * (549 - TRIAL.fade - 6), 0.36],
 ])
+
+/** How far off it has gone, as the share of its size it is seen at: 1 at the jetty, less and less as it goes west. */
+export function skiffScale(t: number): number {
+  return 1 - 0.8 * smoother(t, TRIAL.fade + 4.5, 549)
+}
 
 export interface Skiff {
   x: number
   y: number
   a: number
+  s: number
 }
 
 export function skiffAt(t: number): Skiff {
-  const x = track(Math.max(t, TRIAL.fade))
-  return { x, y: surface(x, t) - 0.02, a: slope(x, t, L) * 0.8 }
+  const near = track(Math.max(t, TRIAL.fade))
+  const s = skiffScale(t)
+  // Going away: towards the point on the horizon under the sun, as far as it has gone (the perspective of the held shot).
+  const x = SUN_X + (near - SUN_X) * s
+  const y = HORIZON_Y * (1 - s) + (surface(near, t) - 0.02) * s
+  return { x, y, a: slope(near, t, L) * 0.8 * s, s }
 }
 
 /** Where seat `i` is at `t` (0 his, at the stern; 1 hers). */
 export function skiffSeat(t: number, i: number): Pt {
-  const s = skiffAt(t)
+  const k = skiffAt(t)
   const [lx, ly] = SEATS[i]
-  const c = Math.cos(s.a)
-  const n = Math.sin(s.a)
+  const c = Math.cos(k.a)
+  const n = Math.sin(k.a)
   const r = i === 0 ? 0.13 : 0.125
-  return [s.x + lx * c - (ly - r) * n, s.y + lx * n + (ly - r) * c]
+  const px = lx * k.s
+  const py = (ly - r) * k.s
+  return [k.x + px * c - py * n, k.y + px * n + py * c]
 }
 
 /** The skiff: a small hull, a mast and a square sail with a madder band, lifting a little in the evening wind. */
@@ -51,6 +73,7 @@ export function drawSkiff(g: Paint): void {
   ctx.save()
   ctx.translate(s.x, s.y)
   ctx.rotate(s.a)
+  ctx.scale(s.s, s.s)
   // The mast and the sail, set once they are under way.
   const set = Math.min(1, Math.max(0, (t - TRIAL.fade - 1.5) / 3))
   rect(ctx, 0.3, -1.05, 0.03, 0.85)
@@ -76,7 +99,7 @@ export function drawSkiff(g: Paint): void {
   stroke(g, ink, 1.4)
   ctx.restore()
   // The mooring line to the jetty's bollard, until they cast off.
-  if (t < TRIAL.fade + 1.2) {
+  if (t < TRIAL.fade + 1.2 && s.s > 0.99) {
     ctx.beginPath()
     ctx.moveTo(s.x - L / 2 + 0.05, s.y - 0.15)
     ctx.quadraticCurveTo((s.x + JETTY.x1 - 0.5) / 2, s.y + 0.05, JETTY.x1 - 0.5, JETTY.top - 0.1)

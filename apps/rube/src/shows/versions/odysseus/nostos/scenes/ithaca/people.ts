@@ -6,7 +6,7 @@ import { BEACH, DAIS, GATE, HALL, HOIST, HOME, JETTY, ON_TOP, R, ROOM, STAIRS, T
 import { stepAt } from './palace'
 import { heroBasketY, plateEnd } from './rig'
 import { weaverX } from './loom'
-import { skiffSeat } from './west'
+import { skiffScale, skiffSeat } from './west'
 
 /**
  * Who moves on Ithaca, and how: the hero from the beach to the bow and the skiff; Penelope at her loom, at the head of
@@ -91,8 +91,8 @@ export function heroMoves(): Move[] {
   const meet: Pt = [820.66, HERO_ON]
   m.push(roll([byDoor, meet], TRIAL.erupts + 0.4, TRIAL.meet))
   m.push(rest(meet, TRIAL.meet, TRIAL.fade))
-  // The west: in the skiff with her (the dissolve carries him there).
-  m.push(ride((t) => skiffSeat(t, 0), TRIAL.fade, END))
+  // The west: in the skiff with her (the dissolve carries him there), going away with it.
+  m.push(ride((t) => skiffSeat(t, 0), TRIAL.fade, END, undefined, { scale: skiffScale }))
   return m
 }
 
@@ -128,7 +128,7 @@ function penelopePath(): Path {
   const meet: Pt = [820.66 - R - R * PENELOPE_SIZE, on(FLOOR, PENELOPE_SIZE)]
   m.push(roll([floorFoot, meet], 507.79, TRIAL.meet))
   m.push(rest(meet, TRIAL.meet, TRIAL.fade))
-  m.push(ride((t) => skiffSeat(t, 1), TRIAL.fade, END))
+  m.push(ride((t) => skiffSeat(t, 1), TRIAL.fade, END, undefined, { scale: skiffScale }))
   return new Path(m, 'penelope')
 }
 
