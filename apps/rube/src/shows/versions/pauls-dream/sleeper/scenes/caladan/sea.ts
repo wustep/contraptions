@@ -162,7 +162,6 @@ export function spray(g: Paint): void {
     ...T.waves.map((t): [number, number] => [t, 7]),
     ...T.answers.map((t): [number, number] => [t, 3]),
     [T.great, 15],
-    [T.sea, 6],
   ]
   for (const [at, height] of bursts) {
     const s = g.t - at

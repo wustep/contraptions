@@ -33,11 +33,10 @@ const C = {
 
 /**
  * How much of the castle's face is drawn over the rooms at `t`: whole while the camera is outside, gone while it is in
- * a room. It goes as the camera comes in to Paul's window, comes back for the shot from the sea, and goes again inside.
+ * a room. It goes as the camera comes in to Paul's window, and comes back for the field.
  */
 export function faceAt(t: number): number {
   if (t < T.window + 1) return 1 - smooth(t, T.window - 4.5, T.window + 0.5)
-  if (t >= T.sea && t < T.inside) return 1
   if (t >= T.field) return 1
   return 0
 }

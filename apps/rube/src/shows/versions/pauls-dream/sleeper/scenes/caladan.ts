@@ -143,9 +143,9 @@ const shots: Shot[] = [
   // The hall: Leto at the window over the sea, the head on the wall.
   { t: T.hall, cells: 5.1, at: [-555.2, -14.05], cut: true },
   { t: T.sea - 0.002, cells: 4.9, at: [-555.4, -14.0] },
-  // From the sea: the two of them small in a window of the tower on its cliff.
-  { t: T.sea, cells: 24, at: [-567, -11], cut: true },
-  { t: T.inside - 0.002, cells: 22.5, at: [-566.2, -11.3] },
+  // Close: father and son at the window, the sea's grey light on them.
+  { t: T.sea, cells: 2.4, at: [-556.75, -13.3], cut: true },
+  { t: T.inside - 0.002, cells: 2.25, at: [-556.8, -13.27] },
   // Back in: the head comes down into its crate.
   { t: T.inside, cells: 4.7, at: [-554.6, -14.0], cut: true },
   { t: T.lid, cells: 4.4, at: [-554.4, -13.95] },
@@ -243,7 +243,7 @@ export const caladan: Scene = {
     ['it is over', T.over],
     ['the door opens', T.open],
     ['the hall', T.hall],
-    ['the sea', T.sea],
+    ['at the window', T.sea],
     ...T.lower.map((t, i): [string, number] => [`the head comes down ${i}`, t]),
     ['the lid', T.lid],
     ['the field', T.field],
