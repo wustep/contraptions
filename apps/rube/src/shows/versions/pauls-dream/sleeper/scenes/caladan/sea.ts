@@ -1,4 +1,4 @@
-import { blob, clamp01, cover, drift, fill, hash, layer, mix, poly, rgba, smooth, vgrad, type Layer, type Paint, type Pt, type View } from '../../paint'
+import { clamp01, cover, drift, fill, hash, layer, mix, poly, rgba, smooth, vgrad, type Layer, type Paint, type Pt, type View } from '../../paint'
 import { CLIFF, SEA, T } from './geo'
 
 /**
@@ -65,20 +65,23 @@ export function sea(g: Paint): void {
   const top = v.cy
   ctx.fillStyle = vgrad(ctx, top, Math.max(top + 0.5, SEA + 0.5), [[0, AIR.seaFar], [0.35, mix(AIR.seaFar, AIR.sea, 0.6)], [1, AIR.sea]])
   ctx.fillRect(v.x0 - 1, top, v.w + 2, Math.max(0, SEA + 1 - top))
-  // Swells across it, each at its depth, a little lighter on their faces.
-  for (const d of [90, 22]) {
+  // Long swells across it, each at its depth: a broad lighter band on its face, fading down its back, rolling east
+  // toward the cliff (a few, large and slow; small waves would read as texture).
+  for (const [d, phase] of [[70, 0.4], [30, 1.9], [12, 3.1]] as const) {
     const L = layer(v, d)
-    const pts: Pt[] = []
-    const step = Math.max(0.4, (8 * g.px) / L.s)
+    const step = Math.max(0.5, (10 * g.px) / L.s)
     const xa = v.cx + (v.x0 - v.cx) / L.s - 2
     const xb = v.cx + (v.x1 - v.cx) / L.s + 2
-    for (let x = xa; x <= xb; x += step) pts.push(L.pt([x, SEA + swell(x, g.t, 0.5) - 0.05]))
+    const top: Pt[] = []
+    for (let x = xa; x <= xb; x += step) top.push(L.pt([x, SEA - 0.25 - 0.35 * Math.sin(x * 0.2 - g.t * 0.85 + phase)]))
+    const depth = 1.6 * L.s
     ctx.beginPath()
-    ctx.moveTo(pts[0][0], pts[0][1])
-    for (const p of pts) ctx.lineTo(p[0], p[1])
-    for (let i = pts.length - 1; i >= 0; i--) ctx.lineTo(pts[i][0], pts[i][1] + 0.6 * L.s)
+    ctx.moveTo(top[0][0], top[0][1])
+    for (const p of top) ctx.lineTo(p[0], p[1])
+    for (let i = top.length - 1; i >= 0; i--) ctx.lineTo(top[i][0], top[i][1] + depth)
     ctx.closePath()
-    fill(ctx, rgba(mix(AIR.crest, AIR.mist, clamp01(d / 160)), 0.3))
+    const y = L.y(SEA - 0.6)
+    fill(ctx, vgrad(ctx, y, y + depth * 1.5, [[0, rgba(mix(AIR.crest, AIR.mist, clamp01(d / 120)), 0.42)], [1, rgba(AIR.crest, 0)]]))
   }
 }
 
@@ -166,19 +169,28 @@ export function spray(g: Paint): void {
   for (const [at, height] of bursts) {
     const s = g.t - at
     if (s < 0 || s > 3.2) continue
+    const key = Math.round(at * 10)
+    // One sheet of white water thrown up the rock: its top rises with the fastest of it and falls back under gravity,
+    // and the sheet fans out, leans off the face and thins as it goes. One ragged shape, not a stack of blobs.
     const v0 = Math.sqrt(2 * 24 * height)
-    for (let i = 0; i < 7; i++) {
-      const spread = (hash(i, Math.round(at * 10)) - 0.5) * 2
-      const vi = v0 * (0.55 + 0.45 * hash(i, 7, Math.round(at * 10)))
-      const y = -vi * s + 0.5 * 24 * s * s
-      if (y > 0.6) continue
-      const yy = SEA + y
-      const x = CLIFF.foot - 0.6 - Math.abs(spread) * 2.4 - s * 1.2 * (0.4 + Math.abs(spread))
-      const r = (0.5 + 0.5 * hash(i, 11)) * (0.7 + height * 0.2) * (1 + s * 0.6)
-      const a = (1 - smooth(s, 0.8, 3.0)) * 0.75
-      blob(g.ctx, [[x - r, yy], [x - r * 0.4, yy - r * 0.8], [x + r * 0.5, yy - r * 0.7], [x + r, yy + r * 0.1], [x + r * 0.2, yy + r * 0.6], [x - r * 0.7, yy + r * 0.5]])
-      fill(g.ctx, rgba(AIR.foam, a))
+    const h = Math.max(0, v0 * s - 12 * s * s) + 0.5 * smooth(s, 0, 0.3)
+    const a = (1 - smooth(s, 0.5, 3.0)) * 0.72
+    if (h < 0.05 || a < 0.01) continue
+    // A burst of lobes along the plume's axis, one path (their union), so it is lumpy like broken water and its overlaps
+    // never darken.
+    const ctx = g.ctx
+    ctx.beginPath()
+    const n = 9
+    for (let i = 0; i < n; i++) {
+      const u = i / (n - 1)
+      const cx = CLIFF.foot - 0.5 - u * h * 0.25 - s * 0.6 + (hash(i, 5, key) - 0.5) * 0.5 * (1 + s)
+      const cy = SEA - u * h + (hash(i, 9, key) - 0.5) * 0.4
+      const r = (0.35 + h * (0.05 + 0.2 * u)) * (0.75 + 0.5 * hash(i, 13, key)) * (1 + s * 0.3)
+      ctx.moveTo(cx + r, cy)
+      ctx.arc(cx, cy, r, 0, Math.PI * 2)
     }
+    ctx.fillStyle = rgba(AIR.foam, a)
+    ctx.fill('nonzero')
   }
 }
 
