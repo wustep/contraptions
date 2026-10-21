@@ -69,8 +69,8 @@ function heroMoves(): Move[] {
 
 const SHOTS: Key[] = [
   // Down with them through the cloud.
-  { t: FROM + 0.05, cells: 5.0, off: [0.2, -0.2] },
-  { t: FROM + 2.4, cells: 5.6, off: [0, 1.2] },
+  { t: FROM + 0.05, cells: 3.3, off: [0.1, 0.05] },
+  { t: FROM + 2.4, cells: 5.0, off: [0, 1.0] },
   // Out under it into the dawn: the meadow and the river of stones below.
   { t: FROM + 4.1, cells: 7.6, off: [-0.4, 1.9] },
   // Down on the bed, close on the two of them.

@@ -103,35 +103,37 @@ export function drawCloudFloor(g: Paint, L: Light, a = 1): void {
     ctx.clip()
     const dx = (v.cx - GAP.x) * 0.6
     ctx.translate(dx, 0)
-    ctx.fillStyle = vgrad(ctx, by - 0.2, by + 1.6, [
-      [0, mix(lit('#4A6070', L.ambient, 0.5), L.low, 0.35)],
-      [1, lit('#2C3C48', L.ambient, 0.5)],
+    // Moonlit country far below: hazed going away, darker green near.
+    ctx.fillStyle = vgrad(ctx, by - 0.2, by + 1.7, [
+      [0, mix(lit('#56705E', L.ambient, 0.5), L.low, 0.45)],
+      [1, lit('#2F4A3A', L.ambient, 0.5)],
     ])
     ctx.fillRect(GAP.x - GAP.w * 2, by - 0.5, GAP.w * 4, 3)
-    // Low hills going away in it.
+    // Low hills going away in it, the river coming out from between them.
     ctx.beginPath()
     ctx.moveTo(GAP.x - GAP.w * 1.5, by + 0.5)
-    ctx.quadraticCurveTo(GAP.x - 1.8, by + 0.05, GAP.x - 0.6, by + 0.42)
-    ctx.quadraticCurveTo(GAP.x + 1.0, by + 0.12, GAP.x + GAP.w * 1.5, by + 0.46)
+    ctx.quadraticCurveTo(GAP.x - 1.8, by + 0.02, GAP.x - 0.2, by + 0.44)
+    ctx.quadraticCurveTo(GAP.x + 1.2, by + 0.1, GAP.x + GAP.w * 1.5, by + 0.46)
     ctx.lineTo(GAP.x + GAP.w * 1.5, by + 2)
     ctx.lineTo(GAP.x - GAP.w * 1.5, by + 2)
     ctx.closePath()
-    fill(ctx, lit('#2E4250', L.ambient, 0.5))
-    // The river: a ribbon coming towards us out of the hills, widening, winding, silver.
-    const pts: Pt[] = []
-    for (let i = 0; i <= 24; i++) {
-      const u = i / 24
-      pts.push([GAP.x + 0.3 + 1.9 * Math.sin(u * 3.0 + 0.9) * (0.35 + 0.65 * u), by + 0.36 + u * 0.95])
-    }
+    fill(ctx, mix(lit('#3E5A46', L.ambient, 0.5), L.low, 0.15))
+    // The river: a ribbon winding towards us out of the hills, widening as it comes, silver with the moon on it.
+    const N = 32
+    const mid = (u: number): Pt => [GAP.x - 0.1 + 1.7 * Math.sin(u * 4.2 + 0.5) * (0.3 + 0.7 * u), by + 0.4 + u * 1.0]
+    const half = (u: number) => 0.03 + 0.2 * u
     ctx.beginPath()
-    for (let i = 0; i <= 24; i++) {
-      const w = 0.04 + 0.26 * (i / 24)
-      if (i === 0) ctx.moveTo(pts[i][0] - w, pts[i][1])
-      else ctx.lineTo(pts[i][0] - w, pts[i][1])
+    for (let i = 0; i <= N; i++) {
+      const [x, y] = mid(i / N)
+      if (i === 0) ctx.moveTo(x - half(i / N), y)
+      else ctx.lineTo(x - half(i / N), y)
     }
-    for (let i = 24; i >= 0; i--) ctx.lineTo(pts[i][0] + 0.04 + 0.26 * (i / 24), pts[i][1])
+    for (let i = N; i >= 0; i--) {
+      const [x, y] = mid(i / N)
+      ctx.lineTo(x + half(i / N), y)
+    }
     ctx.closePath()
-    fill(ctx, mix('#BFD2DC', L.cloud, 0.35))
+    fill(ctx, mix('#E2EAE4', L.cloud, 0.2))
     ctx.restore()
     // The basin's far wall, in shade, its lower edge hanging in lobes.
     ctx.beginPath()

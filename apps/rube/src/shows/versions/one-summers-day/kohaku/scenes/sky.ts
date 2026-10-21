@@ -12,10 +12,14 @@ import { HEAD, heading, seat, trail } from '../world/dragon'
  * into the dawn and on to the river of stones, where they come to rest side by side.
  */
 
-/** The dragon's head over the cloud, flying west, rising and falling a little. */
+/**
+ * The dragon's head over the cloud, flying west, rising and falling a little; coming down nearer the cloud as the gap
+ * opens under them, so that the cadence finds the whole of him over the river.
+ */
 export function head(t: number): Pt {
   const u = t - M.summit
-  return [64 - 4.1 * u, -25.4 + 0.5 * Math.sin(0.85 * u) - 0.25 * Math.sin(0.37 * u + 1)]
+  const down = 1.8 * smooth(t, M.summit + 3.4, M.cadence - 0.3)
+  return [64 - 4.1 * u, -25.4 + down + 0.5 * Math.sin(0.85 * u) - 0.25 * Math.sin(0.37 * u + 1)]
 }
 
 /** His back is to the sky flying west. */

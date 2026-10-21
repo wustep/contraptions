@@ -32,16 +32,16 @@ const SHOTS: Key[] = [
   { t: FROM, cells: 3.7, off: [-0.7, -0.15], cut: true },
   { t: FROM + 2.2, cells: 5.4, off: [-1.1, -0.35] },
   // The whole floor of cloud under the moon.
-  { t: FROM + 4.4, cells: 10.5, off: [-1.6, 1.4] },
-  // Over the gap: the river far below in it, and the two of them over it.
-  { t: M.cadence - 2.6, cells: 11.5, at: [GAP.x + 0.6, -22.7], w: 0.8 },
-  { t: M.cadence - 1.9, cells: 9.5, at: [GAP.x - 0.8, -23.4], w: 0.6 },
-  // The whole of him for the name: the scales come off from his tail up to her.
-  { t: M.cadence - 0.1, cells: 6.6, off: [1.5, 0.15] },
-  { t: M.cadence + 1.2, cells: 5.6, off: [0.7, 0.0] },
-  // Falling together, the scales streaming away up over them.
-  { t: FREE + 0.5, cells: 5.2, off: [0.4, -1.1] },
-  { t: TO - 0.05, cells: 5.0, off: [0.2, -0.2] },
+  { t: FROM + 4.4, cells: 10.5, off: [-2.6, 1.3] },
+  // Over the gap: the river far below in it, held while he comes in and down over it.
+  { t: M.cadence - 2.0, cells: 8.6, at: [GAP.x + 1.6, -22.5], w: 0.8 },
+  { t: M.cadence - 0.95, cells: 7.8, at: [GAP.x + 0.6, -22.3], w: 0.6 },
+  // The whole of him over his river for the name: the scales come off from his tail up to her.
+  { t: M.cadence - 0.1, cells: 7.0, off: [2.0, 1.1] },
+  { t: M.cadence + 1.2, cells: 5.6, off: [0.8, 0.4] },
+  // Falling together, close, the scales going up past them.
+  { t: FREE + 0.5, cells: 3.8, off: [0.15, 0.05] },
+  { t: TO - 0.05, cells: 3.3, off: [0.1, 0.05] },
 ]
 
 const far = standing('name-cloud-sea', region(-40, -60, 120, 0, 6), END, (g) => {
@@ -57,7 +57,7 @@ const dragon = standing('name-dragon', region(-10, -34, 90, -14, 2), END, (g) =>
   if (g.t < FROM - 0.001 || g.t > BURST.at + BURST.dur + 5.4) return
   const L = light(g.t)
   if (g.t <= BURST.at + BURST.dur) drawDragon(g, spineAt(g.t), L, { up: UP, burst: burstAt(g.t), reach: 0 })
-  drawScales(g, L, spineAt, BURST.at, BURST.dur, 170)
+  drawScales(g, L, spineAt, BURST.at, BURST.dur, 110)
 })
 
 export const name: Scene = {
