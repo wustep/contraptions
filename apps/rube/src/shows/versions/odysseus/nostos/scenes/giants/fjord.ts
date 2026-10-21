@@ -39,7 +39,7 @@ export function cliffTop(x: number): number {
   const bumps = 1.1 * Math.sin(x * 0.21 + 0.4) + 0.6 * Math.sin(x * 0.57 + 2.1) + 0.2 * Math.sin(x * 1.7)
   let gully = 0
   for (const [gx, w, d] of GULLIES) gully += d * Math.max(0, 1 - Math.abs(x - gx) / w) ** 1.5
-  return lerp(CLIFF.foot - 0.6, TOP + bumps * 0.7 + gully, ends)
+  return lerp(CLIFF.foot, TOP + bumps * 0.7 + gully, ends)
 }
 
 /* ------------------------------------------------------------------ the far walls */
@@ -79,8 +79,8 @@ export function drawFar(g: Paint): void {
 /* ------------------------------------------------------------------ the cliff */
 
 /**
- * The cliff: one dark face with its upper part catching the fog's light, a few long cracks, and its wet foot at the
- * water.
+ * The cliff: one dark face with its upper part catching the fog's light, and its wet foot at the water, running down
+ * into the water at both ends.
  */
 export function drawCliff(g: Paint): void {
   const { ctx, t, view } = g
@@ -110,17 +110,6 @@ export function drawCliff(g: Paint): void {
   for (let x = b + 1; x >= a - 1; x -= 0.8) ctx.lineTo(x, cliffTop(x) + 2.2 + 0.9 * Math.sin(x * 0.33 + 1.2) + 0.5 * Math.sin(x * 0.9))
   ctx.closePath()
   fill(ctx, mix(ROCK.lit, fog, 0.3))
-  // A few long cracks, slanting.
-  ctx.beginPath()
-  for (let i = Math.floor(a / 13); i <= Math.ceil(b / 13); i++) {
-    const x = i * 13 + 5 * hash(i, 21)
-    const y0 = TOP + 2.5 + 2 * hash(i, 22)
-    const len = 3 + 3 * hash(i, 23)
-    ctx.moveTo(x, y0)
-    ctx.lineTo(x + 0.6, y0 + len * 0.45)
-    ctx.lineTo(x + 0.2, y0 + len)
-  }
-  stroke(g, rgba(mix(ROCK.dark, fog, 0.15), 0.8), 2.4)
   // The wet foot of it, at the water.
   ctx.fillStyle = mix(ROCK.wet, fog, 0.12)
   ctx.fillRect(a, CLIFF.foot - 0.6, b - a, 0.7)
