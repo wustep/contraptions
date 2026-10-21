@@ -1,10 +1,10 @@
 import type { Placed } from '../../../../../../plan'
 import { drawBull } from '../../craft/bull'
-import { mix, standing, type Paint } from '../../paint'
+import { mix, ring, standing, type Paint } from '../../paint'
 import { BARON } from '../../cast'
 import { CHAIR, HOOK } from './geo'
 import { inside, isNight, toneAt } from './look'
-import { drawArmada, drawChair, drawDoor, drawFires, drawGas, drawLamps, drawNearShips, drawRoom, drawRoomLight, drawShield, drawStraps, drawUpperRooms } from './night'
+import { drawArmada, drawChair, drawDoor, drawFires, drawGas, drawHallLamp, drawHallPool, drawHallWash, drawNearShips, drawRoom, drawRoomLight, drawShield, drawStraps, drawUpperRooms, underlightBull } from './night'
 import { bullSwing, bullTop, drawCrateFront, drawFrigateOver, drawFrigateUnder, drawHark, drawHarkOver, drawWinch } from './rig'
 import { drawBehind, drawNear, drawPalaceWhole } from './set'
 import { ARRIVAL, ATTACK } from './times'
@@ -44,8 +44,13 @@ function under(g: Paint): void {
       drawCrateFront(g, WOOD)
     }
     if (night) {
-      drawBull(g, { x: HOOK[0], y: HOOK[1], dark: 0.55 })
-      drawLamps(g, t, tone.lamp, IRON)
+      // The hall by its one lamp: its pool, the bull over it lit from below (it shudders on the blow after the death),
+      // the lamp, the chair.
+      drawHallPool(g, tone.lamp)
+      const swing = 0.035 * ring(t, ATTACK.fall, 0.8, 0.9)
+      drawBull(g, { x: HOOK[0], y: HOOK[1], dark: 0.5, swing })
+      underlightBull(g, HOOK, tone.lamp, swing)
+      drawHallLamp(g, t, IRON)
       drawRoom(g, tone.lamp, NIGHT_WOOD)
       drawUpperRooms(g, tone.lamp, NIGHT_WOOD)
       drawDoor(g, t, '#6A5240')
@@ -64,6 +69,7 @@ function over(g: Paint): void {
   drawFrigateOver(g, t, night, tone.air.sand)
   if (night) {
     drawHarkOver(g, t)
+    if (inside(t)) drawHallWash(g, tone.lamp)
     if (inside(t) && t < ATTACK.hall) drawRoomLight(g, t)
     if (inside(t) && t >= ATTACK.hall) {
       drawStraps(g, DUKE_SEAT, 0.13 * 1.18, '#16120F')

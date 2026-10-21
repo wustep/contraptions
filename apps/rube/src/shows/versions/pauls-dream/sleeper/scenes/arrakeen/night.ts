@@ -1,7 +1,7 @@
 import { drawFrigate, type FrigateLook } from '../../craft/frigate'
-import { blob, drift, ellipse, fill, hash, layer, line, mix, poly, rect, rgba, ring, smooth, smoother, stroke, type Layer, type Paint, type Pt } from '../../paint'
+import { blob, drift, ellipse, fill, hash, layer, line, mix, poly, rect, rgba, ring, smooth, smoother, type Layer, type Paint, type Pt } from '../../paint'
 import { hazeAt } from '../../world/desert'
-import { CHAIR, HALL, ROOM, ROOM_DOOR, SHIELD, TOP_ROOMS, WEST_ROOM } from './geo'
+import { CHAIR, HALL, LAMP, ROOM, ROOM_DOOR, SHIELD, TOP_ROOMS, WEST_ROOM } from './geo'
 import { ATTACK } from './times'
 
 /**
@@ -21,24 +21,23 @@ export function drawShield(g: Paint, t: number): void {
   if (t < from || t > out + 3) return
   const p = smooth(t, out, out + 2.2)
   const ctx = g.ctx
-  const n = 48
   // A faint flat body to it, gone first.
   ctx.beginPath()
   ctx.ellipse(SHIELD.cx, 0, SHIELD.w, SHIELD.h, 0, Math.PI, Math.PI * 2)
   ctx.closePath()
   fill(ctx, rgba('#9DB3C9', 0.035 * (1 - smooth(p, 0, 0.35))))
-  // The line, a segment at a time: the crown goes out first, the feet last.
-  for (let i = 0; i < n; i++) {
-    const a0 = Math.PI + (i / n) * Math.PI
-    const a1 = Math.PI + ((i + 1) / n) * Math.PI
-    const h = Math.abs(Math.sin((a0 + a1) / 2))
+  // The line, one stroke whose strength goes with its height: the crown goes out first, the feet last.
+  const line = ctx.createLinearGradient(0, -SHIELD.h, 0, 0)
+  for (let i = 0; i <= 12; i++) {
+    const h = 1 - i / 12
     const gone = smooth(p, (1 - h) * 0.6, (1 - h) * 0.6 + 0.4)
-    const a = 0.42 * (1 - gone)
-    if (a <= 0.004) continue
-    ctx.beginPath()
-    ctx.ellipse(SHIELD.cx, 0, SHIELD.w, SHIELD.h, 0, a0, a1)
-    stroke(g, rgba('#B5C8DA', a), 0.11)
+    line.addColorStop(i / 12, rgba('#B5C8DA', 0.42 * (1 - gone)))
   }
+  ctx.beginPath()
+  ctx.ellipse(SHIELD.cx, 0, SHIELD.w, SHIELD.h, 0, Math.PI, Math.PI * 2)
+  ctx.strokeStyle = line
+  ctx.lineWidth = 2.2 * g.px
+  ctx.stroke()
 }
 
 /* ------------------------------------------------------------------ the armada */
@@ -123,7 +122,7 @@ const HITS: { t: number; x: number; y: number; d: number; w: number; h: number }
  */
 function sheet(g: Paint, x0: number, x1: number, y: number, h: number, t: number, seed: number, fade: number): void {
   const ctx = g.ctx
-  const layers: [number, string][] = [[1, '#8A2C11'], [0.74, '#C24E1C'], [0.48, '#E0782E'], [0.24, '#F0B25A']]
+  const layers: [number, string][] = [[1, '#6E1E0E'], [0.7, '#9C3315'], [0.42, '#C24A1B']]
   const n = Math.max(6, Math.ceil((x1 - x0) / Math.max(0.15, h * 0.35)))
   for (const [k, c] of layers) {
     const inset = (1 - k) * 0.35 * (x1 - x0) * 0.5
@@ -136,8 +135,8 @@ function sheet(g: Paint, x0: number, x1: number, y: number, h: number, t: number
       const u = i / n
       const x = a + (b - a) * u
       const taper = Math.sqrt(Math.max(0, 1 - Math.pow(2 * u - 1, 2)))
-      const wave = 0.55 + 0.45 * drift(x / Math.max(0.3, h * 0.8) + t * 0.55, seed)
-      ctx.lineTo(x, y - h * k * wave * (0.35 + 0.65 * taper))
+      const wave = 0.75 + 0.25 * drift(x / Math.max(0.3, h * 1.2) + t * 0.45, seed)
+      ctx.lineTo(x, y - h * k * wave * (0.7 + 0.3 * taper))
     }
     ctx.lineTo(b, y + 0.02)
     ctx.closePath()
@@ -177,7 +176,7 @@ export function drawFires(g: Paint, t: number, depth: (d: number) => boolean, ai
     const age = t - h.t
     // It takes where it lands and spreads along the roof either way; it stands up tall at first and settles.
     const spread = h.w * (0.12 + 0.88 * (1 - Math.exp(-age / 2.4)))
-    const tall = h.h * (0.3 + 0.7 * smoother(age, 0, 0.5)) * (1 + 0.2 * Math.exp(-age / 0.8))
+    const tall = Math.min(h.h * (0.3 + 0.7 * smoother(age, 0, 0.5)), spread * 0.38)
     smoke(g, L.x(h.x), L.y(h.y), spread * L.s, tall * L.s, age, 70 + i, air, hz)
     sheet(g, L.x(h.x - spread), L.x(h.x + spread), L.y(h.y), tall * L.s, t, 80 + i, 1 - hz * 0.55)
   }
@@ -185,21 +184,96 @@ export function drawFires(g: Paint, t: number, depth: (d: number) => boolean, ai
 
 /* ------------------------------------------------------------------ the hall and Paul's room by night */
 
-/** The hall's lamps: bowls on chains from the vault, swinging when the palace is struck. */
-const LAMPS = [76.2, 85.8]
-export function drawLamps(g: Paint, t: number, lamp: string, iron: string): void {
-  for (const [i, x] of LAMPS.entries()) {
-    const sway = 0.08 * (ring(t, ATTACK.fall, 0.55, 1.6) + 0.4 * ring(t, ATTACK.hits[2], 0.6, 1.2)) * (i ? -1 : 1)
-    const top: Pt = [x, HALL.ceil]
-    const len = 8.4
-    const bx = x + Math.sin(sway) * len
-    const by = HALL.ceil + Math.cos(sway) * len
-    line(g, top, [bx, by], iron, 0.035)
-    poly(g.ctx, [[bx - 0.42, by], [bx + 0.42, by], [bx + 0.24, by + 0.28], [bx - 0.24, by + 0.28]])
-    fill(g.ctx, iron)
-    ellipse(g.ctx, bx, by, 0.4, 0.09, 0)
-    fill(g.ctx, lamp)
+/**
+ * The hall's one lamp by night: a tall iron stand under the bull, a shallow bowl, and a low flame in it, deep orange
+ * and flat, that leans when the palace is struck and leans again on the blow after the Duke's death.
+ */
+export function drawHallLamp(g: Paint, t: number, iron: string): void {
+  const ctx = g.ctx
+  const [x, y] = LAMP
+  line(g, [x, 0], [x, y + 0.12], iron, 0.05)
+  poly(ctx, [[x - 0.3, 0], [x + 0.3, 0], [x + 0.08, -0.12], [x - 0.08, -0.12]])
+  fill(ctx, iron)
+  poly(ctx, [[x - 0.3, y], [x + 0.3, y], [x + 0.17, y + 0.16], [x - 0.17, y + 0.16]])
+  fill(ctx, iron)
+  const lean = 0.08 * (ring(t, ATTACK.fall, 0.7, 0.9) + 0.6 * ring(t, ATTACK.bite, 1.2, 0.4))
+  const h = 0.11 + 0.015 * drift(t * 0.5, 7)
+  // A low flat lens of flame in the bowl, deep orange, rounded: no peak.
+  blob(ctx, [[x - 0.22, y + 0.01], [x - 0.14 + lean, y - h], [x + 0.14 + lean, y - h], [x + 0.22, y + 0.01]])
+  fill(ctx, '#A9441A')
+  blob(ctx, [[x - 0.12, y + 0.01], [x - 0.06 + lean, y - h * 0.6], [x + 0.06 + lean, y - h * 0.6], [x + 0.12, y + 0.01]])
+  fill(ctx, '#C25A21')
+}
+/**
+ * The lamp's light where it falls, under the balls: a pool on the floor round the chair and up the dark wall behind,
+ * strongest near the lamp and gone well short of the vault; the floor's front edge lit under it.
+ */
+export function drawHallPool(g: Paint, lamp: string): void {
+  const ctx = g.ctx
+  const [x, y] = LAMP
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(HALL.x0, HALL.ceil, HALL.x1 - HALL.x0, -HALL.ceil)
+  ctx.clip()
+  ctx.translate(x, y + 0.5)
+  ctx.scale(1, 0.82)
+  const r = 3.2
+  const pool = ctx.createRadialGradient(0, 0, 0, 0, 0, r)
+  pool.addColorStop(0, rgba(lamp, 0.34))
+  pool.addColorStop(0.45, rgba(lamp, 0.24))
+  pool.addColorStop(0.8, rgba(lamp, 0.07))
+  pool.addColorStop(1, rgba(lamp, 0))
+  ctx.fillStyle = pool
+  ctx.fillRect(-r, -r, 2 * r, 2 * r)
+  ctx.restore()
+  rect(ctx, x - 3.2, 0, 6.4, 0.35)
+  ctx.fillStyle = (() => {
+    const gr = ctx.createLinearGradient(x - 3.2, 0, x + 3.2, 0)
+    gr.addColorStop(0, rgba(lamp, 0))
+    gr.addColorStop(0.5, rgba(lamp, 0.3))
+    gr.addColorStop(1, rgba(lamp, 0))
+    return gr
+  })()
+  ctx.fill()
+}
+
+/**
+ * Over the bull (hung at `top`, its plaque's top): the lamp's light from below on it, flat, on the underside of its
+ * muzzle, the lower face and the undersides of the horns' sweep. The bull itself is drawn dim; this is all that is lit.
+ */
+export function underlightBull(g: Paint, top: Pt, lamp: string, swing = 0): void {
+  const ctx = g.ctx
+  ctx.save()
+  ctx.translate(top[0], top[1])
+  ctx.rotate(swing)
+  // The lower face and the muzzle, as the bull's own shapes give them.
+  blob(ctx, [[-0.15, 0.62], [0.15, 0.62], [0.13, 0.84], [0.1, 0.95], [0, 0.98], [-0.1, 0.95], [-0.13, 0.84]])
+  fill(ctx, rgba(lamp, 0.26))
+  ellipse(ctx, 0, 0.93, 0.11, 0.055, 0)
+  fill(ctx, rgba(lamp, 0.42))
+  // The horns' undersides, where they leave the head.
+  for (const s of [-1, 1]) {
+    blob(ctx, [[0.18 * s, 0.38], [0.36 * s, 0.25], [0.5 * s, 0.17], [0.4 * s, 0.26], [0.24 * s, 0.38]])
+    fill(ctx, rgba(lamp, 0.35))
   }
+  ctx.restore()
+}
+
+/** Over the balls in the lamp's pool: its warm light on them too. */
+export function drawHallWash(g: Paint, lamp: string): void {
+  const ctx = g.ctx
+  const [x, y] = LAMP
+  ctx.save()
+  ctx.translate(x, y + 0.5)
+  ctx.scale(1, 0.82)
+  const r = 3.0
+  const wash = ctx.createRadialGradient(0, 0, 0, 0, 0, r)
+  wash.addColorStop(0, rgba(lamp, 0.16))
+  wash.addColorStop(0.6, rgba(lamp, 0.08))
+  wash.addColorStop(1, rgba(lamp, 0))
+  ctx.fillStyle = wash
+  ctx.fillRect(-r, -r, 2 * r, 2 * r)
+  ctx.restore()
 }
 
 /** Paul's room: a low bed by its west wall, a lamp on a low table by the window. */

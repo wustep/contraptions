@@ -1,7 +1,7 @@
 import { blob, cover, drift, fill, hash, layer, mix, poly, rect, rgba, vgrad, type Paint, type Pt, type View } from '../../paint'
 import { dunes, hazeAt, sky } from '../../world/desert'
 import {
-  FIELD, HALL, HALL_DOOR, PALACE, PAD_X, ROOM, ROOM_DOOR, SLITS, TERRACE_Y, TOP_ROOMS, WEST_ROCK, EAST_ROCK,
+  FIELD, HALL, HALL_DOOR, LAMP, PALACE, PAD_X, ROOM, ROOM_DOOR, SLITS, TERRACE_Y, TOP_ROOMS, WEST_ROCK, EAST_ROCK,
   WEST_ROOM, WINDOW,
 } from './geo'
 import { inside, isNight, type Tone } from './look'
@@ -18,11 +18,13 @@ import { PAD } from '../../plan'
  * rock walls at the bowl's edges).
  */
 
-/** A city block in a layer: its middle, half width, height (near-plane cells) and whether a slit in it is lit at night. */
+/** A mass of the city in a layer: its middle, half width, height (near-plane cells), a second tier, a lit slit at night. */
 interface Block {
   x: number
   w: number
   h: number
+  /** A narrower tier on top, this share of its height again (0 for none). */
+  tier: number
   lit: number
 }
 
@@ -32,19 +34,24 @@ function blocks(seed: number, x0: number, x1: number, hMin: number, hMax: number
   let i = 0
   while (x < x1) {
     const w = wMin + (wMax - wMin) * hash(i, seed, 1)
-    const h = hMin + (hMax - hMin) * Math.pow(hash(i, seed, 2), 1.6)
-    out.push({ x: x + w / 2, w: w / 2, h, lit: hash(i, seed, 3) })
-    // Mostly shoulder to shoulder, so a row is one mass of the city stepping up and down, not a field of boxes.
-    x += w + (hash(i, seed, 4) < 0.75 ? 0 : 2 + 6 * hash(i, seed, 5))
+    const h = hMin + (hMax - hMin) * Math.pow(hash(i, seed, 2), 1.4)
+    const tier = hash(i, seed, 6) < 0.45 ? 0.35 + 0.4 * hash(i, seed, 7) : 0
+    out.push({ x: x + w / 2, w: w / 2, h, tier, lit: hash(i, seed, 3) })
+    // Mostly shouldering into the next, so a row is a few great masses stepping up and down, not a row of boxes.
+    x += w * 0.82 + (hash(i, seed, 4) < 0.8 ? 0 : 6 + 14 * hash(i, seed, 5))
     i++
   }
   return out
 }
 
-/** The city behind the palace: a far row and a near one. */
+/**
+ * The city behind the palace: a far row of a few huge angled masses nearly lost in the air, and a nearer one, larger and
+ * a little clearer. `haze` is how far each goes into the air (it is more than its depth alone gives: Arrakeen's air is
+ * thick with dust).
+ */
 const ROWS = [
-  { d: 70, seed: 11, list: blocks(11, -140, 300, 3, 9, 12, 28) },
-  { d: 24, seed: 12, list: blocks(12, -90, 230, 1.5, 6, 9, 20) },
+  { d: 70, seed: 11, haze: 0.62, list: blocks(11, -200, 360, 7, 15, 44, 90) },
+  { d: 24, seed: 12, haze: 0.3, list: blocks(12, -120, 260, 4, 10, 24, 52) },
 ]
 
 /** The bowl's far rim: a ridge of red rock with flat tops (near-plane heights, at its depth). */
@@ -69,10 +76,10 @@ function inLayerRange(v: View, d: number): [number, number] {
 function cityRow(g: Paint, tone: Tone, row: (typeof ROWS)[number], night: boolean): void {
   const v = g.view
   const L = layer(v, row.d)
-  const hz = hazeAt(row.d) * 0.8
+  const hz = row.haze
   const face = mix(tone.city, tone.air.haze, hz)
-  const side = mix(tone.cityShade, tone.air.haze, hz * 0.9)
-  const ground = mix(tone.cityShade, tone.air.haze, hz * 0.85)
+  const side = mix(tone.cityShade, tone.air.haze, hz * 0.85)
+  const ground = mix(tone.cityShade, tone.air.haze, hz * 0.9)
   const [xa, xb] = inLayerRange(v, row.d)
   const ctx = g.ctx
   // Its ground, from its floor down past the frame's foot.
@@ -83,20 +90,29 @@ function cityRow(g: Paint, tone: Tone, row: (typeof ROWS)[number], night: boolea
   }
   for (const b of row.list) {
     if (b.x + b.w < xa - 2 || b.x - b.w > xb + 2) continue
-    const bat = b.w * 0.18
-    const pts: Pt[] = [[b.x - b.w, 0.3], [b.x - b.w + bat, -b.h], [b.x + b.w - bat, -b.h], [b.x + b.w, 0.3]].map((p) => L.pt(p as Pt))
-    poly(ctx, pts)
+    // A great battered mass: its sides lean in hard, the west one in shade (the light is from the east).
+    const bat = b.w * 0.3
+    const top = -b.h
+    poly(ctx, [[b.x - b.w, 0.3], [b.x - b.w + bat, top], [b.x + b.w - bat, top], [b.x + b.w, 0.3]].map((p) => L.pt(p as Pt)))
     fill(ctx, face)
-    // Its west batter in shade (the light is from the east).
-    poly(ctx, [L.pt([b.x - b.w, 0.3]), L.pt([b.x - b.w + bat, -b.h]), L.pt([b.x - b.w + bat * 2.2, -b.h]), L.pt([b.x - b.w + bat * 1.4, 0.3])])
+    poly(ctx, [[b.x - b.w, 0.3], [b.x - b.w + bat, top], [b.x - b.w + bat * 1.45, top], [b.x - b.w + bat * 0.45, 0.3]].map((p) => L.pt(p as Pt)))
     fill(ctx, side)
-    // A slit in one block in four: dark by day; at night a lamp in some.
-    if (b.h > 3 && b.lit > 0.75) {
-      const sx = b.x + (hash(b.x * 7, row.seed) - 0.5) * b.w
-      const sy = -b.h * (0.45 + 0.3 * hash(b.x * 3, row.seed))
-      const lit = night && b.lit > 0.82
-      rect(ctx, L.x(sx - 0.2), L.y(sy - 1.4), 0.4 * L.s, 1.4 * L.s)
-      fill(ctx, lit ? mix(tone.lamp, tone.air.haze, hz * 0.6) : mix(tone.slit, tone.air.haze, hz * 1.1))
+    if (b.tier > 0) {
+      // A narrower tier stepped back on top of it.
+      const tw = (b.w - bat) * 0.62
+      const th = b.h * b.tier
+      const tb = tw * 0.3
+      poly(ctx, [[b.x - tw, top + 0.05], [b.x - tw + tb, top - th], [b.x + tw - tb, top - th], [b.x + tw, top + 0.05]].map((p) => L.pt(p as Pt)))
+      fill(ctx, face)
+      poly(ctx, [[b.x - tw, top + 0.05], [b.x - tw + tb, top - th], [b.x - tw + tb * 1.45, top - th], [b.x - tw + tb * 0.45, top + 0.05]].map((p) => L.pt(p as Pt)))
+      fill(ctx, side)
+    }
+    // At night a lamp in a slit of a few of the near masses; by day nothing breaks the plain faces.
+    if (night && row.d < 50 && b.lit > 0.7) {
+      const sx = b.x + (hash(b.x * 7, row.seed) - 0.5) * b.w * 0.8
+      const sy = -b.h * (0.4 + 0.3 * hash(b.x * 3, row.seed))
+      rect(ctx, L.x(sx - 0.25), L.y(sy - 1.6), 0.5 * L.s, 1.6 * L.s)
+      fill(ctx, mix(tone.lamp, tone.air.haze, hz * 0.7))
     }
   }
 }
@@ -240,9 +256,9 @@ function palaceCut(g: Paint, tone: Tone, t: number): void {
     ctx.fill('evenodd')
   }
   if (night) {
-    // By night the hall is lit by its lamps from the middle of its height down, its vault dark.
+    // By night the hall is dark: its vault lost, its wall dim toward the floor; the one lamp's light is the scene's to draw.
     rect(ctx, HALL.x0, HALL.ceil, HALL.x1 - HALL.x0, HALL.floor - HALL.ceil)
-    fill(ctx, vgrad(ctx, HALL.ceil, HALL.floor, [[0, mix(tone.room, tone.lamp, 0.06)], [0.45, mix(tone.room, tone.lamp, 0.2)], [1, mix(tone.room, tone.lamp, 0.3)]]))
+    fill(ctx, vgrad(ctx, HALL.ceil, HALL.floor, [[0, '#07080B'], [0.55, '#101318'], [1, '#1B1C21']]))
   } else wall(HALL.x0, HALL.ceil, HALL.x1, HALL.floor, [], tone.room, mix(tone.roomDark, tone.cut, 0.35))
   hallWall(g, tone, night)
   wall(WEST_ROOM.x0, WEST_ROOM.ceil, WEST_ROOM.x1, WEST_ROOM.floor, night ? [] : [[76.8, -18.0, 0.45, 2.6]], night ? mix(tone.room, tone.lamp, 0.16) : tone.roomDark, mix(tone.roomDark, tone.cut, 0.3))
@@ -267,7 +283,19 @@ function hallWall(g: Paint, tone: Tone, night: boolean): void {
   const ctx = g.ctx
   for (const x of [68.6, 76.4, 85.6, 93.4]) {
     rect(ctx, x - 0.7, HALL.ceil, 1.4, -HALL.ceil)
-    fill(ctx, vgrad(ctx, HALL.ceil, 0, [[0, mix(tone.roomDark, tone.cut, 0.45)], [1, mix(tone.room, tone.cut, 0.18)]]))
+    if (!night) {
+      fill(ctx, vgrad(ctx, HALL.ceil, 0, [[0, mix(tone.roomDark, tone.cut, 0.45)], [1, mix(tone.room, tone.cut, 0.18)]]))
+      continue
+    }
+    // By night a pier is a dark column going up into the dark, its edge toward the lamp catching a little of its light.
+    fill(ctx, vgrad(ctx, HALL.ceil, 0, [[0, '#050608'], [0.6, '#0C0E12'], [1, '#17181C']]))
+    const toward = x < LAMP[0] ? 1 : -1
+    const near = Math.max(0, 1 - Math.abs(x - LAMP[0]) / 9)
+    if (near > 0) {
+      const ex = x + toward * 0.7 - (toward > 0 ? 0.16 : 0)
+      rect(ctx, ex, LAMP[1] - 3.2, 0.16, -LAMP[1] + 3.2)
+      fill(ctx, vgrad(ctx, LAMP[1] - 3.2, 0, [[0, rgba(tone.lamp, 0)], [0.5, rgba(tone.lamp, 0.42 * near)], [1, rgba(tone.lamp, 0.25 * near)]]))
+    }
   }
   if (night) return
   const lean = 0.42

@@ -69,7 +69,7 @@ export const toneAt = (t: number): Tone => (isNight(t) ? NIGHT_TONE : DAY_TONE)
  */
 const INSIDE: [number, number][] = [
   [ARRIVAL.hall, ARRIVAL.to],
-  [ATTACK.window, ATTACK.crown],
+  [ATTACK.window, ATTACK.dome],
   [ATTACK.watch, ATTACK.terrace],
   [ATTACK.room, ATTACK.to + 1],
 ]

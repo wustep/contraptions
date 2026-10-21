@@ -36,8 +36,8 @@ export const ATTACK = {
   /** Paul at his window; the Duke alone in the hall under the bull. */
   window: boomNear(200.79),
   duke: onsetNear(203.19, 1, 0.05),
-  /** In close on the palace's crown under the shield; the shield goes out from its crown down. */
-  crown: onsetNear(205.09, 1, 0.05),
+  /** Out over the whole city under its shield; the shield goes out from its crown down across the sky. */
+  dome: onsetNear(205.09, 1, 0.05),
   shieldOut: boomNear(206.83),
   /** The armada: its near ships passing low over the palace's roof; then all of it over the city. */
   armada: boomNear(210.11),

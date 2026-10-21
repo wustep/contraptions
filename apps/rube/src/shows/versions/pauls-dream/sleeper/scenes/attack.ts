@@ -133,18 +133,18 @@ const DUKE_CLOSE: Pt = [79.9, -1.0]
 const WINDOW_CLOSE: Pt = [95.3, -16.1]
 
 const shots: Shot[] = [
-  // The city at night, dissolving in.
-  { t: N.from, cells: 52, at: [88, -24], cut: true },
-  { t: N.window - 0.002, cells: 48, at: [88, -22.5] },
+  // The palace at night, dissolving in, low: its lamps, the shield's line over it.
+  { t: N.from, cells: 34, at: [92, -15], cut: true },
+  { t: N.window - 0.002, cells: 31, at: [92, -14.5] },
   // Paul at his window.
   { t: N.window, cells: 3.6, at: WINDOW_CLOSE, cut: true },
   { t: N.duke - 0.002, cells: 3.5, at: [95.2, -16.05] },
   // The Duke alone under his father's bull.
   { t: N.duke, cells: 3.9, at: [80.6, -1.75], cut: true },
-  { t: N.crown - 0.002, cells: 3.8, at: [80.55, -1.8] },
-  // Close on the palace's crown: the shield over it goes out from the top down.
-  { t: N.crown, cells: 10, at: [80, -25.2], cut: true },
-  { t: N.armada - 0.002, cells: 9.6, at: [80.5, -25.1] },
+  { t: N.dome - 0.002, cells: 3.8, at: [80.55, -1.8] },
+  // Out over the whole city under its shield; the shield goes out from its crown down across the sky.
+  { t: N.dome, cells: 70, at: [70, -31], cut: true },
+  { t: N.armada - 0.002, cells: 66, at: [72, -30] },
   // Two of the armada's ships come in low over the roof.
   { t: N.armada, cells: 18, at: [74, -31], cut: true },
   { t: N.sky - 0.002, cells: 18, at: [77, -31] },
@@ -221,7 +221,7 @@ export const attack: Scene = {
   strikes: [
     ['Paul at his window', N.window],
     ['the Duke under the bull', N.duke],
-    ['close on the crown', N.crown],
+    ['the shield over the city', N.dome],
     ['the shield goes out', N.shieldOut],
     ['the armada comes in low', N.armada],
     ['all of it over the city', N.sky],

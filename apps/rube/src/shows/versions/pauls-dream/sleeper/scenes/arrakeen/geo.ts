@@ -50,6 +50,8 @@ export const LEVER_END: Pt = [85.35, -1.1]
 export const CRATE = { x0: 80.1, x1: 81.9, top: -0.75 }
 /** The Duke's chair on the night (under the hook). */
 export const CHAIR: Pt = [79.6, 0]
+/** The one lamp in the hall by night: a tall iron stand under the bull, between the Duke and where the Baron comes to; its bowl. */
+export const LAMP: Pt = [80.9, -1.95]
 /** The vault the Baron comes down out of and goes back up into. */
 export const VAULT_Y = -12.2
 
@@ -71,5 +73,5 @@ export const PAD_X: [number, number] = [PAD[0] - 5, PAD[0] + 5]
 export const WEST_ROCK = { x0: -60, x1: -6 }
 export const EAST_ROCK = { x0: 146, x1: 200 }
 
-/** The house shield over the palace and the city near it: a dome's middle and its half width and height. */
-export const SHIELD = { cx: 86, w: 68, h: 28.2 }
+/** The house shield over the palace and the whole city in its bowl: a dome's middle and its half width and height. */
+export const SHIELD = { cx: 70, w: 112, h: 62 }
