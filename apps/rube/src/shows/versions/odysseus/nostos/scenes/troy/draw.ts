@@ -22,6 +22,8 @@ import { MAT, burning, firelight, night, sun, tone } from './tone'
  */
 
 const TROY = region(-70, -14, 14, 6, 2)
+/** Troy far off from the sea: a far layer, which trails the camera well past the city as the ships go, so its own region reaches out over the sea after them (`drawTroyFar` fades it into the haze before its end). */
+const TROY_FAR = region(-70, -14, 60, 6, 2)
 
 /** The horse's look at `t`: the dusk's sun on its seaward side, then the brazier's fire; its hatch, open from the night's first notes. */
 function drawTheHorse(g: Paint): void {
@@ -117,10 +119,8 @@ function drawSack(g: Paint): void {
 
 export function troyPieces(): { back: Placed[]; mid: Placed[]; front: Placed[] } {
   const back: Placed[] = [
-    standing('troy-inland', TROY, END, (g) => {
-      drawInland(g)
-      drawTroyFar(g)
-    }),
+    standing('troy-inland', TROY, END, (g) => drawInland(g)),
+    standing('troy-far', TROY_FAR, END, (g) => drawTroyFar(g)),
     standing('troy-town', TROY, END, (g) => drawTownBehind(g)),
     standing('troy-crowd', TROY, END, (g) => {
       drawCrowd(g)

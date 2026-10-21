@@ -305,7 +305,8 @@ export function drawRopes(g: Paint): void {
 export function drawTroyFar(g: Paint): void {
   const { ctx, t, view } = g
   if (t < 124) return
-  const a = smooth(view.x0, -3, 6)
+  // In as the camera comes away from the city to the sea; and into the haze behind them as it opens out over the sea.
+  const a = smooth(view.x0, -3, 6) * (1 - smooth(view.x0, 24, 40))
   if (a <= 0.01) return
   const L = layer(view, 70)
   const hill: Pt[] = []
