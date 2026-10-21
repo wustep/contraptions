@@ -7,7 +7,7 @@ import { SAND, depthScale, farDesert, frameH, horizonOf, paintFar, tiltOf } from
 import type { SkyKey } from '../world/sky'
 import { paintFlat, paintFunnelBack, paintFunnelFront } from './desert/ground'
 import { paintDust, paintMawBack, paintMawFront } from './desert/maw'
-import { CHANI_SEAT, LIFT_BEATS, PAUL_SEAT, ROCK, W, XH, harvesterX, swellX } from './desert/plan'
+import { CHANI_SEAT, LIFT_BEATS, PAUL_SEAT, ROCK, W, XH, harvesterX } from './desert/plan'
 import { paintCables, paintCarryall, paintHarvester, paintPlume } from './desert/rig'
 
 /**
@@ -126,15 +126,17 @@ export const desert: Scene = {
     // plume, and they are two specks on the rock.
     { t: W.open, cells: 8, at: [PAUL_SEAT[0] - 1.2, PAUL_SEAT[1] - 1.3] },
     { t: W.machine - 0.01, cells: 44, at: [14, -13.5] },
-    // The machine close, going along with it as it crawls.
-    { t: W.machine, cut: true, cells: 23, at: [harvesterX(W.machine) + 1.5, -8.4] },
-    { t: W.boom - 0.01, cells: 21, at: [harvesterX(W.boom) + 0.5, -8.2] },
+    // The machine close: low on its scoop biting the sand, craning up and back over the chant to the whole of it and its
+    // plume going up.
+    { t: W.machine, cut: true, cells: 11, at: [harvesterX(W.machine) - 7.5, -3.2] },
+    { t: W.boom - 0.01, cells: 27, at: [harvesterX(W.boom) + 1, -11.5] },
     // The two of them on the lip, close.
     { t: W.boom, cut: true, cells: 4.6, at: [CHANI_SEAT[0] + 0.7, CHANI_SEAT[1] - 0.25] },
     { t: W.sign - 0.01, cells: 4.3, at: [CHANI_SEAT[0] + 0.75, CHANI_SEAT[1] - 0.2] },
     // Worm sign: the flat east of the machine, the swell coming in.
-    { t: W.sign, cut: true, cells: 34, track: (t) => [swellX(t) - 6, -6.5] },
-    { t: W.alarm - 0.01, cells: 40, track: (t) => [swellX(t) - 10, -8] },
+    // Held wide east of the machine (at the frame's west edge): the swell runs in across the frame toward it.
+    { t: W.sign, cut: true, cells: 78, at: [176, -19] },
+    { t: W.alarm - 0.01, cells: 70, at: [160, -17] },
     // The alarm: the carryall coming down to the machine.
     { t: W.alarm, cut: true, cells: 46, at: [XH + 3, -20] },
     { t: W.lock - 0.01, cells: 40, at: [XH + 1, -16] },

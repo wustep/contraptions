@@ -194,8 +194,9 @@ P3.push(
     [249.85, P3_LAST],
     [A.kill, P3_LAST],
   ], RP),
-  leap(P3_LAST, FALLEN[2] + 0.2, A.kill, A.kill + 0.4, RP),
-  ...along([[A.kill + 0.4, FALLEN[2] + 0.2], [A.kill + 1.1, FALLEN[2], 'out'], [A.out, FALLEN[2]]], RP),
+  // Struck, he goes back along the sand and stops, the colour going out of him: a slide, not a fall, so it reads from
+  // the rim as well as from the floor.
+  ...along([[A.kill, P3_LAST], [A.kill + 1.0, FALLEN[2], 'out'], [A.out, FALLEN[2]]], RP),
 )
 
 /** The colour going out of a prisoner from the blow that fells him. */

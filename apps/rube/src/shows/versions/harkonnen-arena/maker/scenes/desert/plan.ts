@@ -55,7 +55,7 @@ export const XH = harvesterX(W.lock)
 export function swellX(t: number): number {
   const u = clamp01((t - W.boom) / (W.sink - W.boom))
   // Quick from far off, slowing as it comes under the machine.
-  return 285 + (XH - 285) * (1 - Math.pow(1 - u, 1.5))
+  return 238 + (XH - 238) * (1 - Math.pow(1 - u, 1.5))
 }
 
 /** How high the swell stands: it rises from the first boom, heaves on each boom and blow, and is gone into the hole. */

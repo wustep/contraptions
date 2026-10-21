@@ -28,7 +28,7 @@ import {
  *           the thumper is gone into the head (134.7)
  *   136.5   the seam opens and the worm rolls its open side up, carrying him with it
  *   143.1   the run's hardest beat: the surge, the worm heaving up and on, faster
- *   145.5   he climbs, a pull every other beat, up to its back
+ *   145.5   he climbs, a pull a beat, up to its back
  *   151.4   wide: the worm racing east, the desert going by
  *   158.0   he stands: the iconic image, him upright on its back against the sky, the hooks in his hands
  *   160.4   the Fremen on the mesa, hopping with the drum; Chani still, looking after him
@@ -97,9 +97,11 @@ const chani: Move[] = [
   hold(chaniAt, 136.2, TO, Math.PI * 0.02),
 ]
 
-/** The Fremen along the top, each with his own facing; they hop on the drum's beats once he stands. */
+/** The Fremen along the top, each with his own facing; they hop on the drum's beats as he climbs to its back. */
 const FREMEN_XS = [1074.6, 1075.7, 1077.0, 1080.2, 1081.3, 1082.6, 1083.6, 1087.4, 1088.7, 1091.9]
-const CHEER = beatsIn('run', 160.3, 164.7).map((b) => b.t)
+/** When we cut to Chani and the Fremen, as he climbs: the run's beat after the climb's fifth pull. */
+const CHANI_AT = beat('run', 34)
+const CHEER = beatsIn('run', CHANI_AT - 0.05, beat('run', 38) + 0.05).map((b) => b.t)
 const fremen: Actor[] = FREMEN_XS.map((x, i) => {
   const at: Pt = [x, mesaTop(x) - R * FREMEN_SIZE]
   const moves: Move[] = []
@@ -138,12 +140,30 @@ const swellAt = (t: number): Pt => [headX(t) - 2.5, -1.2]
 /** The worm's middle, where the back is highest: what the wide shots of the ride keep. */
 const wormMid = (t: number): Pt => [headX(t) - 12, spineY(12, t) - 1]
 
+/** Paul's whole way through the scene, for the camera to track before he is on the worm. */
+const PAUL = new Path(paul, 'paul-ride')
+const paulWay = (t: number): Pt => PAUL.where(t)
+
+/**
+ * In the second close shot of the roll the camera lags him a little, so the worm's rings and the hooks slide slowly
+ * forward through the frame with him, the rock going back past them.
+ */
+const ROLL2 = run(21)
+const lagging = (t: number): Pt => {
+  const [x, y] = paulAt(t)
+  return [x - 0.5 * (t - ROLL2), y]
+}
+
+/** An offset from what is tracked that puts it at shares (sx, sy) of a frame `cells` high. */
+const at = (sx: number, sy: number, cells: number): Pt => [(0.5 - sx) * cells * (16 / 9), (0.5 - sy) * cells]
+
 const LAST_HOLD: Pt = [1404, -44]
 
 const shots: Shot[] = [
-  // The mesa: the Fremen on its top, him coming down the ridge.
-  { t: FROM, cut: true, cells: 25, at: [1067.5, -8.6] },
-  { t: PLANT - 0.01, cells: 21, at: [1063.5, -7.2] },
+  // The mesa, close enough to see him: down its west ridge with the thumper on his back, the Fremen on its top.
+  { t: FROM, cut: true, cells: 15, track: paulWay, off: [3.4, -2.1] },
+  { t: DOWN, cells: 13.5, track: paulWay, off: [2.4, -2.6] },
+  { t: PLANT - 0.01, cells: 12, track: paulWay, off: [1.4, -3.1] },
   // The thumper, close, as he drives it in and it starts.
   { t: PLANT, cut: true, cells: 3.4, at: [1056.9, -0.95] },
   { t: drive(13) - 0.01, cells: 3.2, at: [1056.95, -0.92] },
@@ -153,45 +173,48 @@ const shots: Shot[] = [
   // Worm sign: low, going along with the swell as it runs east under the sand.
   { t: drive(21), cut: true, cells: 15, track: swellAt, off: [-1.5, -3.6], focus: swellAt },
   { t: drive(27), cells: 16, track: swellAt, off: [1.0, -3.8], focus: swellAt },
-  // It runs on into the frame toward the dune, him small on its crest.
-  { t: 125.846 - 0.01, cells: 30, at: [1019, -9.4], focus: [1042, -6] },
+  // It runs on into the frame toward the dune, him on its crest.
+  { t: 125.846 - 0.01, cells: 26, at: [1023, -8.4], focus: [1042, -6] },
   // Close on him on the crest; it comes; the frame opens as its back rises behind the dune, and he goes.
   { t: 125.846, cut: true, cells: 5.2, at: [1041.4, -6.9] },
   { t: 129.0, cells: 6, at: [1040.6, -6.7] },
   { t: LEAP - 0.3, cells: 17, at: [1039.5, -6.2] },
   { t: OPEN - 0.01, cells: 19, at: [1050.5, -6.0] },
-  // The roll: on its flank going by under the mesa, the Fremen on its edge over him, the rock sliding past.
+  // The roll: on its flank going by under the mesa, the Fremen on its edge over him; pushing in as the worm rolls him up.
   { t: OPEN, cut: true, cells: 13, track: paulAt, off: [-1.2, -3.4] },
-  { t: SURGE - 0.01, cells: 12, track: paulAt, off: [-0.8, -3.0] },
+  { t: ROLL2 - 0.01, cells: 9.5, track: paulAt, off: [-0.7, -2.3] },
+  // Close on the open seam and the hooks, the rings sliding through the frame with him.
+  { t: ROLL2, cut: true, cells: 5.4, track: lagging, off: [1.4, -0.45] },
+  { t: SURGE - 0.01, cells: 5.0, track: lagging, off: [1.4, -0.4] },
   // The surge: the whole worm heaving out of the sand.
-  { t: SURGE, cut: true, cells: 30, track: wormMid, off: [3, -1.5], focus: paulAt },
-  { t: CLIMB[0] - 0.01, cells: 28, track: wormMid, off: [2, -1.5], focus: paulAt },
-  // The climb, close.
-  { t: CLIMB[0], cut: true, cells: 5.4, track: paulAt, off: [-0.9, 0.2] },
-  { t: run(39) - 0.01, cells: 5.0, track: paulAt, off: [-0.8, 0.1] },
+  { t: SURGE, cut: true, cells: 25, track: wormMid, off: [3, -1.5], focus: paulAt },
+  { t: CLIMB[0] - 0.01, cells: 24, track: wormMid, off: [2, -1.5], focus: paulAt },
+  // The climb, close, rising with him and pushing in.
+  { t: CLIMB[0], cut: true, cells: 5.6, track: paulAt, off: [-0.9, 0.45] },
+  { t: CHANI_AT - 0.01, cells: 4.6, track: paulAt, off: [-0.7, -0.15] },
+  // On the mesa, far behind: Chani close and still, looking after him; the Fremen beside her hopping with the drum.
+  { t: CHANI_AT, cut: true, cells: 4.6, at: [1075.0, -14.45] },
+  { t: run(39) - 0.01, cells: 4.3, at: [1074.9, -14.4] },
   // Wide and still: the worm comes into the frame from the west and races across it.
-  { t: run(39), cut: true, cells: 42, at: [1193, -13], focus: paulAt },
-  { t: STAND - 0.01, cells: 40, at: [1196, -12.6], focus: paulAt },
-  // He stands: low and close, him high in the frame against the sky.
-  { t: STAND, cut: true, cells: 7.6, track: paulAt, off: [2.4, 1.3], focus: paulAt },
-  { t: run(54) - 0.01, cells: 6.8, track: paulAt, off: [2.1, 1.15], focus: paulAt },
-  // On the mesa: Chani close and still, looking after him; the Fremen beside her hopping with the drum.
-  { t: run(54), cut: true, cells: 4.6, at: [1075.0, -14.45] },
-  { t: M.fall - 0.01, cells: 4.3, at: [1074.9, -14.4] },
-  // The long last shot: behind him, then drawing back and back as the sun goes out, then still.
-  { t: M.fall, cut: true, cells: 34, track: wormMid, off: [3, -8.5], focus: paulAt },
-  { t: 170, cells: 52, track: wormMid, off: [18, -15], w: 0 },
-  { t: 177.5, cells: 112, at: [1390, -43] },
-  { t: 184.3, cells: 120, at: LAST_HOLD },
-  { t: TO - 0.001, cells: 120, at: LAST_HOLD },
+  { t: run(39), cut: true, cells: 30, at: [1193, -10.5], focus: paulAt },
+  { t: STAND - 0.01, cells: 29, at: [1195, -10.3], focus: paulAt },
+  // He stands: low and close, him upright against the sky over the long back, the desert going by under it; held,
+  // pushing in a little. Then, as the music falls away, the camera draws back and back, and he goes small on it,
+  // riding on toward the sun as the moon comes over it; still for the silence and the dissolve.
+  { t: STAND, cut: true, cells: 7.4, track: paulAt, off: at(0.32, 0.38, 7.4), focus: paulAt },
+  { t: M.fall, cells: 6.4, track: paulAt, off: at(0.33, 0.4, 6.4), focus: paulAt },
+  { t: 170.5, cells: 26, track: paulAt, off: at(0.36, 0.64, 26), focus: paulAt },
+  { t: 177.5, cells: 100, at: [1388, -40] },
+  { t: 184.3, cells: 112, at: LAST_HOLD },
+  { t: TO - 0.001, cells: 112, at: LAST_HOLD },
 ]
 
 /** Where the horizon stands in each shot: low for the stand, so he is against the sky. */
 const tilt = tiltOf([
-  [FROM, 0.14], [PLANT - 0.01, 0.14], [PLANT, 0.36], [drive(13) - 0.01, 0.36], [drive(13), 0.16], [drive(21) - 0.01, 0.16],
-  [drive(21), 0.22], [drive(27), 0.22], [125.84, 0.16], [125.846, 0.2], [LEAP, 0.18], [OPEN - 0.01, 0.18], [OPEN, 0.3], [SURGE - 0.01, 0.3],
-  [SURGE, 0.14], [CLIMB[0] - 0.01, 0.14], [CLIMB[0], 0.24], [run(39) - 0.01, 0.24], [run(39), 0.12], [STAND - 0.01, 0.12],
-  [STAND, 0.26], [run(54) - 0.01, 0.26], [run(54), 0.25], [M.fall - 0.01, 0.25], [M.fall, 0.14], [177.5, 0.12], [TO, 0.12],
+  [FROM, 0.2], [PLANT - 0.01, 0.2], [PLANT, 0.36], [drive(13) - 0.01, 0.36], [drive(13), 0.16], [drive(21) - 0.01, 0.16],
+  [drive(21), 0.34], [drive(27), 0.34], [125.84, 0.2], [125.846, 0.2], [LEAP, 0.18], [OPEN - 0.01, 0.18], [OPEN, 0.3],
+  [SURGE - 0.01, 0.3], [SURGE, 0.14], [CLIMB[0] - 0.01, 0.14], [CLIMB[0], 0.24], [CHANI_AT - 0.01, 0.24], [CHANI_AT, 0.25],
+  [run(39) - 0.01, 0.25], [run(39), 0.14], [STAND - 0.01, 0.14], [STAND, 0.3], [M.fall, 0.3], [177.5, 0.27], [TO, 0.27],
 ])
 
 /* ------------------------------------------------------------------ the drawings */
@@ -254,11 +277,13 @@ export const ride: Scene = {
     ['the hooks bite', BITE],
     ['the thumper swallowed', SWALLOW],
     ['the seam opens', OPEN],
+    ['close on the seam', ROLL2],
     ['the surge', SURGE],
     ...CLIMB.map((t, i): [string, number] => [`climb ${i}`, t]),
     ['wide, racing', run(39)],
     ['he stands', STAND],
+    ['Chani', CHANI_AT],
     ...CHEER.map((t, i): [string, number] => [`the Fremen ${i}`, t]),
-    ['the long last shot', M.fall],
+    ['the long draw back', M.fall],
   ],
 }

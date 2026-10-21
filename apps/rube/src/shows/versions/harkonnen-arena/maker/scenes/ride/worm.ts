@@ -1,6 +1,6 @@
 import { R } from '../../../../../../parts'
 import { beat, M } from '../../music'
-import { clamp01, mix, pulse, smooth, smoother, type Brush, type Pt } from '../../paint'
+import { mix, pulse, smooth, smoother, type Brush, type Pt } from '../../paint'
 import { paintBody, SKIN } from '../../world/worm'
 
 /**
@@ -223,10 +223,10 @@ function paintSeam(b: Brush, t: number): void {
 }
 
 /** Paul on the worm: where he is at `t` once he is on it (the hooks hold him; he climbs; he stands). */
-export const CLIMB = [29, 31, 33, 35, 37, 39, 41].map((n) => beat('run', n))
+export const CLIMB = [29, 30, 31, 32, 33].map((n) => beat('run', n))
 export const STAND = beat('run', 50)
 
-/** His height on the seam, as `v`: under the hook as it is carried up, then a step a beat up to the back. */
+/** His height on the seam, as `v`: under the hook as it is carried up, then a pull a beat up to the back. */
 export function paulV(t: number): number {
   const hang = hookV(t) - 0.2
   if (t < CLIMB[0]) return hang
@@ -289,62 +289,72 @@ export function paintHooks(b: Brush, t: number, paul: Pt): void {
  * west face in shade); as it rises and rides, the bow wave at the head and the sheets of sand pouring off its back, and
  * behind it the furrow it leaves.
  */
-export function paintSand(b: Brush, t: number, sand: { lit: string; shade: string }): void {
+export function paintSand(b: Brush, t: number, sand: { lit: string; shade: string; air: string }): void {
   const { ctx, view } = b
   const hx = headX(t)
   const e = emerged(t)
   if (hx + 12 < view.x0 || hx - LENGTH - 80 > view.x1) return
-  // The swell: from the worm sign on, a long low ridge of sand running before it, growing as it nears; gone into the
-  // body as it breaks out. Its east face takes the sun, its long west back is in shade, a pale plume goes up off its
-  // front, and a furrow trails behind it.
-  const sw = smooth(t, 118.1, 119.4) * (1 + 0.45 * smooth(t, 121, 130)) * (1 - smooth(t, 131.5, 134))
+  // The swell: worm sign, a long low rise of the ground running east under the sand toward the thumper, growing as it
+  // nears, gone into the body as it breaks out. Its front, steep, takes the sun; its long west back is in shade, crisp
+  // at the crest and soft at the foot; sand spills off the crest down the back, and a thin veil trails behind it.
+  const sw = smooth(t, 118.1, 119.6) * (1 + 0.5 * smooth(t, 121, 130)) * (1 - smooth(t, 131.5, 134))
   if (sw > 0.001) {
-    const h = 2.6 * sw
-    const crestS = 3
-    const pts: Pt[] = []
-    for (let s = -6; s <= 38; s += 0.75) {
-      // A rounded front up to the crest, then a long back easing down into the furrow.
-      const y = s < crestS ? -h * Math.sin((Math.PI / 2) * clamp01((s + 6) / (crestS + 6))) : -h * (1 - smooth(s, crestS, 38))
-      pts.push([hx - s, y])
+    const h = 2.0 * sw
+    const L = 30
+    const crestX = hx - 2.5
+    const at = (x: number): number => {
+      const u = (x - crestX) / L
+      if (u <= -1 || u >= 1) return 0
+      // Steep in front (east, where it pushes), long behind.
+      const v = u > 0 ? u * 2.2 : u * 0.85
+      const k = Math.max(0, 1 - v * v)
+      return -h * k * k
     }
-    // The whole mound lit, then its long back in shade, from a line down from the crest.
+    const n = 56
     ctx.beginPath()
-    ctx.moveTo(pts[0][0], 0.05)
-    for (const p of pts) ctx.lineTo(p[0], p[1])
-    ctx.lineTo(pts[pts.length - 1][0], 0.05)
+    ctx.moveTo(crestX - L, 0.05)
+    for (let i = 0; i <= n; i++) {
+      const x = crestX - L + (2 * L * i) / n
+      ctx.lineTo(x, at(x))
+    }
+    ctx.lineTo(crestX + L, 0.05)
     ctx.closePath()
     ctx.fillStyle = b.c(sand.lit)
     ctx.fill()
+    // The back in shade.
     ctx.beginPath()
-    ctx.moveTo(hx - crestS, -h)
-    for (const p of pts) if (p[0] < hx - crestS) ctx.lineTo(p[0], p[1])
-    ctx.lineTo(pts[pts.length - 1][0], 0.05)
-    ctx.lineTo(hx - crestS - h * 1.2, 0.05)
-    ctx.quadraticCurveTo(hx - crestS - h * 0.2, -h * 0.55, hx - crestS, -h)
+    ctx.moveTo(crestX, at(crestX))
+    for (let i = 1; i <= 20; i++) {
+      const x = crestX - (L * 0.85 * i) / 20
+      ctx.lineTo(x, at(x))
+    }
+    ctx.lineTo(crestX - L * 0.3, h * 0.15)
+    ctx.quadraticCurveTo(crestX - L * 0.04, -h * 0.35, crestX + 0.1, at(crestX))
     ctx.closePath()
-    ctx.fillStyle = b.c(sand.shade)
-    ctx.fill()
-    // The plume off its front: sand thrown up as it comes, a soft pale fan leaning back over it.
-    const gr = ctx.createLinearGradient(0, -h * 3.2, 0, -h * 0.6)
-    gr.addColorStop(0, b.ca(sand.lit, 0))
-    gr.addColorStop(1, b.ca(sand.lit, 0.62 * Math.min(1, sw)))
+    const gr = ctx.createLinearGradient(0, -h, 0, 0.2)
+    gr.addColorStop(0, b.c(sand.shade))
+    gr.addColorStop(0.65, b.ca(sand.shade, 0.9))
+    gr.addColorStop(1, b.ca(sand.shade, 0))
     ctx.fillStyle = gr
-    ctx.beginPath()
-    ctx.moveTo(hx + 1.5, -h * 0.4)
-    ctx.quadraticCurveTo(hx + 0.5, -h * 2.6, hx - 6, -h * 3.2)
-    ctx.quadraticCurveTo(hx - 2.5, -h * 1.6, hx - crestS - 2, -h * 0.85)
-    ctx.closePath()
     ctx.fill()
-    // The furrow behind it.
-    const fur = ctx.createLinearGradient(hx - 30, 0, hx - 90, 0)
-    fur.addColorStop(0, b.ca(sand.shade, 0.6 * sw))
-    fur.addColorStop(1, b.ca(sand.shade, 0))
-    ctx.fillStyle = fur
+    // Sand spilling off the crest down the shaded back: one pale tongue, sliding.
+    const spill = 0.55 * Math.min(1, sw)
+    const sl = (t * 0.6) % 1
     ctx.beginPath()
-    ctx.moveTo(hx - 30, -h * 0.25)
-    ctx.quadraticCurveTo(hx - 60, -0.1, hx - 90, 0.02)
-    ctx.lineTo(hx - 30, 0.05)
+    ctx.moveTo(crestX + 0.2, at(crestX) + 0.05)
+    ctx.quadraticCurveTo(crestX - L * (0.12 + 0.05 * sl), at(crestX - L * 0.1) + 0.05, crestX - L * (0.3 + 0.08 * sl), at(crestX - L * 0.3) + 0.2)
+    ctx.quadraticCurveTo(crestX - L * 0.12, at(crestX - L * 0.12) + h * 0.35, crestX + 0.2, at(crestX) + 0.05)
     ctx.closePath()
+    ctx.fillStyle = b.ca(sand.lit, spill)
+    ctx.fill()
+    // The veil: sand blown off the crest, a long thin sliver trailing west behind it, low over its back.
+    const top = at(crestX)
+    ctx.beginPath()
+    ctx.moveTo(crestX + 0.4, top + 0.05)
+    ctx.quadraticCurveTo(crestX - L * 0.3, top - h * 0.5, crestX - L * 1.05, top + h * 0.2)
+    ctx.quadraticCurveTo(crestX - L * 0.45, top + h * 0.12, crestX + 0.4, top + 0.05)
+    ctx.closePath()
+    ctx.fillStyle = b.ca(mix(sand.lit, sand.air, 0.25), 0.5 * Math.min(1, h / 2.6))
     ctx.fill()
   }
   if (e <= 0.001) return

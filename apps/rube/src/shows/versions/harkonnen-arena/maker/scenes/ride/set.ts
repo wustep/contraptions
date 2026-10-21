@@ -58,18 +58,19 @@ export const THUMPS: number[] = [...beatsIn('drive', PLANT, 128), ...beatsIn('ru
 
 /** The day's sky, then the late light, then the eclipse, over the ride. */
 export const SKY: SkyKey[] = [
-  { t: T.thumper, top: '#CDB79B', low: '#F0D6B2', sun: { x: 0.84, y: 0.13, r: 0.028, color: '#FFF2DC' }, eclipse: 0 },
-  { t: 158, top: '#C8AA88', low: '#EFCB9C', sun: { x: 0.86, y: 0.2, r: 0.03, color: '#FFEBC9' }, eclipse: 0 },
-  // The cut into the last long shot: the low sun ahead, larger in the long lens.
-  { t: M.fall - 0.01, top: '#C8AA88', low: '#EFCB9C', sun: { x: 0.86, y: 0.2, r: 0.03, color: '#FFEBC9' }, eclipse: 0 },
-  { t: M.fall, top: '#B48A66', low: '#EDB57E', sun: { x: 0.56, y: 0.29, r: 0.05, color: '#FFE2B8' }, eclipse: 0 },
-  { t: 168.5, top: '#A67A58', low: '#E8A870', sun: { x: 0.53, y: 0.315, r: 0.05, color: '#FFDDB0' }, eclipse: 0.02 },
+  // By day the sun is high, over the frame: its light is on the sand and in the shade under the crests.
+  { t: T.thumper, top: '#CDB79B', low: '#F0D6B2', sun: { x: 0.8, y: -0.3, r: 0.028, color: '#FFF2DC' }, eclipse: 0 },
+  { t: 158, top: '#C9AC8B', low: '#EFCDA0', sun: { x: 0.74, y: -0.3, r: 0.04, color: '#FFEBC9' }, eclipse: 0 },
+  // As the camera draws back from him and turns ahead, it comes into the frame from the east, low, and the moon comes
+  // over it.
+  { t: M.fall, top: '#B88E6A', low: '#EDB880', sun: { x: 1.14, y: 0.4, r: 0.05, color: '#FFE2B8' }, eclipse: 0 },
+  { t: 170.5, top: '#A67A58', low: '#E8A870', sun: { x: 0.56, y: 0.35, r: 0.05, color: '#FFDDB0' }, eclipse: 0.03 },
   { t: 176.5, top: '#24160F', low: '#6A4630', sun: { x: 0.505, y: 0.335, r: 0.05, color: '#FFE6C4' }, eclipse: 1 },
   { t: T.arena, top: '#140D09', low: '#3C2A1F', sun: { x: 0.5, y: 0.34, r: 0.05, color: '#FFEAD0' }, eclipse: 1 },
 ]
 
 /** The light going under the eclipse, 0 (day) to 1 (the sun gone): the land darkens with the sky. */
-export const dusk = (t: number): number => smooth(t, 168.5, 176.5)
+export const dusk = (t: number): number => smooth(t, 169.5, 176.5)
 
 const DARK = '#1C120D'
 const FAR = farDesert(40)

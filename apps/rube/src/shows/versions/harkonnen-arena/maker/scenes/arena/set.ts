@@ -1,5 +1,6 @@
 import { circle, clamp01, composed, layer, noise1, pulse, rect, smooth, vgrad, type Brush } from '../../paint'
-import { A, EAST_GATE, GATE_H, GATE_W, PYLON_H, PYLON_W, STANDS_F, STANDS_PIVOT, SWAY, WEST_GATE, X0 } from './geo'
+import { A, EAST_GATE, GATE_H, GATE_W, PYLON_H, PYLON_W, SWAY, WEST_GATE, X0 } from './geo'
+import { STANDS_TOP, standsOf, sunOf, type Mode } from './views'
 
 /**
  * The arena's set: the white sky with its black sun, the bowl of tiers and the crowd in them, the floor, and the two
@@ -22,19 +23,17 @@ const PYLON_FACE = '#2B2A27'
 const GATE_DARK = '#050505'
 const DOOR = '#3B3A36'
 
-/** The black sun in the frame: where it is, as shares of the frame, and its radius as a share of the frame's height. */
-const SUN_AT = { x: 0.5, y: 0.34, r: 0.05 }
-
 /** The sky and the black sun: the sun stands in the composed frame, as the eclipse's did, so the dissolve finds it where it was. */
-export function paintSky(b: Brush): void {
+export function paintSky(b: Brush, mode: Mode): void {
   const { ctx, view } = b
   ctx.fillStyle = vgrad(b, view.y0, view.y0 + view.h * 0.75, [[0, SKY_TOP], [1, SKY_LOW]])
   rect(ctx, view.x0 - 1, view.y0 - 1, view.w + 2, view.h + 2)
   ctx.fill()
+  const sun = sunOf(mode)
   const f = composed(view)
-  const r = SUN_AT.r * f.h
-  const x = f.cx + (SUN_AT.x - 0.5) * f.h * (16 / 9)
-  const y = f.cy + (SUN_AT.y - 0.5) * f.h
+  const r = sun.r * f.h
+  const x = f.cx + (sun.x - 0.5) * f.h * (16 / 9)
+  const y = f.cy + (sun.y - 0.5) * f.h
   // A hair of white round it, the corona's edge, and the hole.
   ctx.fillStyle = b.c('#FFFFFF')
   circle(ctx, x, y, r * 1.045)
@@ -46,53 +45,61 @@ export function paintSky(b: Brush): void {
 
 /* ------------------------------------------------------------------ the bowl */
 
-/** Its tiers, in the stands' own layer: the podium wall, then each tier a riser and the crowd on its tread, then the rim. */
+/**
+ * Its tiers, in the stands' own layer: the podium wall, then five deep tiers, each a riser and the crowd standing on
+ * its tread, then the rim. Few and deep, so a tier is a crowd and not a stripe.
+ */
 const PODIUM_H = 1.0
-const TIERS = 9
-const RISER_H = 0.45
-const BAND_H = 1.25
-const RIM_H = 1.9
-const TOP = PODIUM_H + TIERS * (RISER_H + BAND_H)
+const TIERS = 5
+const PITCH = (STANDS_TOP - PODIUM_H - 1.0) / TIERS
+const RIM_H = STANDS_TOP - PODIUM_H - TIERS * PITCH
+const TOP = PODIUM_H + TIERS * PITCH
+/** How deep the crowd stands on a tread, at rest. */
+const CROWD_H = 2.15
 /** The bowl's half width in the layer, and how much taller it stands toward the edges, where it comes round to us. */
 const BOWL_W = 55
 const BOWL_RISE = 1.4
 
-/** How much taller than at the middle the bowl stands at layer x. */
-const rise = (x: number) => {
+/** How much taller than at the middle the bowl stands at layer x, with `by` of its rise. */
+const riseOf = (x: number, by: number) => {
   const u = (x - X0) / BOWL_W
-  return 1 + BOWL_RISE * u * u
+  return 1 + BOWL_RISE * by * u * u
 }
 
-/** The crowd's answer: rising on the blows and the kill, swaying on the slow pulse under the duel. 0 sitting, up to about 1. */
+/** The crowd's answer: up on its feet on the blows and the kill. 0 at rest, up to about 1. */
 function roar(t: number): number {
   return Math.min(1.2, 0.8 * pulse(t, A.blow1, 0.25, 1.6) + 0.9 * pulse(t, A.blow2, 0.25, 1.8) + 1.0 * pulse(t, A.kill, 0.3, 3.2))
 }
-function sway(t: number, tier: number): number {
-  const s = t - SWAY.from - tier * 0.05
-  if (s < -0.5 || t > SWAY.to + 1.2) return 0
-  const env = smooth(t, SWAY.from - 0.6, SWAY.from + 0.8) * (1 - smooth(t, SWAY.to - 0.6, SWAY.to + 1.2))
-  // Up on each beat, easing down between: a crowd on its feet, rocking.
-  const ph = (((s / SWAY.period) % 1) + 1) % 1
-  return env * Math.pow(Math.sin(Math.PI * ph), 2)
+
+/**
+ * The crowd rocking on the slow pulse under the duel: the whole mass going side to side, a beat each way, and rising
+ * a little at the top of each swing. Smooth all through, eased in and out of it. Each tier a hair behind the one below.
+ */
+function rock(t: number, tier: number): { dx: number; up: number } {
+  if (t < SWAY.from - 1 || t > SWAY.to + 1.6) return { dx: 0, up: 0 }
+  const env = smooth(t, SWAY.from - 0.8, SWAY.from + 1.2) * (1 - smooth(t, SWAY.to - 0.6, SWAY.to + 1.6))
+  const s = t - SWAY.from - tier * 0.06
+  return { dx: env * 0.45 * Math.sin((Math.PI * s) / SWAY.period), up: env * 0.5 * (1 - Math.cos((2 * Math.PI * s) / SWAY.period)) }
 }
 
-/** How full a tier stands at x: a crowd stands in knots and thins between them, so its top is never a ruled line. */
+/** How full a tier stands at x: a crowd stands in knots and thins between them, so its edge is never a ruled line. */
 function mass(x: number, tier: number): number {
-  return 0.86 + 0.14 * noise1(x / 2.3 + tier * 17.3, tier + 40)
+  return 0.84 + 0.16 * noise1(x / 0.95 + tier * 17.3, tier + 40)
 }
 
 /** The bowl of tiers behind the floor, filling the frame's back from the floor's far edge up past the rim. */
-export function paintStands(b: Brush): void {
-  layer(b, STANDS_F, STANDS_PIVOT, (lb) => {
+export function paintStands(b: Brush, mode: Mode): void {
+  const { f, pivot, rise: by } = standsOf(mode, b.view)
+  const rise = (x: number) => riseOf(x, by)
+  layer(b, f, pivot, (lb) => {
     const { ctx, view, t } = lb
     const x0 = view.x0 - 1
     const x1 = view.x1 + 1
-    const n = Math.min(240, Math.max(48, Math.ceil(view.w / 0.6)))
+    const n = Math.min(260, Math.max(48, Math.ceil(view.w / 0.4)))
     const step = (x1 - x0) / n
     const xs: number[] = []
     for (let i = 0; i <= n; i++) xs.push(x0 + i * step)
     const ys = (h: number) => xs.map((x) => -h * rise(x))
-    // The whole bowl, rim and all, dark; then the risers lighter between the crowd's bands.
     const fillBetween = (lo: number[], hi: number[], color: string) => {
       ctx.beginPath()
       ctx.moveTo(xs[0], lo[0])
@@ -107,33 +114,35 @@ export function paintStands(b: Brush): void {
     fillBetween(ground, ys(TOP + RIM_H), RIM)
     fillBetween(ground, ys(TOP), RISER)
     fillBetween(ground, ys(PODIUM_H), PODIUM)
-    // Each tier: the crowd standing on its tread, their heads against the next riser's grey. In a wide frame the heads
-    // are smaller than a few pixels and the crowd's edge is a plain line; closer, a row of shallow bumps.
+    // Each tier: the crowd standing on its tread as one dark mass, knotted along its top; the front row's heads along
+    // that edge once they are big enough on the screen to be heads.
     const r = roar(t)
-    const headPx = 0.15 * STANDS_F * b.k
-    const bump = smooth(headPx, 4, 8)
+    const headPx = 0.15 * f * b.k
+    const bump = smooth(headPx, 3, 6)
     for (let i = 0; i < TIERS; i++) {
-      const base = PODIUM_H + i * (RISER_H + BAND_H) + 0.12
-      const lift = BAND_H * (0.66 + 0.22 * r + 0.2 * sway(t, i))
+      const base = PODIUM_H + i * PITCH + 0.15
+      const { dx, up } = rock(t, i)
+      const lift = CROWD_H * (0.9 + 0.12 * r + 0.14 * up)
       const lo = ys(base)
       ctx.beginPath()
       ctx.moveTo(xs[0], lo[0])
       for (let k = 1; k <= n; k++) ctx.lineTo(xs[k], lo[k])
       if (bump > 0.01) {
-        // Heads, right to left along the tread: a row of shallow arcs, spaced as people stand, each the tier's size there.
-        const sp = 0.34
-        let x = Math.floor(x1 / sp) * sp
-        while (x >= x0) {
-          const s = rise(x)
+        // Heads, right to left along the edge: a row of arcs, spaced as people stand, swaying with the mass.
+        const sp = 0.36
+        let x = Math.floor((x1 - dx) / sp) * sp
+        while (x + dx >= x0) {
+          const hx = x + dx
+          const s = rise(hx)
           const y = -(base + lift * mass(x, i)) * s
-          const hr = 0.14 * s
+          const hr = 0.15 * s
           const off = Math.sin(x * 12.9898 + i * 78.233) * 0.5 + 0.5
-          ctx.lineTo(x + hr, y)
-          ctx.quadraticCurveTo(x, y - hr * 1.5 * bump * (0.75 + 0.25 * off), x - hr, y)
+          ctx.lineTo(hx + hr, y)
+          ctx.quadraticCurveTo(hx, y - hr * 1.7 * bump * (0.75 + 0.25 * off), hx - hr, y)
           x -= sp
         }
       } else {
-        for (let k = n; k >= 0; k--) ctx.lineTo(xs[k], -(base + lift * mass(xs[k], i)) * rise(xs[k]))
+        for (let k = n; k >= 0; k--) ctx.lineTo(xs[k], -(base + lift * mass(xs[k] - dx, i)) * rise(xs[k]))
       }
       ctx.closePath()
       ctx.fillStyle = lb.c(CROWD)
@@ -145,7 +154,7 @@ export function paintStands(b: Brush): void {
       const ax = X0 + 8.5 + k * 17
       if (ax < x0 - 2 || ax > x1 + 2) continue
       const s = rise(ax)
-      const w = 0.7 * s
+      const w = 0.8 * s
       ctx.beginPath()
       ctx.moveTo(ax - w / 2, -PODIUM_H * s)
       ctx.lineTo(ax + w / 2, -PODIUM_H * s)
@@ -158,10 +167,17 @@ export function paintStands(b: Brush): void {
   })
 }
 
-/** The floor: pale sand from the stands' foot to the frame's bottom, a little darker toward us. */
-export function paintFloor(b: Brush): void {
+/** The floor: pale sand from the stands' foot to the frame's bottom, a little darker toward us; from above, all of it. */
+export function paintFloor(b: Brush, mode: Mode): void {
   const { ctx, view } = b
-  const far = STANDS_PIVOT * (1 - STANDS_F)
+  if (mode === 'high') {
+    ctx.fillStyle = b.c(FLOOR_FAR)
+    rect(ctx, view.x0 - 1, view.y0 - 1, view.w + 2, view.h + 2)
+    ctx.fill()
+    return
+  }
+  const { f, pivot } = standsOf(mode, view)
+  const far = pivot * (1 - f)
   const y1 = Math.max(view.y1, 1) + 1
   ctx.fillStyle = vgrad(b, far, far + 8, [[0, FLOOR_FAR], [1, FLOOR_NEAR]])
   rect(ctx, view.x0 - 1, far, view.w + 2, y1 - far)
@@ -213,6 +229,27 @@ export function paintDoor(b: Brush, side: -1 | 1, at: number): void {
   // Its foot.
   rect(ctx, gx - GATE_W / 2, -GATE_H + h - 0.08, GATE_W, 0.08)
   ctx.fillStyle = b.c(PYLON)
+  ctx.fill()
+}
+
+/**
+ * From above, a ball's shadow: long across the sand, away from the black sun's side, from where it stands (a ball
+ * off the floor leaves it behind).
+ */
+export function paintLong(b: Brush, x: number, size: number): void {
+  const { ctx } = b
+  const r = 0.13 * size
+  const a = 0.46
+  const L = r * 9
+  const ux = Math.cos(a)
+  const uy = Math.sin(a)
+  ctx.beginPath()
+  ctx.moveTo(x - uy * r * 0.85, -r + ux * r * 0.85)
+  ctx.lineTo(x + ux * L - uy * r * 0.55, -r + uy * L + ux * r * 0.55)
+  ctx.quadraticCurveTo(x + ux * (L + r * 0.9), -r + uy * (L + r * 0.9), x + ux * L + uy * r * 0.55, -r + uy * L - ux * r * 0.55)
+  ctx.lineTo(x + uy * r * 0.85, -r - ux * r * 0.85)
+  ctx.closePath()
+  ctx.fillStyle = b.ca('#000000', 0.3)
   ctx.fill()
 }
 

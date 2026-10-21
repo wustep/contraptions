@@ -5,8 +5,8 @@ import { T } from '../../timeline'
  * Giedi Prime's arena: where it is, and when what happens in it, every moment on the music.
  *
  * The arena is a bowl seen from its floor. The floor is the action's plane (y = 0, x round `X0`); its far side is a wall
- * of tiers behind it, drawn in a layer (`STANDS_F` the size of the floor's plane) whose rim dips at the middle, where the
- * bowl is furthest, and towers toward the frame's edges, where it comes round toward us. Two black pylons stand at the
+ * of tiers behind it, drawn in a layer (sized by where the camera stands, `views.ts`) whose rim dips at the middle, where
+ * the bowl is furthest, and towers toward the frame's edges, where it comes round toward us. Two black pylons stand at the
  * floor's ends, each with a gate: Feyd-Rautha's on the west, the prisoners' on the east.
  */
 
@@ -20,9 +20,6 @@ export const PYLON_H = 17
 export const GATE_W = 1.7
 export const GATE_H = 1.5
 
-/** The stands' layer: how big against the floor's plane, and the world y it shrinks toward (above the floor, so the floor shows behind the fighters). */
-export const STANDS_F = 0.6
-export const STANDS_PIVOT = -3.5
 
 /** A strike on the onset nearest `t` (at least `g` strong, within `tol`). */
 const on = (t: number, g = 0.2, tol = 0.05): number => onsetNear(t, g, tol)
@@ -47,6 +44,8 @@ export const A = {
   /** The third comes at him. */
   advance: on(203.842, 0.4),
   clash1: on(205.055, 0.8),
+  /** From above: the cut up to the rim, as they part after he lands on Feyd. */
+  above: on(205.392, 0.4),
   /** The flurry, five strokes in a second. */
   flurry: [on(207.494, 1), on(207.761, 1), on(207.929, 1), on(208.196, 1), on(208.48, 1)],
   part: on(210.187, 0.4),
@@ -65,6 +64,8 @@ export const A = {
   close: on(235.868, 1),
   exchange: [on(235.868, 1), on(236.768, 1), on(237.041, 1), on(237.476, 0.7)],
   lunge: on(243.473, 0.6),
+  /** The held breath. */
+  breath: on(244.402, 0.25),
   /** The kill, after the held breath. */
   kill: on(250.114, 1),
   /** The sky: the ink. */

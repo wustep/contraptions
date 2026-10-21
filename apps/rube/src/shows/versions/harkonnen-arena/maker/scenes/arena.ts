@@ -6,7 +6,8 @@ import { END } from '../timeline'
 import { FEYD_PATH, FIGHT_STRIKES, FIGHTERS, KNIFE, PRISONER_PATHS, pairAt } from './arena/fight'
 import { A, X0 } from './arena/geo'
 import { BLOOMS, paintInk } from './arena/ink'
-import { paintDoor, paintFloor, paintPylon, paintSeat, paintSky, paintStands } from './arena/set'
+import { paintDoor, paintFloor, paintLong, paintPylon, paintSeat, paintSky, paintStands } from './arena/set'
+import { modeAt } from './arena/views'
 
 /**
  * Giedi Prime, under its black sun (186.0 to 262.9): the arena, in black and white.
@@ -14,15 +15,18 @@ import { paintDoor, paintFloor, paintPylon, paintSeat, paintSky, paintStands } f
  *   186.0    the dissolve from the eclipse: the white sky, the black sun where the eclipsed one was, the bowl of black
  *            tiers rising round it, two black pylons at the floor's ends; a slow push in
  *   190.1    Feyd-Rautha's gate opens, and he comes out; 190.8 the prisoners' gate, and they are shoved out, one by one
- *   196.6    the floor: the three of them, and him
- *   198.0    the first blow, the hardest note of the cue: the first prisoner falls, his colour going out; the crowd rises
+ *   196.6    down on the sand, close: the crowd a dark band low behind, the black sun over it; Feyd comes in
+ *   198.0    the first blow, the hardest note of the cue: the first prisoner thrown back, his colour going out
  *   202.2    the second, harder still: the second, who came at him over the first
- *   205.1    the third comes over his dead and onto him: close, the fight; five strokes in a second (207.5 to 208.5)
- *   216.9    wide: the crowd rocking as one on the slow pulse; 218.5 close again
- *   221.5    the ram: Feyd knocked back and down (222.6), up again (223.7)
- *   224.1    circling; a feint; strokes; 235.9 close, the exchange; 243.5 the lunge, and he vaults over it
- *   244.4    the held breath, the two of them still; 250.1 the kill
- *   252.0    wide, the sky: ink opening over the arena (250.1, 254.9, 258.3); still from 261.3 to the dissolve to the storm
+ *   205.1    the third comes over his dead and onto him
+ *   205.4    from the rim, looking down: the pale floor, the long shadows; five strokes in a second (207.5 to 208.5)
+ *   213.4    close among them, the crowd's front rows behind: a clash
+ *   216.9    the whole bowl: the two of them specks on its floor, the crowd rocking as one on the slow pulse
+ *   218.5    close: the ram, Feyd knocked back and down (222.6), up again (223.7)
+ *   224.1    from the rim again: circling; a feint
+ *   233.7    close: a clash; 235.9 down on the sand: the exchange; 243.5 the lunge, and he vaults over it
+ *   244.4    the held breath, low, the black sun over them; 250.1 the kill
+ *   252.0    the bowl and the sky: ink opening over the arena (250.1, 254.9, 258.3); still from 258.8 to the dissolve
  */
 
 const FEYD_R = R * FEYD_SIZE
@@ -36,6 +40,12 @@ function paintSeats(b: Brush): void {
     const [x, y] = p.where(b.t)
     seat(x, y, R, 1)
   }
+}
+
+/** From the rim, every fighter's long shadow across the sand, from where he stands on it. */
+function paintShadows(b: Brush): void {
+  paintLong(b, FEYD_PATH.where(b.t)[0], FEYD_SIZE)
+  for (const p of PRISONER_PATHS) paintLong(b, p.where(b.t)[0], 1)
 }
 
 /** Feyd's knife: a short dark blade out of him toward the man he kills, on the note, and back. */
@@ -75,33 +85,33 @@ export const arena: Scene = {
     { t: A.in, cut: true, cells: 54, at: [X0, -14] },
     { t: A.in + A.inFor + 0.3, cells: 54, at: [X0, -14] },
     { t: 196.4, cells: 24, at: [X0 - 0.5, -6.1] },
-    // The floor: the three, and him.
-    { t: A.floor, cut: true, cells: 10.5, at: [5999.8, -3.1] },
-    { t: A.clash1 - 0.01, cells: 9.6, at: [5999.8, -2.85] },
-    // Close on the two of them: the strokes.
-    { t: A.clash1, cut: true, cells: 4.4, track: pairAt, off: [0, -1.25] },
-    { t: A.clash2 - 0.01, cells: 4.2, track: pairAt, off: [0, -1.2] },
-    // Back a little on the clash, easing out.
-    { t: A.clash2, cut: true, cells: 7, track: pairAt, off: [0, -1.85] },
-    { t: A.wide - 0.01, cells: 8.6, track: pairAt, off: [0, -2.3] },
+    // Down on the sand, close: the two blows, and the third over his dead onto Feyd.
+    { t: A.floor, cut: true, cells: 3.3, at: [5998.45, -1.03] },
+    { t: A.above - 0.01, cells: 3.1, at: [5998.45, -0.98] },
+    // From the rim, looking down: the strokes, and the parting.
+    { t: A.above, cut: true, cells: 4.0, track: pairAt, off: [0, 0] },
+    { t: A.clash2 - 0.01, cells: 3.8, track: pairAt, off: [0, 0] },
+    // Close among them, the crowd's front rows behind.
+    { t: A.clash2, cut: true, cells: 3.0, track: pairAt, off: [0, -0.8] },
+    { t: A.wide - 0.01, cells: 3.2, track: pairAt, off: [0, -0.86] },
     // The whole bowl: the two of them specks on its floor, the crowd rocking as one.
     { t: A.wide, cut: true, cells: 50, at: [X0 - 1, -13] },
     { t: A.back - 0.01, cells: 47, at: [X0 - 1, -12.2] },
     // Close for the ram, the fall and the getting up.
-    { t: A.back, cut: true, cells: 4.8, track: pairAt, off: [0, -1.4] },
-    { t: A.circle - 0.01, cells: 5.2, track: pairAt, off: [0, -1.5] },
-    // Circling, small under the black sun, the push in as they close.
-    { t: A.circle, cut: true, cells: 30, at: [5997.8, -11.5] },
-    { t: A.clash3 - 0.01, cells: 19, at: [5997.8, -6.9] },
-    { t: A.clash3, cut: true, cells: 7.4, track: pairAt, off: [0, -1.95] },
-    { t: A.close - 0.01, cells: 7, track: pairAt, off: [0, -1.85] },
-    // The exchange, and the vault.
-    { t: A.close, cut: true, cells: 4.6, track: pairAt, off: [0, -1.35] },
-    { t: 244.38, cells: 4.9, track: pairAt, off: [0, -1.45] },
-    // The held breath: the two of them, still, and the kill.
-    { t: 244.402, cut: true, cells: 6, at: [5998.45, -1.85] },
-    { t: A.kill, cells: 5.4, at: [5998.35, -1.66] },
-    { t: A.sky - 0.01, cells: 5.3, at: [5998.3, -1.63] },
+    { t: A.back, cut: true, cells: 3.2, track: pairAt, off: [0, -0.86] },
+    { t: A.circle - 0.01, cells: 3.4, track: pairAt, off: [0, -0.92] },
+    // From the rim again: circling, the feint, closing.
+    { t: A.circle, cut: true, cells: 5.0, track: pairAt, off: [0, 0] },
+    { t: A.clash3 - 0.01, cells: 4.4, track: pairAt, off: [0, 0] },
+    { t: A.clash3, cut: true, cells: 3.0, track: pairAt, off: [0, -0.8] },
+    { t: A.close - 0.01, cells: 3.1, track: pairAt, off: [0, -0.83] },
+    // Down on the sand: the exchange, and the vault.
+    { t: A.close, cut: true, cells: 3.2, track: pairAt, off: [0, -0.86] },
+    { t: A.breath - 0.01, cells: 3.3, track: pairAt, off: [0, -0.89] },
+    // The held breath, low, the black sun over them; the kill.
+    { t: A.breath, cut: true, cells: 4.4, at: [5998.3, -1.33] },
+    { t: A.kill, cells: 4.1, at: [5998.2, -1.25] },
+    { t: A.sky - 0.01, cells: 4.05, at: [5998.2, -1.24] },
     // The sky: the ink opening over the arena, rising to it, and still.
     { t: A.sky, cut: true, cells: 52, at: [X0, -15] },
     { t: 258.8, cells: 50, at: [X0, -24] },
@@ -110,10 +120,16 @@ export const arena: Scene = {
   back: [
     drawing('arena', END, (b) => {
       if (!here(b.t)) return
-      paintSky(b)
+      const mode = modeAt(b.t)
+      if (mode === 'high') {
+        paintFloor(b, mode)
+        paintShadows(b)
+        return
+      }
+      paintSky(b, mode)
       paintInk(b)
-      paintStands(b)
-      paintFloor(b)
+      paintStands(b, mode)
+      paintFloor(b, mode)
       paintPylon(b, -1)
       paintPylon(b, 1)
       paintSeats(b)
@@ -123,8 +139,10 @@ export const arena: Scene = {
     // Over the balls: the doors they wait behind, and the knife.
     drawing('arena-front', END, null, (b) => {
       if (!here(b.t)) return
-      paintDoor(b, -1, A.westGate)
-      paintDoor(b, 1, A.eastGate)
+      if (modeAt(b.t) !== 'high') {
+        paintDoor(b, -1, A.westGate)
+        paintDoor(b, 1, A.eastGate)
+      }
       paintKnife(b)
     }),
   ],
@@ -133,6 +151,8 @@ export const arena: Scene = {
     ['the west gate opens', A.westGate],
     ['the east gate opens', A.eastGate],
     ['the first is shoved out', A.shoved[0]],
+    ['up to the rim', A.above],
+    ['the held breath', A.breath],
     ...FIGHT_STRIKES,
     ...BLOOMS.map((o, i): [string, number] => [`ink ${i + 1}`, o.at]),
   ],
