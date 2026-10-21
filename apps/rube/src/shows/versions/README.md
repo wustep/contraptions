@@ -29,7 +29,7 @@ The folder and file names are addresses, so they are chosen once:
   freely: `come-recover` is **Everything**, `heptapod-b` **Logogram**,
   `interstellar` **Voyage**, `la-la-land` **Epilogue**, `bolero` **Ostinato**,
   `nature-of-daylight` **Palindrome**, `relax` **Magnum**, `time` **Kick**, `step-out` **Quintessence**,
-  `rule-the-world` **Rally**. The write-up says which is which.
+  `rule-the-world` **Rally**, `odysseus` **Nostos**. The write-up says which is which.
 - **Take**: `<take>.show.ts`, which is also `/shows/<work>/<take>/` and the
   card `public/shows/<work>/<take>.png`. Name it for who made it (`opus55`,
   `fable51`, `grok47`), or with a letter (`take-a`). La La Land's takes keep the
@@ -530,3 +530,24 @@ its cut (`rally/cab.ts`). The song is a shuffle on a machine-steady pulse, so `s
 fits one comb (112.05 bpm) and moves every beat, and every beat's shuffled "a", onto its own attack, into
 `scripts/shows/plans/rule-the-world-onsets.json`; `check:shows` holds every strike to it (`apps/rube/checks/rally.ts`).
 The report is `apps/rube/src/shows/versions/rule-the-world/RALLY.md`.
+
+`odysseus/opus55` (in the picker, **Nostos**, one take, **Opus 5.5**) is **Nostos · after The Odyssey**: Ludwig
+Göransson's *Odysseus* from Christopher Nolan's *The Odyssey*, the cue that scores Odysseus's confession and the second
+sack of Troy, played whole by YouTube from Back Lot Music's upload only (WCxx_OVOVUw; no recording is shipped:
+`apps/rube/src/shows/versions/odysseus/ATTRIBUTION.txt`), and then the end credits into the quiet after it. Every piece
+is new. It tells the film in order as one machine along one sea, cut away below the waterline: the black horse
+half-sunk in the surf at Troy and hauled ashore; Ithaca that night (Penelope's loom, the suitors, Telemachus, Argos, the
+bow and the twelve axes, all set out before he leaves); the men down the horse's rope, the gate's gears, the city
+burning, Athena's statue; three black ships; the Cyclops' cave, the boulder door on the low voices' thud and the stake
+on the swell; the giants in the fog, two ships sunk on the beat; the dead rising from black sand; lashed to the mast for
+the Sirens; Apollo's cattle; Zeus's bolt on the cue's cut; the wreck and the spar; seven years on Ogygia, with the loom
+weaving by day and unpicking by night; the raft given to the storm; the hoist up Ithaca's cliff, Argos's one wag; the
+trial of the bow (a crank only a drop from the terrace will move, the string Penelope's red thread, the arrow through
+twelve eyes); and the two of them sailing west into the sun. Odysseus is a bronze ball, his men clay, Penelope madder
+red, Telemachus a paler, smaller bronze, the suitors slate; no god is ever seen. The code is `odysseus/nostos/` (one
+world on one clock, a scene per stretch of the voyage handed on at measured seams, an authored camera, dissolves, the
+end credits from `Performance.titles`). The cue keeps no steady beat but in its middle, so
+`scripts/shows/odysseus-onsets.py` measures its stretches, its onsets and that one comb (80 bpm) into
+`scripts/shows/plans/odysseus-onsets.json`; `check:shows` holds the story's strikes to it (`apps/rube/checks/nostos.ts`).
+The report is `apps/rube/src/shows/versions/odysseus/NOSTOS.md`; the research and the cue's structure are in
+`docs/shows/nostos/`.
