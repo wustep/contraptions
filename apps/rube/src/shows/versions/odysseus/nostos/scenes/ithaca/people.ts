@@ -113,15 +113,16 @@ function penelopePath(): Path {
   // He comes up the stairs into her room: she goes a little towards him, and stops.
   const near: Pt = [821.32, y]
   m.push(roll([watch, near], 489.4, 490.43))
-  m.push(rest(near, 490.43, 495.2))
-  // The bow sings: to her door, to look out at the well.
-  const door: Pt = [822.2, y]
-  m.push(roll([near, door], 495.2, 497.0))
-  m.push(rest(door, 497.0, 503.3))
+  m.push(rest(near, 490.43, 495.0))
+  // The bow sings, and she knows him by it: out of her door after him, across the terrace to the light well's lip,
+  // and there she stands over him, looking down, while his weight draws the bow and the arrow goes.
+  const lip: Pt = [826.18, y]
+  m.push(roll([near, lip], 495.0, 497.4, 'inout'))
+  m.push(rest(lip, 497.4, 501.3))
   // Back to the stairs' head, to watch the fight over the hall; down them when it is over, a step a note, to him.
   const head = stepAt(STAIRS.steps - 1)
   const top: Pt = [head[0], y]
-  m.push(roll([door, top], 503.3, 503.95))
+  m.push(roll([lip, top], 501.3, 503.95, 'inout'))
   const down = penelopeDown(top)
   m.push(...down.moves)
   m.push(rest(down.end, TRIAL.meet, TRIAL.fade))
