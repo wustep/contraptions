@@ -1,4 +1,4 @@
-import type { Shot } from '../camera'
+import { lens, type Shot } from '../camera'
 import { JESSICA, LETO, MOTHER, PAUL } from '../cast'
 import { bell, kick, ring, standing, type Pt } from '../paint'
 import { Walk } from '../path'
@@ -123,7 +123,10 @@ const shots: Shot[] = [
   // Up the cliff and in to the window, through the wall.
   { t: 21, cells: 11, at: [-559.5, -25.5] },
   { t: T.window, cells: 3.2, at: [-556.15, -26.98] },
-  { t: T.wake, cells: 3.0, at: [-556.1, -26.95] },
+  // He sleeps low in the frame, and the dream opens in the room's air above him.
+  { t: T.dream - 1, cells: 3.4, at: [-556.45, -27.3] },
+  { t: T.wake - 1.2, cells: 3.3, at: [-556.4, -27.28] },
+  { t: T.wake + 0.6, cells: 3.1, at: [-556.2, -27.0] },
   { t: T.door - 0.002, cells: 2.95, at: [-556.4, -26.92] },
   // The test room: the door slides, they come in.
   { t: T.door, cells: 3.3, at: [-543.4, -20.05], cut: true },
@@ -157,6 +160,10 @@ const shots: Shot[] = [
   { t: T.fold - 0.002, cells: FOLD.cells, on: frigateAt },
 ]
 
+/** The camera, for openings that are placed in the frame: built once from the shots. */
+let cam: ((t: number) => { x: number; y: number; cells: number }) | null = null
+const cameraAt = (t: number) => (cam ??= lens(shots, (s) => whereAt(s)))(t)
+
 /** The dream: from the call, an opening grows from him onto the dream shot, holds, and closes before he wakes. */
 const dream = {
   from: T.dream,
@@ -165,8 +172,13 @@ const dream = {
   rate: (DREAM_SHOT.to - DREAM_SHOT.from - 0.2) / (T.wake - 0.3 - T.dream),
   a: (t: number) => bell(t, T.dream, T.dream + 1.6, T.wake - 3.4, T.wake - 0.4),
   iris: (t: number) => {
+    // It starts at his head and rises as it opens, to where the girl is in the dream's frame (60% across, 55% down),
+    // so he stays in the room under it, asleep; it closes back into him before he wakes.
     const grow = bell(t, T.dream, T.dream + 5.5, T.wake - 3.6, T.wake - 0.6)
-    return { x: asleep[0] + 0.15, y: asleep[1] - 0.25, r: 0.25 + 1.75 * grow, soft: 0.9 }
+    const head: Pt = [asleep[0], asleep[1] - 0.16]
+    const f = cameraAt(t)
+    const place: Pt = [f.x + 0.1 * ((f.cells * 16) / 9), f.y + 0.05 * f.cells]
+    return { x: head[0] + (place[0] - head[0]) * grow, y: head[1] + (place[1] - head[1]) * grow, r: 0.08 + 0.78 * grow, soft: 0.05 + 0.12 * grow }
   },
 }
 
