@@ -24,7 +24,7 @@ const C = {
   floor: '#3A2F25',
   wall: '#3A342D',
   pool: '#5E4D3A',
-  lamp: '#E6BF82',
+  lamp: '#C7A06A',
   screen: '#B5A78D',
   screenLit: '#D8C7A2',
   slit: '#151918',
@@ -48,21 +48,30 @@ function exterior(g: Paint, a: number): void {
   const ctx = g.ctx
   ctx.save()
   ctx.globalAlpha = a
-  // The block, then the tower over it, each lit a little on the sea side.
-  rect(ctx, BLOCK.x0, BLOCK.top, BLOCK.x1 - BLOCK.x0, CLIFF.top - BLOCK.top)
+  // The block, battered (its walls lean in as they rise), under a low broad roof; a shorter tower at its east end.
+  poly(ctx, [[BLOCK.x0, CLIFF.top], [BLOCK.x0 + 0.4, BLOCK.top], [BLOCK.x1 - 0.4, BLOCK.top], [BLOCK.x1, CLIFF.top]])
   fill(ctx, vgrad(ctx, BLOCK.top, CLIFF.top, [[0, C.stone], [1, C.stoneDark]]))
-  poly(ctx, [[BLOCK.x0 - 0.4, BLOCK.top], [BLOCK.x0 + 3, BLOCK.top - 2.4], [BLOCK.x1 - 3, BLOCK.top - 2.4], [BLOCK.x1 + 0.4, BLOCK.top]])
+  poly(ctx, [[BLOCK.x0 - 0.6, BLOCK.top + 0.1], [BLOCK.x0 + 1.4, BLOCK.top - 1.3], [BLOCK.x1 - 1.4, BLOCK.top - 1.3], [BLOCK.x1 + 0.6, BLOCK.top + 0.1]])
   fill(ctx, C.roof)
-  // The tower, with two of its windows open on its face: Paul's room and the hall's sea end behind them, and anyone in
-  // them, are seen through.
+  const east = { x0: BLOCK.x1 - 6.5, x1: BLOCK.x1 - 0.8, top: BLOCK.top - 5.5 }
+  poly(ctx, [[east.x0, BLOCK.top + 0.1], [east.x0 + 0.3, east.top], [east.x1 - 0.3, east.top], [east.x1, BLOCK.top + 0.1]])
+  fill(ctx, vgrad(ctx, east.top, BLOCK.top, [[0, C.stoneLit], [1, C.stone]]))
+  rect(ctx, east.x0 - 0.5, east.top - 0.7, east.x1 - east.x0 + 1, 0.7)
+  fill(ctx, C.roof)
+  // The great tower on the cliff's edge, with two of its windows open on its face: Paul's room and the hall's sea end
+  // behind them, and anyone in them, are seen through. Its top is a heavy slab that overhangs it. No spires.
   ctx.beginPath()
   ctx.rect(TOWER.x0, TOWER.top, TOWER.x1 - TOWER.x0, CLIFF.top - TOWER.top)
   ctx.rect(ROOM.x0 + 0.5, ROOM.ceil + 0.3, 1.6, ROOM.floor - ROOM.ceil - 0.3)
   ctx.rect(HALL.x0 + 0.35, HALL.floor - 2.2, 2.0, 2.2)
   ctx.fillStyle = vgrad(ctx, TOWER.top, CLIFF.top, [[0, C.stoneLit], [0.6, C.stone], [1, C.stoneDark]])
   ctx.fill('evenodd')
-  poly(ctx, [[TOWER.x0 - 0.7, TOWER.top], [(TOWER.x0 + TOWER.x1) / 2, TOWER.peak], [TOWER.x1 + 0.7, TOWER.top]])
+  rect(ctx, TOWER.x0, TOWER.top, 1.1, ROOM.ceil + 0.3 - TOWER.top)
+  fill(ctx, rgba(C.stoneLit, 0.5))
+  rect(ctx, TOWER.x0 - 1.3, TOWER.top - 1.3, TOWER.x1 - TOWER.x0 + 2.6, 1.3)
   fill(ctx, C.roof)
+  rect(ctx, TOWER.x0 - 1.3, TOWER.top - 1.3, TOWER.x1 - TOWER.x0 + 2.6, 0.18)
+  fill(ctx, mix(C.roof, C.stoneLit, 0.6))
   // Courses: three dark bands round the tower and the block, where the floors are.
   for (const y of [-16.9, -21.6, -25.6]) {
     rect(ctx, TOWER.x0, y, TOWER.x1 - TOWER.x0, 0.25)
@@ -106,7 +115,7 @@ function roomBox(g: Paint, x0: number, x1: number, ceil: number, floor: number, 
 /** A paper lamp on a stand, its shade warm (it is the light; there is no halo round it). */
 function lamp(g: Paint, x: number, floor: number, h = 0.62): void {
   line(g, [x, floor], [x, floor - h + 0.12], C.timber, 0.03)
-  ellipse(g.ctx, x, floor - h, 0.12, 0.15)
+  ellipse(g.ctx, x, floor - h, 0.085, 0.11)
   fill(g.ctx, C.lamp)
 }
 

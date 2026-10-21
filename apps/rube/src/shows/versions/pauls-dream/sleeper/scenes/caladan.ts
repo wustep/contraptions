@@ -1,10 +1,10 @@
 import type { Shot } from '../camera'
 import { LETO, MOTHER } from '../cast'
-import { standing, bell, type Pt } from '../paint'
+import { bell, kick, ring, standing, type Pt } from '../paint'
 import { Walk } from '../path'
 import { DREAM_SHOT, FOLD, PLACES, WINDOWS } from '../plan'
 import type { Scene } from '../scene'
-import { castle, castleOver, faceAt } from './caladan/castle'
+import { castle, castleOver, faceAt, painAt } from './caladan/castle'
 import { BED, BOX, HALL, RAMP, ROOM, SEAT, TEST, T } from './caladan/geo'
 import { clouds, field, frigateAt, frigateOver, frigateUnder, heighliner, heights, holdLip } from './caladan/leaving'
 import { cliff, headlands, nearWater, rain, sea, sky, spray } from './caladan/sea'
@@ -57,7 +57,8 @@ const paul = new Walk(asleep, from)
   .roll([nearBox], T.atBox, 'inout')
   .wait(T.hand - 0.55)
   .roll([inBox], T.hand, 'in')
-  .wait(T.over)
+  // The pain: he shakes on every blow of the lament, and shivers while it lasts, and does not take his hand out.
+  .ride((t) => [inBox[0] + tremble(t), inBox[1]], T.over)
   .roll([[nearBox[0] + 0.25, nearBox[1]]], T.over + 0.9, 'out')
   .wait(T.open + 0.4)
   .roll([[TEST.x1 - 0.7, nearBox[1]]], 85.04, 'inout')
@@ -80,7 +81,8 @@ const jessica = new Walk([inPassage[0] - 0.2, inPassage[1]], T.door)
   .wait(T.sent)
   // Sent out: she goes, the door shuts, and she waits against it.
   .roll([[TEST.x1 + 0.55, inPassage[1]]], T.shut - 0.4, 'inout')
-  .wait(T.open)
+  // Against the door she flinches on the same blows he does, and is still between them.
+  .ride((t) => [TEST.x1 + 0.55 + flinch(t), inPassage[1]], T.open)
   .roll([[TEST.x1 - 0.35, inPassage[1]]], T.open + 0.9, 'inout')
   .wait(T.hall)
   .jump(rampFoot(1))
@@ -102,6 +104,17 @@ const leto = new Walk([HALL.x0 + 0.85, floorOf(HALL.floor, LETO.size)], T.hall)
 
 const mother = new Walk([SEAT[0], floorOf(TEST.floor - 0.2, MOTHER.size)], T.door).wait(T.hall)
 
+/** His shaking in the box: a start on each blow, ringing down, and a small shiver under it while the pain lasts. */
+function tremble(t: number): number {
+  const blows = T.blows.reduce((sum, b) => sum + ring(t, b, 7, 0.22), 0)
+  return 0.016 * blows + 0.0035 * painAt(t) * Math.sin(2 * Math.PI * 6.5 * t)
+}
+
+/** Her flinch outside the door, on his blows: toward the door and back. */
+function flinch(t: number): number {
+  return -0.03 * T.blows.reduce((sum, b) => sum + kick(t, b, 0.08, 0.7), 0)
+}
+
 /** The camera: the sea, the cliff and the window; the room; the test; the hall; the field and the climb. */
 const shots: Shot[] = [
   // The sea, the cliff, the castle on it, one window lit; slowly in.
@@ -109,9 +122,9 @@ const shots: Shot[] = [
   { t: T.rise, cells: 40, at: [-576, -19.5] },
   // Up the cliff and in to the window, through the wall.
   { t: 21, cells: 11, at: [-559.5, -25.5] },
-  { t: T.window, cells: 3.1, at: [-556.15, -27.1] },
-  { t: T.wake, cells: 2.85, at: [-556.1, -27.12] },
-  { t: T.door - 0.002, cells: 2.75, at: [-556.4, -27.1] },
+  { t: T.window, cells: 3.2, at: [-556.15, -26.98] },
+  { t: T.wake, cells: 3.0, at: [-556.1, -26.95] },
+  { t: T.door - 0.002, cells: 2.95, at: [-556.4, -26.92] },
   // The test room: the door slides, they come in.
   { t: T.door, cells: 3.3, at: [-543.4, -20.05], cut: true },
   { t: T.atBox, cells: 3.0, at: [-544.0, -19.95] },
@@ -125,15 +138,15 @@ const shots: Shot[] = [
   { t: T.open + 1.6, cells: 3.2, at: [-543.3, -20.0] },
   { t: T.hall - 0.002, cells: 3.2, at: [-543.3, -20.0] },
   // The hall: Leto at the window over the sea, the head on the wall.
-  { t: T.hall, cells: 5.1, at: [-555.2, -14.15], cut: true },
-  { t: T.sea - 0.002, cells: 4.9, at: [-555.4, -14.15] },
+  { t: T.hall, cells: 5.1, at: [-555.2, -14.05], cut: true },
+  { t: T.sea - 0.002, cells: 4.9, at: [-555.4, -14.0] },
   // From the sea: the two of them small in a window of the tower on its cliff.
   { t: T.sea, cells: 19, at: [-565.5, -16.0], cut: true },
   { t: T.inside - 0.002, cells: 17.5, at: [-565.0, -15.8] },
   // Back in: the head comes down into its crate.
-  { t: T.inside, cells: 4.6, at: [-554.6, -14.15], cut: true },
-  { t: T.lid, cells: 4.2, at: [-554.4, -14.05] },
-  { t: T.field - 0.002, cells: 4.2, at: [-554.4, -14.05] },
+  { t: T.inside, cells: 4.7, at: [-554.6, -14.0], cut: true },
+  { t: T.lid, cells: 4.4, at: [-554.4, -13.95] },
+  { t: T.field - 0.002, cells: 4.4, at: [-554.4, -13.95] },
   // The field, the lift, the climb, the heighliner, the hold.
   { t: T.field, cells: 15, at: [-498.5, -15.6], cut: true },
   { t: T.lift, cells: 16, at: [-497.5, -16.2] },
@@ -164,6 +177,12 @@ export const caladan: Scene = {
   from,
   to,
   moves: { paul: paul.segs, jessica: jessicaSegs, leto: leto.segs, mother: mother.segs },
+  looks: {
+    // At his window, at the sea; at the box, toward her; with his father, at the sea; under the head, up at it.
+    paul: [[T.look + 1.0, T.door - 0.05, Math.PI], [T.atBox - 0.3, T.over + 0.8, Math.PI], [T.hall + 1.6, T.inside + 0.6, Math.PI], [T.lower[0] - 0.1, T.lid + 0.6, -Math.PI / 2 - 0.45]],
+    leto: [[T.hall, T.inside + 0.3, Math.PI], [T.lower[0] - 0.3, T.lid + 0.6, -Math.PI / 2 - 0.3]],
+    jessica: [[T.shut - 0.3, T.open, Math.PI]],
+  },
   shots,
   dreams: [dream],
   scope: [[0, 1]],
