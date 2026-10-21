@@ -21,11 +21,19 @@ export interface Range {
   vary?: number
   /** The range's foot, world y (0 is the flat). */
   foot?: number
+  /**
+   * Soft: rounded swells, no crest or shadow of their own. So far off the crests are lost in the haze, and a row of
+   * small sharp ones reads as teeth.
+   */
+  soft?: boolean
+  /** The share of crests left out, so the range has open corridors between its dunes (0 none). */
+  gap?: number
 }
 
 interface Crest {
   x: number
   h: number
+  soft: boolean
   /** Its back's length, east of the crest, over its height. */
   back: number
   /** Its face's length, west of the crest, over its height. */
@@ -38,9 +46,10 @@ function crestsOf(r: Range, x0: number, x1: number): Crest[] {
   const i0 = Math.floor(x0 / r.spacing) - 3
   const i1 = Math.ceil(x1 / r.spacing) + 3
   for (let i = i0; i <= i1; i++) {
+    if (hash(i, r.seed, 5) < (r.gap ?? 0)) continue
     const x = (i + (hash(i, r.seed, 1) - 0.5) * 0.7) * r.spacing
     const h = r.height * (1 - vary / 2 + vary * hash(i, r.seed, 2))
-    out.push({ x, h, back: 3.0 + 1.8 * hash(i, r.seed, 3), face: 1.35 + 0.3 * hash(i, r.seed, 4) })
+    out.push({ x, h, soft: !!r.soft, back: 3.0 + 1.8 * hash(i, r.seed, 3), face: 1.35 + 0.3 * hash(i, r.seed, 4) })
   }
   return out
 }
@@ -48,6 +57,12 @@ function crestsOf(r: Range, x0: number, x1: number): Crest[] {
 /** How high one crest stands over the foot at `x` (0 away from it). */
 function crestAt(c: Crest, x: number): number {
   const d = x - c.x
+  if (c.soft) {
+    const u = d / (c.h * (d > 0 ? c.back : c.face * 1.8))
+    if (u <= -1 || u >= 1) return 0
+    const k = 1 - u * u
+    return c.h * k * k
+  }
   if (d >= 0) {
     const L = c.h * c.back
     if (d >= L) return 0
@@ -119,7 +134,7 @@ export function paintRange(b: Brush, r: Range, f: number, hy: number, look: Dune
     ctx.fill()
     // The shadows: under each crest in the frame, the face, crisp at the crest and along the terminator, melting into the
     // lit sand toward its foot.
-    for (const c of cs) {
+    for (const c of r.soft ? [] : cs) {
       const top = (r.foot ?? 0) - c.h
       const faceL = c.h * c.face
       if (c.x + c.h < x0 || c.x - faceL - 1 > x1) continue

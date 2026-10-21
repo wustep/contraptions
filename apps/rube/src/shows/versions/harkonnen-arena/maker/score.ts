@@ -67,7 +67,7 @@ export function compose(): {
   const paulPath = pathOf('paul', SCENES.flatMap((s) => s.paul ?? []), 1)
   const chaniPath = pathOf('chani', SCENES.flatMap((s) => s.chani ?? []), CHANI_SIZE)
   const paul: Actor = { id: PAUL_ID, color: PAUL, rim: PAUL_RIM, size: 1, path: paulPath, on: (t) => !paulPath.at(t).hidden }
-  const chani: Actor = { id: CHANI_ID, color: CHANI, rim: CHANI_RIM, size: CHANI_SIZE, path: chaniPath, turn: 2.6, on: (t) => !chaniPath.at(t).hidden }
+  const chani: Actor = { id: CHANI_ID, color: CHANI, rim: CHANI_RIM, size: CHANI_SIZE, path: chaniPath, on: (t) => !chaniPath.at(t).hidden }
   const actors = SCENES.flatMap((s) => s.actors ?? [])
 
   const pieces: Placed[] = [

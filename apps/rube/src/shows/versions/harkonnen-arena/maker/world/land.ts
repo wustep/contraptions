@@ -9,15 +9,23 @@ import { paintSky, skyOf, type SkyKey } from './sky'
  * The horizon is at the eye: it stands in the frame (a share `tilt` of the frame's height below its middle), so a
  * camera that rises sees the far ranges stay put while the near sand drops away, as from a crane. Ranges are layers
  * (`paint.ts`), so they drift by less the further they are when the camera pans.
+ *
+ * The camera is a dolly, not a zoom: a range `d` cells behind the action's plane is drawn at `h / (h + d)` of its size,
+ * `h` the frame's height in cells (the camera stands about a frame's height back from what it frames). So close on the
+ * two of them the far desert is a low line behind them, and pulled back over the flat it comes up nearer their size,
+ * and in a push in the background grows less than the subject, as through a lens that moves.
  */
+
+/** How big a layer `d` cells behind the action's plane is drawn, in a frame `h` cells high. */
+export const depthScale = (h: number, d: number): number => h / (h + Math.max(0, d))
 
 /** The horizon in world y for a frame: `tilt` of the frame's height below its middle. */
 export const horizonOf = (view: View, tilt: number): number => view.cy + view.h * tilt
 
 export interface Far {
   range: Range
-  /** How big against the action's plane. */
-  f: number
+  /** How far behind the action's plane, cells. */
+  d: number
   look: DuneLook
 }
 
@@ -27,10 +35,10 @@ export const SAND = { lit: '#D9965A', shade: '#9E5A34', air: '#EAD2B4' }
 /** The usual far desert: four ranges, from the horizon in. */
 export function farDesert(seed: number): Far[] {
   return [
-    { range: { seed: seed + 1, spacing: 60, height: 9, vary: 0.5 }, f: 0.05, look: { lit: SAND.lit, shade: SAND.shade, air: SAND.air, pale: 0.72 } },
-    { range: { seed: seed + 2, spacing: 48, height: 10, vary: 0.55 }, f: 0.11, look: { lit: SAND.lit, shade: SAND.shade, air: SAND.air, pale: 0.5 } },
-    { range: { seed: seed + 3, spacing: 40, height: 11, vary: 0.6 }, f: 0.22, look: { lit: SAND.lit, shade: SAND.shade, air: SAND.air, pale: 0.3 } },
-    { range: { seed: seed + 4, spacing: 34, height: 10, vary: 0.6 }, f: 0.42, look: { lit: SAND.lit, shade: SAND.shade, air: SAND.air, pale: 0.14 } },
+    { range: { seed: seed + 1, spacing: 420, height: 34, vary: 0.6, soft: true }, d: 1200, look: { lit: SAND.lit, shade: SAND.shade, air: SAND.air, pale: 0.7 } },
+    { range: { seed: seed + 2, spacing: 260, height: 30, vary: 0.7, soft: true }, d: 560, look: { lit: SAND.lit, shade: SAND.shade, air: SAND.air, pale: 0.5 } },
+    { range: { seed: seed + 3, spacing: 150, height: 22, vary: 0.85, gap: 0.25 }, d: 250, look: { lit: SAND.lit, shade: SAND.shade, air: SAND.air, pale: 0.32 } },
+    { range: { seed: seed + 4, spacing: 90, height: 16, vary: 0.85, gap: 0.3 }, d: 100, look: { lit: SAND.lit, shade: SAND.shade, air: SAND.air, pale: 0.15 } },
   ]
 }
 
@@ -38,7 +46,7 @@ export function farDesert(seed: number): Far[] {
 export function paintFar(b: Brush, sky: SkyKey[], ranges: Far[], tilt: number): void {
   const hy = horizonOf(b.view, tilt)
   paintSky(b, skyOf(sky, b.t), hy)
-  for (const r of ranges) paintRange(b, r.range, r.f, hy, r.look)
+  for (const r of ranges) paintRange(b, r.range, depthScale(b.view.h, r.d), hy, r.look)
 }
 
 /** A tilt keyed through time: [t, tilt] pairs, eased between. */
