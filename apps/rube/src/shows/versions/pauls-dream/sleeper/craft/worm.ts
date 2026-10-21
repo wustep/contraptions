@@ -6,8 +6,8 @@ import { clamp01, drift, mix, rgba, type Paint, type Pt } from '../paint'
  * in its own shade, the middle toward us between); broad low ring bands go round it, curved as rings round a body are,
  * darkest on its shaded side and gone on its lit side. Its hide is the desert's own sand-greys and umbers.
  *
- * Its head, where it has one in sight, is a mouth of three petals. Shut, they meet in a blunt bud; opening, they peel
- * back like a flower's, and inside the rim is a dark throat with a fringe of pale baleen. The mouth is an ellipse, a
+ * Its head, where it has one in sight, is a mouth of three broad lips. Shut, they meet in a blunt bud; opening, they fold
+ * back flush against its flanks, and what is seen is the dark throat inside the rim with a fringe of pale baleen. The mouth is an ellipse, a
  * circle foreshortened by how far it faces us.
  *
  * Shared by every worm in the show: the first one at the harvester, and the one the Fremen ride.
@@ -196,37 +196,52 @@ function drawMouth(g: Paint, w: Worm, h: Section, look: WormLook, tint: (c: stri
   const C = h.p
   const rimAt = (phi: number, k = 1): Pt => [C[0] + (h.n[0] * A * Math.cos(phi) + h.d[0] * B * Math.sin(phi)) * k, C[1] + (h.n[1] * A * Math.cos(phi) + h.d[1] * B * Math.sin(phi)) * k]
   const towardSun = (v: Pt) => v[0] * w.sun[0] + v[1] * w.sun[1]
+  /**
+   * A lip: hinged on the rim at `phi0`, broad (its base a wide stretch of the rim), blunt-ended. Shut, its end meets the
+   * others' in the bud in front of the head; open, it folds back flush against the body's flank, short.
+   */
   const petal = (phi0: number, alpha = 1) => {
     if (alpha <= 0.003) return
-    const half = 1.05
-    const R1 = rimAt(phi0 - half)
-    const R2 = rimAt(phi0 + half)
+    const half = 1.25
+    const R1 = rimAt(phi0 + half)
+    const R2 = rimAt(phi0 - half)
     const rim = rimAt(phi0)
     const out: Pt = [(rim[0] - C[0]) / rm, (rim[1] - C[1]) / rm]
-    // Shut, the tips meet in front of the head; open, each is peeled out past the rim and back along the body.
     const bud: Pt = [C[0] + h.d[0] * r0 * 1.05, C[1] + h.d[1] * r0 * 1.05]
-    const peeled: Pt = [rim[0] + out[0] * rm * 0.32 - h.d[0] * rm * 0.95, rim[1] + out[1] * rm * 0.32 - h.d[1] * rm * 0.95]
-    const tip: Pt = [bud[0] + (peeled[0] - bud[0]) * e, bud[1] + (peeled[1] - bud[1]) * e]
-    const mid1: Pt = [(R1[0] + tip[0]) / 2 + out[0] * rm * 0.18, (R1[1] + tip[1]) / 2 + out[1] * rm * 0.18]
-    const mid2: Pt = [(R2[0] + tip[0]) / 2 + out[0] * rm * 0.18, (R2[1] + tip[1]) / 2 + out[1] * rm * 0.18]
-    const p = [R1, mid1, tip, mid2, R2].map(M)
+    // Open: its blunt end lies along the flank, a little way back from the rim.
+    const back = rm * 0.5
+    const flushA: Pt = [C[0] + out[0] * r0 * 1.05 - h.d[0] * back, C[1] + out[1] * r0 * 1.05 - h.d[1] * back]
+    const flushB: Pt = [C[0] + out[0] * r0 * 0.8 - h.d[0] * back * 0.9, C[1] + out[1] * r0 * 0.8 - h.d[1] * back * 0.9]
+    const budA: Pt = [bud[0] + out[0] * r0 * 0.08, bud[1] + out[1] * r0 * 0.08]
+    const T1: Pt = [budA[0] + (flushA[0] - budA[0]) * e, budA[1] + (flushA[1] - budA[1]) * e]
+    const T2: Pt = [bud[0] + (flushB[0] - bud[0]) * e, bud[1] + (flushB[1] - bud[1]) * e]
+    // Its outer edge bows out a little past the rim, and comes round to the end.
+    const bow: Pt = [rim[0] + out[0] * rm * 0.06 * e, rim[1] + out[1] * rm * 0.06 * e]
+    const p = [R1, bow, T1, T2, R2].map(M)
+    const c = M(C)
     ctx.beginPath()
     ctx.moveTo(p[0][0], p[0][1])
     ctx.quadraticCurveTo(p[1][0], p[1][1], p[2][0], p[2][1])
-    ctx.quadraticCurveTo(p[3][0], p[3][1], p[4][0], p[4][1])
-    const c = M(C)
-    ctx.quadraticCurveTo(c[0], c[1], p[0][0], p[0][1])
+    // The blunt end.
+    const m12: Pt = [(p[2][0] + p[3][0]) / 2 - (c[0] - p[2][0]) * 0.04, (p[2][1] + p[3][1]) / 2 - (c[1] - p[2][1]) * 0.04]
+    ctx.quadraticCurveTo(m12[0], m12[1], p[3][0], p[3][1])
+    ctx.quadraticCurveTo((p[3][0] + c[0]) / 2, (p[3][1] + c[1]) / 2, p[4][0], p[4][1])
+    // Back to where it began along the rim itself, so it never crosses the throat.
+    for (let k = 1; k <= 12; k++) {
+      const q = M(rimAt(phi0 - half + (2 * half * k) / 12))
+      ctx.lineTo(q[0], q[1])
+    }
     ctx.closePath()
     const light = clamp01(0.5 + 0.5 * towardSun(out))
-    const outer = mix(mix(look.shade, look.lit, light), look.hide, 0.35)
+    const outer = mix(mix(look.shade, look.lit, light), look.hide, 0.4)
     const was = ctx.globalAlpha
     ctx.globalAlpha = was * alpha
-    ctx.fillStyle = tint(mix(outer, look.flesh, 0.45 * e))
+    ctx.fillStyle = tint(mix(outer, look.flesh, 0.3 * e))
     ctx.fill()
     ctx.globalAlpha = was
   }
-  // Two petals at its sides and a third that, shut, closes the bud between them and, opening, folds away behind the
-  // head: side on, an open mouth shows its two sides, and nothing crosses the throat.
+  // Two lips at its sides and a third that, shut, closes the bud between them and, opening, folds away behind the head:
+  // side on, an open mouth shows its two sides, and nothing crosses the throat.
   petal(Math.PI / 2, 1 - smoothstep(e, 0.12, 0.42))
   if (e > 0.02) {
     // The throat, and the fine pale baleen inside the rim.

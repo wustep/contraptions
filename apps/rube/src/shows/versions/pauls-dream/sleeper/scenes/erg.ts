@@ -90,6 +90,9 @@ const crew: Actor[] = T.crew.map((e, i) => {
 
 /* ------------------------------------------------------------------ the camera */
 
+/** The cut to the ornithopter turning for home, on the onset after the swallow's dust. */
+const TURN_CUT = 192.57
+
 // A tracking shot follows the ornithopter on its own side of a cut: its smoothing never looks across one.
 const onRoof = (t: number): Pt => at(Math.min(t, T.out - 0.011))
 const thopter = (t: number): Pt => at(Math.max(t, T.out))
@@ -140,12 +143,13 @@ const shots: Shot[] = [
   { t: T.down, cells: 88, at: [440, -40] },
   { t: T.swallow, cells: 72, at: [432, -32] },
   { t: T.above - 0.002, cells: 72, at: [431, -32] },
-  // From high over it: the dust going down, the ornithopter rising out of it and turning for home.
+  // From high over it: the arch sinking into the hole, the dust going down.
   { t: T.above, cells: 100, at: [418, -46], cut: true },
-  { t: 192.6, cells: 94, at: [410, -43] },
-  // And in on it going home: the ornithopter small against the low sun in the west.
-  { t: 195.4, cells: 46, on: thopter, off: [0.3 * 46 * (16 / 9), 0.12 * 46] },
-  { t: TO, cells: 34, on: thopter, off: [0.3 * 34 * (16 / 9), 0.12 * 34] },
+  { t: TURN_CUT - 0.002, cells: 98, at: [414, -45] },
+  // Close on the ornithopter as it turns for home, and with it as it goes west, until it is small against the low sun.
+  { t: TURN_CUT, cells: 13, on: thopter, off: [-1.5, 0.6], cut: true },
+  { t: 194.4, cells: 15, on: thopter, off: [-2.8, 1.0] },
+  { t: TO, cells: 22, on: thopter, off: [0.3 * 22 * (16 / 9), 0.12 * 22] },
 ]
 
 /* ------------------------------------------------------------------ the vision */
@@ -250,20 +254,36 @@ function drawDust(g: Paint, t: number, sand: string): void {
   }
 }
 
-/** The spice in the air round Paul: a low rust haze over the flat, and a few motes going slowly up through it. */
+/**
+ * The spice in the air round Paul: a fine haze over the flat, and a few veils of it drifting slowly up past him and
+ * thinning, and only a handful of large, very soft motes. No specks.
+ */
 const SPICE = '#B5662F'
 function drawSpice(g: Paint, t: number): void {
-  const a = smooth(t, 163.6, 165.6) * (1 - smooth(t, T.up, 178.4))
+  const a = smooth(t, 163.6, 165.8) * (1 - smooth(t, T.up, 178.4))
   if (a <= 0.003) return
   const ctx = g.ctx
-  softBox(ctx, SPICE, 0.18 * a, { x0: 394, y0: -3.2, x1: 414, y1: 0.4 }, 6, 6, [[0, 0], [0.55, 1], [0.85, 0.8], [1, 0]])
-  for (let i = 0; i < 9; i++) {
-    const x = 399.5 + hash(i, 11) * 10 + 0.5 * drift(t * 0.25 + i, 31)
-    const y = -0.2 - ((hash(i, 12) * 2.6 + (t - 163.6) * 0.16) % 2.8)
-    const r = 0.045 + 0.02 * hash(i, 13)
-    const fade = Math.min(1, (y + 2.8) / 0.6, -y / 0.4)
-    circle(ctx, x, y, r)
-    fill(ctx, rgba(SPICE, 0.5 * a * Math.max(0, fade)))
+  softBox(ctx, SPICE, 0.13 * a, { x0: STOP - 11, y0: -3.0, x1: STOP + 9, y1: 0.4 }, 6, 6, [[0, 0], [0.55, 1], [0.85, 0.8], [1, 0]])
+  // Veils rising: each a soft column of haze going slowly up from the sand, born again under itself as it thins.
+  for (let i = 0; i < 4; i++) {
+    const period = 7
+    const u = (((t - 163.6) / period + i / 4) % 1 + 1) % 1
+    const x = STOP - 4.5 + i * 2.6 + 0.8 * drift(t * 0.12 + i * 3, 41)
+    const y = -0.4 - u * 3.2
+    const k = Math.sin(Math.PI * u)
+    softBox(ctx, SPICE, 0.1 * a * k, { x0: x - 1.1, y0: y - 1.8, x1: x + 1.1, y1: y + 0.6 }, 0.9, 0.9, [[0, 0], [0.4, 1], [0.75, 0.7], [1, 0]])
+  }
+  // A handful of large, very soft motes.
+  for (let i = 0; i < 4; i++) {
+    const x = STOP - 3.5 + hash(i, 11) * 7 + 0.4 * drift(t * 0.2 + i, 31)
+    const y = -0.5 - ((hash(i, 12) * 2.4 + (t - 163.6) * 0.12) % 2.6)
+    const r = 0.12 + 0.06 * hash(i, 13)
+    const fade = Math.max(0, Math.min(1, (y + 2.9) / 0.8, -y / 0.5))
+    const m = ctx.createRadialGradient(x, y, 0, x, y, r)
+    m.addColorStop(0, rgba(SPICE, 0.16 * a * fade))
+    m.addColorStop(1, rgba(SPICE, 0))
+    ctx.fillStyle = m
+    ctx.fillRect(x - r, y - r, 2 * r, 2 * r)
   }
 }
 
@@ -311,5 +331,6 @@ export const erg: Scene = {
     ['the maw comes down', T.down],
     ['swallowed', T.swallow],
     ['from above', T.above],
+    ['turning for home', TURN_CUT],
   ],
 }

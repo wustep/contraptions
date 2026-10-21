@@ -18,12 +18,12 @@ const UP = 56
 const R_ARC = (WORM.base - WORM.plunge) / 2
 const ARC = Math.PI * R_ARC
 const TOP = 3 - UP
-const LENGTH = 160
+const LENGTH = 260
 /** The maw's rim, wide open: its mouth wider than the harvester is long. */
 const MAW = 17.5
 
 /** Its radius `back` cells behind the head: a little narrower at the head, thicker where it leaves the sand. */
-const radius = (back: number): number => 9.6 + 3.0 * smooth(back, 2, 52) - 5 * smooth(back, LENGTH - 16, LENGTH)
+const radius = (back: number): number => 9.6 + 3.0 * smooth(back, 2, 52)
 
 /** The radius where it comes out of the sand: for its shadow and the slump round its foot. */
 export const RADIUS = radius(UP)
@@ -55,14 +55,31 @@ const S_IN = UP + ARC - TOP
 /** How far along its rail the head is. */
 const head = curve([
   [T.rise - 0.4, 0], [T.rise, S_OUT], [172.2, 40], [173.6, 50], [176.0, 53.5], [T.arch, 55], [T.over, UP + ARC * 0.33], [T.down, UP + ARC],
-  [185.6, UP + ARC + 28], [T.swallow, S_IN - 0.4], [188.6, S_IN + 22], [191.6, S_IN + LENGTH + 4],
+  [185.6, UP + ARC + 28], [T.swallow, S_IN - 0.4], [188.6, S_IN + 22], [191.6, S_IN + 90],
 ])
+
+/** Once its head is this far under the sand, the arch behind it sinks after it: the rest goes under in one curve. */
+const UNDER = S_IN + 3
+/** When the head is that far under (found once). */
+const SINK_FROM = (() => {
+  let a: number = T.swallow
+  let b = 189
+  for (let i = 0; i < 40; i++) {
+    const m = (a + b) / 2
+    if (head(m) < UNDER) a = m
+    else b = m
+  }
+  return b
+})()
+const SINK_TO = 191.4
+/** How far the arch has sunk into the hole, 0 to 1. */
+const sinkAt = (t: number): number => smooth(t, SINK_FROM, SINK_TO)
 
 /** How far open the maw is: its petals peel back as it stands, and it goes down open over what it takes. */
 const openAt = (t: number): number => smooth(t, 171.4, 175.2)
 
 /** Whether any of it is out of the sand at `t`. */
-export const out = (t: number): boolean => head(t) > S_OUT && head(t) - LENGTH < S_IN
+export const out = (t: number): boolean => head(t) > S_OUT && t < SINK_TO
 
 /** How high its top stands at `t` (cells over the sand; 0 when none of it is up). */
 export function height(t: number): number {
@@ -85,15 +102,24 @@ export function drawErgWorm(g: Paint, t: number, sand: string, shade: string): v
   // The slump round its foot while it stands, behind it.
   const stand = smooth(t, T.rise, T.rise + 1.0) * (1 - smooth(t, T.over, T.down))
   drawSlump(g, [WORM.base, 0.2], RADIUS, stand, sand, shade)
+  // The hole's slump, after it has gone.
+  drawSlump(g, [WORM.plunge, 0.2], RADIUS * 0.9, smooth(t, SINK_FROM, SINK_TO) * (1 - smooth(t, 194, 198)), sand, shade)
   if (!out(t)) return
-  const s1 = head(t)
+  // Once its head is under, the body is held where it was then, and the whole arch sinks bodily into the hole (lowered
+  // under the sand, drawn in toward it, its round back kept), its bands sliding on toward the hole as the body goes.
+  const sink = sinkAt(t)
+  const s1 = Math.min(head(t), UNDER)
+  const at = Math.min(t, SINK_FROM)
   const lo = Math.max(S_OUT - 2, s1 - LENGTH)
   const hi = Math.min(s1, S_IN + 2)
   if (hi <= lo) return
   const spine: Pt[] = []
   const n = Math.max(8, Math.ceil((hi - lo) / 1.0))
-  for (let i = 0; i <= n; i++) spine.push(rail(lo + ((hi - lo) * i) / n, t).p)
-  const d = rail(hi, t).d
+  for (let i = 0; i <= n; i++) {
+    const [x, y] = rail(lo + ((hi - lo) * i) / n, at).p
+    spine.push([WORM.plunge + (x - WORM.plunge) * (1 - 0.6 * sink), y * (1 - 0.7 * sink) + 17 * sink])
+  }
+  const d = rail(hi, at).d
   // Raised over them it is seen a little from below its open side; side on (the arch), three-quarter; coming down, its
   // rim is seen nearly edge on, a bell going down over the harvester.
   const facing = d[1] < -0.5 ? 0.42 : 0.14 + 0.4 * Math.abs(d[0])
@@ -103,7 +129,7 @@ export function drawErgWorm(g: Paint, t: number, sand: string, shade: string): v
     mouth: s1 <= S_IN + 1 ? { open: openAt(t), facing, size: MAW } : undefined,
     sun: SUN,
     ground: 0.4,
-    phase: s1 - hi,
+    phase: s1 - hi + Math.max(0, head(t) - UNDER),
   }
   drawWorm(g, worm)
   // Sand pouring off it as it comes up and stands, thinning as it settles.

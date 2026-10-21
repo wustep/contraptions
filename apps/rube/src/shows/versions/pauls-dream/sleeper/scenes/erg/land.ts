@@ -47,8 +47,8 @@ export function ground(x: number, t: number): number {
 const RANGES = [
   { d: 1500, base: 0, amp: 62, len: 900, seed: 21 },
   { d: 480, base: 0, amp: 24, len: 280, seed: 22 },
-  { d: 140, base: 0, amp: 9, len: 92, seed: 23 },
-  { d: 45, base: 0, amp: 3.6, len: 34, seed: 24 },
+  { d: 140, base: 0, amp: 10, len: 170, seed: 23 },
+  { d: 45, base: 0, amp: 4.4, len: 88, seed: 24 },
 ]
 
 /** Arrakeen's rock, far to the west: the outer wall of the bowl the city stands in, flat-topped. */

@@ -32,8 +32,8 @@ const awayX = curve([[T.up, LANDED.x], [T.climbing, LANDED.x - 0.6], [T.arch, LA
 const awayY = curve([[T.up, LANDED.y], [T.climbing, -3.6], [T.arch, -9], [T.down, -14], [T.swallow, -17], [T.above, -19], [191.6, -20], [198.252, -24]])
 const awayPitch = curve([[T.up, 0], [177.2, -0.12], [T.arch, -0.06], [T.down, -0.1], [T.above, 0], [191.6, 0], [193, 0.06], [198.252, 0.04]])
 
-/** The turn from east to west, in the high wide shot: drawn as a turn about its upright, so it never flips at once. */
-const TURN = [190.3, 191.7] as const
+/** The turn from east to west, close: drawn as a turn about its upright, so it never flips at once. */
+const TURN = [192.7, 194.3] as const
 const faceAt = (t: number): number => Math.cos(Math.PI * smoother(t, TURN[0], TURN[1]))
 
 export function pose(t: number): ThopterPose {

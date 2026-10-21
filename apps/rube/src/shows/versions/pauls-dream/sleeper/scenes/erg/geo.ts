@@ -72,15 +72,19 @@ export const beatAt = (t: number): number => (2 * Math.PI * (t - 0.057)) / TICK
  * the worm sign to run across), rising to the open dunes either side.
  */
 export function dunesAt(x: number): number {
-  const env = x < 430 ? smooth(430 - x, 52, 72) : smooth(x - 430, 130, 152)
-  return env * (3.1 + 0.9 * drift(x / 41, 7))
+  const env = x < 430 ? smooth(430 - x, 52, 76) : smooth(x - 430, 130, 156)
+  return env * (4.2 + 1.5 * drift(x / 97, 7))
 }
 
-/** The near sand's surface at `x` before anything disturbs it: dunes 22 cells apart, with crests on 240, 262, 284 … */
+/**
+ * The near sand's surface at `x` before anything disturbs it: long smooth swells about 46 cells apart, unequal, with a
+ * crest on 262 (the one the ornithopter skims), their troughs broad.
+ */
 export function dunes(x: number): number {
   const A = dunesAt(x)
-  const u = (x - 251) / 22
-  return -A * (0.5 - 0.5 * Math.cos(2 * Math.PI * u))
+  const u = (x - 239 + 6 * drift(x / 140, 9)) / 46
+  const c = 0.5 - 0.5 * Math.cos(2 * Math.PI * u)
+  return -A * c ** 1.4
 }
 
 /** A monotone cubic through [t, v] keys, flat outside them. */
