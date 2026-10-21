@@ -73,7 +73,8 @@ export function checkSleeper(perf: Performance, version: ShowVersion, check: Che
   }
   const step = 0.004
   const cutting = (t: number) => show.cuts.some((c) => c > t - step - 1e-6 && c <= t + 1e-6)
-  const covered = new Set(ordered.flatMap((s) => (s.covered ?? []).map(([t, id]) => `${id}@${Math.round(t / step)}`)))
+  const coveredList = ordered.flatMap((s) => s.covered ?? [])
+  const isCovered = (t: number, id: number) => coveredList.some(([ct, cid]) => cid === id && Math.abs(ct - t) < 0.02)
   let heroJump = 0
   let heroAt = 0
   let camJump = 0
@@ -99,11 +100,11 @@ export function checkSleeper(perf: Performance, version: ShowVersion, check: Che
       const now = new Map((here.balls ?? []).map((b) => [b.id, b]))
       for (const [id, b1] of now) {
         const b0 = was.get(id)
-        if (!b0 && (b1.scale ?? 1) > 0.3 && inShot(t, b1.x, b1.y) && !covered.has(`${id}@${Math.round(t / step)}`)) pops.push(`${id} in at ${t.toFixed(3)}`)
+        if (!b0 && (b1.scale ?? 1) > 0.3 && inShot(t, b1.x, b1.y) && !isCovered(t, id)) pops.push(`${id} in at ${t.toFixed(3)}`)
         if (b0 && Math.hypot(b1.x - b0.x, b1.y - b0.y) > 0.12 && (inShot(t, b1.x, b1.y) || inShot(t - step, b0.x, b0.y))) pops.push(`${id} jumps at ${t.toFixed(3)}`)
       }
       for (const [id, b0] of was) {
-        if (!now.has(id) && (b0.scale ?? 1) > 0.3 && inShot(t - step, b0.x, b0.y) && !covered.has(`${id}@${Math.round(t / step)}`)) pops.push(`${id} out at ${t.toFixed(3)}`)
+        if (!now.has(id) && (b0.scale ?? 1) > 0.3 && inShot(t - step, b0.x, b0.y) && !isCovered(t, id)) pops.push(`${id} out at ${t.toFixed(3)}`)
       }
     }
     prev = here
