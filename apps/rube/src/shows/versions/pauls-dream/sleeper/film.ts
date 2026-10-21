@@ -7,7 +7,8 @@ import { clamp01, standing } from './paint'
  * over Arrakis, and never come back.
  *
  * Drawn last of all, over everything, against the canvas itself: the band they leave is the stage's width over 2.39
- * (the whole stage where it is already wider than that), in its middle. A vision laid over the frame (`Dream`) is
+ * (the whole stage where it is already wider than that), in its middle; a phone held upright keeps its 16:9 frame
+ * (`band`). A vision laid over the frame (`Dream`) is
  * painted at another moment of the show, so it asks for the bars of the moment it is seen in (`seenAt`), and the
  * picture's bars stay whole over it.
  */
@@ -49,6 +50,16 @@ export function seenAt(liveTime: number, visionTime: number): void {
 }
 const barsFor = (t: number): number => scopeAt(Math.abs(t - vision) < 1e-6 && live >= 0 ? live : t)
 
+/**
+ * The band the bars leave, in pixels, on a stage `w` × `h`: the scope picture's height on a 16:9 stage, growing a
+ * little with a taller one, so a phone held upright keeps the whole composed 16:9 frame between its bars (a scope
+ * strip a third of its width high would leave the cast specks). Continuous in the stage's shape: no jump on a resize.
+ */
+export function band(w: number, h: number): number {
+  const tall = Math.max(1, h / w / (9 / 16))
+  return (w / SCOPE) * Math.pow(tall, 0.22)
+}
+
 export function frame(): Placed {
   return standing('frame', null, null, (g) => {
     const f = barsFor(g.t)
@@ -56,7 +67,7 @@ export function frame(): Placed {
     const ctx = g.ctx
     const W = ctx.canvas.width
     const H = ctx.canvas.height
-    const keep = Math.min(H, W / SCOPE)
+    const keep = Math.min(H, band(W, H))
     const bar = ((H - keep) / 2) * f
     if (bar <= 0.01) return
     ctx.save()
