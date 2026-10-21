@@ -159,3 +159,22 @@ by copying their folders.
     Jamis's body. The walk keeps its order, so nobody passes through anybody.
   - Cut: the crown shot, two hanging lamps, the city's slits, the fire's yellow, the worm's horns and stub, the spice
     spots, five seconds of empty wide after the swallow, the overtaking in the walk.
+- **Round 3.** Cutting weighed equally with adding: every scene cut one thing that did not earn its time.
+  - Cut:
+    - Caladan's insert from the sea, where Leto and Paul were two specks; it is now a close two-shot of father and son
+      at the window, the sea's grey light on them.
+    - The empty worm-sign shot; the swell now runs in under the held shot of the harvester.
+    - The second shot of the Harkonnen craft lifting off.
+    - The walk from the wreck to the tent; a dissolve now goes to the tent already pitched.
+    - Stilgar's still vigil; the blow runs to the walk in one shot.
+  - The Gom Jabbar, which was one static frame for 19 s, is covered on the lament's blows: close on the box and the
+    needle's point, close on the Reverend Mother, closer on Paul for the worst blow. Paul's trembling is a few percent of
+    the frame, where it was under one percent and read as a freeze.
+  - The lamp in the great hall is flat light: a pool on the floor and a wedge up the wall to the bull. On a phone, the
+    radial wash had read as a halo. The day hall is the same room as the night's.
+  - The storm spans the horizon, its far reaches standing over the dunes; it had read as a pillar.
+  - The duel's blows throw both of them back, and Jamis is thrown up and back as he goes grey. The worm stands over the
+    crest behind Paul and Chani.
+  - The worm's sections and ring bands are fixed to its body, so nothing swims or jolts as it moves. The far worm
+    breaches from its own sand line. The rider's worm heaves on the blows, where it had jolted.
+  - A whole-show sweep, every 1/30 s, finds no one-frame pops: only cuts, the bars opening, and motion.
