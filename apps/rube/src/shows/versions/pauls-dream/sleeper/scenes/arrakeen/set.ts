@@ -346,12 +346,15 @@ export function drawPalaceWhole(g: Paint, tone: Tone, t: number): void {
   if (!inside(t)) palaceWhole(g, tone, t)
 }
 
-/** Arrakis's first moon: a flat pale disc low over the rim, at the frame's own place (it is very far). */
+/**
+ * Arrakis's first moon: a flat pale disc low over the rim, at the frame's own place (it is very far): where the erg's low
+ * sun stands in its last frame, and as big, so through the dissolve into the night the sun becomes the moon.
+ */
 function moon(g: Paint): void {
   const v = g.view
   const x = v.x0 + v.w * 0.2
-  const y = v.cy - v.h * 0.36
-  const r = v.h * 0.035
+  const y = v.cy - v.h * 0.12
+  const r = v.h * 0.06
   g.ctx.beginPath()
   g.ctx.arc(x, y, r, 0, Math.PI * 2)
   fill(g.ctx, '#C9CDD2')

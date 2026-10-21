@@ -133,9 +133,9 @@ const DUKE_CLOSE: Pt = [79.9, -1.0]
 const WINDOW_CLOSE: Pt = [95.3, -16.1]
 
 const shots: Shot[] = [
-  // The palace at night, dissolving in, low: its lamps, the shield's line over it.
-  { t: N.from, cells: 34, at: [92, -15], cut: true },
-  { t: N.window - 0.002, cells: 31, at: [92, -14.5] },
+  // The palace at night, dissolving in: the erg's low sun becomes the moon over its roof; its lamps, the shield's line.
+  { t: N.from, cells: 34, at: [88, -24], cut: true },
+  { t: N.window - 0.002, cells: 31, at: [88, -23] },
   // Paul at his window.
   { t: N.window, cells: 3.6, at: WINDOW_CLOSE, cut: true },
   { t: N.duke - 0.002, cells: 3.5, at: [95.2, -16.05] },
