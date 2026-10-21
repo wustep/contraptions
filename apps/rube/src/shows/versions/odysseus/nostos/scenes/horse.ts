@@ -35,10 +35,11 @@ const shots: Key[] = [
   // The last spear, in close by his face.
   { t: 25.0, cells: 2.9, at: [-5.85, -1.85] },
   { t: 26.6, cells: 2.95, at: [-5.85, -1.85] },
-  // On the third heave, out: the haul going on up the beach towards the walls in the last of the light.
+  // On the third heave, out: the haul going on up the beach towards the walls in the last of the light, the gate
+  // tower whole at the frame's edge, not a sliver of it.
   { t: 26.97, cells: 9.5, at: [-9.6, -2.9], cut: true },
   { t: 31.4, cells: 11, at: [-11.4, -3.6] },
-  { t: 35.2, cells: 15, at: [-14.5, -5.0] },
+  { t: 35.2, cells: 15, at: [-16.8, -5.0] },
 ]
 
 /** The men of the other two ships ride them through Troy, a little smaller while their ships are out beyond his. */
