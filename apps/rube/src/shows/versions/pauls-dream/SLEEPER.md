@@ -178,3 +178,15 @@ by copying their folders.
   - The worm's sections and ring bands are fixed to its body, so nothing swims or jolts as it moves. The far worm
     breaches from its own sand line. The rider's worm heaves on the blows, where it had jolted.
   - A whole-show sweep, every 1/30 s, finds no one-frame pops: only cuts, the bars opening, and motion.
+- **Round 4.** A fresh real-speed watch on desktop and an upright phone, for what still read as specks or as nothing.
+  - The family come down the ramp large, against the lit hold (they were specks under a hull). The hoist is close on
+    Paul at the lever and the head going up. Paul and Jessica are close at the window with the city burning behind them.
+  - The shield has a faint veil inside its line, so its going-out reads: the veil drains from the crown down.
+  - Four of the crew run close from the harvester's door to the ornithopter's hatch (six had been specks). The spice
+    vision opens over Paul onto Chani like the others, and he stands under it.
+  - The storm wall comes on: its front leans out over its foot and billows, with a crisp soft edge and wisps torn off
+    it. The craft comes out from behind its back face.
+  - The walk is tracked close on Paul and Chani, wide only on the fill into worm sign.
+  - Caladan's swells are broad bands rolling in toward the cliff; the spray is one burst of broken water up the rock
+    on every figure.
+  - Cut: two of the crew, the walk's loose framing, the wide hatch shot, the storm's churn ellipses and blur.
