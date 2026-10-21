@@ -75,9 +75,10 @@ const LANDED: Pt = [660, -0.35]
 const STIR = 358.7
 const STIRRED = STIR + 1 / (2 * 1.4)
 const ARRIVE = FIRST_DUSK
-/** Woken: two swings, dying. */
+/** Woken: a start up out of the drift on the thunder, then two swings, dying. */
 const WAKE_F = 1.7
-const WOKEN = LAST_DAWN + 2 / (2 * WAKE_F)
+const START = 0.24
+const WOKEN = LAST_DAWN + START + 2 / (2 * WAKE_F)
 /** Down to the first log, his touch on it, after it. */
 const SETS_OFF = 386.34
 const TOUCH_X = 670.953
@@ -92,7 +93,8 @@ const HERO: Move[] = [
   rock(LANDED, STIR, 0.035, 1.4, 1, 0.25),
   roll(sandPath(LANDED[0], BED[0]), STIRRED, ARRIVE, 'inout'),
   rest(BED, ARRIVE, LAST_DAWN),
-  rock(BED, LAST_DAWN, 0.04, WAKE_F, 2, 0.35),
+  fly(BED, BED, LAST_DAWN, LAST_DAWN + START),
+  rock(BED, LAST_DAWN + START, 0.04, WAKE_F, 2, 0.35),
   rest(BED, WOKEN, SETS_OFF),
   roll(sandPath(BED[0], TOUCH_X), SETS_OFF, HIT, 'in'),
   roll(sandPath(TOUCH_X, AFTER_X), HIT, HIT + 0.46, 'out'),
@@ -155,9 +157,12 @@ const SHOTS: Key[] = [
   // Ithaca again, on the cue's loudest bars.
   { t: 377.28, cells: 2.35, at: [LOOM[0], LOOM[1] + 0.05], cut: true },
   { t: 380.85, cells: 2.2, at: LOOM },
-  // The last nights going, wide; the cloudless morning; the thunder.
+  // The last nights going, wide; the cloudless morning. On the thunder, in close: he starts awake out of the drift
+  // among the lotus as they snap shut, and she lets him go, back into the dark of her cave.
   { t: 380.96, cells: 9, at: [669.8, -2.3], cut: true },
-  { t: 384.5, cells: 8, at: [670.0, -2.0] },
+  { t: LAST_DAWN - 0.05, cells: 8, at: [670.0, -2.0] },
+  { t: LAST_DAWN, cells: 3.0, at: [669.45, -0.95], cut: true },
+  { t: 385.6, cells: 3.15, at: [669.55, -1.0] },
   // The machine: down to the logs, the knocks, the lashing, aboard.
   { t: 386.3, cells: 5, at: [670.4, -1.4] },
   { t: 389.4, cells: 4.6, at: [671.6, -1.25] },
