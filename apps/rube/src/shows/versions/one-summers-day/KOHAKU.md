@@ -55,7 +55,7 @@ passengers and the girl on the platform, the lamp.
 | --- | --- | --- |
 | 0 | four chords | **The gate.** The red-plastered gate under its summer trees, its arch dark, the stone figure by the path. On the first chord she comes up out of the tunnel's dark; on the second she rolls out into the sun; on the third the wind goes past her into the tunnel and the grass leans after it; on the fourth she goes on to the brow, and the camera opens on the summer: the hills, the cloud, the meadow running down to the river of stones. |
 | 20.60 | the theme | **The way in.** Down the meadow, over the dry river a stone a note, up the far bank's steps a step an eighth, and along the empty street of eating houses as the sun goes. On the theme's last notes the lanterns come on down the street, one a note, overtaking her towards the bridge. |
-| 44.31 | the swell | **The bathhouse.** The camera rises and draws back from her at the bridge's foot to the whole bathhouse lit in the night, its smoke, the moon. Haku comes to her from the middle of the bridge (45.58), and they cross together (47.95), past No-Face at the rail, his mask turning after her. At the door Haku stays back; she goes in (54.13). |
+| 44.31 | the swell | **The bathhouse.** The camera rises and draws back from her at the bridge's foot to the whole bathhouse lit in the night, its smoke, the moon. Haku comes to her from the middle of the bridge (45.58), and they cross together (47.95), under No-Face on the rail. A cut in at the bridge's end (53.02): his mask turned after her; at the door Haku stays back; she goes in (54.13). |
 | 54–64 | the swell | **The great bath** (its front taken away). The big east doors slide open on the night sea; the river spirit, a heaving mound of sludge, comes in and heaves himself into the tub (57.94). She lands on the treadle (58.60): the herbal token drops onto its cord and runs down through the floor. A cut on 59.71 to the boiler room: Kamaji's long arms catch it, pull a drawer, tip the herbs; the soot carries coal into the fire a lump a note. A cut back on 62.87 as the spout gushes. |
 | 64.08 | the crest | The tub floods. She finds the thorn in his side, a bicycle's handlebar; a hook comes down from the pulley and takes it, and the hands on the gallery haul, a pull a note, seven times. On 77.65 it comes free and the junk pours out after it a thing a note. |
 | 80.36 | settling | The river spirit, clean, rises out of the tub, an old man's smiling face on a column of water; laughs twice; and goes out through the east doors over the sea (84.22), a long ribbon of water going away east, seen from outside (86.54). Back in the hall the hands cheer, and it goes still. |
@@ -214,6 +214,15 @@ picture, and the lamp at Swamp Bottom was hard to tell from the line's posts.
 - **The lamp** hopped beside the line's posts, the same dark height with a crossarm, and read as one more of them. The
   line sets no posts on Swamp Bottom's island now (the wire goes over the wood to the next one), so the lamp is the
   only post there.
+
+**Round 7, the crossing.** The first half was looked at again at full size, beat by beat.
+- **Over the bridge** the two of them were specks under the bathhouse for five seconds, six pixels on a desktop and two
+  on a phone, and No-Face's mask turning after her could not be seen at all. The wide still holds while they cross;
+  then on the note after they pass under him the picture cuts in at the bridge's end: No-Face on the rail at the left,
+  his mask turned after her, the great door's gable over them, Haku stopping at the porch, and she going on in as the
+  hall's front comes away. The cut at the door is gone, so there is still one cut there, not two.
+- **Under the bridge's end** a square of the far green hill showed between the bridge and the footings. The footings
+  now come out to the building's west end.
 
 ## Known limits
 
