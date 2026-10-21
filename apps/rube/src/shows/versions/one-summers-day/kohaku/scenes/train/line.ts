@@ -410,8 +410,10 @@ export function drawFarHouses(g: Paint, L: Light, hy: number, v: { x0: number; x
   const { ctx } = g
   const tone = mix(lit('#5E6A70', L.ambient, 0.3), L.haze, 0.55)
   const lamps = smooth(L.lamps, 0.4, 1)
-  for (let i = 0; i < 14; i++) {
-    const x = 70 + i * 13 + hash(i, 81) * 6
+  // A few, here and there, some in twos: not a row of markers.
+  for (let i = 0; i < 24; i++) {
+    if (hash(i, 86) < 0.55) continue
+    const x = 70 + i * 8.5 + hash(i, 81) * 5
     if (x < v.x0 - 2 || x > v.x1 + 2) continue
     const s = v.h * (0.018 + 0.01 * hash(i, 82))
     const w = s * (1.6 + hash(i, 83))

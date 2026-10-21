@@ -187,9 +187,13 @@ const SHOTS: Key[] = [
   { t: 156.95, cells: 12.4, at: [94.6, 1.25] },
   // In the car beside them, its side cut away: held on the car as it goes (its pace, so it does not slide in the frame).
   { t: M.swell2, cells: 3.0, at: [carX(M.swell2) - 0.1, 3.2], cut: true },
-  { t: M.swell2 + 0.02, cells: 3.0, at: [carX(M.swell2 + 0.02) - 0.1, 3.2] },
-  { t: INTO_DUSK - 0.08, cells: 2.85, at: [carX(INTO_DUSK - 0.08) - 0.05, 3.2] },
-  { t: INTO_DUSK - 0.06, cells: 2.85, at: [carX(INTO_DUSK - 0.06) - 0.05, 3.2] },
+  // Keyed to the car every half second, so the frame keeps its pace as it brakes.
+  ...Array.from({ length: Math.floor((INTO_DUSK - 0.3 - M.swell2) / 0.5) }, (_, i): Key => {
+    const t = M.swell2 + 0.5 * (i + 1)
+    const u = (t - M.swell2) / (INTO_DUSK - M.swell2)
+    return { t, cells: 3.0 - 0.15 * u, at: [carX(t) - 0.1 + 0.05 * u, 3.2] }
+  }),
+  { t: INTO_DUSK - 0.002, cells: 2.85, at: [carX(INTO_DUSK - 0.002) - 0.05, 3.2] },
   // The lonely station, at dusk.
   { t: INTO_DUSK, cells: 5.6, at: [148.7, 2.85], cut: true, focus: [146.0, 3.4] },
   { t: INTO_NIGHT - 0.05, cells: 5.9, at: [149.0, 2.8], focus: [146.0, 3.4] },
