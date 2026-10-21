@@ -332,8 +332,13 @@ export const cyclops: Scene = {
     { t: 154.6, cells: 4.8, at: [104.2, -3.7] },
     { t: 156.3, cells: 4.8, at: [104.3, -3.8] },
     { t: 158.4, cells: 7.8, at: [104.6, -5.3] },
-    { t: 161.0, cells: 6.8, at: [104.8, -5.0] },
-    { t: 163.4, cells: 7.6, at: [104.7, -5.6] },
+    // The hand: in as it reaches for the two by the fire and closes on them, his eye still at the top of the frame;
+    // then up with the fist, past the eye, until they are carried out of the frame's top.
+    { t: T.reach, cells: 7.2, at: [104.75, -5.15] },
+    { t: T.grab, cells: 5.4, at: [105.05, -5.0] },
+    { t: T.lift, cells: 5.4, at: [105.05, -5.0] },
+    { t: 163.6, cells: 5.6, at: [104.85, -6.15] },
+    { t: T.gone, cells: 5.5, at: [106.2, -5.7] },
     { t: 165.0, cells: 5.0, at: [111.4, -4.5] },
     { t: 167.8, cells: 5.2, at: [110.6, -4.7] },
     { t: 168.6, cells: 6.6, at: [107.8, -5.1] },
