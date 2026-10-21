@@ -101,7 +101,7 @@ function aboveSand(b: Brush): void {
 
 function paint(b: Brush): void {
   const t = b.t
-  if (t < FROM - 0.01) return
+  if (t < FROM) return
   paintStormSky(b)
   const hy = horizonOf(b.view, TILT)
   const sand = sandAt(t)
@@ -173,7 +173,7 @@ export const charge: Scene = {
   ],
   back: [drawing('charge', TO, paint)],
   front: [drawing('charge-skirt', TO, (b) => {
-    if (b.t < FROM - 0.01) return
+    if (b.t < FROM) return
     paintSkirt(b)
   })],
   overview: { x0: 8860, y0: -90, x1: 9180, y1: 12 },
