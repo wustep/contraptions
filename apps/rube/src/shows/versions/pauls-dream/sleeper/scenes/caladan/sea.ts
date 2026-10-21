@@ -138,9 +138,9 @@ export function cliff(g: Paint): void {
     at(0.74, -5.2),
     at(0.86, -6.0),
     [CLIFF.foot, SEA + 0.4],
-    [CLIFF.foot - 0.6, SEA + 6],
+    [CLIFF.foot - 0.6, SEA + 60],
   ]
-  poly(ctx, [...face, [-380, SEA + 6], [-380, CLIFF.top]])
+  poly(ctx, [...face, [-380, SEA + 60], [-380, CLIFF.top]])
   fill(ctx, vgrad(ctx, CLIFF.top, SEA + 4, [[0, AIR.rockLit], [0.5, AIR.rock], [1, '#151A19']]))
   // Ledges: the face's broken steps, lit a little on their tops.
   for (const [u, dx, w] of [[0.07, -0.8, 1.2], [0.26, -2.1, 1.6], [0.5, -3.4, 1.4], [0.74, -5.2, 1.8]] as const) {

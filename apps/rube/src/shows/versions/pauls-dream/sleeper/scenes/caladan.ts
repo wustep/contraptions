@@ -118,14 +118,14 @@ function flinch(t: number): number {
 /** The camera: the sea, the cliff and the window; the room; the test; the hall; the field and the climb. */
 const shots: Shot[] = [
   // The sea, the cliff, the castle on it, one window lit; slowly in.
-  { t: 0, cells: 64, at: [-577, -11] },
-  { t: T.rise, cells: 54, at: [-572, -13.5] },
+  { t: 0, cells: 86, at: [-606, -14] },
+  { t: T.rise, cells: 52, at: [-573, -13.2] },
   // Up the cliff and in to the window, through the wall.
   { t: 21, cells: 11, at: [-559.5, -25.5] },
   { t: T.window, cells: 3.2, at: [-556.15, -26.98] },
   // He sleeps low in the frame, and the dream opens in the room's air above him.
-  { t: T.dream - 1, cells: 3.4, at: [-556.45, -27.3] },
-  { t: T.wake - 1.2, cells: 3.3, at: [-556.4, -27.28] },
+  { t: T.dream - 1, cells: 3.6, at: [-556.5, -27.35] },
+  { t: T.wake - 1.2, cells: 2.8, at: [-556.1, -27.15] },
   { t: T.wake + 0.6, cells: 3.1, at: [-556.2, -27.0] },
   { t: T.door - 0.002, cells: 2.95, at: [-556.4, -26.92] },
   // The test room: the door slides, they come in.
@@ -186,7 +186,11 @@ const dream = {
     const head: Pt = [asleep[0], asleep[1] - 0.16]
     const f = cameraAt(t)
     const place: Pt = [f.x + 0.1 * ((f.cells * 16) / 9), f.y + 0.05 * f.cells]
-    return { x: head[0] + (place[0] - head[0]) * grow, y: head[1] + (place[1] - head[1]) * grow, r: 0.08 + 0.78 * grow, soft: 0.05 + 0.12 * grow }
+    const x = head[0] + (place[0] - head[0]) * grow
+    const y = head[1] + (place[1] - head[1]) * grow
+    // Never over him: the opening's lower edge stays clear of him, so he is seen asleep under his dream.
+    const clear = Math.hypot(asleep[0] - x, asleep[1] - y) - 0.13 - 0.1
+    return { x, y, r: Math.max(0.04, Math.min(0.08 + 0.78 * grow, clear)), soft: 0.05 + 0.12 * grow }
   },
 }
 
