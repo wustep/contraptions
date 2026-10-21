@@ -230,10 +230,16 @@ const shots: Shot[] = [
   // and across the frame toward the dune and him (a camera going along with it made it one more dune).
   { t: drive(21), cut: true, cells: 15, at: [971, -4.8], focus: swellAt },
   { t: 125.846 - 0.01, cells: 15.5, at: [990, -5.0], focus: swellAt },
-  // Close on him on the crest; it comes; the frame opens as its back rises behind the dune, and he goes.
+  // Close on him on the crest; it comes; the frame opens as its back rises behind the dune.
   { t: 125.846, cut: true, cells: 5.2, at: [1041.4, -6.9] },
   { t: 129.0, cells: 6, at: [1040.6, -6.7] },
   { t: LEAP - 0.3, cells: 17, at: [1039.5, -6.2] },
+  // The leap, close, on the first of the run's three hard beats: off the crest onto its flank, the rings going by under
+  // him, and the hooks bite on the second.
+  { t: LEAP, cut: true, cells: 5.4, track: paulWay, off: [0.5, -0.2] },
+  { t: SWALLOW - 0.01, cells: 5.2, track: paulWay, off: [0.7, -0.1] },
+  // On the third, wide again: the head takes the thumper.
+  { t: SWALLOW, cut: true, cells: 18, at: [1048.5, -6.0] },
   { t: OPEN - 0.01, cells: 19, at: [1050.5, -6.0] },
   // The roll: on its flank going by under the mesa, the Fremen on its edge over him; pushing in as the worm rolls him up.
   { t: OPEN, cut: true, cells: 13, track: paulAt, off: [-1.2, -3.4] },
