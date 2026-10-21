@@ -1,5 +1,6 @@
 import { drift, hash, layer, mix, rgba, smooth, vgrad, type Paint, type View } from '../../paint'
-import { STORM } from './geo'
+import { hazeAt, type Air } from '../../world/desert'
+import { STORM, T } from './geo'
 
 /**
  * The storm: a wall of dust from the sand to far above any frame, standing across the desert from STORM.front to
@@ -230,6 +231,50 @@ export function drawWall(g: Paint): void {
       ctx.fill()
     }
   })
+}
+
+/* ---------------------------------------------------------------- its far reaches */
+
+/**
+ * The same wall going on north and south to the horizon both ways: from the wide shot on, a band of it stands over the
+ * far dunes from one edge of the frame to the other, paler with distance, its top soft and slowly heaving, so there is
+ * no way round it. Two depths of it (`REACHES`), each drawn among the dune ranges at its own depth (`land.ts`), the
+ * nearer lower and denser, the farther taller and fainter.
+ */
+export const REACHES = [
+  { d: 330, tall: 150, seed: 81 },
+  { d: 120, tall: 66, seed: 82 },
+] as const
+
+/** How much of the far reaches is seen at `t` from a camera at `x`: from the reveal, until it is inside or past the storm. */
+const reachesAt = (t: number, x: number): number => (t >= T.wall ? 1 : 0) * (1 - smooth(x, STORM.front + 2, STORM.front + 8))
+
+export function drawReach(g: Paint, air: Air, reach: (typeof REACHES)[number]): void {
+  const v = g.view
+  const f = reachesAt(g.t, v.cx)
+  if (f <= 0.002) return
+  const L = layer(v, reach.d)
+  const haze = hazeAt(reach.d)
+  const top = mix(TOP, air.haze, haze)
+  const body = mix(FACE, air.haze, haze * 0.92)
+  const step = Math.max(2, (8 * g.px) / L.s)
+  const xa = v.cx + (v.x0 - v.cx) / L.s - step
+  const xb = v.cx + (v.x1 - v.cx) / L.s + step
+  const ctx = g.ctx
+  ctx.beginPath()
+  const foot = L.y(2)
+  ctx.moveTo(L.x(xa), foot)
+  let high = Infinity
+  for (let x = xa; x <= xb + 1e-9; x += step) {
+    const y = L.y(-reach.tall * (0.86 + 0.14 * drift(x / 90 + g.t * 0.02, reach.seed)))
+    high = Math.min(high, y)
+    ctx.lineTo(L.x(x), y)
+  }
+  ctx.lineTo(L.x(xb), foot)
+  ctx.closePath()
+  // Its top thins into the sky, so it has no edge there either.
+  ctx.fillStyle = vgrad(ctx, high, foot, [[0, rgba(top, 0)], [0.16, rgba(top, 0.85 * f)], [0.45, rgba(body, f)], [1, rgba(body, f)]])
+  ctx.fill()
 }
 
 /* ---------------------------------------------------------------- inside */

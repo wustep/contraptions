@@ -1,6 +1,7 @@
 import { circle, drift, fill, hash, layer, mix, poly, rgba, smooth, vgrad, type Paint, type Pt } from '../../paint'
 import { DAWN, NIGHT, between, dunes, sky, type Air } from '../../world/desert'
 import { STORM, T, ground } from './geo'
+import { REACHES, drawReach } from './wall'
 
 /**
  * The land and the air of the night desert, and of the morning after: the sky going from night to dawn, a few fixed
@@ -88,9 +89,14 @@ export function drawLand(g: Paint): void {
   sky(g, air)
   const night = 1 - smooth(g.t, T.dawn[0], T.out - 0.2)
   stars(g, night)
+  // Each range in turn from the farthest, with whatever stands between it and the next farther one drawn first: the
+  // burning city, and the storm's far reaches.
+  let behind = Infinity
   for (const r of RANGES) {
+    for (const reach of REACHES) if (reach.d < behind && reach.d >= r.d) drawReach(g, air, reach)
     if (r.d < 150 && r.d >= 70) city(g, night * (1 - smooth(g.view.cx, 760, 800)))
     dunes(g, air, r)
+    behind = r.d
   }
   floor(g, air)
 }

@@ -28,10 +28,11 @@ export const T = {
   land: 278.7,
   /** The hold opens, and Paul and Jessica come out. */
   hatch: 279.5,
-  /** They go up the dune to the lee of its crest and pitch the tent. */
-  tentUp: [283.0, 285.0] as [number, number],
+  /** A dissolve, and the tent stands pitched in the lee of the dune with the two of them by it. */
+  pitched: 281.3,
+  tentUp: [281.299, 281.3] as [number, number],
   /** Into the tent. */
-  inside: [285.2, 286.4] as [number, number],
+  inside: [282.6, 283.7] as [number, number],
   /** The high voice: the tent, close, and the first vision. */
   voiceIn: M.voice,
   /** The visions: Chani; the duel; the rider. */

@@ -46,14 +46,18 @@ function along(a: number, b: number, r = R): Pt[] {
 /** Where they lie in the tent. */
 const IN_TENT = { paul: TENT - 0.2, jessica: TENT + 0.22 }
 
-/** Paul: bound in the hold, out at the back, west to the tent, in it through the night, back to the controls at dawn. */
+/**
+ * Paul: bound in the hold, out at the back onto the sand; across the dissolve, beside the tent pitched in the lee of the
+ * dune, and into it; in it through the night, and back to the controls at dawn.
+ */
 function paulMoves() {
   const edge = (t: number): Pt => onCraft(pose(t), [-0.98, 0.02])
   const w = new Walk(hold('paul')(FROM), FROM)
     .ride(hold('paul'), T.hatch + 0.65)
     .roll([edge(T.hatch + 1.1)], T.hatch + 1.1, 'in')
     .hop(onFloor(LANDING - 1.55, R), T.hatch + 1.45)
-    .roll(along(LANDING - 1.55, TENT + 0.9).slice(1), 283.1)
+    .wait(T.pitched)
+    .jump(onFloor(TENT + 0.9, R))
     .wait(T.inside[0] + 0.25)
     .roll(along(TENT + 0.9, IN_TENT.paul).slice(1), T.inside[1])
     .wait(T.out + 0.3)
@@ -73,7 +77,9 @@ function jessicaMoves() {
     .ride(hold('jessica'), T.hatch + 0.45)
     .roll([edge(T.hatch + 0.75)], T.hatch + 0.75, 'in')
     .hop(onFloor(LANDING - 1.95, R), T.hatch + 1.1)
-    .roll(along(LANDING - 1.95, TENT + 1.25).slice(1), 283.3)
+    .roll(along(LANDING - 1.95, LANDING - 2.35).slice(1), T.pitched - 0.1, 'out')
+    .wait(T.pitched)
+    .jump(onFloor(TENT + 1.25, R))
     .wait(T.inside[0])
     .roll(along(TENT + 1.25, IN_TENT.jessica).slice(1), T.inside[1] - 0.2)
     .wait(T.out)
@@ -158,10 +164,11 @@ const shots: Shot[] = [
   // It falls; the camera lets it down onto the dune.
   { t: 278.85, cells: 4.6, on: craftAt, off: [0.2, -0.5] },
   { t: 279.5, cells: 5.0, at: [LANDING - 1.0, LAND_Y - 1.45] },
-  // The hold opens; they come out and go west to the lee of the dune; the tent goes up.
-  { t: 281.0, cells: 6.2, at: [LANDING - 3.0, LAND_Y - 1.7] },
-  { t: 284.4, cells: 6.8, at: [LANDING - 3.3, LAND_Y - 1.9] },
-  // The hush: back and back until they are nothing in the desert, the city burning on the horizon.
+  // The hold opens and they come out onto the sand.
+  { t: T.pitched - 0.002, cells: 5.3, at: [LANDING - 1.3, LAND_Y - 1.45] },
+  // A dissolve, and the tent is pitched in the lee of the dune: they go into it, and the camera goes back and back in the
+  // hush until they are nothing in the desert, the city burning on the horizon.
+  { t: T.pitched, cells: 13, at: [LANDING - 4.6, -5.4], cut: true },
   { t: 288.07, cells: 20, at: [LANDING - 4.3, -7.2] },
   // The high voice: the tent, and a slow push in through the first two visions.
   { t: WIDE.t0, cells: WIDE.c0, at: holding(WIDE, WIDE.c0), cut: true },
@@ -279,7 +286,7 @@ export const storm: Scene = {
   },
   actors: soldiers(),
   shots,
-  dissolves: [[T.dissolve, T.dissolveFor]],
+  dissolves: [[T.dissolve, T.dissolveFor], [T.pitched, 1.8]],
   dreams,
   pieces,
   strikes: [
