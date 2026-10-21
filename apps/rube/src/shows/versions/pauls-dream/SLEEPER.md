@@ -205,3 +205,7 @@ by copying their folders.
     does from the moment the craft is out of the storm.
   - The worm breaks the sand as a smooth blunt dome, with sand sliding off it; it had read as a crumpled bag between
     two flaps. The harvester's plume is one soft column, where it had been stacked discs.
+- **Round 7.** A fresh full-speed watch on desktop and an upright phone, and a whole-show pop sweep. The one thing it
+  found was on the phone: the sun, and the moon that now matches it, were sized by the whole stage's height, so on a
+  tall phone they came out two or three times too big, and the moon was cut by the window. Both are now placed and
+  sized against the composed 16:9 frame (`sunAt` in `world/desert.ts`). On a desktop nothing moves.
