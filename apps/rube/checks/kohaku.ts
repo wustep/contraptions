@@ -13,6 +13,9 @@ import { JERKS } from '../src/shows/versions/one-summers-day/kohaku/scenes/drago
 import { BURST } from '../src/shows/versions/one-summers-day/kohaku/scenes/sky'
 import { PART, STONE_LANDS as HOME_STONES } from '../src/shows/versions/one-summers-day/kohaku/scenes/home'
 import { SCENES } from '../src/shows/versions/one-summers-day/kohaku/scenes'
+import * as BATHHOUSE from '../src/shows/versions/one-summers-day/kohaku/scenes/bathhouse/beats'
+import { STEPS } from '../src/shows/versions/one-summers-day/kohaku/scenes/train'
+import { ARRIVE_LONELY, ARRIVE_SWAMP, BOARD, LAMP_BACK, LAMP_OUT } from '../src/shows/versions/one-summers-day/kohaku/scenes/train/plan'
 import type { KohakuShow } from '../src/shows/versions/one-summers-day/kohaku/show'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -58,10 +61,30 @@ export function checkKohaku(perf: Performance, version: ShowVersion, check: Chec
     ...STONE_LANDS.map((t, i): [string, number] => [`stone ${i}`, t]),
     ...STEP_LANDS.map((t, i): [string, number] => [`step ${i}`, t]),
     ...LAMP_AT.map((t, i): [string, number] => [`lantern ${i}`, t]),
+    ['Haku sets off to her', BATHHOUSE.HAKU_GO],
+    ['they set off over the bridge', BATHHOUSE.SET_OFF],
+    ['the spirit heaves into the tub', BATHHOUSE.HEAVE],
+    ['the treadle and the token', BATHHOUSE.TREADLE],
+    ['Kamaji catches it', BATHHOUSE.CATCH],
+    ['the drawer', BATHHOUSE.DRAWER],
+    ...BATHHOUSE.COAL.map((t, i): [string, number] => [`coal ${i}`, t]),
+    ['the tub floods', BATHHOUSE.FLOOD],
+    ['the hook takes the thorn', BATHHOUSE.HOOK],
+    ...BATHHOUSE.PULLS.map((t, i): [string, number] => [`haul ${i}`, t]),
+    ['the thorn comes free', BATHHOUSE.FREE],
+    ...BATHHOUSE.JUNK.map((t, i): [string, number] => [`junk ${i}`, t]),
+    ['the clean spirit rises', BATHHOUSE.RISE],
+    ['and goes', BATHHOUSE.AWAY],
     ['the dragon in at her door', M.peak],
     ['the shutter', SHUT],
     ...SLAMS.map((t, i): [string, number] => [`paper bird ${i} on the shutter`, t]),
     ...JERKS.map((t, i): [string, number] => [`he jerks ${i}`, t]),
+    ...STEPS.map(([t], i): [string, number] => [`a step on the water ${i}`, t]),
+    ['the train in at the lonely station', ARRIVE_LONELY],
+    ['the train in at Swamp Bottom', ARRIVE_SWAMP],
+    ...LAMP_OUT.map((t, i): [string, number] => [`the lamp's hop out ${i}`, t]),
+    ...LAMP_BACK.map((t, i): [string, number] => [`the lamp's hop back ${i}`, t]),
+    ['she is on his back', BOARD],
     ['his name: the scales', BURST.at],
     ['they part', PART],
     ...HOME_STONES.map((t, i): [string, number] => [`home stone ${i}`, t]),
@@ -71,8 +94,12 @@ export function checkKohaku(perf: Performance, version: ShowVersion, check: Chec
 
   // Every ball's way is one piece: each move begins where and when the last ended.
   const paths = [show.hero, ...show.cast]
-  const torn = paths.flatMap((a) => a.path.seams().filter(([t, d]) => d > 0.02 && !show.cameraCuts.some((c) => Math.abs(c - t) < 0.02) && !perf.blend?.(t + 0.01)).map(([t, d]) => `${a.path.name} ${t.toFixed(3)} (${d.toFixed(3)})`))
-  check('kohaku: no ball\'s way is torn, but at a cut or under a dissolve', torn.length === 0, torn.slice(0, 8).join(', '))
+  // A seam while the ball is off the stage is no tear: it was elsewhere, unseen.
+  const onStage = (a: (typeof paths)[number], t: number) => (a.on ? a.on(t) : true)
+  const torn = paths.flatMap((a) => a.path.seams()
+    .filter(([t, d]) => d > 0.02 && onStage(a, t - 0.01) && onStage(a, t + 0.01) && !show.cameraCuts.some((c) => Math.abs(c - t) < 0.02) && !perf.blend?.(t + 0.01))
+    .map(([t, d]) => `${a.path.name} ${t.toFixed(3)} (${d.toFixed(3)})`))
+  check('kohaku: no ball\'s way is torn while it is on the stage, but at a cut or under a dissolve', torn.length === 0, torn.slice(0, 8).join(', '))
 
   // Nothing jumps in shot: her, the cast and the camera, except at a cut or across a dissolve.
   const step = 0.002

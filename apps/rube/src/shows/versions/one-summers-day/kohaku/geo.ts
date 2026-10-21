@@ -124,7 +124,5 @@ export const SEA_Y = 4.0
 export const RAIL_Y = SEA_Y + 0.02
 /** The bathhouse's halt, a little wooden platform in the water off its east end. */
 export const HALT = { x0: 74.2, x1: 77.4, y: SEA_Y - 0.3 }
-/** The lonely station on the way, where the girl waits on the platform. */
-export const LONELY = { x0: 148, x1: 151, y: SEA_Y - 0.3 }
 /** The Sixth Station: Swamp Bottom. Its platform, and the wood and the path to the cottage beyond it. */
 export const SWAMP = { x0: 236, x1: 239.5, y: SEA_Y - 0.3, path: SEA_Y - 0.1, cottage: 252 }
