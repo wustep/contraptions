@@ -159,10 +159,12 @@ export const wreck: Scene = {
     { t: STRIKE + 2.4, cells: 8.0, at: [532.8, -0.75] },
     { t: 308.6, cells: 9.5, off: [0.3, 0.7] },
     // In the quiet after the cut, in close at the waterline: him on the spar, and his last three men afloat behind him
-    // on the swell, out of his reach; one by one they go under, and the camera goes down a little after the last.
-    { t: 313.6, cells: 4.8, off: [-0.75, 0.3] },
-    { t: 317.6, cells: 5.2, off: [-0.85, 0.5] },
-    { t: 320.4, cells: 6.2, off: [-0.9, 1.2] },
+    // on the swell, out of his reach, the four of them held between the frame's edges; one by one they go under, and
+    // the camera goes down a little after the last.
+    { t: 313.6, cells: 3.6, off: [-2.2, 0.25] },
+    { t: 317.6, cells: 3.75, off: [-2.5, 0.35] },
+    { t: 319.4, cells: 3.9, off: [-2.75, 0.45] },
+    { t: 320.4, cells: 4.8, off: [-1.9, 1.0] },
     // As the low voices come back, out to the seas at their highest: wide enough that they dwarf him, never so wide that
     // he is lost among them.
     { t: 322.4, cells: 6.4, off: [0.6, -0.8] },
