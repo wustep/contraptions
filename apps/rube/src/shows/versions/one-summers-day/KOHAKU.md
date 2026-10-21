@@ -241,6 +241,11 @@ fix is in where he goes and where the camera looks.
 - **Coming in,** he no longer comes down across the cloud from high up: after the wheel he comes in low over the water
   straight at her door. The sea is empty for two seconds while she goes in to the cord, and then he is there.
 
+**Round 10, in among the birds.** The next full watch found the same fault in the cut in among them: for five
+seconds the great cumulus stood behind him and his body was white on white. That shot lies between two cuts, so it may
+be another angle on the same sky: a scene can now move the day's cloud across for a shot of its own (`Scene.sky`), and
+in among the birds the great cloud is off to the side. He is white against the blue, the paper birds about him.
+
 ## Known limits
 
 - **The bathhouse is long.** The great bath holds the stage from 54 s to 94 s, broken only by the boiler room and the
