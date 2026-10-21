@@ -2,11 +2,12 @@ import { R } from '../../../../../parts'
 import { FEYD_SIZE } from '../cast'
 import { drawing, smooth, type Brush } from '../paint'
 import type { Scene } from '../scene'
+import { onsetNear } from '../music'
 import { END } from '../timeline'
-import { FEYD_PATH, FIGHT_STRIKES, FIGHTERS, KNIFE, PRISONER_PATHS, pairLine } from './arena/fight'
+import { FEYD_PATH, FIGHT_STRIKES, FIGHTERS, KNIFE, PRISONER_PATHS, feydAt, pairLine } from './arena/fight'
 import { A, X0 } from './arena/geo'
 import { BLOOMS, paintInk } from './arena/ink'
-import { paintDoor, paintFloor, paintLong, paintPylon, paintSeat, paintSky, paintStands } from './arena/set'
+import { gateX, paintDoor, paintFloor, paintLong, paintPylon, paintSeat, paintSky, paintStands } from './arena/set'
 import { modeAt } from './arena/views'
 
 /**
@@ -14,7 +15,8 @@ import { modeAt } from './arena/views'
  *
  *   186.0    the dissolve from the eclipse: the white sky, the black sun where the eclipsed one was, the bowl of black
  *            tiers rising round it, two black pylons at the floor's ends; a slow push in
- *   190.1    Feyd-Rautha's gate opens, and he comes out; 190.8 the prisoners' gate, and they are shoved out, one by one
+ *   190.1    Feyd-Rautha's gate opens: close, he steps out of the dark pylon into the white and walks out onto the floor;
+ *   194.4    the floor: the prisoners' gate open (190.8), the three shoved in across it toward him, one by one
  *   196.6    down on the sand, close: the crowd a dark band low behind, the black sun over it; Feyd comes in
  *   198.0    the first blow, the hardest note of the cue: the first prisoner thrown back, his colour going out
  *   202.2    the second, harder still: the second, who came at him over the first
@@ -29,6 +31,16 @@ import { modeAt } from './arena/views'
  */
 
 const FEYD_R = R * FEYD_SIZE
+
+/** The middle of the three prisoners, on the floor: what the camera goes with as they are shoved in. */
+const threeAt = (t: number): [number, number] => {
+  let x = 0
+  for (const p of PRISONER_PATHS) x += p.where(t)[0]
+  return [x / PRISONER_PATHS.length, -R]
+}
+
+/** Back to the floor from his walk out, on the music, as the three come in from the east. */
+const ENTER = onsetNear(194.386, 0.2, 0.03)
 
 /** Each fighter's foot on the floor, seated by a soft dark, less of it the higher he is off the floor. */
 function paintSeats(b: Brush): void {
@@ -79,11 +91,18 @@ export const arena: Scene = {
   actors: FIGHTERS,
   dissolves: [[A.in, A.inFor]],
   shots: [
-    // The bowl from its floor, the black sun in the notch of its rim: held through the dissolve, then a slow push in as
-    // the gates open and they come out.
+    // The bowl from its floor, the black sun in the notch of its rim: held through the dissolve, then a slow push in.
     { t: A.in, cut: true, cells: 54, at: [X0, -14] },
     { t: A.in + A.inFor + 0.3, cells: 54, at: [X0, -14] },
-    { t: 196.4, cells: 24, at: [X0 - 0.5, -6.1] },
+    { t: A.westGate - 0.01, cells: 47, at: [X0, -12.6] },
+    // His gate, close, as its door goes up: he steps out of the dark of the pylon into the white, and walks out onto the
+    // floor, the camera going with him.
+    { t: A.westGate, cut: true, cells: 3.6, at: [gateX(-1) + 1.0, -1.05] },
+    { t: A.westGate + 0.8, cells: 3.6, at: [gateX(-1) + 1.0, -1.05] },
+    { t: ENTER - 0.01, cells: 3.9, track: feydAt, off: [0.8, -0.9] },
+    // The three, shoved in across the floor toward him, walking in a file under the black sun.
+    { t: ENTER, cut: true, cells: 6.6, track: threeAt, off: [-0.6, -1.25] },
+    { t: 196.4, cells: 6.2, track: threeAt, off: [-0.8, -1.2] },
     // Down on the sand, close: the two blows, and the third over his dead onto Feyd.
     { t: A.floor, cut: true, cells: 3.3, at: [5998.45, -1.03] },
     { t: A.above - 0.01, cells: 3.1, at: [5998.45, -0.98] },

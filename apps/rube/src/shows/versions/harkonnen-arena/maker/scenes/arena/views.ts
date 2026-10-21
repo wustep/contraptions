@@ -16,7 +16,7 @@ export type Mode = 'wide' | 'close' | 'low' | 'high'
 
 export const VIEWS: [number, Mode][] = [
   [A.in, 'wide'],
-  [A.floor, 'low'],
+  [A.westGate, 'low'],
   [A.above, 'high'],
   [A.clash2, 'close'],
   [A.circle, 'high'],
