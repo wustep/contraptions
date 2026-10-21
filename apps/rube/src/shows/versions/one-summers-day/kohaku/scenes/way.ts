@@ -124,7 +124,7 @@ const SHOTS: Key[] = [
   { t: M.chord4 + 5, cells: 6.0, at: [1.8, -1.85] },
   { t: M.theme - 0.4, cells: 8.6, at: [5.2, -2.5] },
   // Down the meadow with her, to the river.
-  { t: M.theme + 3.2, cells: 6.8, at: [10.6, -1.5] },
+  { t: M.theme + 3.2, cells: 6.8, off: [1.6, -1.0], w: 0.3 },
   { t: STONE_LANDS[0] - 0.6, cells: 5.8, at: [17.4, 0.35] },
   { t: STONE_LANDS[5], cells: 5.4, at: [20.4, 0.15] },
   // Up the steps, and along the street as the light goes.

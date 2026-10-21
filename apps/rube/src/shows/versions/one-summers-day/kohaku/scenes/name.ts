@@ -34,9 +34,9 @@ const SHOTS: Key[] = [
   { t: FROM + 4.4, cells: 10.5, off: [-1.6, 1.4] },
   // Over the gap: the river far below in it, and the two of them over it.
   { t: M.cadence - 2.6, cells: 11.5, at: [GAP.x + 0.6, -22.7], w: 0.8 },
-  { t: M.cadence - 1.3, cells: 9.5, at: [GAP.x - 0.8, -23.4], w: 0.6 },
+  { t: M.cadence - 1.9, cells: 9.5, at: [GAP.x - 0.8, -23.4], w: 0.6 },
   // In close for the name.
-  { t: M.cadence - 0.35, cells: 4.3, off: [-0.4, 0.25] },
+  { t: M.cadence - 0.1, cells: 4.4, off: [-0.4, 0.25] },
   { t: FREE + 0.6, cells: 3.5, off: [0, 0.1] },
   { t: TO - 0.05, cells: 4.3, off: [0, 0.65] },
 ]

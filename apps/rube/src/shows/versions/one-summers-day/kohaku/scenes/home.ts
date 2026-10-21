@@ -73,7 +73,7 @@ const SHOTS: Key[] = [
   // Out under it into the dawn: the meadow and the river of stones below.
   { t: FROM + 4.1, cells: 7.6, off: [-0.4, 1.9] },
   // Down on the bed, close on the two of them.
-  { t: LAND, cells: 3.4, at: [SHE_LANDS[0] + 0.15, SHE_LANDS[1] - 0.45] },
+  { t: LAND + 0.9, cells: 3.4, at: [SHE_LANDS[0] + 0.15, SHE_LANDS[1] - 0.45] },
   { t: PART, cells: 3.6, at: [SHE_LANDS[0] - 0.1, SHE_LANDS[1] - 0.45] },
   // Back over the stones with her; he stays.
   { t: STONE_LANDS[3], cells: 5.0, at: [18.6, 0.9] },

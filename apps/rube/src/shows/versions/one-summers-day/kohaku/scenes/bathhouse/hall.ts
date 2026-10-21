@@ -57,28 +57,17 @@ export function drawHallBack(g: Paint, L: Light): void {
   const { ctx, t } = g
   const IN = inside(L)
   const B = BACK
-  // The back wall: dark wood, a little lighter high up where the lanterns' light falls.
+  // The back wall: warm wood in the lanterns' light, lighter high up where it falls, darker down by the floor.
   ctx.fillStyle = vgrad(ctx, B.y0, B.y1, [
-    [0, lit('#6A4430', IN)],
-    [0.45, lit('#7A5038', IN)],
-    [1, lit('#4A3022', IN)],
+    [0, lit('#93613F', IN)],
+    [0.45, lit('#A06E4A', IN)],
+    [1, lit('#6E4632', IN)],
   ])
   ctx.fillRect(B.x0, B.y0, B.x1 - B.x0, B.y1 - B.y0)
   // Its uprights, red, and a long beam across under the ceiling.
   const red = lit('#A8402C', IN)
   for (let x = B.x0 + 0.05; x < B.x1; x += 2.15) box(ctx, x - 0.08, B.y0, 0.16, B.y1 - B.y0, red)
   box(ctx, B.x0, B.y0 + 0.28, B.x1 - B.x0, 0.12, lit('#5A3424', IN))
-  // High in the wall, a long window onto the night between each pair of uprights, lattice across it.
-  for (let x = B.x0 + 0.05; x + 2.15 < B.x1 + 0.1; x += 2.15) {
-    const wx = x + 0.45
-    const ww = 1.25
-    if (wx + ww > DOORWAY.x0 - 0.1 && wx < DOORWAY.x1 + 0.1) continue
-    box(ctx, wx, B.y0 + 0.55, ww, 0.42, mix(L.top, L.low, 0.4))
-    for (let k = 1; k < 5; k++) {
-      poly(ctx, [[wx + (ww * k) / 5, B.y0 + 0.55], [wx + (ww * k) / 5, B.y0 + 0.97]], false)
-      ink(g, lit('#3A2216', IN), 1)
-    }
-  }
   // The back doors: an opening onto the night; two lit paper leaves slide apart off it.
   const d = DOORWAY
   const open = doorsOpen(t)
@@ -388,5 +377,28 @@ export function drawPulley(g: Paint, L: Light, hook: Pt, hands: Pt[], slack: num
     const last = pts[pts.length - 1]
     ctx.quadraticCurveTo(last[0] - 0.15, last[1] + 0.2 + slack * 0.2, last[0] - 0.25, GALLERY.y - 0.02)
     ink(g, rope, 2.2)
+  }
+}
+
+/**
+ * The steam off the hot water once it is running: a few soft rounds lifting off the water and thinning as they go,
+ * leaning a little toward the open doors. Few and slow, so the hall reads as a bath and not as weather.
+ */
+export function drawSteam(g: Paint, L: Light): void {
+  const { ctx, t } = g
+  const hot = waterIn(t) * smooth(t, FLOOD - 0.5, FLOOD + 1.5)
+  if (hot <= 0.01) return
+  const col = mix('#FFF6E8', inside(L), 0.2)
+  for (let i = 0; i < 6; i++) {
+    const period = 4.2
+    const age = (t + i * (period / 6)) % period
+    const u = age / period
+    const x = MOUTH.x + (i / 5 - 0.5) * MOUTH.rx * 1.5 + u * 0.35 + 0.12 * Math.sin(t * 0.7 + i * 1.7)
+    const y = MOUTH.y - 0.05 - u * 1.25
+    const r = 0.14 + u * 0.24
+    ctx.beginPath()
+    ctx.ellipse(x, y, r * 1.4, r, 0, 0, Math.PI * 2)
+    ctx.ellipse(x + r * 0.8, y + r * 0.25, r, r * 0.8, 0, 0, Math.PI * 2)
+    fill(ctx, rgba(col, 0.12 * hot * Math.sin(Math.PI * u)))
   }
 }

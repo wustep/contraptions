@@ -32,7 +32,7 @@ import {
   TREADLE,
 } from './bathhouse/beats'
 import { drawBoiler } from './bathhouse/boiler'
-import { GALLERY, PULLEY, TREAD, drawHallBack, drawHallLamps, drawPulley, drawSpout, drawToken, drawTubBack, drawTubFront, drawTubWater, hauled, hookAt } from './bathhouse/hall'
+import { GALLERY, PULLEY, TREAD, drawHallBack, drawHallLamps, drawPulley, drawSpout, drawSteam, drawToken, drawTubBack, drawTubFront, drawTubWater, hauled, hookAt } from './bathhouse/hall'
 import { drawMask } from './bathhouse/noface'
 import { bridge, building, cutAt, gorge, hallFront, openings } from './bathhouse/set'
 import { drawBicycle, drawJunk, drawMound, drawSpirit, drawSpiritOutside, drawThorn, thornAt } from './bathhouse/spirit'
@@ -176,16 +176,15 @@ openings.boiler.push((t) => (t >= CUT_BOILER && t < CUT_HALL ? 1 : 0))
 
 const SHOTS: Key[] = [
   // At the bridge's foot as Haku comes to her, the bathhouse's lit footings at the frame's edge; then, as they set
-  // off together, up and back to the whole of it lit in the night.
-  { t: FROM + 0.3, cells: 6.6, at: [40.9, -2.45] },
+  // off together, up and back to the whole of it lit in the night, held while they cross.
+  { t: FROM + 0.3, cells: 6.9, at: [39.8, -2.85] },
   { t: HAKU_THERE, cells: 5.4, at: [42.6, -2.15], focus: [41.6, -1.35] },
-  { t: 51.0, cells: 17.4, at: [56.6, -6.3] },
-  { t: 52.4, cells: 17.0, at: [56.9, -6.15] },
-  // Down to the door with them.
-  { t: 53.9, cells: 6.4, at: [54.0, -2.55], focus: [54.5, -1.4] },
-  { t: AT_DOOR + 0.3, cells: 5.4, at: [58.0, -2.7] },
+  { t: 51.6, cells: 17.4, at: [56.6, -6.3] },
+  { t: AT_DOOR - 0.01, cells: 16.8, at: [57.0, -6.1] },
+  // A cut in on the note she reaches the door: the hall's front going away as she goes in.
+  { t: AT_DOOR, cells: 5.3, at: [58.8, -2.7], cut: true },
   // Inside: the hall, the doors opening, the spirit coming in and up into the tub.
-  { t: ARRIVE, cells: 5.6, at: [63.9, -2.75] },
+  { t: ARRIVE, cells: 5.5, at: [62.6, -2.75] },
   { t: TREADLE - 0.4, cells: 5.2, at: [62.6, -2.65] },
   { t: CUT_BOILER - 0.02, cells: 3.6, at: [61.0, -2.25], focus: [60.3, -1.6] },
   // Down to the boiler room on the note.
@@ -242,6 +241,7 @@ const hall = standing('bath-hall', HALL, END, (g) => {
   const flow = smooth(g.t, CUT_HALL - 0.6, CUT_HALL + 0.25) * (1 - smooth(g.t, FLOOD + 7, FLOOD + 10))
   drawSpout(g, L, flow)
   drawTubWater(g, L)
+  drawSteam(g, L)
   drawTubFront(g, L)
   drawToken(g, L)
   const thorn = thornAt(g.t)
