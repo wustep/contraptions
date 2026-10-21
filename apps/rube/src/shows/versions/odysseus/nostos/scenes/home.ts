@@ -61,9 +61,15 @@ export const home: Scene = {
     // The second: the whole house, cut open, his whole way round, the beggar by the door.
     { t: 462.6, cells: 5.15, at: [822.5, -10.6] },
     { t: 468.6, cells: 5.1, at: [822.5, -10.58] },
-    // The third: in on her room and the terrace as he goes past her.
-    { t: 473.6, cells: 3.65, at: [823.65, -10.45] },
-    { t: 478.4, cells: 3.6, at: [823.7, -10.43] },
+    // The third: not followed. The camera comes to the beggar at his threshold by the hearth, with his son, and the third
+    // goes up the stairs behind him and past his wife; on his note, in close on the plate as he lands, and it does not
+    // give; on the next strong one, back to the stranger, who has seen enough.
+    { t: 471.4, cells: 3.15, at: [819.75, -10.05] },
+    { t: TRIAL.tries[2] - 0.05, cells: 3.05, at: [819.8, -10.1] },
+    { t: TRIAL.tries[2], cells: 2.5, at: [825.3, -10.05], cut: true },
+    { t: 480.25, cells: 2.55, at: [825.2, -10.05] },
+    { t: 480.32, cells: 2.6, at: [819.0, -9.62], cut: true },
+    { t: 483.4, cells: 2.75, at: [819.2, -9.68] },
     // His climb, and her room.
     { t: 485.2, cells: 3.2, at: [820.9, -10.1] },
     { t: 489.4, cells: 2.4, at: [821.5, -11.15] },
@@ -82,14 +88,12 @@ export const home: Scene = {
     // On the next, they come at him: the wall of them that pressed up against the bow, charging him at the west door.
     { t: TRIAL.erupts, cells: 4.1, at: [824.2, -10.0], cut: true },
     { t: FIGHT.first[0] - 0.05, cells: 4.0, at: [824.4, -9.98] },
-    // On the first blow, in close at the west end: the first two hurled back into the hall.
+    // On the first blow, in close at the west end: the first two hurled back into the hall. Then, without a cut, out and
+    // with him, east down the hall through three of them, one on each note, past the ones he has thrown, to the son
+    // holding the stairs below his mother.
     { t: FIGHT.first[0], cells: 2.7, at: [825.5, -9.82], cut: true },
-    { t: FIGHT.sonHit - 0.05, cells: 2.62, at: [825.35, -9.84] },
-    // On the next, the son on the stairs below his mother, driven up a step.
-    { t: FIGHT.sonHit, cells: 2.5, at: [820.4, -9.92], cut: true },
-    { t: FIGHT.rampage[0] - 0.05, cells: 2.45, at: [820.45, -9.92] },
-    // On the next, with him: east down the hall through three of them, one on each note, past the ones he has thrown.
-    { t: FIGHT.rampage[0], cells: 3.2, at: [824.85, -9.95], cut: true },
+    { t: 505.7, cells: 2.75, at: [825.4, -9.86] },
+    { t: FIGHT.rampage[0], cells: 3.2, at: [824.85, -9.95] },
     { t: FIGHT.rampage[1], cells: 3.25, at: [823.75, -9.97] },
     { t: FIGHT.rampage[2], cells: 3.35, at: [822.65, -10.0] },
     { t: FIGHT.last - 0.05, cells: 3.5, at: [820.7, -10.03] },
