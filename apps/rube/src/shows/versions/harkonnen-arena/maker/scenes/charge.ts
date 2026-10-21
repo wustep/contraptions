@@ -181,8 +181,8 @@ export const charge: Scene = {
     { t: B.run - 0.01, cells: 24, at: [9020, -5.6] },
     // With the lead worm up to the great ship, and held there as it rears over it and brings it down.
     { t: B.run, cut: true, cells: 42, track: paulAt, off: [22, -3] },
-    { t: B.peak, cells: 40, at: [9100, -16] },
-    { t: B.crash, cells: 40, at: [9106, -15.5] },
+    { t: B.peak, cells: 46, at: [9098, -19] },
+    { t: B.crash, cells: 45, at: [9103, -18] },
     { t: B.cutClose - 0.01, cells: 39, at: [9113, -14.5] },
     // Close: on the worm's back as it lowers them; down; up onto the rise.
     { t: B.cutClose, cut: true, cells: 6.6, track: paulAt, off: [1.1, 0.5] },

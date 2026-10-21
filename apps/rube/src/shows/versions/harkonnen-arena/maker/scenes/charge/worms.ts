@@ -42,7 +42,7 @@ function paintHead(b: Brush, w: WormBody, open: number): void {
     ctx.save()
     ctx.translate(x + Math.cos(dir) * r * 0.35, y + Math.sin(dir) * r * 0.35)
     ctx.rotate(dir + Math.PI / 2)
-    paintMouth(b, 0, 0, r * (1 + 0.28 * open), 0.2 + 0.5 * open, open)
+    paintMouth(b, 0, 0, r * (1 + 0.36 * open), 0.2 + 0.5 * open, open)
     ctx.restore()
   }
 }

@@ -86,7 +86,7 @@ export const RANKS: [number, number][] = [
 /** The first small ship: it stands just behind the first block. (The second stands in the second worm's plane.) */
 export const SHIP1 = { x: 9046, h: 11, w: 3.6 }
 /** The Emperor's ship: an upright ovoid on a low plinth. */
-export const EMPEROR = { x: 9122, w: 12, h: 15, legs: 1.8 }
+export const EMPEROR = { x: 9113, w: 9.5, h: 11.5, legs: 1.5 }
 
 /* ---------------------------------------------------------------- the worms */
 
@@ -158,17 +158,20 @@ const leadEmerge = (t: number): number => {
 /** How far it has rolled back after the crash: a settle that swings and dies away. */
 const settle = (t: number): number => (t <= B.crash ? 0 : 0.13 * Math.sin((t - B.crash) * 7.5) * Math.exp(-(t - B.crash) / 0.55))
 
+/** How far the neck bends up at the top of the rear: past upright at the head, so it stands as a tower over the ship. */
+const REAR = 1.62
+
 /**
  * The neck's bend: nothing until the peak, then up over the ship, a sway at the top, down onto it on the crash, and,
  * as the ship goes over, after it into the sand, with a damped settle.
  */
 export function rear(t: number): number {
   if (t <= B.peak) return 0
-  const up = 1.38 * (1 - Math.pow(1 - clamp01((t - B.peak) / 1.5), 3))
+  const up = REAR * (1 - Math.pow(1 - clamp01((t - B.peak) / 1.5), 3))
   const sway = 0.05 * Math.sin((t - B.peak) * 2.2) * smooth(t, B.peak + 0.8, B.peak + 1.6) * (1 - smooth(t, B.crash - 0.9, B.crash - 0.6))
   if (t <= B.crash - 0.62) return up + sway
   // The fall onto the ship: from the top to the strike in 0.62 s, accelerating.
-  const top = 1.38 + 0.05 * Math.sin((B.crash - 0.62 - B.peak) * 2.2)
+  const top = REAR + 0.05 * Math.sin((B.crash - 0.62 - B.peak) * 2.2)
   if (t <= B.crash) {
     const u = (t - (B.crash - 0.62)) / 0.62
     return lerp(top, 0.24, u * u)
@@ -177,7 +180,7 @@ export function rear(t: number): number {
 }
 
 /** How far the head curls forward over the top of the rear, so its mouth faces down onto the ship. */
-export const rearCurl = (t: number): number => 1.5 * smooth(t, B.peak + 0.5, B.peak + 2.2) * (1 - 0.83 * smooth(t, B.crash - 0.6, B.crash))
+export const rearCurl = (t: number): number => 1.9 * smooth(t, B.peak + 0.5, B.peak + 2.2) * (1 - 0.83 * smooth(t, B.crash - 0.6, B.crash))
 
 /** How open its mouth is: shut while it runs, wide as it rears, shut again in the wreck. */
 export const mouthOpen = (t: number): number => smooth(t, B.peak + 0.2, B.peak + 1.3) * (1 - smooth(t, B.crash + 0.6, B.crash + 2.2))
@@ -248,7 +251,8 @@ export function wormAt(w: WormSpec, t: number): WormBody {
     const s = i * step
     base.push([hx - s, -profile(w, s) + sink])
   }
-  // The neck: from the bend forward, each step turned a little more up by the rear, the head curling over at the top.
+  // The neck: from the bend forward, turned up by the rear mostly at its foot, so it stands; the head curling over at
+  // the top.
   const phi = w.rear ? w.rear(t) : 0
   const curl = w.curl ? w.curl(t) : 0
   const k = Math.round(w.neck / step)
@@ -258,7 +262,7 @@ export function wormAt(w: WormSpec, t: number): WormBody {
     for (let i = k - 1; i >= 0; i--) {
       const u = (k - i) / k
       const dirBase = Math.atan2(base[i][1] - base[i + 1][1], base[i][0] - base[i + 1][0])
-      const a = dirBase - phi * Math.pow(u, 0.45) + curl * Math.pow(u, 5)
+      const a = dirBase - phi * Math.pow(u, 0.3) + curl * Math.pow(u, 6)
       px += Math.cos(a) * step
       py += Math.sin(a) * step
       spine[i] = [px, py]
@@ -267,9 +271,10 @@ export function wormAt(w: WormSpec, t: number): WormBody {
   const thick = w === LEAD ? rearing(t) : 0
   const radius = spine.map((_, i) => {
     const s = i * step
-    // A blunt head, full through the body, narrowing a little toward the tail; the neck fuller when it rears.
+    // A blunt head, full through the body, narrowing a little toward the tail; the neck fuller when it rears, and the
+    // head flaring round the mouth as it opens, wider than the ship it comes down on.
     const neck = 1 + 0.16 * thick * (1 - smooth(s, w.neck - 4, w.neck + 6))
-    return w.r * (0.82 + 0.18 * smooth(s, 0, 5) + 0.12 * thick * (1 - smooth(s, 0, 5))) * neck * (1 - 0.18 * smooth(s, w.seat + 12, w.length))
+    return w.r * (0.82 + 0.18 * smooth(s, 0, 5) + 0.3 * thick * (1 - smooth(s, 0, 8))) * neck * (1 - 0.18 * smooth(s, w.seat + 12, w.length))
   })
   const headDir = Math.atan2(spine[0][1] - spine[2][1], spine[0][0] - spine[2][0])
   const side = (s: number, sign: 1 | -1, lift: number): Pt => {
