@@ -13,6 +13,7 @@ import { HEAVES, THRUSTS } from '../src/shows/versions/odysseus/nostos/scenes/tr
 import { SURGE } from '../src/shows/versions/odysseus/nostos/scenes/troy/host'
 import { KILLS } from '../src/shows/versions/odysseus/nostos/scenes/troy/sack'
 import { FIGHT } from '../src/shows/versions/odysseus/nostos/scenes/ithaca/battle'
+import { WRECK_STRIKES } from '../src/shows/versions/odysseus/nostos/scenes/wreck'
 import { FIRE, KNEEL } from '../src/shows/versions/odysseus/nostos/scenes/storm/island'
 import type { NostosShow } from '../src/shows/versions/odysseus/nostos/show'
 
@@ -62,6 +63,7 @@ export function checkNostos(perf: Performance, version: ShowVersion, check: Chec
     ['they meet', TRIAL.meet],
     ...KILLS.street.map((t, i): [string, number] => [`a Trojan struck down in the street ${i}`, t]),
     ...KILLS.statue.map((t, i): [string, number] => [`a Trojan killed at Athena's feet ${i}`, t]),
+    ...WRECK_STRIKES.under.map((t, i): [string, number] => [`his last men go under ${i}`, t]),
     ['the suitors charge', FIGHT.charge],
     ...FIGHT.first.map((t, i): [string, number] => [`the first blows ${i}`, t]),
     ['the son driven up the stairs', FIGHT.sonHit],

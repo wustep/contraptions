@@ -178,4 +178,4 @@ export const wreck: Scene = {
 }
 
 /** For the checks: the moments this scene strikes. */
-export const WRECK_STRIKES = { strike: STRIKE, float: FLOAT, aground: AGROUND, lowBack: M.lowBack, lowGone: M.lowGone }
+export const WRECK_STRIKES = { strike: STRIKE, float: FLOAT, aground: AGROUND, lowBack: M.lowBack, lowGone: M.lowGone, under: UNDER }
