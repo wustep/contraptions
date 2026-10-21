@@ -62,7 +62,9 @@ export const SKY: SkyKey[] = [
   // under the crests.
   { t: T.thumper, top: '#CDB79B', low: '#F0D6B2', sun: { x: 0.8, y: -2.6, r: 0.028, color: '#FFF2DC' }, eclipse: 0 },
   { t: 158, top: '#C9AC8B', low: '#EFCDA0', sun: { x: 0.74, y: -2.6, r: 0.04, color: '#FFEBC9' }, eclipse: 0 },
-  { t: M.fall - 0.01, top: '#BE9876', low: '#EEC28E', sun: { x: 0.74, y: -2.6, r: 0.05, color: '#FFE2B8' }, eclipse: 0 },
+  // The stand runs on into the draw back without a cut, so the light goes on without a step: the sky is the late light's
+  // already, and the sun has gone round over the frame to its east side before it drops to come in from there.
+  { t: M.fall - 0.01, top: '#B88E6A', low: '#EDB880', sun: { x: 1.14, y: -2.6, r: 0.05, color: '#FFE2B8' }, eclipse: 0 },
   // As the camera draws back from him and turns ahead, it comes into the frame from the east, low, and the moon comes
   // over it.
   { t: M.fall, top: '#B88E6A', low: '#EDB880', sun: { x: 1.14, y: 0.4, r: 0.05, color: '#FFE2B8' }, eclipse: 0 },
