@@ -1,7 +1,7 @@
 import { drift, fill, mix, poly, rgba, ring, smooth, stroke, type Paint, type Pt } from '../../paint'
 import { TICK } from '../../music'
 import { HARKONNEN, drawThopter, drawThopterOver, thopterLook, type ThopterLook, type ThopterPose } from '../../craft/thopter'
-import { LANDING, STORM, T, ground, keyed } from './geo'
+import { LANDING, STORM, T, backAt, frontAt, ground, keyed } from './geo'
 
 /**
  * The Harkonnen ornithopter that carries Paul and Jessica out into the night, comes down on the dune when the Voice
@@ -100,21 +100,21 @@ const pitch = keyed([
 ])
 
 /** How far into the storm it is: 0 outside, 1 a few cells in. */
-export const inStorm = (px: number): number => smooth(px, STORM.front - 1, STORM.front + 4) * (1 - smooth(px, STORM.back - 4, STORM.back + 1))
+export const inStorm = (px: number, t: number): number => smooth(px, frontAt(t) - 1, frontAt(t) + 4) * (1 - smooth(px, backAt(t) - 4, backAt(t) + 1))
 
 /**
  * How the storm rolls it, radians: a slow roll one way and back over two or three seconds, with a smaller slower one
  * under it, never a judder. The camera inside drifts with it (`storm.ts`).
  */
-export const wobble = (t: number): number => inStorm(x(t)) * (0.17 * drift(t * 0.38, 47) + 0.05 * drift(t * 0.9, 48))
+export const wobble = (t: number): number => inStorm(x(t), t) * (0.17 * drift(t * 0.38, 47) + 0.05 * drift(t * 0.9, 48))
 
 /** How far the storm heaves it up or down (cells), `s` how far into the storm it is. */
-export const heaveAt = (t: number, s = inStorm(x(t))): number => s * (0.32 * drift(t * 0.9, 41) + 0.1 * drift(t * 1.7, 43))
+export const heaveAt = (t: number, s = inStorm(x(t), t)): number => s * (0.32 * drift(t * 0.9, 41) + 0.1 * drift(t * 1.7, 43))
 
 export function pose(t: number): ThopterPose {
   const px = x(t)
   // Buffeted inside the storm: slow heaves and a slow roll.
-  const s = inStorm(px)
+  const s = inStorm(px, t)
   const heave = heaveAt(t, s)
   // The landing's jolt, rung down.
   const jolt = 0.07 * ring(t, T.land, 2.6, 0.22)

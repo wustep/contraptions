@@ -90,8 +90,13 @@ export const onFloor = (x: number, r: number): Pt => [x, ground(x) - r]
 export const LANDING = 722.4
 export const TENT = 716.4
 
-/** The storm: its front face, its back face (x, cells), how high it stands. */
+/** The storm: its front face, its back face (x, cells) as Paul flies into it, how high it stands. */
 export const STORM = { front: 774, back: 836, top: -130 } as const
+
+/** It comes on: its faces move west this fast (cells a second), and its front is at STORM.front as he flies into it. */
+export const ADVANCE = 0.8
+export const frontAt = (t: number): number => STORM.front - ADVANCE * (t - T.enter)
+export const backAt = (t: number): number => STORM.back - ADVANCE * (t - T.enter)
 
 /** A monotone cubic through [t, v] keys, flat outside them. */
 export function keyed(keys: [number, number][]): (t: number) => number {

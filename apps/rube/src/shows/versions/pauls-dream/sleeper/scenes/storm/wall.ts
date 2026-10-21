@@ -1,6 +1,6 @@
 import { drift, hash, layer, mix, rgba, smooth, vgrad, type Paint, type View } from '../../paint'
 import { hazeAt, type Air } from '../../world/desert'
-import { STORM, T } from './geo'
+import { STORM, T, backAt, frontAt } from './geo'
 
 /**
  * The storm: a wall of dust from the sand to far above any frame, standing across the desert from STORM.front to
@@ -18,7 +18,6 @@ import { STORM, T } from './geo'
 const TOP = '#C29469'
 const FACE = '#9A6E47'
 const FOOT = '#3E2D20'
-const DUSK = '#5A3E29'
 const SUN = '#E2BC8E'
 const BODY_HI = '#8F6847'
 const BODY_MID = '#6A4A31'
@@ -28,72 +27,90 @@ const CORE = '#1A110B'
 /* ---------------------------------------------------------------- its shape */
 
 /**
- * The swells on a face: long low swellings of dust, a few cells out of the face and many tall, rising slowly up it as
- * the storm turns over, from its foot to far above any frame. Low and long, so the face is a wall that heaves, never a
- * profile.
+ * A face's edge at height `y`: the front leans out over its own foot as it rises (the head of the storm rides ahead of
+ * its feet), the back trails away behind; each wavers slowly. `face` is where the face stands at its foot.
  */
-interface Swell {
-  y: number
-  out: number
-  tall: number
-}
-
-function swells(t: number, seed: number): Swell[] {
-  const out: Swell[] = []
-  const H = 170
-  const n = 9
-  for (let i = 0; i < n; i++) {
-    const life = ((i / n) * H + t * 0.45 * (0.8 + 0.4 * hash(i, seed + 1))) % H
-    const tall = 12 + 12 * hash(i, seed + 2)
-    const swell = smooth(life, 0, 16) * (1 - smooth(life, H - 20, H))
-    out.push({ y: -life, out: (1.5 + 2.5 * hash(i, seed + 3)) * swell, tall })
-  }
-  return out
-}
-
-/**
- * A face's edge at height `y`: the front leans out over the sand as it rises (the wall overhangs its own foot), the
- * back trails away from its foot; each wavers slowly, and its swells heave it.
- */
-function edge(face: number, side: 1 | -1, y: number, t: number, seed: number, ss: Swell[]): number {
-  const lean = side < 0 ? 10 * smooth(-y, 6, 110) : -18 * smooth(-y, 0, 90) + 3
-  let heave = 0
-  for (const m of ss) heave += m.out * Math.exp(-(((y - m.y) / m.tall) ** 2))
-  return face + side * (lean + heave) + 2 * drift(y * 0.012 + t * 0.03, seed)
+function edge(face: number, side: 1 | -1, y: number, t: number, seed: number): number {
+  const lean = side < 0 ? 16 * smooth(-y, 2, 90) : -18 * smooth(-y, 0, 90) + 3
+  return face + side * lean + 1.6 * drift(y * 0.015 + t * 0.03, seed)
 }
 
 /** Where the wall meets the sand, seen from outside: just under the floor's line, so no seam shows between them. */
 const SAND = 0.05
 
+/** The body's colour by height (y, colour), from high up where the sun reaches it down to its dark foot. */
+const BODY_STOPS: [number, string][] = [[-70, TOP], [-34.5, FACE], [-9.6, mix(FACE, FOOT, 0.6)], [1, FOOT]]
+
+/** The body's colour at height `y`. */
+function bodyAt(y: number): string {
+  const st = BODY_STOPS
+  if (y <= st[0][0]) return st[0][1]
+  for (let i = 0; i + 1 < st.length; i++) if (y < st[i + 1][0]) return mix(st[i][1], st[i + 1][1], (y - st[i][0]) / (st[i + 1][0] - st[i][0]))
+  return st[st.length - 1][1]
+}
+
 /**
- * The storm's body as a path on `ctx`: up the front face, across far over any frame, down the back face, and across at
- * `foot`; `grow` cells out beyond both faces (its thin edge).
+ * The storm's body as a path on `ctx`: up the front face, across far over any frame (its top is never seen, however tall
+ * the stage), down the back face, and across at `foot`.
  */
-function body(ctx: CanvasRenderingContext2D, view: View, t: number, foot: number, grow = 0): void {
-  const front = swells(t, 5)
-  const back = swells(t, 9)
-  const top = Math.min(STORM.top, view.y0 - 20)
+function body(ctx: CanvasRenderingContext2D, view: View, t: number, foot: number): void {
+  const fx = frontAt(t)
+  const bx = backAt(t)
+  const top = Math.min(STORM.top, view.y0 - 30)
   const step = Math.max(1.5, -top / 120)
-  const f = (y: number) => edge(STORM.front, -1, y, t, 3, front) - grow
-  const b = (y: number) => edge(STORM.back, 1, y, t, 7, back) + grow
   ctx.beginPath()
-  ctx.moveTo(f(foot), foot)
-  for (let y = Math.min(1, foot); y >= top; y -= step) ctx.lineTo(f(y), y)
-  ctx.lineTo(f(top), top - 1)
-  ctx.lineTo(b(top), top - 1)
-  for (let y = top; y <= Math.min(1, foot); y += step) ctx.lineTo(b(y), y)
-  ctx.lineTo(b(foot), foot)
+  ctx.moveTo(edge(fx, -1, foot, t, 3), foot)
+  for (let y = Math.min(1, foot); y >= top; y -= step) ctx.lineTo(edge(fx, -1, y, t, 3), y)
+  ctx.lineTo(edge(fx, -1, top, t, 3), top - 1)
+  ctx.lineTo(edge(bx, 1, top, t, 7), top - 1)
+  for (let y = top; y <= Math.min(1, foot); y += step) ctx.lineTo(edge(bx, 1, y, t, 7), y)
+  ctx.lineTo(edge(bx, 1, foot, t, 7), foot)
   ctx.closePath()
 }
 
-/* ---------------------------------------------------------------- soft painting */
+/**
+ * The billows: great rounded lobes of dust rolling over the head of the storm and down its face, slowly, each born far
+ * above any frame and gone into the skirt at its foot. Unequal, and bigger the higher they are; each bulges forward out
+ * of the face by most of itself, so the face's line is theirs. Lit on their tops by the low sun, shadowed under.
+ */
+interface Lobe {
+  x: number
+  y: number
+  r: number
+}
 
-/** A small buffer for each canvas the show paints on (the stage, a saved video's frame), and its blurred copy. */
+function lobes(t: number, view: View, side: 1 | -1): Lobe[] {
+  const fx = side < 0 ? frontAt(t) : backAt(t)
+  const seed = side < 0 ? 91 : 191
+  const top = Math.min(STORM.top, view.y0 - 30)
+  const H = -top + 10
+  // Close together, so they run into one another and the face is one heaving line, not a string of beads.
+  const n = Math.max(20, Math.round(H / 4.5))
+  const out: Lobe[] = []
+  for (let i = 0; i < n; i++) {
+    // Rolling down: from far above to the foot at a cell and a half a second.
+    const s = ((i / n) * H + t * 1.5 * (0.9 + 0.2 * hash(i, seed))) % H
+    const y = top + s
+    const size = (0.65 + 0.7 * hash(i, seed + 1)) * (6 + 14 * smooth(-y, 0, 90))
+    // Swelling out where it comes over the head, and sinking into the skirt at the foot.
+    const r = size * smooth(s, 0, 12) * (1 - smooth(y, -9, -2))
+    if (r < 0.2) continue
+    // Sunk half into the face: each bulges out of it by a third to a half of itself.
+    const x = edge(fx, side, y, t, side < 0 ? 3 : 7) - side * r * (0.5 + 0.17 * hash(i, seed + 2))
+    out.push({ x, y, r })
+  }
+  return out
+}
+
+/* ---------------------------------------------------------------- crisp-soft painting */
+
+/** A buffer for each canvas the show paints on (the stage, a saved video's frame), and its softened copy. */
 const buffers = new WeakMap<HTMLCanvasElement, [HTMLCanvasElement, HTMLCanvasElement]>()
 
 /**
- * Paint `fn` (in world cells, as on the frame) into a buffer about 210 pixels across, blur it a pixel, and lay it over
- * the whole frame scaled up: everything in it comes out soft-edged, a few cells soft at any distance.
+ * Paint `fn` (in world cells, as on the frame) into a buffer about 480 pixels across, soften it a pixel, and lay it
+ * over the whole frame scaled up: everything in it has a short soft edge, the way dust meets clear air, never a hard
+ * line and never a wide blur.
  */
 function soft(g: Paint, fn: (ctx: CanvasRenderingContext2D) => void): void {
   const main = g.ctx.canvas as HTMLCanvasElement
@@ -103,7 +120,7 @@ function soft(g: Paint, fn: (ctx: CanvasRenderingContext2D) => void): void {
     buffers.set(main, pair)
   }
   const [buf, blur] = pair
-  const f = Math.max(2, main.width / 210)
+  const f = Math.max(1.5, main.width / 480)
   const w = Math.max(8, Math.round(main.width / f))
   const h = Math.max(8, Math.round(main.height / f))
   for (const c of pair) {
@@ -123,7 +140,7 @@ function soft(g: Paint, fn: (ctx: CanvasRenderingContext2D) => void): void {
   const bl = blur.getContext('2d')!
   bl.setTransform(1, 0, 0, 1, 0, 0)
   bl.clearRect(0, 0, w, h)
-  bl.filter = 'blur(1.8px)'
+  bl.filter = 'blur(1px)'
   bl.drawImage(buf, 0, 0)
   bl.filter = 'none'
   const ctx = g.ctx
@@ -137,97 +154,94 @@ function soft(g: Paint, fn: (ctx: CanvasRenderingContext2D) => void): void {
 
 /* ---------------------------------------------------------------- outside */
 
-/** The wisps: long thin drifts lifting off the front face and streaming forward on the wind, thinning as they go. */
-function wisps(ctx: CanvasRenderingContext2D, t: number, front: Swell[]): void {
+/** The wisps: long thin drifts torn off the billows on the upper face, streaming forward on the wind and thinning. */
+function wisps(ctx: CanvasRenderingContext2D, t: number): void {
   const n = 7
-  const life = 7
+  const life = 6
   for (let i = 0; i < n; i++) {
     const phase = (((t + hash(i, 61) * life) % life) + life) % life
     const born = t - phase
-    const y0 = -2 - 42 * hash(i, 62) ** 1.3 - 6 * hash(Math.floor(born / life), 63 + i)
-    const x0 = edge(STORM.front, -1, y0, born, 3, front)
+    const y0 = -16 - 50 * hash(i, 62) - 8 * hash(Math.floor(born / life), 63 + i)
+    const x0 = edge(frontAt(born), -1, y0, born, 3)
     const u = phase / life
-    const x = x0 - 3 - 2 * phase
-    const y = y0 - 0.5 * phase
-    const a = 0.34 * smooth(u, 0, 0.2) * (1 - smooth(u, 0.4, 1))
-    const len = 3 + 3 * hash(i, 64) + 0.8 * phase
+    const x = x0 - 2 - 2.4 * phase
+    const y = y0 - 0.9 * phase
+    const a = 0.4 * smooth(u, 0, 0.15) * (1 - smooth(u, 0.35, 1))
+    const len = 3 + 4 * hash(i, 64) + 0.9 * phase
     ctx.save()
     ctx.translate(x, y)
-    ctx.rotate(0.06)
+    ctx.rotate(0.12)
     ctx.beginPath()
-    ctx.ellipse(0, 0, len, 0.5 + 0.6 * hash(i, 65), 0, 0, Math.PI * 2)
-    ctx.fillStyle = rgba(mix(FACE, TOP, 0.4), a)
+    ctx.ellipse(0, 0, len, 0.45 + 0.5 * hash(i, 65), 0, 0, Math.PI * 2)
+    ctx.fillStyle = rgba(mix(FACE, TOP, 0.6), a)
     ctx.fill()
     ctx.restore()
   }
 }
 
-/** Darker masses turning over slowly inside the face, behind its front, rising: tone in the dust, never a spot. */
-function churn(ctx: CanvasRenderingContext2D, t: number, front: Swell[]): void {
-  const n = 5
-  const H = 120
-  for (let i = 0; i < n; i++) {
-    const rise = ((i / n) * H + t * 0.6 * (0.8 + 0.4 * hash(i, 71))) % H
-    const r = 14 + 10 * hash(i, 72)
-    const y = -rise + r * 0.5
-    const a = 0.13 * smooth(rise, 0, 14) * (1 - smooth(rise, H - 16, H))
-    const x = edge(STORM.front, -1, y, t, 3, front) + r * 0.9 + 3 * hash(i, 73) + 1.5 * drift(t * 0.08 + i, 74)
-    // Densest at its middle and gone at its edge, so it is a darkening in the dust and has no outline at all.
-    const gr = ctx.createRadialGradient(x, y, 0, x, y, r)
-    gr.addColorStop(0, rgba(DUSK, a * 1.6))
-    gr.addColorStop(0.5, rgba(DUSK, a))
-    gr.addColorStop(1, rgba(DUSK, 0))
-    ctx.fillStyle = gr
-    ctx.beginPath()
-    ctx.arc(x, y, r, 0, Math.PI * 2)
-    ctx.fill()
-  }
-}
-
-/** The low sun grazing the upper face: a warm band down its edge from about twenty cells up, inside it. */
-function graze(ctx: CanvasRenderingContext2D, view: View, t: number, front: Swell[]): void {
-  const top = Math.min(STORM.top, view.y0 - 20)
-  ctx.beginPath()
-  for (let y = -14; y >= top; y -= 2) ctx.lineTo(edge(STORM.front, -1, y, t, 3, front) - 0.5, y)
-  for (let y = top; y <= -14; y += 2) ctx.lineTo(edge(STORM.front, -1, y, t, 3, front) + 5, y)
-  ctx.closePath()
-  ctx.fillStyle = vgrad(ctx, -14, -55, [[0, rgba(SUN, 0)], [1, rgba(SUN, 0.5)]])
-  ctx.fill()
-}
-
-/** The storm seen from outside, soft: its thin edge, its body, the churn in its face, the sun on it, its wisps. */
+/**
+ * The storm seen from outside: its body and its billows as one mass, darker to its foot; the low sun on the crowns of
+ * the billows; its wisps; its skirts.
+ *
+ * The light is the shape's own: the whole mass is painted once in the light, and again in its body's colour a little
+ * down and in from it, so what is left lit is a thin rim along every edge that faces up and out toward the sun, the
+ * crown of every billow, and nothing inside it. So the billows are swellings of one body, never balls on it.
+ */
 export function drawWall(g: Paint): void {
   const v = g.view
-  if (v.x1 < STORM.front - 70 || v.x0 > STORM.back + 60) return
   const t = g.t
+  if (v.x1 < frontAt(t) - 80 || v.x0 > backAt(t) + 60) return
+  const inView = (l: Lobe) => !(l.y - l.r > v.y1 + 2 || l.y + l.r < v.y0 - 2 || l.x - l.r > v.x1 + 2 || l.x + l.r < v.x0 - 2)
+  const ls = [...lobes(t, v, -1), ...lobes(t, v, 1)].filter(inView)
   soft(g, (ctx) => {
-    const fill = vgrad(ctx, -60, 1, [[0, TOP], [0.55, FACE], [0.9, mix(FACE, FOOT, 0.55)], [1, FOOT]])
-    // The thin edge round it: the same dust thinning out over a tenth of the frame's height, the dunes seen through it,
-    // in fine steps the blur runs together.
-    ctx.fillStyle = fill
-    ctx.globalAlpha = 0.085
-    for (let i = 8; i >= 1; i--) {
-      body(ctx, v, t, SAND, i * 0.0115 * v.h)
+    const span = BODY_STOPS[BODY_STOPS.length - 1][0] - BODY_STOPS[0][0]
+    const at = (y: number) => (y - BODY_STOPS[0][0]) / span
+    const mass = (style: CanvasGradient) => {
+      ctx.fillStyle = style
+      body(ctx, v, t, SAND)
       ctx.fill()
+      for (const l of ls) {
+        ctx.beginPath()
+        ctx.arc(l.x, l.y, l.r, 0, Math.PI * 2)
+        ctx.fill()
+      }
     }
-    ctx.globalAlpha = 1
-    body(ctx, v, t, SAND, 0)
-    ctx.fill()
-    const front = swells(t, 5)
+    // In the light: warm and pale high up where the sun reaches it, going to the body's own colour toward the foot.
+    const lit = vgrad(ctx, BODY_STOPS[0][0], BODY_STOPS[BODY_STOPS.length - 1][0], [
+      [0, mix(TOP, SUN, 0.7)],
+      [at(-34.5), mix(FACE, SUN, 0.45)],
+      [at(-12), bodyAt(-12)],
+      [1, FOOT],
+    ])
+    // Nothing of it below the sand's line, where the copy laid down and in would show as a ledge.
     ctx.save()
-    body(ctx, v, t, SAND, 0)
+    ctx.beginPath()
+    ctx.rect(v.x0 - 60, v.y0 - 200, v.w + 120, SAND - (v.y0 - 200))
     ctx.clip()
-    churn(ctx, t, front)
-    graze(ctx, v, t, front)
+    mass(lit)
+    // The body, by height, a little down and in from each face (the light on the front is the low sun behind the
+    // camera's west, on the back the morning's ahead in the east): warm high up, darkening down to its foot.
+    const fill = vgrad(ctx, BODY_STOPS[0][0], BODY_STOPS[BODY_STOPS.length - 1][0], BODY_STOPS.map(([y, c]) => [at(y), c]))
+    const mid = (frontAt(t) + backAt(t)) / 2
+    for (const side of [-1, 1] as const) {
+      ctx.save()
+      ctx.beginPath()
+      if (side < 0) ctx.rect(v.x0 - 60, v.y0 - 200, mid - (v.x0 - 60), v.h + 400)
+      else ctx.rect(mid, v.y0 - 200, v.x1 + 60 - mid, v.h + 400)
+      ctx.clip()
+      ctx.translate(-side * 1.3, 1.0)
+      mass(fill)
+      ctx.restore()
+    }
     ctx.restore()
-    wisps(ctx, t, front)
-    // Its skirt of dust over the sand ahead of it and behind it.
-    for (const [face, side] of [[STORM.front, -1], [STORM.back, 1]] as [number, 1 | -1][]) {
+    wisps(ctx, t)
+    // Its skirts of dust over the sand, ahead of its foot and behind it: low and dark.
+    for (const [face, side] of [[frontAt(t), -1], [backAt(t), 1]] as [number, 1 | -1][]) {
       ctx.beginPath()
       ctx.moveTo(face + side * 2, SAND)
-      ctx.quadraticCurveTo(face + side * 10, -2.2, face + side * 28, SAND)
+      ctx.quadraticCurveTo(face + side * 10, -2.4, face + side * 30, SAND)
       ctx.closePath()
-      ctx.fillStyle = rgba(FOOT, 0.45)
+      ctx.fillStyle = rgba(FOOT, 0.5)
       ctx.fill()
     }
   })
@@ -247,7 +261,7 @@ export const REACHES = [
 ] as const
 
 /** How much of the far reaches is seen at `t` from a camera at `x`: from the reveal, until it is inside or past the storm. */
-const reachesAt = (t: number, x: number): number => (t >= T.wall ? 1 : 0) * (1 - smooth(x, STORM.front + 2, STORM.front + 8))
+const reachesAt = (t: number, x: number): number => (t >= T.wall ? 1 : 0) * (1 - smooth(x, frontAt(t) + 2, frontAt(t) + 8))
 
 export function drawReach(g: Paint, air: Air, reach: (typeof REACHES)[number]): void {
   const v = g.view
@@ -280,12 +294,12 @@ export function drawReach(g: Paint, air: Air, reach: (typeof REACHES)[number]): 
 /* ---------------------------------------------------------------- inside */
 
 /** How deep in the storm the view's middle is: 0 outside, 1 well in. */
-const deep = (x: number) => smooth(x, STORM.front + 1, STORM.front + 7) * (1 - smooth(x, STORM.back - 6, STORM.back - 1))
+const deep = (x: number, t: number) => smooth(x, frontAt(t) + 1, frontAt(t) + 7) * (1 - smooth(x, backAt(t) - 6, backAt(t) - 1))
 
 /** Inside: the body's browns and the great masses going by on the wind, behind the thopter, coming in as it goes in. */
 export function drawInside(g: Paint): void {
   const v = g.view
-  const k = deep(v.cx)
+  const k = deep(v.cx, g.t)
   if (k <= 0.002) return
   const ctx = g.ctx
   // The body by height in the world: dun where the light still gets in, high up, thickening downward to a dark core
@@ -322,7 +336,7 @@ export function drawInside(g: Paint): void {
 
 /** In front of everything inside: a thin veil of the dust. */
 export function drawVeil(g: Paint): void {
-  const k = deep(g.view.cx)
+  const k = deep(g.view.cx, g.t)
   if (k <= 0.002) return
   g.ctx.fillStyle = rgba('#7A5534', 0.2 * k)
   g.ctx.fillRect(g.view.x0 - 1, g.view.y0 - 1, g.view.w + 2, g.view.h + 2)

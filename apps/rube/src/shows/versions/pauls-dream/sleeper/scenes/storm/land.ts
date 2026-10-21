@@ -1,6 +1,6 @@
 import { circle, drift, fill, hash, layer, mix, poly, rgba, smooth, vgrad, type Paint, type Pt } from '../../paint'
 import { DAWN, NIGHT, between, dunes, sky, type Air } from '../../world/desert'
-import { STORM, T, ground } from './geo'
+import { T, backAt, ground } from './geo'
 import { REACHES, drawReach } from './wall'
 
 /**
@@ -16,7 +16,7 @@ const MORNING: Air = { ...DAWN, sun: { x: 0.8, up: 0.08, r: 0.06, color: '#FFF0D
 export function airAt(t: number, viewX: number): Air {
   const a = between(NIGHT, DAWN, smooth(t, T.dawn[0], T.dawn[1]))
   // The storm darkens the dawn round it; out of its back the sun is up ahead.
-  const past = smooth(viewX, STORM.back - 2, STORM.back + 14)
+  const past = smooth(viewX, backAt(t) - 2, backAt(t) + 14)
   if (past > 0) return between({ ...a, sun: undefined }, MORNING, past)
   return { ...a, sun: undefined }
 }

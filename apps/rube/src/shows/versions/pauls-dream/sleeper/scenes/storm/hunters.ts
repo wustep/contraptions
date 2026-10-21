@@ -48,7 +48,7 @@ const depth = (t: number): number => 70 - 56 * smooth(t, T.hunters, T.wall)
 
 function nearPose(h: Hunter, t: number): ThopterPose {
   const p = ours(t)
-  const s = inStorm(p.x)
+  const s = inStorm(p.x, t)
   return {
     x: p.x - h.gap(t),
     y: p.y + h.dy + 0.25 * drift(t * 0.7, h.seed) + s * 0.35 * drift(t * 1.3, h.seed + 1),

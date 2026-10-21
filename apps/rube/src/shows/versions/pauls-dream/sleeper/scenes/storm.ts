@@ -7,7 +7,7 @@ import { PLACES } from '../plan'
 import type { Dream, Scene } from '../scene'
 import type { Actor } from '../show'
 import { HOLD, craftAt, drawCraft, drawCraftOver, drawDoorway, heaveAt, onCraft, pose, wobble } from './storm/craft'
-import { FROM, JAMIS_IN_VISION, LANDING, T, TENT, TO, VISIONS, ground, keyed, onFloor } from './storm/geo'
+import { FROM, JAMIS_IN_VISION, LANDING, T, TENT, TO, VISIONS, backAt, ground, keyed, onFloor } from './storm/geo'
 import { drawHunters, drawHuntersOver } from './storm/hunters'
 import { drawLand } from './storm/land'
 import { drawTent, drawTentOver } from './storm/tent'
@@ -195,8 +195,8 @@ const shots: Shot[] = [
   { t: 332.5, cells: 6.6, on: craftAt, off: [0.4, -0.2], roll: sway },
   { t: T.burst - 0.002, cells: 6.6, on: craftAt, off: [0.4, -0.2], roll: sway },
   // Out of the storm's back into the morning.
-  { t: T.burst, cells: 17, at: [842, -6.6], cut: true },
-  { t: T.glide, cells: 16, at: [844.6, -6.1] },
+  { t: T.burst, cells: 17, at: [836.5, -6.6], cut: true },
+  { t: T.glide, cells: 16, at: [839, -6.1] },
   { t: TO, cells: 14.5, on: craftAt, off: [1.4, -2.1] },
 ]
 
@@ -252,13 +252,18 @@ const dreams: Dream[] = [
 /* ---------------------------------------------------------------- the drawings */
 
 const BOX = { x0: PLACES.night.x0, y0: -160, x1: PLACES.night.x1, y1: 40 }
+/**
+ * Whether the camera is past the storm, looking back at it: then the wall is drawn over the ornithopter, so it comes out
+ * of the dust rather than lying on it. Before it, the wall is behind everything that flies at it.
+ */
+const behindIt = (g: { t: number; view: { cx: number } }) => g.view.cx > backAt(g.t) - 2
 const live = (t: number) => t >= FROM - 3 && t < TO + 3
 
 const pieces = [
   standing('storm-land', BOX, (g) => {
     if (!live(g.t)) return
     drawLand(g)
-    drawWall(g)
+    if (!behindIt(g)) drawWall(g)
     drawInside(g)
     drawTent(g)
     drawHunters(g)
@@ -269,6 +274,7 @@ const pieces = [
     drawTentOver(g)
     drawCraftOver(g)
     drawHuntersOver(g)
+    if (behindIt(g)) drawWall(g)
     drawVeil(g)
   }),
 ]
