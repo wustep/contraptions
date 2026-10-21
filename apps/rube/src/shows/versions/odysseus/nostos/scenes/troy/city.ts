@@ -160,7 +160,9 @@ function drawHouse(g: Paint, h: House, t: number, depth: number, L: { x: (x: num
     const s = L ? L.s : 1
     for (let k = 0; k < 2; k++) {
       const fx = x0 + (x1 - x0) * (0.3 + 0.4 * k)
-      flame(ctx, fx, y1 - lip * 0.6, (x1 - x0) * 0.5, (0.55 + 0.35 * hash(Math.round(h.x * 10), k)) * s * b, t, h.x * 7 + k)
+      // The near houses' fires kept low, so the people in the street below them are seen.
+      const tall = (0.55 + 0.35 * hash(Math.round(h.x * 10), k)) * (depth ? 1 : 0.62)
+      flame(ctx, fx, y1 - lip * 0.6, (x1 - x0) * (depth ? 0.5 : 0.42), tall * s * b, t, h.x * 7 + k)
     }
   }
 }
