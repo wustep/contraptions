@@ -61,8 +61,8 @@ const shots: Key[] = [
   // in round the tower's foot with their torches, and a blow on each note, up the street from the gate to the steps.
   // Then the music holds its breath, and the camera with it, over the dead in the street, as the torches go on up the
   // steps after the rest.
-  { t: KILLS.street[0], cells: 4.2, at: [-31.4, -4.05], cut: true },
-  { t: 117.6, cells: 4.1, at: [-31.65, -4.12] },
+  { t: KILLS.street[0], cells: 3.3, at: [-31.35, -3.95], cut: true },
+  { t: 117.6, cells: 3.25, at: [-31.6, -4.0] },
   { t: 120.6, cells: 3.85, at: [-32.35, -4.35] },
   // On the next note, down to the drain's mouth: him out of it and down the hill through them, the other way.
   { t: 120.73, cells: 6.5, at: [-21.2, -2.3], cut: true },
