@@ -51,14 +51,23 @@ export function paintBlock(b: Brush, x0: number, x1: number, taken: number, at: 
     ctx.beginPath()
     const y0 = at(from) + lift
     ctx.moveTo(from, y0 + 0.02)
-    // The helmets: one row of shallow arcs along the top.
+    // The helmets: one row of shallow arcs along the top; too far off to tell one from the next (under about four
+    // pixels a helmet) the row is one flat band, not a dotted line.
     const n = Math.max(1, Math.floor((x1 - from) / (r * 2.15)))
     const w = (x1 - from) / n
-    for (let i = 0; i < n; i++) {
-      const cx = from + w * (i + 0.5)
-      const y = at(cx) + lift - h
-      ctx.lineTo(cx - w / 2, y + r * 0.55)
-      ctx.quadraticCurveTo(cx, y - r * 0.75, cx + w / 2, y + r * 0.55)
+    if (w * b.k < 4) {
+      const steps = Math.max(2, Math.ceil((x1 - from) / 2))
+      for (let i = 0; i <= steps; i++) {
+        const x = from + ((x1 - from) * i) / steps
+        ctx.lineTo(x, at(x) + lift - h + r * 0.2)
+      }
+    } else {
+      for (let i = 0; i < n; i++) {
+        const cx = from + w * (i + 0.5)
+        const y = at(cx) + lift - h
+        ctx.lineTo(cx - w / 2, y + r * 0.55)
+        ctx.quadraticCurveTo(cx, y - r * 0.75, cx + w / 2, y + r * 0.55)
+      }
     }
     ctx.lineTo(x1, at(x1) + lift + 0.02)
     ctx.closePath()

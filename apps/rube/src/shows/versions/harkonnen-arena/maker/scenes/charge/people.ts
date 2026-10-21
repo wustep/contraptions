@@ -76,7 +76,8 @@ function rider(i: number): Actor {
  * The Fremen on foot: thirty of them, waiting in the dust of the skirt, who burst out of it in a wave over six beats and
  * run east across the floor a stride on every beat, the line of them going on past the blocks and the rise to the great
  * ship. Each one's stride is a little his own; every one is past the rise before Paul and Chani get down onto it, and the
- * first away go furthest: they stop in a crowd by the wreck.
+ * first away go furthest: they stop by the wreck in a few close knots, as people gather, not spaced out evenly along the
+ * flat (from far off an even row of them read as a dotted line).
  */
 const RUNNERS: { x0: number; go: number; stop: number; stride: number }[] = (() => {
   const out: { x0: number; go: number; stop: number; stride: number }[] = []
@@ -85,7 +86,11 @@ const RUNNERS: { x0: number; go: number; stop: number; stride: number }[] = (() 
     const go = 9 + Math.floor((i * 6) / n)
     const stride = 2.85 + 0.3 * hash(i, 41)
     const x0 = Math.max(8946 + 4 * hash(i, 42), 9100 - stride * (68 - go))
-    out.push({ x0, go, stride, stop: 9127.5 - (i * 25) / (n - 1) + 0.4 * (hash(i, 43) - 0.5) })
+    // Four knots, the first away furthest east; within a knot each a ball and a little apart.
+    const knot = Math.floor((i * 4) / n)
+    const within = i - Math.ceil((knot * n) / 4)
+    const centre = [9126.5, 9119.2, 9111.6, 9104.4][knot]
+    out.push({ x0, go, stride, stop: centre - within * 0.31 + 0.06 * (hash(i, 43) - 0.5) })
   }
   return out
 })()

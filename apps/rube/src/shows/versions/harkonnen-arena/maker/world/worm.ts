@@ -124,13 +124,13 @@ export function paintBody(b: Brush, w: Body): void {
     ctx.quadraticCurveTo(mid[0] * 2 - (a[0] + c[0]) / 2 + tng[0] * plateW, mid[1] * 2 - (a[1] + c[1]) / 2 + tng[1] * plateW, a[0] + tng[0] * plateW, a[1] + tng[1] * plateW)
     ctx.closePath()
     const shade = 0.12 + 0.1 * hash(kk, 3)
-    ctx.fillStyle = b.ca(mix(SKIN.plate, SKIN.side, shade), 0.32)
+    ctx.fillStyle = b.ca(mix(SKIN.plate, SKIN.side, shade), 0.18)
     ctx.fill()
     // The seam.
     ctx.beginPath()
     ctx.moveTo(a[0], a[1])
     ctx.quadraticCurveTo(mid[0] * 2 - (a[0] + c[0]) / 2, mid[1] * 2 - (a[1] + c[1]) / 2, c[0], c[1])
-    ctx.strokeStyle = b.ca(SKIN.seam, 0.55)
+    ctx.strokeStyle = b.ca(SKIN.seam, 0.45)
     ctx.lineWidth = Math.max(1.25 * b.px, r * 0.022)
     ctx.stroke()
   }

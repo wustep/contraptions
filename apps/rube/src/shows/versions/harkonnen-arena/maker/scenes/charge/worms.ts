@@ -3,7 +3,7 @@ import { FREMEN, FREMEN_RIM } from '../../cast'
 import { circle, clamp01, hash, smooth, type Brush } from '../../paint'
 import { paintBody, paintMouth, SKIN } from '../../world/worm'
 import { paintPuff } from './dust'
-import { B, LEAD, SECOND, THIRD, mouthOpen, rearing, wormAt, wormOn, type WormBody, type WormSpec } from './plan'
+import { B, LEAD, SECOND, THIRD, ground, mouthOpen, rearing, wormAt, wormOn, type WormBody, type WormSpec } from './plan'
 import { sandAt } from './storm'
 
 /**
@@ -115,15 +115,18 @@ function paintPour(b: Brush): void {
   }
 }
 
-/** The lead worm in the action's plane, with the sand off its rear, and the burst where its head comes down. */
+/**
+ * The lead worm in the action's plane, with the sand off its rear, and the burst where its head comes down: thrown up off
+ * the sand under the blow and drawn behind the worm, so it never lies over the open mouth as a halo.
+ */
 export function paintLead(b: Brush): void {
   paintPour(b)
-  const w = paintWorm(b, LEAD, mouthOpen(b.t))
-  if (!w) return
   if (b.t > B.crash && b.t < B.crash + 3) {
     const tip = wormAt(LEAD, B.crash).spine[0]
-    paintPuff(b, { x: tip[0] + 1.5, y: tip[1] + 2, at: B.crash, size: 7 + 2 * rearing(b.t), drift: 0.9, life: 2.4 }, sandAt(b.t).lit)
+    const x = tip[0] + 1.5
+    paintPuff(b, { x, y: ground(x) - 0.4, at: B.crash, size: 8 + 2 * rearing(b.t), drift: 0.9, life: 2.4 }, sandAt(b.t).lit)
   }
+  paintWorm(b, LEAD, mouthOpen(b.t))
 }
 
 /* ---------------------------------------------------------------- the far worms */

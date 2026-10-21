@@ -64,8 +64,12 @@ function frontAt(base: number, y: number, t: number, seed: number, size: number,
   return base + Math.min(0, y) * -0.42 + bulge
 }
 
-/** How high the wall's crest stands over its top at `x`: big round billows along it, drifting slowly west. */
-function crestAt(x: number, t: number, seed: number, size: number): number {
+/**
+ * How high the wall's crest stands over its top at `x`: a few great round billows along it, drifting slowly west. They
+ * are much broader than the wall's own billows and low: a row of small ones read as scallops, a pattern, not a storm.
+ */
+function crestAt(x: number, t: number, seed: number, wallSize: number): number {
+  const size = wallSize * 2.6
   const u = (x + t * 1.4) / size
   const k = Math.floor(u)
   let up = 0
@@ -73,7 +77,7 @@ function crestAt(x: number, t: number, seed: number, size: number): number {
     const c = j + 0.5 + (hash(j, seed, 5) - 0.5) * 0.4
     const r = 0.6 + 0.3 * hash(j, seed, 6)
     const d = (u - c) / r
-    if (Math.abs(d) < 1) up = Math.max(up, Math.sqrt(1 - d * d) * r * size * (0.55 + 0.5 * hash(j, seed, 7)))
+    if (Math.abs(d) < 1) up = Math.max(up, Math.sqrt(1 - d * d) * r * size * 0.32 * (0.55 + 0.5 * hash(j, seed, 7)))
   }
   return up
 }
@@ -91,9 +95,9 @@ interface Wall {
 
 /** The three walls, the back one highest and darkest; each crest catches the light as a band of its own. */
 const WALLS: Wall[] = [
-  { ahead: -50, height: 250, size: 70, climb: 1.6, seed: 11, body: '#21140F', band: '#5E3E2D' },
-  { ahead: -22, height: 160, size: 52, climb: 2.4, seed: 12, body: '#2C1A13', band: '#704A33' },
-  { ahead: 0, height: 92, size: 34, climb: 3.4, seed: 13, body: '#3B2418', band: '#87593B' },
+  { ahead: -50, height: 250, size: 70, climb: 1.6, seed: 11, body: '#21140F', band: '#4E3326' },
+  { ahead: -22, height: 160, size: 52, climb: 2.4, seed: 12, body: '#2C1A13', band: '#5F3F2C' },
+  { ahead: 0, height: 92, size: 34, climb: 3.4, seed: 13, body: '#3B2418', band: '#764D34' },
 ]
 
 /** One wall: its body from the floor up to its crest, west of its front, and the crest's band of light. */
@@ -134,7 +138,7 @@ function paintWall(b: Brush, wall: Wall, front: number, fall: number, a: number)
   for (let i = m; i >= 0; i--) {
     const [x, y] = crest[i]
     // Thickest over the heads of the billows, thin in the dips between them: the light lies on what stands up.
-    const head = Math.min(1, (-H - y) / (wall.size * 0.45))
+    const head = Math.min(1, (-H - y) / (wall.size * 2.6 * 0.32 * 0.45))
     ctx.lineTo(Math.max(west, x), y + band * (0.35 + 1.1 * head))
   }
   ctx.closePath()
