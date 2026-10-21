@@ -16,8 +16,10 @@ import { HE_STOPS, SHIP0, SHIP1, SHIP2 } from './troy/plan'
  * step a note, along the street, and into the Trojans' own counterweight bucket with his men: the seventh weight takes
  * it down, the great wheels turn, the gate goes up, and Agamemnon's host, massed down the hill to the sea with its
  * torches, pours in under it behind him, the gold one (`troy/host.ts`). The city burns from the gate up, roof by roof,
- * while they come out of the drain under the hill, run down to the ships through the host the other way, and put out at
- * first light. (Every move is in `troy/plan.ts`; the horse scene carries them.)
+ * and the Trojans who took the horse in run out of their doors and are cut down in their street, and at last at
+ * Athena's feet (`troy/sack.ts`), while he and his men come out of the drain under the hill, run down to the ships
+ * through the host the other way, and put out at first light. (Every move is in `troy/plan.ts`; the horse scene carries
+ * them.)
  */
 
 const shots: Key[] = [
