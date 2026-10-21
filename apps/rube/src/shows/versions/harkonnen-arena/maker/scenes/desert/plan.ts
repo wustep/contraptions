@@ -86,22 +86,48 @@ export function funnelDepth(t: number): number {
 }
 export const FUNNEL_R = 15
 
-/** The mouth: how high its lip stands over the flat (negative up), and how far it has gone back down. */
+/**
+ * The mouth: how high its lip stands over the flat (negative up). It breaks the sand round the machine on the fourth blow
+ * and stands up out of the funnel, quick at first and slowing, its lip four times the machine's height up;
+ * it gulps a little higher on each step the machine goes down; on the fifth blow it goes straight back down.
+ */
 export function mawRise(t: number): number {
-  if (t < W.maw - 0.6) return 3
-  const up = smoother(t, W.maw - 0.6, W.maw + 7.5)
-  const down = smoother(t, W.gone, W.gone + 3.2)
-  return 3 - 9.5 * up + 15 * down
+  if (t < W.maw - 0.45) return 11
+  const u = clamp01((t - W.maw + 0.45) / 7.5)
+  const up = 1 - Math.pow(1 - u, 2.5)
+  let gulp = 0
+  for (const at of SWALLOW) gulp += 0.7 * heave(t, at)
+  const down = smoother(t, W.gone, W.gone + 3.4)
+  return 11 - 36 * up - gulp * (1 - down) + 39 * down
 }
 export const MAW_R = 16
+/** How round the mouth is seen, its height against its width: it tips a little toward us as it stands. */
+export const mawTip = (t: number): number => 0.36 + 0.1 * smooth(t, W.maw, W.maw + 6)
 
-/** The harvester's middle at `t`: crawling, held, sinking into the funnel and then into the throat. */
+/** The drum under the mouth, every other beat: the machine goes down its throat a step on each. */
+export const SWALLOW = [89.36, 91.38, 93.44, 95.43].map((t) => onsetNear(t, 0.25, 0.15))
+
+/** How far the machine is down in the mouth: its tracks' foot under the lip, cells. */
+function inMouth(t: number): number {
+  let d = 4.4
+  for (const at of SWALLOW) d += 3.2 * smoother(t, at, at + 0.55)
+  return d
+}
+
+/**
+ * The harvester's middle at `t`: crawling, held, sinking into the funnel; then carried up in the mouth that comes up
+ * round it, tipping, and going down its throat.
+ */
 export function harvesterAt(t: number): { x: number; y: number; tilt: number } {
   const x = harvesterX(t)
   const lift = -0.7 * smooth(t, W.lock + 0.4, W.lock + 6) * (1 - smooth(t, W.sink, W.sink + 2))
-  const sink = funnelDepth(t) * 0.8 + 2.4 * smoother(t, W.maw, W.gone) + 11 * smoother(t, W.gone, W.gone + 2.4)
-  const tilt = 0.05 * smooth(t, W.sink, W.maw) - 0.08 * smooth(t, W.maw, W.gone)
-  return { x, y: lift + sink, tilt }
+  let y = lift + funnelDepth(t) * 0.8
+  if (t > W.maw - 0.45) {
+    const carried = mawRise(t) + inMouth(t)
+    y = t < W.gone ? Math.min(y, carried) : carried
+  }
+  const tilt = 0.05 * smooth(t, W.sink, W.maw) - 0.2 * smooth(t, W.maw + 1, SWALLOW[3])
+  return { x, y, tilt }
 }
 
 /** The beats of the drum under the lift: the carryall heaves on each. */

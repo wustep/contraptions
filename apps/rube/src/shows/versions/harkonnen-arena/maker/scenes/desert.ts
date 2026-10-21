@@ -7,7 +7,7 @@ import { SAND, depthScale, farDesert, frameH, horizonOf, paintFar, tiltOf } from
 import type { SkyKey } from '../world/sky'
 import { paintFlat, paintFunnelBack, paintFunnelFront } from './desert/ground'
 import { paintDust, paintMawBack, paintMawFront } from './desert/maw'
-import { CHANI_SEAT, LIFT_BEATS, PAUL_SEAT, ROCK, W, XH, harvesterX } from './desert/plan'
+import { CHANI_SEAT, LIFT_BEATS, PAUL_SEAT, ROCK, SWALLOW, W, XH, harvesterX } from './desert/plan'
 import { paintCables, paintCarryall, paintHarvester, paintPlume } from './desert/rig'
 
 /**
@@ -20,7 +20,8 @@ import { paintCables, paintCarryall, paintHarvester, paintPlume } from './desert
  *    44.5     the first great blow: the carryall comes down to the machine, its cables let down
  *    58.1     the second: the grapples take hold; it strains up on each beat of the drum
  *    71.7     the third: the sand goes down round the machine, a step a beat
- *    85.3     the fourth: the mouth comes up out of the funnel round it; the cables part; the carryall gets away
+ *    85.3     the fourth: the mouth stands up out of the funnel with the machine in it; the cables part; the carryall
+ *             gets away; on every other beat of the drum the machine goes down its throat
  *    97.5     the fifth: back down, with the harvester in it, the dust going up; on 99.5 the rock again, far off
  */
 
@@ -144,14 +145,16 @@ export const desert: Scene = {
     // Held: close enough to see the cables take the weight.
     { t: W.lock, cut: true, cells: 30, at: [XH, -11.5] },
     { t: W.sink - 0.01, cells: 28, at: [XH, -11] },
-    // The sand going down: wide and low.
+    // The sand going down: a slow push in on the machine in its funnel, the carryall straining over it.
     { t: W.sink, cut: true, cells: 50, at: [XH - 2, -12] },
-    { t: W.maw - 0.01, cells: 46, at: [XH - 1, -11] },
-    // The mouth: wider still, for its size.
-    { t: W.maw, cut: true, cells: 54, at: [XH - 2, -13] },
-    { t: W.gone - 0.01, cells: 50, at: [XH - 1, -12] },
-    // The fifth blow: held as it goes back down with the machine in it, the dust going up.
-    { t: W.after - 0.01, cells: 47, at: [XH - 1, -11] },
+    { t: W.maw - 0.01, cells: 34, at: [XH, -9.5] },
+    // The mouth: wider, as it breaks the sand round the machine; craning up and back as it stands, and held while the
+    // machine goes down its throat.
+    { t: W.maw, cut: true, cells: 46, at: [XH - 2, -11] },
+    { t: W.maw + 6.5, cells: 54, at: [XH + 1, -17] },
+    { t: W.gone - 0.01, cells: 51, at: [XH + 1, -16.5] },
+    // The fifth blow: it goes straight back down with the machine in it, the dust going up.
+    { t: W.after - 0.01, cells: 48, at: [XH + 1, -12.5] },
     // Gone: the desert again from far off, as at first.
     { t: W.after, cut: true, cells: 44, at: [14, -13.5] },
     { t: T.thumper, cells: 41, at: [14.5, -13] },
@@ -184,6 +187,7 @@ export const desert: Scene = {
     ['the sand goes down', W.sink],
     ...STEPS.map((t, i): [string, number] => [`step ${i}`, t]),
     ['the mouth', W.maw],
+    ...SWALLOW.map((t, i): [string, number] => [`down its throat ${i}`, t]),
     ['swallowed', W.gone],
     ['the rock again', W.after],
   ],
