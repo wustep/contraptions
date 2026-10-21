@@ -21,6 +21,11 @@ export interface Scene {
   to: number
   /** The principals' segments inside the window (a `Walk`'s `segs`). A principal with none is off the stage. */
   moves?: Partial<Record<Who, Seg[]>>
+  /**
+   * Where a principal looks while it is not rolling: [from, to, angle] windows in which its mark turns to `angle`
+   * (radians: 0 is to its right, −π/2 up, π/2 down) and holds there, easing in and out over a third of a second.
+   */
+  looks?: Partial<Record<Who, [number, number, number][]>>
   /** A principal's colour going out (death): [time it starts, seconds it takes]. */
   deaths?: Partial<Record<Who, [number, number]>>
   /** Balls of its own (the crew, soldiers, the Fremen), each with its own run. */

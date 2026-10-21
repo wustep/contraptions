@@ -11,7 +11,7 @@ import { Run } from './path'
 import { END } from './plan'
 import type { Scene } from './scene'
 import { SCENES } from './scenes'
-import { SleeperShow, type Actor } from './show'
+import { SleeperShow, looking, type Actor } from './show'
 
 /**
  * The whole show: the scenes laid end to end on the music, the principals assembled from what each scene gives them,
@@ -53,6 +53,7 @@ function principal(who: Who, scenes: Scene[]): Actor | null {
   if (!segs.length) return null
   const deaths = scenes.flatMap((s) => (s.deaths?.[who] ? [s.deaths[who]!] : []))
   const death = deaths[0]
+  const looks = scenes.flatMap((s) => s.looks?.[who] ?? [])
   return {
     id: role.id,
     color: role.color,
@@ -60,6 +61,7 @@ function principal(who: Who, scenes: Scene[]): Actor | null {
     size: role.size,
     run: new Run(segs, who),
     colorAt: death ? (t) => mix(role.color, DEAD, smooth(t, death[0], death[0] + death[1])) : undefined,
+    markAt: looks.length ? looking(looks) : undefined,
   }
 }
 

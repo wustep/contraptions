@@ -31,6 +31,23 @@ export interface Actor {
   mark?: number | null
   /** Where its mark starts (radians): which way it faces before it has rolled. */
   turn?: number
+  /** Where its mark is at `t`, given where rolling has turned it (`looks`: a ball turning to face something). */
+  markAt?(t: number, rolled: number): number
+}
+
+/** `[from, to, angle]` windows as a mark: rolled, except inside a window, where it turns to the angle and holds. */
+export function looking(windows: [number, number, number][]): (t: number, rolled: number) => number {
+  return (t, rolled) => {
+    for (const [a, b, angle] of windows) {
+      if (t < a || t > b) continue
+      const ease = Math.min(0.35, (b - a) / 2)
+      const u = Math.min(1, (t - a) / ease, (b - t) / ease)
+      const w = u * u * (3 - 2 * u)
+      const d = Math.atan2(Math.sin(angle - rolled), Math.cos(angle - rolled))
+      return rolled + d * w
+    }
+    return rolled
+  }
 }
 
 export class SleeperShow extends Show {
@@ -109,8 +126,13 @@ export class SleeperShow extends Show {
       scale,
       stretch: 1,
       angle: 0,
-      spin: a.mark === undefined ? a.run.spin(time, 0.13 * a.size) + (a.turn ?? 0) : a.mark,
+      spin: a.mark === undefined ? this.markOf(a, time) : a.mark,
     }
+  }
+
+  private markOf(a: Actor, t: number): number {
+    const rolled = a.run.spin(t, 0.13 * a.size) + (a.turn ?? 0)
+    return a.markAt ? a.markAt(t, rolled) : rolled
   }
 
   override at(t: number): ShowPoint {
