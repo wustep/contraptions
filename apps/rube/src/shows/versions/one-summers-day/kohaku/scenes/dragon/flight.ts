@@ -4,7 +4,8 @@ import { trail } from '../../world/dragon'
 
 /**
  * The dragon's way in (M.rise → M.high): from far out over the sea, harried by the paper birds, round in front of the
- * bathhouse, at her room's door, through it, and down on its floor; then the thrashing, dying away to stillness.
+ * bathhouse, and in low over the water at her room's door, through it, and down on its floor; then the thrashing,
+ * dying away to stillness.
  *
  * His head goes through timed points on a smooth curve (each point's tangent from its neighbours, so he never turns on
  * a pin); the body is the head's own way behind it. Once he is down, the body is held where it lay and only writhes.
@@ -19,9 +20,9 @@ const KEYS: [number, number, number][] = [
   [111.0, 85.5, -7.6],
   [113.4, 89, -6.4],
   [115.8, 93, -9.4],
-  [118.0, 88.5, -12.2],
-  [120.2, 82.0, -9.4],
-  [122.0, 76.0, -6.9],
+  [118.0, 88.5, -9.2],
+  [120.2, 82.0, -7.7],
+  [122.0, 76.0, -6.8],
   [M.peak, 70.5, -6.12],
   [M.peak + 0.39, 69.0, -6.22],
   [M.peak + 0.79, 67.4, -6.22],

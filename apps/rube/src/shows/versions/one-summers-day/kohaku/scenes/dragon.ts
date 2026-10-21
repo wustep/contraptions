@@ -64,9 +64,10 @@ const SHOTS: Key[] = [
   // Dawn: her room open at the left, she on the balcony, the new sea.
   { t: FROM, cells: 6.0, at: [74.4, -6.1], cut: true, focus: BALC },
   { t: M.rise - 3.0, cells: 6.6, at: [75.4, -6.4], focus: BALC },
-  // A white shape far out over the water, and the swarm about it.
-  { t: M.rise + 2.6, cells: 12.5, at: [89.0, -9.3] },
-  { t: CUT_IN - 0.05, cells: 11.6, at: [89.0, -9.6] },
+  // A white shape far out over the water, and the swarm about it: framed so he goes low over the sea under the day's
+  // great cloud, white on blue, never across it.
+  { t: M.rise + 2.6, cells: 12.5, at: [89.0, -12.6] },
+  { t: CUT_IN - 0.05, cells: 11.6, at: [89.0, -12.7] },
   // In among them.
   { ...onHim(CUT_IN, 4.6), cut: true },
   onHim(109.4, 4.5),
@@ -76,8 +77,8 @@ const SHOTS: Key[] = [
   { t: CUT_BACK, cells: 3.4, at: [72.6, -6.05], cut: true, focus: BALC },
   { t: GOES_IN - 0.4, cells: 3.8, at: [72.2, -6.05] },
   // He comes for the door: the room at the left, the whole sea he comes in over, wheeling, at the right.
-  { t: GOES_IN + 3.0, cells: 12, at: [79.4, -8.6] },
-  { t: 121.2, cells: 9.0, at: [77.2, -7.6] },
+  { t: GOES_IN + 3.0, cells: 12, at: [79.4, -9.9] },
+  { t: 121.2, cells: 9.0, at: [77.2, -8.4] },
   { t: M.peak - 0.5, cells: 5.6, at: [71.8, -6.3], focus: INSIDE },
   // In over her, down on the floor; the shutter.
   { t: SHUT, cells: 4.0, at: [69.7, -6.1], focus: INSIDE },
