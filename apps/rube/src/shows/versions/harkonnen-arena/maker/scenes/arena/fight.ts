@@ -235,6 +235,9 @@ export const pairAt = (t: number): Pt => {
   return [(fx + px) / 2, (fy + py) / 2]
 }
 
+/** The pair's middle along the floor, at the floor's height: what the camera keeps, so it does not bob with a leap. */
+export const pairLine = (t: number): Pt => [pairAt(t)[0], -0.14]
+
 /** Every contact the fight turns on, by name, for the checks. */
 export const FIGHT_STRIKES: [string, number][] = [
   ['the first blow', A.blow1],

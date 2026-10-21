@@ -3,7 +3,7 @@ import { FEYD_SIZE } from '../cast'
 import { drawing, smooth, type Brush } from '../paint'
 import type { Scene } from '../scene'
 import { END } from '../timeline'
-import { FEYD_PATH, FIGHT_STRIKES, FIGHTERS, KNIFE, PRISONER_PATHS, pairAt } from './arena/fight'
+import { FEYD_PATH, FIGHT_STRIKES, FIGHTERS, KNIFE, PRISONER_PATHS, pairLine } from './arena/fight'
 import { A, X0 } from './arena/geo'
 import { BLOOMS, paintInk } from './arena/ink'
 import { paintDoor, paintFloor, paintLong, paintPylon, paintSeat, paintSky, paintStands } from './arena/set'
@@ -23,9 +23,9 @@ import { modeAt } from './arena/views'
  *   213.4    close among them, the crowd's front rows behind: a clash
  *   216.9    the whole bowl: the two of them specks on its floor, the crowd rocking as one on the slow pulse
  *   218.5    close: the ram, Feyd knocked back and down (222.6), up again (223.7)
- *   224.1    from the rim again: circling; a feint
+ *   224.1    from the rim again, over them circling, drawing up and away until the whole round floor is under us; a feint
  *   233.7    close: a clash; 235.9 down on the sand: the exchange; 243.5 the lunge, and he vaults over it
- *   244.4    the held breath, low, the black sun over them; 250.1 the kill
+ *   244.4    the held breath, from the rim: the two of them still among their long shadows; 250.1 the kill
  *   252.0    the bowl and the sky: ink opening over the arena (250.1, 254.9, 258.3); still from 258.8 to the dissolve
  */
 
@@ -89,29 +89,32 @@ export const arena: Scene = {
     { t: A.floor, cut: true, cells: 3.3, at: [5998.45, -1.03] },
     { t: A.above - 0.01, cells: 3.1, at: [5998.45, -0.98] },
     // From the rim, looking down: the strokes, and the parting.
-    { t: A.above, cut: true, cells: 4.0, track: pairAt, off: [0, 0] },
-    { t: A.clash2 - 0.01, cells: 3.8, track: pairAt, off: [0, 0] },
-    // Close among them, the crowd's front rows behind.
-    { t: A.clash2, cut: true, cells: 3.0, track: pairAt, off: [0, -0.8] },
-    { t: A.wide - 0.01, cells: 3.2, track: pairAt, off: [0, -0.86] },
+    { t: A.above, cut: true, cells: 4.0, track: pairLine, off: [0, 0] },
+    { t: A.clash2 - 0.01, cells: 3.8, track: pairLine, off: [0, 0] },
+    // Close among them, the crowd's front rows behind; the two of them a little above the frame's middle.
+    { t: A.clash2, cut: true, cells: 3.0, track: pairLine, off: [0, -0.5] },
+    { t: A.wide - 0.01, cells: 3.1, track: pairLine, off: [0, -0.52] },
     // The whole bowl: the two of them specks on its floor, the crowd rocking as one.
     { t: A.wide, cut: true, cells: 50, at: [X0 - 1, -13] },
     { t: A.back - 0.01, cells: 47, at: [X0 - 1, -12.2] },
     // Close for the ram, the fall and the getting up.
-    { t: A.back, cut: true, cells: 3.2, track: pairAt, off: [0, -0.86] },
-    { t: A.circle - 0.01, cells: 3.4, track: pairAt, off: [0, -0.92] },
-    // From the rim again: circling, the feint, closing.
-    { t: A.circle, cut: true, cells: 5.0, track: pairAt, off: [0, 0] },
-    { t: A.clash3 - 0.01, cells: 4.4, track: pairAt, off: [0, 0] },
-    { t: A.clash3, cut: true, cells: 3.0, track: pairAt, off: [0, -0.8] },
-    { t: A.close - 0.01, cells: 3.1, track: pairAt, off: [0, -0.83] },
-    // Down on the sand: the exchange, and the vault.
-    { t: A.close, cut: true, cells: 3.2, track: pairAt, off: [0, -0.86] },
-    { t: A.breath - 0.01, cells: 3.3, track: pairAt, off: [0, -0.89] },
-    // The held breath, low, the black sun over them; the kill.
-    { t: A.breath, cut: true, cells: 4.4, at: [5998.3, -1.33] },
-    { t: A.kill, cells: 4.1, at: [5998.2, -1.25] },
-    { t: A.sky - 0.01, cells: 4.05, at: [5998.2, -1.24] },
+    { t: A.back, cut: true, cells: 3.2, track: pairLine, off: [0, -0.53] },
+    { t: A.circle - 0.01, cells: 3.4, track: pairLine, off: [0, -0.56] },
+    // From the rim again, close over them as they circle, then drawing up and away until the whole round floor is
+    // under us: the two of them and their dead small in the middle of it, the pylons at its ends.
+    { t: A.circle, cut: true, cells: 4.6, track: pairLine, off: [0, 0] },
+    { t: 226.4, cells: 5.4, track: pairLine, off: [0, 0] },
+    { t: A.clash3 - 0.01, cells: 21, at: [X0 - 1.5, -0.14] },
+    // Close: they come together again.
+    { t: A.clash3, cut: true, cells: 3.0, track: pairLine, off: [0, -0.5] },
+    { t: A.close - 0.01, cells: 3.1, track: pairLine, off: [0, -0.52] },
+    // Down on the sand: the exchange, and the vault against the sky.
+    { t: A.close, cut: true, cells: 3.2, track: pairLine, off: [0, -0.86] },
+    { t: A.breath - 0.01, cells: 3.3, track: pairLine, off: [0, -0.89] },
+    // The held breath from the rim: the two of them still, their shadows long, the dead round them; the kill.
+    { t: A.breath, cut: true, cells: 3.8, at: [5998.6, -0.14] },
+    { t: A.kill, cells: 3.4, at: [5998.35, -0.14] },
+    { t: A.sky - 0.01, cells: 3.35, at: [5998.3, -0.14] },
     // The sky: the ink opening over the arena, rising to it, and still.
     { t: A.sky, cut: true, cells: 52, at: [X0, -15] },
     { t: 258.8, cells: 50, at: [X0, -24] },

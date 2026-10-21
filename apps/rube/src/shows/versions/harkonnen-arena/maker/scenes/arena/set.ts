@@ -171,9 +171,7 @@ export function paintStands(b: Brush, mode: Mode): void {
 export function paintFloor(b: Brush, mode: Mode): void {
   const { ctx, view } = b
   if (mode === 'high') {
-    ctx.fillStyle = b.c(FLOOR_FAR)
-    rect(ctx, view.x0 - 1, view.y0 - 1, view.w + 2, view.h + 2)
-    ctx.fill()
+    paintFromAbove(b)
     return
   }
   const { f, pivot } = standsOf(mode, view)
@@ -182,6 +180,45 @@ export function paintFloor(b: Brush, mode: Mode): void {
   ctx.fillStyle = vgrad(b, far, far + 8, [[0, FLOOR_FAR], [1, FLOOR_NEAR]])
   rect(ctx, view.x0 - 1, far, view.w + 2, y1 - far)
   ctx.fill()
+}
+
+/** From the rim: the round sand floor, the black tiers in rings round it, and the two pylons' tops at its ends. */
+const FLOOR_R = 15
+function paintFromAbove(b: Brush): void {
+  const { ctx, view } = b
+  const cy = -0.14
+  ctx.fillStyle = b.c(RIM)
+  rect(ctx, view.x0 - 1, view.y0 - 1, view.w + 2, view.h + 2)
+  ctx.fill()
+  // The tiers going up and away from the floor: from above, rings of crowd with the risers' grey between.
+  if (Math.hypot(Math.max(Math.abs(view.cx - X0) - view.w / 2, 0), Math.max(Math.abs(view.cy - cy) - view.h / 2, 0)) < FLOOR_R + 14) {
+    for (let i = 4; i >= 0; i--) {
+      const r = FLOOR_R + 1 + i * 2.6
+      circle(ctx, X0, cy, r + 2.2)
+      ctx.fillStyle = b.c(RISER)
+      ctx.fill()
+      circle(ctx, X0, cy, r + 1.6)
+      ctx.fillStyle = b.c(CROWD)
+      ctx.fill()
+    }
+    circle(ctx, X0, cy, FLOOR_R + 1)
+    ctx.fillStyle = b.c(PODIUM)
+    ctx.fill()
+  }
+  circle(ctx, X0, cy, FLOOR_R)
+  ctx.fillStyle = b.c(FLOOR_FAR)
+  ctx.fill()
+  // The pylons, square blocks across the floor's two ends, a way through each along the line the fighters keep.
+  for (const side of [-1, 1] as const) {
+    const face = side < 0 ? WEST_GATE : EAST_GATE
+    const xa = Math.min(face, face + side * PYLON_W)
+    rect(ctx, xa, cy - 2.4, PYLON_W, 4.8)
+    ctx.fillStyle = b.c(PYLON)
+    ctx.fill()
+    rect(ctx, xa, cy - GATE_W / 4, PYLON_W, GATE_W / 2)
+    ctx.fillStyle = b.c(DOOR)
+    ctx.fill()
+  }
 }
 
 /** How far up a gate's door is, 0 shut to 1 open: it rises into the pylon over a second and a half. */

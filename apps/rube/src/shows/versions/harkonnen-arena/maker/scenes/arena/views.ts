@@ -24,7 +24,7 @@ export const VIEWS: [number, Mode][] = [
   [A.circle, 'high'],
   [A.clash3, 'close'],
   [A.close, 'low'],
-  [A.breath, 'low'],
+  [A.breath, 'high'],
   [A.sky, 'wide'],
 ]
 
