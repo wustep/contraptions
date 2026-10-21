@@ -117,4 +117,12 @@ const hashTurn = (i: number) => ((i * 2.399) % (Math.PI * 2)) - Math.PI
 /** The beats the wave sets off on: every stride is a beat of the comb by construction; these are its first. */
 export const STRIDE_BEATS = [...new Set(RUNNERS.map((r) => r.go))].map((g) => bt(g + 1))
 
-export const fremen: Actor[] = [...[0, 1].map(rider), ...RUNNERS.map((_, i) => runner(i))]
+const runners = RUNNERS.map((_, i) => runner(i))
+export const fremen: Actor[] = [...[0, 1].map(rider), ...runners]
+
+/** The middle of the runners on foot, on the sand: what the camera runs with as they pour out of the dust. */
+export const crowdAt = (t: number): Pt => {
+  let x = 0
+  for (const a of runners) x += a.path.where(t)[0]
+  return [x / runners.length, -R]
+}

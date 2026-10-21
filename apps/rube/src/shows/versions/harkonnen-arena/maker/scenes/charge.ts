@@ -5,7 +5,7 @@ import { depthScale, frameH, horizonOf } from '../world/land'
 import { skyOf } from '../world/sky'
 import { BLOCK_TAKEN, paintCamp, paintSmallShip, toppled } from './charge/camp'
 import { paintPuff, type Puff } from './charge/dust'
-import { chaniMoves, fremen, paulMoves, STRIDE_BEATS } from './charge/people'
+import { chaniMoves, crowdAt, fremen, paulMoves, STRIDE_BEATS } from './charge/people'
 import { B, BREACH, EMPEROR, FROM, GROUND_SWELLS, SHIP1, SHIP2_HIT, TO, ground } from './charge/plan'
 import { basinFill, paintSkirt, paintStormSky, sandAt, SKY, tiltAt } from './charge/storm'
 import { ENDING_SHOTS, paintEnding } from './charge/ending'
@@ -177,8 +177,8 @@ export const charge: Scene = {
     { t: B.rankA, cut: true, cells: 30, track: paulAt, off: [11, 3] },
     { t: B.wave - 0.01, cells: 29, track: paulAt, off: [10.5, 2.8] },
     // The charge: the Fremen pouring out of the dust across the floor, the second worm beyond them; going with them.
-    { t: B.wave, cut: true, cells: 25, at: [8994, -6] },
-    { t: B.run - 0.01, cells: 24, at: [9020, -5.6] },
+    { t: B.wave, cut: true, cells: 8, track: crowdAt, off: [1.4, -1.6] },
+    { t: B.run - 0.01, cells: 7.6, track: crowdAt, off: [1.8, -1.5] },
     // With the lead worm up to the great ship, and held there as it rears over it and brings it down.
     { t: B.run, cut: true, cells: 42, track: paulAt, off: [22, -3] },
     { t: B.peak, cells: 46, at: [9098, -19] },
@@ -186,7 +186,11 @@ export const charge: Scene = {
     { t: B.cutClose - 0.01, cells: 39, at: [9113, -14.5] },
     // Close: on the worm's back as it lowers them; down; up onto the rise.
     { t: B.cutClose, cut: true, cells: 6.6, track: paulAt, off: [1.1, 0.5] },
-    { t: B.dive - 0.01, cells: 6.2, track: paulAt, off: [0.9, 0.3] },
+    { t: beat('charge', 66), cells: 4.5, track: paulAt, off: [-0.8, 0.3] },
+    // As they get down it lets go of him and opens a little, held, so the back they leave and the sand they come down on
+    // are both in it.
+    { t: beat('charge', 70), cells: 6.4, at: [9085.3, -2.2] },
+    { t: B.dive - 0.01, cells: 6.3, at: [9085.3, -2.15] },
     // Wide: the worms going down, the storm settling over the field.
     { t: B.dive, cut: true, cells: 84, at: [9078, -26] },
     { t: B.last - 0.01, cells: 92, at: [9082, -28] },
