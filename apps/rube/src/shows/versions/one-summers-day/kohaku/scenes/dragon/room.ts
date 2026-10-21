@@ -47,7 +47,7 @@ export function drawRoom(g: Paint, L: Light): void {
   box(ctx, R.x0 + 0.85, R.y1 - 0.3, 0.42, 0.3, lit('#6A4A32', L.ambient, 0.2))
   ink(g, line, 1)
   // The daylight in at the door, lying on the floor towards the room.
-  pool(ctx, D.x0 - 0.6, R.y1 - 0.02, 1.0, mix(L.low, '#FFF2D8', 0.4), 0.55 * (1 - L.night), 0.2)
+  pool(ctx, D.x0 - 0.9, R.y1 - 0.02, 0.9, mix(L.low, '#FFF2D8', 0.4), 0.26 * (1 - L.night), 0.18)
   // The west wall's edge.
   box(ctx, R.x0 - 0.06, R.y0, 0.1, R.y1 - R.y0 + 0.1, lit(WOOD, L.ambient, 0.2))
 }

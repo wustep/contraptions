@@ -90,6 +90,11 @@ passengers and the girl on the platform, the lamp.
   and the dragon (`dragon.ts`: a spine that is his head's own way behind it, a mane, horns and legs, and the burst).
 - `geo.ts` is the world's lie, west to east: the gate, the meadow, the river of stones, the town, the bridge, the
   bathhouse, the sea and its stations.
+- `scenes/` holds the six scenes and their sets: `way/` (the gate, the meadow, the river, the steps, the town),
+  `bathhouse/` (the building drawn whole with its fronts taken away where a scene goes in, `building.ts` and `set.ts`;
+  the bridge; the great bath's hall, the river spirit, the boiler room, No-Face's mask), `dragon/` (his way in, the
+  paper birds, her room), `train/` (the line, the car inside and out, the stations, Swamp Bottom and the lamp), and
+  `sky.ts`, the flight and the fall shared by the name and home. `world/sea.ts` is the water under every eastern scene.
 
 The look is flat fills and few ink lines. Ink weights scale with the camera, like the balls' own outlines. Depth comes
 from layers paling into the air, and light only from where it comes from, as flat shapes on what it falls on. There is
@@ -180,3 +185,16 @@ for the frames that read as unfinished or busy beside the rest.
   piers and the town's bank with it.
 - **No-Face** hovered over the bridge's deck like something hung there. He sits on its rail, quite still, as they
   pass under him.
+
+## Known limits
+
+- **The bathhouse is long.** The great bath holds the stage from 54 s to 94 s, broken only by the boiler room and the
+  shot outside; every beat in it is on the music, and it was kept whole because the crest needs its build.
+- **The fall through the cloud** goes to the cloud's pale for about a second; it is a slow change of the whole frame,
+  measured at one swing, not a flash.
+- **Inside the car** the line's posts pass the windows about once a second, so a frame-to-frame sweep sees steady
+  change there; it is the train going, and was kept.
+- **The flight's dragon is small** on a phone held upright, where the 16:9 frame is a band across the middle of a tall
+  sky; the cadence frames the whole of him so the burst still reads there.
+- **YouTube's player** decides when the music starts; the show's clock follows it (the shared `youtube.ts`), as every
+  YouTube show's does.
