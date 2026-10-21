@@ -226,11 +226,10 @@ const shots: Shot[] = [
   { t: drive(13), cut: true, cells: 8.5, track: paulWay, off: [2.4, -1.6] },
   { t: ON_TOP, cells: 7.4, track: paulWay, off: [1.6, -1.2] },
   { t: drive(21) - 0.01, cells: 7.2, track: paulWay, off: [1.5, -1.1] },
-  // Worm sign: low, going along with the swell as it runs east under the sand.
-  { t: drive(21), cut: true, cells: 15, track: swellAt, off: [-1.5, -3.6], focus: swellAt },
-  { t: drive(27), cells: 16, track: swellAt, off: [1.0, -3.8], focus: swellAt },
-  // It runs on into the frame toward the dune, him on its crest.
-  { t: 125.846 - 0.01, cells: 26, at: [1023, -8.4], focus: [1042, -6] },
+  // Worm sign: low over the flat, nearly still, drifting a little east, so the swell is seen to run: in at the west edge
+  // and across the frame toward the dune and him (a camera going along with it made it one more dune).
+  { t: drive(21), cut: true, cells: 15, at: [971, -4.8], focus: swellAt },
+  { t: 125.846 - 0.01, cells: 15.5, at: [990, -5.0], focus: swellAt },
   // Close on him on the crest; it comes; the frame opens as its back rises behind the dune, and he goes.
   { t: 125.846, cut: true, cells: 5.2, at: [1041.4, -6.9] },
   { t: 129.0, cells: 6, at: [1040.6, -6.7] },
