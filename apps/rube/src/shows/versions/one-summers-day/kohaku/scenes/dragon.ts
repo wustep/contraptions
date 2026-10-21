@@ -73,9 +73,10 @@ const SHOTS: Key[] = [
   // Back to her, watching from the balcony.
   { t: CUT_BACK, cells: 3.4, at: [72.6, -6.05], cut: true, focus: BALC },
   { t: GOES_IN, cells: 3.7, at: [72.2, -6.05] },
-  // He comes for the door: the room at the left, the sea he comes over.
-  { t: GOES_IN + 2.6, cells: 6.6, at: [74.2, -6.6], focus: INSIDE },
-  { t: M.peak - 0.6, cells: 5.4, at: [71.6, -6.3], focus: INSIDE },
+  // He comes for the door: the room at the left, the whole sea he comes in over, wheeling, at the right.
+  { t: GOES_IN + 2.2, cells: 12, at: [79.4, -8.6] },
+  { t: 121.2, cells: 9.0, at: [77.2, -7.6] },
+  { t: M.peak - 0.5, cells: 5.6, at: [71.8, -6.3], focus: INSIDE },
   // In over her, down on the floor; the shutter.
   { t: SHUT, cells: 4.0, at: [69.7, -6.1], focus: INSIDE },
   { t: STOP + 3.5, cells: 3.7, at: [68.9, -6.05] },
