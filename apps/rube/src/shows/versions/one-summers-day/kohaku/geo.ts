@@ -106,11 +106,13 @@ export const BATH = {
   spout: [66.4, -3.15] as Pt,
   /** The big doors, east, out over the sea. */
   doors: { x: 69.0, y0: -3.6, y1: -1.2 },
-  /** The boiler room, at the footings' foot on the east, and the chimney up the east end. */
+  /** The boiler room, at the footings' foot on the east, and its chimney going up behind the building. */
   boiler: { x0: 63.2, x1: 70.2, y0: 1.4, y1: 4.0 },
-  chimney: { x: 71.2, w: 0.85, y0: 3.0, y1: -10.6 },
-  /** Her room, on the third storey's east end, its shutters in the east wall, and the balcony outside them. */
+  chimney: { x: 67.0, w: 0.9, y0: 2.0, y1: -12.3 },
+  /** Her room, on the third storey's east end, its door and shutter in the east wall, and the balcony outside it. */
   room: { x0: 66.2, x1: 70.5, y0: -6.6, y1: -5.5 },
+  /** The east wall's door out onto the balcony: its span in the wall, and how high it is. */
+  door2: { x0: 70.28, x1: 70.5, top: -6.5 },
   balcony: { x0: 70.5, x1: 72.6, y: -5.5 },
 }
 

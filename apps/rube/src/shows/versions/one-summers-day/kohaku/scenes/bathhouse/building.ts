@@ -369,8 +369,9 @@ function withHole(ctx: CanvasRenderingContext2D, hole: [number, number, number, 
  */
 export function drawBathhouse(g: Paint, L: Light, cut: Cut = WHOLE): void {
   const { ctx } = g
-  footings(g, L, cut)
+  // The chimney stands behind the building: only its top is seen, over the roofs, smoking.
   chimney(g, L)
+  footings(g, L, cut)
   const hall = BATH.hall
   withHole(ctx, [hall.x0, hall.y0, hall.x1, hall.y1], cut.hall, () => ground(g, L, BATH.x0, BATH.x1))
   UPPER.forEach(([x0, x1], i) => {
