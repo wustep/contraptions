@@ -5,8 +5,10 @@ import { boulderAt, boulderTurn } from './giant'
 import { BACK, BOULDER_R, CAVE, EAST, FIRE, FLOOR, LEDGE, MOUTH, PILLAR, PIVOT, RIDGE, SHELF, STEP, T, WEST } from './plan'
 
 /**
- * The island and its cave. Outside: a dome of black rock under a cap of green turf, its lower cliff in a few broad
- * columns, a shelf of rock up from the water to the mouth, a paler hill behind. Inside, while the camera is in it: the
+ * The island and its cave. Outside: a headland of black rock under a cap of green turf, a bare crag over the mouth and
+ * its east shoulder breaking down in steps; lit on the face to the morning sun, in its own shade on the far flank, two
+ * clefts down the face between, and its foot dark where the sea wets it; a shelf of rock up from the water to the
+ * mouth. Inside, while the camera is in it: the
  * cave cut open (its rock's cut edge a lighter rim), his fire, his club over its stone, the heap of rock at the back,
  * and the dark, lifted only where the mouth's daylight and the fire's light fall, as flat shapes.
  */
@@ -15,6 +17,7 @@ export const INK = '#15181C'
 const ROCK = '#3A3C3C'
 const ROCK_DARK = '#2D2F30'
 const ROCK_LIT = '#4A4B48'
+const WET = '#262A2B'
 const CUT = '#5E5B53'
 const WALL = '#2A2421'
 const WALL_DARK = '#221D1B'
@@ -32,7 +35,7 @@ export const FIRELIT = '#C8723A'
 /** Whether the cave is cut open at `t`: from the cut that takes the camera in to the one that takes it out. */
 export const openAt = (t: number): boolean => t >= T.cutIn && t < T.cutOut
 
-/** The island's outline, west at the waterline round over the ridge to the east, and down under the water. */
+/** The island's outline, west at the waterline up over the crag and the ridge to the east, and down under the water. */
 const OUTLINE: Pt[] = [
   [WEST - 0.4, 0.5],
   [WEST, 0.1],
@@ -40,17 +43,27 @@ const OUTLINE: Pt[] = [
   [94.15, -1.05],
   [93.85, -3.4],
   [94.35, -6.6],
-  [95.3, -9.6],
-  [96.6, -12.1],
-  [98.6, -14.1],
-  [102.2, -15.7],
+  [94.7, -9.4],
+  [95.5, -11.6],
+  [96.4, -12.6],
+  [97.3, -13.0],
+  // The crag over the mouth, bare of turf.
+  [97.9, -14.6],
+  [98.9, -15.7],
+  [100.1, -15.5],
+  [100.9, -14.9],
+  [103.0, -15.3],
   [107.2, -16.95],
   [112.2, -17.75],
   RIDGE,
   [121, -17.4],
-  [126, -15.35],
-  [130.6, -12.2],
-  [134.6, -8.25],
+  // The east shoulder, breaking down in two steps.
+  [124.2, -16.3],
+  [125.4, -15.1],
+  [128.6, -14.4],
+  [131.2, -11.4],
+  [132.4, -10.6],
+  [135.0, -7.6],
   [137.6, -4.45],
   [139.8, -1.35],
   [EAST, 0.25],
@@ -58,11 +71,20 @@ const OUTLINE: Pt[] = [
   [WEST - 0.4, 3],
 ]
 
-/** The turf: a cap along the top from the mouth's shoulder round to the east slope. */
-function turfLine(): Pt[] {
-  const top = OUTLINE.slice(7, 19)
-  return top
-}
+/** The turf: a cap along the top from behind the crag round to the east slope. */
+const TURF_LINE: Pt[] = OUTLINE.filter(([x, y]) => x >= 100.9 && x <= 139.8 && y < 0)
+
+/** The face turned to the morning sun, from the west cliff up the crag. */
+const LIT: Pt[] = [[93.85, -3.4], [94.35, -6.6], [94.7, -9.4], [95.5, -11.6], [96.4, -12.6], [97.3, -13.0], [97.9, -14.6], [98.9, -15.7], [99.5, -14.1], [98.7, -11.9], [99.1, -9.1], [98.2, -6.8], [98.0, -2.6], [94.6, -0.9]]
+
+/** The far flank in its own shade, from just past the ridge down to the east foot. */
+const SHADE: Pt[] = [[121, -17.4], [124.2, -16.3], [125.4, -15.1], [128.6, -14.4], [131.2, -11.4], [132.4, -10.6], [135.0, -7.6], [137.6, -4.45], [139.8, -1.35], [EAST, 0.25], [EAST, 1], [121.4, 1], [122.0, -4.2], [120.4, -8.6], [121.2, -12.8], [119.6, -16.2]]
+
+/** Two clefts down the face: narrow under the turf, opening to the water. */
+const CLEFTS: Pt[][] = [
+  [[103.3, -15.6], [103.9, -13.0], [103.5, -9.6], [104.3, -5.8], [103.9, -2.2], [104.6, 1], [106.4, 1], [105.6, -3.0], [105.9, -7.2], [104.8, -10.8], [104.5, -14.0]],
+  [[114.0, -17.4], [114.6, -14.2], [113.9, -10.4], [114.8, -6.4], [114.4, -2.6], [115.4, 1], [117.6, 1], [116.6, -3.2], [116.8, -8.0], [115.6, -12.4], [115.0, -16.0]],
+]
 
 /** The fire's strength: embers until he stirs it, a blaze while he is awake and asleep, lower after the blow. */
 export function fireAt(t: number): number {
@@ -89,40 +111,33 @@ export function drawIsland(g: Paint, t: number, inside: () => void): void {
   if (view.x1 < WEST - 3 || view.x0 > EAST + 3) return
   const sky = skyAt(t)
   const air = (c: string, f: number) => mix(c, sky.low, f)
-  // The rock.
+  // The rock, and its planes as the light falls on them: a few big shapes, not a pattern of lines.
   poly(ctx, OUTLINE)
   ctx.fillStyle = air(ROCK, 0.06)
   ctx.fill()
-  // Its lower cliff in broad columns of two tones: a few big shapes, not a pattern of lines.
   ctx.save()
   poly(ctx, OUTLINE)
   ctx.clip()
-  const cols: [number, number, number][] = [
-    [97.0, 99.2, -12.4],
-    [101.5, 103.0, -14.6],
-    [106.4, 107.6, -15.6],
-    [113.0, 115.2, -16.4],
-    [119.8, 121.0, -15.9],
-    [125.6, 127.9, -13.6],
-    [131.4, 132.6, -9.6],
-  ]
+  poly(ctx, LIT)
+  ctx.fillStyle = air(ROCK_LIT, 0.05)
+  ctx.fill()
   ctx.fillStyle = air(ROCK_DARK, 0.04)
-  for (const [x0, x1, top] of cols) {
-    ctx.beginPath()
-    ctx.moveTo(x0, 1)
-    ctx.lineTo(x0 + 0.2, top)
-    ctx.lineTo(x1 - 0.15, top + 0.5)
-    ctx.lineTo(x1, 1)
-    ctx.closePath()
+  for (const c of [SHADE, ...CLEFTS]) {
+    poly(ctx, c)
     ctx.fill()
   }
-  // The face west of the mouth, catching the light off the sea.
-  poly(ctx, [[93.85, -3.4], [94.35, -6.6], [95.3, -9.6], [95.6, -6.0], [95.6, -2.4], [94.15, -1.05]])
-  ctx.fillStyle = air(ROCK_LIT, 0.05)
+  // Its foot, dark where the sea wets it.
+  ctx.beginPath()
+  ctx.moveTo(WEST, -0.5)
+  for (let x = WEST; x <= EAST + 0.01; x += 1.5) ctx.lineTo(x, -0.55 - 0.12 * Math.sin(x * 0.9))
+  ctx.lineTo(EAST, 1)
+  ctx.lineTo(WEST, 1)
+  ctx.closePath()
+  ctx.fillStyle = air(WET, 0.04)
   ctx.fill()
   ctx.restore()
   // The turf over the top: a cap with a lighter crown.
-  const top = turfLine()
+  const top = TURF_LINE
   const under = [...top].reverse().map(([x, y], i, a): Pt => {
     const f = Math.min(i, a.length - 1 - i) / (a.length / 2)
     return [x + (i < a.length / 2 ? -0.2 : 0.2), y + 0.55 + 0.6 * f]
@@ -136,9 +151,9 @@ export function drawIsland(g: Paint, t: number, inside: () => void): void {
   stroke(g, air(TURF_HI, 0.05), 3.2)
   // The outline.
   ctx.beginPath()
-  OUTLINE.slice(0, 20).forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
+  OUTLINE.slice(0, OUTLINE.length - 2).forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
   stroke(g, INK, 2.6)
-  if (!openAt(t)) drawFace(g, t)
+  if (!openAt(t)) drawFace(g)
   else {
     drawInside(g, t)
     inside()
@@ -154,29 +169,9 @@ export function drawIsland(g: Paint, t: number, inside: () => void): void {
   stroke(g, INK, 2.4)
 }
 
-/** The face over the cave, as it is from outside: the island's own rock, and the mouth's dark arch. */
-function drawFace(g: Paint, t: number): void {
+/** The face over the cave, as it is from outside: the island's own rock, drawn already, and the mouth's dark arch. */
+function drawFace(g: Paint): void {
   const { ctx } = g
-  const sky = skyAt(t)
-  ctx.beginPath()
-  CAVE.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
-  ctx.closePath()
-  ctx.fillStyle = mix(ROCK, sky.low, 0.06)
-  ctx.fill()
-  // The columns cross it as they cross the rest of the face.
-  ctx.save()
-  ctx.clip()
-  ctx.fillStyle = mix(ROCK_DARK, sky.low, 0.04)
-  for (const [x0, x1, top] of [[97.0, 99.2, -12.4], [101.5, 103.0, -14.6], [106.4, 107.6, -15.6], [113.0, 115.2, -16.4]] as const) {
-    ctx.beginPath()
-    ctx.moveTo(x0, 1)
-    ctx.lineTo(x0 + 0.2, top)
-    ctx.lineTo(x1 - 0.15, top + 0.5)
-    ctx.lineTo(x1, 1)
-    ctx.closePath()
-    ctx.fill()
-  }
-  ctx.restore()
   // The mouth: an arch of dark in the face.
   ctx.beginPath()
   ctx.moveTo(MOUTH.x0, FLOOR + 0.25)
