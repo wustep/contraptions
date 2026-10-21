@@ -11,12 +11,13 @@ import { INSERT, riderAt } from './worm'
 /**
  * Who is where in the Fremen's scene, and how they move.
  *
- * At the foot of the great rock: the stolen thopter, Jessica and Paul by it. The Fremen come up round them: two out of
- * the sand behind Jessica as the picture comes back from Chani, Jamis nearest Paul, Stilgar behind him, one beyond, one
- * on the slope's boulder; Chani alone on the crest above. Jamis is fought on the
- * flat, side on, and falls back toward his own people. Stilgar steps over him to Paul. Then, on the dune beyond, they go
- * east in a line that keeps its order: two Fremen and Stilgar ahead, Paul beside Chani and in step with her, Jessica
- * behind; up onto the crest to watch the worm, the others waiting off its top; and on toward the sun, out of the frame.
+ * At the foot of the great rock: the stolen thopter, Jessica by it, Paul a little way off. The Fremen come up out of the
+ * sand between them, Jamis nearest Paul, Stilgar behind him; one rises behind the slope's boulder; Chani is alone on
+ * the crest above, on the other side. Jamis is fought on the flat, side on, and falls back among his own. Stilgar steps
+ * over him to Paul, and Chani comes down and forward to Paul from the other side, and they look at each other. Then,
+ * on the dune beyond, they go east in a line that keeps its order: two Fremen and Stilgar ahead, Paul beside Chani and
+ * in step with her, Jessica behind; up onto the crest to watch the worm, the others waiting off its top; and on toward
+ * the sun, out of the frame.
  *
  * In a side view everyone is on one line, so the order along it is the staging: nobody crosses anybody at a moment
  * that matters, and where the walk has someone overtake, they do it moving.
@@ -24,17 +25,24 @@ import { INSERT, riderAt } from './worm'
 
 export const SIZE = { paul: PAUL.size, jessica: JESSICA.size, chani: CHANI.size, stilgar: STILGAR.size, jamis: JAMIS.size, fremen: FREMEN.size }
 
+/**
+ * The duel was laid out with Paul to the west; it is played mirrored about here, Jamis coming at him from the west, out
+ * of the ring that rose between Paul and his mother, and falling back among his own.
+ */
+const MIRROR = 2331.7
+const m = (x: number) => MIRROR - x
+
 /** Where each one stands before anything happens (x). */
 export const AT = {
-  paul: 1165.5,
-  jessica: 1163.1,
-  jamis: 1168.6,
-  stilgar: 1173.2,
+  paul: m(1165.5),
+  jessica: 1159.9,
+  jamis: m(1168.6),
+  stilgar: 1162.15,
   /**
-   * The Fremen, by number (1 to 4): two that come up out of the sand behind Jessica as the picture comes back to Paul,
-   * one beyond Stilgar, one rising from behind the slope's boulder.
+   * The Fremen, by number (1 to 4): two that come up out of the sand between Paul and his mother as the picture comes
+   * back to him, one by the thopter's nose (up while the picture is on Chani), one rising from behind the slope's boulder.
    */
-  fremen: [NaN, 1162.05, 1161.3, 1174.6, BOULDERS[0][0]] as number[],
+  fremen: [NaN, 1161.3, 1160.6, 1158.85, BOULDERS[0][0]] as number[],
   chani: 1186,
 } as const
 
@@ -47,9 +55,19 @@ export const DUEL = {
   blow: 349.629,
 } as const
 /** Jamis thrown by the blow: where he comes down (and when), and where he bounces to. */
-export const THROWN = { land: 1167.75, at: 349.93, bounce: 1168.25 } as const
+export const THROWN = { land: m(1167.75), at: 349.93, bounce: m(1168.25) } as const
 /** Stilgar takes Paul in. */
 export const TAKEN = 357.53
+/**
+ * The meeting: Chani comes down from her crest and forward to Paul, and stops in front of him; Paul turns to her and she
+ * to him, and they hold. `at` is where she stands; the looks are the scene's (`MEET_LOOKS`).
+ */
+export const MEET = { from: 357.9, to: 359.9, at: m(1166.35) + R * (PAUL.size + CHANI.size) + 0.42 } as const
+export const MEET_LOOKS = {
+  paul: [[358.6, 363.4, 0]] as [number, number, number][],
+  chani: [[359.5, 363.4, Math.PI]] as [number, number, number][],
+  stilgar: [[358.1, 363.4, 0]] as [number, number, number][],
+}
 /**
  * The walk: on the fill's first onset the picture dissolves from the basin to the troop already in its line on the dune
  * beyond, in the order it keeps (the two Fremen and Stilgar ahead, Paul with Chani beside him, Jessica behind), and
@@ -139,34 +157,39 @@ function paul(): Seg[] {
   const s = SIZE.paul
   const w = new Walk(on(1160.6, s), M.breath2)
   w.roll(over(1160.6, 1164.2, s), 337.7, 'inout').wait(338.6).roll(over(1164.2, AT.paul, s), 339.6).wait(343.75)
-  // The duel: Paul west, Jamis east; on each exchange the striker arrives in contact on the onset.
-  const J = (x: number) => x - contact(SIZE.paul, SIZE.jamis)
+  // The duel: Paul east, Jamis west; on each exchange the striker arrives in contact on the onset.
+  const J = (x: number) => m(x - contact(SIZE.paul, SIZE.jamis))
+  const k = (keys: [number, number, Ease?][]) => keyed(w, s, keys.map(([t, x, e]): [number, number, Ease?] => [t, m(x), e]))
   keyed(w, s, [[DUEL.clash, J(1166.3), 'in']])
   // The clash throws them both back.
-  w.hop(on(1165.45, s), 344.36)
-  keyed(w, s, [
+  w.hop(on(m(1165.45), s), 344.36)
+  k([
     [345.45, 1165.3],
     [346.4, 1165.55],
     [DUEL.lunges[0], 1165.55],
   ])
   // Jamis's lunge lands: back he goes.
-  w.hop(on(1165.1, s), 347.13)
-  keyed(w, s, [
-    [DUEL.lunges[1], J(1166.55), 'in'],
+  w.hop(on(m(1165.1), s), 347.13)
+  keyed(w, s, [[DUEL.lunges[1], J(1166.55), 'in']])
+  k([
     [347.85, 1166.0, 'out'],
     [DUEL.fill[0], 1166.0],
     [348.08, 1165.8, 'out'],
-    [DUEL.fill[1], J(1166.45), 'in'],
+  ])
+  keyed(w, s, [[DUEL.fill[1], J(1166.45), 'in']])
+  k([
     [348.26, 1166.0, 'out'],
     [DUEL.fill[2], 1166.0],
     [348.55, 1165.75, 'out'],
-    [DUEL.fill[3], J(1166.5), 'in'],
+  ])
+  keyed(w, s, [[DUEL.fill[3], J(1166.5), 'in']])
+  k([
     [349.1, 1166.05, 'out'],
     [DUEL.fill[4], 1166.05],
     [349.5, 1165.85, 'out'],
-    [DUEL.blow, J(1166.45), 'in'],
-    [349.95, 1166.35, 'out'],
   ])
+  keyed(w, s, [[DUEL.blow, J(1166.45), 'in']])
+  k([[349.95, 1166.35, 'out']])
   // From the line on the dune beyond, beside Chani, in step with her and no one else.
   w.wait(WALK_FROM).jump(on(LINE.paul, s)).wait(SET_OFF.paul)
   sandwalk(w, PAIR.to, SET_OFF.paul, STOPS.together, PAIR.seed, s)
@@ -185,11 +208,8 @@ function paul(): Seg[] {
 function jessica(): Seg[] {
   const s = SIZE.jessica
   const w = new Walk(on(1159.4, s), M.breath2)
-  w.roll(over(1159.4, AT.jessica, s), 337.95).wait(342.95)
-  // A step back from the two of them as Jamis comes.
-  w.roll(over(AT.jessica, 1162.55, s), 343.9)
-  // To her son's side when it is over.
-  w.wait(359.2).roll(over(1162.55, 1166.35 - contact(s, SIZE.paul), s), 361.0).wait(WALK_FROM)
+  // By the thopter's nose: the Fremen come up out of the sand between her and her son.
+  w.roll(over(1159.4, AT.jessica, s), 337.95).wait(WALK_FROM)
   w.jump(on(LINE.jessica, s)).wait(SET_OFF.jessica)
   sandwalk(w, 1193.6, SET_OFF.jessica, STOPS.jessica, 41, s)
   w.wait(ON + 1.2)
@@ -202,39 +222,45 @@ function jessica(): Seg[] {
 
 function jamis(): Seg[] {
   const s = SIZE.jamis
-  const P = (x: number) => x + contact(SIZE.paul, SIZE.jamis)
-  const w = new Walk(on(AT.jamis, s), 339.9)
-  w.wait(DUEL.challenge)
-  keyed(w, s, [
-    [343.6, 1168.0],
-    [DUEL.clash, P(1166.3 - contact(SIZE.paul, SIZE.jamis)), 'in'],
-  ])
-  w.hop(on(1166.95, s), 344.38)
-  keyed(w, s, [
+  const P = (x: number) => m(x + contact(SIZE.paul, SIZE.jamis))
+  const k = (keys: [number, number, Ease?][]) => keyed(w, s, keys.map(([t, x, e]): [number, number, Ease?] => [t, m(x), e]))
+  // Up out of the sand behind Paul as the picture comes back to him, nearest of all.
+  const w = new Walk([AT.jamis, ground(AT.jamis) + R * s + 0.05], 339.9)
+  w.wait(342.35).roll([on(AT.jamis, s)], 343.2, 'out')
+  k([[343.6, 1168.0]])
+  keyed(w, s, [[DUEL.clash, P(1166.3 - contact(SIZE.paul, SIZE.jamis)), 'in']])
+  w.hop(on(m(1166.95), s), 344.38)
+  k([
     [345.45, 1166.75],
     [346.4, 1167.05],
-    [DUEL.lunges[0], P(1165.55), 'in'],
+  ])
+  keyed(w, s, [[DUEL.lunges[0], P(1165.55), 'in']])
+  k([
     [347.25, 1166.55, 'out'],
     [DUEL.lunges[1], 1166.55],
   ])
   // Paul's lunge lands: back he goes.
-  w.hop(on(1166.95, s), 347.82)
-  keyed(w, s, [
-    [DUEL.fill[0], P(1166.0), 'in'],
+  w.hop(on(m(1166.95), s), 347.82)
+  keyed(w, s, [[DUEL.fill[0], P(1166.0), 'in']])
+  k([
     [348.08, 1166.45, 'out'],
     [DUEL.fill[1], 1166.45],
     [348.26, 1166.65, 'out'],
-    [DUEL.fill[2], P(1166.0), 'in'],
+  ])
+  keyed(w, s, [[DUEL.fill[2], P(1166.0), 'in']])
+  k([
     [348.55, 1166.5, 'out'],
     [DUEL.fill[3], 1166.5],
     [349.1, 1166.75, 'out'],
-    [DUEL.fill[4], P(1166.05), 'in'],
+  ])
+  keyed(w, s, [[DUEL.fill[4], P(1166.05), 'in']])
+  k([
     [349.5, 1166.45, 'out'],
     [DUEL.blow, 1166.45],
   ])
-  // Thrown back by the blow: off his feet, down, once more, and still.
+  // Thrown back by the blow: off his feet, down among his own, once more, and still.
   w.hop(on(THROWN.land, s), THROWN.at).hop(on(THROWN.bounce, s), THROWN.at + 0.2)
-  w.roll(over(THROWN.bounce, 1168.6, s), 350.65, 'out').wait(440)
+  w.roll(over(THROWN.bounce, AT.jamis, s), 350.65, 'out').wait(440)
   return w.segs
 }
 
@@ -242,14 +268,13 @@ function jamis(): Seg[] {
 
 function stilgar(): Seg[] {
   const s = SIZE.stilgar
-  const w = new Walk(on(AT.stilgar, s), 339.9)
-  w.wait(350.4)
-  // In from the ring's edge to his man, slowly, a step and a stop and a step; a breath beside him; then over him, on
-  // the boom, to the one who killed him.
-  w.roll(over(AT.stilgar, 1171.9, s), 352.4).wait(353.0).roll(over(1171.9, 1170.5, s), 354.5).wait(354.9)
-  w.roll(over(1170.5, 1169.3, s), 356.1).wait(TAKEN - 0.45)
-  w.hop(on(1166.35 + contact(SIZE.paul, s), s), TAKEN).wait(TAKEN + 0.05)
-  w.roll(over(w.at[0], w.at[0] + 0.18, s), TAKEN + 0.5, 'out').wait(WALK_FROM)
+  // Up out of the sand behind Paul while the picture is on Chani.
+  const w = new Walk([AT.stilgar, ground(AT.stilgar) + R * s + 0.05], 339.9).roll([on(AT.stilgar, s)], 341.6, 'out')
+  w.wait(352.4)
+  // A step to his man, and a breath beside him; then over him, on the boom, to the one who killed him.
+  w.roll(over(AT.stilgar, 1162.45, s), 353.6).wait(TAKEN - 0.45)
+  w.hop(on(m(1166.35) - contact(SIZE.paul, s), s), TAKEN).wait(TAKEN + 0.05)
+  w.roll(over(w.at[0], w.at[0] - 0.18, s), TAKEN + 0.5, 'out').wait(WALK_FROM)
   // He leads them off, and waits over the crest.
   w.jump(on(LINE.stilgar, s)).wait(SET_OFF.stilgar)
   sandwalk(w, LEAD.stilgar, SET_OFF.stilgar, STOPS.stilgar, 47, s)
@@ -270,8 +295,9 @@ function chani(): Seg[] {
   segs.push({ t0: 339.9, t1: 341.6, kind: 'ride', at: () => crest, turn: (t) => -2.72 * smoother(t, 339.9, 341.6) })
   const w = new Walk(crest, 341.6)
   w.wait(350.4)
-  // Down the dune to the others, behind the boulder, short of the Fremen; then in the line, beside him.
-  w.roll(over(AT.chani, 1175.4, s), 357.1).wait(WALK_FROM)
+  // Down the dune, behind the boulder, to the flat; then forward to him, and she stops in front of him.
+  w.roll(over(AT.chani, 1170.2, s), 357.1).wait(MEET.from)
+  w.roll(over(1170.2, MEET.at, s), MEET.to).wait(WALK_FROM)
   w.jump(on(LINE.chani, s)).wait(SET_OFF.paul)
   sandwalk(w, PAIR.to + PAIR.gap, SET_OFF.paul, STOPS.together, PAIR.seed, s)
   const walked = [...segs, ...w.segs]
@@ -300,8 +326,8 @@ function fremen(i: number): Actor {
   const id = FREMEN.id + i
   let w: Walk
   if (i === 1 || i === 2) {
-    // Up out of the sand behind Jessica as the picture comes back to Paul (one half up on the cut, the other after it);
-    // and they stay with the dead.
+    // Up out of the sand between Paul and his mother as the picture comes back to him (one half up on the cut, the
+    // other after it); and they stay with the dead.
     const [r0, r1] = i === 2 ? [342.25, 343.45] : [342.95, 343.95]
     w = new Walk([x, ground(x) + R * s + 0.05], 339.9).wait(r0).roll([on(x, s)], r1, 'out').wait(440)
   } else {
@@ -310,7 +336,8 @@ function fremen(i: number): Actor {
       const top: Pt = [x, boulderTop(0) - R * s]
       w = new Walk([x, ground(x) + 0.3], 339.9).roll([top], 341.4, 'out')
     } else {
-      w = new Walk(on(x, s), 339.9)
+      // Up out of the sand by the thopter's nose while the picture is on Chani.
+      w = new Walk([x, ground(x) + R * s + 0.05], 339.9).roll([on(x, s)], 341.2, 'out')
     }
     const plan = WALKS[i]
     w.wait(WALK_FROM).jump(on(plan.line, s)).wait(plan.off)

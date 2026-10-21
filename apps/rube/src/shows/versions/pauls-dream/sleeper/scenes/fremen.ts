@@ -6,7 +6,7 @@ import type { Scene } from '../scene'
 import { looking } from '../show'
 import { ground, on } from './fremen/ground'
 import { BASIN_D, airAt, drawBack, drawBasin, drawFront, setSwell, setTilt } from './fremen/land'
-import { DUEL, ON, SET_OFF, STOPS, TAKEN, THROWN, TURN, WALK_FROM, troop } from './fremen/troop'
+import { DUEL, MEET_LOOKS, ON, SET_OFF, STOPS, TAKEN, THROWN, TURN, WALK_FROM, troop } from './fremen/troop'
 import { D, INSERT, drawFarWorm, drawNearWorm, drawRopes, riderAt, sign } from './fremen/worm'
 
 /**
@@ -41,21 +41,21 @@ const shots: Shot[] = [
   { t: 338.15, cells: DREAM_CELLS, at: DREAM_AT, cut: true },
   { t: 342.66, cells: DREAM_CELLS * 0.97, at: [DREAM_AT[0] - 0.1, DREAM_AT[1]] },
   // Back to him, close and from a little above: the sand rising behind them to the skyline, the Fremen coming up out of
-  // it round them, Jamis stepping forward.
-  { t: DUEL.challenge, cells: 4.9, at: [1165.0, -1.35], cut: true },
-  { t: DUEL.clash - 0.002, cells: 4.8, at: [1165.15, -1.33] },
-  // The duel, side on and close.
-  { t: DUEL.clash, cells: 3.7, at: [1166.25, -0.95], cut: true },
-  { t: 347.0, cells: 3.6, at: [1166.15, -0.94] },
-  { t: JAMIS_FALLS, cells: 3.55, at: [1166.5, -0.93] },
-  // On without a cut: Paul over the man he killed; Stilgar walking in from the ring to his man, and over him to Paul on
-  // the boom; Jessica coming to her son.
-  { t: 350.8, cells: 3.9, at: [1167.35, -1.0] },
-  { t: 353.6, cells: 4.7, at: [1168.7, -1.18] },
-  { t: 356.4, cells: 4.2, at: [1167.9, -1.1] },
-  { t: 358.0, cells: 3.9, at: [1167.2, -1.05] },
-  { t: 361.2, cells: 4.3, at: [1166.9, -1.12] },
-  { t: WALK_FROM - 0.002, cells: 4.2, at: [1166.8, -1.1] },
+  // it behind him, between him and his mother, Jamis nearest, stepping forward.
+  { t: DUEL.challenge, cells: 4.9, at: [1164.5, -1.35], cut: true },
+  { t: DUEL.clash - 0.002, cells: 4.8, at: [1164.6, -1.33] },
+  // The duel, side on and close enough that a phone sees every blow.
+  { t: DUEL.clash, cells: 3.0, at: [1165.45, -0.74], cut: true },
+  { t: 347.0, cells: 2.95, at: [1165.55, -0.74] },
+  { t: JAMIS_FALLS, cells: 2.95, at: [1165.3, -0.74] },
+  // On without a cut: Paul over the man he killed; Stilgar to his man and over him to Paul on the boom; Chani down from
+  // her crest and forward to him from the other side, and they look at each other.
+  { t: 350.6, cells: 3.2, at: [1164.6, -0.8] },
+  { t: 353.6, cells: 3.6, at: [1164.25, -0.88] },
+  { t: 356.4, cells: 3.5, at: [1164.1, -0.86] },
+  { t: 357.7, cells: 3.3, at: [1164.6, -0.84] },
+  { t: 359.4, cells: 3.2, at: [1165.35, -0.82] },
+  { t: WALK_FROM - 0.002, cells: 2.9, at: [1165.6, -0.8] },
   // The walk, on the dune beyond: close on him and Chani side by side, the line ahead of them and behind.
   { t: WALK_FROM, cells: 4.1, off: [0.35, -0.7], cut: true },
   { t: 371, cells: 4.0, off: [0.4, -0.72] },
@@ -124,7 +124,7 @@ export const fremen: Scene = {
   from: FROM,
   to: TO,
   moves: people.moves,
-  looks: { jessica: WATCH, stilgar: WATCH },
+  looks: { jessica: WATCH, stilgar: [...MEET_LOOKS.stilgar, ...WATCH], paul: MEET_LOOKS.paul, chani: MEET_LOOKS.chani },
   deaths: { jamis: [JAMIS_FALLS, 0.15] },
   actors: people.actors.map((a) => (a.id > FREMEN.id && a.id <= FREMEN.id + 4 ? { ...a, markAt: looking(WATCH) } : a)),
   shots,
