@@ -12,7 +12,8 @@ import { MARTY, RACHEL } from './worlds'
  *
  * The words are the page's: a show's canvas sets no type, and a saved frame or a recorded video has none
  * (`shows/stage.ts`), so the player sets them over the frame from `creditsAt` in its own face. The canvas's half is
- * the hall's light going down round the nursery's lit window, so they read over the pale ward.
+ * the hall's light going down round the nursery's lit window. The words stand high in the frame, in the sky the crane
+ * leaves over the building's roof, and the cast waits for the crane to come out so the roof is still under them.
  */
 
 export interface Card {
@@ -25,6 +26,10 @@ export interface Card {
   notes?: string[]
   /** Where this card's top middle sits, if not at `AT`. */
   place?: [number, number]
+  /** Its type this many times the usual size. */
+  scale?: number
+  /** Seconds it waits, once the card before has gone, before it comes up. */
+  gap?: number
 }
 
 const FORM = 1.3
@@ -34,6 +39,10 @@ const OVERLAP = 0.25
 const script: Omit<Card, 'at'>[] = [
   { hold: 3.2, role: 'Directed by', names: ['Claude Opus 5.5'] },
   {
+    // Once the crane has come out and the roof stands still under the sky: three lines, a little smaller, to fit the sky
+    // over the washing and the loft.
+    gap: 2,
+    scale: 0.9,
     hold: 4.6,
     role: 'With',
     names: [
@@ -61,6 +70,7 @@ export const CARDS: Card[] = (() => {
   const out: Card[] = []
   let at = CREDITS_AT
   for (const c of script) {
+    at += c.gap ?? 0
     out.push({ ...c, at })
     at += FORM + c.hold + GO - OVERLAP
   }
@@ -73,8 +83,8 @@ export const LAST_GONE = (() => {
   return last.at + FORM + last.hold + GO
 })()
 
-/** Where a card's top middle sits, as shares of the 16:9 frame: high and centred, over the ward's pale wall. */
-const AT: [number, number] = [0.5, 0.1]
+/** Where a card's top middle sits, as shares of the 16:9 frame: high and centred, in the sky over the building's roof. */
+const AT: [number, number] = [0.5, 0.03]
 
 function lightOf(card: Card, t: number): { light: number; rise: number } {
   const since = t - card.at
@@ -91,7 +101,7 @@ export function creditsAt(t: number): TitleCard[] {
   CARDS.forEach((card, n) => {
     const { light, rise } = lightOf(card, t)
     if (light <= 0.001) return
-    out.push({ key: `rally-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: card.place ?? AT })
+    out.push({ key: `rally-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: card.place ?? AT, scale: card.scale })
   })
   return out
 }

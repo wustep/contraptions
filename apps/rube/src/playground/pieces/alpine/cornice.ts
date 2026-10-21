@@ -218,8 +218,6 @@ export const cornice = definePiece<CorniceState>({
   },
   over: (p, s, { k, since, ink, weight }) => {
     const { fall } = LANES.get(s.floors)!
-    const f = (since - fall) / 0.55
-    powder(p, k, ink, weight, s.white, -0.04, s.floors + 0.3, f, 1.8)
-    powder(p, k, ink, weight, s.white, 0.3, s.floors + 0.32, f * 1.15, 1.4)
+    powder(p, k, ink, weight, s.white, 0.12, s.floors + FLOOR, (since - fall) / 0.55, 2.2)
   },
 })

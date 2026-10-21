@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { R, type Pt } from '../../../../../parts'
-import { drawScreen, mix, rgba, shellOnScreen } from '../cast'
+import { drawScreen, mix, rgba } from '../cast'
 import { shellDown } from '../shell-path'
 import { HANNAH_AGE, HOUSE } from '../worlds'
 import {
@@ -14,8 +14,10 @@ import {
   PATIENT,
   RR,
   TV,
+  clockHour,
   goingWeight,
   hammer,
+  lampAt,
   pendulum,
   pose,
   ss,
@@ -482,10 +484,11 @@ export function drawClock(p: p5, k: number, T: number, L: Light): void {
   ctx.beginPath()
   ctx.arc(cx * k, dcy * k, dialS * 0.4 * k, 0, Math.PI * 2)
   ctx.stroke()
-  const minutes = 0.9 + (Math.min(T, GONE[0]) - 71.953) * 0.012
+  // The hour of the day it is (`DAYS`): a different one at each cut, going on between.
+  const hour = clockHour(T)
   const hands: [number, number, number][] = [
-    [minutes * Math.PI * 2 - Math.PI / 2, dialS * 0.36, 0.014],
-    [(minutes / 12 + 0.38) * Math.PI * 2 - Math.PI / 2, dialS * 0.24, 0.02],
+    [(hour % 1) * Math.PI * 2 - Math.PI / 2, dialS * 0.36, 0.014],
+    [((hour % 12) / 12) * Math.PI * 2 - Math.PI / 2, dialS * 0.24, 0.02],
   ]
   ctx.strokeStyle = HOUSE.mullion
   ctx.lineCap = 'round'
@@ -521,6 +524,48 @@ export function drawClock(p: p5, k: number, T: number, L: Light): void {
   ctx.fillStyle = rgba(W.rim, W.rimA * 0.8)
   ctx.fillRect((cx - hw - 0.03) * k, top * k, (CLOCK.w + 0.06) * k, 0.012 * k)
   ctx.fillRect((cx - hw) * k, plinthTop * k, CLOCK.w * k, 0.01 * k)
+  ctx.restore()
+}
+
+/* ------------------------------------------------------------------ the lamp by the bed */
+
+/** A floor lamp standing behind her at the bed's head, its shade over the two of them: lit through the night. */
+const LAMP = { x: 0.13, shadeTop: -1.12, shadeBottom: -0.9, top: 0.1, bottom: 0.17 }
+export const LAMP_HULL: Pt[] = [
+  [LAMP.x - 0.08, FLOOR],
+  [LAMP.x - LAMP.bottom, LAMP.shadeBottom],
+  [LAMP.x + LAMP.bottom, LAMP.shadeBottom],
+  [LAMP.x + 0.08, FLOOR],
+]
+export function drawLamp(p: p5, k: number, T: number, L: Light): void {
+  const ctx = p.drawingContext as Ctx
+  const W = woodTones(L)
+  const on = lampAt(T)
+  const { x, shadeTop: st, shadeBottom: sb } = LAMP
+  ctx.save()
+  // Its light first, under everything it stands in: warm on the wall, the pillow and her, falling off fast.
+  if (on > 0.01) {
+    const g = ctx.createRadialGradient(x * k, (sb + 0.05) * k, 0.05 * k, x * k, (sb + 0.05) * k, 1.6 * k)
+    g.addColorStop(0, rgba(HOUSE.lamp, 0.5 * on))
+    g.addColorStop(0.35, rgba(HOUSE.lamp, 0.2 * on))
+    g.addColorStop(1, rgba(HOUSE.lamp, 0))
+    ctx.fillStyle = g
+    ctx.fillRect((x - 1.6) * k, (sb - 1.55) * k, 3.2 * k, 3.2 * k)
+  }
+  // The stem and its foot.
+  ctx.fillStyle = W.shade
+  ctx.fillRect((x - 0.012) * k, sb * k, 0.024 * k, (FLOOR - sb) * k)
+  path(ctx, k, [[x - 0.09, FLOOR], [x + 0.09, FLOOR], [x + 0.06, FLOOR - 0.025], [x - 0.06, FLOOR - 0.025]])
+  ctx.fill()
+  // The shade: linen, dark against the window by day, glowing from inside when lit.
+  const shade = on > 0.01 ? mix(mix(HOUSE.linenShade, HOUSE.night, 0.25 * (1 - L.amb)), HOUSE.lamp, 0.75 * on) : mix(HOUSE.linenShade, HOUSE.night, 0.3 + 0.3 * (1 - L.amb))
+  ctx.fillStyle = shade
+  path(ctx, k, [[x - LAMP.top, st], [x + LAMP.top, st], [x + LAMP.bottom, sb], [x - LAMP.bottom, sb]])
+  ctx.fill()
+  if (on > 0.01) {
+    ctx.fillStyle = rgba('#FFFFFF', 0.35 * on)
+    ctx.fillRect((x - LAMP.bottom + 0.02) * k, (sb - 0.012) * k, (2 * LAMP.bottom - 0.04) * k, 0.012 * k)
+  }
   ctx.restore()
 }
 
@@ -584,10 +629,4 @@ export function drawTVGlow(p: p5, k: number, T: number): void {
   ctx.restore()
 }
 
-/**
- * The shell on the television at show time T, in world cells: where `drawShellScene` puts it on the glass (a fifth of
- * the screen over the land, lowered out of the cloud by `descend`).
- */
-export function tvShell(T: number): { c: Pt; h: number } {
-  return shellOnScreen(TV.x, TV.y, TV.w, TV.h, shellDown(T))
-}
+

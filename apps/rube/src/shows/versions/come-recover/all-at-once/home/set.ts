@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp } from '../../../../../../../../src/core/ease'
 import { FLOOR, mixHex, type Pt } from '../../../../../parts'
-import { alpha, frame, hash, knock, scenery, smooth } from '../kit'
+import { alpha, depth, frame, hash, knock, scenery, smooth } from '../kit'
 import { GREAT, HOME_HITS, home } from '../music'
 import { HOME_CIRCLE } from '../seams'
 import { KNOTS, WIRE_A, WIRE_B, lanternAt } from './set-garland'
@@ -129,8 +129,9 @@ export { lanternAt }
 export interface Glow {
   x: number
   y: number
-  /** Radius, cells. */
+  /** Radius, cells; and its height, for light laid along a floor (the radius when left out). */
   r: number
+  ry?: number
   /** 0..1. */
   a: number
   color?: string
@@ -160,6 +161,11 @@ export const LIGHTS = {
   neonOff: Infinity,
   /** When the garland's lanterns go down to an ember (the finale sets it: with the tubes, on the last hit). */
   lanternsOff: Infinity,
+  /**
+   * Windows across the street that light in the night and go dark again, from other parts: by the far front's number
+   * (the block's own 0 to 4, left to right behind the glass), its row and column; `who` puts someone at it.
+   */
+  wake: [] as { front: number; row: number; col: number; on: number; off: number; who?: boolean }[],
 }
 
 /** How lit the garland's lantern `i` is at `t`, 0..1: lit on its time, and down to an ember from `LIGHTS.lanternsOff`. */
@@ -197,9 +203,13 @@ export function tubeLevel(i: number, t: number): number {
   return clamp(v * d)
 }
 
-/** The night outside, and the room with no light on. */
+/**
+ * The night outside, and the room with no light on. The dark is a moonlit blue, not the tile's own green gone grey:
+ * so what a lamp still lights in it (the washer's window under the credits, the lanterns, a car's headlights) is
+ * warm against cool, as a night is, and the room at the end is a night and not a murk.
+ */
 const NIGHT = HOME.night
-const AMBIENT = mixHex(HOME.night, HOME.glassDeep, 0.5)
+const AMBIENT = '#36436A'
 const STREET_LIGHT = mixHex(HOME.light, HOME.glass, 0.35)
 
 /** The glows the room itself has in the dark: the street lamp through the glass, and the neon. */
@@ -238,11 +248,74 @@ export function lightAt(x: number, y: number, t: number): number {
   return clamp(v)
 }
 
-/** A colour as the light at (x, y) leaves it: for what a part draws in its `over`, after the room's light map. */
+/**
+ * A pool of light on the room's light map: an ellipse round (x, y), `a` at its heart (no more than full), three
+ * quarters of that a little past halfway out, and nothing at its rim.
+ */
+interface Pool {
+  x: number
+  y: number
+  rx: number
+  ry: number
+  a: number
+  color: string
+}
+
+/** Every pool of light in the room at `t`: the tubes, the room's own glows, and every other part's. */
+let poolsSeen: { t: number; pools: Pool[] } = { t: NaN, pools: [] }
+function poolsAt(t: number): Pool[] {
+  if (poolsSeen.t === t) return poolsSeen.pools
+  const out: Pool[] = []
+  TUBES.forEach((tb, i) => {
+    const l = tubeLevel(i, t)
+    if (l <= 0) return
+    // A pool of light under the tube, down to the floor; and the tube itself.
+    // The pools saturate when the tube is fully on, so a lit room is exactly as drawn; dimmed, they fall off fast.
+    out.push({ x: tb.x, y: TUBE_Y + 1.9, rx: 4.2, ry: 4.0, a: 2.0 * l * Math.sqrt(l), color: HOME.light })
+    out.push({ x: tb.x, y: TUBE_Y + 0.05, rx: 1.8, ry: 0.4, a: 1.4 * l, color: HOME.light })
+  })
+  for (const gl of roomGlows(t)) out.push({ x: gl.x, y: gl.y, rx: gl.r, ry: gl.ry ?? gl.r, a: gl.a, color: gl.color ?? HOME.light })
+  for (const fn of LIGHTS.glows) for (const gl of fn(t)) out.push({ x: gl.x, y: gl.y, rx: gl.r, ry: gl.ry ?? gl.r, a: gl.a, color: gl.color ?? HOME.light })
+  poolsSeen = { t, pools: out.filter((q) => q.a > 0.003) }
+  return poolsSeen.pools
+}
+
+/** A pool's strength at a share `u` of the way out to its rim: the light map's gradient, stop for stop. */
+function poolFall(a: number, u: number): number {
+  const top = Math.min(1, a)
+  if (u >= 1) return 0
+  if (u < 0.55) return top * (1 - 0.25 * (u / 0.55))
+  return top * 0.75 * (1 - (u - 0.55) / 0.45)
+}
+
+const rgbOf = (hex: string): [number, number, number] => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255) as [number, number, number]
+
+/** The light map's colour at (x, y) at `t`, each channel 0..1: the night's, with every pool added in light. */
+function lightRgbAt(x: number, y: number, t: number): [number, number, number] {
+  const out = rgbOf(AMBIENT)
+  for (const q of poolsAt(t)) {
+    const v = poolFall(q.a, Math.hypot((x - q.x) / q.rx, (y - q.y) / q.ry))
+    if (v <= 0) continue
+    const c = rgbOf(q.color)
+    for (let j = 0; j < 3; j++) out[j] += c[j] * v
+  }
+  return out.map((v) => Math.min(1, v)) as [number, number, number]
+}
+
+/**
+ * A colour as the light at (x, y) leaves it: for what a part draws in its `over`, after the room's light map. It is
+ * the light map's own light, so a googly eye in the washer window's warm glow is lit warm as the ball under it is,
+ * and in the dark it is the night's blue; with a fifth of its own colour kept, so an eye still reads in the dark.
+ */
 export function shade(hex: string, x: number, y: number, t: number): string {
-  const l = lightAt(x, y, t)
-  if (l >= 0.999) return hex
-  return mixHex(hex, mixHex(hex, AMBIENT, 0.78), 1 - l)
+  if (lightAt(x, y, t) >= 0.999) return hex
+  if (!/^#[0-9a-f]{6}$/i.test(hex)) return mixHex(hex, AMBIENT, 0.6)
+  const l = lightRgbAt(x, y, t)
+  if (l[0] >= 0.999 && l[1] >= 0.999 && l[2] >= 0.999) return hex
+  const c = rgbOf(hex)
+  let out = '#'
+  for (let j = 0; j < 3; j++) out += Math.round(255 * (0.8 * c[j] * l[j] + 0.2 * c[j])).toString(16).padStart(2, '0')
+  return out
 }
 
 /** True when every tube is fully on and nothing dims them: the light map would change nothing. */
@@ -916,6 +989,12 @@ export function tube(pen: Pen, x: number, level: number): void {
 /** Where the neon washer hangs in the window. */
 const NEON_AT: Pt = [-5.72, -2.55]
 
+/**
+ * How far off the street's two layers are: the block across it moves at `far` of the camera's speed and the lanterns
+ * strung over it at `lines`, each sitting where it is drawn when the camera is at `ref` (the opening's wide shot).
+ */
+const STREET_DEPTH = { far: 0.55, lines: 0.78, ref: [-2.6, -2.1] as Pt }
+
 /** The block across the street, on past the shop's end wall to the left: fronts of their own widths and heights. */
 const FAR_FRONTS: [number, number, number][] = (() => {
   const out: [number, number, number][] = []
@@ -935,34 +1014,52 @@ function street(pen: Pen, t: number, x0: number, x1: number, y0: number, y1: num
   p.fill(NIGHT)
   p.rect(((x0 + x1) / 2) * k, ((y0 + y1) / 2) * k, (x1 - x0) * k, (y1 - y0) * k)
   // The block across the street: building fronts in two night tones, each with a grid of windows, a few lit warm.
-  // Further left the block goes on, past the shop's end wall, for a frame wide enough to look out past it.
-  const fronts: [number, number, number][] = [...FAR_FRONTS, [-9.6, -8.2, -3.9], [-8.2, -6.9, -3.3], [-6.9, -5.6, -4.2], [-5.6, -4.3, -3.6], [-4.3, -2.9, -4.0]]
-  fronts.forEach(([a0, a1, roof], at) => {
-    if (a1 < x0 || a0 > x1) return
-    // Each front's own number, the original block's 0 to 4 as they always were, so its tones and lit windows are
-    // unchanged; the fronts further left count back from there.
-    const i = at - FAR_FRONTS.length
-    p.fill(mixHex(HOME.night, HOME.steelDark, Math.abs(i) % 2 ? 0.22 : 0.34))
-    p.rect(((a0 + a1) / 2) * k, ((roof + FLOOR - 0.6) / 2) * k, (a1 - a0) * k, (FLOOR - 0.6 - roof) * k)
-    p.fill(mixHex(HOME.night, HOME.steelDark, 0.5))
-    p.rect(((a0 + a1) / 2) * k, roof * k, (a1 - a0 + 0.06) * k, 0.08 * k)
-    for (let r = 0; r < 4; r++) {
-      const wy = roof + 0.45 + r * 0.62
-      if (wy > -1.3) break
-      for (let c = 0; c < 3; c++) {
-        const wx = a0 + 0.25 + c * ((a1 - a0 - 0.5) / 2)
-        const on = hash(i * 7 + r, c, 3) < 0.34
-        if (on) p.fill(alpha(p, HOME.gold, 0.62))
-        else p.fill(mixHex(HOME.night, HOME.steelDark, 0.12))
-        p.rect(wx * k, wy * k, 0.2 * k, 0.3 * k, 0.02 * k)
+  // Further left the block goes on, past the shop's end wall, for a frame wide enough to look out past it; and right,
+  // past the door, so the far side always fills the glass. It is across the street, so it moves slower than the shop
+  // as the camera goes by (`STREET_DEPTH`): the glass is a window onto somewhere.
+  depth(p, k, STREET_DEPTH.far, STREET_DEPTH.ref, (_fr, [sx]) => {
+    const fronts: [number, number, number][] = [...FAR_FRONTS, [-9.6, -8.2, -3.9], [-8.2, -6.9, -3.3], [-6.9, -5.6, -4.2], [-5.6, -4.3, -3.6], [-4.3, -2.9, -4.0], [-2.9, -1.5, -3.7], [-1.5, 0.2, -4.1]]
+    fronts.forEach(([a0, a1, roof], at) => {
+      if (a1 < x0 - sx || a0 > x1 - sx) return
+      // Each front's own number, the original block's 0 to 4 as they always were, so its tones and lit windows are
+      // unchanged; the fronts further left count back from there.
+      const i = at - FAR_FRONTS.length
+      p.fill(mixHex(HOME.night, HOME.steelDark, Math.abs(i) % 2 ? 0.22 : 0.34))
+      p.rect(((a0 + a1) / 2) * k, ((roof + FLOOR - 0.6) / 2) * k, (a1 - a0) * k, (FLOOR - 0.6 - roof) * k)
+      p.fill(mixHex(HOME.night, HOME.steelDark, 0.5))
+      p.rect(((a0 + a1) / 2) * k, roof * k, (a1 - a0 + 0.06) * k, 0.08 * k)
+      for (let r = 0; r < 4; r++) {
+        const wy = roof + 0.45 + r * 0.62
+        if (wy > -1.3) break
+        for (let c = 0; c < 3; c++) {
+          const wx = a0 + 0.25 + c * ((a1 - a0 - 0.5) / 2)
+          const on = hash(i * 7 + r, c, 3) < 0.34
+          if (on) p.fill(alpha(p, HOME.gold, 0.62))
+          else p.fill(mixHex(HOME.night, HOME.steelDark, 0.12))
+          p.rect(wx * k, wy * k, 0.2 * k, 0.3 * k, 0.02 * k)
+          // A neighbour's light coming on in the night, and going off again (`LIGHTS.wake`).
+          const woke = on ? undefined : LIGHTS.wake.find((wk) => wk.front === i && wk.row === r && wk.col === c)
+          const wa = woke ? smooth(t, woke.on, woke.on + 0.35) * (1 - smooth(t, woke.off, woke.off + 0.5)) : 0
+          if (woke && wa > 0.01) {
+            p.fill(alpha(p, HOME.gold, 0.62 * wa))
+            p.rect(wx * k, wy * k, 0.2 * k, 0.3 * k, 0.02 * k)
+            // Someone at it, looking out at the street, head and shoulders against the light.
+            if (woke.who) {
+              const lean = 0.02 * Math.sin((t - woke.on) * 0.8)
+              p.fill(alpha(p, mixHex(HOME.night, HOME.steelDark, 0.2), wa))
+              p.circle((wx + lean) * k, (wy - 0.02) * k, 0.09 * k)
+              p.rect((wx + lean * 0.5) * k, (wy + 0.11) * k, 0.16 * k, 0.1 * k, 0.04 * k, 0.04 * k, 0, 0)
+            }
+          }
+        }
       }
-    }
   })
   // A shop across the way, still lit: its window's warm light, behind the door.
   p.fill(alpha(p, HOME.gold, 0.3))
   p.rect(-4.2 * k, -1.2 * k, 1.1 * k, 0.9 * k)
   p.fill(alpha(p, HOME.light, 0.38))
   p.rect(-4.2 * k, -1.2 * k, 0.9 * k, 0.7 * k)
+  })
   // The pavement and the kerb.
   p.fill(mixHex(HOME.night, HOME.steelDark, 0.45))
   p.rect(((x0 + x1) / 2) * k, (FLOOR - 0.3) * k, (x1 - x0) * k, 0.62 * k)
@@ -980,29 +1077,32 @@ function street(pen: Pen, t: number, x0: number, x1: number, y0: number, y1: num
   p.fill(HOME.light)
   p.ellipse((lx + 0.36) * k, -3.02 * k, 0.22 * k, 0.08 * k)
   // Strings of new year lanterns across the street, small and far, on their line: the one seen through the glass, and
-  // more spans of it on down the street to the left, so a wide frame never sees it end in the air.
-  for (let span = 0; span < 4; span++) {
-    const off = -6.4 * span
-    if (-3.0 + off < x0 || -9.4 + off > x1) continue
-    p.noFill()
-    p.stroke(alpha(p, HOME.steelDark, 0.9))
-    p.strokeWeight(Math.max(1, k * 0.01))
-    p.beginShape()
-    for (let i = 0; i <= 16; i++) {
-      const sx = -9.4 + (i / 16) * 6.4
-      p.vertex((sx + off) * k, (-3.86 + 0.22 * Math.sin(((sx + 9.4) / 6.4) * Math.PI)) * k)
+  // more spans of it on down the street to the left, so a wide frame never sees it end in the air. Strung over the
+  // middle of the street, they move between the far side and the pavement.
+  depth(p, k, STREET_DEPTH.lines, STREET_DEPTH.ref, (_fr, [shift]) => {
+    for (let span = -1; span < 4; span++) {
+      const off = -6.4 * span
+      if (-3.0 + off < x0 - shift || -9.4 + off > x1 - shift) continue
+      p.noFill()
+      p.stroke(alpha(p, HOME.steelDark, 0.9))
+      p.strokeWeight(Math.max(1, k * 0.01))
+      p.beginShape()
+      for (let i = 0; i <= 16; i++) {
+        const sx = -9.4 + (i / 16) * 6.4
+        p.vertex((sx + off) * k, (-3.86 + 0.22 * Math.sin(((sx + 9.4) / 6.4) * Math.PI)) * k)
+      }
+      p.endShape()
+      p.noStroke()
+      for (let i = 0; i < 6; i++) {
+        const sx = -8.9 + i * 1.08
+        const sy = -3.86 + 0.22 * Math.sin(((sx + 9.4) / 6.4) * Math.PI) + 0.1
+        p.fill(alpha(p, HOME.red, 0.85))
+        p.ellipse((sx + off) * k, sy * k, 0.17 * k, 0.14 * k)
+        p.fill(alpha(p, HOME.gold, 0.7))
+        p.rect((sx + off) * k, (sy - 0.075) * k, 0.07 * k, 0.025 * k)
+      }
     }
-    p.endShape()
-    p.noStroke()
-    for (let i = 0; i < 6; i++) {
-      const sx = -8.9 + i * 1.08
-      const sy = -3.86 + 0.22 * Math.sin(((sx + 9.4) / 6.4) * Math.PI) + 0.1
-      p.fill(alpha(p, HOME.red, 0.85))
-      p.ellipse((sx + off) * k, sy * k, 0.17 * k, 0.14 * k)
-      p.fill(alpha(p, HOME.gold, 0.7))
-      p.rect((sx + off) * k, (sy - 0.075) * k, 0.07 * k, 0.025 * k)
-    }
-  }
+  })
   for (const f of STREET) f(pen.p, k, t)
 }
 
@@ -1481,8 +1581,11 @@ function calendar(pen: Pen): void {
   p.circle((x - cw / 2 + 0.1 + 3 * 0.105 + 0.02) * k, (y - ch / 2 + 0.52) * k, 0.1 * k)
 }
 
-/** The washers that are running someone's washing all night. */
+/** The washers that are running someone's washing all night, and the stacked dryer tumbling. */
 const RUNNING = [2, 5]
+const TUMBLING = 1
+/** A running washer's shudder on its feet, cells: a fast small buzz, swelling and easing with the load. */
+const shudder = (t: number, i: number): number => 0.007 * Math.sin(t * 31 + i * 2.1) * (0.6 + 0.4 * Math.sin(t * 0.9 + i))
 
 /** The great hit shakes the room: everything loose hops, and settles. */
 const jolt = (t: number): number => knock(t - GREAT, 0.12) * Math.sin(Math.max(0, t - GREAT) * 38)
@@ -1519,27 +1622,8 @@ function drawRoom(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; 
     storefront(pen, t)
     frontDoor(pen, t)
   }
-  // Over the ceiling, the storey above in section: the same cut tone as the ground under the floor, going up into
-  // the night, so a camera that sees over the ceiling sees the building go on rather than a black band.
-  if (f.y0 < C - 0.4) {
-    const ux0 = Math.max(R0 - 0.3, f.x0 - 1)
-    const ux1 = Math.min(R1 + 0.3, f.x1 + 1)
-    if (ux1 > ux0) {
-      const cut = mixHex(HOME.floor, HOME.night, 0.62)
-      const deep = 1.4
-      const fade = 1.0
-      p.noStroke()
-      p.fill(cut)
-      p.rect(((ux0 + ux1) / 2) * k, (C - 0.4 - deep / 2) * k, (ux1 - ux0) * k, deep * k)
-      const ctx = p.drawingContext as CanvasRenderingContext2D
-      const e = (a: number) => `rgba(${parseInt(cut.slice(1, 3), 16)}, ${parseInt(cut.slice(3, 5), 16)}, ${parseInt(cut.slice(5, 7), 16)}, ${a})`
-      const g = ctx.createLinearGradient(0, (C - 0.4 - deep) * k, 0, (C - 0.4 - deep - fade) * k)
-      g.addColorStop(0, e(1))
-      g.addColorStop(1, e(0))
-      ctx.fillStyle = g
-      ctx.fillRect(ux0 * k, (C - 0.4 - deep - fade) * k, (ux1 - ux0) * k, (fade + 0.01) * k)
-    }
-  }
+  // Over the ceiling, the family's home above the shop, in section, asleep (`upstairs`).
+  if (f.y0 < C - 0.4) upstairs(pen, t, f)
   // The ceiling and the floor, cut.
   solid(p, ink, w, CEILING_FILL)
   p.rect(((R0 + R1) / 2) * k, (C - 0.2) * k, (R1 - R0 + 0.6) * k, 0.4 * k)
@@ -1614,7 +1698,8 @@ function drawRoom(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; 
   WASHERS.forEach((wa, i) => {
     if (i === 0 || !see(wa.x - 0.8, wa.x + 0.8)) return
     const near = Math.abs(wa.x - WASHERS[0].x) < 9
-    // Two of them are running: someone's washing, turning slowly all night.
+    // Two of them are running: someone's washing, turning slowly all night, the machine shuddering a little on its
+    // feet with the load.
     const running = RUNNING.includes(i)
     washer(pen, wa.x, {
       turn: 0.4 + i + (running ? t * 0.9 : 0),
@@ -1622,13 +1707,15 @@ function drawRoom(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; 
       water: running ? 0.18 : 0,
       slosh: running ? 0.12 * Math.sin(t * 1.3 + i) : 0,
       lamp2: running ? 1 : 0,
+      dx: running ? shudder(t, i) : 0,
       dy: near ? -Math.abs(j) * 0.03 * (1 - Math.abs(wa.x - WASHERS[0].x) / 9) : 0,
     })
   })
-  // The stacked dryers.
+  // The stacked dryers: one of them tumbling someone's towels, its lamp on.
   STACKS.forEach((x, i) => {
     if (!see(x - 0.8, x + 0.8)) return
-    dryer(pen, x, false, { turn: i * 1.3 }, FLOOR)
+    const tumbling = i === TUMBLING
+    dryer(pen, x, false, tumbling ? { turn: -t * 1.7, load: [HOME.rose, HOME.paper, HOME.butter], lamp: 0.8, lamp2: 1 } : { turn: i * 1.3 }, FLOOR)
     dryer(pen, x, false, { turn: i * 0.7 + 2 }, FLOOR - DRYER.h)
   })
   // The folding table, a stack of folded laundry on it, two stools by it.
@@ -1652,20 +1739,255 @@ function drawRoom(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; 
   for (const b of TOP_BAGS) {
     if (!see(b.x - 0.5, b.x + 0.5)) continue
     const near = clamp(1 - Math.abs(b.x - WASHERS[0].x) / 10)
-    const hop = Math.max(0, j) * 0.08 * near
-    let swing = 0.8 * j * near
+    // A bag on a running washer rides its shudder: it jiggles, and its googly eyes wobble with it.
+    const under = WASHERS.findIndex((wa) => Math.abs(wa.x - b.x) < WASHER.w / 2)
+    const ride = RUNNING.includes(under) ? 1 : 0
+    const hop = Math.max(0, j) * 0.08 * near + ride * 0.012 * Math.abs(Math.sin(t * 11 + b.x))
+    let swing = 0.8 * j * near + ride * 0.35 * Math.sin(t * 2.3 + b.x) * Math.sin(t * 0.7)
     if (seen) {
       // How far it is turned to her (`w`, eased in and out), its pupils drawn the short way round.
       const a = Math.atan2(seen.p[1] - (WASHER.top - 0.3 * b.size), seen.p[0] - b.x) - Math.PI / 2
       swing += Math.atan2(Math.sin(a), Math.cos(a)) * seen.w
     }
-    bag(pen, b.x, WASHER.top - hop, { color: b.color, size: b.size, swing, lift: clamp(j * 1.5) * near })
+    bag(pen, b.x + (ride ? shudder(t, under) : 0), WASHER.top - hop, { color: b.color, size: b.size, swing, lift: clamp(j * 1.5) * near })
   }
   // The tubes, over all of it.
   TUBES.forEach((tb, i) => {
     if (!see(tb.x - TUBE_L, tb.x + TUBE_L)) return
     tube(pen, tb.x, tubeLevel(i, t))
   })
+}
+
+/* ------------------------------------------------------------------ upstairs */
+
+/**
+ * Over the shop, the family's home, cut open as the shop is: rooms in the night, everyone asleep at two in the
+ * morning. The front room over the storefront, Gong Gong's armchair turned to a television left on, flickering; the
+ * kitchen, the rice cooker's keep-warm lamp; Joy's old room as she left it; her parents' room and the family altar's
+ * small red lamp; then the boxes of receipts the taxes come out of. Each room is lit only by its own small lights, never
+ * by the shop's tubes under its floor (the light map leaves it be), and the roof goes up into the night. It is seen
+ * where the camera looks over the ceiling: in the party's high shots, and above the credits as the last draw-back takes
+ * in the whole shop.
+ */
+export const UPSTAIRS = { floor: ROOM.ceiling - 0.4, ceiling: ROOM.ceiling - 3.1, roof: ROOM.ceiling - 3.45 }
+const UP_SHADE = '#1F2740'
+const UP_WALL = mixHex(HOME.tile, UP_SHADE, 0.9)
+const UP_PAPER = mixHex(HOME.paper, UP_SHADE, 0.86)
+const UP_FLOOR = mixHex(HOME.wood, UP_SHADE, 0.82)
+const UP_THING = mixHex(HOME.steelDark, UP_SHADE, 0.74)
+const UP_DEEP = mixHex(HOME.night, UP_SHADE, 0.51)
+/** The partitions between the rooms, and the rooms' far walls' windows (x0, x1). */
+const WALLS = [-3.2, 4.8, 12.2, 20.2, 27.5]
+const UP_WINDOWS: [number, number][] = [[-6.7, -5.4], [-1.9, -0.7], [8.7, 9.8], [15.9, 17.0], [31.0, 32.2]]
+
+/** The television's picture at `t`: a shot that changes every few seconds, how bright, and how blue. */
+function tvAt(t: number): { a: number; cool: number } {
+  const shot = Math.floor(t / 2.7 + hash(Math.floor(t / 2.7), 3, 91) * 0.6)
+  const cool = hash(shot, 1, 91)
+  const a = 0.55 + 0.25 * hash(shot, 2, 91) + 0.08 * Math.sin(t * 9.3) * Math.sin(t * 3.1)
+  return { a, cool }
+}
+
+function softLight(p: p5, k: number, x: number, y: number, r: number, rgb: string, a: number): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const g = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, r * k)
+  g.addColorStop(0, `rgba(${rgb}, ${a})`)
+  g.addColorStop(0.5, `rgba(${rgb}, ${a * 0.45})`)
+  g.addColorStop(1, `rgba(${rgb}, 0)`)
+  ctx.fillStyle = g
+  ctx.fillRect((x - r) * k, (y - r) * k, 2 * r * k, 2 * r * k)
+}
+
+function upstairs(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; y1: number }): void {
+  const { p, k, w } = pen
+  const ink = mixHex(pen.ink, UP_SHADE, 0.51)
+  const U = UPSTAIRS
+  const x0 = Math.max(ROOM.x0 - 0.3, f.x0 - 1)
+  const x1 = Math.min(ROOM.x1 + 0.3, f.x1 + 1)
+  if (x1 <= x0) return
+  const see = (a: number, b: number) => b >= f.x0 - 0.3 && a <= f.x1 + 0.3
+  const rect = (a: number, b: number, top: number, bot: number) => p.rect(((a + b) / 2) * k, ((top + bot) / 2) * k, (b - a) * k, (bot - top) * k)
+  // The rooms' far wall, a skirting, and the floorboards' edge.
+  p.noStroke()
+  p.fill(UP_WALL)
+  rect(x0, x1, U.ceiling, U.floor)
+  p.fill(UP_FLOOR)
+  rect(x0, x1, U.floor - 0.12, U.floor)
+  // Windows in the far wall, onto the night behind the block: a deeper sky, and a far roofline with a lit window.
+  for (const [a, b] of UP_WINDOWS) {
+    if (!see(a, b)) continue
+    const top = U.ceiling + 0.55
+    const bot = U.floor - 1.1
+    solid(p, ink, w * 0.6, UP_DEEP)
+    rect(a, b, top, bot)
+    p.noStroke()
+    p.fill(mixHex(UP_DEEP, '#000000', 0.25))
+    p.beginShape()
+    p.vertex(a * k, bot * k)
+    for (let i = 0; i <= 4; i++) {
+      const x = a + ((b - a) * i) / 4
+      p.vertex(x * k, (bot - 0.25 - 0.3 * hash(Math.round(a * 10) + i, 4, 92)) * k)
+      p.vertex((x + (b - a) / 8) * k, (bot - 0.25 - 0.3 * hash(Math.round(a * 10) + i, 4, 92)) * k)
+    }
+    p.vertex(b * k, bot * k)
+    p.endShape(p.CLOSE)
+    p.fill(alpha(p, HOME.gold, 0.55))
+    p.rect((a + (b - a) * (0.3 + 0.4 * hash(Math.round(a * 10), 5, 92))) * k, (bot - 0.18) * k, 0.08 * k, 0.1 * k)
+    outline(p, ink, w * 0.5)
+    p.line(((a + b) / 2) * k, top * k, ((a + b) / 2) * k, bot * k)
+    p.line(a * k, ((top + bot) / 2) * k, b * k, ((top + bot) / 2) * k)
+    // A curtain pulled to one side.
+    solid(p, ink, w * 0.4, UP_PAPER)
+    p.rect((b + 0.08) * k, ((top - 0.08 + bot + 0.15) / 2) * k, 0.16 * k, (bot + 0.15 - top + 0.08) * k, 0.03 * k)
+    // The night's light through it, on the wall below and the floor.
+    softLight(p, k, (a + b) / 2, U.floor - 0.6, 1.3, '150, 172, 226', 0.1)
+  }
+  const floor = U.floor - 0.12
+  // The front room: the television on its cabinet, left on, and the armchair turned to it, a blanket over its arm.
+  if (see(-8, -3.2)) {
+    const tv = tvAt(t)
+    const tvCol = mixHex('#E8EEFF', '#A9C2FF', tv.cool)
+    solid(p, ink, w * 0.6, UP_THING)
+    rect(-4.75, -3.75, floor - 0.42, floor)
+    solid(p, ink, w * 0.6, mixHex(UP_THING, '#000000', 0.2))
+    p.rect(-4.25 * k, (floor - 0.72) * k, 0.72 * k, 0.56 * k, 0.06 * k)
+    p.noStroke()
+    p.fill(alpha(p, tvCol, 0.35 + 0.5 * tv.a))
+    p.rect(-4.25 * k, (floor - 0.72) * k, 0.56 * k, 0.42 * k, 0.04 * k)
+    // The armchair, side-on, facing it.
+    solid(p, ink, w * 0.7, mixHex(HOME.red, UP_SHADE, 0.82))
+    p.rect(-6.1 * k, (floor - 0.28) * k, 0.95 * k, 0.4 * k, 0.08 * k)
+    p.rect(-6.48 * k, (floor - 0.62) * k, 0.22 * k, 0.9 * k, 0.08 * k)
+    p.rect(-5.72 * k, (floor - 0.42) * k, 0.2 * k, 0.32 * k, 0.06 * k)
+    solid(p, ink, w * 0.5, mixHex(HOME.butter, UP_SHADE, 0.78))
+    p.rect(-5.72 * k, (floor - 0.5) * k, 0.26 * k, 0.24 * k, 0.04 * k)
+    // Its light on the room: blue-white, flickering with the picture.
+    softLight(p, k, -4.25, floor - 0.6, 2.1, tv.cool > 0.5 ? '169, 194, 255' : '220, 228, 255', 0.16 + 0.12 * tv.a)
+  }
+  // The kitchen: the table and two chairs, the counter along the far wall, the rice cooker keeping warm.
+  if (see(-3.2, 4.8)) {
+    solid(p, ink, w * 0.6, UP_THING)
+    rect(2.2, 4.5, floor - 0.62, floor)
+    solid(p, ink, w * 0.6, mixHex(HOME.wood, UP_SHADE, 0.76))
+    rect(2.1, 4.6, floor - 0.7, floor - 0.62)
+    solid(p, ink, w * 0.6, mixHex(HOME.enamel, UP_SHADE, 0.82))
+    p.rect(3.0 * k, (floor - 0.86) * k, 0.38 * k, 0.3 * k, 0.1 * k)
+    p.noStroke()
+    p.fill('#FF5A3C')
+    p.circle(3.08 * k, (floor - 0.82) * k, 0.045 * k)
+    softLight(p, k, 3.08, floor - 0.82, 0.5, '255, 90, 60', 0.22)
+    // The kettle.
+    solid(p, ink, w * 0.5, mixHex(HOME.steel, UP_SHADE, 0.71))
+    p.ellipse(3.9 * k, (floor - 0.82) * k, 0.3 * k, 0.24 * k)
+    // The table and chairs.
+    solid(p, ink, w * 0.6, mixHex(HOME.wood, UP_SHADE, 0.78))
+    rect(-0.2, 1.4, floor - 0.68, floor - 0.6)
+    for (const lx of [0.0, 1.2]) rect(lx - 0.04, lx + 0.04, floor - 0.6, floor)
+    for (const [cx, s] of [[-0.55, -1], [1.75, 1]] as const) {
+      rect(cx - 0.18, cx + 0.18, floor - 0.42, floor - 0.36)
+      rect(cx + s * 0.14 - 0.03, cx + s * 0.14 + 0.03, floor - 0.86, floor)
+      rect(cx - s * 0.14 - 0.03, cx - s * 0.14 + 0.03, floor - 0.42, floor)
+    }
+    // A bowl of oranges on the table.
+    solid(p, ink, w * 0.4, mixHex(HOME.gold, UP_SHADE, 0.66))
+    for (const ox of [0.5, 0.66, 0.58]) p.circle(ox * k, (floor - 0.75 - (ox === 0.58 ? 0.08 : 0)) * k, 0.13 * k)
+  }
+  // Joy's old room as she left it: a narrow bed, a desk and its lamp, a poster, a paper star in the window.
+  if (see(4.8, 12.2)) {
+    solid(p, ink, w * 0.6, mixHex(HOME.wood, UP_SHADE, 0.78))
+    rect(5.4, 5.55, floor - 0.95, floor)
+    rect(5.4, 7.6, floor - 0.42, floor - 0.2)
+    solid(p, ink, w * 0.6, mixHex(JOY, UP_SHADE, 0.78))
+    p.rect(6.55 * k, (floor - 0.5) * k, 1.9 * k, 0.2 * k, 0.08 * k)
+    solid(p, ink, w * 0.5, UP_PAPER)
+    p.rect(5.85 * k, (floor - 0.62) * k, 0.4 * k, 0.16 * k, 0.06 * k)
+    // The poster over the bed.
+    solid(p, ink, w * 0.5, mixHex(JOY, UP_SHADE, 0.66))
+    rect(6.0, 6.9, U.ceiling + 0.75, U.ceiling + 1.85)
+    solid(p, ink, w * 0.35, mixHex(HOME.butter, UP_SHADE, 0.66))
+    p.circle(6.45 * k, (U.ceiling + 1.2) * k, 0.36 * k)
+    // The desk and its lamp, off.
+    solid(p, ink, w * 0.6, mixHex(HOME.wood, UP_SHADE, 0.76))
+    rect(10.4, 11.8, floor - 0.68, floor - 0.6)
+    for (const lx of [10.5, 11.7]) rect(lx - 0.04, lx + 0.04, floor - 0.6, floor)
+    solid(p, ink, w * 0.5, UP_THING)
+    p.line(11.4 * k, (floor - 0.68) * k, 11.3 * k, (floor - 1.05) * k)
+    p.triangle(11.15 * k, (floor - 1.12) * k, 11.45 * k, (floor - 1.12) * k, 11.3 * k, (floor - 1.0) * k)
+    // A paper star hung in the window, turning on its thread.
+    const sx = 9.25
+    const sy = U.ceiling + 1.25
+    outline(p, ink, w * 0.3)
+    p.line(sx * k, (U.ceiling + 0.55) * k, sx * k, (sy - 0.12) * k)
+    solid(p, ink, w * 0.35, mixHex(HOME.butter, UP_SHADE, 0.51))
+    p.push()
+    p.translate(sx * k, sy * k)
+    p.scale(Math.cos(t * 0.6), 1)
+    p.beginShape()
+    for (let i = 0; i < 10; i++) {
+      const a = -Math.PI / 2 + (i * Math.PI) / 5
+      const r = i % 2 ? 0.05 : 0.12
+      p.vertex(Math.cos(a) * r * k, Math.sin(a) * r * k)
+    }
+    p.endShape(p.CLOSE)
+    p.pop()
+  }
+  // Her parents' room: their bed, the wardrobe, and high on the wall the family altar, its little red lamp lit.
+  if (see(12.2, 20.2)) {
+    solid(p, ink, w * 0.6, mixHex(HOME.wood, UP_SHADE, 0.78))
+    rect(12.8, 12.98, floor - 1.0, floor)
+    rect(12.8, 15.6, floor - 0.42, floor - 0.2)
+    solid(p, ink, w * 0.6, mixHex(HOME.rose, UP_SHADE, 0.78))
+    p.rect(14.35 * k, (floor - 0.5) * k, 2.3 * k, 0.2 * k, 0.08 * k)
+    solid(p, ink, w * 0.5, UP_PAPER)
+    for (const px of [13.3, 13.8]) p.rect(px * k, (floor - 0.62) * k, 0.38 * k, 0.15 * k, 0.06 * k)
+    solid(p, ink, w * 0.6, UP_THING)
+    rect(17.6, 18.9, U.ceiling + 0.5, floor)
+    outline(p, ink, w * 0.4)
+    p.line(18.25 * k, (U.ceiling + 0.6) * k, 18.25 * k, (floor - 0.1) * k)
+    // The altar: a red shelf, two cups, an orange, a photograph, and its lamp.
+    const ax = 19.45
+    const ay = U.ceiling + 1.2
+    solid(p, ink, w * 0.5, mixHex(HOME.red, UP_SHADE, 0.61))
+    rect(ax - 0.45, ax + 0.45, ay, ay + 0.08)
+    solid(p, ink, w * 0.4, UP_PAPER)
+    rect(ax - 0.12, ax + 0.12, ay - 0.36, ay)
+    solid(p, ink, w * 0.35, mixHex(HOME.gold, UP_SHADE, 0.56))
+    p.circle((ax + 0.28) * k, (ay - 0.06) * k, 0.12 * k)
+    const flick = 0.85 + 0.15 * Math.sin(t * 7.1) * Math.sin(t * 2.3)
+    p.noStroke()
+    p.fill('#FF6A48')
+    p.ellipse((ax - 0.3) * k, (ay - 0.1) * k, 0.07 * k, 0.11 * k)
+    softLight(p, k, ax - 0.3, ay - 0.1, 0.95, '255, 96, 64', 0.24 * flick)
+  }
+  // The store room: boxes of receipts, years of them, paper at their lids.
+  if (see(20.2, 27.5)) {
+    for (let i = 0; i < 9; i++) {
+      const bx = 20.8 + (i % 5) * 0.7 + (i >= 5 ? 0.35 : 0)
+      const row = i >= 5 ? 1 : 0
+      const by = floor - row * 0.5
+      solid(p, ink, w * 0.5, mixHex(HOME.wood, UP_SHADE, 0.5 + 0.1 * hash(i, 1, 93)))
+      rect(bx - 0.32, bx + 0.32, by - 0.5, by)
+      solid(p, ink, w * 0.35, UP_PAPER)
+      rect(bx - 0.18 + 0.1 * hash(i, 2, 93), bx + 0.08 + 0.1 * hash(i, 2, 93), by - 0.58, by - 0.5)
+    }
+  }
+  // The partitions between the rooms, cut, each with a doorway, and the ceiling and roof over all of it.
+  p.noStroke()
+  for (const x of WALLS) {
+    if (!see(x - 0.2, x + 0.2)) continue
+    solid(p, ink, w * 0.7, SECTION)
+    rect(x - 0.09, x + 0.09, U.ceiling, U.floor - 2.0)
+  }
+  solid(p, ink, w, SECTION)
+  rect(x0, x1, U.roof, U.ceiling)
+  // Above the roof, the night, the cut fading into it.
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const e = (a: number) => `rgba(${parseInt(SECTION.slice(1, 3), 16)}, ${parseInt(SECTION.slice(3, 5), 16)}, ${parseInt(SECTION.slice(5, 7), 16)}, ${a})`
+  const g = ctx.createLinearGradient(0, U.roof * k, 0, (U.roof - 0.8) * k)
+  g.addColorStop(0, e(0.6))
+  g.addColorStop(1, e(0))
+  ctx.fillStyle = g
+  ctx.fillRect(x0 * k, (U.roof - 0.8) * k, (x1 - x0) * k, 0.81 * k)
 }
 
 /* ------------------------------------------------------------------ the light map */
@@ -1696,31 +2018,26 @@ function lightMap(p: p5, k: number, t: number): void {
   g.fillRect(0, 0, cw, ch)
   g.setTransform(ctx.getTransform())
   g.globalCompositeOperation = 'lighter'
-  const pool = (x: number, y: number, rx: number, ry: number, a: number, color = '#FFF7DC') => {
-    if (a <= 0.003) return
-    const c = p.color(color)
+  const pool = (q: Pool) => {
+    const c = p.color(q.color)
     const rgb = `${p.red(c)}, ${p.green(c)}, ${p.blue(c)}`
+    const top = Math.min(1, q.a)
     g.save()
-    g.translate(x * k, y * k)
-    g.scale(1, ry / rx)
-    const grad = g.createRadialGradient(0, 0, 0, 0, 0, rx * k)
-    grad.addColorStop(0, `rgba(${rgb}, ${Math.min(1, a)})`)
-    grad.addColorStop(0.55, `rgba(${rgb}, ${Math.min(1, a) * 0.75})`)
+    g.translate(q.x * k, q.y * k)
+    g.scale(1, q.ry / q.rx)
+    const grad = g.createRadialGradient(0, 0, 0, 0, 0, q.rx * k)
+    grad.addColorStop(0, `rgba(${rgb}, ${top})`)
+    grad.addColorStop(0.55, `rgba(${rgb}, ${top * 0.75})`)
     grad.addColorStop(1, `rgba(${rgb}, 0)`)
     g.fillStyle = grad
-    g.fillRect(-rx * k, -rx * k, 2 * rx * k, 2 * rx * k)
+    g.fillRect(-q.rx * k, -q.rx * k, 2 * q.rx * k, 2 * q.rx * k)
     g.restore()
   }
-  TUBES.forEach((tb, i) => {
-    const l = tubeLevel(i, t)
-    // A pool of light under the tube, down to the floor; and the tube itself.
-    // The pools saturate when the tube is fully on, so a lit room is exactly as drawn; dimmed, they fall off fast.
-    const a = 2.0 * l * Math.sqrt(l)
-    pool(tb.x, TUBE_Y + 1.9, 4.2, 4.0, a)
-    pool(tb.x, TUBE_Y + 0.05, 1.8, 0.4, 1.4 * l)
-  })
-  for (const gl of roomGlows(t)) pool(gl.x, gl.y, gl.r, gl.r, gl.a, gl.color)
-  for (const fn of LIGHTS.glows) for (const gl of fn(t)) pool(gl.x, gl.y, gl.r, gl.r, gl.a, gl.color)
+  for (const q of poolsAt(t)) pool(q)
+  // Upstairs is not the shop's to light: its rooms keep their own lamps, whatever the tubes under the floor do.
+  g.globalCompositeOperation = 'source-over'
+  g.fillStyle = '#FFFFFF'
+  g.fillRect((ROOM.x0 - 0.3) * k, UPSTAIRS.roof * k, (ROOM.x1 - ROOM.x0 + 0.6) * k, (UPSTAIRS.floor - UPSTAIRS.roof) * k)
   g.restore()
   ctx.save()
   ctx.setTransform(1, 0, 0, 1, 0, 0)

@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../src/core/draw'
-import { easeInOutSine, easeInQuad, lerp } from '../../../../../../src/core/ease'
+import { easeInOutSine, easeInQuad, easeOutQuad, lerp } from '../../../../../../src/core/ease'
 import { FLOOR, R, ROLL, arrive, definePiece, fly, over, post, rail, ramp, segTime, trace, wait, type Lane, type Pt } from '../../../parts'
 import { soil, tuft } from '../../../pieces/garden/green'
 
@@ -14,7 +14,7 @@ import { soil, tuft } from '../../../pieces/garden/green'
  * the side, and the head drops: the handle whips up about the rim and
  * flings the ball off its end, up over the stump onto a shelf of path a
  * floor above. The axe slides off the stump behind it and comes to rest
- * on its head, leaning on the far side.
+ * on its head on the ground, the blade leaning on the far side.
  *
  * The axe is one drawing in its own frame, posed by a pivot and an angle;
  * the ball's seat on the handle rides that pose, so the lane through the
@@ -46,9 +46,9 @@ const CREAK = 0.1
 /** The seesaw after the tear: the head's fall accelerates the axe, the ball is let go at this angle (the near end up), and the axe is over at this one. */
 const ALPHA = 55
 const LET_GO = 0.35
-const OVER = 1.15
-/** Where the axe comes to rest: on its head at the stump's far foot. */
-const O_END: Pt = [0.34, 0.4]
+const OVER = 1.22
+/** Where the axe comes to rest: on the heel of its blade, on the ground just past the root flare, the toe against the stump's far side. */
+const HEEL: Pt = [0.315, 0.5]
 /** Where the ball lands on the shelf. */
 const LAND: Pt = [0.42, -1]
 const FLIGHT = 0.5
@@ -63,6 +63,8 @@ const rot = (v: Pt, a: number): Pt => [v[0] * Math.cos(a) - v[1] * Math.sin(a), 
 const add = (a: Pt, b: Pt): Pt => [a[0] + b[0], a[1] + b[1]]
 /** A point of the axe's frame in the piece's, for a pose. */
 const place = (pose: Pose, q: Pt): Pt => add(pose.o, rot(q, pose.a))
+
+const O_END = add(HEEL, rot([-HEAD[2][0], -HEAD[2][1]], OVER))
 
 const BITE_W = add(O0, BITE)
 /** The axe rotated by `a` about its bite. */
@@ -88,12 +90,14 @@ function poseAt(t: number): Pose {
   }
   const tau = t - FIRE
   if (t < T_OVER) {
+    // It slides off the rim before it drops, so the head goes down outside the stump, not through its corner.
     const a = -DIP + 0.5 * ALPHA * tau * tau
-    const slide = easeInQuad(over(t, T_GO, T_OVER))
-    return { o: [lerp(O_TEAR[0], O_END[0], slide), lerp(O_TEAR[1], O_END[1], slide)], a }
+    const slide = over(t, T_GO, T_OVER)
+    return { o: [lerp(O_TEAR[0], O_END[0], easeOutQuad(slide)), lerp(O_TEAR[1], O_END[1], easeInQuad(slide))], a }
   }
+  // It knocks against the stump and rocks off it, and back, never into the wood.
   const s = t - T_OVER
-  return { o: O_END, a: OVER + 0.05 * Math.exp(-s * 8) * Math.sin(s * 30) }
+  return { o: O_END, a: OVER + 0.05 * Math.exp(-s * 8) * Math.abs(Math.sin(s * 22)) }
 }
 
 const ballAt = (t: number): Pt => place(poseAt(t), SEAT_L)

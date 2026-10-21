@@ -807,6 +807,11 @@ function drawSeeds(ctx: CanvasRenderingContext2D, pose: BagelPose, S: number, h:
   }
 }
 
+/**
+ * What stands further back in the dark than the bagel, drawn just before it (under the crust): `fn(p, k, ink, weight, t)` in the bagel's own cells (its resting centre at 0, 0). The peak's far ironwork.
+ */
+export const BEHIND: ((p: p5, k: number, ink: string, weight: number, t: number) => void)[] = []
+
 /** The bagel, where the score stands it in the dark, drawn from show time. */
 export const bagel = scenery<null>({
   name: 'bagel',
@@ -828,6 +833,7 @@ export const bagel = scenery<null>({
       ctx.fillStyle = gr
       ctx.fillRect(f.x0 * k, f.y0 * k, (f.x1 - f.x0) * k, (f.y1 - f.y0) * k)
     }
+    for (const fn of BEHIND) fn(p, k, c.ink, c.weight, c.t)
     drawBagel(p, k, c.ink, c.weight, pose)
   },
 })

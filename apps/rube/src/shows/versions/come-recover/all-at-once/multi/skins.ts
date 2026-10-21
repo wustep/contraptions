@@ -1,5 +1,5 @@
 import { DOJO, HIBACHI, HOME, HOTDOG, LAUNDROMAT, PREMIERE, ROCKS, STAR, VOID, DOJO_THEME, HOTDOG_THEME, HIBACHI_THEME, VOID_THEME, ROCKS_THEME } from '../worlds'
-import { at, beam, circle, ellipse, glow, hash, line, mix, poly, rect, round, type Pen, type Pt } from './skins-pen'
+import { at, beam, circle, ellipse, glow, hash, line, mix, poly, rect, rgba, round, type Pen, type Pt } from './skins-pen'
 import { flashOf, PL, ring, TH, WEIGHT_H, type Moment, type Skin, type View } from './skins-kit'
 
 import { FILM_SKINS } from './skins-film'
@@ -81,6 +81,36 @@ function washer(pen: Pen, x: number, m: Moment, turn: number): void {
   }
 }
 
+/** The laundromat's garland: a cord in shallow swags, two red lanterns on each, rocking on their hooks. */
+function garland(pen: Pen, m: Moment, v: View): void {
+  const y = -2.52
+  const sag = 0.13
+  const span = 2.2
+  const knock = ring(m, 0.55, 0.6)
+  for (let i = Math.floor(v.x0 / span); i * span < v.x1; i++) {
+    const hx = i * span
+    const { ctx } = pen
+    ctx.beginPath()
+    ctx.moveTo(hx, y)
+    ctx.quadraticCurveTo(hx + span / 2, y + 2 * sag, hx + span, y)
+    ctx.strokeStyle = pen.ink
+    ctx.lineWidth = pen.lw * 0.7
+    ctx.stroke()
+    for (const u of [0.28, 0.72]) {
+      const lx = hx + span * u
+      const ly = y + 4 * sag * u * (1 - u)
+      const sway = (0.12 + 0.1 * hash(i, u * 10, 41)) * knock + 0.035 * Math.sin(m.t * 1.3 + lx * 1.7)
+      at(pen, lx, ly, sway, 1, () => {
+        line(pen, 0, 0, 0, 0.07, pen.ink, pen.lw * 0.6)
+        ellipse(pen, 0, 0.21, 0.13, 0.15, HOME.red, 0.7)
+        rect(pen, -0.065, 0.05, 0.13, 0.04, HOME.gold, 0.6)
+        rect(pen, -0.065, 0.33, 0.13, 0.04, HOME.gold, 0.6)
+        line(pen, 0, 0.37, 0, 0.5, HOME.gold, pen.lw * 1.4)
+      })
+    }
+  }
+}
+
 const home: Skin = {
   key: 'home',
   bg: LAUNDROMAT.bg,
@@ -105,6 +135,8 @@ const home: Skin = {
       glow(pen, 1.2, -3.0, 1.7, HOME.light, 0.35)
       round(pen, -0.1, -3.06, 2.6, 0.12, 0.06, HOME.light, 0.8)
     }
+    // The new year garland strung across under the ceiling, its lanterns rocking when the floor is struck.
+    if (pen.lod === 0 && v.y0 < -2.35) garland(pen, m, v)
     const turn = m.t * 2.2
     washer(pen, -1.98, m, turn)
     washer(pen, 1.98, m, turn + 1.3)
@@ -125,6 +157,34 @@ const home: Skin = {
 
 /* ------------------------------------------------------------------ the premiere */
 
+/**
+ * The premiere's crowd behind the rope: heads and shoulders dark against the dark, a hat or two, swaying; on a loud
+ * landing they come up on their toes and the press lift their cameras, and a bulb or two goes.
+ */
+function crowd(pen: Pen, m: Moment, v: View): void {
+  const col = mix(PREMIERE.bg, STAR.velvet, 0.18)
+  const deep = mix(PREMIERE.bg, '#000000', 0.35)
+  const loud = m.since >= 0 && Number.isFinite(m.since) && m.s >= 1.0 ? Math.exp(-m.since / 0.55) : 0
+  const step = 0.44
+  for (let i = Math.floor(v.x0 / step) - 1; i * step < v.x1 + step; i++) {
+    const x = i * step + 0.14 * (hash(i, 3) - 0.5)
+    const hy = -1.22 - 0.16 * hash(i, 4) + 0.025 * Math.sin(m.t * 1.7 + i * 1.9) - 0.09 * loud * hash(i, 8)
+    round(pen, x - 0.19, hy + 0.12, 0.38, -hy - 0.12, 0.12, col, 0)
+    circle(pen, x, hy, 0.115, col, 0)
+    if (hash(i, 5) < 0.22) {
+      rect(pen, x - 0.15, hy - 0.08, 0.3, 0.04, col, 0)
+      rect(pen, x - 0.09, hy - 0.2, 0.18, 0.13, col, 0)
+    }
+    // The press, with their cameras up over the heads in front.
+    if (hash(i, 6) < 0.34 && loud > 0.04) {
+      const cy = hy - 0.12 - 0.22 * Math.min(1, loud * 1.6)
+      rect(pen, x - 0.11, cy - 0.07, 0.22, 0.14, deep, 0)
+      circle(pen, x, cy, 0.045, mix(deep, STAR.brass, 0.4), 0)
+      if (m.since < 0.07 && hash(i, 7, Math.round(m.t * 3)) < 0.5) rect(pen, x - 0.06, cy - 0.15, 0.12, 0.06, STAR.flash, 0)
+    }
+  }
+}
+
 const premiere: Skin = {
   key: 'premiere',
   bg: PREMIERE.bg,
@@ -133,9 +193,10 @@ const premiere: Skin = {
   edge: STAR.gold,
   plank: STAR.brass,
   fulcrum: STAR.velvet,
-  back(pen, m, _v) {
+  back(pen, m, v) {
     // The spotlight, from high on the left, onto the machine.
     beam(pen, -2.6, -3.4, 0.1, 0.1, 0.2, 2.2, STAR.spot, 0.2)
+    if (pen.lod === 0) crowd(pen, m, v)
     if (pen.lod <= 1) {
       // Stanchions and their velvet rope, going off either way.
       for (const x of [-1.72, 1.72]) {
@@ -153,17 +214,6 @@ const premiere: Skin = {
         ctx.stroke()
       }
     }
-    // The press: flashes that go off on the loud landings, somewhere along the dark behind.
-    const f = flashOf(m, 1.0, 0.1)
-    if (f > 0.01) {
-      const k = Math.floor(m.t * 2.5)
-      for (let i = 0; i < 2; i++) {
-        const x = -1.9 + 3.8 * hash(k, i, 5)
-        const y = -1.9 + 0.7 * hash(k, i, 6)
-        glow(pen, x, y, 0.5, STAR.flash, 0.8 * f)
-        if (pen.lod <= 1) poly(pen, [[x - 0.2 * f, y], [x, y - 0.05], [x + 0.2 * f, y], [x, y + 0.05]], STAR.flash, 0)
-      }
-    }
   },
   weight(pen) {
     // A gold statuette on a brass base.
@@ -175,6 +225,25 @@ const premiere: Skin = {
 }
 
 /* ------------------------------------------------------------------ the dojo */
+
+/** The dojo's weapon rack: two posts and two rails, four staffs stood in it, the outer two spears with red tassels. */
+function rack(pen: Pen, m: Moment): void {
+  const x = -2.62
+  const r = ring(m, 0.24, 0.3)
+  for (let i = 0; i < 4; i++) {
+    const fx = x - 0.36 + i * 0.24
+    const tip = fx + 0.06 + r * (i % 2 ? 0.035 : -0.035)
+    const top = -1.95 + 0.08 * (i % 2)
+    line(pen, fx, -0.03, tip, top, pen.ink, 0.085)
+    line(pen, fx, -0.03, tip, top, DOJO.wood, 0.05)
+    if (i === 0 || i === 3) {
+      poly(pen, [[tip - 0.05, top], [tip + 0.05, top], [tip, top - 0.24]], mix(DOJO.screen, DOJO.wash, 0.45), 0.6)
+      line(pen, tip, top + 0.02, tip + 0.05 + r * 0.1, top + 0.2, DOJO.lacquer, 0.045)
+    }
+  }
+  for (const px of [x - 0.5, x + 0.5]) round(pen, px - 0.05, -1.5, 0.1, 1.5, 0.03, DOJO.woodDeep, 0.8)
+  for (const ry of [-1.28, -0.36]) rect(pen, x - 0.56, ry, 1.12, 0.08, DOJO.woodDeep, 0.8)
+}
 
 const dojo: Skin = {
   key: 'dojo',
@@ -194,6 +263,8 @@ const dojo: Skin = {
       for (let x = Math.floor(v.x0 / 1.44) * 1.44; x < v.x1 + 0.1; x += step) line(pen, x, top, x, 0, DOJO.woodDeep, Math.abs(x / 1.44 - Math.round(x / 1.44)) < 1e-6 ? bar * 2.2 : bar)
       for (let y = top; y < 0; y += pen.lod === 0 ? 0.42 : 0.84) line(pen, v.x0, y, v.x1, y, DOJO.woodDeep, bar)
     }
+    // A rack of staffs and spears along the left wall, rattling in it when the floor is struck.
+    if (pen.lod === 0 && v.x0 < -2.0) rack(pen, m)
     // A wooden dummy stands in the corner, and its arms rattle when the floor is struck.
     const x = 1.95
     const r = ring(m, 0.22, 0.25) * (m.e ? 0.14 : 0.08)
@@ -218,6 +289,26 @@ const dojo: Skin = {
 
 /* ------------------------------------------------------------------ hot dog fingers */
 
+/** A drape at one side of the recital room, from above the frame to the floor, in folds, gathered at its waist. */
+function drape(pen: Pen, side: number, v: View): void {
+  const inner = side * 2.5
+  const outer = side < 0 ? v.x0 - 0.1 : v.x1 + 0.1
+  const top = v.y0 - 0.1
+  const cloth = mix(HOTDOG.ketchup, HOTDOG_THEME.bg, 0.4)
+  const fold = mix(cloth, HOTDOG.piano, 0.25)
+  const waist = -1.05
+  // Gathered in at the cord, out again below it to the floor.
+  const pull = side * -0.22
+  poly(pen, [[outer, top], [inner, top], [inner - pull, waist], [inner, 0.02], [outer, 0.02]], cloth, 0.8)
+  for (let j = 1; j < 4; j++) {
+    const u = j / 4
+    const fx = inner + (outer - inner) * u
+    line(pen, fx, top, fx - pull * (1 - u), waist, fold, 0.03)
+    line(pen, fx - pull * (1 - u), waist, fx, 0, fold, 0.03)
+  }
+  line(pen, inner - pull - side * 0.04, waist - 0.04, outer, waist + 0.06, HOTDOG.mustard, 0.05)
+}
+
 const hotdog: Skin = {
   key: 'hotdog',
   bg: HOTDOG_THEME.bg,
@@ -225,7 +316,9 @@ const hotdog: Skin = {
   floor: HOTDOG.lilac,
   plank: HOTDOG.bun,
   fulcrum: HOTDOG.ketchup,
-  back(pen, m, _v) {
+  back(pen, m, v) {
+    // The recital's drapes at either side, gathered back with a mustard cord.
+    if (pen.lod === 0) for (const side of [-1, 1]) if (side < 0 ? v.x0 < -2.45 : v.x1 > 2.45) drape(pen, side, v)
     // The piano that is played with the feet, behind the machine: up on its legs, its keyboard over the plank's
     // highest swing and the weight's head, so the seesaw works under the keys rather than through them.
     const x0 = -1.5
@@ -254,6 +347,32 @@ const hotdog: Skin = {
         for (let i = 0; i < 4; i++) {
           const fx = hx - 0.16 + i * 0.105
           at(pen, fx, hy + 0.08, w * (0.6 + 0.2 * i) + 0.08 * (i - 1.5), 1, () => round(pen, -0.04, 0, 0.08, 0.34 + 0.04 * (i % 2), 0.04, HOTDOG.sausage, 0.7))
+        }
+      }
+    }
+  },
+  front(pen, m, v) {
+    // The audience, in front: the backs of their heads, swaying to it; on a loud landing they clap, floppily.
+    if (pen.lod > 0 || v.y1 < 0.3) return
+    const col = mix(HOTDOG.piano, HOTDOG.sausageDeep, 0.25)
+    const clap = m.since >= 0 && Number.isFinite(m.since) && m.s >= 1.1 ? Math.exp(-m.since / 0.7) : 0
+    for (let i = Math.floor(v.x0 / 0.85) - 1; i * 0.85 < v.x1 + 0.5; i++) {
+      const x = i * 0.85 + 0.22 * (hash(i, 31) - 0.5)
+      const y = 0.52 + 0.07 * hash(i, 32)
+      const lean = 0.05 * Math.sin(m.t * 1.1 + i * 1.3)
+      at(pen, x, y, lean, 1, () => {
+        round(pen, -0.34, 0.18, 0.68, 0.6, 0.2, col, 0)
+        ellipse(pen, 0, 0, 0.19, 0.22, col, 0)
+        if (hash(i, 33) < 0.3) ellipse(pen, 0.13, -0.17, 0.08, 0.05, HOTDOG.ketchup, 0, 0.4)
+      })
+      if (clap > 0.06 && hash(i, 34) < 0.6) {
+        // Two hands of hot dogs, up, flopping as they meet.
+        const meet = Math.abs(Math.sin(m.since * 14))
+        for (const s of [-1, 1]) {
+          const hx = x + s * (0.06 + 0.1 * meet)
+          const hy = y - 0.32 - 0.12 * clap
+          round(pen, hx - 0.06, hy, 0.12, 0.09, 0.04, HOTDOG.bun, 0)
+          for (let j = 0; j < 3; j++) at(pen, hx - 0.04 + j * 0.04, hy, -s * 0.3 * meet + 0.15 * (j - 1), 1, () => round(pen, -0.016, -0.15, 0.032, 0.15, 0.016, HOTDOG.sausage, 0))
         }
       }
     }
@@ -298,7 +417,6 @@ const hibachi: Skin = {
     const f = flashOf(m, 0.9, 0.2)
     const lick = 0.5 + 0.5 * Math.sin(m.t * 17) * Math.sin(m.t * 7.3)
     const fh = 0.45 + 0.15 * lick + 0.9 * f
-    glow(pen, x, -0.55 - fh * 0.5, 0.6 + fh * 0.5, HIBACHI.flame, 0.35 + 0.3 * f)
     poly(pen, [[x - 0.2, -0.5], [x - 0.08, -0.5 - fh * 0.7], [x - 0.02, -0.55 - fh * 0.45], [x + 0.03, -0.5 - fh], [x + 0.1, -0.5 - fh * 0.5], [x + 0.2, -0.5]], HIBACHI.flame, 0.7)
     if (pen.lod <= 1) poly(pen, [[x - 0.1, -0.5], [x, -0.5 - fh * 0.55], [x + 0.1, -0.5]], HIBACHI.flameHot, 0)
     for (let i = 0; i < 3; i++) ellipse(pen, x, -0.08 - i * 0.15, 0.3 - i * 0.07, 0.07, HIBACHI.onion, 0.7)
@@ -318,6 +436,25 @@ const hibachi: Skin = {
       rect(pen, -0.3, -0.12, 0.6, 0.12, HIBACHI.hat, 0.8)
       poly(pen, [[-0.28, -0.12], [-0.34, -0.66], [-0.17, -0.86], [0, -0.78], [0.17, -0.88], [0.34, -0.66], [0.28, -0.12]], HIBACHI.hat)
     })
+  },
+  front(pen, m, v) {
+    // The diners along the griddle, between us and it: heads and shoulders against the flame's light, their tops
+    // caught by it; at the onion volcano's flare they rock back.
+    if (pen.lod > 0 || v.y1 < 0.3) return
+    const f = flashOf(m, 0.9, 0.35)
+    const col = mix(HIBACHI_THEME.bg, '#000000', 0.35)
+    for (let i = Math.floor(v.x0 / 0.95) - 1; i * 0.95 < v.x1 + 0.5; i++) {
+      const x = i * 0.95 + 0.25 * (hash(i, 21) - 0.5)
+      const y = 0.5 + 0.06 * hash(i, 22) - 0.07 * f * (0.5 + hash(i, 23)) + 0.012 * Math.sin(m.t * 1.4 + i * 2.1)
+      round(pen, x - 0.36, y + 0.2, 0.72, 0.6, 0.2, col, 0)
+      ellipse(pen, x, y, 0.2, 0.23, col, 0)
+      const { ctx } = pen
+      ctx.beginPath()
+      ctx.ellipse(x, y, 0.2, 0.23, 0, Math.PI * 1.15, Math.PI * 1.85)
+      ctx.strokeStyle = rgba(HIBACHI.flame, 0.55)
+      ctx.lineWidth = pen.lw * 1.2
+      ctx.stroke()
+    }
   },
   board(pen) {
     // A spatula: a wooden handle, and a steel blade.

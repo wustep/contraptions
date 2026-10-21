@@ -22,17 +22,6 @@ export function clipBox(p: p5, w: number, h: number, fn: () => void): void {
   p.pop()
 }
 
-/** Same, but clipped to a circle of diameter `d` centered on the cell. */
-export function clipCircle(p: p5, d: number, fn: () => void): void {
-  p.push()
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  ctx.beginPath()
-  ctx.arc(0, 0, d / 2, 0, Math.PI * 2)
-  ctx.clip()
-  fn()
-  p.pop()
-}
-
 /** Ink outline, no fill. */
 export function outline(p: p5, ink: string, weight: number): void {
   p.stroke(ink)

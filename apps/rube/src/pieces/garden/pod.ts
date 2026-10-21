@@ -80,12 +80,13 @@ export const pod = definePiece<{ color: string }>({
   },
   over: (p, s, { k, t, since, ink, weight }) => {
     // The swell: the pod fattens while the ball is inside, bursts, and slumps.
+    // At the burst it goes down fast, as the flaps fly open, rather than in one frame, and then slumps.
     const inside = t > T_GONE && since < 0
-    const swell = inside ? 1 + 0.3 * over(t, T_GONE + CREEP * 0.5, FIRE) : since >= 0 ? 1 - 0.15 * Math.min(1, over(since, 0, 0.6)) : 1
     const open = since < 0 ? 0 : easeOutCubic(over(since, 0, 0.08))
+    const swell = inside ? 1 + 0.3 * over(t, T_GONE + CREEP * 0.5, FIRE) : since >= 0 ? 1.3 - 0.3 * open - 0.15 * over(since, 0, 0.6) : 1
     // The bulge: where the ball is, once its back is in the mouth; it stays where the ball stops.
     const bx = t < T_GONE ? GONE : since < 0 ? laneAt(LANE, t).x : INSIDE
-    const bump = t < T_GONE - 0.05 ? 0 : since < 0 ? 1 : 0.6
+    const bump = since < 0 ? over(t, T_GONE - 0.05, T_GONE + 0.03) : 1 - 0.4 * open
     const h = HALF_H * swell
 
     // The body: a capsule from the mouth to the cut, its skin bulging over the ball.
@@ -125,13 +126,13 @@ export const pod = definePiece<{ color: string }>({
       p.endShape(p.CLOSE)
       p.pop()
     }
-    // The burst.
-    if (since > 0 && since < 0.25) {
-      const f = over(since, 0, 0.25)
+    // The burst: a few strokes off the tip, clear of the seed coming through it.
+    if (since > 0 && since < 0.18) {
+      const f = over(since, 0, 0.18)
       p.push()
       p.stroke(s.color)
       p.strokeWeight(weight)
-      burst(p, FAR * k, 0, (0.1 + 0.16 * f) * k, (0.16 + 0.22 * f) * k, 6, 0.3 + f)
+      burst(p, FAR * k, 0, (0.17 + 0.1 * f) * k, (0.22 + 0.16 * f) * k, 4, Math.PI / 4)
       p.pop()
     }
   },

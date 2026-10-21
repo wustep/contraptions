@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { solid } from '../../../../../src/core/draw'
 import { easeInQuad, easeOutCubic } from '../../../../../src/core/ease'
-import { FLOOR, ROLL, arrive, arriveAt, definePiece, over, rail, ramp, wait, type BallChange, type Lane } from '../../parts'
+import { FLOOR, ROLL, arrive, arriveAt, definePiece, mixHex, over, rail, ramp, wait, type BallChange, type Lane } from '../../parts'
 import { bodyColor, luminance, piling, water } from './sea'
 
 /**
@@ -9,8 +9,8 @@ import { bodyColor, luminance, piling, water } from './sea'
  * level with the planks and heaped to the brim with coin, and its domed
  * lid stands thrown back behind, the dark of its inside to us. The ball
  * rolls off the planks onto the gold and beds down in the hollow between
- * two heaps; the lid slams over it. A beat, and gold light leaks out of
- * the seam and the keyhole. The lid flies back, a few coins jump with it,
+ * two heaps; the lid slams over it. A beat, and the keyhole shows gold
+ * from inside. The lid flies back, a few coins jump with it,
  * and the ball is lying there gilded — the palette's yellowest colour that
  * is not the one it came in — and rolls off that colour for good. The
  * chest keeps its lid up after, for the next one.
@@ -22,7 +22,7 @@ const BOX = 0.2
 const LID = 0.3
 /** The straps: a band of paper down the box and over the lid, this far in from either end. */
 const STRAP = HW - 0.075
-/** Stop in the hollow; the slam; the glint; the lid lifts; out. */
+/** Stop in the hollow; the slam; the keyhole lit; the lid lifts; out. */
 const ARRIVE = arriveAt(0)
 const SLAM = 0.08
 const FIRE = ARRIVE + 0.1
@@ -46,7 +46,7 @@ const LANE: Lane = {
   fire: FIRE,
 }
 
-/** How far shut the lid is: open, slammed at the fire, thrown back again after the glint. */
+/** How far shut the lid is: open, slammed at the fire, thrown back again after the beat. */
 function shutAt(since: number): number {
   if (since < -SLAM) return 0
   if (since < 0) return easeInQuad(over(since, -SLAM, 0))
@@ -114,6 +114,20 @@ export const chest = definePiece<{ color: string; gold: string }>({
       p.fill(ink)
       dome(p, k, h, 0.045)
     }
+    // The lid flies back and three coins jump with it, clear of the ball, and fall back into the heaps: two behind it, and one
+    // ahead that goes high enough for the ball to have gone by under it. Each comes up out of the gold and goes back under
+    // it, drawn before the heaps; laid over them, each was there whole the frame it jumped and gone the frame it landed.
+    if (since > T_SHOW - FIRE) {
+      solid(p, ink, weight * 0.6, s.gold)
+      for (const [x, h, dur] of [
+        [-0.22, 0.36, 0.4],
+        [-0.15, 0.48, 0.45],
+        [0.19, 0.56, 0.5],
+      ]) {
+        const hop = over(since, T_SHOW - FIRE, T_SHOW - FIRE + dur)
+        if (hop < 1) p.circle(x * k, (BRIM + 0.01 - h * 4 * hop * (1 - hop)) * k, 0.07 * k)
+      }
+    }
     // The gold, heaped to the brim in two heaps with a hollow between, where the ball beds down.
     solid(p, ink, weight, s.gold)
     p.beginShape()
@@ -131,7 +145,8 @@ export const chest = definePiece<{ color: string; gold: string }>({
   },
   over: (p, s, { k, since, ink, bg, weight }) => {
     const shut = shutAt(since)
-    const glint = since > 0.2 && since < 0.55 ? Math.sin(Math.PI * over(since, 0.2, 0.55)) : 0
+    // The keyhole lit from inside through the beat: gold coming up in it and going down again.
+    const glint = Math.sin(Math.PI * over(since, 0.2, 0.55))
 
     // The lid slammed down over the ball, in front of it: the dome, its two straps, and the hasp over the lock.
     if (shut >= 0.5) {
@@ -145,26 +160,11 @@ export const chest = definePiece<{ color: string; gold: string }>({
       }
       if (shut > 0.98) p.rect(0, (BRIM - 0.01) * k, 0.06 * k, 0.08 * k, 0.012 * k)
     }
-    // The keyhole, dark, or lit from inside when the glint comes.
+    // The keyhole, dark, or lit from inside. Rays of gold out of the seam at either end were a sparkle.
     p.noStroke()
-    p.fill(glint > 0.1 ? s.gold : ink)
+    p.fill(mixHex(ink, s.gold, glint))
     p.circle(0, (BRIM + 0.065) * k, 0.04 * k)
     p.triangle(-0.012 * k, (BRIM + 0.07) * k, 0.012 * k, (BRIM + 0.07) * k, 0, (BRIM + 0.115) * k)
-    // The glint: gold light out of the seam under the lid, at either end.
-    if (glint > 0.02) {
-      p.push()
-      p.stroke(s.gold)
-      p.strokeWeight(weight)
-      for (const side of [-1, 1]) {
-        for (const a of [-0.6, -0.15, 0.3]) {
-          const r0 = 0.05
-          const r1 = 0.07 + 0.09 * glint
-          const x = side * (HW + 0.01)
-          p.line((x + side * Math.cos(a) * r0) * k, (BRIM - 0.01 + Math.sin(a) * r0) * k, (x + side * Math.cos(a) * r1) * k, (BRIM - 0.01 + Math.sin(a) * r1) * k)
-        }
-      }
-      p.pop()
-    }
     // The slam: a knock of lines off the lid's foot.
     if (since > 0 && since < 0.16) {
       const f = since / 0.16
@@ -177,19 +177,6 @@ export const chest = definePiece<{ color: string; gold: string }>({
         p.line(x * k, (BRIM - 0.16) * k, (x + side * (0.04 + 0.05 * f)) * k, (BRIM - 0.22 - 0.04 * f) * k)
       }
       p.pop()
-    }
-    // The lid flies back and three coins jump with it, clear of the ball, and fall back into the heaps: two behind it, and one
-    // ahead that goes high enough for the ball to have gone by under it.
-    if (since > T_SHOW - FIRE) {
-      solid(p, ink, weight * 0.6, s.gold)
-      for (const [x, h, dur] of [
-        [-0.22, 0.3, 0.4],
-        [-0.15, 0.42, 0.45],
-        [0.26, 0.5, 0.5],
-      ]) {
-        const hop = over(since, T_SHOW - FIRE, T_SHOW - FIRE + dur)
-        if (hop < 1) p.circle(x * k, (BRIM - 0.06 - h * 4 * hop * (1 - hop)) * k, 0.07 * k)
-      }
     }
   },
 })

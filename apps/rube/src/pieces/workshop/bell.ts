@@ -59,24 +59,22 @@ export const bell = definePiece<{ color: string }>({
     if (!fits([[0, 0]], [1, 0])) return null
     return { cells: [[0, 0]], exit: { at: [1, 0], dir: 1 }, lane: LANE, state: { color } }
   },
-  draw: (p, s, { k, since, ink, weight }) => {
+  draw: (p, s, { k, t, since, ink, weight }) => {
     // The knock: the bell rocks on its pin, away from the clapper first, and rings down.
     const rock = since < 0 ? 0 : -0.13 * Math.sin(since * 28) * Math.exp(-since * 4)
     const ring = since < 0 ? 0 : 1 - over(since, 0, 0.5)
 
     rail(p, k, ink, weight, -0.5, 0.5)
 
-    // The sound: two arcs a side, going out and thinning to nothing.
+    // The sound: an arc a side, going out and thinning to nothing.
     if (ring > 0.02) {
       p.push()
       p.stroke(s.color)
       p.strokeWeight(weight * ring)
       p.noFill()
       for (const side of [-1, 1]) {
-        for (let i = 1; i <= 2; i++) {
-          const r = BW * (0.9 + i * 0.3 + (1 - ring) * 0.4) * k
-          p.arc(side * BW * 0.42 * k, (CROWN + BH * 0.5) * k, r, r, side > 0 ? -0.5 : Math.PI - 0.5, side > 0 ? 0.5 : Math.PI + 0.5)
-        }
+        const r = BW * (1.2 + (1 - ring) * 0.3) * k
+        p.arc(side * BW * 0.42 * k, (CROWN + BH * 0.5) * k, r, r, side > 0 ? -0.5 : Math.PI - 0.5, side > 0 ? 0.5 : Math.PI + 0.5)
       }
       p.pop()
     }
@@ -98,10 +96,11 @@ export const bell = definePiece<{ color: string }>({
     p.pop()
     solid(p, ink, weight, s.color)
     p.circle(0, CROWN * k, 0.05 * k)
-  },
-  over: (p, s, { k, t, since, ink, weight }) => {
+
     // The clapper: shoved ahead by the ball to the lip, wedged there while
-    // the ball goes under, then dropping back and swinging itself out.
+    // the ball goes under, then dropping back and swinging itself out. It
+    // hangs inside the bell, so behind the ball like the bell: drawn over
+    // the ball, its head sat pressed into the ball's top all the way under.
     const swing =
       since < 0 ? shoved(laneAt(LANE, t).x)
       : since < FREE ? KNOCK

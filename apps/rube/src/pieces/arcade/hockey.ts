@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../src/core/draw'
-import { easeInQuad, easeOutCubic, easeOutQuad } from '../../../../../src/core/ease'
+import { easeInOutSine, easeInQuad, easeOutQuad } from '../../../../../src/core/ease'
 import { FAST, FLOOR, R, ROLL, arrive, arriveAt, definePiece, over, rail, ramp, roll, wait, type Lane, type Pt } from '../../parts'
-import { display, flash, glow, score } from './neon'
+import { display, flash, score } from './neon'
 
 /**
  * An air-hockey table. The rail runs onto the table's surface; the ball
@@ -21,8 +21,12 @@ const V = FAST * 1.3
 const PIVOT: Pt = [-0.1, -0.42]
 const ROD = 0.34
 const HEAD_W = 0.18
-/** Drawn back, behind the ball. Positive is back: the head swings toward the ball as it falls. */
-const BACK = 0.9
+/**
+ * Drawn back, behind the ball. Positive is back: the head swings toward the ball as it falls. It is held
+ * there while the ball comes in under it, and goes back there after: hanging straight, the head was in
+ * the ball's way, and the ball rolled through it.
+ */
+const BACK = 1.05
 /** Where the head's face meets the ball's back, hanging almost straight. */
 const CONTACT = Math.asin((PIVOT[0] + HEAD_W / 2 - (SEAT - R)) / ROD)
 /** How far past contact it follows through while the ball gets away. */
@@ -60,19 +64,17 @@ export const hockey = definePiece<{ color: string }>({
   },
   // The goal is what scores: over the scoreboard, as it goes to one. Off the slap it lay across the mallet.
   scores: (p, s, { k, since, bg }) => score(p, k, s.color, bg, GOAL + 0.1, BOARD_Y - 0.075 - 0.025 + 0.1, '+100', since - T_GOAL, 1),
-  draw: (p, s, { k, t, since, ink, bg, weight }) => {
-    // The mallet: drawn back behind the ball while it winds, swung down onto
-    // its back at the fire, a short follow-through as the ball gets away,
-    // then left hanging.
-    const wind = t < ARRIVE ? 0 : since < -SLAP ? easeOutCubic(over(t, ARRIVE, FIRE - SLAP)) : 1
+  draw: (p, s, { k, since, ink, bg, weight }) => {
+    // The mallet: held drawn back, clear of the ball as it comes in, swung
+    // down onto its back at the fire, a short follow-through as the ball
+    // gets away, then drawn back again.
     const swing =
-      since < -SLAP ? BACK * wind
+      since < -SLAP ? BACK
       : since < 0 ? BACK - (BACK - CONTACT) * easeInQuad(over(since, -SLAP, 0))
       : since < 0.15 ? CONTACT + (THROUGH - CONTACT) * easeOutQuad(over(since, 0, 0.15))
       : since < 0.6 ? THROUGH
-      : THROUGH * (1 - over(since, 0.6, 1.4))
+      : THROUGH + (BACK - THROUGH) * easeInOutSine(over(since, 0.6, 1.4))
     const goal = since - T_GOAL
-    const scored = goal > 0 ? 1 - over(goal, 2, 3) : 0
 
     rail(p, k, ink, weight, -0.5, -0.2)
     rail(p, k, ink, weight, GOAL + 0.16, 2.5)
@@ -102,11 +104,9 @@ export const hockey = definePiece<{ color: string }>({
     p.rect(0, (ROD - 0.03) * k, 0.06 * k, 0.06 * k)
     p.pop()
     // The scoreboard on a post over the goal, under the cell's roof: a dark
-    // window with a dim 0 in it, that lights to 1 in the colour on the goal
-    // and glows a while.
+    // window with a dim 0 in it, that lights to 1 in the colour on the goal.
     outline(p, ink, weight)
     p.line((GOAL + 0.1) * k, -0.1 * k, (GOAL + 0.1) * k, BOARD_Y * k)
-    glow(p, k, s.color, GOAL + 0.1, BOARD_Y, 0.16, scored)
     display(p, k, ink, weight, bg, GOAL + 0.1, BOARD_Y, 0.26, 0.15, goal > 0 ? '1' : '0', s.color, goal > 0)
     // The slap, and the goal.
     flash(p, k, s.color, weight, SEAT + 0.1, 0, since)

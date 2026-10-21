@@ -2,7 +2,7 @@ import { solid } from '../../../../../../src/core/draw'
 import { clamp, easeOutQuad } from '../../../../../../src/core/ease'
 import { R, ROLL, definePiece, laneReach, rail, ramp, roll, type Lane, type Pt, type Seg } from '../../../parts'
 import { otherColor, sprung } from './parts-c'
-import { gearColor, powder, snow, snowAt, snowWhite } from './snow'
+import { gearColor, snow, snowAt } from './snow'
 
 /**
  * Three slalom poles planted in the snow beside the track, each on a
@@ -57,13 +57,13 @@ function poleAt(i: number, t: number): number {
   const down = t - STRUCK[i]
   if (down < 0) return 0
   const up = t - LET_UP[i]
-  if (up >= 0) return sprung(up, DOWN, 0, 17, 6.5)
+  if (up >= 0) return sprung(up, DOWN, 0, 17, 10)
   if (down < SLAP) return DOWN * easeOutQuad(down / SLAP)
   // A bounce off the snow, once.
   return DOWN - 0.13 * Math.sin(Math.PI * clamp((down - SLAP) / 0.14))
 }
 
-export const slalom = definePiece<{ colors: string[]; white: string }>({
+export const slalom = definePiece<{ colors: string[] }>({
   name: 'slalom',
   weight: 1,
   place: ({ color, fits, theme, ball }) => {
@@ -75,7 +75,7 @@ export const slalom = definePiece<{ colors: string[]; white: string }>({
     // Gates go by turns in two colours, neither of them the snow's or the ball's.
     const first = gearColor(theme, color, ball.color)
     const second = otherColor(theme, first, ball.color)
-    return { cells, exit: { at: [2, 0], dir: 1 }, lane: LANE, state: { colors: [first, second, first], white: snowWhite(theme) } }
+    return { cells, exit: { at: [2, 0], dir: 1 }, lane: LANE, state: { colors: [first, second, first] } }
   },
   draw: (p, s, { k, t, ink, weight }) => {
     snow(p, k, ink, weight, -0.5, 1.5)
@@ -83,9 +83,6 @@ export const slalom = definePiece<{ colors: string[]; white: string }>({
     POLES.forEach((px, i) => {
       const a = poleAt(i, t)
       const hy = hinge(px)
-      // Powder where the pole's head slaps the snow.
-      const tip = px + LEN * Math.sin(DOWN)
-      powder(p, k, ink, weight, s.white, tip - 0.06, snowAt(tip) - 0.01, clamp((t - STRUCK[i] - SLAP) / 0.32), 0.55)
       // How fast it is turning: the flag trails behind the pole's swing.
       const turning = (poleAt(i, t + 0.004) - poleAt(i, t - 0.004)) / 0.008
       const trail = clamp(Math.abs(turning) * 0.005, 0, 0.07)

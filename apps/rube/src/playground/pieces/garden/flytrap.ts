@@ -8,15 +8,15 @@ import { gardenGreen, leaf, nearestHue, soil, tuft } from '../../../pieces/garde
  * A Venus flytrap on a tall stalk, rooted a floor down. Its trap gapes at
  * the path's end like a jaw: the lower lobe held level with the path, the
  * upper, a dome, thrown back, and a row of teeth along the near rim of
- * each. The ball rolls onto the lower lobe and stops among the trigger
- * hairs; they bend; the dome snaps down over it and the teeth lace shut in
- * front of the ball, which is seen through them from there on, the trap cut
- * open to us the way the chest and the pond are. A caught ball is heavy: the
- * stalk bows over under it, slowly and then not, and lowers the shut trap a
- * whole floor, the head coming round to face on when that is the way the
- * ball is to go. It sways to a stop with its chin on the path below; the
- * trap gapes again and the ball rolls out down the lower lobe and away.
- * The plant stays bowed, its mouth open on the path.
+ * each. The ball rolls onto the lower lobe and stops, and the dome snaps
+ * down over it and the teeth lace shut in front of the ball, which is seen
+ * through them from there on, the trap cut open to us the way the chest and
+ * the pond are. A caught ball is heavy: the stalk bows over under it,
+ * slowly and then not, and lowers the shut trap a whole floor, the head
+ * coming round to face on when that is the way the ball is to go. It sways
+ * to a stop with its chin on the path below; the trap gapes again and the
+ * ball rolls out down the lower lobe and away. The plant stays bowed, its
+ * mouth open on the path.
  *
  * The head is one thing in its own frame: where its seat is, how far it has
  * come round, how wide it gapes, how far its chin has dropped about the
@@ -194,11 +194,12 @@ export const flytrap = definePiece<FlytrapState>({
     const hinge: Pt = [h.at[0] + h.face * HINGE, h.at[1] + R + LOBE * 0.4]
     leaf(p, k, ink, weight, s.color, ROOT[0], ROOT[1] - 0.012, 0.27, -0.3, 0.34)
     leaf(p, k, ink, weight, s.color, ROOT[0], ROOT[1] - 0.012, 0.25, Math.PI + 0.35, 0.34)
+    // It always comes up into the hinge from under the head, and bows out on the hinge's side, more the lower the head is.
     const low = clamp(h.at[1])
-    const side = turn > 0 ? 1 - 2 * low : 1
+    const rise = ROOT[1] - hinge[1]
     outline(p, ink, weight * 1.5)
     p.noFill()
-    p.bezier(ROOT[0] * k, ROOT[1] * k, (ROOT[0] + 0.12 * side) * k, (0.85 - 0.55 * low) * k, (hinge[0] + side * (0.1 + 0.25 * low)) * k, (hinge[1] + 0.45 - 1.0 * low) * k, hinge[0] * k, hinge[1] * k)
+    p.bezier(ROOT[0] * k, ROOT[1] * k, (ROOT[0] + 0.12 * h.face) * k, (ROOT[1] - rise * 0.45) * k, (hinge[0] + h.face * (0.1 + 0.18 * low)) * k, (hinge[1] + rise * 0.45) * k, hinge[0] * k, hinge[1] * k)
 
     // The head, behind the ball: the dome with its inside showing, thrown back or shut, and the lower lobe.
     p.push()
@@ -211,12 +212,6 @@ export const flytrap = definePiece<FlytrapState>({
     p.pop()
     solid(p, ink, weight, s.color)
     lowerLobe(p, k)
-    // The trigger hairs, bent flat by the ball.
-    if (t < SNAP + 0.04) {
-      const bent = clamp((t - ARRIVE + 0.18) / 0.16)
-      outline(p, ink, weight * 0.7)
-      for (const x of [-0.1, 0.09]) p.line(x * k, 0, (x + 0.055 * bent) * k, -0.07 * (1 - bent * 0.8) * k)
-    }
     p.pop()
   },
   over: (p, _s, { k, t, ink, weight }) => {

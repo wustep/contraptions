@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { mixHex } from '../../../../../parts'
-import { beam, bloom, pool, rgba } from '../cast'
+import { beam, pool, rgba } from '../cast'
 import { hash } from '../kit'
 import { BAND, RAIN_GEO } from '../stack'
 import { RAIN, SLEEP } from '../worlds'
@@ -341,7 +341,6 @@ function building(pen: Pen, f: View, b: Building, i: number): void {
         ctx.fillRect((x - ww / 2) * k, y * k, ww * k, wh * k)
         ctx.fillStyle = sill
         ctx.fillRect((x - ww / 2 - 0.05) * k, (y + wh) * k, (ww + 0.1) * k, Math.max(1, 0.07 * k))
-        if (lit) bloom(p, k, [x, y + wh / 2], 0.9, RAIN.windowLit, 0.14)
       }
     }
   }
@@ -408,7 +407,6 @@ function shop(pen: Pen, te: number): void {
   pool(p, k, [(x0 + x1) / 2 - 0.4, 0.02], 2.2, 0.16, RAIN.windowLit, 0.3 * glow)
   // Into the street: a soft pool fading out on every side (a window-wide box of light ended on hard vertical edges).
   pool(p, k, [(wx0 + wx1) / 2, 0.22], (wx1 - wx0) / 2 + 0.7, 0.34, RAIN.windowLit, 0.3 * glow)
-  bloom(p, k, [(wx0 + wx1) / 2, y + 1.1], 2.4, RAIN.windowLit, 0.16 * glow)
   // The awning: a canvas sloped out from the wall, its valance scalloped, dark against the lit window; it shivers as
   // the train goes by.
   p.push()
@@ -482,7 +480,7 @@ function lampPost(pen: Pen, x: number, onBridge: boolean, quake: number): void {
   p.pop()
 }
 
-/** The lamps' light: soft glows, cones down through the rain, pools on the wet street and their runs into it. */
+/** The lamps' light: cones down through the rain, pools on the wet street and their runs into it (no halo round a head). */
 export function drawLampLight(pen: Pen, f: View, te: number): void {
   const { p, k, ctx } = pen
   for (let i = 0; i < LAMPS.length; i++) {
@@ -491,7 +489,6 @@ export function drawLampLight(pen: Pen, f: View, te: number): void {
     const q = shake(te, LAMPS[i])
     const flick = (0.94 + 0.06 * Math.sin(te * (1.3 + hash(i, 1, 95)) + i)) * (1 - Math.min(0.5, Math.abs(q) * 12))
     const head: [number, number] = [x + q * 0.9 * 3, -2.92]
-    bloom(p, k, head, 1.0, LAMP, 0.32 * flick)
     beam(p, k, head, [x, 0], 0.22, 2.4, LAMP, 0.12 * flick)
     pool(p, k, [x, 0.02], 1.5, 0.13, LAMP, 0.22 * flick)
     // Its reflection in the wet road: a soft streak down from its foot, fading at its sides as well as down (a strip

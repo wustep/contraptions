@@ -10,7 +10,7 @@ import { bellAt, CH, CHURCH_BOX, ease, FOOT, FUN, gloomy, paint, pchip, SEATED, 
  *
  * From the cut Carl sits alone in the front pew where his father sat at the wedding, the balloon over him, and the
  * place beside him where she was a moment ago (at her bedside, across the cut) is empty. Nothing moves but the light:
- * one grey beam from a lancet with the dust turning in it, the candles burned low. The camera drifts from him to the
+ * one grey beam from a lancet, the candles burned low. The camera drifts from him to the
  * altar: the wedding's kiss, framed again, with nobody in it; white lilies, and the wedding photograph on an easel
  * where the two of them stood.
  *

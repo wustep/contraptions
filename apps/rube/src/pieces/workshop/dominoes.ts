@@ -195,22 +195,16 @@ export const dominoes = definePiece<{ color: string }>({
     outline(p, ink, weight)
     p.line((GATE + 0.03 + nudge) * k, (STRIKE_Y - RISE * lift) * k, (FINGER_X + nudge) * k, (STRIKE_Y - RISE * lift) * k)
   },
-  over: (p, s, { k, since, ink, bg, weight }) => {
+  over: (p, _s, { k, ink, bg, weight }) => {
     // The coil over the gate, in front: the gate's top slides up inside it.
+    // No burst round it when it pulls: the gate's snap is the event, and a
+    // second star of ticks a beat after the button's read as a sparkle.
     solid(p, ink, weight, bg)
     p.rect(GATE * k, ((COIL_Y0 + COIL_Y1) / 2) * k, COIL_W * k, (COIL_Y1 - COIL_Y0) * k, 0.015 * k)
     outline(p, ink, weight)
     for (let i = 1; i <= 3; i++) {
       const y = COIL_Y0 + ((COIL_Y1 - COIL_Y0) * i) / 4
       p.line((GATE - COIL_W / 2) * k, y * k, (GATE + COIL_W / 2) * k, y * k)
-    }
-    if (since > SIGNAL && since < SIGNAL + 0.18) {
-      const f = over(since, SIGNAL, SIGNAL + 0.18)
-      p.push()
-      p.stroke(s.color)
-      p.strokeWeight(weight)
-      burst(p, GATE * k, ((COIL_Y0 + COIL_Y1) / 2) * k, (0.1 + 0.08 * f) * k, (0.14 + 0.12 * f) * k, 6, 0.3)
-      p.pop()
     }
   },
 })

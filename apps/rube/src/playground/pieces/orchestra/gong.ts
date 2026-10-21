@@ -9,11 +9,12 @@ import { brassFor, partColor } from './parts-a'
  * a bar across their heads, and the gong hung from the bar on two cords,
  * its foot well clear of the ball. Under the stage a beater lies on a
  * bell crank, its felt head on the floor to the east and the crank's short
- * arm standing up through a slot in the stage to the west. The ball rolls
- * over that paddle and treads it down; the crank flies round and throws the
- * beater up, and its head meets the gong's foot just as the ball goes under
- * it. The gong swings on its cords, away and back and away, shimmering,
- * and dies down; the beater falls back on the floor with a bounce, and the
+ * arm standing up through a slot in the stage to the west; the crank's
+ * axle runs back under the boards, so the beater swings behind the line.
+ * The ball rolls over that paddle and treads it down; the crank flies round
+ * and throws the beater up past the stage's edge, and its head meets the
+ * gong's foot just as the ball goes under it. The gong swings on its cords, away and back and away, and dies
+ * down; the beater falls back on the floor with a bounce, and the
  * paddle comes up through its slot again behind the ball. The ball never
  * stops.
  */
@@ -65,7 +66,6 @@ function beaterAt(t: number): number {
 }
 /** The gong's swing on its cords after the blow: away from the beater first. */
 const swing = (since: number) => (since < 0 ? 0 : -0.2 * Math.sin(8.3 * since) * Math.exp(-since / 1.3))
-const shimmer = (since: number) => (since < 0 ? 0 : 0.016 * Math.exp(-since * 1.9))
 
 export const gong = definePiece<{ color: string; metal: string }>({
   name: 'gong',
@@ -80,10 +80,6 @@ export const gong = definePiece<{ color: string; metal: string }>({
     return { cells, exit: { at: [1, 0], dir: 1 }, lane: LANE, state: { color: partColor(theme, feltColor(theme, color, ball.color), ball.color, metal), metal } }
   },
   draw: (p, s, { k, t, since, ink, weight }) => {
-    // The stage, with a slot where the paddle stands up through it.
-    stage(p, k, ink, weight, -0.5, TREAD - 0.05)
-    stage(p, k, ink, weight, TREAD + 0.05, 0.5)
-
     // The frame: two posts from the floor and the bar across their heads.
     post(p, k, ink, weight, -POST, BAR, 0.5)
     post(p, k, ink, weight, POST, BAR, 0.5)
@@ -96,15 +92,6 @@ export const gong = definePiece<{ color: string; metal: string }>({
     const dy = CORD * (Math.cos(a) - 1)
     outline(p, ink, weight * 0.8)
     for (const side of [-1, 1]) p.line(side * CORD_X * k, BAR * k, (side * CORD_X + dx) * k, (CORD_Y + dy) * k)
-    const shiver = shimmer(since)
-    if (shiver > 0.002) {
-      const faint = p.color(ink)
-      faint.setAlpha(70)
-      p.noFill()
-      p.stroke(faint)
-      p.strokeWeight(weight * 0.8)
-      for (const side of [-1, 1]) p.circle((GONG[0] + dx + side * shiver) * k, (GONG[1] + dy) * k, (RAD * 2 + shiver * 2) * k)
-    }
     solid(p, ink, weight, s.metal)
     p.circle((GONG[0] + dx) * k, (GONG[1] + dy) * k, RAD * 2 * k)
     outline(p, ink, weight * 0.8)
@@ -125,5 +112,9 @@ export const gong = definePiece<{ color: string; metal: string }>({
     solid(p, ink, weight, ink)
     p.circle(PIVOT[0] * k, PIVOT[1] * k, 0.04 * k)
     p.circle(px * k, py * k, 0.03 * k)
+
+    // The stage's edge, in front of the crank, with a slot where the paddle stands up through it.
+    stage(p, k, ink, weight, -0.5, TREAD - 0.05)
+    stage(p, k, ink, weight, TREAD + 0.05, 0.5)
   },
 })

@@ -129,6 +129,8 @@ bass, on the one); Ellie, round, answers on the first pah.
   33 and lies by him under all of it, her face turned up to the sky (`LOOKS`); he starts at the baby, she turns her
   face from it to him, he answers with a small lean to her, and she looks back up at it for the cut (`GLANCE`): what
   they want, decided between them. She rolls the last of the way. The camera stays at most 5.5 cells.
+- Their picnic hamper stands shut on the grass at the blanket's head: the one he hides the tickets in fifty years
+  later and carries up this hill.
 
 ### The nursery (63.25 to 73.46 s): the house, inside, upstairs
 
@@ -146,21 +148,32 @@ bass, on the one); Ellie, round, answers on the first pah.
 - **The machine is light and time.** Sun bars from unseen blinds slide across the room: a few broad, soft bars, ends
   leaning with the sun, laid on the wall, floor and chairs under the two of them, so they keep their colour. The
   camera pushes in slowly through the held note, from the room to the two of them (the coat stand slides out of the
-  frame on the way), so that on 81.14, when she sinks a little and rolls away from him and he leans toward her, the
-  two of them are the whole picture (2.3 cells). It stays with them through his lean and the first soft note of the
+  frame on the way), so that on 81.14, when she sinks and rolls away from him and he leans toward her, the
+  two of them are the whole picture (2.3 cells). She slumps as she does on the hill, lower and wider, settling into
+  the seat, and her gaze falls to the floor and stays there (a span in `LOOKS`), so the news is seen in her: the
+  first loss is shaped like the last. It stays with them through his lean and the first soft note of the
   near silence. A cloud takes the light and the room goes cold; as he sits back the camera drifts a little left, off
   her, onto the office door, toward where the yard will be. Nothing else hits.
 
 ### The yard, the jar and the ties (84.38 to 167.71 s): the house, inside, one long take
 
 The doll's house cut open: the yard, the back door, the living room, the hall, the front door. There is no cut for
-83 s.
+83 s. Each room has its own paper (`inside/papers.ts`): the living room a faint warm stripe with rosebuds, the hall
+and the landing a dusty-rose trellis, the nursery small white stars; the living room and the hall are panelled to the
+chair rail. The papers fade with the years, and the nursery's once it is given up. Beyond the yard's end and past
+the porch are the gardens behind (`BEHIND`, the street's far side again, `house/far.ts`, lower and hazier): trees and
+a roof or two in the sky's own light, grey through the loss, dusk on the evening of the tickets, kept low behind her
+stump. The ground is cut through with the house: topsoil under the grass, the subsoil and a deeper band, stones, the
+yard tree's roots and the old stump's under the yard, and the house's stone footings under its walls, its partition
+and its chimney (`underground` in `inside/inside.ts`); the rain soaks the topsoil dark through the storm.
 
 - **The yard.** The office's cold light carries across the cut, which opens close on Carl at the back door, the
   office door become this one, and Ellie small on a tall stump far to his left in the grey yard, turned away; the camera
   settles slowly out to hold the distance between them. Carl watches from inside the back door through the piano alone.
   Nothing strikes, but the wind gusts with the piano: each of its stronger notes is a breath of wind a moment after
-  it, lifting the sheet on the line, the grass and the tree, and dying away. He leans into the bookcase, the adventure
+  it, lifting the sheet on the line, the grass and the tree, and dying away. The grey lifts a third of the way as he
+  goes out to her, and the rest breaks on the waltz's return as the book opens (`clearAt`): the light comes back with
+  the music. He leans into the bookcase, the adventure
   book tips onto him (a thick old book, a rounded spine, a strap), and he pushes out through the screen door and walks out to her at an
   even pace, round in front of the stump, the book passing under her, easing to a stop where she is looking. **On
   100.36, the waltz's return, the book opens** on his top: its top board swings over on the spine and comes down
@@ -175,7 +188,7 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
 - **The jar.** A seesaw stands in front of the fireplace. Carl hops on his end on each downbeat (taking off on the
   third beat before it, the waltz's pickup, when the plank, held half down under his weight since the stroke, kicks
   up and throws him), and the cup end
-  throws a handful of five coins over the room, spreading and closing up again, turning and catching the light, into
+  throws a handful of five coins over the room, spreading and closing up again, turning as they go, into
   the jar's slot on the mantle on the next downbeat; each handful puts a visible notch of brass in the glass, the jar
   clinks in its cradle, and Ellie on the ladder counts each one in: up off her tread as it drops into the slot, down
   on the two. The camera is close (3.6 cells) on the
@@ -212,11 +225,14 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   swaying on the two and three, across the open floor from the gramophone toward her painting. The swell crests from
   bar 51's third beat into bar 52's downbeat (156.75 to 157.5 s, the loudest of the second half; by bar 53 it is 8 to
   10 dB down). They dance in hold, her face on him throughout, and through the crest she rolls out along the floor
-  to arm's length on 52's downbeat, still looking at him, as a dancer spots her partner, as the warm pool brightens and the camera, come in with the swell, is closest on the two of them
+  to arm's length on 52's downbeat, still looking at him, as a dancer spots her partner, as the light comes full on them and the camera, come in with the swell, is closest on the two of them
   (1.9 cells) under their wedding photograph on the hall wall, hung low under the chair rail and large enough to read
   at the close: the two of them at arm's length under the picture of them touching. The low evening sun through the front door's glass
-  lays two long warm shafts down the hall (the glass's cross bar splits it, so it reads as sun through a window): it gathers with the swell and falls full on the two of them on the crest, the
-  light that fell on them at the kiss, and settles as the music falls away. She rolls back in by bar 53, and as they close into each other's arms on bar 55 it cranes out to the desk
+  lands low and long on the wall behind them, the glass's two panes with the cross bar's shadow between them, on down
+  the skirting to the floor (so it reads as sun through a window), and the two of them keep it off the wall behind
+  them: two soft shadows that part as she turns out and close as they come into each other's arms. It gathers with
+  the swell and falls full on the two of them on the crest, the light that fell on them at the kiss, and settles as
+  the music falls away. She rolls back in by bar 53, and as they close into each other's arms on bar 55 it cranes out to the desk
   and her painting.
 - **The tickets.** The picture lamp lights on her painting, and Carl looks up at it. Ellie goes to the front door,
   opens it and stands out at it looking at the evening, her back to the hall: the tickets are his surprise, and she
@@ -226,7 +242,10 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   on the press, the basket and him until it is close (2.55 cells) on the slot and the basket as the two tickets fly
   into it on the cadence (166.93, 167.28), each thrown high off the slot and turning slowly, so it is seen whole
   against the wall over the press before it drops in; it draws back as the lid shuts on 167.71, on through the cut. Past the open front door the
-  porch has its rail and the evening sky. He goes out after her with the basket on his top.
+  porch has its rail and the evening sky. He goes out after her with the basket on his top. On the wall under the
+  stairs, beside her painting, are their snapshots: their house new, then one hung on each tie morning (out of shot),
+  the hill, the seaside, a winter, the car, the two of them greying picture to picture: the life they had while the
+  falls stayed a picture.
 
 ### The climb (167.71 to 180.41 s): the hill, years later
 
@@ -242,8 +261,8 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   rolling with her (a ball that rolls back reads as play), down in a little over a second and a half, and is still,
   slumped (lower, wider: `slumpOf`), spent. No bounce. The strike is
   the basket, thrown off his top as he lurches toward her; it lands up the path, on its side, and stays there, and
-  its lid jolted open, the two tickets slip out and slide away down the straw, the surprise he never gets to give
-  her, lying on the slope as he passes. Struck, he straightens up out of the slope's lean and stands still for most
+  its lid jolted open, the two tickets slip out onto the straw by it, the surprise he never gets to give
+  her, lying there as he passes, and left with the basket out of the close. Struck, he straightens up out of the slope's lean and stands still for most
   of a second, watching her go, so she is seen
   to fall first; then on the next strong note (175.409, the one the basket tips over on) he bolts down after her, faster than he has gone in years, up out of the slope's lean and
   into the run (`RUN`, `runTilt`: tilted with the slope, a square going downhill
@@ -272,10 +291,12 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
 ### The funeral (189.45 to 201.94 s): the church, empty
 
 - The same church, empty. It opens under the hospital's night, dim and blue, the glass dark, and the grey morning
-  comes up over it in three seconds, the one pale beam and its dust last. Carl sits alone in the front pew, the
+  comes up over it in three seconds, the one pale beam last. Carl sits alone in the front pew, the
   wedding photograph on an easel where they stood: a third larger than the hall's, the two of them in it with a hint
-  of the blue and coral they were that day, and a soft warm light gathering on it as the morning comes, the one warm
-  thing at the altar end. Across the cut the balloon is his again: it holds its place and
+  of the blue and coral they were that day, and the low sun through the east window landing across it as the
+  window's shape (over its lower right and on down the wall beside it, not round it), its leads in shadow, creeping
+  down as the morning comes: the one warm thing at the altar end, between a
+  wreath on a stand and an urn of white lilies, where the wedding had its garland and posies. Across the cut the balloon is his again: it holds its place and
   rises back over him as its string is let out. She is gone. The camera drifts slowly across the dawn to the wedding kiss's framing, now
   empty, arriving as he reaches the floor.
 - As the morning comes up he lets himself down off the pew, forward to its edge and down its front in one even move
@@ -292,10 +313,14 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
 ### Alone (201.94 to 258 s): the house, from the street, at dusk
 
 - The church's steps become his own front steps: a match cut. The house is faded, the roof patched where the tree
-  came through.
+  came through. Across the street, along the horizon, are the neighbours' roofs among their trees (hazy by day at the
+  fix-up), going to one silhouette against an afterglow that stays warm low down after the sky over it has gone, every
+  window in them dark.
 - On the piano's notes he climbs the three steps, one careful step at a time (lifting, then
   shifting onto the tread: a climb, not a hop, `climbUp`), the camera close (3.5 cells) on the
-  steps, the door and the porch rail, the mailbox's faded handprints at the frame's edge. The latch; as it gives he
+  steps, the door and the porch rail, the mailbox's faded handprints at the frame's edge, drifting along with him. It
+  is late autumn: one wind moves the far trees and the neighbours' smoke and blows the street trees' leaves across
+  the frame, sparse while he climbs. The latch; as it gives he
   draws the balloon's string in short (`GATHERS` in `life/cast.ts`), so it comes in under the lintel with him before
   the door shuts and passes the wall between the door and the bay at his side; the door, and the camera widens as he
   goes in. In the bay he lets the string out again, before he ties it. The bay's glass runs down to the room's floor, so he is seen whole through it,
@@ -305,8 +330,27 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   lamp on.
 - The camera pushes in slowly on the two chairs through the sit, and holds the lit room for a phrase of the piano,
   him in his chair and the balloon over her empty one; then it draws back past the roof before the first card, and
-  on at an even rate to the last frame (27 cells): the lit window, the house at dusk, the roof,
-  the sky, the small lit house at the foot of the frame under the stars. The evening star comes out, then the street lamps, the last on the last piano note (242.53).
+  on at an even rate to the last frame (27 cells): the lit window and its light on the porch floor and the lawn, the house at
+  dusk, the roof, the sky, the small lit house at the foot of the frame under the stars, the one lit window in the street. The evening star comes out, then the street lamps, the last on the last piano note (242.53).
+- **The first snow.** As he puts the lamp on, the wind drops, the leaves go, and the first flakes fall past the lit
+  bay: the room is held for its phrase through them. Through the credits the snow thickens at three depths, settles
+  on the roofs, the lamps' caps, the mailbox and the lawn, and a thin veil takes the stars from the top of the sky
+  down, the evening star last; his window and the lamps' pools stay warm. Flakes fade where they pass under a card.
+- **Their whole life on the horizon.** Behind the neighbours stands a far ridge, at its own depth (`drawBeyond` in
+  `house/far.ts`): the picnic hill and its tree, the church on its rise, the hospital, a town on the slopes, a viaduct
+  and a railway. At the fix-up it is faint in the day's haze; at dusk it is one silhouette, where the town's windows
+  light, car lamps move along a road and trains cross the viaduct. As the camera draws back through the credits each
+  place comes into the frame in turn: the church where they married, the hill, the hospital. Then his own street
+  around him: four neighbours' houses at his scale (a cottage, a bungalow, a gable to the street, a bay), their
+  fences and hedges, their porch lights off, the snow settling on them as on his; in front, our side of the street,
+  picket fences and hedges. The first three come in with a window or two still lit, a flat warm pane, and in the
+  quiet after the piano's last note the street goes to bed: the cottage's front room at 244.6, its dormer at 247.4,
+  the bungalow at 250.6, the gable house's landing at 253.9 (`NEIGHBOURS` in `house/front-house.ts`); the house with
+  the bay comes in dark. From then his is the one lit window in the street. None of it is in any frame before the
+  credits' draw-back.
+- **Lived in.** From his coming home the house's windows have curtains behind the glass: the nursery's pink drawn shut
+  under the gable, as it has been inside since the doctor; their bedroom's cream and the living room's faded green
+  tied back. At the fix-up the house is new and its windows bare.
 
 ## End credits
 
@@ -411,7 +455,7 @@ window.
     `front-plan.ts` (every place and time the set, machine and lanes agree on), `fixup.ts`, `fixup-rig.ts` (the
     cart), `alone.ts`.
   - `hill/`: `hill.ts` (the set, summer and autumn), `clouds.ts` (the engine and the cloud shapes), `climb.ts`.
-  - `inside/`: `inside.ts` (the doll's house, the director's), `nursery.ts`, `yard.ts`, `jar.ts` with `jar-clock.ts`,
+  - `inside/`: `inside.ts` (the doll's house, the director's), `papers.ts` (its rooms' papers and panelling), `nursery.ts`, `yard.ts`, `jar.ts` with `jar-clock.ts`,
     `jar-draw.ts` and `jar-storm.ts`, `ties.ts` with `ties-set.ts` and `ties-tie.ts`, and `home-motion.ts`.
   - `clinic/`: `clinic.ts` (both rooms and their light clocks), `doctor.ts`, `hospital.ts`.
   - `props/`: the canonical drawings: `falls.ts` (her painting of Paradise Falls), `balloon.ts`, `chairs.ts`,
@@ -911,6 +955,176 @@ window.
   for that, drops low off the mantle's front on the fireplace side of the ladder, and rolls to him past its feet.
   Her touch moves from bar 20's one to its two (122.27, her beat), so the roll is not a dash, and the bandage wraps
   in 0.45 s, before she climbs again. Nothing added; the strikes are the same in number, each on the music.
+
+- **Craft pass, round 4 (Opus 5.5).** A frame audit at full size, scene by scene, for what the picture lacked rather
+  than what the story did. The strongest finding: from the nursery to the tickets, a third of the show, every room
+  was one flat beige, and the street side stood on bare sky. Taken:
+  - *The house papered* (`inside/papers.ts`): a paper for each room and painted panelling to the chair rail, a few
+    percent off the plain paper so the machines and the two of them read over it as before. The first living-room
+    stripe, sage with hairlines, read as drapes hung down the wall; it is now a shade of the paper itself. The small
+    motifs fade with the cells' size: in the storm's wide they were a pixel each and tripled the frame's drawing (2.4
+    ms from 0.8 headless, now 1.0; every other frame within half a millisecond of before).
+  - *The street's far side* (`front.ts`, `far`): neighbours' houses, each with two windows and a door, among trees,
+    hazy by day, silhouettes at dusk against a low afterglow; his window the only one lit. The houses stand in front
+    of the trees (behind a tall one a house was a lone chimney). And the lit bay's light on the house round it
+    (`drawBayGlow`, since the fullness pass `drawBayLight`: on the porch floor and the lawn, not a halo).
+  - *Their snapshots* under the stairs (`GALLERY`, `drawSnapshot` in `ties-set.ts`), hung one a morning out of shot,
+    seen whole as the camera opens out to her painting; clear of the stairs, over the rail, and above the crest's
+    close, which keeps its one picture, the wedding. The bay room seen from the street has the living room's paper.
+  - *The nursery's window* looks out on hills and a low cloud, the mural's hill, where it was a pane of flat sky.
+  - *The office's sun* in eight narrower slats with clear shadows between, lighter over the chairs: the six broad soft
+    bars had run together into one wash over them.
+  - *Three small drawing faults*: the front door's lower panel ran past its foot onto the porch boards; the wall over
+    the door, drawn square, covered a notch of the porch roof's trim and its laps were out of step with the wall's
+    (it read as a patch); the church tower's inner wall ended in a curved stub that read as a drip, now a cased head
+    like the house's doorways.
+  - Looked at on a phone held upright (the rooms papered to their edges, the far row only along the horizon) and under
+    Zoom (the gallery whole at its close, the crest's photograph alone over them). The share card rebuilt (the card
+    path reproduces main's card exactly before the change). No strike, timing or camera key changed.
+
+- **Craft pass, round 5 (Opus 5.5).** Watched end to end as a viewer, one to three changes a round, adding weighed
+  against cutting.
+  - *Round 1.* The yard was the one outside with nothing behind it, a slab of grey behind Ellie through the piano
+    alone; it now has the gardens behind (`BEHIND` in `inside.ts`, the street's far row moved to `house/far.ts` and
+    shared; the street draws exactly as before), a row picked so nothing stands up behind her stump. Its grey cleared
+    on a straight line from 95 s and was mostly gone before the waltz came back; now a third lifts with his walk out
+    (from 90 s, as before) and the rest breaks on the return, as the book opens (`clearAt`). Cut: the spilled tickets
+    sat half in at the left edge of the close on the two of them after her fall, the brightest thing in the frame;
+    they now stay by the basket, seen as he runs past and out of the close. The storm's wide draws about 0.4 ms more
+    (headless).
+  - *Round 2.* A fresh viewer, told nothing, read the doctor's office as a waiting room: his lean read, her sinking
+    (the news) did not, as she stayed round and upright, shrinking 3.5%. She now slumps as she does at her fall on the
+    hill (`slump` in `doctor.ts`: most of `slumpOf`, lower and wider, settling into the seat over 1.6 s from 81.136),
+    and her gaze falls to the floor as she sinks and stays down through his lean and the cold, held a little across
+    the cut so it turns from the floor to her looking away on the stump. Same note, same timing, nothing added to the
+    room. The same viewer's other notes were weighed and left: the storm's wide is scale on purpose (above); the jar's
+    chute peeks in at the frame's edge before it is used, and keeping it out would move the handfuls' framing; the
+    storey under the nursery is veiled, not inked, for a phone held upright.
+
+- **Fullness pass, round 1 (Opus 5.5).** Married Life made fuller from substance, not gloss: every place stands in a
+  world at several depths that move at their own speeds, something is always moving, and shine is taken out. Audited
+  first: ten frames evenly spaced (most of them a third or more flat wall or bare sky), a contact sheet of the whole
+  show, every camera hold (the camera already moved nearly everywhere), and two measures at 320×180 every half second:
+  motion (the share of pixels that change in 1/30 s) and detail (the share on an edge). Six builders took a place
+  each, on a shared toolkit (`life/depth.ts`: `along` for parallax, `clouds`, `birds`, `smoke`, `grass`, `wobble`,
+  `gust`, all flat and unlined and a pure function of show time); the director reviewed every place in stills and
+  took the cast, the camera and the integration.
+  - *What each place gained.* The church: hills, the town and the picnic hill's tree past it, clouds, a verge in the
+    wind; doves off the roof on the first peal, rooks on the toll; lanterns, moving flames, posies and a garland at the
+    wedding, a wreath and lilies at the funeral; the windows' light landing on the floor and pews. The street: clouds,
+    birds, smoke, shadows on the lawn, a near verge, and the far ridge with their life's places. The hill: a high
+    sheet over the steam's shapes, their house and the spire across the valley, butterflies, the tree's shadow, grass
+    and flowers along the foot; years later grey bands, geese leaving, and a gale seen running through the straw,
+    dropping to a lull from her give-way until he is beside her. The clinic: a sweeping clock (the office's and the
+    ward's, a rhyme), a plant, a radiator, a print of the falls, someone passing behind the door's glass before the
+    news; the ward's window a town lighting window by window into the night, flowers, the drip, the curtain. The
+    doll's house: clouds, the gardens and a far hill line behind at their own depths, a sparrow on the line and torn
+    leaves in the yard's gusts, a storm in cloud decks at three depths with leaves torn off and finer far rain, and
+    the sun coming back over the roof. The rooms: the street through the living room's windows, a neighbour and his
+    dog ahead of the storm, curtains, a fire the storm puts out, the afternoon's light moving; a tall clock in the
+    hall swinging a bar, and each morning's season laid in the door's sun. Home: the wind, the first snow, the
+    horizon (above).
+  - *The cast and the camera.* The two of them breathe when they stand still (`breath` in `cast.ts`, a few percent of
+    their height, slower with the years; drawing only). Of the camera's holds of 1.5 s or more, two were turned into
+    moves: the nursery draws back as the mural climbs, and the steps at home drift along with him (a push-in there
+    put him within an eighth of the Zoom frame's foot for 3.95 s: from his feet to the balloon's crown is the Zoom
+    frame's height). The storm's hold, as the limb comes down, is kept.
+  - *Shine taken out.* The clouds' white halo; the pane's glint as the new glass lands; the street lamps' and the
+    evening star's halos; the bay's halo on the clapboard (`drawBayLight`: light on the porch floor and the lawn); the
+    glow behind her funeral photograph (the dawn lands on it as the window's shape) and the dust in the funeral's
+    beam; the crest's flash and the warm pools behind the dancers (the door's panes land on the wall instead); the
+    coins' glints; the halo round the living room lamp's shade; the ward's screen wash and the office window's halo;
+    the music box's brass highlight and pale pins.
+  - *Measured.* Motion and detail by third, before → after: 0–86 s 9.4% → 10.6% and 14.8% → 16.4%; 86–172 s
+    8.6% → 9.7% and 14.2% → 15.6%; 172–258 s 5.9% → 7.8% and 12.1% → 14.6%. Samples with under 0.2% of pixels moving:
+    39 → 1 (the last frame); the credits' draw-back had been a still picture for 19 s. A frame draws in about 1 ms
+    (headless Chromium, every quarter second: mean 0.95 ms, p95 1.7, from 0.77 and 1.4), the odd 30 to 40 ms spike
+    a first frame or a collection, as before. `npm run build` passes.
+  - *Not yet met.* The final third is not yet the busiest by the measures (7.8% against the opening's 10.6%): the
+    credits' wide (2.7% motion) and the climb's plain field carry little at that size. Round 2 takes it up.
+  - *Not touched.* The share card (`public/shows/married-life/opus55.png`, outside the show's folder) still shows the
+    bay at 47.3 s as it was, without the new sky and lawn shadows.
+
+- **Fullness pass, round 2 (Opus 5.5).** The same eight points with fresh eyes: the ten frames and the whole show's
+  sheets again, every section measured, and what round 1 added looked at for gloss.
+  - *The weakest stretches, made fuller.* The credits' wide, still mostly sky: his street comes into the frame round
+    him as the camera draws back (above, Alone), the one lit window shown. The climb, the sparsest scene in detail: a
+    weathered fence along the lane at the frame's foot, below where the two of them go (its gate where the path
+    leaves the lane), stooks in the stubble at four depths, a farmstead and a row of poplars far off by the town, and
+    crows that lift once on a gust and settle before her give-way; nothing new moves in the lull.
+  - *Gloss trimmed.* The church's coloured shafts thinned in the air to half (the light is told where it lands: the
+    floor, the wall's foot, the pews); the cars that passed along the fix-up's road (only a cabin poked up at the
+    frame's foot, like a dome); round 1's gale on the climb thinned (the leaves to about half, the pale gust streaks
+    to under half: they read as a blizzard and as puddles); the farmstead hazed back where it stood in the closes.
+  - *Measured* (motion / detail at 320×180, original → now): 0–86 s 9.4 → 10.5% / 14.8 → 16.4%; 86–172 s
+    8.6 → 9.8% / 14.2 → 15.8%; 172–258 s 5.9 → 8.1% / 12.1 → 15.2%. The climb 5.2 → 10.2% / 6.4 → 11.4%; the credits
+    0.2 → 2.8% / 5.0 → 10.4%. A frame, drawn and then made to finish (a pixel read back, so the raster is counted),
+    every quarter second of the show in Chrome for Testing at 1280 by 800: median 3.4 → 4.4 ms, p95 8.1 → 9.7, the
+    worst 13.3 → 16.1, none over 16.7. `npm run build` passes.
+  - *Where it stands on the escalation.* The final third now holds the most world (a gale through a harvest, a city
+    lighting up, rooks at the toll, a whole street and town under the first snow), and has nearly caught the opening
+    in detail; in motion it is still behind it, because its last 25 s are the credits' wide and slow draw-back, the
+    house small under a sky the cards are set in. Filling that sky to win the measure would put clutter under the
+    words; it is kept.
+
+- **Fullness pass, round 3 (Opus 5.5).** The same eight points again, cutting and refining as much as adding: the ten
+  frames, three sheets of the whole show, every section measured, each of the earlier rounds' additions looked at for
+  gloss and for clutter, and the frame cost found by section.
+  - *Cut.* The white slants across glass, wherever they were: the house's windows and its bay, the doll's house's
+    windows, the jar's still frames, the hall's pictures, the ticket press's reel, the front door's light (the glass
+    is told by its frame and by what is behind it). The wet paint's white streaks and the roller's shine (its deeper wet
+    edge and its shade stay). The east window's flare on the kiss, a second, stronger shaft over the light already
+    gathering on them, which hazed the pews (the gathering light and the photograph's flash stay). From round 2: the
+    round car at the credits' kerb (a dark dome at the frame's foot, as the fix-up's cars were). From round 1: the
+    flocks still crossing the sky after dark and through the snow (the last dusk flocks are home by about 245 s). A
+    sliver of a pane the bungalow drew backwards between its door and window. The nearest snowflakes made a little
+    smaller and softer, so the last frame's snow does not read as dots.
+  - *Added, from the story.* The street goes to bed: the neighbours come in with lights on and put them out one at a
+    time in the silence after the last note, so his being the one lit window is told, not given. Curtains behind the
+    house's glass once it is lived in, the nursery's drawn shut. Their picnic hamper on the clouds' hill, the one the
+    climb carries up it. The doll's house's ground cut through (above), the flat band under it that is a fifth of the
+    frame through the storm's wide.
+  - *Cost.* The slowest frames were the doctor's close (78 to 83 s): the sun's bars laid three times a frame, each in
+    four screen passes over half the frame. Now three passes for the wall's (the same core, the same soft edge) and
+    one for each faint layer; stills are the same. Measured side by side with round 2 (both served at once, the same
+    frame drawn 50 to 60 times and then made to finish, the median of four alternating rounds, on a machine busy with
+    other work): the office's close 15.7 → 8.4 ms, 16.6 → 8.6, 14.2 → 7.9; the storm's wide, now the heaviest frame,
+    16.7 → 16.3 and 15.4 → 15.6 (the ground under it costs nothing to speak of); the yard 3.6 → 3.7; the credits
+    8.3 → 7.8.
+  - *Measured* (motion / detail at 320×180, round 2 → round 3): 0–86 s 10.5 → 10.5% / 16.4 → 16.5%; 86–172 s
+    9.8 → 10.0% / 15.8 → 16.2%; 172–258 s 8.1 → 8.1% / 15.2 → 15.1%. The final third holds where it was: what was cut
+    from it (night birds, the car, the flakes' size) about matches what came in (the lights going out are a few pixels
+    each at that size). It is still behind the opening in motion for the reason round 2 gives, and kept so.
+
+- **Fullness pass, round 4 (Opus 5.5).** The same eight points again, more cut and refined than added: the ten
+  frames, two sheets of the whole show and close sheets of each quiet stretch, and every light looked at for where it
+  is drawn: in the air, on glass, or where it lands.
+  - *Cut and refined.* The hall's crest: the evening sun was drawn three times over the wall (a wedge from the door,
+    two shafts in the air down to the floor, the door's panes on the wainscot), and together they hazed it; now the
+    panes alone, a little stronger, on down the skirting (above). The funeral's dawn on her picture: the east window's
+    image was centred on it, its arch standing behind the photograph like a halo; it now crosses the picture's lower
+    right and runs on down the wall, and the one pale beam is thin in the air, as the wedding's are. The sun back
+    after the storm: no longer washed over the windows' glass as well (the garden behind it went milky), only where
+    it lands under them. The living room's pendant: its cone drawn under the window, so it lands on the paper round
+    the glass, not on the street seen through it. The white gleam down each of the organ's pipes (the gold of the rank
+    that speaks is what the eye should go to) and along the toy engine's boiler.
+  - *Added, from the story.* Their shadows in the crest's light: the two of them keep the low sun off the wall behind
+    them, two soft shapes that part as she turns out and close into one as they come into each other's arms.
+  - *Weighed and left out.* A car's headlights sweeping the bay as he sits in the dusk (the balloon, the lamp and the
+    chairs all stand in its path, and without their shadows it was a flourish); a train in the clouds' valley (the
+    hill's set keeps to its rule that the machines are the parts'). *Looked at and kept:* the church's coloured shafts
+    (thin, and the church's own) and the kiss's light; the hospital lamp's fan on the wall; the picture lamp's throw
+    over her painting; the night veil over the storey under the nursery.
+  - *Cost.* Measured side by side with round 3 (both served at once, the same frame drawn 60 times and made to
+    finish, the median of three alternating rounds, on a machine busy with other work): the crest 6.7 → 2.3 ms (the
+    wedge's and the shafts' gradient layers gone); the funeral, the sun after the storm, the living room, the organ
+    and the engine unchanged. The whole show, every quarter second, swept twice each: median 4.3 and 4.3 → 4.3 and
+    4.5 ms, p99 9.8 and 10.3 → 10.0 and 11.2 ms, worst 13.0 → 13.6 and 12.8 ms (one 30.7 ms hiccup in a round 3
+    sweep), none over 16.7 ms.
+  - *Measured* (motion / detail at 320×180, round 3 → round 4): 0–86 s 10.5 → 10.5% / 16.5 → 16.5%; 86–172 s
+    10.0 → 10.0% / 16.2 → 16.2%; 172–258 s 8.1 → 8.1% / 15.1 → 15.1%; the dance (152 to 162 s) 13.4 → 13.6% /
+    17.4 → 17.4%. A round of refinement, so the thirds hold; the final third is still behind the opening in motion,
+    for the reason round 2 gives.
 
 ## Known limits
 

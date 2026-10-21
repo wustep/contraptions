@@ -239,16 +239,20 @@ function partLine(p: p5, k: number, pts: Pt[], run: number): void {
 
 /**
  * The water in the air at `t`: every drop let go of the lip in the last
- * `AIRBORNE` seconds, each where its own fall has got it to, drawn along
- * the way it is going. The spray falls in front of the ball. Where the
- * last of them came down, on the lower deck or in the sea, beads hop.
- * The fill is the caller's.
+ * `AIRBORNE` seconds, each where its own fall has got it to, and each
+ * joined to the one let go just before it, so that while the pool runs
+ * the fall is one rope of water, and only its last dribble breaks into
+ * drops. Where the water comes down, on the lower deck or in the sea, it
+ * spreads.
  */
-function pour(p: p5, k: number, t: number, front: boolean): void {
+function pour(p: p5, k: number, color: string, t: number): void {
   const newest = Math.floor(t / DRIP)
   const count = Math.ceil(AIRBORNE / DRIP) + 1
   let onDeck: [number, number] | null = null
   let inSea: [number, number] | null = null
+  let last: { n: number; x: number; y: number; d: number } | null = null
+  p.fill(color)
+  p.stroke(color)
   for (let i = 0; i <= count; i++) {
     const n = newest - i
     const born = n * DRIP
@@ -256,54 +260,50 @@ function pour(p: p5, k: number, t: number, front: boolean): void {
     if (born < T_POUR || born > FIRE + DRAIN) continue
     const flow = flowAt(born)
     // A dribble is fewer drops, not only smaller ones.
-    if (hash(n, 4) > flow * 7) continue
-    // Three in four are the body of the fall, fat and close; the fourth is spray, a bead thrown a little wide of it.
-    const spray = n % 4 === 3
+    if (hash(n, 4) > flow * 14) continue
     const head = 1 - drainedAt(born)
     // The rush builds as the gap opens, and dies with the head of water behind it.
-    const v = RUSH * Math.sqrt(head) * (0.55 + 0.45 * over(born, FIRE, FIRE + 0.45)) * (spray ? 0.75 + 0.4 * hash(n, 1) : 0.9 + 0.2 * hash(n, 1))
+    const v = RUSH * Math.sqrt(head) * (0.55 + 0.45 * over(born, FIRE, FIRE + 0.45))
     const vx = v * Math.cos(SLOPE)
-    const v0 = v * Math.sin(SLOPE) - (spray ? 0.5 * hash(n, 5) : 0)
+    const v0 = v * Math.sin(SLOPE)
     // As fat as the sheet it came off, which builds as the gap opens and thins with the pool; thinner the longer it has fallen; and it leaves with its underside on the lip.
     const thick = (SILL - levelAt(born)) * (1 - DIP) * (1 - THIN)
     const girth = Math.max(0.03, thick * 1.7 * (0.4 + 0.6 * over(born, FIRE, FIRE + 0.4)))
-    const d = spray ? 0.04 * (0.6 + 0.7 * hash(n, 2)) : girth * (0.85 + 0.3 * hash(n, 2)) * (1 - 0.6 * (age / AIRBORNE))
+    const d = girth * (1 - 0.6 * (age / AIRBORNE))
     const x = LIP[0] + vx * age
-    const y = LIP[1] - (spray ? thick * hash(n, 3) : girth / 2) + v0 * age + 0.5 * G * age * age
+    const y = LIP[1] - girth / 2 + v0 * age + 0.5 * G * age * age
     if (x >= DECK_X - 0.01 && y >= 1 + FLOOR - 0.02) {
       onDeck ??= [x, flow]
+      last = null
       continue
     }
     if (y >= SEA) {
       inSea ??= [x, flow]
+      last = null
       continue
     }
-    if (spray !== front) continue
-    const vy = v0 + G * age
-    p.push()
-    p.translate(x * k, y * k)
-    p.rotate(Math.atan2(vy, vx))
-    p.ellipse(0, 0, (d + Math.hypot(vx, vy) * (spray ? 0.004 : 0.01)) * k, d * k)
-    p.pop()
+    p.noStroke()
+    p.circle(x * k, y * k, d * k)
+    if (last && last.n - n <= 2) {
+      p.stroke(color)
+      p.strokeWeight(Math.min(d, last.d) * k)
+      p.line(last.x * k, last.y * k, x * k, y * k)
+    }
+    last = { n, x, y, d }
   }
-  if (front) return
+  p.noStroke()
   for (const [hit, y, big] of [
     [onDeck, 1 + FLOOR, 1],
     [inSea, SEA, 1.3],
   ] as [[number, number] | null, number, number][]) {
     if (!hit) continue
-    const x = hit[0]
     const size = big * (0.35 + 0.65 * hit[1])
     const f = (t * 3.4) % 1
-    p.ellipse(x * k, (y - 0.006) * k, (0.07 + 0.1 * f) * size * k, 0.034 * (1 - f) * size * k)
-    for (let i = 0; i < 3; i++) {
-      const g = (t * 2.9 + i / 3) % 1
-      p.circle((x + (i - 1) * 0.09 * g * size) * k, (y - 0.012 - 0.4 * g * (1 - g) * size) * k, 0.028 * (1 - g * 0.5) * k)
-    }
+    p.ellipse(hit[0] * k, (y - 0.006) * k, (0.07 + 0.1 * f) * size * k, 0.034 * (1 - f) * size * k)
   }
 }
 
-export const tidepool = definePiece<{ color: string; sea: string; mark: string }>({
+export const tidepool = definePiece<{ color: string; sea: string }>({
   name: 'tidepool',
   weight: 0.8,
   place: ({ color, fits, theme, ball }) => {
@@ -318,9 +318,7 @@ export const tidepool = definePiece<{ color: string; sea: string; mark: string }
     const blue = seaWater(theme)
     const body = bodyColor(theme, color, ball.color)
     const rock = body !== blue ? body : bodyColor(theme, theme.colors.find((c) => c !== blue && c !== ball.color) ?? body, ball.color)
-    // What lives on the rock is some other colour of the palette again, or failing that the paper's.
-    const mark = theme.colors.find((c) => c !== rock && c !== blue && c !== ball.color) ?? theme.bg
-    return { cells, exit: { at: [2, 1], dir: 1 }, lane: LANE, state: { color: rock, sea: blue === ball.color ? mixHex(blue, theme.ink, 0.3) : blue, mark } }
+    return { cells, exit: { at: [2, 1], dir: 1 }, lane: LANE, state: { color: rock, sea: blue === ball.color ? mixHex(blue, theme.ink, 0.3) : blue } }
   },
   draw: (p, s, { k, t, ink, bg, weight }) => {
     const broken = t > FIRE
@@ -382,19 +380,11 @@ export const tidepool = definePiece<{ color: string; sea: string; mark: string }
     p.line(-0.25 * k, 0.7 * k, 0.16 * k, 0.74 * k)
     p.line(0.26 * k, 0.83 * k, 0.62 * k, 0.87 * k)
     p.line(-0.3 * k, 1.13 * k, 0.24 * k, 1.18 * k)
-    // What lives on it: a starfish on its flank, and two limpets down by the tideline.
-    solid(p, ink, weight * 0.7, s.mark)
-    p.beginShape()
-    for (let i = 0; i < 10; i++) {
-      const a = 0.35 + (i * Math.PI) / 5
-      const r = i % 2 ? 0.042 : 0.1
-      p.vertex((-0.02 + r * Math.sin(a)) * k, (0.94 - r * Math.cos(a)) * k)
-    }
-    p.endShape(p.CLOSE)
-    p.arc(0.4 * k, 1.29 * k, 0.09 * k, 0.09 * k, Math.PI, Math.PI * 2, p.CHORD)
-    p.arc(0.52 * k, 1.35 * k, 0.07 * k, 0.07 * k, Math.PI, Math.PI * 2, p.CHORD)
     // The deck in, its end on the crag's shoulder.
     rail(p, k, ink, weight, -0.5, EDGE)
+
+    // Where the rim goes into the sea, behind it.
+    splash(p, k, s.sea, weight, LIP[0] + 0.2, SEA, over(t, T_RIM_SEA, T_RIM_SEA + 0.6), 1.3)
 
     // The crack: in from the lip most of the way, and the rest of the way when the wave slaps the rim.
     if (!broken) {
@@ -428,15 +418,14 @@ export const tidepool = definePiece<{ color: string; sea: string; mark: string }
       if (f < 1) p.ellipse((LIP[0] + 0.012) * k, SEA * k, (0.04 + 0.1 * f) * k, 0.03 * (1 - f) * k)
     }
 
-    // The water in the air, and what it does where it comes down.
-    pour(p, k, t, false)
+    // The water in the air, and what it does where it comes down. The wave's slap is thrown off the rim, not into water, so it leaves no ring.
+    pour(p, k, s.sea, t)
     splash(p, k, s.sea, weight, WET[0] + 0.04, BRIM, over(t, T_WET, T_WET + 0.4), 0.6)
-    splash(p, k, s.sea, weight, RIM_IN - 0.02, BRIM - 0.04, over(t, T_SLAP, T_SLAP + 0.4), 0.6)
-    splash(p, k, s.sea, weight, LIP[0] + 0.2, SEA, over(t, T_RIM_SEA, T_RIM_SEA + 0.6), 1.3)
+    splash(p, k, s.sea, weight, RIM_IN - 0.02, BRIM - 0.04, over(t, T_SLAP, T_SLAP + 0.4), 0.6, false)
     splash(p, k, s.sea, weight, LAND[0], 1 + FLOOR, over(t, T_LAND, T_LAND + 0.4), 0.7)
   },
   over: (p, s, { k, t }) => {
-    // The ball is in the water, not on it: the pool over its lower half, seen through, and the spray of the fall in front of it.
+    // The ball is in the water, not on it: the pool over its lower half, seen through.
     p.noStroke()
     if (t > T_WET && t < T_LIP) {
       const [bx] = afloat(t)
@@ -456,7 +445,5 @@ export const tidepool = definePiece<{ color: string; sea: string; mark: string }
       }
       p.endShape(p.CLOSE)
     }
-    p.fill(s.sea)
-    pour(p, k, t, true)
   },
 })

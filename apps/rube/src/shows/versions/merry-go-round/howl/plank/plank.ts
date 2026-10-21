@@ -555,6 +555,35 @@ function cragH(s: number): number {
  * it) instead of the moor's pale mist. Its foot goes down into the gorge's mist; its right side rises from behind the
  * far wall's top, which stays in front of it.
  */
+/**
+ * At the brink, mist up out of the gorge: a few long faint wisps lying across the crag's flank, drifting slowly back
+ * along it, so the stillness of the cadenza breathes. Uneven soft heaps along each, never outlined; above the deck,
+ * under everyone.
+ */
+const WISPS: { x: number; y: number; len: number; a: number; v: number }[] = [
+  { x: -3.4, y: -3.3, len: 4.2, a: 0.28, v: 0.24 },
+  { x: -7.6, y: -2.2, len: 3.1, a: 0.22, v: 0.3 },
+  { x: -1.2, y: -4.4, len: 2.6, a: 0.18, v: 0.18 },
+]
+function drawWisps(p: p5, k: number, t: number, f: View) {
+  const on = smooth(t, 278, 281.5) * (1 - smooth(t, 294, 297))
+  if (on < 0.01) return
+  const { x0 } = farWall(f.cx)
+  const g = LAND.ledge
+  for (const [i, w] of WISPS.entries()) {
+    const cx = x0 + w.x - w.v * (t - 278)
+    if (cx + w.len < f.x0 - 1 || cx - w.len > f.x1 + 1) continue
+    const n = 7
+    for (let j = 0; j < n; j++) {
+      const u = j / (n - 1)
+      const r = (0.32 + 0.3 * Math.sin(Math.PI * u)) * (0.75 + 0.5 * hash(j, i, 31))
+      const x = cx - w.len / 2 + u * w.len
+      const y = g + w.y - 0.25 * u + 0.08 * Math.sin(t * 0.4 + j + i)
+      puff(p, k, x, y, r * 1.6, WASTES.mist, on * w.a * (0.6 + 0.4 * Math.sin(Math.PI * u)), 0.38)
+    }
+  }
+}
+
 function drawCrag(p: p5, k: number, W: number, ink: string, f: View) {
   const { x0, lip, face } = farWall(f.cx)
   const xl = x0 + CRAG_H[0][0]
@@ -1143,8 +1172,9 @@ export const plank = part<PlankState>(
       p.rectMode(p.CORNER)
       const land = PLANK_AFTER.land || t <= T1
       if (land) {
-        drawBack(p, k, W, ink, f)
+        drawBack(p, k, W, ink, f, t)
         drawCrag(p, k, W, ink, f)
+        drawWisps(p, k, t, f)
         drawGround(p, k, W, ink, f)
         drawTors(p, k, W, ink, f)
         drawBrink(p, k, W, ink, f)
@@ -1179,17 +1209,14 @@ export const plank = part<PlankState>(
         drawGrate(p, k, W, ink, t, inGrate ? 1 : 0.15 + 0.2 * smooth(t, T0, T0 + 1), cal.weak)
         p.pop()
         steamAndDust(p, k, t, legs)
-        drawSparks(p, k, W, t)
         drawTorn(p, k, W, ink, t, f)
         drawCrumbs(p, k, W, ink, t)
       }
       // Calcifer.
       const cal = freed(t, calciferAt(t))
       if (cal.shown && (t <= T1 || PLANK_AFTER.star)) {
-        if (cal.star > 0) drawStar(p, k, t, cal.at, cal.star)
-        // Straining on every stride: a flare and a breath of warm light over the grate, dimming between.
+        // Straining on every stride: he flares up (his size and his mouth), dimming between.
         const st = strain(t)
-        if (st > 0.02) puff(p, k, cal.at[0], cal.at[1] - 0.2, 0.45 + 0.2 * st, CALCIFER.core, 0.16 * st)
         p.push()
         p.translate(cal.at[0] * k, cal.at[1] * k)
         // As she leans in to him on the run he burns up a little and looks round at her.
@@ -1207,7 +1234,7 @@ export const plank = part<PlankState>(
         const dim = 0.07 * drive(t) * (1 - st)
         drawCalcifer(p, k, W, ink, {
           t,
-          size: cal.size * (1 + 0.16 * tn + 0.26 * st),
+          size: cal.size * (1 + 0.16 * tn + 0.26 * st) * starLift(t, cal.star),
           weak: Math.min(1, cal.weak * (1 - 0.35 * tn) * (1 - 0.5 * st) + dim),
           look,
           lean: cal.lean * (1 - 0.5 * tn) - 0.4 * st,
@@ -1217,27 +1244,11 @@ export const plank = part<PlankState>(
         })
         p.pop()
       }
-      // The heart: a warm light through Howl as Calcifer goes into him, spreading over her as well (the gift passes
-      // between them), and a flare as he comes out free.
+      // The heart: the fire in Howl's breast lights the planks under the two of them, spreading out from his feet to
+      // hers (the gift passes between them) and dying back as Calcifer comes out free. Light on the deck, never a disc
+      // in the air.
       const hu = t - HEART
-      if (hu > -0.05 && hu < 2.4) {
-        const [hx, hy] = howlX(t)
-        const [sx, sy] = herAt(t)
-        const a = 0.32 * Math.exp(-Math.max(0, hu) / 0.55) * smooth(hu, -0.05, 0.02)
-        puff(p, k, hx, hy, 0.75 + 0.5 * Math.min(1, hu + 0.05), CALCIFER.core, a)
-        // Between them and over her, a moment later and slower to go: it reaches her as it lights him.
-        const b = 0.24 * smooth(hu, 0.02, 0.3) * Math.exp(-Math.max(0, hu - 0.3) / 0.8)
-        puff(p, k, (hx + sx) / 2, (hy + sy) / 2, 0.55 + 0.3 * Math.min(1, hu), CALCIFER.core, b * 0.7)
-        puff(p, k, sx, sy, 0.6 + 0.35 * Math.min(1, hu), CALCIFER.core, b)
-      }
-      // His warmth as he comes out: it swells with him out of Howl's chest, rides up with him and fades.
-      const fu = t - FREE
-      if (fu > 0 && fu < 1.6) {
-        const [fx, fy] = freed(t, calciferAt(t)).at
-        const e = smooth(fu, 0, EMERGE)
-        const glow = 0.26 * (0.3 + 0.7 * e) * smooth(fu, 0, 0.06) * Math.exp(-Math.max(0, fu - EMERGE) / 0.35)
-        puff(p, k, fx, fy - 0.08, 0.2 + 0.35 * e + 0.25 * Math.max(0, fu - EMERGE), CALCIFER.body, glow)
-      }
+      if (hu > -0.05 && hu < 2.6) heartPool(p, k, t, hu)
       // Howl's wings, under his ball.
       if (t >= HOWL_IN && t <= T1 + 0.5) {
         const w = wingsAt(t)
@@ -1350,7 +1361,7 @@ export const plank = part<PlankState>(
       hold(c(8) - 0.05, 21, [BX0 + 0.6, -1.2]),
       // The run: from c8 close on her on the deck, right of the middle, the wreck left behind at the left and Turnip
       // Head springing out of the dust onto the stern behind her; on with it close on the deck as it runs (Calcifer
-      // straining in the grate, the boards shedding at the stern, the sparks off the hips, what the feet throw up
+      // straining in the grate, the boards shedding at the stern, what the feet throw up
       // coming in at the foot); out to the whole machine and the size of the wastes as the bird comes down out of the
       // sky (c18, two bars); in to the two of them on the prow (the stern out of the frame) as he glides down into
       // it and lands on the loudest note, the deck line a little under the middle and open sky over it, so his last
@@ -1461,47 +1472,6 @@ function steamAndDust(p: p5, k: number, t: number, legs: { hip: Pt; foot: Pt }[]
   }
 }
 
-/** Sparks where the iron hips grind, thrown off on each near footfall while it runs: short hot streaks, never dots. */
-function drawSparks(p: p5, k: number, W: number, t: number) {
-  for (const [fi, ff] of FOOTFALLS.entries()) {
-    const leg = LEGS[ff.leg]
-    if (leg.far) continue
-    const a0 = t - ff.t
-    if (a0 < 0 || a0 > 0.7) continue
-    const [hx, hy] = onDeck(ff.t, leg.u, leg.v, deckAt(ff.t))
-    p.push()
-    // A breath of heat where the iron bites, then the sparks: long hot streaks flying out and falling away.
-    puff(p, k, hx, hy, 0.25 + 0.3 * a0, CALCIFER.body, 0.2 * Math.exp(-a0 / 0.12))
-    // Thrown off behind the running plank in a low fan, each one a hot head with a fading tail, arcing down.
-    const d0 = deckAt(ff.t - 0.03)
-    const d1 = deckAt(ff.t + 0.03)
-    const run = (d1.x - d0.x) / 0.06
-    for (let j = 0; j < 5; j++) {
-      const a = a0 - 0.05 * hash(fi, j, 121)
-      const life = 0.35 + 0.3 * hash(fi, j, 122)
-      if (a <= 0 || a > life) continue
-      const an = Math.PI * (0.88 + 0.3 * hash(fi, j, 123))
-      const sp = 2.4 + 2.2 * hash(fi, j, 124)
-      const vx = run * 0.6 + Math.cos(an) * sp
-      const vy = Math.sin(an) * sp - 1.0
-      const x0 = hx + (hash(fi, j, 125) - 0.5) * 0.4
-      const y0 = hy - 0.05
-      const at = (s: number): Pt => [x0 + vx * s, y0 + vy * s + 7 * s * s]
-      const u = a / life
-      const [x, y] = at(a)
-      const [xm, ym] = at(Math.max(0, a - 0.03))
-      const [xb, yb] = at(Math.max(0, a - 0.1))
-      p.stroke(alpha(p, CALCIFER.edge, 0.7 * (1 - u)))
-      p.strokeWeight(W * 0.7)
-      p.line(xb * k, yb * k, xm * k, ym * k)
-      p.stroke(alpha(p, mixHex(CALCIFER.core, CALCIFER.body, u), 1 - u * u))
-      p.strokeWeight(W * (1.6 - 0.7 * u))
-      p.line(xm * k, ym * k, x * k, y * k)
-    }
-    p.pop()
-  }
-}
-
 /** Each footfall kicks stones and sprigs of heather back off the moor, which fall and lie a moment. */
 function drawKicks(p: p5, k: number, W: number, ink: string, t: number) {
   for (const [fi, ff] of FOOTFALLS.entries()) {
@@ -1581,43 +1551,45 @@ function pebbles(p: p5, k: number, W: number, ink: string, t: number) {
 }
 
 /**
- * Calcifer as a star: a soft glow and, behind his flame, a small soft sparkle of four short broad points with curved
- * sides (never needles, never a crosshair) that swells a little on the cadenza's high notes. His face carries it.
+ * Calcifer as a star: a small free flame, no sparkle and no glow round him, that leaps up a little on each of the
+ * cadenza's high notes (his size, as a multiplier, for `star` of him a star). His face carries it.
  */
 const TWINKLES = [286.383, 286.923, 287.364, 288.943, 289.814, 291.677]
-export function drawStar(p: p5, k: number, t: number, at: Pt, star: number) {
-  let flare = 0.35
+export function starLift(t: number, star: number): number {
+  if (star <= 0) return 1
+  let leap = 0
   for (const tw of TWINKLES) {
     const u = t - tw
-    if (u >= 0) flare = Math.max(flare, 0.35 + 0.65 * Math.exp(-u / 0.5))
+    if (u >= 0) leap = Math.max(leap, Math.exp(-u / 0.45) * smooth(u, 0, 0.05))
   }
-  const [x, y] = at
-  puff(p, k, x, y - 0.1, 0.5 + 0.22 * flare, CALCIFER.core, 0.24 * star * (0.55 + 0.45 * flare))
-  p.push()
-  p.noStroke()
-  p.translate(x * k, (y - 0.1) * k)
-  p.rotate(0.25 * Math.sin(t * 0.8))
-  // Points under 0.22 cells up and down (the glow's layer too), 0.15 across; the waist between two points 0.045 from the middle, so each
-  // point's base is about 0.09 wide.
-  const long = (0.13 + 0.055 * flare) * star
-  const wide = (0.1 + 0.05 * flare) * star
-  const waist = 0.045 * star
-  const pts: Pt[] = [[0, -long], [wide, 0], [0, long], [-wide, 0]]
-  for (const [col, a, s] of [[CALCIFER.body, 0.45, 1.18], [CALCIFER.core, 0.9, 1]] as [string, number, number][]) {
-    p.fill(alpha(p, col, a * star))
-    p.beginShape()
-    p.vertex(pts[0][0] * s * k, pts[0][1] * s * k)
-    for (let i = 1; i <= 4; i++) {
-      const q = pts[i % 4]
-      const m = pts[i - 1]
-      // The side's control point pulled in toward the middle: a curved, concave side.
-      const cx = (Math.sign(m[0] + q[0]) || 0) * waist * s
-      const cy = (Math.sign(m[1] + q[1]) || 0) * waist * s
-      p.quadraticVertex(cx * k, cy * k, q[0] * s * k, q[1] * s * k)
-    }
-    p.endShape(p.CLOSE)
-  }
-  p.pop()
+  return 1 + 0.22 * star * leap
+}
+
+/**
+ * The heart's light on the deck (`hu` seconds after it): a flat warm oval on the planks under Howl, running out along
+ * them to under her a moment later, and dying back over two seconds. Laid on the boards as the lantern's pool is on
+ * the porch.
+ */
+function heartPool(p: p5, k: number, t: number, hu: number): void {
+  const [hx, hy] = howlX(t)
+  const [sx] = herAt(t)
+  const a = 0.5 * smooth(hu, -0.05, 0.06) * Math.exp(-Math.max(0, hu - 0.25) / 0.9)
+  if (a < 0.01) return
+  const reach = smooth(hu, 0, 0.45)
+  const cx = hx + (sx - hx) * 0.5 * reach
+  const half = 1.1 + Math.abs(sx - hx) * 0.55 * reach
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.translate(cx * k, (hy + R + 0.02) * k)
+  ctx.rotate(deckAt(t).rot)
+  ctx.scale(1, 0.16)
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, half * k)
+  g.addColorStop(0, alpha(p, CALCIFER.core, a).toString())
+  g.addColorStop(0.45, alpha(p, CALCIFER.core, a * 0.6).toString())
+  g.addColorStop(1, alpha(p, CALCIFER.core, 0).toString())
+  ctx.fillStyle = g
+  ctx.fillRect(-half * k, -half * k, 2 * half * k, 2 * half * k)
+  ctx.restore()
 }
 
 /** Every strike of this part, in show seconds. */

@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { mixHex, R, type Pt } from '../../../../../parts'
-import { alpha, box, carried, frame, hash, knock, lastOf, lensedArc, part, smooth, type Companion, type Ctx } from '../kit'
+import { alpha, box, carried, farSide, frame, knock, lastOf, part, smooth, type Companion, type Ctx } from '../kit'
 import { beat } from '../music'
 import { brandDrift } from '../rocket'
 import { G_LOW } from '../physics'
@@ -538,23 +538,20 @@ const litAt = (a: number) => smooth(Math.cos(a - SUN), -0.012, 0.012)
 
 const mixCol = (p: p5, a: string, b: string, f: number): p5.Color => p.lerpColor(p.color(a), p.color(b), Math.max(0, Math.min(1, f)))
 
-function glow(p: p5, x: number, y: number, r: number, rgb: string, a: number): void {
-  if (a <= 0.01) return
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  const g = ctx.createRadialGradient(x, y, 0, x, y, r)
-  g.addColorStop(0, `rgba(${rgb}, ${Math.min(1, a)})`)
-  g.addColorStop(1, `rgba(${rgb}, 0)`)
-  ctx.fillStyle = g
-  ctx.beginPath()
-  ctx.arc(x, y, r, 0, TAU)
-  ctx.fill()
+/** A knock, drawn as what it is: a few short ink strokes thrown out round the place, and gone. `a` is how fresh. */
+function impact(p: p5, c: Ctx, x: number, y: number, a: number, seed: number): void {
+  if (a <= 0.02) return
+  const { k, weight } = c
+  const u = 1 - a
+  p.stroke(alpha(p, '#ECE5D3', 0.9 * a))
+  p.strokeWeight(Math.max(0.8, weight * 0.6))
+  for (let i = 0; i < 5; i++) {
+    const ang = (i / 5) * TAU + seed
+    const r0 = 0.1 + 0.12 * u
+    const r1 = r0 + 0.07 * a
+    p.line((x + Math.cos(ang) * r0) * k, (y + Math.sin(ang) * r0) * k, (x + Math.cos(ang) * r1) * k, (y + Math.sin(ang) * r1) * k)
+  }
 }
-
-const AMBER_RGB = '240, 147, 64'
-const ICE_RGB = '143, 198, 230'
-const BONE_RGB = '236, 229, 211'
-/** The ball's colour as r, g, b, for gradients. */
-const BALL_RGB = [1, 3, 5].map((i) => parseInt(BALL.slice(i, i + 2), 16)).join(', ')
 
 /** A thick stroke with an ink edge: a finger, an arm. */
 function bar(p: p5, ink: string, weight: number, fill: string, w: number, pts: [number, number][]): void {
@@ -571,12 +568,14 @@ function bar(p: p5, ink: string, weight: number, fill: string, w: number, pts: [
   p.endShape()
 }
 
-/** A lamp: a small disc, lit or not, with its glow. */
-function lamp(p: p5, c: Ctx, x: number, y: number, on: number, fill: string, rgb: string, size = 0.08): void {
+/** A lamp: a small lens in a dark bezel, lit or not. No glow: lit is its colour. */
+function lamp(p: p5, c: Ctx, x: number, y: number, on: number, fill: string, size = 0.08): void {
   const { k, ink, weight } = c
-  glow(p, x * k, y * k, k * (0.12 + 0.2 * Math.min(1, on)), rgb, 0.75 * on)
-  solid(p, ink, weight * 0.5, on > 0.35 ? fill : DARK.slate)
-  p.circle(x * k, y * k, k * size)
+  solid(p, ink, weight * 0.5, DARK.slate)
+  p.circle(x * k, y * k, k * size * 1.35)
+  p.noStroke()
+  p.fill(on > 0.35 ? fill : mixHex(DARK.slate, fill, 0.25))
+  p.circle(x * k, y * k, k * size * (on > 0.35 ? 1 + 0.15 * Math.min(1, on - 0.35) : 0.9))
 }
 
 /* ------------------------------------------------------------------ drawing: the mass driver */
@@ -631,8 +630,8 @@ function drawDriver(p: p5, s: EnduranceState, c: Ctx, T: number): void {
     const d = coils[i]
     const hit = knock(T - times[i], 0.18)
     const w = i === coils.length - 1 ? 0.1 : 0.065
-    const out = i === coils.length - 1 ? 0.36 : 0.31
-    if (hit > 0.02) glow(p, ...at(d, 0), k * (0.5 + 0.2 * hit), AMBER_RGB, 0.85 * hit)
+    // A coil firing jumps out on its mounts and comes back: the kick, not a flash.
+    const out = (i === coils.length - 1 ? 0.36 : 0.31) + 0.05 * hit
     solid(p, ink, weight * 0.8, hit > 0.3 ? DARK.amber : DARK.gold)
     quad(p, at, [[d - w, -out], [d + w, -out], [d + w, out], [d - w, out]])
     p.noStroke()
@@ -659,7 +658,7 @@ function drawDriverOver(p: p5, s: EnduranceState, c: Ctx, T: number): void {
   const hit = knock(T - CATCH, 0.2)
   const on = T < CATCH ? 0.25 + 0.9 * Math.exp(-ago / 0.18) : 0.15 + hit
   const [bx, by] = at(0.3, -CH - 0.07)
-  lamp(p, c, bx / k, by / k, on, DARK.ice, ICE_RGB)
+  lamp(p, c, bx / k, by / k, on, DARK.ice, 0.1)
 }
 
 /* ------------------------------------------------------------------ drawing: the ring */
@@ -745,7 +744,7 @@ function drawRing(p: p5, s: EnduranceState, c: Ctx, T: number): void {
   const rap = T >= KNOCK ? knock(T - KNOCK, 0.12) : 0
   if (rap > 0.02) {
     const d = ringPt(s.c, T, PSI_CUP, COR_OUT)
-    glow(p, X(d[0]), X(d[1]), X(0.3), BONE_RGB, 0.55 * rap)
+    impact(p, c, d[0], d[1], rap, 0.4)
   }
 
   // The kicker: a paddle on the corridor floor at her back, cocked; on 158 it snaps up into her, and she into him.
@@ -756,22 +755,22 @@ function drawRing(p: p5, s: EnduranceState, c: Ctx, T: number): void {
   bar(p, ink, weight * 0.6, DARK.hull, X(0.05), [[X(kb[0]), X(kb[1])], [X(kt[0]), X(kt[1])]])
   solid(p, ink, weight * 0.5, DARK.slate)
   p.circle(X(kb[0]), X(kb[1]), X(0.07))
-  // The knock: a spark where she meets him, the moment it goes through her.
+  // The knock: where she meets him, the moment it goes through her.
   const kick = T >= KICK ? knock(T - KICK, 0.1) : 0
   if (kick > 0.02) {
     const now = ringPt(s.c, T, PSI_IN / 2, RUN_R)
-    glow(p, X(now[0]), X(now[1]), X(0.4), BONE_RGB, 0.85 * kick)
+    impact(p, c, now[0], now[1], kick, 0.1)
   }
 
   // The bulkhead lamp the run passes on 159, a module on from the port, on the corridor's inner wall: his blink, and hers on the and.
   const g = ringPt(s.c, T, -RHO * (GATE - KICK), COR_IN - 0.02)
-  lamp(p, c, g[0], g[1], 0.2 + Math.max(knock(T - GATE, 0.22), 0.75 * knock(T - GATE2, 0.22)), DARK.amber, AMBER_RGB, 0.075)
+  lamp(p, c, g[0], g[1], 0.2 + Math.max(knock(T - GATE, 0.22), 0.75 * knock(T - GATE2, 0.22)), DARK.amber, 0.075)
 
   // The port's lamp, beside the jaws: amber waiting (and bright as they open), ice while it holds the two.
   const pl = ringPt(s.c, T, -0.17, MOD_OUT + 0.05)
   const holding = T >= CLAMP && T < HATCH + 0.3
   const on = holding ? 0.6 + 0.6 * knock(T - CLAMP, 0.25) : T < CLAMP ? 0.25 + 0.9 * knock(T - READY, 0.25) : 0.15
-  lamp(p, c, pl[0], pl[1], on, holding ? DARK.ice : DARK.amber, holding ? ICE_RGB : AMBER_RGB, 0.07)
+  lamp(p, c, pl[0], pl[1], on, holding ? DARK.ice : DARK.amber, 0.07)
 }
 
 /** A hatch in a module's floor at `rel` from the port: two leaves, `width` each, that slide apart as `open` goes to 1. */
@@ -786,9 +785,6 @@ function hatch(p: p5, c: Ctx, ctr: Pt, T: number, rel: number, open: number, wid
     sector(p, k, ctr[0], ctr[1], COR_OUT - 0.01, MOD_OUT + 0.01, a - half * open, a + half * open, 3)
     p.fill(alpha(p, DARK.amber, 0.55 * open))
     sector(p, k, ctr[0], ctr[1], COR_OUT - 0.01, MOD_OUT + 0.01, a - half * open, a + half * open, 3)
-    const ox = ctr[0] + Math.cos(a) * (MOD_OUT + 0.05)
-    const oy = ctr[1] + Math.sin(a) * (MOD_OUT + 0.05)
-    glow(p, ox * k, oy * k, k * 0.45, AMBER_RGB, 0.45 * open)
   }
   // The leaves: heavy lines along the module's face either side of the opening.
   const slide = half * open
@@ -858,7 +854,6 @@ function drawCatapult(p: p5, s: EnduranceState, c: Ctx, T: number): void {
   const { ago } = lastOf(CLICKS, T)
   const clicked = T < FIRE - SWING ? knock(ago, 0.14) : 0
   const fired = knock(T - FIRE, 0.2)
-  glow(p, X(pivot[0]), X(pivot[1]), X(0.32), AMBER_RGB, 0.85 * Math.max(clicked, fired))
   solid(p, ink, weight * 0.6, clicked > 0.3 || fired > 0.3 ? DARK.amber : DARK.gold)
   p.circle(X(pivot[0]), X(pivot[1]), X(0.17))
   outline(p, ink, weight * 0.6)
@@ -874,7 +869,12 @@ function drawCatapult(p: p5, s: EnduranceState, c: Ctx, T: number): void {
     // Vapour, not a cloud: in the vacuum it spreads and thins, uninked.
     const gx = foot[0] + ax.ox * (0.2 + 0.3 * Math.sqrt(u)) + ax.fx * 0.25 * u
     const gy = foot[1] + ax.oy * (0.2 + 0.3 * Math.sqrt(u)) + ax.fy * 0.25 * u
-    glow(p, X(gx), X(gy), X(0.08 + 0.2 * Math.sqrt(u)), BONE_RGB, 0.55 * (1 - u) ** 1.5)
+    p.noStroke()
+    p.fill(alpha(p, '#ECE5D3', 0.32 * (1 - u) ** 1.5))
+    for (let j = 0; j < 3; j++) {
+      const off = (j - 1) * 0.07 * (0.4 + Math.sqrt(u))
+      p.circle(X(gx + ax.fx * off), X(gy + ax.fy * off), X(0.07 + 0.16 * Math.sqrt(u) - 0.02 * Math.abs(j - 1)))
+    }
   }
 }
 
@@ -890,7 +890,7 @@ function drawPlanet(p: p5, s: EnduranceState, c: Ctx): void {
     ctx.save()
     ctx.translate(X(gx), X(gy))
     ctx.rotate(tilt)
-    ctx.strokeStyle = `rgba(${BONE_RGB}, 0.5)`
+    ctx.strokeStyle = 'rgba(236, 229, 211, 0.5)'
     ctx.lineWidth = X(0.09)
     ctx.beginPath()
     ctx.ellipse(0, 0, X(PLANET_R * 2.1), X(PLANET_R * 0.48), 0, a0, a1)
@@ -935,40 +935,11 @@ function drawSphere(p: p5, s: EnduranceState, c: Ctx, T: number): void {
   const f = frame(p, k)
   const [sx, sy] = s.sphere
   const X = (v: number) => v * k
-  glow(p, X(sx), X(sy), X(RS * 1.75), ICE_RGB, 0.2)
+  farSide(p, X(sx), X(sy), X(RS), -0.5 + T * 0.03 + (f.cy - sy) * 0.02, ((f.cx - sx) * -0.08) / RS, 11, 120, ink)
   ctx.save()
   ctx.beginPath()
   ctx.arc(X(sx), X(sy), X(RS), 0, TAU)
   ctx.clip()
-  p.noStroke()
-  p.fill(DARK.deep)
-  p.circle(X(sx), X(sy), X(RS * 2))
-  const shift = (f.cx - sx) * -0.08
-  const turn = T * 0.03 + (f.cy - sy) * 0.02
-  ctx.save()
-  ctx.translate(X(sx + shift * 0.5), X(sy))
-  ctx.rotate(-0.5 + turn)
-  const band = ctx.createLinearGradient(0, X(-RS * 0.5), 0, X(RS * 0.5))
-  band.addColorStop(0, 'rgba(110, 99, 201, 0)')
-  band.addColorStop(0.5, 'rgba(110, 99, 201, 0.32)')
-  band.addColorStop(1, 'rgba(110, 99, 201, 0)')
-  ctx.fillStyle = band
-  ctx.fillRect(X(-RS * 1.3), X(-RS * 0.5), X(RS * 2.6), X(RS))
-  ctx.restore()
-  for (let j = 0; j < 120; j++) {
-    const rho = hash(j, 11) ** 0.38
-    const a = hash(j, 12) * TAU + turn + shift * (1 - rho) * 0.6
-    const r = RS * rho * 0.98
-    const bright = 0.35 + 0.65 * hash(j, 13)
-    const len = 0.02 + 0.5 * rho ** 8
-    if (len < 0.06) {
-      p.noStroke()
-      p.fill(alpha(p, ink, bright * 0.85))
-      p.circle(X(sx + Math.cos(a) * r), X(sy + Math.sin(a) * r), Math.max(1.2, X(0.025) * (0.6 + bright)))
-    } else {
-      lensedArc(p, X(sx), X(sy), X(r), a, len, ink, bright * 0.8, Math.max(1, X(0.022)))
-    }
-  }
   p.noFill()
   p.stroke(alpha(p, DARK.hull, 0.22))
   p.strokeWeight(X(0.07))
@@ -1016,7 +987,6 @@ function drawSphereOver(p: p5, s: EnduranceState, c: Ctx, T: number): void {
     p.stroke(alpha(p, BALL, 0.9 * (1 - u) ** 1.5))
     p.strokeWeight(X(0.07 * (1 - 0.6 * u)))
     p.circle(X(sx), X(sy), X(RS * 2))
-    glow(p, X(sx), X(sy), X(RS * 1.6), BALL_RGB, 0.35 * (1 - u))
     if (T < END) {
       const q = Math.max(0.15, dist / RS)
       p.noStroke()

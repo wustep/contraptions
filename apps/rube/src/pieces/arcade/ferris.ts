@@ -2,10 +2,10 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, over, post, rail, ramp, trace, wait, type Lane, type Pt } from '../../parts'
-import { glow, lamp, score } from './neon'
+import { lamp, litColor, score } from './neon'
 
 /**
- * A little Ferris wheel. Six gondolas hang upright from the rim, each a
+ * A little Ferris wheel. Four gondolas hang upright from the rim, each a
  * seat on a rod under a little roof, and the lamps round the rim chase
  * the whole time. The lane is the boarding platform: the ball rolls onto
  * the seat of the gondola at the bottom and the hub lights; the wheel
@@ -13,7 +13,10 @@ import { glow, lamp, score } from './neon'
  * — easing in and easing out, every gondola swinging out a little on its
  * pivot as it goes; at the top the seat is level with the upper rail, the
  * gondola rocks forward as the wheel stops, and the ball rolls off it and
- * on. Half a turn of six gondolas leaves the wheel exactly as it was.
+ * on. Half a turn of four gondolas leaves the wheel exactly as it was,
+ * with one at each side, hanging clear under the upper rail: with six,
+ * the one beside the top hung across it, and the ball rolled off through
+ * its roof.
  *
  * The wheel's angle, a gondola's swing and the ball's place on its seat
  * are one function of time, which the lane traces and the drawing uses.
@@ -22,7 +25,7 @@ const RIM = 0.5
 /** A seat hangs this far under its pivot, which puts the hub here: the low seat on the lane's line, the high one on the upper rail's. */
 const HANG = 0.34
 const HUB: Pt = [0.5, FLOOR - HANG - RIM]
-const GONDOLAS = 6
+const GONDOLAS = 4
 const SEAT = 0.34
 const ARRIVE = arriveAt(HUB[0])
 const BOARD = 0.15
@@ -88,7 +91,7 @@ const SIDE = 0.035
 /**
  * One gondola hanging from (px, py), swung by `s`: a roof over the pivot, a
  * rod, a car. The car is a floor with a short wall at each end, cut as one
- * shape, so it is still three shapes six times: anything more and the wheel
+ * shape, so it is still three shapes a gondola: anything more and the wheel
  * is a thicket at the show's scale.
  */
 function gondola(p: p5, k: number, ink: string, weight: number, color: string, px: number, py: number, s: number): void {
@@ -151,9 +154,8 @@ export const ferris = definePiece<{ color: string }>({
       const [lx, ly] = pivotAt(a + ((i + 0.5) * Math.PI) / GONDOLAS)
       lamp(p, k, ink, weight, s.color, bg, lx, ly, 0.03, Math.floor(t * 5 + i) % 3 === 0 ? 1 : 0)
     }
-    // The hub, lit while there is a rider.
-    glow(p, k, s.color, HUB[0], HUB[1], 0.13, running)
-    solid(p, ink, weight, running > 0.5 ? s.color : bg)
+    // The hub, lit while there is a rider, and dimming once the ride is over.
+    solid(p, ink, weight, litColor(bg, s.color, running))
     p.circle(HUB[0] * k, HUB[1] * k, 0.15 * k)
     p.fill(ink)
     p.noStroke()

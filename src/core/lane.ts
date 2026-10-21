@@ -102,7 +102,7 @@ export const pieceTime = (p: Piece): number => (p.hold !== undefined ? p.hold : 
 /** Loop fraction a whole lane takes. */
 export const laneTime = (lane: Lane): number => lane.pieces.reduce((sum, p) => sum + pieceTime(p), 0)
 
-export interface LanePoint {
+interface LanePoint {
   x: number
   y: number
   /** Riding a car. */

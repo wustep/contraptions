@@ -151,7 +151,7 @@ export const fountain = definePiece<{ color: string; water: string }>({
     const stone = color !== hue ? color : rng.pick(theme.colors.filter((c) => c !== hue && c !== ball.color)) ?? color
     return { cells, exit: { at: [1, -1], dir: 1 }, lane: LANE, state: { color: stone, water: gardenWater(theme, ball.color) } }
   },
-  draw: (p, s, { k, t, since, ink, bg, weight }) => {
+  draw: (p, s, { k, t, since, ink, weight }) => {
     const jet = jetAt(t)
     const corked = t > ARRIVE && since <= 0
     const shudder = corked ? 0.009 * Math.sin(t * 80) * over(t, ARRIVE, FIRE) : 0
@@ -235,7 +235,7 @@ export const fountain = definePiece<{ color: string; water: string }>({
       }
     } else {
       // The column, from the cup to the crown, leaning where the crown leans: its sides are never still, a swell
-      // running up it faster than the eye follows, and a glint or two of the paper riding up inside it.
+      // running up it faster than the eye follows.
       const w0 = 0.044
       const w1 = 0.034 + 0.012 * jet.force
       const foot = FLOOR + 0.04
@@ -248,17 +248,6 @@ export const fountain = definePiece<{ color: string; water: string }>({
       for (let i = 0; i <= n; i++) p.vertex(edge(i / n, -1)[0] * k, edge(i / n, -1)[1] * k)
       for (let i = n; i >= 0; i--) p.vertex(edge(i / n, 1)[0] * k, edge(i / n, 1)[1] * k)
       p.endShape(p.CLOSE)
-      p.stroke(bg)
-      p.strokeWeight(0.011 * k)
-      for (let i = 0; i < 3; i++) {
-        const u = (t * 2.6 + i / 3) % 1
-        const len = 0.07 * Math.sin(Math.PI * u)
-        if (jet.h * u < 0.08 || len < 0.01) continue
-        const x = jet.x * u * u + (i - 1) * 0.014
-        const y = foot + (top + 0.03 - foot) * u
-        p.line(x * k, y * k, x * k, (y + len) * k)
-      }
-      p.noStroke()
       // The crown: a cushion of water under the ball, heaving a little.
       const half = 0.085 + 0.025 * jet.force
       p.ellipse(jet.x * k, (top + 0.012) * k, half * 2 * (1 + 0.05 * Math.sin(t * 31)) * k, 0.07 * k)

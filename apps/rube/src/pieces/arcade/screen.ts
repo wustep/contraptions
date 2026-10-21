@@ -21,7 +21,7 @@ export function screen(p: p5, k: number, ink: string, weight: number, color: str
   p.rect(cx, cy, (x1 - x0 + 2 * BEZEL) * k, (y1 - y0 + 2 * BEZEL) * k, 0.035 * k)
   solid(p, ink, weight * 0.8, bg)
   p.rect(cx, cy, (x1 - x0) * k, (y1 - y0) * k, 0.01 * k)
-  // Scanlines: opaque, a shade off the dark, so nothing here is translucent but the halos.
+  // Scanlines: opaque, a shade off the dark.
   p.push()
   p.stroke(mixHex(bg, ink, 0.09))
   p.strokeWeight(Math.max(1, weight * 0.35))

@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../../src/core/draw'
 import { R, ROLL, definePiece, over, post, rail, ramp, roll, wait, type Lane, type Pt } from '../../../parts'
-import { flash, glow, lamp, score } from '../../../pieces/arcade/neon'
+import { flash, lamp, score } from '../../../pieces/arcade/neon'
 
 /**
  * A prize wheel. Six wedges on a mast behind the lane, a peg between each
@@ -148,7 +148,6 @@ export const prizewheel = definePiece<PrizewheelState>({
     rail(p, k, ink, weight, -0.5, 1.5)
 
     // The wheel: six wedges, a peg at every seam, the handle among them.
-    if (won) glow(p, k, s.colors[PRIZES[s.wedge] === 100 ? 0 : PRIZES[s.wedge] === 200 ? 1 : 2], CX, -H, RIM * 0.9, 0.6 * (1 - over(since, s.spin + 1.2, s.spin + 2.4)))
     for (let j = 0; j < WEDGES; j++) {
       const a0 = PHI0 + j * STEP - turn
       solid(p, ink, weight, s.colors[PRIZES[j] === 100 ? 0 : PRIZES[j] === 200 ? 1 : 2])

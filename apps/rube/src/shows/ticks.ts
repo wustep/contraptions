@@ -66,9 +66,3 @@ export function renderWav(notes: readonly Note[], duration: number): Uint8Array 
   }
   return bytes
 }
-
-/** A URL for the rendered notes, good for the page's life. */
-export function wavUrl(notes: readonly Note[], duration: number): string {
-  const bytes = renderWav(notes, duration)
-  return URL.createObjectURL(new Blob([bytes.buffer as ArrayBuffer], { type: 'audio/wav' }))
-}

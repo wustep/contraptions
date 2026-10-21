@@ -8,6 +8,7 @@ import { drawBalloon, BALLOON_SIZE } from './props/balloon'
 import { drawBowTie } from './inside/ties-tie'
 import { FUN } from './church/church'
 import { GLANCE } from './hill/clouds'
+import { SLUMP } from './clinic/doctor'
 
 /**
  * The two of them, drawn (the stage draws no ball in this show: `LifeShow.at` hands it none).
@@ -96,6 +97,10 @@ export const LOOKS: { from: number; to: number; ease: number; at: number | ((sho
   // The kiss: from the march's slowing steps as they turn to each other, at him (up into his face, not at his middle),
   // easing off as she sets out down the aisle (18.6), so it never lets go at speed.
   { from: 15.2, to: 19.0, ease: 0.6, at: towardHim },
+  // The doctor's office: as she sinks (`SLUMP`, `doctor.ts`) her gaze falls, down and a little away from him, and stays
+  // down; held a little across the cut into the yard, so it turns from the floor to her looking away there, never back
+  // up to him first.
+  { from: SLUMP - 0.05, to: CUT.yard + 0.5, ease: 0.6, at: 1.25 },
   // From the moment she gives way (174.672, `climb.ts`), spent, she looks down, toward the ground on his side, and her
   // face does not roll as she goes back down the flank (`spot`): she slides back limp, not a ball rolling (a fresh
   // viewer read the rolling as the two of them sliding down for fun). Held on the fieldstone; her answer to his lean is
@@ -175,6 +180,25 @@ export function bearingOfAge(show: LifeShow, t: number): { stoop: number; settle
 export function carlBearing(show: LifeShow, t: number, years = bearingOfAge(show, t)): { tilt: number; squash: number } {
   const pose = show.pose(t)
   return { tilt: (pose?.tilt ?? slopeAt(show, t)) + years.stoop, squash: (pose?.squash ?? 0) + years.settle }
+}
+
+/**
+ * Their breath: while one of them stands still, a slow rise and settle (a few percent of their height, about the
+ * bottom), slower with the years, so no quiet stretch is a still picture of them. 0 while moving, eased in and out
+ * with stillness; `phase` keeps the two of them out of step.
+ */
+function breath(at: (u: number) => Pt | null, show: LifeShow, t: number, phase: number): number {
+  const leg = show.legs[show.owner(t)]
+  const a = Math.max(leg.from, t - 0.15)
+  const b = Math.min(leg.to - 1e-4, t + 0.15)
+  const p0 = at(a)
+  const p1 = at(b)
+  if (!p0 || !p1 || b - a < 0.05) return 0
+  const v = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]) / (b - a)
+  const still = 1 - Math.max(0, Math.min(1, (v - 0.03) / 0.12))
+  if (still <= 0) return 0
+  const period = 3.4 + 1.2 * AGE(t)
+  return still * 0.5 * (1 - Math.cos((2 * Math.PI * t) / period + phase))
 }
 
 /** Carl, a rounded square, at (x, y) in pixels, turned `tilt`, flattened `squash` onto his bottom. */
@@ -455,9 +479,10 @@ export const cast = scenery<CastState>({
       // Settled a little onto the floor with the years: flattened on the vertical about her bottom, under whatever
       // squash or stretch a part gives her.
       const foot = (ellie.y + R * size) * k
+      const rise = 0.022 * breath((u) => { const e = show.ellie(u); return e ? [e.x, e.y] : null }, show, t, 2.1)
       p.push()
       p.translate(0, foot)
-      p.scale(1, 1 - years.ellie)
+      p.scale(1, 1 - years.ellie + rise)
       p.translate(0, -foot)
       ball(p, k, INK, weight, ellie.color, ellie.x * k, ellie.y * k, spin, size, ellie.stretch ?? 1, ellie.angle ?? 0, false)
       p.pop()
@@ -484,7 +509,9 @@ export const cast = scenery<CastState>({
         p.pop()
       },
     )
-    const { tilt, squash } = carlBearing(show, t, years)
+    const bearing = carlBearing(show, t, years)
+    const tilt = bearing.tilt
+    const squash = bearing.squash - 0.02 * breath((u) => show.where(u), show, t, 0)
     drawCarl(p, k, weight, color, here.x * k, here.y * k, tilt, squash, here.scale, 1, years.corner)
     if (t >= BOW_FROM) drawBowTie(p, k, weight, here.x * k, here.y * k, tilt, squash, here.scale)
   },

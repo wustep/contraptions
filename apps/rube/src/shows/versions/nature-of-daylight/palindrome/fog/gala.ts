@@ -1,7 +1,8 @@
 import { R, type Pt } from '../../../../../parts'
 import { box, carried, part, scenery, type PartShot, type Slot } from '../kit'
 import { drawGala } from './gala-draw'
-import { GALA_SHOTS, GALA_STRIKES, herAt, P0, shangAt } from './gala-plan'
+import { SEAM } from '../music'
+import { GALA_SHOTS, GALA_STRIKES, herAt, shangAt } from './gala-plan'
 
 /**
  * The gala, years on (the FOG builder's): champagne light, a crowd, and General Shang, who has come to thank her and
@@ -20,8 +21,11 @@ export const galaSet = scenery<null>({
   draw: (p, _s, c) => drawGala(p, c.k, c.t),
 })
 
-/** She comes into the gala at rest where the plan has her. */
-export const GALA_AT: Pt = [P0[0] + 0.5, P0[1]]
+/** She comes into the gala where the plan has her as the show cuts in: on the pedal, the tower filling. */
+export const GALA_AT: Pt = (() => {
+  const [x, y] = herAt(SEAM.gala)
+  return [x + 0.5, y]
+})()
 
 export const gala = part<{ begin: number }>(
   { name: 'gala', draw: () => {} },

@@ -18,6 +18,8 @@ export const T1 = SEAM.tokyo
 /** The road's surface (the cab's wheels on it), and a ball resting on the ground. */
 export const ROAD = CAB.road
 export const GB = ROAD - R
+/** The height every far layer (`sky.ts`, `airfield.ts`) is laid out against: the camera's usual height on the road. */
+export const AY = ROAD - 1.6
 
 /* ------------------------------------------------------------------ the drive */
 

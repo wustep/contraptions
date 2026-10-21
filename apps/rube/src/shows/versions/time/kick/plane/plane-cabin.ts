@@ -1,5 +1,5 @@
 import { mixHex, R, type Pt } from '../../../../../parts'
-import { beam, rgba } from '../cast'
+import { rgba } from '../cast'
 import type { frame } from '../kit'
 import { HOME, PLANE } from '../worlds'
 import {
@@ -31,7 +31,7 @@ import {
   teamNod,
   wallAt,
 } from './plane-geo'
-import { arcPts, asP5, box, clipCircle, clipTo, glow, line, oval, polyline, puff, rbox, shape, type Pen } from './plane-kit'
+import { arcPts, box, clipCircle, clipTo, line, oval, polyline, puff, rbox, shape, type Pen } from './plane-kit'
 import { isDay, spinAt, treads } from './plane-sky'
 
 /**
@@ -189,30 +189,18 @@ function drawInside(pen: Pen, t: number, p: Pal): void {
       shape(pen, band(wallPts(s, CAB.bin, CAB.floor, 10)), p.wall, 0.5)
       // The window at the section, the day or the night in it (Fischer's, on the right, is in the door).
       if (s < 0) shape(pen, windowQuad(s, WINDOWS[0]), day ? mixHex(PLANE.dawnHigh, PLANE.dawn, 0.45) : mixHex(PLANE.window, PLANE.night, 0.35), 0.6)
-      // Along the wall aft, the windows' light on it (the panes themselves are edge-on from here).
-      if (day && s > 0) for (let i = 1; i < WINDOWS.length; i++) {
-        const q = windowQuad(s, WINDOWS[i])
-        glow(pen, [(q[0][0] + q[2][0]) / 2, (q[0][1] + q[2][1]) / 2], 0.34 * WINDOWS[i][0], HOME.sun, 0.5 * aft)
-      }
     }
     shape(pen, band([[wallAt(CAB.floor)[0], CAB.floor], [wallAt(CAB.floor)[1], CAB.floor]]), p.floor, 0.5)
     // The far bulkhead, and the galley's doorway in it at the aisle's end.
     shape(pen, at(OPENING, S_FAR), p.bulk, 0.5)
     shape(pen, at([[0.62, CAB.floor], [0.62, -1.35], [1.38, -1.35], [1.38, CAB.floor]], S_FAR), day ? mixHex(p.bulk, p.far, 0.45) : mixHex(PLANE.cabin, PLANE.dawnHigh, 0.15), 0.5)
-    // The morning aft: the low sun in through the windows on the right, laying shafts across the aisle.
+    // The morning aft: the low sun in through the windows on the right, lying across the aisle's floor.
     if (day) {
       for (let i = 1; i < WINDOWS.length; i++) {
         const [s0, s1] = WINDOWS[i]
         const sm0 = (s0 + s1) / 2
-        const from = proj([wallAt(-0.45)[1], -0.45], sm0)
-        const to = proj([wallAt(0.35)[0] + 0.3, 0.45], sm0 * 0.93)
-        beam(asP5(pen), pen.k, from, to, 0.4 * sm0, 1.0 * sm0, PLANE.lamp, 0.32 * aft)
         puff(pen, proj([0.4, CAB.floor], sm0 * 0.93), 0.9 * sm0, 0.22 * sm0, PLANE.lamp, 0.35 * aft)
       }
-      glow(pen, V, 1.4, HOME.sun, 0.18 * aft)
-    } else {
-      // Night aft: dark, and the galley's glow faint at the far end.
-      glow(pen, proj([cx, -0.3], S_FAR), 0.35, PLANE.dawnHigh, 0.12)
     }
     // The bins' cut ends at the section, and the ceiling's.
     for (const s of [-1, 1] as const) {
@@ -276,7 +264,6 @@ function drawDoor(pen: Pen, t: number, p: Pal): void {
       const tab: Pt = [(shade[2][0] + shade[3][0]) / 2, (shade[2][1] + shade[3][1]) / 2]
       rbox(pen, tab[0] - 0.045, tab[1] - 0.008, tab[0] + 0.045, tab[1] + 0.03, 0.012, PLANE.seatShade, 0.5)
       if (up < 0.5) line(pen, [tab[0], tab[1] + 0.03], [tab[0] - 0.01, tab[1] + 0.13], PLANE.seatShade, 0.7)
-      if (up > 0.02) glow(pen, mid, 0.42, HOME.sun, 0.7 * up)
     }
     // The handle.
     const h0 = lift(proj([wallAt(-0.95)[1], -0.98], 0.94))
@@ -304,13 +291,26 @@ function drawSkin(pen: Pen, t: number, p: Pal): void {
 
 /* ------------------------------------------------------------------ the seats */
 
-/** A first-class seat seen from ahead, a ball's width in its cushion: back and headrest, cushion, pedestal. */
-function drawSeat(pen: Pen, x: number, p: Pal, arms: [boolean, boolean], dy: number): void {
+/**
+ * A first-class seat seen from ahead, a ball's width in its cushion: back and headrest, cushion, pedestal. `lit`: the
+ * reading lamp over it, warm on the back from the headrest down, fading before the cushion.
+ */
+function drawSeat(pen: Pen, x: number, p: Pal, arms: [boolean, boolean], dy: number, lit = 0): void {
   const y = dy
   box(pen, x - 0.15, 0.24 + y, x + 0.15, CAB.floor, p.seatDark, 0.6)
   rbox(pen, x - 0.2, 0.4 + y, x + 0.2, 0.47 + y, 0.02, p.seatShade, 0.5)
   rbox(pen, x - 0.23, -0.64 + y, x + 0.23, 0.2 + y, [0.1, 0.1, 0.03, 0.03], p.seat, 0.7)
-  rbox(pen, x - 0.19, -0.6 + y, x + 0.19, -0.46 + y, 0.05, p.seatShade, 0.5)
+  if (lit > 0.002) {
+    const { ctx, k } = pen
+    const g = ctx.createLinearGradient(0, (-0.64 + y) * k, 0, (0.05 + y) * k)
+    g.addColorStop(0, rgba(PLANE.lamp, 0.5 * lit))
+    g.addColorStop(0.45, rgba(PLANE.lamp, 0.22 * lit))
+    g.addColorStop(1, rgba(PLANE.lamp, 0))
+    rbox(pen, x - 0.225, -0.635 + y, x + 0.225, 0.195 + y, [0.1, 0.1, 0.03, 0.03], null, 0)
+    ctx.fillStyle = g
+    ctx.fill()
+  }
+  rbox(pen, x - 0.19, -0.6 + y, x + 0.19, -0.46 + y, 0.05, lit > 0.002 ? mixHex(p.seatShade, PLANE.lamp, 0.25 * lit) : p.seatShade, 0.5)
   line(pen, [x - 0.12, -0.28 + y], [x + 0.12, -0.28 + y], rgba(PLANE.night, 0.18), 0.5)
   rbox(pen, x - 0.25, R + y, x + 0.25, 0.27 + y, 0.04, p.seat, 0.7)
   if (arms[0]) rbox(pen, x - 0.33, -0.02 + y, x - 0.24, 0.27 + y, 0.035, p.seatShade, 0.6)
@@ -454,7 +454,6 @@ function drawChamber(pen: Pen, t: number, dy: number, up: number): void {
   const h = (c1 - c0) * up
   const top = bottom - h
   const w = 0.045
-  if (!day) glow(pen, [cx, bottom - 0.08], 0.22, PLANE.drip, 0.22 + 0.1 * (t > PLUNGE ? 1 : 0))
   rbox(pen, cx - w, top, cx + w, bottom, 0.015, rgba(PLANE.drip, 0.16), 0.55, day ? PLANE.caseDark : mixHex(PLANE.drip, PLANE.cabin, 0.45))
   const pool = bottom - 0.065
   const last = DRIPS.filter((d) => d <= t).pop()
@@ -521,39 +520,30 @@ function drawNoseGear(pen: Pen, t: number, p: Pal): void {
 
 /* ------------------------------------------------------------------ light */
 
-/** The lamp's cone over the case at night, the moon at the left window; the sun through Fischer's window in the morning. */
+/**
+ * The reading lamp's light where it falls at night, on the seat tops and the case under it; the sun's through Fischer's window
+ * in the morning, on the row and the case. Light on things, not shafts in the air.
+ */
 export function drawLight(pen: Pen, t: number, over: boolean): void {
   const dy = jolt(t)
   const lamp = lampAt(t)
-  const p5 = asP5(pen)
   if (lamp > 0.002) {
-    beam(p5, pen.k, [CASE_X, CAB.bin + 0.04], [CASE_X, 0.42], 0.12, 1.35, PLANE.lamp, (over ? 0.2 : 0.42) * lamp)
     if (!over) {
-      puff(pen, [CASE_X, -0.1], 0.8, 0.45, PLANE.lamp, 0.2 * lamp)
+      // On the case at their feet (the seats' backs under it are lit as they are drawn).
       puff(pen, [CASE_X, CASE.top], 0.6, 0.12, PLANE.lamp, 0.3 * lamp)
       box(pen, CASE_X - 0.06, CAB.bin, CASE_X + 0.06, CAB.bin + 0.03, rgba(PLANE.lamp, 0.95 * lamp), 0)
     }
   }
-  if (!isDay(t)) {
-    if (!over) beam(p5, pen.k, proj([wallAt(-0.45)[0], -0.45], 0.93), [0.4, 0.4], 0.3, 0.9, PLANE.dawnHigh, 0.09)
-    return
-  }
-  // The morning off the left window, soft.
-  if (!over) beam(p5, pen.k, proj([wallAt(-0.45)[0], -0.45 + dy], 0.93), [0.4, 0.45 + dy], 0.3, 1.0, PLANE.dawn, 0.14 * (1 - sm(t, DOCK - 1.5, DOCK)))
-  // The sun, low, through Fischer's window once he has it up: across him, the aisle, Cobb, the case, Ariadne.
+  if (!isDay(t)) return
+  // The sun, low, through Fischer's window once he has it up: on him, the aisle, Cobb, the case, Ariadne.
   const sun = sunAt(t)
   if (sun > 0.002) {
-    const q = windowQuad(1, WINDOWS[0])
-    const src = onDoor(t, [(q[0][0] + q[2][0]) / 2, (q[0][1] + q[2][1]) / 2 + dy])
     const col = mixHex(PLANE.lamp, PLANE.dawn, 0.4)
-    beam(p5, pen.k, src, [-1.0, 0.4 + dy], 0.4, 1.35, col, (over ? 0.26 : 0.7) * sun)
-    beam(p5, pen.k, src, [-0.7, 0.25 + dy], 0.26, 0.7, HOME.sun, (over ? 0.16 : 0.5) * sun)
     if (!over) {
       puff(pen, [0.8, CAB.floor + dy], 2.4, 0.2, col, 0.4 * sun)
       // Where it falls: on the seat backs of the row, on the case, warm.
       for (const x of [SEAT.fischer, SEAT.team, SEAT.cobb, SEAT.ariadne]) puff(pen, [x, -0.3 + dy + 0.06 * (x - 2.6) * -0.3], 0.28, 0.32, HOME.sun, 0.42 * sun)
       puff(pen, [CASE_X, CASE.top + 0.1 + dy], 0.45, 0.15, HOME.sun, 0.4 * sun)
-      puff(pen, src, 0.2, 0.35, HOME.sun, 0.6 * sun)
     }
   }
 }
@@ -572,8 +562,8 @@ export function drawCabin(pen: Pen, t: number, f: Frame): void {
   drawSkin(pen, t, p)
   ctx.restore()
   drawNoseGear(pen, t, p)
-  drawSeat(pen, SEAT.ariadne, p, [true, true], dy)
-  drawSeat(pen, SEAT.cobb, p, [true, true], dy)
+  drawSeat(pen, SEAT.ariadne, p, [true, true], dy, lampAt(t))
+  drawSeat(pen, SEAT.cobb, p, [true, true], dy, lampAt(t))
   drawSeat(pen, SEAT.team, p, [true, false], dy)
   drawSeat(pen, SEAT.fischer, p, [false, true], dy)
   // The console between the team's seat and Fischer's.

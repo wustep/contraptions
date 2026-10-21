@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../src/core/draw'
-import { easeInOutSine, lerp } from '../../../../../src/core/ease'
+import { clamp, easeInOutSine, lerp } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, over, post, rail, ramp, rankBy, wait, type Lane, type Pt } from '../../parts'
-import { flash, glow, lamp, marquee, score, tube } from './neon'
+import { flash, lamp, marquee, score, tube } from './neon'
 
 /**
  * A flying saucer, hovering one or two floors up, bobbing, its rim lamps
@@ -92,13 +92,16 @@ export const ufo = definePiece<UfoState>({
     const { floors, turn } = s
     const rise = riseTime(floors)
     const release = BEAM + rise + CARRY
-    // The saucer: bobbing, a little steadier while it works.
-    const working = since > -OPEN && since < release
+    // The saucer: bobbing, a little steadier while it works, settling into
+    // it and out of it rather than jumping a hair at the hatch and the release;
+    // its lamps chase faster meanwhile, picking up from where they were.
+    const calm = over(since, -OPEN - 0.25, -OPEN) * (1 - over(since, release, release + 0.4))
+    const chase = t + 1.5 * clamp(since + OPEN, 0, release + OPEN)
     const x = slideAt(since, floors, turn)
-    const y = -floors - HOVER + 0.014 * Math.sin(t * 2.4) * (working ? 0.3 : 1)
+    const y = -floors - HOVER + 0.014 * Math.sin(t * 2.4) * (1 - 0.7 * calm)
     // The hatch opens before the beam and shuts after it; the beam comes down fast and goes out from the bottom up.
     const hatch = since < -OPEN ? 0 : since < release ? over(since, -OPEN, 0) : 1 - over(since, release + 0.05, release + 0.3)
-    const down = since < 0 ? 0 : since < release ? over(since, 0, BEAM * 0.8) : 0
+    const down = since < 0 ? 0 : over(since, 0, BEAM * 0.8)
     const up = since < release ? 0 : over(since, release, release + 0.1)
 
     // The lane to the mark, the mark, and the rail at the top, clear of the way up.
@@ -122,8 +125,8 @@ export const ufo = definePiece<UfoState>({
       // Once the ball is up the beam lets go of the mark and draws up to the ball: it is only holding it now.
       const held = -floors - HELD + R * 0.6
       const foot = lerp(FLOOR, held, easeInOutSine(over(since, BEAM + rise - 0.05, BEAM + rise + 0.12)))
-      const y0 = lerp(beamTop, foot, up)
-      const y1 = lerp(beamTop, foot, down)
+      const y0 = beamTop
+      const y1 = lerp(beamTop, foot, down * (1 - up))
       const half = (yy: number) => lerp(HATCH, 0.17, (yy - beamTop) / (FLOOR - beamTop))
       const xAt = (yy: number) => lerp(x, 0, (yy - beamTop) / (FLOOR - beamTop))
       p.push()
@@ -133,7 +136,7 @@ export const ufo = definePiece<UfoState>({
       p.fill(wash)
       p.quad((xAt(y0) - half(y0)) * k, y0 * k, (xAt(y0) + half(y0)) * k, y0 * k, (xAt(y1) + half(y1)) * k, y1 * k, (xAt(y1) - half(y1)) * k, y1 * k)
       p.pop()
-      for (const side of [-1, 1]) tube(p, k, ink, weight * 0.4, s.color, xAt(y0) + side * half(y0), y0, xAt(y1) + side * half(y1), y1, 0.7)
+      for (const side of [-1, 1]) tube(p, k, ink, weight * 0.4, s.color, xAt(y0) + side * half(y0), y0, xAt(y1) + side * half(y1), y1)
       // Rings of light going up it, the way the ball is going.
       const rings = 2 + 2 * floors
       p.push()
@@ -148,7 +151,6 @@ export const ufo = definePiece<UfoState>({
       }
       p.pop()
     }
-    glow(p, k, s.color, x, y + 0.04, 0.2, down * (1 - up))
 
     // The saucer: a disc in the colour with a dark band of lamps round it, a glass dome with the pilot in it, the hatch underneath.
     solid(p, ink, weight, bg)
@@ -163,7 +165,7 @@ export const ufo = definePiece<UfoState>({
     for (const dx of [-0.032, 0.032]) p.circle((x + dx + lookX) * k, (y - DISC_H / 2 - 0.03 + lookY) * k, 0.032 * k)
     solid(p, ink, weight, s.color)
     p.ellipse(x * k, y * k, DISC_W * k, DISC_H * k)
-    marquee(p, k, ink, weight, s.color, bg, x - 0.21, x + 0.21, y, 5, t * (working ? 2.5 : 1), true, 0.055)
+    marquee(p, k, ink, weight, s.color, bg, x - 0.21, x + 0.21, y, 5, chase, true, 0.055)
     // The hatch: a dark mouth in the belly, open while it works.
     solid(p, ink, weight, ink)
     p.ellipse(x * k, (y + DISC_H / 2 + 0.005) * k, (0.05 + (HATCH * 2 - 0.05) * hatch) * k, (0.02 + 0.02 * hatch) * k)

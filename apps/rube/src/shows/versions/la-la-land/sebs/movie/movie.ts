@@ -4,6 +4,7 @@ import { alpha, box, carried, frame, glow, hash, part, ring, rgba, route, smooth
 import { hop } from '../physics'
 import { MOVIE_MAT as M } from '../worlds'
 import { box2, lerp, seg, shape, soft, trackAt, vgrad, type Key } from './movie-kit'
+import { cat, crab, curtains, dog, dogAt, kite, nextDoor, noodle, passingCar, pinwheel, plane, poolLife, poolPlumbing, sandcastle, sprinkler, swell, train, windPump, type DogKey } from './movie-life'
 import { birds, bunting, butterflies, clouds, farTrees, flowerBed, hedge, homeWall, lounger, mailbox, partyTable, poolRing, sailboat, summerSky, tree, umbrella } from './movie-sets'
 
 /**
@@ -645,7 +646,7 @@ function dust(p: p5, k: number, fi: number, v: Rect, weave: number): void {
 
 /* ------------------------------------------------------------------ the room */
 
-/** The projector in the dark, its beam on the screen, the reels turning; drawn outside the gate only. */
+/** The projector in the dark, its picture on the screen, the reels turning; drawn outside the gate only. */
 function drawRoom(p: p5, t: number, c: Ctx, fr: Rect, g: Rect, img: Rect): void {
   const { k, weight } = c
   const ctx = p.drawingContext as CanvasRenderingContext2D
@@ -657,7 +658,6 @@ function drawRoom(p: p5, t: number, c: Ctx, fr: Rect, g: Rect, img: Rect): void 
   ctx.clip('evenodd')
   ctx.fillStyle = M.room
   ctx.fillRect((fr.x0 - pad) * k, (fr.y0 - pad) * k, (fr.x1 - fr.x0 + 2 * pad) * k, (fr.y1 - fr.y0 + 2 * pad) * k)
-  const h = img.y1 - img.y0
   const cy = (img.y0 + img.y1) / 2
   const floor = img.y1 + 1.35
   // The screen round the picture: its matte white, lit a little by the spill; its stand down to the floor.
@@ -669,41 +669,88 @@ function drawRoom(p: p5, t: number, c: Ctx, fr: Rect, g: Rect, img: Rect): void 
   seg(p, k, [sx, floor - 0.35], [sx - 0.55, floor], alpha(p, M.warm, 0.16), weight * 0.8)
   seg(p, k, [sx, floor - 0.35], [sx + 0.55, floor], alpha(p, M.warm, 0.16), weight * 0.8)
   seg(p, k, [img.x0 - m, img.y0 - m - 0.06], [img.x1 + m, img.y0 - m - 0.06], alpha(p, M.warm, 0.2), weight * 1.2)
-  // The floor, barely: where the beam's spill reaches.
+  // The floor, barely: where the screen's light reaches.
   vgrad(p, k, fr.x0 - pad, floor, fr.x1 + pad, fr.y1 + pad, [[0, rgba(M.warm, 0.06)], [0.4, rgba(M.warm, 0)]])
+  // The room, just seen by the picture's light: an armchair turned to the screen, empty, a little table beside it with
+  // a cup, and two frames on the wall; each with the screen's light along its edges toward it.
+  if (img === IMG1) darkRoom(p, k, weight, img.x0, floor, t < TAIL ? 1 : 1.6, t)
+  // The screen's light lying on the floor in front of it.
+  glow(p, k, sx, floor + 0.12, (img.x1 - img.x0) * 0.6, M.cream, 0.1 * lit, 1, 0.1)
   // The projector: its lens level with the picture's middle, well back from it.
   const lx = img.x0 - 5.2
   const ly = cy
   const run = t < TAIL ? 1 : 1 + 2.2 * smooth(t, TAIL, TAIL + 0.3)
-  // The beam: a soft wedge from the lens to the screen, flickering with the shutter.
-  const shutter = 0.9 + 0.1 * Math.sin(t * 2 * Math.PI * 18)
-  ctx.save()
-  const bg = ctx.createLinearGradient(lx * k, 0, img.x0 * k, 0)
-  const ba = (t < TAIL ? 0.16 : 0.24) * shutter
-  bg.addColorStop(0, rgba(M.beam, ba * 1.6))
-  bg.addColorStop(1, rgba(M.beam, ba * 0.45))
-  ctx.fillStyle = bg
-  ctx.beginPath()
-  ctx.moveTo(lx * k, (ly - 0.05) * k)
-  ctx.lineTo(img.x0 * k, img.y0 * k)
-  ctx.lineTo(img.x0 * k, img.y1 * k)
-  ctx.lineTo(lx * k, (ly + 0.05) * k)
-  ctx.closePath()
-  ctx.fill()
-  ctx.restore()
-  // Motes turning slowly in the beam.
-  for (let i = 0; i < 9; i++) {
-    const u = (hash(i, 61) + t * 0.012 * (0.5 + hash(i, 62))) % 1
-    const x = lerp(lx + 0.4, img.x0 - 0.2, u)
-    const spread = (x - lx) / (img.x0 - lx)
-    const y = ly + (hash(i, 63) - 0.5) * h * 0.8 * spread + Math.sin(t * 0.4 + i) * 0.05
-    p.noStroke()
-    p.fill(alpha(p, M.beam, 0.28 * (0.5 + 0.5 * Math.sin(t * 0.7 + i * 1.7))))
-    p.circle(x * k, y * k, Math.max(1.2, 0.028 * k))
-  }
-  glow(p, k, lx + 0.05, ly, 0.5, M.beam, 0.42 * shutter)
+  // No beam in the air: the lens is lit, and the picture on the screen is its light, falling on the room round it.
   drawProjector(p, k, weight, lx, ly, floor, t, run)
   ctx.restore()
+}
+
+/** The room round the projector, in the dark: shapes only, lit along their edges toward the screen at `sx`. */
+function darkRoom(p: p5, k: number, weight: number, sx: number, floor: number, lit: number, t: number): void {
+  const body = '#211A24'
+  const rim = alpha(p, M.beam, 0.22 * lit)
+  // The window behind the projector, its curtains drawn but for a gap: the street's night in it, a streetlamp and a
+  // few windows across the way, the curtains stirring a little.
+  const wx0 = sx - 9.7
+  const wx1 = sx - 7.3
+  const wy0 = -5.6
+  const wy1 = -3.3
+  box2(p, k, wx0, wy0, wx1, wy1, '#1A2244', null)
+  p.noStroke()
+  for (const [x, y, c] of [[wx0 + 1.32, wy0 + 1.05, M.sun], [wx0 + 1.05, wy0 + 1.6, M.orange], [wx0 + 1.5, wy0 + 1.7, M.orange], [wx0 + 0.95, wy0 + 0.7, M.orange]] as const) {
+    p.fill(alpha(p, c, 0.8))
+    p.rect((x - 0.03) * k, (y - 0.04) * k, 0.06 * k, 0.08 * k)
+  }
+  const gap = 0.32 + 0.04 * Math.sin(t * 0.6)
+  const mid = wx0 + 1.25
+  shape(p, k, [[wx0 - 0.15, wy0 - 0.12], [mid - gap / 2, wy0 - 0.12], [mid - gap / 2 - 0.05, wy1 + 0.25], [wx0 - 0.2, wy1 + 0.25]], '#2A1E2E', null)
+  shape(p, k, [[mid + gap / 2, wy0 - 0.12], [wx1 + 0.15, wy0 - 0.12], [wx1 + 0.2, wy1 + 0.25], [mid + gap / 2 + 0.05, wy1 + 0.25]], '#2A1E2E', null)
+  seg(p, k, [wx0 - 0.3, wy0 - 0.14], [wx1 + 0.3, wy0 - 0.14], alpha(p, M.warm, 0.18), weight * 1.2)
+  p.stroke(alpha(p, '#1A2244', 0.9))
+  p.strokeWeight(weight * 0.6)
+  for (const f of [0.35, 0.7]) p.line((mid - gap / 2 - 0.03) * k, (wy0 + (wy1 - wy0) * f) * k, (mid - gap / 2 - 0.4) * k, (wy0 + (wy1 - wy0) * f + 0.1) * k)
+  // Under it, a low sideboard: the film's tins stacked on it, and a lamp, off; the screen's light along their edges.
+  const bx0 = sx - 10.8
+  const bx1 = sx - 8.2
+  const btop = floor - 0.85
+  box2(p, k, bx0, btop, bx1, floor, body, null)
+  seg(p, k, [bx1, btop], [bx1, floor], rim, weight * 0.9)
+  seg(p, k, [bx0, btop], [bx1, btop], rim, weight * 0.8)
+  for (let i = 0; i < 4; i++) {
+    const y1 = btop - i * 0.09
+    box2(p, k, bx0 + 0.3 + 0.02 * (i % 2), y1 - 0.08, bx0 + 1.0 - 0.03 * (i % 2), y1, '#2E2533', null)
+    seg(p, k, [bx0 + 1.0 - 0.03 * (i % 2), y1 - 0.08], [bx0 + 1.0 - 0.03 * (i % 2), y1], rim, weight * 0.7)
+  }
+  const lmp = bx1 - 0.5
+  seg(p, k, [lmp, btop], [lmp, btop - 0.75], body, weight * 1.4)
+  shape(p, k, [[lmp - 0.25, btop - 0.75], [lmp + 0.25, btop - 0.75], [lmp + 0.17, btop - 1.05], [lmp - 0.17, btop - 1.05]], '#2E2533', null)
+  seg(p, k, [lmp + 0.25, btop - 0.75], [lmp + 0.17, btop - 1.05], rim, weight * 0.8)
+  // The armchair, side on, its back to the projector: a back, an arm, a seat, short legs.
+  const x = sx - 2.6
+  shape(p, k, [[x - 0.85, floor - 0.12], [x - 0.95, floor - 1.55], [x - 0.6, floor - 1.62], [x - 0.5, floor - 0.95], [x + 0.55, floor - 0.95], [x + 0.62, floor - 1.2], [x + 0.78, floor - 1.18], [x + 0.75, floor - 0.12]], body, null)
+  for (const lx of [x - 0.8, x + 0.65]) box2(p, k, lx - 0.04, floor - 0.13, lx + 0.04, floor, body, null)
+  p.noFill()
+  p.stroke(rim)
+  p.strokeWeight(weight * 0.9)
+  p.line((x - 0.6) * k, (floor - 1.62) * k, (x - 0.5) * k, (floor - 0.95) * k)
+  p.line((x + 0.62) * k, (floor - 1.2) * k, (x + 0.78) * k, (floor - 1.18) * k)
+  p.line((x + 0.78) * k, (floor - 1.18) * k, (x + 0.75) * k, (floor - 0.12) * k)
+  // The little table, and a cup on it.
+  const tx = sx - 1.35
+  box2(p, k, tx - 0.3, floor - 0.72, tx + 0.3, floor - 0.66, body, null)
+  for (const lx of [tx - 0.24, tx + 0.24]) box2(p, k, lx - 0.025, floor - 0.66, lx + 0.025, floor, body, null)
+  box2(p, k, tx - 0.07, floor - 0.84, tx + 0.07, floor - 0.72, body, null, 0, 0.02)
+  p.line((tx + 0.3) * k, (floor - 0.72) * k, (tx + 0.3) * k, (floor - 0.66) * k)
+  p.line((tx + 0.07) * k, (floor - 0.84) * k, (tx + 0.07) * k, (floor - 0.72) * k)
+  // Two frames on the wall behind, catching the spill.
+  for (const [fx, fy, fw, fh] of [[sx - 3.6, -2.6, 0.7, 0.9], [sx - 2.5, -2.2, 0.55, 0.55]] as const) {
+    p.stroke(alpha(p, M.beam, 0.08 * lit))
+    p.strokeWeight(weight * 1.4)
+    p.rect((fx + fw / 2) * k, (fy + fh / 2) * k, fw * k, fh * k)
+    p.stroke(rim)
+    p.strokeWeight(weight * 0.8)
+    p.line((fx + fw) * k, fy * k, (fx + fw) * k, (fy + fh) * k)
+  }
 }
 
 /** An eight-millimetre projector seen from the side, lens to the right at (lx, ly), on a small table. */
@@ -724,9 +771,12 @@ function drawProjector(p: p5, k: number, weight: number, lx: number, ly: number,
     const y = ly - 0.1 + i * 0.12
     seg(p, k, [lx - 1.8, y], [lx - 1.56, y], alpha(p, M.beam, 0.5 + 0.12 * Math.sin(t * 9 + i)), weight * 0.9)
   }
-  glow(p, k, lx - 1.68, ly + 0.02, 0.45, M.orange, 0.16)
   box2(p, k, lx - 0.34, ly - 0.1, lx, ly + 0.1, dark, edge, w, 0.02)
   shape(p, k, [[lx - 0.02, ly - 0.1], [lx + 0.02, ly - 0.1], [lx + 0.02, ly + 0.1], [lx - 0.02, ly + 0.1]], alpha(p, M.beam, 0.85), null)
+  // The lamp, seen through the lens: the one point of light the star in the dark became.
+  p.noStroke()
+  p.fill(alpha(p, M.beam, 0.95))
+  p.circle(lx * k, ly * k, Math.max(2, 0.07 * k))
   // The arms and reels: feed at the front, take-up at the back, turning at their own rates as the film goes over.
   const feed: Pt = [lx - 0.62, ly - 1.05]
   const take: Pt = [lx - 1.55, ly - 0.92]
@@ -782,6 +832,79 @@ function flat(p: p5, k: number, b: Rect, y: number, fill: string | p5.Color, ink
   seg(p, k, [b.x0, y], [b.x1, y], ink, w)
 }
 
+/**
+ * A mown lawn from `y` (its far edge, at the hedge) down to the box's foot: the mower's stripes, paler and darker,
+ * going back from us toward a point far off over `vx`, which is what lays the lawn down and sends it away.
+ */
+function mown(p: p5, k: number, b: Rect, y: number, vx: number): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const vy = y - 3.4
+  const spread = (b.y1 - vy) / (y - vy)
+  const near = (x: number) => vx + (x - vx) * spread
+  const step = 0.8
+  // Each stripe is counted from the far point, so it keeps its place as the camera moves; enough of them to cover the
+  // box along the far edge and along the near one.
+  const n0 = Math.floor((Math.min(b.x0, vx + (b.x0 - vx) / spread) - vx) / step) - 1
+  const n1 = Math.ceil((Math.max(b.x1, vx + (b.x1 - vx) / spread) - vx) / step) + 1
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(b.x0 * k, y * k, (b.x1 - b.x0) * k, (b.y1 - y) * k)
+  ctx.clip()
+  ctx.beginPath()
+  for (let n = n0; n <= n1; n++) {
+    if (n % 2 !== 0) continue
+    const x0 = vx + n * step
+    const x1 = x0 + step
+    ctx.moveTo(x0 * k, y * k)
+    ctx.lineTo(x1 * k, y * k)
+    ctx.lineTo(near(x1) * k, b.y1 * k)
+    ctx.lineTo(near(x0) * k, b.y1 * k)
+    ctx.closePath()
+  }
+  ctx.fillStyle = rgba(M.cream, 0.11)
+  ctx.fill()
+  ctx.restore()
+}
+
+/** Where the late sun throws a thing's shadow on the lawn, per cell of its height: toward us, and away from the sun. */
+const SUN_THROW: Pt = [-0.2, 0.3]
+
+/**
+ * The late sun's shadows on the lawn, all thrown the one way, in one flat shade: `walls` stand on the lawn (from x0 to
+ * x1 at `foot`, `h` tall: a hedge, a table, a chair, a box), `crowns` are a tree's or a palm's head held up on its
+ * trunk (at x, its foot, the head's height and its radius), and `feet` are small shadows right under a thing.
+ */
+function lawnShadows(p: p5, k: number, walls: [number, number, number, number][], crowns: [number, number, number, number][], feet: [number, number, number][] = []): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const [dx, dy] = SUN_THROW
+  ctx.beginPath()
+  for (const [x0, x1, foot, h] of walls) {
+    ctx.moveTo(x0 * k, foot * k)
+    ctx.lineTo(x1 * k, foot * k)
+    ctx.lineTo((x1 + dx * h) * k, (foot + dy * h) * k)
+    ctx.lineTo((x0 + dx * h) * k, (foot + dy * h) * k)
+    ctx.closePath()
+  }
+  for (const [x, foot, h, r] of crowns) {
+    // The trunk's shadow out to the head's, then the head's, flattened on the ground.
+    ctx.moveTo((x - 0.04) * k, foot * k)
+    ctx.lineTo((x + 0.04) * k, foot * k)
+    ctx.lineTo((x + dx * h + 0.04) * k, (foot + dy * h) * k)
+    ctx.lineTo((x + dx * h - 0.04) * k, (foot + dy * h) * k)
+    ctx.closePath()
+    const cx = x + dx * h
+    const cy = foot + dy * h
+    ctx.moveTo((cx + r * 1.1) * k, cy * k)
+    ctx.ellipse(cx * k, cy * k, r * 1.1 * k, r * 0.26 * k, 0, 0, Math.PI * 2)
+  }
+  for (const [x, foot, r] of feet) {
+    ctx.moveTo((x + dx * 0.15 + r) * k, (foot + 0.02) * k)
+    ctx.ellipse((x + dx * 0.15) * k, (foot + 0.02) * k, r * k, r * 0.22 * k, 0, 0, Math.PI * 2)
+  }
+  ctx.fillStyle = rgba('#3E5A34', 0.2)
+  ctx.fill()
+}
+
 /** Shot one: the house, the path, the gate, the steps; Mia and the pram on the porch. */
 function drawHouse(p: p5, t: number, c: Ctx, b: Rect): void {
   const { k, ink, weight } = c
@@ -794,9 +917,11 @@ function drawHouse(p: p5, t: number, c: Ctx, b: Rect): void {
   // The tree beside the house, and the hedge along the back of the garden.
   tree(p, k, ink, w, -2.45, FLOORY, 2.3, 0.75, t)
   hedge(p, k, ink, w, -3.7, b.x1, FLOORY, 0.3)
-  // The lawn and the path.
+  // The lawn, mown, and the path; the late sun's shadows of the hedge, the tree, the palm and the mailbox on them.
   flat(p, k, b, FLOORY, M.grass, ink, w)
+  mown(p, k, b, FLOORY, -2.2)
   shape(p, k, [[STEP_X[0] - 0.1, FLOORY], [b.x1, FLOORY], [b.x1, FLOORY + 0.1], [STEP_X[0] - 0.1, FLOORY + 0.1]], M.warm, null)
+  lawnShadows(p, k, [[-3.7, b.x1, FLOORY, 0.3], [-0.48, -0.42, FLOORY, 0.55]], [[-2.45, FLOORY, 1.85, 0.75], [1.05, FLOORY, 2.6, 0.6], [-0.45, FLOORY, 0.65, 0.17]])
   // The palm on the right of the garden.
   palm(p, k, ink, w, 1.05, FLOORY, 2.7, t)
   // The house: its wall, the window lit warm, the door; the roof. Then the porch in front, and its steps.
@@ -824,6 +949,8 @@ function drawHouse(p: p5, t: number, c: Ctx, b: Rect): void {
   // Flowers along the porch's foot; the mailbox by the gate.
   flowerBed(p, k, ink, w, -8.3, STEP_X[3] - 0.1, FLOORY)
   mailbox(p, k, ink, w, -0.45, FLOORY)
+  // The sprinkler on the lawn in front, swinging its fan of water across the grass.
+  sprinkler(p, k, ink, w, -1.6, FLOORY + 0.78, t)
   // The pram, rocked by her hand on its handle.
   pram(p, k, ink, w, PRAM_X + rockAt(t), t)
   // The gate: he pushes it on its latch side; it swings away round its hinge and its spring brings it back.
@@ -929,6 +1056,23 @@ function pram(p: p5, k: number, ink: string, w: number, x: number, t: number): v
   seg(p, k, [x - 0.64, top - 0.28], [x - 0.56, top - 0.3], ink, w * 1.6)
 }
 
+/** The dog at the party: where it is, sitting (0), trotting (1) or bounding (2), and looking up (1). */
+const DOG_KEYS: DogKey[] = [
+  { t: 349.0, x: -2.0, pose: 0 },
+  { t: KNOCK + 0.1, x: -2.0, pose: 0 },
+  { t: KNOCK + 0.25, x: -2.02, pose: 2 },
+  { t: LID_DOWN + 0.2, x: -2.5, pose: 2, look: 0.3 },
+  { t: 353.0, x: -2.52, pose: 2, look: 1 },
+  { t: 354.2, x: -2.55, pose: 2, look: 1 },
+  { t: 354.5, x: -2.62, pose: 1, look: 0.2 },
+  { t: 356.0, x: -6.3, pose: 1 },
+  { t: 356.25, x: -6.3, pose: 0 },
+  { t: 356.45, x: -6.21, pose: 0 },
+  { t: SON_DOWN, x: -6.21, pose: 0 },
+  { t: SON_DOWN + 0.25, x: -6.15, pose: 1 },
+  { t: 359.0, x: -5.0, pose: 1 },
+]
+
 /** Shot two: his first birthday on the lawn: the high chair, the cake with its candle, the present, the balloons. */
 function drawParty(p: p5, t: number, c: Ctx, b: Rect): void {
   const { k, ink, weight } = c
@@ -948,9 +1092,22 @@ function drawParty(p: p5, t: number, c: Ctx, b: Rect): void {
   p.vertex(b.x1 * k, (LAWN + 0.01) * k)
   p.endShape(p.CLOSE)
   flat(p, k, b, LAWN, M.grass, ink, w)
+  // The lawn mown for the party, and the late sun's shadows on it: the hedge's, the tree's, the table's, the high
+  // chair's, the present's, the pinwheels', and the dog's under it wherever it is.
+  mown(p, k, b, LAWN, -3.2)
+  lawnShadows(
+    p,
+    k,
+    [[b.x0, b.x1, LAWN, 0.62], [-2.17, -0.93, LAWN, 0.5], [GIFT.x0, GIFT.x1, LAWN, 0.3]],
+    [[-0.15, LAWN, 1.7, 0.7], [CHAIR_X, LAWN, 0.5, 0.26], [-6.95, LAWN + 0.5, 0.46, 0.1], [-0.95, LAWN + 0.4, 0.52, 0.1]],
+    [[dogAt(DOG_KEYS, t).x, LAWN + 0.34, 0.26]],
+  )
   // Bunting from the house's eave (off to the left) to the tree, and the table with the lemonade behind the party.
   bunting(p, k, ink, w, [-9.2, -2.55], [-0.4, -2.35], 0.32, t)
   partyTable(p, k, ink, w, -1.55, LAWN)
+  // Pinwheels stuck in the lawn, turning in the breeze.
+  pinwheel(p, k, ink, w, -6.95, LAWN + 0.5, 0.46, t, 0)
+  pinwheel(p, k, ink, w, -0.95, LAWN + 0.4, 0.52, t, 1)
   // The high chair: splayed legs, the seat he sits in, the tray with his cake.
   const cx = CHAIR_X
   const seat = CHAIR_SEAT + SON_R(0.85)
@@ -970,7 +1127,6 @@ function drawParty(p: p5, t: number, c: Ctx, b: Rect): void {
     // The flame: a drop, leaning away from his breath as it goes.
     const lean = 0.06 * smooth(t, CANDLE - 0.12, CANDLE)
     const s = 1 - out
-    glow(p, k, wick[0] + lean, wick[1] - 0.05, 0.22, M.sun, 0.35 * s)
     p.noStroke()
     p.fill(M.orange)
     p.beginShape()
@@ -988,6 +1144,10 @@ function drawParty(p: p5, t: number, c: Ctx, b: Rect): void {
     const h = 0.2 + sm * 0.25
     p.bezier(wick[0] * k, wick[1] * k, (wick[0] + 0.08) * k, (wick[1] - h * 0.3) * k, (wick[0] - 0.08) * k, (wick[1] - h * 0.6) * k, (wick[0] + 0.03 * Math.sin(sm * 3)) * k, (wick[1] - h) * k)
   }
+  // The dog: by the table until the present is knocked; after the lid, then up at the balloons; then off to sit by
+  // the high chair for the candle, and up again when the boy gets down. In front of them all, on the near lawn.
+  const d = dogAt(DOG_KEYS, t)
+  dog(p, k, ink, w, d.x, LAWN + 0.34, t, d.face, d.pose, d.look)
   // The present: a box with its bow; knocked, its lid flies up and over and lands on the lawn.
   const g = GIFT
   box2(p, k, g.x0, g.y0 + 0.06, g.x1, g.y1, M.pink, ink, w)
@@ -1064,7 +1224,13 @@ function drawBeach(p: p5, t: number, c: Ctx, b: Rect): void {
   // The far sea, a band to the horizon.
   shape(p, k, [[b.x0, SEA - 0.72], [b.x1, SEA - 0.72], [b.x1, b.y1], [b.x0, b.y1]], alpha(p, M.pool, 0.85), null)
   seg(p, k, [b.x0, SEA - 0.72], [b.x1, SEA - 0.72], alpha(p, ink, 0.5), w * 0.6)
+  // The swell rolling in from the horizon; boats out on it, one tacking back the other way.
+  swell(p, k, w, b.x0, b.x1, SEA - 0.66, SEA - 0.06, t)
   sailboat(p, k, ink, w, -3.3 + (t - 358.5) * 0.03, SEA - 0.72)
+  sailboat(p, k, ink, w, -6.6 + (t - 358.5) * 0.018, SEA - 0.72)
+  sailboat(p, k, ink, w, -1.2 - (t - 358.5) * 0.04, SEA - 0.72)
+  // A kite high over the beach, its string down to someone out of the picture along the shore.
+  kite(p, k, ink, w, -3.1, -2.1, [2.2, 0.9], t)
   // The sand: flat, then sloping down into the sea at the right.
   const sand = (x: number) => (x < SEA_EDGE ? LAWN : LAWN + (x - SEA_EDGE) * 0.22)
   p.fill(M.cream)
@@ -1075,8 +1241,11 @@ function drawBeach(p: p5, t: number, c: Ctx, b: Rect): void {
   for (let x = b.x0; x <= b.x1 + 0.2; x += 0.25) p.vertex(x * k, sand(x) * k)
   p.vertex(b.x1 * k, b.y1 * k)
   p.endShape(p.CLOSE)
-  // Their umbrella and towel, up the beach behind her.
+  // Their umbrella and towel, up the beach behind her; the boy's sandcastle on the near sand; a crab going by.
   umbrella(p, k, ink, w, -7.55, LAWN, t)
+  sandcastle(p, k, ink, w, -5.0, 0.36, t)
+  const cr = crabAt(t)
+  crab(p, k, ink, w, cr.x, 0.62, t, cr.moving)
   // The wet sand the waves have reached, darker.
   const reach = washAt(t)
   const wetTo = Math.min(reach.x, reach.far)
@@ -1111,6 +1280,24 @@ function drawBeach(p: p5, t: number, c: Ctx, b: Rect): void {
   if (br > -0.5 && br < 0.5) breaker(p, k, ink, w, br)
   // The bucket, the boy's, yellow; full of sea after the wave; tipped by him, the water running out.
   bucket(p, k, ink, w, t)
+}
+
+/** The crab on the near sand: a dash sideways, a stop, another, all the way across under them. */
+const CRAB_KEYS: Key[] = [
+  { t: 358.5, p: [-1.9, 0] },
+  { t: 359.0, p: [-1.9, 0] },
+  { t: 359.7, p: [-2.7, 0] },
+  { t: 360.6, p: [-2.7, 0] },
+  { t: 361.3, p: [-3.6, 0] },
+  { t: 362.1, p: [-3.6, 0] },
+  { t: 362.8, p: [-4.4, 0] },
+  { t: 363.4, p: [-4.4, 0] },
+  { t: 364.3, p: [-5.5, 0] },
+]
+function crabAt(t: number): { x: number; moving: number } {
+  const x = trackAt(CRAB_KEYS, t)[0]
+  const x2 = trackAt(CRAB_KEYS, t + 0.04)[0]
+  return { x, moving: Math.min(1, Math.abs(x2 - x) * 40) }
 }
 
 /** The swash: how far up the sand the water reaches (x, smaller is further), how high its lip, and the furthest it has been. */
@@ -1195,15 +1382,25 @@ function drawPool(p: p5, t: number, c: Ctx, b: Rect): void {
   glow(p, k, 1.2, -3.4, 2.4, M.cream, 0.6)
   clouds(p, k, ink, w, t, [[-6.0, -2.75, 0.85], [-2.4, -3.15, 0.6], [1.0, -2.45, 0.7]])
   birds(p, k, ink, w, t, -4.2, -2.3, 3)
+  // A light plane going over, high, its trail drawn out behind it.
+  plane(p, k, ink, w, -8.6 + (t - CUTS[2]) * 1.15, -3.45 + (t - CUTS[2]) * 0.02, 2.6)
+  // Beyond the hedge: a car going by on the street, and next door's fence, tree and sprinkler.
+  if (t > 365.0 && t < 370.2) passingCar(p, k, ink, w, -9.4 + (t - 365.0) * 2.9, LAWN - 0.15)
+  nextDoor(p, k, ink, w, -0.45, 2.25, LAWN - 0.04, t)
   hedge(p, k, ink, w, b.x0, b.x1, LAWN, 0.42)
   // A palm over the far side of the pool.
   palm(p, k, ink, w, 2.6, LAWN, 2.9, t)
   // The deck, terracotta tiles, and the pool sunk in it: its water, its lip, the depth.
   flat(p, k, b, LAWN, M.orange, ink, w)
   for (let x = Math.floor(b.x0); x < b.x1; x += 0.5) if (x < POOL_X0) seg(p, k, [x, LAWN], [x, LAWN + 0.5], alpha(p, ink, 0.18), w * 0.5)
+  // In the ground the section cuts, under the deck: the pool's pump and its pipes, the water running round.
+  poolPlumbing(p, k, ink, w, -5.2, POOL_X0, LAWN, WATER, t)
   const x1 = b.x1 + 1
   shape(p, k, [[POOL_X0, LAWN], [x1, LAWN], [x1, 1.2], [POOL_X0, 1.2]], M.teal, ink, w)
   const water = waterAt(t)
+  const surface = (x: number) => WATER + water(x)
+  const dives: [number, number][] = [[SPLASH, -0.2], [SON_SPLASH, -1.3]]
+  poolLife(p, k, ink, w, POOL_X0, x1, LAWN, WATER, 1.2, surface, t, dives, false)
   p.fill(M.pool)
   p.noStroke()
   p.beginShape()
@@ -1211,7 +1408,9 @@ function drawPool(p: p5, t: number, c: Ctx, b: Rect): void {
   p.vertex(x1 * k, 1.2 * k)
   p.vertex((POOL_X0 + 0.04) * k, 1.2 * k)
   p.endShape(p.CLOSE)
+  poolLife(p, k, ink, w, POOL_X0, x1, LAWN, WATER, 1.2, surface, t, dives, true)
   poolRing(p, k, ink, w, 1.75 + 0.05 * Math.sin(t * 0.4), WATER + water(1.75), t)
+  noodle(p, k, ink, w, 0.7 + 0.18 * Math.sin(t * 0.27), surface)
   // The light on the pool floor, wavering.
   for (let i = 0; i < 6; i++) {
     const x = POOL_X0 + 0.5 + i * 0.75 + 0.1 * Math.sin(t * 0.9 + i)
@@ -1221,6 +1420,9 @@ function drawPool(p: p5, t: number, c: Ctx, b: Rect): void {
     p.bezier(x * k, 0.95 * k, (x + 0.15) * k, 0.9 * k, (x + 0.25) * k, 1.0 * k, (x + 0.4) * k, 0.95 * k)
   }
   seg(p, k, [POOL_X0, LAWN], [POOL_X0, 1.2], ink, w)
+  // The coping along the pool's near edge, and a pair of flip-flops left on the tiles.
+  box2(p, k, POOL_X0 - 0.42, LAWN - 0.035, POOL_X0 + 0.06, LAWN + 0.03, M.cream, ink, w * 0.6, 0.015)
+  for (const [fx, tilt] of [[-4.02, -0.05], [-3.86, 0.08]] as const) shape(p, k, [[fx - 0.07, LAWN - 0.005], [fx + 0.07 + tilt * 0.2, LAWN - 0.005], [fx + 0.06 + tilt * 0.2, LAWN - 0.03], [fx - 0.06, LAWN - 0.03]], M.pink, ink, w * 0.4)
   lounger(p, k, ink, w, -5.5, LAWN)
   // The board: its stand on the deck, the plank out over the water, bending at its tip on each landing.
   box2(p, k, BOARD_ROOT - 0.15, LAWN + 0.06, BOARD_ROOT + 0.2, LAWN + 0.2, M.teal, ink, w * 0.8)
@@ -1348,7 +1550,11 @@ function drawField(p: p5, t: number, c: Ctx, b: Rect): void {
   for (let x = b.x0; x <= b.x1 + 0.5; x += 0.5) p.vertex(x * k, (-1.0 - 0.35 * Math.sin(x * 0.55 + 1) - 0.15 * Math.sin(x * 1.3)) * k)
   p.vertex(b.x1 * k, b.y1 * k)
   p.endShape(p.CLOSE)
-  farTrees(p, k, ink, w, b.x0, b.x1, (x) => -1.0 - 0.35 * Math.sin(x * 0.55 + 1) - 0.15 * Math.sin(x * 1.3))
+  const far = (x: number) => -1.0 - 0.35 * Math.sin(x * 0.55 + 1) - 0.15 * Math.sin(x * 1.3)
+  farTrees(p, k, ink, w, b.x0, b.x1, far)
+  // A wind pump turning on the far hill, and a little train running along under the trees.
+  windPump(p, k, ink, w, 6.3, far(6.3) + 0.06, t)
+  train(p, k, ink, w, -2.4 + (t - CUTS[3]) * 0.8, (x) => far(x) + 0.3, b.x0, b.x1)
   // The meadow.
   p.fill(M.grass)
   p.stroke(ink)
@@ -1428,13 +1634,37 @@ function drawHome(p: p5, t: number, c: Ctx, b: Rect): void {
   p.strokeWeight(w)
   p.rect(((wx0 + wx1) / 2) * k, ((wy0 + wy1) / 2) * k, (wx1 - wx0) * k, (wy1 - wy0) * k)
   seg(p, k, [(wx0 + wx1) / 2, wy0], [(wx0 + wx1) / 2, wy1], ink, w * 0.7)
+  // Its curtains, drawn back, stirring in the evening air.
+  curtains(p, k, ink, w, wx0, wx1, wy0, wy1, t, '#C2604A')
   // The floor.
   shape(p, k, [[b.x0, floor], [b.x1, floor], [b.x1, b.y1], [b.x0, b.y1]], M.orange, ink, w)
   // Their room: his piano, the pictures of their life on the wall, the rug, a plant.
   const lampOn = 1 - off
-  homeWall(p, k, ink, w, floor, lampOn)
-  // The lamp: a pole and a shade, its light on the wall.
-  glow(p, k, LAMP_X, -1.45, 2.0, M.sun, 0.55 * lampOn)
+  homeWall(p, k, ink, w, floor)
+  // The lamp: a pole and a shade, its light thrown out of the shade's open top and bottom onto the wall behind it, a
+  // fan up and a fan down, and a pool on the floor at its foot. Nothing round the shade itself.
+  if (lampOn > 0.01) {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const fan = (y0: number, y1: number, w0: number, w1: number, a0: number, a1: number) => {
+      const g = ctx.createLinearGradient(0, y0 * k, 0, y1 * k)
+      g.addColorStop(0, rgba(M.sun, a0 * lampOn))
+      g.addColorStop(1, rgba(M.sun, a1 * lampOn))
+      ctx.fillStyle = g
+      ctx.beginPath()
+      ctx.moveTo((LAMP_X - w0) * k, y0 * k)
+      ctx.lineTo((LAMP_X + w0) * k, y0 * k)
+      ctx.lineTo((LAMP_X + w1) * k, y1 * k)
+      ctx.lineTo((LAMP_X - w1) * k, y1 * k)
+      ctx.closePath()
+      ctx.fill()
+    }
+    fan(-1.62, -3.2, 0.13, 0.8, 0.42, 0)
+    fan(-1.33, floor, 0.2, 0.75, 0.3, 0.06)
+    ctx.fillStyle = rgba(M.sun, 0.32 * lampOn)
+    ctx.beginPath()
+    ctx.ellipse(LAMP_X * k, (floor + 0.06) * k, 0.95 * k, 0.1 * k, 0, 0, Math.PI * 2)
+    ctx.fill()
+  }
   seg(p, k, [LAMP_X, floor], [LAMP_X, -1.35], ink, w * 1.2)
   box2(p, k, LAMP_X - 0.2, floor - 0.04, LAMP_X + 0.2, floor, M.teal, ink, w * 0.8)
   shape(p, k, [[LAMP_X - 0.2, -1.33], [LAMP_X + 0.2, -1.33], [LAMP_X + 0.13, -1.62], [LAMP_X - 0.13, -1.62]], lampOn > 0.5 ? M.sun : M.orange, ink, w)
@@ -1453,6 +1683,8 @@ function drawHome(p: p5, t: number, c: Ctx, b: Rect): void {
   for (const lx of [COUCH_X0 + 0.05, COUCH_X1 - 0.05]) seg(p, k, [lx, floor - 0.12], [lx, floor], ink, w * 1.3)
   // Cushion seams.
   for (const sx of [4.8, 5.45]) seg(p, k, [sx, y - 0.68], [sx, y - 0.05], alpha(p, ink, 0.45), w * 0.6)
+  // The cat, asleep on the rug.
+  cat(p, k, ink, w, 4.45, floor + 0.1, t)
   // Dusk comes on in the room as the lamp goes.
   const dim = 0.5 * off + 0.12 * dusk
   if (dim > 0) {

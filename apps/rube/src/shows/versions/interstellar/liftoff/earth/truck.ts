@@ -72,7 +72,7 @@ export interface Pickup {
   turn: number
   /** The near door: 0 shut, 1 wide. */
   door: number
-  /** The headlamp and its beam: 0 dark, 1 lit. */
+  /** The headlamp: 0 dark, 1 lit. */
   lamp: number
 }
 
@@ -98,7 +98,7 @@ function doorShape(open: number): { door: Pt[]; glass: Pt[] } {
 /**
  * The pickup, everything behind the balls: the wheels, the bed's far side and
  * its rail, the cab with its inside (the bench, the far window) showing where
- * the near door is not, the hood, the lamp and its beam, the tailgate.
+ * the near door is not, the hood, the lamp, the tailgate.
  */
 export function drawPickup(p: p5, k: number, ink: string, weight: number, pk: Pickup): void {
   const X = (x: number) => x * k
@@ -148,24 +148,11 @@ export function drawPickup(p: p5, k: number, ink: string, weight: number, pk: Pi
   p.ellipse(0, 0, X(0.07), X(0.32))
   p.pop()
   shape([[HOOD_U, 0.4], [LEN, 0.4], [LEN, HOOD - 0.1], [LEN - 0.12, HOOD], [HOOD_U, HOOD]], DUST.denim)
-  // Bumpers, the lamp and its beam, the mirror, the tailgate.
+  // Bumpers, the lamp, the mirror, the tailgate. (No beam: at noon in the corn a headlamp's light would not show in
+  // the air, so the lamp's glass lighting is the whole of it.)
   shape([[LEN - 0.02, 0.36], [LEN + 0.08, 0.36], [LEN + 0.08, 0.5], [LEN - 0.02, 0.5]], DUST.bone, weight * 0.8)
   shape([[-0.08, 0.36], [0.02, 0.36], [0.02, 0.5], [-0.08, 0.5]], DUST.bone, weight * 0.8)
   const lamp = B(LEN - 0.05, 0.84)
-  if (pk.lamp > 0.01) {
-    const ctx = p.drawingContext as CanvasRenderingContext2D
-    const g = ctx.createLinearGradient(X(lamp[0]), 0, X(lamp[0] + 2.4), 0)
-    g.addColorStop(0, `rgba(255, 244, 205, ${0.55 * pk.lamp})`)
-    g.addColorStop(1, 'rgba(255, 244, 205, 0)')
-    ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.moveTo(X(lamp[0]), X(lamp[1] - 0.05))
-    ctx.lineTo(X(lamp[0] + 2.4), X(lamp[1] - 0.25))
-    ctx.lineTo(X(lamp[0] + 2.4), X(lamp[1] + 0.55))
-    ctx.lineTo(X(lamp[0]), X(lamp[1] + 0.05))
-    ctx.closePath()
-    ctx.fill()
-  }
   solid(p, ink, weight * 0.8, pk.lamp > 0.5 ? DUST.light : DUST.shade)
   p.circle(X(lamp[0]), X(lamp[1]), X(0.11))
   const m0 = B(HOOD_U - 0.05, 1.08)
@@ -607,6 +594,45 @@ function murphTruck(s: TruckState, edge: number, t: number): Companion {
   return { x: q[0], y: q[1], scale: MURPH_SMALL, color: MURPH_YOUNG }
 }
 
+/**
+ * The drop: as he floors it, the crows in the corn go up all at once, a ripple of them, beating hard up out of the
+ * tops, then low over the field: the quicker ones away ahead of the truck, the slower dropping back over it as it
+ * goes by under them. In front of the corn, behind the truck and the drone.
+ */
+const FLUSH = { n: 16, at: DROP + 0.04, life: 4.5 }
+function drawFlush(p: p5, s: TruckState, c: Ctx, t: number, f: ReturnType<typeof frame>): void {
+  const age0 = t - FLUSH.at
+  if (age0 < 0 || age0 > FLUSH.life + 0.4) return
+  const { k, ink, weight } = c
+  const X = (v: number) => v * k
+  const nose = rearAt(s.b0, FLUSH.at) + LEN
+  p.noFill()
+  p.strokeCap(p.ROUND)
+  p.strokeJoin(p.ROUND)
+  p.stroke(alpha(p, ink, 0.85))
+  p.strokeWeight(Math.max(0.9, weight * 0.6))
+  for (let j = 0; j < FLUSH.n; j++) {
+    const age = age0 - 0.4 * hash(j, 61)
+    if (age < 0 || age > FLUSH.life) continue
+    // Up out of the tops of the tall corn round the nose and ahead of it, hard at first, then low over the tops: the
+    // quicker ones away ahead, the slower dropping back over the truck as it goes by under them.
+    const x = nose - 1.5 + 5 * hash(j, 62) + (2.4 + 2.4 * hash(j, 63)) * age
+    const y = GROUND - 2.45 - 0.3 * hash(j, 64) - (0.55 + 0.45 * hash(j, 65)) * (1 - Math.exp(-age / 0.3)) - 0.08 * age + 0.07 * Math.sin(age * 3.2 + j)
+    const sz = 0.13 + 0.05 * hash(j, 66)
+    if (x < f.x0 - sz || x > f.x1 + sz || y < f.y0 - sz) continue
+    // Beating hard off the ground, then the steadier stroke of a bird on its way.
+    const flap = Math.sin(age * (age < 0.8 ? 15 : 9 + 2 * hash(j, 67)) + j * 1.7)
+    const lift = sz * (0.15 + 0.6 * flap)
+    p.beginShape()
+    p.vertex(X(x - sz), X(y - lift))
+    p.vertex(X(x - sz * 0.45), X(y - lift * 0.35 - sz * 0.12))
+    p.vertex(X(x), X(y))
+    p.vertex(X(x + sz * 0.45), X(y - lift * 0.35 - sz * 0.12))
+    p.vertex(X(x + sz), X(y - lift))
+    p.endShape()
+  }
+}
+
 export const truck = part<TruckState>(
   {
     name: 'pickup',
@@ -698,15 +724,9 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
     cornWall(p, k, ink, weight, { x0: Math.max(f.x0 - 1, s.b0 + 0.6), x1: wx1, foot: GROUND - 0.35, h: 2.6, t, fill: DUST.husk, seed: 31, taper: [s.b0 + 0.6, s.edge - 0.1], rise: [2.6, 1.2] })
     cornWall(p, k, ink, weight, { x0: Math.max(f.x0 - 1, s.b0 + 1.4), x1: wx1, foot: GROUND - 0.1, h: 1.25, t: t + 1, fill: DUST.sage, seed: 32, tassels: false, taper: [s.b0 + 1.4, s.edge - 0.1] })
   }
-  // The bank the corn track runs along, the same earth as the track's, sloping down to the road.
-  const toe = s.b0 + 0.25
-  solid(p, ink, weight, DUST.shade)
-  p.beginShape()
-  p.vertex(X(-0.5), X(FLOOR))
-  p.vertex(X(toe - 0.75), X(FLOOR))
-  p.quadraticVertex(X(toe - 0.35), X(FLOOR + 0.15), X(toe), X(GROUND))
-  p.vertex(X(-0.5), X(GROUND))
-  p.endShape()
+  drawFlush(p, s, c, t, f)
+  // (The bank ends square at the flume's end, the channel's own face: the truck is backed up to it. A slope down to the
+  // road ran on under the tailgate and the back wheel.)
   // The road, with the irrigation ditch across it and the dirt lip before it.
   outline(p, ink, weight)
   const [dx0, dx1] = s.ditch

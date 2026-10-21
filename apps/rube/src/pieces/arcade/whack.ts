@@ -190,22 +190,11 @@ export const whack = definePiece<{ color: string; mole: string }>({
     p.noStroke()
     p.rect(tx * k, (head + HEAD.h / 2 - 0.02) * k, (HEAD.w - 0.03) * k, 0.025 * k)
 
-    // The blows: a ring off each, and the thud in the deck.
-    BLOWS.forEach((at, i) => {
-      flash(p, k, s.color, weight, HOLES[i], FLOOR - 0.04, t - at, 0.2, 0.1, 0.22)
-      const f = over(t, at, at + 0.18)
-      if (f <= 0 || f >= 1) return
-      p.push()
-      p.stroke(ink)
-      p.strokeWeight(weight)
-      for (const side of [-1, 1]) {
-        const x0 = HOLES[i] + side * (HEAD.w / 2 + 0.03 + 0.04 * f)
-        p.line(x0 * k, (FLOOR - 0.03) * k, (x0 + side * 0.05) * k, (FLOOR - 0.07 - 0.03 * f) * k)
-      }
-      p.pop()
-    })
-    // The pops: crumbs off the hole's edges as a mole comes up; and the toss.
+    // The blows: a ring off each. (Strokes off the deck as well were a second mark for the one blow.)
+    BLOWS.forEach((at, i) => flash(p, k, s.color, weight, HOLES[i], FLOOR - 0.04, t - at, 0.2, 0.1, 0.22))
+    // The pops: crumbs off the hole's edges as a mole comes up; and the toss, which is the last mole's pop and marked by its ring alone.
     POPS.forEach((at, i) => {
+      if (i === POPS.length - 1) return
       const f = over(t, at, at + 0.14)
       if (f <= 0 || f >= 1) return
       p.push()

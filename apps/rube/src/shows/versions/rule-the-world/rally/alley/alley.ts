@@ -46,7 +46,7 @@ export const hustle = part<AlleyState>(
     draw: (p, s, c) => {
       const pen = penOf(p, c.k, c.ink, c.weight)
       p.push()
-      drawAlley(pen, s.begin + c.t)
+      drawAlley(pen, s.begin + c.t, frame(p, c.k))
       p.pop()
     },
   },

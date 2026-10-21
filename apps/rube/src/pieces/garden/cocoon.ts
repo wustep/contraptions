@@ -163,8 +163,11 @@ export const cocoon = definePiece<{ color: string; paint: string }>({
       const e = easeInOutSine(f)
       const x = lerp(SEAM[0], to[0], e) + swing * Math.sin(f * Math.PI * 2) * (1 - f)
       const y = lerp(SEAM[1], to[1], e) - 0.06 * Math.sin(f * Math.PI) + 0.015 * Math.sin(t * 19 + i) * (1 - f)
-      const beat = f < 1 ? Math.abs(Math.cos(t * 23 + i * 2)) : 0.72 + 0.28 * Math.sin(t * 2.2 + i * 1.9)
-      butterfly(p, k, ink, weight, s.paint, x, y, beat, f < 1 ? 0.5 * Math.sin(f * 9 + i) : i === 0 ? -0.35 : i === 1 ? 0.3 : 0)
+      // It comes in to land: the beat slows to the fanning and it turns to the way it sits, rather than snapping to both.
+      const land = easeInOutSine(over(f, 0.8, 1))
+      const beat = lerp(Math.abs(Math.cos(t * 23 + i * 2)), 0.72 + 0.28 * Math.sin(t * 2.2 + i * 1.9), land)
+      const sits = i === 0 ? -0.35 : i === 1 ? 0.3 : 0
+      butterfly(p, k, ink, weight, s.paint, x, y, beat, lerp(0.5 * Math.sin(f * 9 + i), sits, land))
     })
   },
 })

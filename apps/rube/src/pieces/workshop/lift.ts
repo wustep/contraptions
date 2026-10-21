@@ -69,8 +69,10 @@ export const lift = definePiece<LiftState>({
       since < 0 ? 0
       : since < ride ? easeInOutSine(over(since, 0, ride))
       : 1 - easeInOutSine(over(since, ride + 2.2, ride + 5))
-    const settle = since > ride && since < ride + 0.6 ? 0.012 * Math.sin((since - ride) * 24) * Math.exp(-(since - ride) * 6) : 0
-    const carY = up * top + settle
+    // No settling bounce at the top: the ball waits there on the lane, still,
+    // and a cage bobbing under it (and under its own front rail) left it
+    // floating in and sinking through the floor.
+    const carY = up * top
     const sheaveY = top - 0.42
 
     // The guides, from the sheave bracket to the buffers at the bottom: plain

@@ -1,5 +1,4 @@
 import { coil, outline, solid } from '../../../../../src/core/draw'
-import { easeOutCubic } from '../../../../../src/core/ease'
 import { FLOOR, ROLL, definePiece, fly, over, rail, ramp, roll, type Lane, type Pt } from '../../parts'
 
 /**
@@ -87,9 +86,10 @@ export const trampoline = definePiece<{ color: string }>({
     p.vertex(END1 * k, (edge0 + th) * k)
     p.bezierVertex(0.8 * k, (FABRIC + th + sag * 1.6) * k, 0.6 * k, (FABRIC + th + sag * 1.6) * k, END0 * k, (edge0 + th) * k)
     p.endShape(p.CLOSE)
-    // The bounce: a puff of lines off the fabric.
-    if (since > 0 && since < 0.3) {
-      const f = easeOutCubic(over(since, 0, 0.3))
+    // The bounce: a puff of lines off the fabric, gone as they shrink. Eased
+    // out over 0.3 s, they spent most of it as four lingering dots.
+    if (since > 0 && since < 0.2) {
+      const f = over(since, 0, 0.22)
       p.push()
       p.stroke(s.color)
       p.strokeWeight(weight)

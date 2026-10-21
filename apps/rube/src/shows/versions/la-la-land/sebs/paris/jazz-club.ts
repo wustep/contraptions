@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { FLOOR, mixHex, R, type Pt } from '../../../../../parts'
-import { alpha, beam, glow, hash, knock, lastOf, ring, rgba, smooth, type Companion } from '../kit'
+import { alpha, frame as frameOf, glow, hash, knock, lastOf, ring, rgba, smooth, type Companion } from '../kit'
 import { AT, level, notes, paris, snap } from '../music'
 import { CLUB_INK, CLUB_MAT } from '../worlds'
 
@@ -617,12 +617,12 @@ export function drawClub(p: p5, k: number, weight: number, t: number): void {
     p.endShape()
   }
 
-  // The bulbs strung across the vault, in two swags. Their light is the room's.
-  drawBulbs(p, k, weight, t, L)
+  // The wall is the cellar's: brick in courses where the plaster has come away, and the club's posters pasted on it.
+  drawCourses(ctx, k, L)
+  drawPosters(ctx, k, L)
 
-  // The band's light: a warm pool on the see-saw and the kit once it plays, breathing with the band.
-  const band = smooth(t, SOLO[0][0] - 0.05, SOLO[0][0] + 0.1) * (1 - smooth(t, DARK[0], DARK[1]))
-  if (band > 0) glow(p, k, PIVOT[0] + 0.9, GROUND - 1.1, 3.2, M.bulb, band * (0.1 + 0.08 * level(t)), 1.2, 0.8)
+  // The bulbs strung across the vault, in two swags. Their light is the room's.
+  drawBulbs(p, k, weight, L)
 
   // The floor: old boards, wine-dark, the room's light lying on them and dying into the black under the frame.
   p.noStroke()
@@ -649,9 +649,8 @@ export function drawClub(p: p5, k: number, weight: number, t: number): void {
       p.stroke(rgba(INK, 0.03 + 0.03 * L))
       p.line(S(x + o), S(GROUND + 0.4), S(x + o), S(GROUND + 0.6))
     }
-    // The bulbs' and the band's warmth on the boards.
+    // The bulbs' warmth on the boards.
     glow(p, k, (WALL_L + WALL_R) / 2, GROUND + 0.05, 5.5, M.bulb, 0.06 + 0.06 * L, 1.4, 0.12)
-    if (band > 0) glow(p, k, PIVOT[0] + 0.9, GROUND + 0.06, 2.4, M.bulb, band * 0.14, 1.3, 0.12)
   }
   p.stroke(rgba(M.brass, 0.18 + 0.2 * L))
   p.strokeWeight(lw)
@@ -671,17 +670,8 @@ export function drawClub(p: p5, k: number, weight: number, t: number): void {
     }
     pts.push([STAIR_FOOT, GROUND], [WALL_L, GROUND])
     shape(p, k, pts)
-    // An arch under the landing, dark.
-    p.fill(mixHex(M.black, BG, 0.3))
-    p.beginShape()
-    p.vertex(S(-2.9), S(GROUND))
-    p.vertex(S(-2.9), S(1.35))
-    for (let i = 0; i <= 16; i++) {
-      const a = Math.PI + (Math.PI * i) / 16
-      p.vertex(S(-1.75 + Math.cos(a) * 1.15), S(1.35 + Math.sin(a) * 0.7))
-    }
-    p.vertex(S(-0.6), S(GROUND))
-    p.endShape(p.CLOSE)
+    // An arch under the landing, and through it the room beyond.
+    drawUnderLanding(p, k, t, L)
     p.stroke(edge)
     p.strokeWeight(lw)
     p.noFill()
@@ -715,6 +705,9 @@ export function drawClub(p: p5, k: number, weight: number, t: number): void {
   // The premiere's flash guns, down from the vault.
   drawFlashGuns(p, k, weight, t, L)
 
+  // The arch into the next vault, behind the bass.
+  drawBackArch(p, k, t, 0.75 + 0.25 * L, edge)
+
   // The band.
   drawBass(p, k, weight, L)
   drawTrumpet(p, k, weight, t, L)
@@ -723,19 +716,526 @@ export function drawClub(p: p5, k: number, weight: number, t: number): void {
   drawSnare(p, k, weight, t, L)
   drawSeesaw(p, k, weight, t, L)
 
-  // The balloons, in their net and let go.
+  // The balloons, in their net and let go. (Each flash is its gun's bulb going white and spent: no burst on the wall.)
   drawBalloons(p, k, weight, t, L)
+}
 
-  // The flashes themselves, over it all.
-  for (let i = 0; i < FLASHES.length; i++) {
-    const s = t - FLASHES[i]
-    if (s < -0.01 || s > 0.6) continue
-    const g = GUNS[i % GUNS.length]
-    const f = knock(s, 0.11)
-    const [hx, hy] = gunHead(g, t)
-    glow(p, k, hx, hy + 0.1, 2.6, M.spot, 0.75 * f)
-    glow(p, k, hx + 0.1, 0.1, 1.6, M.spot, 0.35 * f, 1.4, 0.6)
+/* ------------------------------------------------------------------ the wall: brick, and the club's posters */
+
+/** The courses of brick in the lit wall, where the plaster has come away: the same courses the spot finds in the dark. */
+function drawCourses(ctx: CanvasRenderingContext2D, k: number, L: number): void {
+  if (L < 0.01) return
+  const S = X(k)
+  const path = new Path2D()
+  for (const c of COURSES) {
+    path.moveTo(S(c.x0), S(c.y))
+    path.lineTo(S(c.x1), S(c.y))
+    const o = (Math.round(c.y * 100) % 2) * 0.17
+    for (let x = c.x0 + 0.1 + o; x < c.x1 - 0.05; x += 0.34) {
+      path.moveTo(S(x), S(c.y))
+      path.lineTo(S(x), S(c.y + 0.27))
+    }
   }
+  ctx.save()
+  ctx.lineCap = 'butt'
+  ctx.lineWidth = S(0.014)
+  ctx.strokeStyle = rgba(M.black, 0.2 * L)
+  ctx.stroke(path)
+  ctx.restore()
+}
+
+/**
+ * The club's posters, pasted on the brick: by the door, her premiere's (a figure in a yellow dress on rose); over the
+ * stair, a night of the bass; and by the band, pasted over an older bill, a horn's night and a piano's.
+ * Pictures, no letters. They are as lit as the wall, and go with it into the dark.
+ */
+interface Poster {
+  x: number
+  y: number
+  w: number
+  h: number
+  tilt: number
+  field: string
+  art: (ctx: CanvasRenderingContext2D, k: number, w: number, h: number, c: (hex: string) => string) => void
+  /** A torn foot, for the old bill the others are pasted over. */
+  torn?: boolean
+}
+const PAPER = '#E9DCC0'
+const POSTERS: Poster[] = [
+  // The old bill, half pasted over.
+  {
+    x: 6.42, y: 0.18, w: 0.62, h: 0.62, tilt: -0.04, field: PAPER, torn: true,
+    art: (ctx, k, w, h, c) => {
+      ctx.fillStyle = c(M.red)
+      ctx.fillRect(-w * 0.38 * k, -h * 0.4 * k, w * 0.76 * k, h * 0.34 * k)
+    },
+  },
+  // A horn's night: a player in black on deep blue, his horn up in cream, a red block behind him.
+  {
+    x: 6.02, y: 0.45, w: 0.6, h: 0.86, tilt: 0.025, field: '#1E3460',
+    art: (ctx, k, w, h, c) => {
+      ctx.fillStyle = c(M.red)
+      ctx.fillRect(-w * 0.02 * k, -h * 0.42 * k, w * 0.4 * k, h * 0.34 * k)
+      ctx.fillStyle = c(M.black)
+      ctx.beginPath()
+      ctx.ellipse(-w * 0.1 * k, -h * 0.1 * k, w * 0.09 * k, h * 0.065 * k, 0, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.beginPath()
+      ctx.moveTo(-w * 0.16 * k, -h * 0.02 * k)
+      ctx.lineTo(-w * 0.03 * k, -h * 0.02 * k)
+      ctx.lineTo(w * 0.16 * k, h * 0.14 * k)
+      ctx.lineTo(w * 0.2 * k, h * 0.5 * k)
+      ctx.lineTo(-w * 0.42 * k, h * 0.5 * k)
+      ctx.lineTo(-w * 0.34 * k, h * 0.1 * k)
+      ctx.closePath()
+      ctx.fill()
+      // The horn, up from his mouth: its pipe, its valves, its bell.
+      ctx.strokeStyle = c(PAPER)
+      ctx.lineCap = 'round'
+      ctx.lineWidth = w * 0.045 * k
+      ctx.beginPath()
+      ctx.moveTo(-w * 0.02 * k, -h * 0.09 * k)
+      ctx.lineTo(w * 0.26 * k, -h * 0.3 * k)
+      ctx.stroke()
+      ctx.fillStyle = c(PAPER)
+      ctx.beginPath()
+      ctx.moveTo(w * 0.22 * k, -h * 0.29 * k)
+      ctx.lineTo(w * 0.33 * k, -h * 0.42 * k)
+      ctx.lineTo(w * 0.42 * k, -h * 0.3 * k)
+      ctx.closePath()
+      ctx.fill()
+      for (let i = 0; i < 3; i++) {
+        const u = 0.35 + 0.13 * i
+        ctx.fillRect((-w * 0.02 + w * 0.28 * u) * k - w * 0.015 * k, (-h * 0.09 - h * 0.21 * u) * k - h * 0.05 * k, w * 0.03 * k, h * 0.04 * k)
+      }
+    },
+  },
+  // A piano's night: a black lid over a run of keys on ochre.
+  {
+    x: 6.8, y: 0.56, w: 0.5, h: 0.66, tilt: -0.03, field: '#C9953F',
+    art: (ctx, k, w, h, c) => {
+      ctx.fillStyle = c(M.black)
+      ctx.beginPath()
+      ctx.moveTo(-w * 0.36 * k, h * 0.02 * k)
+      ctx.quadraticCurveTo(-w * 0.3 * k, -h * 0.36 * k, w * 0.36 * k, -h * 0.3 * k)
+      ctx.lineTo(w * 0.36 * k, h * 0.02 * k)
+      ctx.closePath()
+      ctx.fill()
+      ctx.fillStyle = c(PAPER)
+      ctx.fillRect(-w * 0.36 * k, h * 0.06 * k, w * 0.72 * k, h * 0.16 * k)
+      ctx.fillStyle = c(M.black)
+      for (let i = 0; i < 7; i++) if (i % 7 !== 2 && i % 7 !== 6) ctx.fillRect((-w * 0.36 + w * 0.72 * ((i + 0.7) / 7)) * k, h * 0.06 * k, w * 0.045 * k, h * 0.09 * k)
+    },
+  },
+  // Over the stair: the bass, black on cream, a red band down its side.
+  {
+    x: 2.55, y: 0.36, w: 0.5, h: 0.72, tilt: 0.035, field: PAPER,
+    art: (ctx, k, w, h, c) => {
+      ctx.fillStyle = c(M.red)
+      ctx.fillRect(-w * 0.5 * k, -h * 0.5 * k, w * 0.2 * k, h * k)
+      ctx.fillStyle = c(M.black)
+      ctx.beginPath()
+      ctx.ellipse(w * 0.08 * k, h * 0.2 * k, w * 0.2 * k, h * 0.15 * k, 0, 0, Math.PI * 2)
+      ctx.ellipse(w * 0.08 * k, -h * 0.02 * k, w * 0.15 * k, h * 0.11 * k, 0, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.fillRect(w * 0.055 * k, -h * 0.4 * k, w * 0.05 * k, h * 0.34 * k)
+    },
+  },
+  // By the door, her premiere: a figure in a yellow dress on rose.
+  {
+    x: -1.6, y: -0.82, w: 0.48, h: 0.68, tilt: -0.02, field: '#B9475E',
+    art: (ctx, k, w, h, c) => {
+      ctx.fillStyle = c(PAPER)
+      ctx.fillRect(-w * 0.5 * k, h * 0.3 * k, w * k, h * 0.2 * k)
+      ctx.fillStyle = c(MIA_DRESS)
+      ctx.beginPath()
+      ctx.moveTo(-w * 0.05 * k, -h * 0.16 * k)
+      ctx.lineTo(w * 0.05 * k, -h * 0.16 * k)
+      ctx.lineTo(w * 0.2 * k, h * 0.24 * k)
+      ctx.lineTo(-w * 0.2 * k, h * 0.24 * k)
+      ctx.closePath()
+      ctx.fill()
+      ctx.strokeStyle = c(MIA_DRESS)
+      ctx.lineCap = 'round'
+      ctx.lineWidth = w * 0.045 * k
+      ctx.beginPath()
+      ctx.moveTo(-w * 0.04 * k, -h * 0.12 * k)
+      ctx.lineTo(-w * 0.2 * k, -h * 0.32 * k)
+      ctx.moveTo(w * 0.04 * k, -h * 0.12 * k)
+      ctx.lineTo(w * 0.2 * k, -h * 0.32 * k)
+      ctx.stroke()
+      ctx.fillStyle = c(M.black)
+      ctx.beginPath()
+      ctx.ellipse(0, -h * 0.23 * k, w * 0.055 * k, h * 0.045 * k, 0, 0, Math.PI * 2)
+      ctx.fill()
+    },
+  },
+]
+/** Her dress on her poster: her yellow, a little warmer, as printed. */
+const MIA_DRESS = '#E8B630'
+function drawPosters(ctx: CanvasRenderingContext2D, k: number, L: number): void {
+  // As lit as the wall round them, and a little under the bulbs' brightest: dim with it, all but gone in the dark,
+  // where the solo's gold line is the only picture on the wall.
+  const lit = 0.06 + 0.8 * L
+  const dark = mixHex(BG, M.redDeep, 0.35)
+  const c = (hex: string) => mixHex(dark, hex, lit)
+  const S = X(k)
+  for (const q of POSTERS) {
+    ctx.save()
+    ctx.translate(S(q.x), S(q.y))
+    ctx.rotate(q.tilt)
+    const hw = q.w / 2
+    const hh = q.h / 2
+    const sheet = new Path2D()
+    sheet.moveTo(S(-hw), S(-hh))
+    sheet.lineTo(S(hw), S(-hh))
+    if (q.torn) {
+      // Torn along its foot where the paste gave.
+      for (let i = 0; i <= 8; i++) sheet.lineTo(S(hw - (q.w * i) / 8), S(hh * (0.55 + 0.35 * hash(i, 97))))
+    } else {
+      sheet.lineTo(S(hw), S(hh))
+      sheet.lineTo(S(-hw), S(hh))
+    }
+    sheet.closePath()
+    ctx.fillStyle = c(PAPER)
+    ctx.fill(sheet)
+    ctx.save()
+    ctx.clip(sheet)
+    // The printed field inside its paper margin, then the picture.
+    const m = q.torn ? 0 : 0.035
+    if (!q.torn) {
+      ctx.fillStyle = c(q.field)
+      ctx.fillRect(S(-hw + m), S(-hh + m), S(q.w - 2 * m), S(q.h - 2 * m))
+    }
+    q.art(ctx, k, q.w - 2 * m, q.h - 2 * m, c)
+    ctx.restore()
+    ctx.strokeStyle = rgba(M.black, 0.08 + 0.42 * L)
+    ctx.lineWidth = Math.max(1, S(0.01))
+    ctx.stroke(sheet)
+    ctx.restore()
+  }
+}
+
+/* ------------------------------------------------------------------ the room under the landing */
+
+/**
+ * Under the landing an arch opens on the cellar's other room, lower and further in, where the club goes on: little
+ * tables, a candle on each, people at them; and a couple dancing to the band between the tables, a step and a dip on
+ * each beat and a turn every two bars. It is further off, so it is smaller, warmer and dimmer than this room, and it
+ * slides a little behind the arch as the camera goes.
+ */
+const UNDER = { cx: -1.75, x0: -2.9, x1: -0.6, spring: 1.35, rx: 1.15, ry: 0.7 }
+const UNDER_FLOOR = GROUND - 0.18
+const UNDER_TABLES = [-2.75, -1.95, -0.85]
+function underPath(ctx: CanvasRenderingContext2D, k: number): void {
+  ctx.beginPath()
+  ctx.moveTo(UNDER.x0 * k, GROUND * k)
+  ctx.lineTo(UNDER.x0 * k, UNDER.spring * k)
+  ctx.ellipse(UNDER.cx * k, UNDER.spring * k, UNDER.rx * k, UNDER.ry * k, 0, Math.PI, Math.PI * 2)
+  ctx.lineTo(UNDER.x1 * k, GROUND * k)
+  ctx.closePath()
+}
+/** A seated figure, small with distance: shoulders and a head, the candle's light along the side toward it. */
+function farSitter(ctx: CanvasRenderingContext2D, k: number, x: number, y: number, s: number, toward: number, nod: number, rim: string): void {
+  ctx.fillStyle = mixHex(M.black, M.redDeep, 0.2)
+  ctx.beginPath()
+  ctx.ellipse(x * k, y * k, 0.17 * s * k, 0.15 * s * k, 0, Math.PI, Math.PI * 2)
+  ctx.fill()
+  ctx.fillRect((x - 0.17 * s) * k, y * k, 0.34 * s * k, 0.12 * s * k)
+  const hy = y - (0.2 - 0.015 * nod) * s
+  ctx.beginPath()
+  ctx.arc((x + 0.015 * toward * s) * k, hy * k, 0.085 * s * k, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.strokeStyle = rim
+  ctx.lineWidth = Math.max(1, 0.012 * k)
+  ctx.beginPath()
+  const a0 = toward > 0 ? -0.5 : Math.PI - 0.6
+  ctx.arc((x + 0.015 * toward * s) * k, hy * k, 0.085 * s * k, a0, a0 + 1.1)
+  ctx.stroke()
+}
+/** A dancer: a standing figure, skirt or trousers, turned through `turn` (0 facing right, 1 facing left). */
+function farDancer(ctx: CanvasRenderingContext2D, k: number, x: number, s: number, dip: number, skirt: boolean, flare: number, arm: number): void {
+  const fy = UNDER_FLOOR
+  const hip = fy - 0.42 * s + 0.04 * dip * s
+  const sh = fy - 0.72 * s + 0.05 * dip * s
+  ctx.fillStyle = mixHex(M.black, M.redDeep, 0.18)
+  ctx.strokeStyle = ctx.fillStyle
+  ctx.lineCap = 'round'
+  ctx.lineWidth = 0.05 * s * k
+  ctx.beginPath()
+  if (skirt) {
+    // The skirt swings out on the turn.
+    ctx.moveTo((x - 0.06 * s) * k, sh * k)
+    ctx.lineTo((x + 0.06 * s) * k, sh * k)
+    ctx.lineTo((x + (0.16 + 0.1 * flare) * s) * k, (hip + 0.12 * s) * k)
+    ctx.lineTo((x - (0.16 + 0.1 * flare) * s) * k, (hip + 0.12 * s) * k)
+    ctx.closePath()
+    ctx.fill()
+    ctx.beginPath()
+    ctx.moveTo((x - 0.04 * s) * k, (hip + 0.1 * s) * k)
+    ctx.lineTo((x - 0.05 * s) * k, fy * k)
+    ctx.moveTo((x + 0.04 * s) * k, (hip + 0.1 * s) * k)
+    ctx.lineTo((x + 0.05 * s) * k, fy * k)
+    ctx.stroke()
+  } else {
+    ctx.moveTo((x - 0.08 * s) * k, sh * k)
+    ctx.lineTo((x + 0.08 * s) * k, sh * k)
+    ctx.lineTo((x + 0.06 * s) * k, hip * k)
+    ctx.lineTo((x - 0.06 * s) * k, hip * k)
+    ctx.closePath()
+    ctx.fill()
+    ctx.beginPath()
+    ctx.moveTo((x - 0.03 * s) * k, hip * k)
+    ctx.lineTo((x - 0.07 * s) * k, fy * k)
+    ctx.moveTo((x + 0.03 * s) * k, hip * k)
+    ctx.lineTo((x + 0.07 * s) * k, fy * k)
+    ctx.stroke()
+  }
+  ctx.beginPath()
+  ctx.arc(x * k, (sh - 0.09 * s) * k, 0.07 * s * k, 0, Math.PI * 2)
+  ctx.fill()
+  // The arm out to the partner's hand.
+  ctx.lineWidth = 0.035 * s * k
+  ctx.beginPath()
+  ctx.moveTo(x * k, (sh + 0.04 * s) * k)
+  ctx.lineTo((x + arm * 0.2 * s) * k, (sh + 0.12 * s) * k)
+  ctx.stroke()
+}
+function drawUnderLanding(p: p5, k: number, t: number, L: number): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const fr = frameOf(p, k)
+  // Further than the arch: as the camera goes, it slides behind the opening a third as fast.
+  const shift = (fr.cx - UNDER.cx) * 0.3
+  const lit = 0.55 + 0.45 * L
+  ctx.save()
+  underPath(ctx, k)
+  ctx.fillStyle = mixHex(M.black, BG, 0.3)
+  ctx.fill()
+  ctx.clip()
+  ctx.translate(shift * k, 0)
+  // The far room: its back wall, warm low down where the candles are, dark up under its own low vault.
+  const g = ctx.createLinearGradient(0, (UNDER.spring - UNDER.ry) * k, 0, GROUND * k)
+  g.addColorStop(0, mixHex(M.black, M.redDeep, 0.25))
+  g.addColorStop(0.7, mixHex(mixHex(M.redDeep, M.bulb, 0.18), M.black, 1 - 0.75 * lit))
+  g.addColorStop(1, mixHex(M.black, M.redDeep, 0.3))
+  ctx.fillStyle = g
+  ctx.fillRect((UNDER.x0 - 1) * k, (UNDER.spring - UNDER.ry - 0.1) * k, (UNDER.x1 - UNDER.x0 + 2) * k, (GROUND - UNDER.spring + UNDER.ry + 0.2) * k)
+  // Its own arches, a further row, just found by the candles.
+  ctx.strokeStyle = rgba(mixHex(M.redDeep, M.bulb, 0.3), 0.35 * lit)
+  ctx.lineWidth = Math.max(1, 0.015 * k)
+  for (const ax of [-3.0, -1.75, -0.5]) {
+    ctx.beginPath()
+    ctx.ellipse(ax * k, (UNDER.spring + 0.25) * k, 0.5 * k, 0.4 * k, 0, Math.PI, Math.PI * 2)
+    ctx.stroke()
+  }
+  const beat = lastOf(CLUB_BEATS, t)
+  const going = t > LIGHTS - 0.2 && t < DARK[1]
+  // The couple, dancing between the tables: a step and a dip on each beat, a turn every two bars.
+  {
+    const bi = going ? beat.i : -1
+    const u = bi >= 0 ? Math.min(1, beat.ago / 0.49) : 0
+    const dip = bi >= 0 ? Math.sin(Math.PI * u) : 0
+    const turnPhase = bi >= 0 ? (bi + u) / 8 : 0
+    const c = Math.cos(Math.PI * turnPhase)
+    const cx = -2.35 + 0.08 * Math.sin(Math.PI * (bi + u) / 2)
+    const s = 0.95
+    farDancer(ctx, k, cx - 0.17 * c, s, dip, false, 0, c >= 0 ? 1 : -1)
+    farDancer(ctx, k, cx + 0.17 * c, s, dip, true, Math.abs(Math.sin(Math.PI * turnPhase)), c >= 0 ? -1 : 1)
+  }
+  // The tables: a cloth, a candle's flame, two at each, nodding to the band in their own time.
+  for (const [i, tx] of UNDER_TABLES.entries()) {
+    const flame = (0.75 + 0.25 * Math.sin(t * 7 + i * 2.3)) * (0.6 + 0.4 * lit)
+    const ty = UNDER_FLOOR - 0.24
+    ctx.fillStyle = mixHex(M.black, M.redDeep, 0.25)
+    ctx.fillRect((tx - 0.03) * k, ty * k, 0.06 * k, (UNDER_FLOOR - ty) * k)
+    ctx.fillStyle = mixHex(mixHex(M.skin, M.redDeep, 0.6), M.black, 1 - 0.7 * lit)
+    ctx.fillRect((tx - 0.17) * k, (ty - 0.03) * k, 0.34 * k, 0.04 * k)
+    ctx.fillStyle = rgba(M.bulb, 0.95 * flame)
+    ctx.beginPath()
+    ctx.ellipse(tx * k, (ty - 0.06) * k, 0.012 * k, 0.022 * k, 0, 0, Math.PI * 2)
+    ctx.fill()
+    const rim = rgba(M.bulb, 0.5 * flame)
+    for (const side of [-1, 1]) {
+      const nod = going && hash(i, side + 5, 77) < 0.7 ? Math.exp(-Math.max(0, beat.ago - 0.03 * (side + 2)) / 0.12) : 0
+      farSitter(ctx, k, tx + side * 0.27, ty + 0.02, 0.85, -side, nod, rim)
+    }
+  }
+  ctx.restore()
+}
+
+/* ------------------------------------------------------------------ the back arch, and the waiter */
+
+/**
+ * An archway in the back wall behind the bass, into the next vault, where the bar is: its low warm light seen
+ * through the arch, bottles on the shelves against it, a lamp hung over the counter. Through the band's numbers it is
+ * one more lit room beyond this one; when the room goes dark for the solo it is the only other light, and the bass,
+ * and the man who comes to play it, stand against it. A waiter goes by in it: on the beat while the band plays, and in
+ * the solo stopped mid-step while it sounds, easing on only in its breaths.
+ */
+const ARCH = { x0: 7.2, x1: 8.5, spring: 0.62 }
+const ARCH_R = (ARCH.x1 - ARCH.x0) / 2
+const ARCH_C = (ARCH.x0 + ARCH.x1) / 2
+function archPath(ctx: CanvasRenderingContext2D, k: number, inset = 0): void {
+  ctx.beginPath()
+  ctx.moveTo((ARCH.x0 + inset) * k, GROUND * k)
+  ctx.lineTo((ARCH.x0 + inset) * k, ARCH.spring * k)
+  ctx.arc(ARCH_C * k, ARCH.spring * k, (ARCH_R - inset) * k, Math.PI, Math.PI * 2)
+  ctx.lineTo((ARCH.x1 - inset) * k, GROUND * k)
+  ctx.closePath()
+}
+/** The far floor, a little higher than ours: it is further off. */
+const FAR_FLOOR = GROUND - 0.12
+const BOTTLES = Array.from({ length: 22 }, (_, i) => ({ row: i % 2, x: ARCH.x0 - 0.1 + ((i >> 1) + 0.5 * (i % 2)) * 0.135 + 0.03 * hash(i, 61), h: 0.16 + 0.07 * hash(i, 62), w: 0.045 + 0.015 * hash(i, 63) }))
+/** How much the solo is sounding at `t` (0 in its rests), eased over a short window. */
+function soloPlaying(t: number): number {
+  let a = 0
+  for (let j = 0; j < 8; j++) if (SOLO_SOUNDING(t - j * 0.1)) a += 1 / 8
+  return a
+}
+/** The waiter's walk in the solo: how far across the arch he has come, moving only in the solo's breaths. */
+const WAIT_DT = 0.05
+const WAITER_SOLO: number[] = (() => {
+  const out: number[] = []
+  let x = 0
+  for (let t = DARK[0]; t <= 269; t += WAIT_DT) {
+    out.push(x)
+    x += (1 - soloPlaying(t)) ** 2 * 0.22 * WAIT_DT
+  }
+  return out
+})()
+/** The band's beats, for his steps while it plays. */
+const CLUB_BEATS = Array.from({ length: 140 }, (_, k) => paris(k)).filter((b) => b > LIGHTS - 1 && b < DARK[0] + 1)
+/** Where the waiter is at `t` (x across the far room) and how far through his stride (0..1), or null. */
+function waiterAt(t: number): { x: number; stride: number; dir: number } | null {
+  if (t >= DARK[0]) {
+    const i = Math.min(WAITER_SOLO.length - 1, Math.max(0, Math.floor((t - DARK[0]) / WAIT_DT)))
+    const d = WAITER_SOLO[i]
+    // Frozen in the arch's left half as the room goes dark, a step a breath to the right, and out behind the jamb.
+    return { x: ARCH.x0 + 0.34 + d, stride: (d / 0.2) % 1, dir: 1 }
+  }
+  // While the band plays: across the arch and back, a step a beat, twice.
+  const { i, ago } = lastOf(CLUB_BEATS, t)
+  if (i < 0) return null
+  const passes: [number, number, number][] = [[4, 14, 1], [22, 32, -1], [40, 48, 1]]
+  for (const [a, b, dir] of passes) {
+    if (i < a || i >= b) continue
+    const span = b - a
+    const u = (i - a + Math.min(1, ago / 0.49)) / span
+    const x = dir > 0 ? ARCH.x0 - 0.35 + u * (ARCH.x1 - ARCH.x0 + 0.7) : ARCH.x1 + 0.35 - u * (ARCH.x1 - ARCH.x0 + 0.7)
+    return { x, stride: (i - a + Math.min(1, ago / 0.49)) % 1, dir }
+  }
+  return null
+}
+function drawWaiter(ctx: CanvasRenderingContext2D, k: number, x: number, stride: number, dir: number, fill: string): void {
+  const S = (v: number) => v * k
+  const fy = FAR_FLOOR
+  const swing = Math.sin(stride * Math.PI * 2)
+  const bob = 0.03 * Math.abs(Math.cos(stride * Math.PI * 2))
+  const hip: Pt = [x, fy - 0.98 - bob]
+  const sh: Pt = [x - 0.02 * dir, fy - 1.72 - bob]
+  ctx.fillStyle = fill
+  ctx.strokeStyle = fill
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  // Legs mid-stride, the long apron, the body, the head.
+  ctx.lineWidth = S(0.085)
+  ctx.beginPath()
+  ctx.moveTo(S(hip[0]), S(hip[1]))
+  ctx.lineTo(S(x + 0.2 * swing), S(fy))
+  ctx.moveTo(S(hip[0]), S(hip[1]))
+  ctx.lineTo(S(x - 0.2 * swing), S(fy))
+  ctx.stroke()
+  ctx.beginPath()
+  ctx.moveTo(S(sh[0] - 0.15), S(sh[1]))
+  ctx.lineTo(S(sh[0] + 0.15), S(sh[1]))
+  ctx.lineTo(S(hip[0] + 0.15), S(hip[1] + 0.35))
+  ctx.lineTo(S(hip[0] - 0.15), S(hip[1] + 0.35))
+  ctx.closePath()
+  ctx.fill()
+  ctx.beginPath()
+  ctx.arc(S(sh[0] + 0.02 * dir), S(sh[1] - 0.2), S(0.12), 0, Math.PI * 2)
+  ctx.fill()
+  // The tray, up on his far hand, a glass and a bottle on it; the other arm at his side.
+  const tx = sh[0] + 0.28 * dir
+  ctx.lineWidth = S(0.07)
+  ctx.beginPath()
+  ctx.moveTo(S(sh[0] + 0.1 * dir), S(sh[1] + 0.05))
+  ctx.lineTo(S(tx), S(sh[1] - 0.12))
+  ctx.moveTo(S(sh[0] - 0.12 * dir), S(sh[1] + 0.05))
+  ctx.lineTo(S(sh[0] - 0.16 * dir - 0.06 * swing), S(sh[1] + 0.6))
+  ctx.stroke()
+  ctx.fillRect(S(tx - 0.2), S(sh[1] - 0.16), S(0.4), S(0.03))
+  ctx.fillRect(S(tx - 0.1), S(sh[1] - 0.27), S(0.04), S(0.11))
+  ctx.fillRect(S(tx + 0.05), S(sh[1] - 0.33), S(0.05), S(0.17))
+}
+/** The far room through the arch, and the light it lays on our floor. `a` is how lit it is. */
+function drawBackArch(p: p5, k: number, t: number, a: number, edge: string): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  // The light it lays on the boards in front of it, spreading toward us.
+  {
+    const g = ctx.createLinearGradient(0, GROUND * k, 0, (GROUND + 0.7) * k)
+    g.addColorStop(0, rgba(M.bulb, 0.2 * a))
+    g.addColorStop(1, rgba(M.bulb, 0))
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.moveTo((ARCH.x0 + 0.05) * k, GROUND * k)
+    ctx.lineTo((ARCH.x1 - 0.05) * k, GROUND * k)
+    ctx.lineTo((ARCH.x1 + 0.55) * k, (GROUND + 0.7) * k)
+    ctx.lineTo((ARCH.x0 - 0.45) * k, (GROUND + 0.7) * k)
+    ctx.closePath()
+    ctx.fill()
+  }
+  archPath(ctx, k)
+  ctx.clip()
+  // The far vault: warm low down where the lamp over the counter lights it, dark up in its curve.
+  const g = ctx.createLinearGradient(0, (ARCH.spring - ARCH_R) * k, 0, GROUND * k)
+  g.addColorStop(0, mixHex(M.black, M.redDeep, 0.35))
+  g.addColorStop(0.55, mixHex(mixHex(M.redDeep, M.bulb, 0.38), M.black, 1 - a))
+  g.addColorStop(1, mixHex(mixHex(M.redDeep, M.bulb, 0.22), M.black, 1 - a))
+  ctx.fillStyle = g
+  ctx.fillRect((ARCH.x0 - 0.1) * k, (ARCH.spring - ARCH_R - 0.1) * k, (ARCH.x1 - ARCH.x0 + 0.2) * k, (GROUND - ARCH.spring + ARCH_R + 0.2) * k)
+  // Shelves of bottles against it, and the counter.
+  const dark = mixHex(M.black, M.redDeep, 0.15)
+  ctx.fillStyle = dark
+  for (const sy of [1.12, 1.52]) ctx.fillRect((ARCH.x0 - 0.1) * k, sy * k, (ARCH.x1 - ARCH.x0 + 0.2) * k, 0.03 * k)
+  for (const b of BOTTLES) {
+    const sy = b.row ? 1.12 : 1.52
+    ctx.fillRect((b.x - b.w / 2) * k, (sy - b.h) * k, b.w * k, b.h * k)
+    ctx.fillRect((b.x - b.w / 5) * k, (sy - b.h - 0.07) * k, (b.w / 2.5) * k, 0.08 * k)
+  }
+  ctx.fillRect((ARCH.x0 - 0.1) * k, (FAR_FLOOR - 0.62) * k, (ARCH.x1 - ARCH.x0 + 0.2) * k, 0.64 * k)
+  ctx.fillStyle = rgba(M.bulb, 0.35 * a)
+  ctx.fillRect((ARCH.x0 - 0.1) * k, (FAR_FLOOR - 0.62) * k, (ARCH.x1 - ARCH.x0 + 0.2) * k, 0.02 * k)
+  // The lamp over the counter: a dark shade on its flex, its lit rim the source of all of it.
+  const lx = ARCH_C + 0.15
+  ctx.strokeStyle = dark
+  ctx.lineWidth = Math.max(1, 0.012 * k)
+  ctx.beginPath()
+  ctx.moveTo(lx * k, (ARCH.spring - ARCH_R) * k)
+  ctx.lineTo(lx * k, 0.62 * k)
+  ctx.stroke()
+  ctx.fillStyle = dark
+  ctx.beginPath()
+  ctx.moveTo((lx - 0.05) * k, 0.62 * k)
+  ctx.lineTo((lx + 0.05) * k, 0.62 * k)
+  ctx.lineTo((lx + 0.17) * k, 0.78 * k)
+  ctx.lineTo((lx - 0.17) * k, 0.78 * k)
+  ctx.closePath()
+  ctx.fill()
+  ctx.fillStyle = rgba(M.bulb, 0.9 * a)
+  ctx.fillRect((lx - 0.15) * k, 0.775 * k, 0.3 * k, 0.018 * k)
+  // The waiter.
+  const w = waiterAt(t)
+  if (w) drawWaiter(ctx, k, w.x, w.stride, w.dir, mixHex(M.black, M.redDeep, 0.1))
+  ctx.restore()
+  // The arch's own edge: its reveal, lit on the side away from the lamp.
+  ctx.save()
+  ctx.strokeStyle = edge
+  ctx.lineWidth = Math.max(1, 0.02 * k)
+  archPath(ctx, k)
+  ctx.stroke()
+  ctx.restore()
 }
 
 /* ------------------------------------------------------------------ bulbs */
@@ -758,7 +1258,7 @@ const BULBS: { x: number; y: number; w: number }[] = (() => {
   return out
 })()
 
-function drawBulbs(p: p5, k: number, weight: number, t: number, L: number): void {
+function drawBulbs(p: p5, k: number, weight: number, L: number): void {
   const S = X(k)
   p.noFill()
   p.stroke(alpha(p, M.black, 0.9))
@@ -771,9 +1271,8 @@ function drawBulbs(p: p5, k: number, weight: number, t: number, L: number): void
     }
     p.endShape()
   }
-  const breath = 0.9 + 0.1 * level(t)
+  // Lit glass, or dark: their light is the warmth of the vault round them, not a halo round each.
   for (const b of BULBS) {
-    if (L > 0.01) glow(p, k, b.x, b.y, 0.45 * b.w, M.bulb, 0.22 * L * breath)
     p.noStroke()
     p.fill(L > 0.01 ? mixHex(M.redDeep, M.bulb, L) : mixHex(M.black, M.redDeep, 0.6))
     p.ellipse(S(b.x), S(b.y), S(0.07 * b.w), S(0.09 * b.w))
@@ -875,9 +1374,10 @@ function drawFlashGuns(p: p5, k: number, weight: number, t: number, L: number): 
     p.strokeWeight(weight * 0.6)
     p.fill(mixHex(M.black, M.brass, 0.25))
     p.rect(S(-0.05), S(-0.08), S(0.1), S(0.12))
-    p.fill(mixHex(M.brass, M.spot, 0.4 + 0.3 * L))
-    p.arc(0, S(0.2), S(0.46), S(0.3), Math.PI, 2 * Math.PI, p.CHORD)
+    // The dish is brass until it fires; for the instant it fires its face is the light, white, and then brass again.
     const since = fired >= 0 ? t - FLASHES[fired] : Infinity
+    p.fill(since < 0.12 ? M.spot : mixHex(M.redDeep, M.brass, 0.6 + 0.4 * L))
+    p.arc(0, S(0.2), S(0.46), S(0.3), Math.PI, 2 * Math.PI, p.CHORD)
     p.noStroke()
     p.fill(since < 0.12 ? M.spot : fired >= 0 ? mixHex(M.skin, M.black, 0.15) : mixHex(M.spot, M.bulb, 0.5))
     p.circle(0, S(0.17), S(0.09))
@@ -957,7 +1457,7 @@ function drawHat(p: p5, k: number, weight: number, t: number, L: number): void {
   }
   cym(HAT_Y, 1)
   // The upper cymbal: in the solo, open at the edge of the spot, it shivers on the trumpet's high accents, rocking
-  // on its rod and catching the light on the rim that tips up.
+  // on its rod.
   const sh = lastOf(SHIVER, t)
   const rock = sh.i >= 0 ? ring(sh.ago, 3.4, 0.28) : 0
   p.push()
@@ -966,13 +1466,6 @@ function drawHat(p: p5, k: number, weight: number, t: number, L: number): void {
   p.translate(-S(HAT_X), -S(HAT_Y - gap))
   cym(HAT_Y - gap, -1)
   p.pop()
-  if (sh.i >= 0 && sh.ago < 0.9) {
-    const f = smooth(sh.ago, 0, 0.012) * (0.75 * Math.exp(-sh.ago / 0.16) + 0.25 * Math.exp(-sh.ago / 0.5))
-    glow(p, k, HAT_X + 0.25, HAT_Y - gap - 0.035 - 0.03 * rock, 0.26, M.spot, 0.6 * f, 1.3, 0.45)
-  }
-  // The chick: a glint off the closed pair.
-  const since = sinceHit(t, -1)
-  if (since < 0.25) glow(p, k, HAT_X, HAT_Y - 0.02, 0.5, M.bulb, 0.45 * knock(since, 0.08) * lit, 1.4, 0.5)
 }
 
 /** Seconds since the see-saw last came down on end `e` (or both). */
@@ -1068,7 +1561,7 @@ function drawSnare(p: p5, k: number, weight: number, t: number, L: number): void
   p.circle(S(pivot[0]), S(pivot[1]), S(0.06))
 }
 
-function drawBass(p: p5, k: number, weight: number, L: number): void {
+function drawBass(p: p5, k: number, weight: number, L: number, dim = 0): void {
   const S = X(k)
   const lit = Math.max(L, 0.2)
   p.push()
@@ -1114,6 +1607,14 @@ function drawBass(p: p5, k: number, weight: number, L: number): void {
   for (let s = 0; s < 4; s++) {
     const x = -0.045 + s * 0.03
     p.line(S(x), S(-0.6), S(x), S(-2.5))
+  }
+  // In the dark, against the arch's light: the same bass, sunk to a shape with a line of light along it.
+  if (dim > 0) {
+    p.noStroke()
+    p.fill(rgba(M.black, dim))
+    shape(p, k, full)
+    p.rect(S(-0.06), S(-2.55), S(0.12), S(1.35))
+    p.circle(0, S(-2.62), S(0.17))
   }
   p.pop()
 }
@@ -1163,10 +1664,10 @@ function drawTrumpet(p: p5, k: number, weight: number, t: number, L: number): vo
   p.quadraticVertex(S(0.6), S(0.2), S(0.5), S(0.24))
   p.quadraticVertex(S(0.4), S(0.24), S(0.2), S(0.24))
   p.endShape(p.CLOSE)
-  // The bell's mouth, and the breath in it: a warm light that comes and goes with the phrase.
-  p.fill(mixHex(M.brass, M.black, 0.35))
-  p.ellipse(S(0.64), S(0.16), S(0.07), S(0.4))
+  // The bell's mouth, and the breath in it: the inside of the bell warms while a phrase sounds and goes dark in its rests.
   const blow = t > AT.trumpet - 0.1 && pitchAt(t) > 0 ? 0.25 + 0.25 * level(t) : 0
+  p.fill(mixHex(mixHex(M.brass, M.black, 0.35), M.bulb, 0.6 * blow))
+  p.ellipse(S(0.64), S(0.16), S(0.07), S(0.4))
   // The mouthpiece.
   p.fill(brass)
   p.stroke(rgba(INK, 0.3 + 0.3 * lit))
@@ -1186,12 +1687,6 @@ function drawTrumpet(p: p5, k: number, weight: number, t: number, L: number): vo
     p.rect(S(vx - 0.04), S(-0.225 + d), S(0.08), S(0.035), S(0.01))
   }
   p.pop()
-  if (blow > 0) {
-    const a = lift + sway
-    const bx = HORN[0] + Math.cos(a) * 0.68 - Math.sin(a) * 0.16
-    const by = HORN[1] + Math.sin(a) * 0.68 + Math.cos(a) * 0.16
-    glow(p, k, bx, by, 0.55, M.bulb, 0.3 * blow, 0.7, 1.1)
-  }
 }
 
 /* ------------------------------------------------------------------ balloons */
@@ -1260,24 +1755,34 @@ export function drawDark(p: p5, k: number, t: number, view: { x0: number; y0: nu
   const S = X(k)
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const pool: Pt = [PIVOT[0], GROUND - 0.9]
-  // On the solo's biggest note the lamp's filament flares: the spot surges, and for a moment the dark gives back a
-  // little of the room round it.
+  // On the solo's biggest note the lamp's filament surges: its pool on the boards widens, and for a moment the dark
+  // gives back a little more of the room round it.
   const fs = t - FLARE
   const fl = fs < -0.02 ? 0 : smooth(fs, -0.02, 0) * (0.8 * Math.exp(-Math.max(0, fs) / 0.24) + 0.2 * Math.exp(-Math.max(0, fs) / 0.9))
-  // The dark: nearly black, with a soft round hole where the spot falls.
+  // The dark: black round the one spot, but not empty. The spot's spill falls off slowly, so the room is still there
+  // in it: the band's things and the stair near the light, the vault and the far wall barely, and black at the edges.
   ctx.save()
-  const g = ctx.createRadialGradient(S(pool[0]), S(pool[1]), S(0.7 + 0.3 * fl), S(pool[0]), S(pool[1]), S(2.1 + 0.8 * fl))
+  const g = ctx.createRadialGradient(S(pool[0]), S(pool[1]), S(0.7 + 0.3 * fl), S(pool[0]), S(pool[1]), S(5.4 + 0.6 * fl))
   g.addColorStop(0, rgba(M.black, 0))
-  g.addColorStop(1, rgba(M.black, 0.93 * f * (1 - 0.12 * fl)))
+  g.addColorStop(0.22, rgba(M.black, 0.36 * f * (1 - 0.2 * fl)))
+  g.addColorStop(0.55, rgba(M.black, 0.64 * f * (1 - 0.1 * fl)))
+  g.addColorStop(1, rgba(M.black, 0.88 * f))
   ctx.fillStyle = g
   ctx.fillRect(S(view.x0 - 2), S(view.y0 - 2), S(view.x1 - view.x0 + 4), S(view.y1 - view.y0 + 4))
   ctx.restore()
-  // The beam, from the lamp in the vault to the floor, and its pool.
+  drawSpill(p, k, t, f)
+  // The spot's light: its pool on the boards, and the lit things in it; nothing drawn in the air from the lamp.
   const on1 = f
-  beam(p, k, LAMP[0], LAMP[1] + 0.1, PIVOT[0], GROUND, 0.2, 1.6, M.spot, 0.12 * on1 * (1 + 1.3 * fl))
-  glow(p, k, PIVOT[0], GROUND - 0.02, 1.0 + 0.2 * fl, M.spot, 0.3 * on1 * (1 + 0.9 * fl), 1.3, 0.28)
-  glow(p, k, HORN[0] + 0.1, HORN[1] + 0.1, 0.9, M.spot, 0.18 * on1 * (1 + 1.2 * fl))
-  drawMotes(p, k, t, on1)
+  glow(p, k, PIVOT[0], GROUND - 0.02, 1.0 + 0.4 * fl, M.spot, 0.3 * on1, 1.3, 0.28)
+  // The arch keeps its light, the bar's beyond, and the bass and the man playing it stand against it.
+  if (on1 > 0.01) {
+    ctx.save()
+    ctx.globalAlpha = on1
+    drawBackArch(p, k, t, 0.5, rgba(M.bulb, 0.14))
+    drawBass(p, k, k * 0.014, 0, 0.72)
+    ctx.restore()
+  }
+  drawBassist(p, k, t, on1)
   drawSolo(p, k, t, on1)
   // The lamp itself: a black can in the crown, its lens lit.
   p.stroke(rgba(INK, 0.35))
@@ -1290,6 +1795,241 @@ export function drawDark(p: p5, k: number, t: number, view: { x0: number; y0: nu
   p.fill(rgba(M.spot, Math.min(1, 0.5 + 0.5 * on1 + 0.3 * fl)))
   p.ellipse(0, S(0.09), S(0.2), S(0.05))
   p.pop()
+}
+
+/** How much of the spot's light reaches (x, y): what lets the dark room be modelled, near things more than far. */
+function spillAt(x: number, y: number): number {
+  const d = Math.hypot(x - PIVOT[0], (y - (GROUND - 0.9)) * 1.15)
+  return Math.max(0, 1 - d / 5.2) ** 1.6
+}
+
+/**
+ * The vault in the spill: its rim and the courses of its brick, the dead bulbs on their strings, just found by the
+ * spot's light off the floor and fading into the black away from it. Far things barely there.
+ */
+const COURSES: { y: number; x0: number; x1: number }[] = (() => {
+  const out: { y: number; x0: number; x1: number }[] = []
+  for (let y = CROWN[1] + 0.3; y < GROUND - 0.3; y += 0.27) {
+    // Each course runs from wall to wall under the vault, broken where the plaster has held.
+    const span: [number, number] = [WALL_L + 0.1, WALL_R - 0.1]
+    const lo = y < SPRING_Y ? (() => { let a = span[0]; while (a < CROWN[0] && vaultY(a) > y - 0.05) a += 0.05; return a })() : span[0]
+    const hi = y < SPRING_Y ? 2 * CROWN[0] - lo : span[1]
+    for (let x = lo, i = 0; x < hi; i++) {
+      const L = 0.5 + 1.4 * hash(Math.round(y * 100), i, 91)
+      if (hash(Math.round(y * 100), i, 92) > 0.45) out.push({ y, x0: x, x1: Math.min(hi, x + L) })
+      x += L + 0.2 + 0.5 * hash(Math.round(y * 100), i, 93)
+    }
+  }
+  return out
+})()
+function drawSpill(p: p5, k: number, t: number, f: number): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const S = X(k)
+  ctx.save()
+  ctx.lineCap = 'round'
+  // The rim of the vault, in short lengths, each as lit as the spill where it is.
+  const LV = 6
+  const rim: Path2D[] = Array.from({ length: LV }, () => new Path2D())
+  for (let i = 0; i < 48; i++) {
+    const xa = WALL_L + 0.1 + ((WALL_R - WALL_L - 0.2) * i) / 48
+    const xb = WALL_L + 0.1 + ((WALL_R - WALL_L - 0.2) * (i + 1)) / 48
+    const ya = vaultY(xa) + 0.17
+    const yb = vaultY(xb) + 0.17
+    const a = spillAt((xa + xb) / 2, (ya + yb) / 2)
+    if (a < 0.03) continue
+    const lv = Math.min(LV - 1, Math.floor(a * LV * 1.4))
+    rim[lv].moveTo(S(xa), S(ya))
+    rim[lv].lineTo(S(xb), S(yb))
+  }
+  ctx.lineWidth = S(0.03)
+  for (let lv = 0; lv < LV; lv++) {
+    ctx.strokeStyle = rgba(mixHex(M.redDeep, M.spot, 0.35), f * 0.34 * ((lv + 0.5) / LV))
+    ctx.stroke(rim[lv])
+  }
+  // The courses of brick, fainter still, and the joints between the bricks along them.
+  const course: Path2D[] = Array.from({ length: LV }, () => new Path2D())
+  for (const c of COURSES) {
+    const a = spillAt((c.x0 + c.x1) / 2, c.y)
+    if (a < 0.03) continue
+    const lv = Math.min(LV - 1, Math.floor(a * LV * 1.4))
+    course[lv].moveTo(S(c.x0), S(c.y))
+    course[lv].lineTo(S(c.x1), S(c.y))
+    const o = (Math.round(c.y * 100) % 2) * 0.17
+    for (let x = c.x0 + 0.1 + o; x < c.x1 - 0.05; x += 0.34) {
+      course[lv].moveTo(S(x), S(c.y))
+      course[lv].lineTo(S(x), S(c.y + 0.27))
+    }
+  }
+  ctx.lineWidth = S(0.012)
+  for (let lv = 0; lv < LV; lv++) {
+    ctx.strokeStyle = rgba(mixHex(M.redDeep, M.spot, 0.25), f * 0.26 * ((lv + 0.5) / LV))
+    ctx.stroke(course[lv])
+  }
+  // The strings of bulbs, out: their glass just catching the spot, a dull warm bead on a dark line.
+  ctx.lineWidth = S(0.012)
+  for (const [a, b, sag] of SWAGS) {
+    for (let i = 0; i < 24; i++) {
+      const u0 = i / 24
+      const u1 = (i + 1) / 24
+      const x0 = a[0] + (b[0] - a[0]) * u0
+      const y0 = a[1] + (b[1] - a[1]) * u0 + sag * 4 * u0 * (1 - u0)
+      const x1 = a[0] + (b[0] - a[0]) * u1
+      const y1 = a[1] + (b[1] - a[1]) * u1 + sag * 4 * u1 * (1 - u1)
+      const s = spillAt((x0 + x1) / 2, (y0 + y1) / 2)
+      if (s < 0.04) continue
+      ctx.strokeStyle = rgba(M.spot, f * 0.16 * s)
+      ctx.beginPath()
+      ctx.moveTo(S(x0), S(y0))
+      ctx.lineTo(S(x1), S(y1))
+      ctx.stroke()
+    }
+  }
+  for (const bl of BULBS) {
+    const s = spillAt(bl.x, bl.y)
+    if (s < 0.04) continue
+    ctx.fillStyle = rgba(mixHex(M.redDeep, M.bulb, 0.5), f * 0.5 * s)
+    ctx.beginPath()
+    ctx.ellipse(S(bl.x), S(bl.y), S(0.035 * bl.w), S(0.045 * bl.w), 0, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
+  void t
+}
+
+/**
+ * The bass player. Through the band's numbers the bass stands idle, nothing in the machine reaching it; when the room
+ * goes dark for the solo he is there behind it in the spill, the one other player, a black shape with the spot's light
+ * along the edge of him that faces it. He bows long notes under the trumpet: the bow turns at each phrase's first
+ * note and is drawn slowly through it, and rests on the string in the solo's breaths; his left hand shifts on the neck
+ * with the phrase. On the knock he lifts the bow off.
+ */
+const BASSIST: Pt = [BASS_X + 0.78, GROUND]
+/** The solo's phrases' first notes, from the threads it draws (filled in once the phrases are known). */
+let PHRASE_STARTS: number[] = []
+function bowAt(t: number): { u: number; on: number } {
+  if (!PHRASE_STARTS.length) PHRASE_STARTS = SOLO_PHRASES.map((ph) => ph[0].s)
+  const { i, ago } = lastOf(PHRASE_STARTS, t)
+  if (i < 0) return { u: 0.5, on: 0 }
+  const dir = i % 2 === 0 ? 1 : -1
+  const ph = SOLO_PHRASES[i]
+  const len = Math.max(0.6, ph[ph.length - 1].s - ph[0].s)
+  // Drawn across the phrase, easing to a stop at its end; it waits there, on the string, through the breath.
+  const u = smooth(ago, 0, len)
+  const from = dir > 0 ? 0.15 : 0.85
+  const to = dir > 0 ? 0.85 : 0.15
+  const off = smooth(t, KNOCK - 0.1, KNOCK + 0.4)
+  return { u: from + (to - from) * u, on: 1 - off }
+}
+/** Where he is and how he is holding the bow at `t`. */
+function bassistPose(t: number) {
+  const [bx, by] = BASSIST
+  const { u, on } = bowAt(t)
+  // The breath of a player: he leans into the long notes, a little, and straightens in the rests.
+  const lean = 0.05 * on * Math.sin(Math.PI * u)
+  const hip: Pt = [bx + 0.02, by - 1.32]
+  const neck: Pt = [bx - 0.06 - lean, by - 2.3]
+  const head: Pt = [neck[0] - 0.04, neck[1] - 0.2]
+  // His left hand on the neck of the bass (the bass leans 0.12 rad to the right from its foot), shifting with the phrase.
+  const shift = PHRASE_STARTS.length ? 0.15 * Math.sin(lastOf(PHRASE_STARTS, t).i * 2.1) : 0
+  const along = 2.0 + shift
+  const lh: Pt = [BASS_X + Math.sin(0.12) * along - 0.02, GROUND - 0.12 - Math.cos(0.12) * along]
+  // The bow at the bridge, drawn across the strings; his right hand at its frog.
+  const bridge: Pt = [BASS_X + Math.sin(0.12) * 0.75, GROUND - 0.12 - Math.cos(0.12) * 0.75]
+  const frog: Pt = [bridge[0] + 0.62 - 0.9 * u, bridge[1] + 0.05 - 0.04 * on]
+  const tipB: Pt = [frog[0] - 0.95, frog[1] + 0.08]
+  const shL: Pt = [neck[0] - 0.12, neck[1] + 0.12]
+  const shR: Pt = [neck[0] + 0.16, neck[1] + 0.14]
+  return { bx, by, on, hip, neck, head, lh, frog, tipB, shL, shR }
+}
+const bassistThere = (t: number): number => smooth(t, DARK[0] + 0.2, DARK[1] + 1.4)
+
+/**
+ * Him, drawn over the dark (he stands clear of the bass's body, to its right, so nothing of the room is in front of him
+ * but the bass's neck, which his left hand reaches round, and his bow). A dark shape, warmer on the side the spot is
+ * on and black away from it, with the spot's light along his edge: so he is there in the dark and is not lit.
+ */
+function drawBassist(p: p5, k: number, t: number, on1: number): void {
+  const there = bassistThere(t) * on1
+  if (there <= 0.01) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const S = X(k)
+  const { bx, by, on, hip, neck, head, lh, frog, tipB, shL, shR } = bassistPose(t)
+  ctx.save()
+  ctx.globalAlpha = there
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  const g = ctx.createLinearGradient(S(bx - 0.35), 0, S(bx + 0.3), 0)
+  g.addColorStop(0, mixHex(M.redDeep, M.black, 0.86))
+  g.addColorStop(1, M.black)
+  ctx.fillStyle = g
+  ctx.strokeStyle = g
+  // Legs, body, head.
+  ctx.beginPath()
+  ctx.moveTo(S(hip[0] - 0.2), S(hip[1]))
+  ctx.lineTo(S(shL[0]), S(shL[1]))
+  ctx.quadraticCurveTo(S(neck[0]), S(neck[1] - 0.02), S(shR[0]), S(shR[1]))
+  ctx.lineTo(S(hip[0] + 0.2), S(hip[1]))
+  ctx.lineTo(S(bx + 0.2), S(by))
+  ctx.lineTo(S(bx + 0.06), S(by))
+  ctx.lineTo(S(hip[0]), S(hip[1] + 0.35))
+  ctx.lineTo(S(bx - 0.08), S(by))
+  ctx.lineTo(S(bx - 0.22), S(by))
+  ctx.closePath()
+  ctx.fill()
+  ctx.beginPath()
+  ctx.arc(S(head[0]), S(head[1]), S(0.16), 0, Math.PI * 2)
+  ctx.fill()
+  // The arm round the neck of the bass.
+  ctx.lineWidth = S(0.1)
+  ctx.beginPath()
+  ctx.moveTo(S(shL[0]), S(shL[1]))
+  ctx.quadraticCurveTo(S(shL[0] - 0.25), S((shL[1] + lh[1]) / 2 + 0.25), S(lh[0]), S(lh[1]))
+  ctx.stroke()
+  // The bass's neck in front of his hand, as the room draws it.
+  ctx.save()
+  ctx.translate(S(BASS_X), S(GROUND - 0.12))
+  ctx.rotate(0.12)
+  ctx.fillStyle = M.black
+  ctx.fillRect(S(-0.05), S(-2.55), S(0.1), S(1.35))
+  ctx.strokeStyle = rgba(M.skin, 0.25)
+  ctx.lineWidth = Math.max(1, S(0.008))
+  ctx.beginPath()
+  for (let i = 0; i < 4; i++) {
+    const x = -0.045 + i * 0.03
+    ctx.moveTo(S(x), S(-1.2))
+    ctx.lineTo(S(x), S(-2.5))
+  }
+  ctx.stroke()
+  ctx.restore()
+  // His bowing arm, in front of the bass.
+  ctx.strokeStyle = g
+  ctx.lineWidth = S(0.1)
+  ctx.beginPath()
+  ctx.moveTo(S(shR[0]), S(shR[1]))
+  ctx.quadraticCurveTo(S(shR[0] + 0.12), S((shR[1] + frog[1]) / 2 + 0.1), S(frog[0]), S(frog[1]))
+  ctx.stroke()
+  // The spot's light along the edge of him that faces it: his head, his shoulder, the arm reaching round the neck, and
+  // down his side; and along the bow's stick.
+  ctx.strokeStyle = rgba(M.spot, 0.45)
+  ctx.lineWidth = Math.max(1, S(0.016))
+  ctx.beginPath()
+  ctx.arc(S(head[0]), S(head[1]), S(0.16), Math.PI * 0.72, Math.PI * 1.5)
+  ctx.moveTo(S(shL[0] - 0.04), S(shL[1] + 0.02))
+  ctx.quadraticCurveTo(S(shL[0] - 0.3), S((shL[1] + lh[1]) / 2 + 0.22), S(lh[0] - 0.05), S(lh[1] - 0.03))
+  ctx.stroke()
+  ctx.strokeStyle = rgba(M.spot, 0.2)
+  ctx.beginPath()
+  ctx.moveTo(S(shL[0] - 0.02), S(shL[1] + 0.12))
+  ctx.lineTo(S(hip[0] - 0.21), S(hip[1]))
+  ctx.lineTo(S(bx - 0.22), S(by))
+  ctx.stroke()
+  ctx.strokeStyle = rgba(M.spot, 0.3 + 0.2 * on)
+  ctx.beginPath()
+  ctx.moveTo(S(frog[0]), S(frog[1]))
+  ctx.lineTo(S(tipB[0]), S(tipB[1]))
+  ctx.stroke()
+  ctx.restore()
+  void neck
 }
 
 /**
@@ -1323,7 +2063,19 @@ const SOLO_PHRASES: { s: number; m: number }[][] = (() => {
     }
   }
   if (cur.length) out.push(cur)
-  return out
+  // A thread of light, not a trace of the pitch: within each phrase the line follows the melody's contour, its high
+  // notes higher, but not its vibrato and grace notes, which drawn note for note made a jagged, heart-monitor line.
+  const W = 6
+  return out.map((ph) => ph.map((n, i) => {
+    let acc = 0
+    let w = 0
+    for (let j = Math.max(0, i - W); j <= Math.min(ph.length - 1, i + W); j++) {
+      const q = 1 - Math.abs(j - i) / (W + 1)
+      acc += ph[j].m * q
+      w += q
+    }
+    return { s: n.s, m: acc / w }
+  }))
 })()
 
 /** Where the bell's mouth is at show time `s`, as the trumpet holds it. (Fixed for a given `s`, so kept once worked out:
@@ -1470,17 +2222,15 @@ function drawTower(ctx: CanvasRenderingContext2D, k: number, t: number, on1: num
     if (i === 0) path.moveTo(x * k, y * k)
     else path.lineTo(x * k, y * k)
   }
-  for (const [w, a0] of [[0.075, 0.1], [0.018, 0.75]] as const) {
-    ctx.lineWidth = w * k
-    ctx.strokeStyle = rgba(M.spot, a0 * on1 * 0.7)
-    ctx.stroke(path)
-  }
-  // The pen: a bright point where it is drawing.
+  ctx.lineWidth = 0.018 * k
+  ctx.strokeStyle = rgba(M.spot, 0.55 * on1)
+  ctx.stroke(path)
+  // The pen: the point where it is drawing, a dot of the line's own light.
   if (d < 1) {
     const [x, y] = skylineAt(u1)
-    ctx.fillStyle = rgba(M.spot, on1)
+    ctx.fillStyle = rgba(M.spot, 0.8 * on1)
     ctx.beginPath()
-    ctx.arc(x * k, y * k, 0.045 * k, 0, Math.PI * 2)
+    ctx.arc(x * k, y * k, 0.022 * k, 0, Math.PI * 2)
     ctx.fill()
   }
 }
@@ -1493,7 +2243,12 @@ function threadAt(s: number, m: number, t: number): { x: number; y: number; a: n
   const f = smooth(t, st.from, st.to)
   if (f <= 0) return q
   const [tx, ty] = skylineAt(st.u)
-  return { x: q.x + (tx - q.x) * f, y: q.y + (ty - q.y) * f, a: q.a + (0.7 - q.a) * f }
+  // On its way to its place it goes down to the skyline's height first, out on the bell's open side, and only then
+  // across under the horn into its place: a straight line from where it drifted to (above and right of the trumpet)
+  // to the skyline (below and left of it) went through the trumpet.
+  const down = f < 0.6 ? smooth(f, 0, 0.6) : 1
+  const across = smooth(f, 0.35, 1)
+  return { x: q.x + (tx - q.x) * across, y: q.y + (ty - q.y) * down, a: q.a + (0.7 - q.a) * f }
 }
 
 /** Every point of the solo's threads that is lit at `t` (more than a quarter there), in this frame: what the checks see. */
@@ -1531,47 +2286,15 @@ function drawSolo(p: p5, k: number, t: number, on1: number): void {
       prev = q
     }
   }
-  // Two passes: a soft wide haze, and the bright thread in it.
-  for (const [w, a0] of [[0.075, 0.1], [0.018, 0.75]] as const) {
-    ctx.lineWidth = w * k
-    for (let lv = 0; lv < LV; lv++) {
-      ctx.strokeStyle = rgba(M.spot, a0 * on1 * ((lv + 0.5) / LV))
-      ctx.stroke(paths[lv])
-    }
+  // The thread itself: a line of warm light, no haze round it.
+  ctx.lineWidth = 0.02 * k
+  for (let lv = 0; lv < LV; lv++) {
+    ctx.strokeStyle = rgba(M.spot, 0.8 * on1 * ((lv + 0.5) / LV))
+    ctx.stroke(paths[lv])
   }
   drawTower(ctx, k, t, on1)
   drawWindows(ctx, k, t, on1)
   ctx.restore()
-}
-
-/** Dust in the spot's beam: a few motes turning slowly, each catching the light now and then. */
-const MOTES = Array.from({ length: 11 }, (_, i) => ({
-  y: -0.75 + 2.2 * ((i + hash(i, 31)) / 11),
-  v: (hash(i, 32) - 0.5) * 1.3,
-  r: 0.009 + 0.007 * hash(i, 33),
-  ph: hash(i, 34) * 6.283,
-  w: 0.12 + 0.1 * hash(i, 35),
-}))
-function drawMotes(p: p5, k: number, t: number, on1: number): void {
-  if (on1 <= 0.01) return
-  const [x0, y0] = [LAMP[0], LAMP[1] + 0.1]
-  const [x1, y1] = [PIVOT[0], GROUND]
-  p.noStroke()
-  for (const m of MOTES) {
-    // Each turns on a slow loop of its own, sinking and lifting a little, drifting across the shaft.
-    const y = m.y + 0.16 * Math.sin(t * m.w + m.ph) + 0.05 * Math.sin(t * m.w * 2.3 + m.ph * 2)
-    const u = (y - y0) / (y1 - y0)
-    const half = (0.2 + 1.4 * u) / 2
-    const lateral = m.v + 0.35 * Math.sin(t * m.w * 0.7 + m.ph * 3)
-    const x = x0 + (x1 - x0) * u + half * lateral
-    // Out of the shaft, unlit; in it, it glints as it turns.
-    const inside = 1 - smooth(Math.abs(lateral), 0.6, 0.95)
-    const turn = 0.5 + 0.5 * Math.sin(t * (0.5 + m.w * 2) + m.ph * 5)
-    const a = on1 * inside * (0.2 + 0.45 * turn * turn)
-    if (a < 0.02) continue
-    p.fill(rgba(M.spot, a))
-    p.circle(x * k, y * k, 2 * m.r * k)
-  }
 }
 
 /** The lamp before it is lit: a black can in the crown of the vault, drawn with the room. */

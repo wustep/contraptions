@@ -75,9 +75,10 @@ function railAt(st: Storey, s: number): { x: number; y: number; a: number } {
 export function drawStorey(p: p5, n: number, c: PieceCtx, t: number): void {
   const st = TOWER[n]
   const open = openOf(n, t)
-  // Folded, it is the bud on top of the tower, once the storey under it has opened: its floor's two halves standing
-  // up against the mast. Before that, nothing.
-  if (open <= 0 && n > 0 && openOf(n - 1, t) < 1) return
+  // Folded, it is the bud on top of the tower: its floor's two halves standing up against the mast, rising out of it
+  // as the storey under it finishes opening. Before that, nothing.
+  const bud = n > 0 ? easeOut(smooth(openOf(n - 1, t), 0.8, 1)) : 1
+  if (bud <= 0) return
   const { k, weight } = c
   const color = STOREY_COLORS[n]
   const loop = LOOPS[n]
@@ -93,6 +94,7 @@ export function drawStorey(p: p5, n: number, c: PieceCtx, t: number): void {
   const rails = smooth(open, 0.38, 0.62)
 
   const floorFill = deep(color, 0.35)
+  const half = (st.w / 2) * bud
   // The floor, in two halves hinged at the mast.
   for (const side of [-1, 1]) {
     p.push()
@@ -100,7 +102,7 @@ export function drawStorey(p: p5, n: number, c: PieceCtx, t: number): void {
     p.rotate(-side * (Math.PI / 2) * (1 - floorOpen))
     solid(p, INK, weight, floorFill)
     p.rectMode(p.CORNER)
-    p.rect(side < 0 ? -(st.w / 2) * k : 0, -0.06 * k, (st.w / 2) * k, 0.12 * k, 0.03 * k)
+    p.rect(side < 0 ? -half * k : 0, -0.06 * k, half * k, 0.12 * k, 0.03 * k)
     p.pop()
   }
   if (posts <= 0) {
@@ -108,7 +110,7 @@ export function drawStorey(p: p5, n: number, c: PieceCtx, t: number): void {
     if (floorOpen < 0.02) {
       solid(p, INK, weight, deep(color, 0.2))
       p.rectMode(p.CENTER)
-      p.rect(0, (st.floor - st.w / 2 + 0.06) * k, 0.34 * k, 0.16 * k, 0.04 * k)
+      p.rect(0, (st.floor - half + 0.06) * k, 0.34 * k, 0.16 * k, 0.04 * k)
     }
     return
   }

@@ -168,16 +168,31 @@ export const DURATION = 408
  * (Seams between two parts of one place are the builders' own.)
  */
 export const SEAM = {
-  /** Dawn at the cradle → the swing on the lawn, years on (c5, A-flat). */
+  /** Dawn at the cradle → the lawn, years on: she runs off and comes back to her mother; the swing (c5, A-flat). */
   swing: chord(5),
-  /** The swing → the bed by the window: the cellos come in (c17). */
+  /** The swing in the spring → the room at the window, years on: Hannah a teenager, who turns from her (c14). */
+  teen: chord(14),
+  /** The window → the bed by the window: the cellos come in (c17). */
   bed: chord(17),
-  /** The bed → the living room at night, the television (the half cadence, c23). */
+  /** The bed → the lecture hall, the day they came: the phones, the news on the screen (the half cadence, c23). */
   news: chord(23),
-  /** The television's shell → the real one over the valley, on the double bass (c24). A scale match cut. */
+  /** The screen's shell → the real one over the valley, on the double bass (c24). A scale match cut. */
   arrival: ARRIVAL,
-  /** The valley → inside the shell: the chamber (c32). */
-  contact: chord(32),
+  /** The valley → the lake house the same night, the shell come down: a helicopter comes for her (c25, the fog). */
+  recruit: chord(25),
+  /** The lake house → the camp in Montana, as she drops out of that helicopter onto the meadow (c27). */
+  camp: chord(27),
+  /** The valley → inside the shell: the shaft above the deck, where gravity turns (c32). */
+  shaft: chord(32),
+  /** The shaft → the chamber, as the glass wakes (c33). */
+  contact: chord(33),
+  /** The chamber → the lake house: a flash of Hannah, drawing at the window (c42). */
+  flash: chord(42),
+  /** The lake house → the command tent: the world as one, the word she sends round the ring (c44). Hannah's crayon
+   * ring, cut to the world's ring of twelve. */
+  share: chord(44),
+  /** The tent → the chamber, the machine sending the next word, both of them writing at once (c45). */
+  again: chord(45),
   /** The chamber → the command tent: the bass drops out, the world breaks (c50). */
   dark: TURN,
   /** The tent → the chamber: the bomb (c55). */
@@ -188,12 +203,19 @@ export const SEAM = {
   sees: chord(66),
   /** The lawn → the fog (c68). */
   fog2: chord(68),
-  /** The fog → the gala, years on (c71). */
-  gala: chord(71),
+  /** The fog → the lecture hall, years on: she teaches their writing (c71). */
+  future: chord(71),
+  /** The hall → the gala (c72). */
+  gala: chord(72),
   /** The gala → the tent: the call (c74). */
   call: chord(74),
   /** The tent → the meadow: the shells go (c84). */
   going: chord(84),
   /** The meadow → the lake house: home, and the first frame again (c90). */
   home: chord(90),
+  /** The room by the window → the lawn, for one chord: Hannah running back into her mother, the prologue's run
+   * remembered as she chooses (c92). */
+  recall: chord(92),
+  /** The lawn → the room again, beside the empty cradle (c93). */
+  cradle: chord(93),
 } as const

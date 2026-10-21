@@ -1,15 +1,14 @@
 import type p5 from 'p5'
 import { solid } from '../../../../../../../../src/core/draw'
-import { mixHex, type Pt } from '../../../../../parts'
-import { bloom, glint, rgba } from '../cast'
+import { mixHex } from '../../../../../parts'
+import { glint, rgba } from '../cast'
 import { type frame } from '../kit'
 import { DERELICTE } from '../worlds'
 import { FLOOR_Y, RUNWAY } from './geo'
-import { derekAt, DEREK_LOOK, HANSEL_LOOK, HEAP, heapAt, LET_GO, MAGNUM, powerAt, STAR_R, starAt, starSpeed, STOP, THROW, worksAt } from './runway-clock'
+import { derekAt, HEAP, heapAt, LET_GO, MAGNUM, powerAt, STAR_R, starAt, starSpeed, STOP, THROW, worksAt } from './runway-clock'
 import { drawFireGlow, drawWindowSpill, TRUSS } from './set-hall'
 
 const TRUSS_LOW = TRUSS.low
-import { TOWER_COMPANY } from './tower'
 import type { Ink } from './set-hall'
 
 /**
@@ -232,20 +231,16 @@ export function drawStar(p: p5, k: number, f: Frame, t: number, ink: Ink): void 
   p.fill(DERELICTE.vinyl)
   p.circle(0, 0, X(0.05))
   p.pop()
-  // The fire's light on its steel while the look holds it.
-  if (t >= MAGNUM && t < MAGNUM + 0.55) bloom(p, k, [x, y], 0.4, lit, 0.14)
 }
 
-/** The looks: Magnum (the only one over 0.6), and Derek's for the press at the end. */
+/**
+ * The look: Magnum, the last of the show's three and the biggest. (The two of them turn for the press at the end,
+ * on their beats, with no glint: the press's flashes are that moment's light.)
+ */
 export function drawLooks(p: p5, k: number, t: number): void {
-  const at = (q: Pt): Pt => [q[0] + 0.09, q[1] - 0.09]
-  if (t >= MAGNUM - 0.01 && t < MAGNUM + 0.6) glint(p, k, at(derekAt(MAGNUM)), t - MAGNUM, 0.9)
-  if (t >= DEREK_LOOK - 0.01 && t < DEREK_LOOK + 0.6) glint(p, k, at(derekAt(DEREK_LOOK)), t - DEREK_LOOK, 0.4)
-  // Hansel's, for the press, a bar after Derek's (he is the tower's, but the pose is the runway's).
-  if (t >= HANSEL_LOOK - 0.01 && t < HANSEL_LOOK + 0.6) {
-    const span = TOWER_COMPANY.find((c) => c.who === 'hansel' && HANSEL_LOOK >= c.from && HANSEL_LOOK < c.to)
-    const h = span?.at(HANSEL_LOOK)
-    if (h) glint(p, k, at([h.x, h.y]), t - HANSEL_LOOK, 0.4)
+  if (t >= MAGNUM - 0.01 && t < MAGNUM + 0.6) {
+    const d = derekAt(MAGNUM)
+    glint(p, k, [d[0] + 0.09, d[1] - 0.09], t - MAGNUM, 0.9)
   }
 }
 

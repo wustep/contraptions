@@ -95,7 +95,7 @@ export type LaneStep = StepCommon &
     | { op: 'move'; to: Pt; dur: number; ease?: 'in' | 'out' | 'inout' }
   )
 
-export const STEP_OPS = ['roll', 'ramp', 'arrive', 'wait', 'fall', 'fly', 'move'] as const
+const STEP_OPS = ['roll', 'ramp', 'arrive', 'wait', 'fall', 'fly', 'move'] as const
 
 /**
  * What a part is filled with. `color` is the colour the planner hands the
@@ -104,9 +104,9 @@ export const STEP_OPS = ['roll', 'ramp', 'arrive', 'wait', 'fall', 'fly', 'move'
  * what holds it. `paint` is the colour a painting piece gives the ball.
  */
 export type Fill = 'color' | 'accent' | 'paint' | 'paper' | 'ink' | 'none'
-export const FILLS: readonly Fill[] = ['color', 'accent', 'paint', 'paper', 'ink', 'none']
+const FILLS: readonly Fill[] = ['color', 'accent', 'paint', 'paper', 'ink', 'none']
 export type Stroke = 'ink' | 'color' | 'accent' | 'paint' | 'none'
-export const STROKES: readonly Stroke[] = ['ink', 'color', 'accent', 'paint', 'none']
+const STROKES: readonly Stroke[] = ['ink', 'color', 'accent', 'paint', 'none']
 
 /** Which clock a motion or a window reads: seconds since the piece fired, or since the ball entered it. */
 export type ClockName = 'since' | 't'
@@ -141,7 +141,7 @@ export interface Motion {
   axis?: 'x' | 'y' | 'both'
 }
 
-export const DRIVES = ['ease', 'pulse', 'flick', 'swing', 'turn', 'follow'] as const
+const DRIVES = ['ease', 'pulse', 'flick', 'swing', 'turn', 'follow'] as const
 
 interface ShapeCommon {
   /** `over` is drawn after the ball, for parts that stand in front of it. */
@@ -177,7 +177,7 @@ export type Shape = ShapeCommon &
     | { kind: 'group'; shapes: Shape[] }
   )
 
-export const SHAPE_KINDS = ['rail', 'post', 'gallows', 'line', 'poly', 'rect', 'ellipse', 'arc', 'coil', 'burst', 'puff', 'group'] as const
+const SHAPE_KINDS = ['rail', 'post', 'gallows', 'line', 'poly', 'rect', 'ellipse', 'arc', 'coil', 'burst', 'puff', 'group'] as const
 
 /* ------------------------------------------------------------------ limits */
 
@@ -202,7 +202,7 @@ export const LIMITS = {
 
 /* ------------------------------------------------------------------ validation */
 
-export interface Parsed {
+interface Parsed {
   build: Build | null
   errors: string[]
 }

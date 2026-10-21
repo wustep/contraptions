@@ -113,6 +113,14 @@ export class SebsShow extends Show {
   private readonly worlds: Universe[]
   /** Every part of the thread, in order of time, whichever universe it was laid in. */
   private readonly thread: Placed[]
+  /**
+   * No trail behind anyone. The camera is close on them most of the show (the keys, her table, the quay, the stars), and
+   * the trail hung a string of fading discs off whoever moved: off Mia crossing to the door, off him hopping the keys
+   * and drifting up to them at the waking, a second ball on the one moving. The move is what shows they move.
+   */
+  override trailOff(): boolean {
+    return true
+  }
 
   constructor(stages: Stage[], readonly duration: number, private readonly company: Company[] = []) {
     super('sebs')

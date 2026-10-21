@@ -1,13 +1,14 @@
 import type p5 from 'p5'
 import { mixHex, R, type Pt, type Seg } from '../../../../../parts'
 import { HALF } from '../cast'
-import { alpha, box, carried, part, smooth, type Company, type Pose } from '../kit'
+import { gust } from '../depth'
+import { alpha, box, carried, frame, hash, part, smooth, type Company, type Pose } from '../kit'
 import { CUT } from '../music'
 import { BASKET, drawBasket } from '../props/basket'
 import { drawTicket } from '../inside/ties-set'
 import { CUTS } from '../seams'
 import { HILL, HOME, INK } from '../worlds'
-import { autumn, LANE_Y, ridge, ridgeSlope, seat, STEP } from './hill'
+import { autumn, LANE_Y, LEAF_COLORS, leafPath, ridge, ridgeSlope, seat, STEP } from './hill'
 
 /**
  * CLIMB (167.706 to 180.413): the same hill, years later, in autumn. A held note, and then the piano.
@@ -404,11 +405,12 @@ function drawStone(p: p5, k: number, weight: number, t: number): void {
   p.beginShape()
   outlinePath()
   p.endShape()
-  // A tuft of straw at each end, where the stone goes into the ground.
+  // A tuft of straw at each end, where the stone goes into the ground, bending as the gusts run along the path (the
+  // hill set's wind).
   p.stroke(alpha(p, mixHex(HILL.grassAutumn, HILL.bark, 0.3), 0.9))
   p.strokeWeight(Math.max(1, weight * 0.55))
-  const lean = 0.02 * Math.sin(t * 1.2)
   for (const [x, h] of [[x0 + 0.01, 0.08], [x1 + 0.01, 0.06]] as const) {
+    const lean = h * (0.5 * gust(t - x * 0.15, 4) - 0.12) * 1.4 + 0.008 * Math.sin(t * 2.2 + x)
     p.line(X(x), Y(ground + 0.01), X(x - 0.03 + lean), Y(ground - h))
     p.line(X(x + 0.03), Y(ground + 0.01), X(x + 0.045 + lean), Y(ground - h * 0.8))
   }
@@ -461,9 +463,10 @@ function basketAt(t: number): { x: number; y: number; tilt: number; open: number
 
 /**
  * The tickets, his surprise, spilling out as the basket lands askew on the strike (`T.fall`, its lid jolted open): two
- * of them slip from its mouth and slide away down the straw toward the two of them, one after the other, and lie on
- * the slope as he hurries down to her, in the frame for his first second. What the fall interrupted is seen: he was
- * about to give them to her. Each ticket's middle and its turn, in the hill's cells.
+ * of them slip from its mouth onto the straw, one after the other, and lie there by it as he hurries down past them,
+ * in the frame for his first second. What the fall interrupted is seen: he was about to give them to her. They stay
+ * with the basket, out of the close on the two of them (slid a little way down the slope, they sat half in at the
+ * close's edge, the brightest thing in it). Each ticket's middle and its turn, in the hill's cells.
  */
 function ticketsAt(t: number): { x: number; y: number; angle: number }[] {
   const out: { x: number; y: number; angle: number }[] = []
@@ -472,7 +475,7 @@ function ticketsAt(t: number): { x: number; y: number; angle: number }[] {
   // Out of the downhill side of its mouth.
   const mx = land.x + Math.sin(land.tilt) * BASKET.h * 0.6 + BASKET.w * 0.35
   // The first slips out on the strike itself; the second on the next onset (174.916).
-  for (const [delay, reach, spin] of [[0.08, 0.3, -0.9], [174.916 - T.fall, 0.5, 0.7]] as [number, number, number][]) {
+  for (const [delay, reach, spin] of [[0.08, 0.0, -0.9], [174.916 - T.fall, 0.07, 0.7]] as [number, number, number][]) {
     const s = t - T.fall - delay
     if (s <= 0) continue
     const u = 1 - Math.exp(-s / 0.22)
@@ -482,6 +485,79 @@ function ticketsAt(t: number): { x: number; y: number; angle: number }[] {
     out.push({ x, y, angle: lie + spin * (1 - u) * (1 - u) })
   }
   return out
+}
+
+/**
+ * Where the basket lies, a soft dark on the straw under it, so it is down on the ground and not laid over it. The sky
+ * is a lid, so the shadow falls straight down: no direction to it.
+ */
+function drawBasketShadow(p: p5, k: number, t: number): void {
+  if (t < T.fall) return
+  const b = basketAt(t)
+  if (!b) return
+  // Under the middle of the box, as wide as what it rests on: its bottom, or its side once it has gone over.
+  const mx = b.x + (Math.sin(b.tilt) * BASKET.h) / 2
+  const lie = Math.atan(ridgeSlope(mx))
+  const wide = Math.abs(Math.cos(b.tilt - lie)) * BASKET.w + Math.abs(Math.sin(b.tilt - lie)) * BASKET.h
+  const [x, y] = L(mx, ridge(mx) + R)
+  p.push()
+  p.noStroke()
+  p.fill(alpha(p, INK, 0.18))
+  p.translate(x * k, (y + 0.012) * k)
+  p.rotate(lie)
+  p.ellipse(0, 0, wide * 1.15 * k, 0.05 * k)
+  p.pop()
+}
+
+/* ------------------------------------------------------------------ the near leaves */
+
+/**
+ * A few near leaves, large and quick, torn past in front of everything on the gusts: each crosses the frame left to
+ * right in about a second, tumbling, kept to the top of the picture or to its foot, never across the two of them. None
+ * flies in the lull (her give-way, his stillness and his run, until he is beside her), and one that ever came near either
+ * of them would thin away before it reached them.
+ */
+const NEAR = { n: 10, quiet: [173.95, 177.35] as const }
+
+function drawNearLeaves(p: p5, k: number, t: number): void {
+  const f = frame(p, k)
+  const W = f.x1 - f.x0
+  // The 16:9 picture (a phone held upright sees more above it): its top and its foot are where they fly.
+  const H = Math.min(f.y1 - f.y0, (W * 9) / 16)
+  const foot = f.y1 - 0.15 * (f.y1 - f.y0 - H)
+  const head = foot - H
+  const them = [carl(t), ellie(t)].map(([x, y]) => L(x, y))
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const lists: [number, number, number, number][][] = [[], [], []]
+  for (let i = 0; i < NEAR.n; i++) {
+    const every = 2.6 + 2.2 * hash(i, 1, 71)
+    const cross = 0.9 + 0.5 * hash(i, 2, 71)
+    const since = (t + every * hash(i, 3, 71)) % every
+    if (since > cross) continue
+    const t0 = t - since
+    // The whole flight or none of it: never one in the air across the lull.
+    if (t0 + cross > NEAR.quiet[0] && t0 < NEAR.quiet[1]) continue
+    const cycle = Math.round(t0 * 10)
+    const u = since / cross
+    const low = hash(i, cycle, 72) < 0.6
+    const y0 = low ? 0.86 + 0.1 * hash(i, cycle, 73) : 0.04 + 0.12 * hash(i, cycle, 73)
+    const x = f.x0 + W * (-0.08 + 1.16 * u)
+    const y = head + H * (y0 + 0.05 * Math.sin(u * 7 + i) * (low ? -1 : 1) - (low ? 0.04 * u : 0))
+    // Kept off the two of them, whatever the framing.
+    let clear = 1
+    for (const [cx, cy] of them) clear = Math.min(clear, smooth(Math.hypot(x - cx, y - cy), 3 * R, 6 * R))
+    if (clear < 0.05) continue
+    const size = 0.021 * W * (0.8 + 0.4 * hash(i, cycle, 74)) * clear
+    lists[i % 3].push([x, y, u * (9 + 5 * hash(i, 5, 71)) + i, size])
+  }
+  p.noStroke()
+  lists.forEach((list, c) => {
+    if (!list.length) return
+    p.fill(LEAF_COLORS[c])
+    ctx.beginPath()
+    for (const [x, y, a, s] of list) leafPath(ctx, k, x, y, a, s)
+    ctx.fill()
+  })
 }
 
 /* ------------------------------------------------------------------ the part */
@@ -498,6 +574,7 @@ export const climb = part<ClimbState>(
       drawStone(p, c.k, c.weight, t)
       // The spilled tickets lie on the ground, behind the two of them: he passes in front of them as he hurries down.
       if (c.t < -0.001 || c.t > END - BEGIN + 2) return
+      drawBasketShadow(p, c.k, t)
       for (const tk of ticketsAt(t)) {
         const [tx, ty] = L(tk.x, tk.y)
         drawTicket(p, c.k, c.weight, tx, ty, tk.angle)
@@ -510,6 +587,7 @@ export const climb = part<ClimbState>(
       if (!b) return
       const [x, y] = L(b.x, b.y)
       drawBasket(p, c.k, c.weight, x, y, { tilt: b.tilt, open: b.open })
+      drawNearLeaves(p, c.k, t)
     },
   },
   (slot) => {

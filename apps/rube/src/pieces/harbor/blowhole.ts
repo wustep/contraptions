@@ -6,7 +6,7 @@ import { bodyColor, luminance, seaWater, splash, water } from './sea'
  * A whale. The deck runs onto the back of a whale lying in the water,
  * head under the deck's end and fluke up out of the sea at the far side,
  * its blowhole on top; the ball rolls into the dip over the blowhole and
- * stops; the whale rumbles, a few bubbles come up, and it blows — a
+ * stops; the whale rumbles, shuts its eye, and it blows — a
  * column of water that throws the ball straight up past a shelf a floor
  * above, where it comes down onto the shelf and rolls on. The water falls
  * back into the blowhole in pieces. The whale is one colour and the water
@@ -82,7 +82,7 @@ export const blowhole = definePiece<{
     p.bezierVertex(0.5 * k, 0.3 * k, 0.46 * k, 0.42 * k, 0.44 * k, 0.5 * k)
     p.endShape(p.CLOSE)
     // The eye — shut tight as it blows — and the mouth's line back from the snout.
-    const blink = since > -0.05 && since < 0.3 ? 0.25 : 1
+    const blink = 1 - 0.75 * over(since, -0.08, -0.04) * (1 - over(since, 0.3, 0.36))
     solid(p, ink, weight * 0.8, bg)
     p.ellipse(-0.35 * k, 0.26 * k, 0.05 * k, 0.05 * blink * k)
     p.noStroke()
@@ -99,14 +99,7 @@ export const blowhole = definePiece<{
     // The sea, in front of the whale: what is under the line is under water.
     water(p, k, ink, bg, weight, -0.5, 0.5)
 
-    // Bubbles up the blowhole while it rumbles.
-    if (t > ARRIVE && since < 0) {
-      solid(p, ink, weight * 0.8, bg)
-      for (let i = 0; i < 3; i++) {
-        const f = ((t * 3 + i / 3) % 1 + 1) % 1
-        p.circle((0.03 * Math.sin(f * 9 + i)) * k, (TOP - 0.14 * f) * k, (0.02 + 0.01 * i) * k)
-      }
-    }
+    // (No bubbles up the blowhole while it rumbles: they rose behind the ball sat over it, unseen.)
     // The spout: a column of water from the blowhole, narrow at the hole and
     // opening into a crown at its head, where the ball is, which breaks into
     // drops. It is the sea's blue let down toward the paper, so it reads as
@@ -129,20 +122,23 @@ export const blowhole = definePiece<{
       p.endShape(p.CLOSE)
       splash(p, k, sea, weight, 0, head + 0.02, 1 - spout, 1.2, false)
     }
-    // Drips after, back into the blowhole.
-    if (since > 0.5 && since < 1.4) {
-      p.push()
-      p.noStroke()
-      p.fill(sea)
-      for (const [dx, d] of [
-        [-0.05, 0],
-        [0.04, 0.3],
-        [0.0, 0.6],
-      ]) {
-        const f = ((since - 0.5) * 1.6 + d) % 1
-        p.ellipse(dx * k, (FLOOR - 0.5 + 0.5 * f) * k, 0.03 * k, 0.045 * k)
-      }
-      p.pop()
+    // Drips after, back into the blowhole: left behind by the head of the
+    // column as it drops away under them, and falling, each once, into the
+    // hole. Drips looping down a fixed stretch of air came out of nothing
+    // half a cell up when the column had already gone, and vanished in mid
+    // air when they stopped.
+    p.push()
+    p.noStroke()
+    p.fill(sea)
+    for (const [dx, r] of [
+      [-0.05, 0.32],
+      [0.04, 0.38],
+      [0.0, 0.44],
+    ]) {
+      if (since < r) continue
+      const y = FLOOR - SPOUT_H * Math.sin((Math.PI * r) / 0.5) - 0.02 + 2.5 * (since - r) * (since - r)
+      if (y < TOP - 0.02) p.ellipse(dx * k, y * k, 0.03 * k, 0.045 * k)
     }
+    p.pop()
   },
 })

@@ -9,6 +9,7 @@ import { SebsShow, type Stage } from './show'
 import { coverAt, covers, IRIS_OPEN, IRIS_SNAP, RED_LIFT, type Cover } from './transitions'
 import { CLUB, CLUB_MAT, DRIVE, GLOBE, LIPTONS, MOVIE, NIGHT, SEB, SEBS, SHADOW, SHADOW_MAT, STUDIO, STUDIO_MAT, THEATRE, THEATRE_MAT } from './worlds'
 import { city } from './city'
+import { block, street } from './street'
 import { clubRoom, DOOR } from './club/room'
 import { opening } from './club/opening'
 import { finale } from './club/finale'
@@ -89,6 +90,9 @@ export function compose(): { show: SebsShow; camera: (t: number) => Framing; cov
   const piano1: Pt = [pFinale.col - DOOR[0], pFinale.row - DOOR[1]]
   const around = (at: Pt, x0: number, y0: number, x1: number, y1: number) => box(at[0] + x0, at[1] + y0, at[0] + x1, at[1] + y1, 2)
   const cityCells = (at: Pt) => around(at, -60, -40, 60, 14)
+  // The block the club stands on (its houses, its palms), and the street in front of it (the cars, the people).
+  const blockCells = (at: Pt) => around(at, -48, -14, 50, 4)
+  const streetCells = (at: Pt) => around(at, -48, 1, 50, 7)
 
   const show0 = (): SebsShow => show
   const where = (t: number): Pt => show0().where(t)
@@ -158,7 +162,9 @@ export function compose(): { show: SebsShow; camera: (t: number) => Framing; cov
   const stages: Stage[] = [
     stage(SEBS, 0, [pOpening], [
       standing(city, piano0[0], piano0[1], cityCells(piano0), { end: false }, DURATION),
+      standing(block, piano0[0], piano0[1], blockCells(piano0), { end: false }, DURATION),
       standing(clubRoom, piano0[0], piano0[1], around(piano0, -14, -9, 14, 3), { end: false }, DURATION),
+      standing(street, piano0[0], piano0[1], streetCells(piano0), { end: false }, DURATION),
     ]),
     stage(LIPTONS, SWITCH.liptons, [pOpening, pKiss], [standing(liptonsRoom, piano0[0], piano0[1], around(piano0, -16, -9, 26, 3), null, DURATION)]),
     stage(THEATRE, SWITCH.theatre, [pTheatre]),
@@ -171,7 +177,9 @@ export function compose(): { show: SebsShow; camera: (t: number) => Framing; cov
     stage(DRIVE, SWITCH.drive, [pDrive]),
     stage(SEBS, SWITCH.finale, [pFinale], [
       standing(city, piano1[0], piano1[1], cityCells(piano1), { end: true }, DURATION),
+      standing(block, piano1[0], piano1[1], blockCells(piano1), { end: true }, DURATION),
       standing(clubRoom, piano1[0], piano1[1], around(piano1, -14, -9, 14, 3), { end: true }, DURATION),
+      standing(street, piano1[0], piano1[1], streetCells(piano1), { end: true }, DURATION),
     ]),
   ]
   const show = new SebsShow(stages, DURATION, [...dreamChain.company].sort((a, b) => a.from - b.from))

@@ -1,6 +1,7 @@
 import { outline, solid } from '../../../../../../src/core/draw'
 import { FLOOR, R, ROLL, definePiece, fly, over, ramp, rankBy, type Lane, type Pt, type Seg } from '../../../parts'
-import { brass, feltColor, ivory, stage } from './hall'
+import { feltColor, ivory, stage } from './hall'
+import { brassFor, partColor } from './parts-a'
 
 /**
  * A kettledrum in the pit. The stage stops at the pit's edge; the ball
@@ -16,6 +17,8 @@ import { brass, feltColor, ivory, stage } from './hall'
  */
 export interface TimpaniState {
   color: string
+  /** The kettle's copper: never the ball's colour, which falls in front of it. */
+  kettle: string
   /** 0: back onto the stage across the pit. 1: onto a shelf a floor up. */
   up: 0 | 1
 }
@@ -98,15 +101,19 @@ export const timpani = definePiece<TimpaniState>({
       if (up) cells.push([0, -1], [1, -1])
       const exit: Pt = [2, -up]
       if (!fits(cells, exit)) continue
-      return { cells, exit: { at: exit, dir: 1 }, lane: PLANS[up].lane, state: { color: feltColor(theme, color, ball.color), up } }
+      const kettle = brassFor(theme, ball.color)
+      const pedal = partColor(theme, feltColor(theme, color, ball.color), ball.color, kettle)
+      return { cells, exit: { at: exit, dir: 1 }, lane: PLANS[up].lane, state: { color: pedal, kettle, up } }
     }
     return null
   },
-  draw: (p, s, { k, t, since, ink, weight, theme }) => {
-    const { cx, touch, let: go } = PLANS[s.up]
-    // How far the head's middle is from level: pressed by the ball, thrown back, and ringing on after.
+  draw: (p, s, { k, t, ink, weight, theme }) => {
+    const { cx, touch, let: go, lane } = PLANS[s.up]
+    // How far the head's middle is from level: pressed by the ball and thrown back with it, in step with the ball
+    // the whole way, so the ball's bottom is on the skin until it leaves; then ringing on.
     const free = t - go
-    const sag = t < touch ? 0 : since < 0 ? SAG * (1 - (1 - over(t, touch, touch + (go - touch) * 0.55)) ** 2) : free < 0 ? SAG * (1 - over(since, 0, go - touch) ** 2) : -0.05 * Math.sin(free * 30) * Math.exp(-free * 3.2)
+    const sag =
+      t < touch ? 0 : t < lane.fire ? SAG * (1 - (1 - over(t, touch, lane.fire)) ** 2) : free < 0 ? SAG * (1 - over(t, lane.fire, go) ** 2) : -0.03 * Math.sin(free * 30) * Math.exp(-free * 3.2)
 
     // The stage to the brink, over the pit's near wall; the pit; and its far wall, up to whatever the ball comes down on.
     const wall0 = Math.min(APRON, cx - RW - 0.09)
@@ -127,7 +134,7 @@ export const timpani = definePiece<TimpaniState>({
     p.quad((cx + 0.1) * k, GROUND * k, (cx - 0.12) * k, GROUND * k, (cx - 0.12) * k, (GROUND - 0.03) * k, (cx + 0.1) * k, (GROUND - 0.1) * k)
 
     // The kettle: copper, hung under the hoop.
-    solid(p, ink, weight, brass(theme))
+    solid(p, ink, weight, s.kettle)
     p.beginShape()
     p.vertex((cx - RW) * k, rim * k)
     p.bezierVertex((cx - RW) * k, (rim + BOWL * 0.75) * k, (cx - RW * 0.55) * k, (rim + BOWL) * k, cx * k, (rim + BOWL) * k)

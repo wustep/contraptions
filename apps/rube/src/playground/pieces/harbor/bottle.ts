@@ -11,10 +11,15 @@ import { WATER, bodyColor, piling, seaWater, splash, water } from '../../../piec
  * the bottle off foot first across the open water, a wake behind it. Its
  * foot fetches up against the far pier's piling with way still on, and the
  * way takes it up: the bottle vaults over the pier's corner, mouth over
- * foot, and hangs there by its shoulder with the mouth down on the deck,
- * and the ball pours out of the neck onto the deck and rolls on. Empty
- * and light, the bottle slides back off the corner into the sea with a
- * splash and lies there mouth to the pier, nodding.
+ * foot, and comes to lie across it on its shoulder with its lip on the
+ * deck, and the ball pours out of the neck onto the deck and rolls on.
+ * Empty and light, the bottle slides back off the corner into the sea,
+ * foot first, with a splash, and lies there mouth to the pier, nodding.
+ *
+ * The vault is one turn about the deck's corner: the corner stays on the
+ * bottle's skin the whole way over, first on the rim of the foot, then
+ * sliding along the side to the shoulder, so nothing floats and nothing
+ * goes through the deck.
  *
  * The ball is inside from the brow to the pour: its hidden lane is sampled
  * from the bottle's own drift and vault, the one motion it is drawn with,
@@ -36,12 +41,15 @@ const BW = 0.21
 const NW = 0.14
 /** Where the ball lies in the body while she drifts, from the foot. */
 const A_REST = 0.26
-/** How far over it goes: past level, mouth down onto the deck; and where the mouth rests then. */
-const TH_END = Math.PI + 0.5
-const MOUTH1: Pt = [EAST + 0.1, -0.03]
 /** The deck's corner the foot catches on, and how far up the foot's face it catches: the bottle vaults about that point. */
 const CORNER: Pt = [EAST, FLOOR]
 const CATCH = AXIS - FLOOR
+/**
+ * Where the corner is on the bottle, in its own frame, when it lies over: on the shoulder. And how far past level
+ * it goes then: until the lip comes down on the deck, the mouth a little lower than the foot.
+ */
+const SHOULDER_AT: Pt = [-(BODY + SHOULDER / 2), -(BW + NW) / 2]
+const TH_END = Math.PI + Math.atan2(-SHOULDER_AT[1] - (NW + 0.015), LEN + SHOULDER_AT[0])
 
 /** Down the brow, gathering pace, into the mouth. */
 const V_BROW = 3.4
@@ -62,10 +70,20 @@ const T_AFLOAT = T_FALL + FALL
 /** Where the foot is: afloat by the brow, at the pier, and afloat again by the pier. */
 const F0: Pt = [MOUTH0 + LEN, AXIS]
 const F1: Pt = [EAST - 0.03, AXIS]
-const F_UP: Pt = [EAST - CATCH, FLOOR]
-const F_HUNG: Pt = [MOUTH1[0] + LEN * Math.cos(TH_END), MOUTH1[1] + LEN * Math.sin(TH_END)]
 const F2: Pt = [EAST - 0.03 - LEN, AXIS]
-const LAND: Pt = [EAST + 0.18, 0]
+
+/** The foot, for a bottle at angle `th` touching the corner at `at` in its own frame. */
+function footOn(th: number, at: Pt): Pt {
+  const c = Math.cos(th)
+  const s = Math.sin(th)
+  return [CORNER[0] - (at[0] * c - at[1] * s), CORNER[1] - (at[0] * s + at[1] * c)]
+}
+/** Where the corner is on the bottle at angle `th`: on the foot's rim until it stands on end, then sliding to the shoulder. */
+function contactAt(th: number): Pt {
+  const u = easeInOutSine(Math.max(0, (th - Math.PI / 2) / (TH_END - Math.PI / 2)))
+  return [lerp(0, SHOULDER_AT[0], u), lerp(-CATCH, SHOULDER_AT[1], u)]
+}
+const F_HUNG = footOn(TH_END, SHOULDER_AT)
 
 /** The bottle's pose: its foot's axis point, and the angle of the axis from foot to mouth, from due west. */
 function poseAt(t: number): { f: Pt; th: number } {
@@ -78,19 +96,20 @@ function poseAt(t: number): { f: Pt; th: number } {
     return { f: [x, AXIS + bob + dip], th: 0.03 * Math.sin(t * 2.2) * (1 - u) - 0.1 * dip }
   }
   if (t < T_OVER) {
-    // Up on end about the deck's corner, the foot's face caught on it; then over the top and down onto the far side.
+    // Up on end about the deck's corner, the foot's rim caught on it; then over the top and down onto the far side.
     const th = TH_END * easeInOutSine(over(t, FIRE, T_OVER))
-    if (th <= Math.PI / 2) return { f: [CORNER[0] - CATCH * Math.sin(th), CORNER[1] + CATCH * Math.cos(th)], th }
-    const v = easeInOutSine((th - Math.PI / 2) / (TH_END - Math.PI / 2))
-    return { f: [lerp(F_UP[0], F_HUNG[0], v), lerp(F_UP[1], F_HUNG[1], v)], th }
+    return { f: footOn(th, contactAt(th)), th }
   }
   if (t < T_FALL) {
+    // Rocking on the shoulder as it lands, about the same corner.
     const s = t - T_OVER
-    return { f: F_HUNG, th: TH_END + 0.04 * Math.exp(-s * 4) * Math.sin(s * 22) }
+    const th = TH_END + 0.04 * Math.exp(-s * 4) * Math.sin(s * 22)
+    return { f: footOn(th, SHOULDER_AT), th }
   }
   if (t < T_AFLOAT) {
+    // Off the corner backwards, foot first, and down flat on the water.
     const v = easeInQuad(over(t, T_FALL, T_AFLOAT))
-    return { f: [lerp(F_HUNG[0], F2[0], v), lerp(F_HUNG[1], F2[1], v)], th: lerp(TH_END, Math.PI, v) }
+    return { f: [lerp(F_HUNG[0], F2[0], v), lerp(F_HUNG[1], F2[1], v)], th: lerp(TH_END, Math.PI, v) - 0.3 * Math.sin(Math.PI * v) }
   }
   const s = t - T_AFLOAT
   const nod = Math.exp(-s * 3) * Math.sin(s * 9)
@@ -111,15 +130,16 @@ const ballAt = (t: number): Pt => onAxis(insideAt(t), t)
 
 const HIDDEN = [...trace(ballAt, T_GONE, FIRE, 6), ...trace(ballAt, FIRE, T_OUT, 16)].map((s) => ({ ...s, hidden: true }))
 const OUT = HIDDEN[HIDDEN.length - 1].to
+/** How fast the ball leaves the lip: the pace it ran down the neck at. */
+const V_POUR = (2 * (LEN - 0.1)) / (T_OUT - (T_OVER - 0.1))
 const LANE: Lane = {
   segs: [
     roll([-0.5, 0], [BROW0, 0], ROLL),
     ramp([BROW0, 0], [BROW1, AXIS], ROLL, V_BROW),
     { from: [BROW1, AXIS], to: [MOUTH0 + 0.1, AXIS], dur: T_GONE - T_IN },
     ...HIDDEN,
-    fly(OUT, LAND, 0.11, 0.02),
-    fly(LAND, [LAND[0] + 0.05, 0], 0.04, 0.01),
-    ramp([LAND[0] + 0.05, 0], [1.5, 0], 2.2, ROLL),
+    // Out of the lip at the pace it ran down the neck, and down onto the deck.
+    fly(OUT, [1.5, 0], (1.5 - OUT[0]) / V_POUR, 0.004),
   ],
   fire: FIRE,
 }
@@ -151,8 +171,14 @@ export const bottle = definePiece<{ color: string }>({
     const { f, th } = poseAt(t)
     const sea = seaWater(theme)
 
+    // Water thrown up behind it, seen over its top and past its ends: at the brow's foot as the ball goes in, at the
+    // piling as the foot hits it, and as it comes back down.
+    splash(p, k, sea, weight, MOUTH0 + 0.06, WATER, over(t, T_IN + 0.02, T_IN + 0.45), 0.55)
+    splash(p, k, sea, weight, EAST - 0.05, WATER, over(since, 0, 0.4), 0.6)
+    splash(p, k, sea, weight, F2[0] + LEN / 2, WATER, over(t, T_AFLOAT - 0.02, T_AFLOAT + 0.5), 1.1)
+
     // The bottle, in front of the ball: one shape from the foot round the shoulder to the lip and back, with one
-    // line of light along the body. Opaque paper: nothing of what is inside is seen.
+    // line of light along the side that is uppermost. Opaque paper: nothing of what is inside is seen.
     p.push()
     p.translate(f[0] * k, f[1] * k)
     p.rotate(th)
@@ -173,33 +199,20 @@ export const bottle = definePiece<{ color: string }>({
     p.vertex(-0.05 * k, BW * k)
     p.quadraticVertex(0, BW * k, 0, (BW - 0.05) * k)
     p.endShape(p.CLOSE)
-    p.push()
-    p.stroke(bg)
-    p.strokeWeight(weight * 1.3)
-    p.strokeCap(p.ROUND)
-    p.line(-0.07 * k, -(BW - 0.06) * k, -(BODY - 0.04) * k, -(BW - 0.06) * k)
-    p.pop()
-    p.pop()
-
-    // The sea in front, and what the bottle does to it.
-    water(p, k, ink, bg, weight, -0.5, 1.5)
-    const way = t < T_GONE || t > FIRE ? 0 : 1.35 - 0.7 * over(t, T_GONE, FIRE)
-    if (way > 0.05) {
-      const mouth = onAxis(LEN, t)
+    // Stood on end there is no upper side, and no line.
+    const level = Math.cos(th)
+    if (Math.abs(level) > 0.4) {
+      const side = level > 0 ? -1 : 1
       p.push()
-      p.noFill()
-      p.stroke(sea)
-      p.strokeWeight(weight * 0.9)
-      for (let i = 0; i < 3; i++) {
-        const wx = mouth[0] - 0.06 - i * 0.12 * way
-        const w = (0.05 + 0.025 * i) * way
-        p.arc(wx * k, (WATER + 0.008) * k, w * 2 * k, 0.045 * k, Math.PI * 1.1, Math.PI * 1.9)
-      }
+      p.stroke(bg)
+      p.strokeWeight(weight * 1.3)
+      p.strokeCap(p.ROUND)
+      p.line(-0.07 * k, side * (BW - 0.06) * k, -(BODY - 0.04) * k, side * (BW - 0.06) * k)
       p.pop()
     }
-    // Water shoved up at the brow's foot as the ball goes in, at the piling as the foot hits it, and the splash as she comes back down.
-    splash(p, k, sea, weight, MOUTH0 + 0.06, WATER, over(t, T_IN + 0.02, T_IN + 0.45), 0.55)
-    splash(p, k, sea, weight, EAST - 0.05, WATER, over(since, 0, 0.4), 0.6)
-    splash(p, k, sea, weight, F2[0] + LEN / 2, WATER, over(t, T_AFLOAT - 0.02, T_AFLOAT + 0.5), 1.1)
+    p.pop()
+
+    // The sea in front.
+    water(p, k, ink, bg, weight, -0.5, 1.5)
   },
 })

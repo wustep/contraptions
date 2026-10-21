@@ -61,10 +61,9 @@ export const zipline = definePiece<{ color: string }>({
     p.line(-0.12 * k, 1.5 * k, 0.04 * k, 1.5 * k)
     p.line((END[0] + 0.12) * k, (END[1] - 0.06) * k, (END[0] + 0.12) * k, 1.5 * k)
     p.line((END[0] + 0.04) * k, 1.5 * k, (END[0] + 0.2) * k, 1.5 * k)
-    // The wire, with a little give under the trolley's weight.
-    const sag = 0.035 * Math.sin(Math.PI * Math.min(1, Math.max(0, (tx - TOP[0]) / (END[0] - TOP[0]))))
-    p.line((TOP[0] - 0.1) * k, TOP[1] * k, tx * k, (ty + sag) * k)
-    p.line(tx * k, (ty + sag) * k, (END[0] + 0.12) * k, END[1] * k)
+    // The wire, straight: the ball rides a straight line, and a wire that
+    // gave under the trolley dropped the cup away from the ball under it.
+    p.line((TOP[0] - 0.1) * k, TOP[1] * k, (END[0] + 0.12) * k, END[1] * k)
     // The brake on the top post: a bar across the wire, lifted at the fire.
     const lifted = t < ARRIVE ? 0 : since < 0 ? over(t, ARRIVE + 0.1, FIRE) : 1
     p.push()
@@ -78,9 +77,12 @@ export const zipline = definePiece<{ color: string }>({
     solid(p, ink, weight, s.color)
     p.rect((END[0] + 0.08 - hit * 0.01) * k, (END[1] + 0.08) * k, (0.06 + hit * 0.02) * k, 0.2 * k)
 
-    // The trolley: a wheel on the wire, a hanger, and the cup.
+    // The trolley: a wheel on the wire, a hanger, and the cup. The cup's
+    // floor is under the ball, level with the rails at both ends; it was a
+    // twelfth of a cell higher, inside the ball, so the ball sank through it.
+    const floor = HANG + R + 0.025
     p.push()
-    p.translate(tx * k, (ty + sag) * k)
+    p.translate(tx * k, ty * k)
     solid(p, ink, weight, bg)
     p.circle(0, -0.03 * k, 0.11 * k)
     p.push()
@@ -93,11 +95,22 @@ export const zipline = definePiece<{ color: string }>({
     outline(p, ink, weight)
     p.line(0, 0.02 * k, 0, (HANG - R - 0.06) * k)
     solid(p, ink, weight, s.color)
-    p.rect(0, (HANG + R * 0.6) * k, 0.3 * k, 0.05 * k)
+    p.rect(0, floor * k, 0.3 * k, 0.05 * k)
+    // The walls, and the bail they hang from: the bar under the hanger, its ends brought down to the walls' tops.
+    // The bar alone floated over the empty cup.
+    const bar = HANG - R - 0.06
+    const left = HANG - R * 0.5
+    const right = HANG - R * 0.1
     outline(p, ink, weight)
-    p.line(-0.15 * k, (HANG + R * 0.6) * k, -0.15 * k, (HANG - R * 0.5) * k)
-    p.line(0.15 * k, (HANG + R * 0.6) * k, 0.15 * k, (HANG - R * 0.1) * k)
-    p.line(-0.09 * k, (HANG - R - 0.06) * k, 0.09 * k, (HANG - R - 0.06) * k)
+    p.noFill()
+    p.beginShape()
+    p.vertex(-0.15 * k, floor * k)
+    p.vertex(-0.15 * k, left * k)
+    p.vertex(-0.09 * k, bar * k)
+    p.vertex(0.09 * k, bar * k)
+    p.vertex(0.15 * k, right * k)
+    p.vertex(0.15 * k, floor * k)
+    p.endShape()
     p.pop()
 
     // The hit: dust off the stop.

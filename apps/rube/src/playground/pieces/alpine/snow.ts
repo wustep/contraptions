@@ -106,14 +106,34 @@ export function fir(p: p5, k: number, ink: string, weight: number, color: string
   p.endShape(p.CLOSE)
 }
 
-/** A puff of powder at (x, y): lumps of white on short arcs, `f` from 0 (the instant) to 1 (gone). */
+/**
+ * Powder thrown up where something lands on the snow at (x, y): one low,
+ * wide body, a mound of three lobes outlined once like `puff`, flung out
+ * along the ground and settling flat into it, gone well before `f`, from
+ * 0 (the instant) to 1, runs out.
+ */
 export function powder(p: p5, k: number, ink: string, weight: number, white: string, x: number, y: number, f: number, size = 1): void {
   if (f <= 0 || f >= 1) return
-  const lumps: [number, number, number][] = [[-1, 0.9, 0.05], [-0.45, 1.3, 0.04], [0.35, 1.4, 0.045], [0.95, 0.85, 0.035]]
-  solid(p, ink, weight * 0.7, white)
-  for (const [dx, up, r] of lumps) {
-    const lx = x + dx * 0.16 * size * f
-    const ly = y - up * 0.16 * size * 4 * f * (1 - f)
-    p.circle(lx * k, ly * k, r * 2 * size * (1 - f * 0.6) * k)
-  }
+  const r = 0.07 * size
+  // Up at once, then sinking back flatter than it spreads.
+  const grown = f < 0.12 ? 0.6 + 0.4 * Math.sin((Math.PI / 2) * (f / 0.12)) : 1
+  const sink = f < 0.12 ? 1 : 1 - ((f - 0.12) / 0.88) ** 1.2
+  if (sink < 0.35) return
+  const out = (0.9 + 0.9 * f) * r
+  const lobes: [dx: number, w: number, h: number][] = [
+    [-out, 1.6 * r, 0.75 * r],
+    [0, 2.4 * r, 1.15 * r],
+    [out, 1.6 * r, 0.75 * r],
+  ]
+  const at = (dx: number, w: number, h: number, inset: number): [number, number, number, number] => [
+    (x + dx) * k,
+    (y - (h * grown * sink) / 2) * k,
+    Math.max(0, w * grown * k - inset),
+    Math.max(0, h * grown * sink * k - inset),
+  ]
+  solid(p, ink, weight * 0.8, white)
+  for (const [dx, w, h] of lobes) p.ellipse(...at(dx, w, h, 0))
+  p.noStroke()
+  p.fill(white)
+  for (const [dx, w, h] of lobes) p.ellipse(...at(dx, w, h, weight * 0.8))
 }

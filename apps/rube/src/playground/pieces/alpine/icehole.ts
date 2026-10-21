@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../../src/core/draw'
 import { easeInOutSine, easeOutQuad } from '../../../../../../src/core/ease'
 import { FLOOR, R, ROLL, definePiece, laneAt, mixHex, over, rail, ramp, roll, trace, wait, type Lane, type Pt } from '../../../parts'
-import { G, lob, spray } from './parts-e'
+import { G, lob } from './parts-e'
 import { iceBlue, snowWhite } from './snow'
 
 /**
@@ -9,11 +9,12 @@ import { iceBlue, snowWhite } from './snow'
  * floor deep under a sheet of ice, level with the track, with two holes cut
  * in it and a tip-up standing by the first, its flag arm cocked down over
  * the hole on a line. The ball rolls out over the ice and drops through the
- * first hole: a splash, the line is snatched, the flag springs up. It dives
- * under the ice, slowing, and fetches up nose to nose with a big fish lying
- * on the bed. The fish looks at it, turns round, and slaps it with its tail:
- * up through the second hole in a spout, over the hole's edge, and down
- * onto the ice beyond. The fish watches it go.
+ * first hole: the line is snatched and the flag springs up. It dives under
+ * the ice, slowing, and fetches up over the nose of a big fish lying on the
+ * bed. The fish looks up at it and turns round where it lies, which brings
+ * its tail under the ball; the tail cocks and slaps up into it: up through
+ * the second hole, over the hole's edge, and down onto the ice beyond. The
+ * fish watches it go.
  *
  * The fish is one drawing posed by a place, a turn and a tail; the ball's
  * dive is one curve run at a slowing pace, and its flight out of the hole
@@ -32,7 +33,7 @@ const FALL = 0.09
 const IN: Pt = [X_EDGE + ROLL * FALL, (G * FALL * FALL) / 2]
 /** The dive: a curve from there, under the ice, to the fish's nose. */
 const BEND: Pt = [0.0, 0.62]
-const DEEP: Pt = [0.42, 0.95]
+const DEEP: Pt = [0.42, 0.85]
 const DIVE = 0.55
 const HOVER = 0.32
 /** The slap: up through the middle of the second hole, losing way in the water. */
@@ -72,18 +73,28 @@ const LANE: Lane = (() => {
     fire: FIRE,
   }
 })()
-const T_OUT = FIRE + LANE.segs[LANE.segs.length - 4].dur
-
-/** The fish: where its middle is, how far round it has turned (1 facing the ball's way in, -1 facing on), and its tail's set. */
-const FISH_Y = 1.0
+/**
+ * The fish's middle. It lies with its nose under the ball where the dive
+ * ends, and turns round where it lies, so that its tail, level, has the top
+ * of its fan just under the ball: cocked down it is clear, and the slap
+ * meets the ball as the tail comes level.
+ */
+const FISH: Pt = [DEEP[0] + 0.32, DEEP[1] + R + 0.15]
 const NOSE = 0.27
-function fishAt(t: number): { x: number; turn: number; tail: number } {
+/** How far the tail is cocked, and how long the whip up from there takes. */
+const COCK = 0.65
+const WHIP = 0.06
+/** The fish: how far round it has turned (1 facing the ball's way in, -1 facing on), and its tail's set (up is positive). */
+function fishAt(t: number): { turn: number; tail: number } {
   const f = easeInOutSine(over(t, T_DEEP - 0.1, T_DEEP + 0.2))
-  // Lying nose to the ball as it comes; turned about, its tail is under the ball's back.
-  const x = DEEP[0] + R + 0.03 + NOSE - f * 0.16
-  const cock = over(t, T_DEEP + 0.16, FIRE - 0.07)
-  const tail = t < FIRE - 0.07 ? -0.65 * cock : t < FIRE ? -0.65 + 1.5 * over(t, FIRE - 0.07, FIRE) : 0.85 * Math.exp(-(t - FIRE) * 5) * Math.cos((t - FIRE) * 9) + 0.12 * Math.sin(t * 2.3)
-  return { x, turn: Math.cos(Math.PI * f), tail: t < T_DEEP - 0.1 ? 0.12 * Math.sin(t * 2.3) : tail }
+  const idle = 0.12 * Math.sin(t * 2.3)
+  const s = t - FIRE
+  let tail: number
+  // Idling it sways; turning, it cocks; the whip gathers pace to the ball; through it, it swings on up at the same pace and settles.
+  if (s < -WHIP) tail = idle * (1 - over(t, T_DEEP - 0.1, T_DEEP + 0.16)) - COCK * easeInOutSine(over(t, T_DEEP + 0.16, FIRE - WHIP))
+  else if (s < 0) tail = -COCK * (1 - ((s + WHIP) / WHIP) ** 2)
+  else tail = ((2 * COCK) / (WHIP * 12)) * Math.exp(-s * 5) * Math.sin(s * 12) + idle * over(s, 0.3, 1)
+  return { turn: Math.cos(Math.PI * f), tail }
 }
 
 export const icehole = definePiece<{ color: string; water: string }>({
@@ -122,7 +133,7 @@ export const icehole = definePiece<{ color: string; water: string }>({
     // The fish, on the bed: a body, a tail that sets and slaps, and an eye that follows the ball.
     const fish = fishAt(t)
     p.push()
-    p.translate(fish.x * k, FISH_Y * k)
+    p.translate(FISH[0] * k, FISH[1] * k)
     p.scale(Math.abs(fish.turn) < 0.08 ? 0.08 * Math.sign(fish.turn || 1) : fish.turn, 1)
     solid(p, ink, weight, s.color)
     p.push()
@@ -146,8 +157,8 @@ export const icehole = definePiece<{ color: string; water: string }>({
     p.circle(eye[0] * k, eye[1] * k, 0.075 * k)
     // The pupil leans toward the ball, in the fish's own hand.
     const hand = fish.turn < 0 ? -1 : 1
-    const dx = (here.x - (fish.x + hand * eye[0])) * hand
-    const dy = here.y - (FISH_Y + eye[1])
+    const dx = (here.x - (FISH[0] + hand * eye[0])) * hand
+    const dy = here.y - (FISH[1] + eye[1])
     const far = Math.hypot(dx, dy) || 1
     p.noStroke()
     p.fill(ink)
@@ -184,9 +195,5 @@ export const icehole = definePiece<{ color: string; water: string }>({
     solid(p, ink, weight * 0.8, s.color)
     p.triangle(-0.22 * k, 0, -0.1 * k, 0, -0.16 * k, -0.11 * k)
     p.pop()
-
-    // A splash going in, and a spout coming out.
-    spray(p, k, s.water, IN[0], SURFACE, over(t, T_IN, T_IN + 0.4), 1)
-    spray(p, k, s.water, OUT[0], SURFACE, over(t, T_OUT, T_OUT + 0.5), 1.5)
   },
 })

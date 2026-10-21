@@ -12,7 +12,7 @@ import { DEREK, HANSEL, HANSEL_ID, MUGATU, MUGATU_ID, PM, PM_ID, WORLDS, type Wo
  * entry cell the score chooses. Between two legs is a cut: the place changes at once, and so does the ball's place in
  * cells, since each place has its own ground. But the camera moves by exactly the same amount at the same instant
  * (`score.ts`), so on the screen the ball holds still while everything round it becomes somewhere else: a match cut
- * on Derek, three of them inside a press camera's flash.
+ * on Derek, each inside a dissolve (`dissolve.ts`).
  */
 
 export interface Leg {

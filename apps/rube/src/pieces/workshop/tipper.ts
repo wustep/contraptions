@@ -1,5 +1,5 @@
 import { outline, solid } from '../../../../../src/core/draw'
-import { easeInQuad, easeInOutSine, easeOutCubic } from '../../../../../src/core/ease'
+import { easeInQuad, easeInOutSine } from '../../../../../src/core/ease'
 import { FAST, FLOOR, R, ROLL, arcPts, arrive, arriveAt, burst, catchBend, chain, definePiece, over, rail, ramp, trace, type Lane, type Pt, type Seg } from '../../parts'
 
 /**
@@ -113,9 +113,9 @@ export const tipper = definePiece<{ color: string }>({
     solid(p, ink, weight, bg)
     p.circle(HEEL[0] * k, HEEL[1] * k, 0.05 * k)
 
-    // The clack.
-    if (since > TIP && since < TIP + 0.25) {
-      const f = easeOutCubic(over(since, TIP, TIP + 0.25))
+    // The clack: out and gone in 0.2 s, not eased to hang at its widest.
+    if (since > TIP && since < TIP + 0.2) {
+      const f = over(since, TIP, TIP + 0.2)
       p.push()
       p.stroke(s.color)
       p.strokeWeight(weight)

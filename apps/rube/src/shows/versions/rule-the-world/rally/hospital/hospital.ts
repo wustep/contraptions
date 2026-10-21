@@ -8,8 +8,8 @@ import { AT_GLASS, babyAt, HOSPITAL_STRIKES, hospitalWay, LIFT, martyAt, NUDGE, 
 
 /**
  * The ward (202.391 → 266, bar 95 to the end). On "All for freedom and for pleasure" he is at rest on the foot of
- * Rachel's bed in the grey of dawn; he rolls up the blanket to her, and they rest together on her pillow, a small warm
- * glow between them (he tells her, for the first time, that he loves her). She nudges him: go. He rolls back down the
+ * Rachel's bed in the grey of dawn; he rolls up the blanket to her, and they rest together on her pillow and lean in
+ * (he tells her, for the first time, that he loves her). She nudges him: go. He rolls back down the
  * bed, springs off its foot, and hops out of the ward's door and down the corridor's checkerboard on the beats, onto the
  * bench, onto the nursery's sill; and on the last "Everybody wants to rule the world" the blind goes up and there is his
  * son, in the front row's first bassinet. Through the guitar and the fade he stays at the glass, trembling on the beats
@@ -17,7 +17,9 @@ import { AT_GLASS, babyAt, HOSPITAL_STRIKES, hospitalWay, LIFT, martyAt, NUDGE, 
  * back to a still picture of the corridor's window, the wall above it pale and quiet for the credits, the morning
  * warming to gold until the end.
  *
- * See `geo.ts` for the clock and the ground, `draw.ts` for the drawing.
+ * See `geo.ts` for the clock and the ground, `draw.ts` for the drawing; `dawn.ts` for the morning's colour (grey-blue,
+ * rose, then gold once the sun clears the roofs), `outside.ts` for the city waking through the windows, `light.ts` for
+ * the shafts, the patches on the floor and the dust in them, and `props.ts` for the small life and the foreground.
  */
 
 export const HOSPITAL_AT: Pt = [0, 0]
@@ -84,8 +86,8 @@ export const nursery = part<WardState>(
 function shots(): PartShot[] {
   const hold = (t: number, cells: number, h: Pt): PartShot => ({ t, cells, hold: h, w: 1 })
   return [
-    hold(at(96, 1), 3.15, [0.25, -0.45]),
-    hold(at(97, 2), 2.95, [0.25, -0.4]),
+    hold(at(96, 1), 3.15, [0.45, -0.45]),
+    hold(at(97, 2), 2.95, [0.5, -0.4]),
     hold(at(98, 1), 3.45, [-1.6, -0.4]),
     hold(at(98, 2), 3.8, [-2.3, 0.15]),
     hold(at(98, 4), 4.0, [-5.4, 0.2]),
@@ -93,7 +95,7 @@ function shots(): PartShot[] {
     hold(at(101, 1), 3.8, [-8.6, -0.62]),
     hold(at(102, 3), 3.55, [-9.35, -0.72]),
     hold(at(103, 2), 3.55, [-9.3, -0.72]),
-    hold(at(104, 1), 3.55, [-8.65, -0.66]),
+    hold(at(104, 1), 3.55, [-8.85, -0.66]),
     hold(LIFT, 3.7, [-8.55, -0.68]),
     hold(at(106, 1), 3.6, [-8.35, -0.62]),
     hold(at(107, 2), 4.0, [-8.45, -0.85]),

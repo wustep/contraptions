@@ -108,8 +108,8 @@ function fillWindow(pen: Pen, t: number, look: WasherLook): void {
 }
 
 /**
- * The window's glow in the dark room, over the light map: the glass lit from within, and a soft bloom round the rim.
- * Only as much as the room is dark (with the tubes on it is just a lit drum).
+ * The window's glow in the dark room, over the light map: the glass lit from within, kept to the glass (its light on
+ * the room is the light map's pool). Only as much as the room is dark (with the tubes on it is just a lit drum).
  */
 export function drawWindowGlow(pen: Pen, t: number, dark: number): void {
   const { p, k } = pen
@@ -124,12 +124,13 @@ export function drawWindowGlow(pen: Pen, t: number, dark: number): void {
   drawLives(ctx, k, cx, cy, r, col, dark, t)
   const inner = 1 - 0.6 * livesShown(t) * dark
   ctx.save()
-  const g = ctx.createRadialGradient(cx * k, cy * k, r * 0.2 * k, cx * k, cy * k, (r + 0.5) * k)
+  const g = ctx.createRadialGradient(cx * k, cy * k, r * 0.2 * k, cx * k, cy * k, r * k)
   g.addColorStop(0, rgba(p, col, 0.55 * a * inner))
-  g.addColorStop(r / (r + 0.5), rgba(p, col, 0.32 * a))
-  g.addColorStop(1, rgba(p, col, 0))
+  g.addColorStop(1, rgba(p, col, 0.32 * a))
   ctx.fillStyle = g
-  ctx.fillRect((cx - r - 0.5) * k, (cy - r - 0.5) * k, 2 * (r + 0.5) * k, 2 * (r + 0.5) * k)
+  ctx.beginPath()
+  ctx.arc(cx * k, cy * k, r * k, 0, Math.PI * 2)
+  ctx.fill()
   ctx.restore()
 }
 
@@ -436,16 +437,10 @@ export function fireworks(p: p5, k: number, t: number): void {
       p.circle(b.x * k, y * k, 0.05 * k)
       continue
     }
-    // Its light on the whole street for a moment, and the bloom where it burst.
-    const bloom = Math.exp(-u / 0.14)
+    // Its light on the whole street for a moment (no bloom where it burst: the sparks are the burst).
     p.noStroke()
-    p.fill(alpha(p, col, 0.32 * bloom))
+    p.fill(alpha(p, col, 0.32 * Math.exp(-u / 0.14)))
     p.rect(-6.4 * k, -2.2 * k, 4 * k, 5 * k)
-    const g = ctx.createRadialGradient(b.x * k, b.y * k, 0, b.x * k, b.y * k, b.r * 2 * k)
-    g.addColorStop(0, rgba(p, col, 0.55 * bloom))
-    g.addColorStop(1, rgba(p, col, 0))
-    ctx.fillStyle = g
-    ctx.fillRect((b.x - b.r * 2) * k, (b.y - b.r * 2) * k, b.r * 4 * k, b.r * 4 * k)
     // The sparks: out fast, slowing, falling, fading, each with a short tail; a ring of them, and a few inside.
     const n = 34
     const fade = clamp(1 - u / 2.5) ** 1.6

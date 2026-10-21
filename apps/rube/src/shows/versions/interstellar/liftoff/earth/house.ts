@@ -5,6 +5,7 @@ import { FLOOR, R, laneAt, mixHex, type Lane, type Pt } from '../../../../../par
 import { alpha, box, carried, hash, knock, lastOf, part, route, scenery, smooth, type Ctx, type Way } from '../kit'
 import { dropTime, G_EARTH, hop } from '../physics'
 import { DUST, MURPH_SMALL, MURPH_YOUNG } from '../worlds'
+import { dayAt } from './light'
 import { drawWatch, WATCH_ON_SHELF } from './watch'
 import { BED } from '../act2/station'
 
@@ -30,7 +31,7 @@ const MID_X = (WALL_L + WALL_R) / 2
 /** The stairwell's edge in the upstairs floor, and where the last step meets the ground floor. */
 const WELL_L = 4.9
 const WELL_R = 6.4
-const WINDOW = { x0: 2.95, x1: 3.8, y0: -3.38, y1: -2.5 }
+export const WINDOW = { x0: 2.95, x1: 3.8, y0: -3.38, y1: -2.5 }
 const DOOR_TOP = -1.02
 
 /* ------------------------------------------------------------------ the kitchen */
@@ -136,22 +137,25 @@ export const house = scenery<null>({
     p.strokeWeight(Math.max(1, k * 0.012))
     for (let x = WALL_L + 0.2; x < WELL_L; x += 0.22) p.line(X(x), X(EAVE + 0.05), X(x), X(UP - 0.02))
 
-    // The window over the room, and the light it lets in.
-    solid(p, ink, weight, DUST.light)
+    // The window over the room, the morning outside it, and the light it lets in.
+    windowView(p, c)
+    p.noFill()
+    outline(p, ink, weight)
     p.rect(X((WINDOW.x0 + WINDOW.x1) / 2), X((WINDOW.y0 + WINDOW.y1) / 2), X(WINDOW.x1 - WINDOW.x0), X(WINDOW.y1 - WINDOW.y0))
     outline(p, ink, weight * 0.8)
     p.line(X((WINDOW.x0 + WINDOW.x1) / 2), X(WINDOW.y0), X((WINDOW.x0 + WINDOW.x1) / 2), X(WINDOW.y1))
     p.line(X(WINDOW.x0), X((WINDOW.y0 + WINDOW.y1) / 2), X(WINDOW.x1), X((WINDOW.y0 + WINDOW.y1) / 2))
-    // Curtains, tied back.
+    // Curtains, tied back, stirring in the draught from the sash: their hems move, their heads do not.
     solid(p, ink, weight * 0.8, DUST.teal)
     for (const side of [-1, 1]) {
       const x = side < 0 ? WINDOW.x0 : WINDOW.x1
+      const stir = 0.022 * Math.sin(c.t * 0.9 + side * 1.3) + 0.01 * Math.sin(c.t * 2.3 + side)
       p.beginShape()
       p.vertex(X(x - side * 0.02), X(WINDOW.y0 - 0.1))
       p.vertex(X(x + side * 0.16), X(WINDOW.y0 - 0.1))
-      p.vertex(X(x + side * 0.04), X(WINDOW.y1 - 0.25))
-      p.vertex(X(x + side * 0.1), X(WINDOW.y1 + 0.08))
-      p.vertex(X(x - side * 0.02), X(WINDOW.y1 + 0.08))
+      p.vertex(X(x + side * 0.04 + stir * 0.4), X(WINDOW.y1 - 0.25))
+      p.vertex(X(x + side * 0.1 + stir), X(WINDOW.y1 + 0.08))
+      p.vertex(X(x - side * 0.02 + stir * 0.8), X(WINDOW.y1 + 0.08))
       p.endShape(p.CLOSE)
     }
     outline(p, ink, weight)
@@ -160,6 +164,7 @@ export const house = scenery<null>({
     solid(p, ink, weight, DUST.wood)
     p.rect(X((WINDOW.x0 + WINDOW.x1) / 2), X(WINDOW.y1 + 0.03), X(WINDOW.x1 - WINDOW.x0 + 0.16), X(0.06))
     lightShaft(p, k, c.t)
+    modelPlane(p, c)
 
     // Murph's bed under the window (the one the station's museum rebuilds).
     farmBed(p, c, c.t)
@@ -238,6 +243,110 @@ export const house = scenery<null>({
     p.rect(X((cx0 + cx1) / 2), X(PEAK - 0.38), X(cx1 - cx0 + 0.08), X(0.07))
   },
 })
+
+/**
+ * What Murph's window looks out on: the sky as the day has it (`light.ts`), pale as a lit window is from a dim room;
+ * the sun coming up low on the left, the far corn, a neighbour's windmill turning, the fence posts along the road, and
+ * dust going by. In the window's own cells, clipped to its glass.
+ */
+function windowView(p: p5, c: Ctx): void {
+  const { k, t, ink, weight } = c
+  const X = (x: number) => x * k
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const day = dayAt(t)
+  const { x0, x1, y0, y1 } = WINDOW
+  const hy = y0 + (y1 - y0) * 0.66
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(X(x0), X(y0), X(x1 - x0), X(y1 - y0))
+  ctx.clip()
+  const g = ctx.createLinearGradient(0, X(y0), 0, X(hy))
+  g.addColorStop(0, mixHex(day.top, DUST.light, 0.5))
+  g.addColorStop(1, mixHex(day.low, DUST.light, 0.4))
+  ctx.fillStyle = g
+  ctx.fillRect(X(x0), X(y0), X(x1 - x0), X(hy - y0 + 0.01))
+  // The sun, coming up over the far corn on the left as the dawn does.
+  const rise = smooth(t, 1, 16)
+  p.noStroke()
+  p.fill(alpha(p, '#FFFBEF', 0.3 + 0.6 * rise))
+  p.circle(X(x0 + 0.2), X(hy + 0.06 - 0.24 * rise), X(0.12))
+  // The land, the far corn's line along it, and the dust wall low on the right.
+  p.fill(mixHex(day.land[1], DUST.light, 0.45))
+  p.rect(X((x0 + x1) / 2), X((hy + y1) / 2), X(x1 - x0), X(y1 - hy))
+  p.fill(mixHex(day.land[2], DUST.light, 0.3))
+  p.rect(X((x0 + x1) / 2), X(hy + 0.035), X(x1 - x0), X(0.03))
+  const far = mixHex(ink, DUST.light, 0.6)
+  p.stroke(alpha(p, far, 0.9))
+  p.strokeWeight(Math.max(0.6, weight * 0.4))
+  for (let x = x0 + 0.02; x < x1; x += 0.035) p.line(X(x), X(hy + 0.005), X(x), X(hy - 0.012 - 0.008 * Math.sin(x * 40)))
+  // A neighbour's windmill, turning in the morning air.
+  const mx = x1 - 0.2
+  const hub = hy - 0.17
+  p.line(X(mx - 0.03), X(hy), X(mx), X(hub))
+  p.line(X(mx + 0.03), X(hy), X(mx), X(hub))
+  const turn = t * 1.7
+  for (let j = 0; j < 8; j++) {
+    const a = turn + (j * Math.PI) / 4
+    p.line(X(mx), X(hub), X(mx + 0.05 * Math.cos(a)), X(hub + 0.05 * Math.sin(a)))
+  }
+  p.line(X(mx), X(hub), X(mx + 0.08), X(hub + 0.004))
+  // Fence posts along the road, and the wire.
+  for (let j = 0; j < 4; j++) {
+    const x = x0 + 0.08 + j * 0.24
+    p.line(X(x), X(y1 - 0.05), X(x), X(y1 - 0.14))
+  }
+  p.line(X(x0), X(y1 - 0.12), X(x1), X(y1 - 0.11))
+  // Dust going by on the air, a mote or two across the glass.
+  p.noStroke()
+  for (let j = 0; j < 5; j++) {
+    const u = (hash(j, 91) + t * (0.05 + 0.03 * hash(j, 92))) % 1
+    p.fill(alpha(p, DUST.wood, 0.35 * Math.sin(Math.PI * u)))
+    p.ellipse(X(x0 + (x1 - x0) * u), X(y0 + 0.1 + (hy - y0) * hash(j, 93)), X(0.03), X(0.008))
+  }
+  ctx.restore()
+}
+
+/**
+ * Cooper's model plane, hung from the ceiling on a thread between the bookcase and the window: a little high-wing
+ * monoplane turning slowly one way and back as the thread twists, foreshortened as it turns, with its shadow thrown
+ * on the wall by the window's light.
+ */
+function modelPlane(p: p5, c: Ctx): void {
+  const { k, t, ink, weight } = c
+  const X = (x: number) => x * k
+  const hx = 2.47
+  const top = EAVE + 0.12
+  const turn = 1.1 * Math.sin(t * 0.33 + 0.4) + 0.25 * Math.sin(t * 0.81)
+  const along = Math.cos(turn)
+  const across = Math.sin(turn)
+  const cy = -3.3 + 0.008 * Math.sin(t * 1.4)
+  const body = 0.08 + 0.26 * Math.abs(along)
+  const span = 0.06 + 0.34 * Math.abs(across)
+  const nose = Math.sign(along) || 1
+  // Its shadow on the wall, down and away from the window.
+  const lit = smooth(t, 1.5, 6)
+  p.noStroke()
+  p.fill(alpha(p, ink, 0.1 * lit))
+  p.ellipse(X(hx + 0.1), X(cy + 0.07), X(body + 0.02), X(0.05))
+  p.rect(X(hx + 0.1), X(cy + 0.06), X(span), X(0.02))
+  // The thread.
+  outline(p, ink, Math.max(0.6, weight * 0.35))
+  p.line(X(hx), X(top), X(hx), X(cy - 0.04))
+  solid(p, ink, weight * 0.6, DUST.wood)
+  p.rect(X(hx), X(top + 0.015), X(0.05), X(0.03))
+  // Tail fin, at the back.
+  solid(p, ink, weight * 0.5, DUST.rust)
+  const tail = hx - nose * body * 0.5
+  p.triangle(X(tail), X(cy - 0.015), X(tail + nose * 0.05 * Math.abs(along) + nose * 0.01), X(cy - 0.015), X(tail), X(cy - 0.09))
+  // The fuselage, the wing across it, and the prop's spinner at the nose.
+  solid(p, ink, weight * 0.6, DUST.rust)
+  p.ellipse(X(hx), X(cy), X(body), X(0.055))
+  solid(p, ink, weight * 0.5, DUST.bone)
+  p.rect(X(hx + nose * 0.02 * Math.abs(along)), X(cy - 0.035), X(span), X(0.022), X(0.01))
+  outline(p, ink, Math.max(0.6, weight * 0.45))
+  const px = hx + nose * body * 0.5
+  p.line(X(px), X(cy - 0.045 * (0.4 + 0.6 * Math.abs(across))), X(px), X(cy + 0.045 * (0.4 + 0.6 * Math.abs(across))))
+}
 
 /** Light from Murph's window: drawn over the room, under everything in it. */
 function lightShaft(p: p5, k: number, t: number): void {

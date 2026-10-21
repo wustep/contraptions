@@ -49,7 +49,8 @@ export interface World {
    * Set on a world the Playground stages: one waiting to be let into the
    * loop, or a stock world's name over the pieces waiting to join it. Like a
    * build it stands beside the loop and is shown by its `own`; this is what
-   * the sheet says of where it stands.
+   * the sheet says of it: how many of a stock world's waiting pieces are new
+   * and how many came back, or that a world is not in the loop yet.
    */
   staged?: string
 }

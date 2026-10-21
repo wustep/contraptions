@@ -119,15 +119,9 @@ export const lock = definePiece<{ color: string; sea: string }>({
     solid(p, ink, weight, bg)
     p.rect(((QUAY + 1.5) / 2) * k, 0, (1.5 - QUAY) * k, 1 * k)
     p.rect((QUAY + 0.04) * k, ((-0.5 - 1 + FLOOR) / 2) * k, 0.08 * k, (0.5 - FLOOR) * k)
+    // The gauge: the low level, half way, and a floor up.
     outline(p, ink, weight * 0.6)
-    for (const [bx, by] of [
-      [1.08, 0.38],
-      [1.36, 0.22],
-      [1.4, -0.3],
-      [1.1, -0.12],
-      [1.32, -0.06],
-    ]) p.line((bx - 0.05) * k, by * k, (bx + 0.05) * k, by * k)
-    for (let i = 0; i <= 5; i++) p.line(QUAY * k, (FLOOR + FREEBOARD - i * 0.2) * k, (QUAY + (i % 5 === 0 ? 0.06 : 0.035)) * k, (FLOOR + FREEBOARD - i * 0.2) * k)
+    for (const f of [0, 0.5, 1]) p.line(QUAY * k, (FLOOR + FREEBOARD - f) * k, (QUAY + (f === 0.5 ? 0.035 : 0.06)) * k, (FLOOR + FREEBOARD - f) * k)
     // The culvert: down from the plug in the pound's bed and out through the chamber's face; it runs the water's colour while it flows.
     const PIPE_X = 1.22
     const PIPE_Y = 0.24
@@ -217,17 +211,6 @@ export const lock = definePiece<{ color: string; sea: string }>({
     }
     p.vertex(QUAY * k, 0.5 * k)
     p.endShape(p.CLOSE)
-    // A mark or two under the surface that come up with it, in the paper's colour.
-    p.stroke(bg)
-    p.strokeWeight(weight * 0.8)
-    for (const [mx, my] of [
-      [0.1, 0.34],
-      [0.62, 0.55],
-      [0.3, 0.8],
-    ]) {
-      if (level + my > 0.45) continue
-      p.line((mx - 0.06) * k, (level + my) * k, (mx + 0.06) * k, (level + my) * k)
-    }
     p.pop()
     outline(p, ink, weight)
     p.line(wall * k, 0.5 * k, QUAY * k, 0.5 * k)
@@ -267,15 +250,5 @@ export const lock = definePiece<{ color: string; sea: string }>({
     p.line((GATE_X - 0.08) * k, (FLOOR - GATE_H - GATE_UP - 0.08) * k, (GATE_X + 0.08) * k, (FLOOR - GATE_H - GATE_UP - 0.08) * k)
     solid(p, ink, weight, s.color)
     p.rect(GATE_X * k, (top + GATE_H / 2) * k, 0.06 * k, GATE_H * k, 0.008 * k)
-    // The thud as it lands.
-    const thud = t - T_TRIP - GATE_T
-    if (thud > 0 && thud < 0.2) {
-      const f = thud / 0.2
-      p.push()
-      p.stroke(ink)
-      p.strokeWeight(weight * (1 - f))
-      for (const side of [-1, 1]) p.line((GATE_X + side * (0.09 + 0.06 * f)) * k, (FLOOR - 0.03) * k, (GATE_X + side * (0.14 + 0.08 * f)) * k, (FLOOR - 0.07 - 0.03 * f) * k)
-      p.pop()
-    }
   },
 })

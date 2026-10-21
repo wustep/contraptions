@@ -394,13 +394,10 @@ export const morning = part<{ begin: number }>(
       // The knocks shake the dust of years off the lintel.
       for (const [at, n] of [[MT.knock, 4], [MT.knock2, 3]] as const) knockDust(p, k, T, at, n, dx, dy - 2.1)
       if (T > MT.green && T < MT.latch + 0.2 && open < 0.05) doorLeak(p, k, W, dx, dy, FLOWERS.yellow, Math.min(1, (T - MT.green) / 0.8))
-      // The bellows' breath, and the sparks off the fire.
+      // The bellows' breath, and the sparks it blows off the fire (only the bellows: his own flares are his size).
       for (const at of MT.puffs) gust(p, k, T, at, [BELLOWS.tip, ROOM_AT.ground - 0.09])
-      sparks(p, k, T, MT.in, 5, 0.6)
-      sparks(p, k, T, MT.flare, 9, 1.2)
       for (const at of MT.puffs) sparks(p, k, T, at, 4, 0.8)
       sparks(p, k, T, MT.roar, 16, 1.8)
-      sparks(p, k, T, MT.howlFlare, 8, 1.2)
       // Calcifer on his log: bowing under the pan, he squashes. While the pan is on him his flames go up round its
       // sides, never through it: he is drawn clipped out of the column over the pan, and two licks curl up at its rim.
       const cal = calciferAt(T)

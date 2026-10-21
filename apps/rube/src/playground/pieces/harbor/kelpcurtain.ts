@@ -7,8 +7,8 @@ import { bodyColor, piling, seabed, water } from '../../../pieces/harbor/sea'
 /**
  * A kelp curtain. Two spars stand behind the pier with a line strung
  * between their heads, and the morning's kelp is hung over it to dry like
- * washing, ten long wet blades side by side with floats at their necks,
- * down to just short of the planks. The deck runs straight through under
+ * washing, ten long wet blades side by side, down to just short of the
+ * planks. The deck runs straight through under
  * them. The ball rolls in and noses into the curtain. Each blade it meets
  * is pushed forward and lifted, lies down the ball's front like a bib, is
  * dragged back over its crown as the ball goes under, rides down its back
@@ -71,12 +71,10 @@ interface Blade {
   r: number
   /** How far past it the ball is, about, when the blade can no longer reach it. */
   out: number
-  /** Nearer than the ball or beyond it, and whether it has a float at its neck. */
+  /** Nearer than the ball or beyond it. */
   front: boolean
-  float: boolean
-  /** How fast it swings, and where along it the ruffle of its edges starts. */
+  /** How fast it swings. */
   omega: number
-  ruffle: number
   /** When the ball first touches it, when it falls clear of the ball, and the angle and the swing it has then. */
   tTouch: number
   tFree: number
@@ -97,9 +95,7 @@ const blades: Blade[] = Array.from({ length: BLADES }, (_, i) => {
     r,
     out: Math.sqrt((len + r) ** 2 - restAt(x) ** 2),
     front: i % 2 === 1,
-    float: i % 3 !== 1,
     omega: Math.sqrt((1.5 * G) / len) * (1.06 - 0.12 * hash(i, 2)),
-    ruffle: hash(i, 3) * 6.28,
     tTouch: 0,
     tFree: 0,
     a0: 0,
@@ -232,14 +228,13 @@ function spine(b: Blade, t: number): Pt[] {
   return pts
 }
 
-/** Half a blade's width, `f` of the way down it: a neck, a long leathery strap, a tapered tip, and a ruffle along each edge. */
-function halfWidth(b: Blade, f: number, side: number): number {
+/** Half a blade's width, `f` of the way down it: a neck, a long leathery strap, and a tapered tip. Its edges are smooth: a ruffle along them was a scribble at the show's size. */
+function halfWidth(b: Blade, f: number): number {
   const strap = b.hw * (0.3 + 0.7 * smooth(f, NECK, NECK + 0.14)) * (1 - 0.3 * smooth(f, 0.45, 1))
-  const tip = 1 - over(f, 0.8, 1) ** 2
-  return strap * tip * (1 + 0.14 * Math.sin(f * 20 + b.ruffle + side * 1.9))
+  return strap * (1 - over(f, 0.8, 1) ** 2)
 }
 
-/** One blade: its stipe over the line and a finger down the far side, the strap, and the float at its neck if it has one. */
+/** One blade: its stipe down from the line, and the strap. */
 function blade(p: p5, k: number, ink: string, weight: number, fill: string, b: Blade, t: number): void {
   const pts = spine(b, t)
   const neck = Math.round(NECK * M)
@@ -251,25 +246,15 @@ function blade(p: p5, k: number, ink: string, weight: number, fill: string, b: B
     const l = Math.hypot(bx - ax, by - ay) || 1
     const nx = (by - ay) / l
     const ny = -(bx - ax) / l
-    near.push([pts[j][0] - nx * halfWidth(b, j / M, -1), pts[j][1] - ny * halfWidth(b, j / M, -1)])
-    far.unshift([pts[j][0] + nx * halfWidth(b, j / M, 1), pts[j][1] + ny * halfWidth(b, j / M, 1)])
+    near.push([pts[j][0] - nx * halfWidth(b, j / M), pts[j][1] - ny * halfWidth(b, j / M)])
+    far.unshift([pts[j][0] + nx * halfWidth(b, j / M), pts[j][1] + ny * halfWidth(b, j / M)])
   }
-  const [x0, y0] = pts[0]
   outline(p, ink, weight * 0.8)
-  p.line((x0 + 0.014) * k, (y0 + 0.035) * k, (x0 + 0.014) * k, (y0 - 0.006) * k)
-  p.line((x0 + 0.014) * k, (y0 - 0.006) * k, x0 * k, (y0 - 0.006) * k)
-  p.line(x0 * k, (y0 - 0.006) * k, pts[neck][0] * k, pts[neck][1] * k)
+  p.line(pts[0][0] * k, pts[0][1] * k, pts[neck][0] * k, pts[neck][1] * k)
   solid(p, ink, weight * 0.6, fill)
   p.beginShape()
   for (const [x, y] of [...near, ...far]) p.vertex(x * k, y * k)
   p.endShape(p.CLOSE)
-  if (!b.float) return
-  // The float: a pear of a bladder where the stipe becomes the blade, lying along it.
-  p.push()
-  p.translate(pts[neck][0] * k, pts[neck][1] * k)
-  p.rotate(Math.atan2(pts[neck + 1][1] - pts[neck][1], pts[neck + 1][0] - pts[neck][0]))
-  p.ellipse(0, 0, 0.075 * k, 0.05 * k)
-  p.pop()
 }
 
 /** The piece's moment is the ball at its slowest, deepest in with the most kelp on it. */

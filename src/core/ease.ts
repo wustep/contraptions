@@ -9,9 +9,6 @@ export const clamp = (v: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v)
  */
 export const seg = (u: number, a: number, b: number) => clamp((u - a) / (b - a))
 
-/** True while `u` sits inside [a, b). */
-export const inSeg = (u: number, a: number, b: number) => u >= a && u < b
-
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 
 export const easeInOutSine = (x: number) => -(Math.cos(Math.PI * x) - 1) / 2
@@ -43,9 +40,6 @@ export const easeOutBounce = (x: number) => {
 
 /** 0 -> 1 -> 0 over the unit interval, with sine easing. Handy for breathing motions. */
 export const pingPong = (x: number) => (1 - Math.cos(x * Math.PI * 2)) / 2
-
-/** Quantize `u` into `steps` discrete positions, for ratchet-like motion. */
-export const step = (u: number, steps: number) => Math.floor(u * steps) / steps
 
 /**
  * Discrete steps with an eased transition inside each step.

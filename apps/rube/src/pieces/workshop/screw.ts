@@ -72,10 +72,15 @@ export const screw = definePiece<{ color: string }>({
     p.push()
     p.stroke(s.color)
     p.strokeWeight(weight)
+    // Each turn of the thread is cut off by the tube's ends rather than
+    // appearing and vanishing whole there, one every few frames at each end
+    // while the screw turned.
     for (let i = -1; i < len / PITCH + 1; i++) {
       const at = (((i * PITCH + run) % (len + PITCH)) + len + PITCH) % (len + PITCH) - PITCH / 2
-      if (at < 0.02 || at > len - 0.02) continue
-      p.line((at - 0.05) * k, -BORE * 0.8 * k, (at + 0.05) * k, BORE * 0.8 * k)
+      const u0 = Math.max(0, (0.02 - (at - 0.05)) / 0.1)
+      const u1 = Math.min(1, (len - 0.02 - (at - 0.05)) / 0.1)
+      if (u1 - u0 < 0.05) continue
+      p.line((at - 0.05 + 0.1 * u0) * k, BORE * 0.8 * (2 * u0 - 1) * k, (at - 0.05 + 0.1 * u1) * k, BORE * 0.8 * (2 * u1 - 1) * k)
     }
     p.pop()
     p.pop()

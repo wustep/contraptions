@@ -189,9 +189,8 @@ export const credits = scenery<null>({
           px = gx + (ex - gx) * b
           py = gy + (ey - gy) * b
         }
-        // Brightest as they arrive; they settle to a glimmer under the words, and go out as they leave.
-        const twinkle = 0.7 + 0.3 * Math.sin(t * (2 + hash(j, seed, 11) * 3) + j)
-        const glim = (0.35 + 0.65 * a) * (1 - 0.55 * light) * (1 - b) * twinkle
+        // Brightest as they arrive; they settle to a steady glimmer under the words (no twinkle), and go out as they leave.
+        const glim = (0.35 + 0.65 * a) * (1 - 0.55 * light) * (1 - b)
         if (glim < 0.02) continue
         ctx.fillStyle = star(glim)
         ctx.beginPath()

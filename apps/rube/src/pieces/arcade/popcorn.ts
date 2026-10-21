@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine, easeOutCubic } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, definePiece, fly, mixHex, over, post, rail, ramp, roll, wait, type Lane, type Pt } from '../../parts'
-import { glow, score, tube } from './neon'
+import { score, tube } from './neon'
 
 /**
  * A popcorn cart. A glass case with an open top stands on a cart on two
@@ -431,8 +431,6 @@ export const popcorn = definePiece<PopcornState>({
     const under = R * Math.hypot(1, (TIP[1] - WALL[1]) / (TIP[0] - WALL[0]))
     solid(p, ink, weight, ink)
     p.quad(WALL[0] * k, FLOOR * k, TIP[0] * k, (TIP[1] + under) * k, TIP[0] * k, (TIP[1] + under + 0.025) * k, WALL[0] * k, (FLOOR + 0.025) * k)
-    // The kettle's heat on the glass behind.
-    glow(p, k, s.color, KX, 0.22, 0.24, heat)
     // The heap: pale, in three shades of it, creased in a line half way to the night; each piece drops in as the heap comes up to it and sinks out as it is served. Behind the ball, behind the kettle's front, and buried chute and all.
     const pale = [ink, mixHex(ink, bg, 0.07), mixHex(ink, bg, 0.14)]
     const crease = mixHex(ink, bg, 0.5)

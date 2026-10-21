@@ -19,6 +19,20 @@ import type { Show } from '../show'
  */
 
 /** Where the camera is: the cell at the frame's centre, and how many cells a 16:9 frame shows top to bottom. */
+/**
+ * What `Performance.blend` lays over a frame: the other side of a cut, held at one moment, seen all over at `a`, or
+ * only inside (or outside) a soft round opening that grows from something in the picture. Inside the opening it is
+ * seen whole; its edge has no line, only a ramp `soft` cells wide.
+ */
+export interface Blend {
+  /** The show time of the frame laid over: the other side of the cut, held there. */
+  from: number
+  /** How much of it is seen, 0 to 1. */
+  a: number
+  /** Where it is seen: a circle round `x, y` of radius `r`, in the live frame's world cells; outside it if `out`. */
+  iris?: { x: number; y: number; r: number; soft: number; out?: boolean }
+}
+
 export interface Framing {
   x: number
   y: number
@@ -167,6 +181,12 @@ export interface Performance {
   /** Whether the show's cuts are drawn at `t`: the iris at a portal, the fade up from ink. Left out, they are. */
   cuts?(t: number): boolean
   /**
+   * A dissolve across a change of place, at `t`: the frame of another moment laid over this one (`Blend`). The
+   * stage paints that moment first, keeps it, paints `t`, and lays the kept frame on. Left out, or null at `t`, the
+   * frame is `t`'s alone and a cut is a cut.
+   */
+  blend?(t: number): Blend | null
+  /**
    * The box Overview frames at `t`, in the world's cells: for a show whose worlds hold several sets far apart (the
    * place in play, not the whole world, most of it empty between them). Left out, the whole world.
    */
@@ -308,8 +328,10 @@ const PREFERRED_TAKES: Record<string, string> = { 'la-la-land': 'opus5-5', 'corn
  * the build still writes a page at the old address (`vite.config.ts`), and Theater keeps an old pool's choices.
  */
 export const RENAMED_TAKES: Record<string, Record<string, string>> = {
-  'la-la-land': { 'opus55-sebs': 'opus5-5', 'fable51-epilogue': 'fable5-1' },
-  'cornfield-chase': { 'opus55-music-sync': 'opus55', 'tech-demo': 'grok47' },
+  // Epilogue's Fable 5.1 take: hidden for now (Stephen, Oct 15), and its old name with it.
+  'la-la-land': { 'opus55-sebs': 'opus5-5' /* , 'fable51-epilogue': 'fable5-1' */ },
+  // Cornfield Chase's Grok 4.7 take: hidden for now (Stephen, Oct 15), and its old name with it.
+  'cornfield-chase': { 'opus55-music-sync': 'opus55' /* , 'tech-demo': 'grok47' */ },
 }
 
 /** A take by its name now, given any name it has shipped under. */
@@ -325,6 +347,7 @@ const SHELVED: Record<string, Section> = {
   'clair-de-lune': 'Machine',
   'premiere-arabesque': 'Machine',
   'cornfield-chase': 'Machine',
+  raindrop: 'Machine',
   bolero: 'Ambient',
   gymnopedie: 'Ambient',
   'soft-lamp': 'Ambient',
@@ -336,7 +359,7 @@ export const sectionOf = (work: string): Section => SHELVED[work] ?? 'Movies'
  * music through YouTube's player, so the Show card keeps the player's box open while its show loads, rather than
  * opening it once the music is known (`player.ts`). `check:shows` holds this to what each take actually loads.
  */
-const OWN_RECORDINGS = new Set(['clair-de-lune', 'premiere-arabesque', 'bolero', 'gymnopedie'])
+const OWN_RECORDINGS = new Set(['clair-de-lune', 'premiere-arabesque', 'bolero', 'gymnopedie', 'raindrop'])
 /** Whether a work's music comes from YouTube's player, known before its show loads. */
 export const musicOnYouTube = (work: string): boolean => !OWN_RECORDINGS.has(work)
 

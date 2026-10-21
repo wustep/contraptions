@@ -25,7 +25,6 @@ import { GIFT_LOOKS } from './home/kindness-draw'
 import { ledge } from './rocks/ledge'
 import { film, IRISES, LOOKS, type Look, type Picture } from './film'
 import { STEP_RATE, stepPrint } from './star/premiere-alley'
-import { drain, radiance } from './void/radiance'
 import { JOY_EYE, peak, PEAK_AT } from './void/peak'
 import { finale, FINALE_AT } from './home/finale'
 import { crown, type CrownState } from './void/crown'
@@ -92,12 +91,9 @@ const SETS = (roomState: RoomState, crownState: CrownState): Partial<Record<Worl
     after: [standing(credits, 0, 0, box(-12, -8, 44, 4, 2), null, DURATION)],
   },
   // Jobu's bagel, where the pull draws everything in and the peak spins it all back out.
-  // Behind it, in the peak, the radiance of every life it gives back; over it, in the pull, the colours it takes.
   void: {
     scenery: [
-      standing(radiance, BAGEL.at[0], BAGEL.at[1], box(BAGEL.at[0] - 24, BAGEL.at[1] - 24, BAGEL.at[0] + 24, BAGEL.at[1] + 24, 2), null, DURATION),
       standing(bagel, BAGEL.at[0], BAGEL.at[1], box(BAGEL.at[0] - 24, BAGEL.at[1] - 24, BAGEL.at[0] + 24, BAGEL.at[1] + 24, 2), null, DURATION),
-      standing(drain, BAGEL.at[0], BAGEL.at[1], box(BAGEL.at[0] - 24, BAGEL.at[1] - 24, BAGEL.at[0] + 24, BAGEL.at[1] + 24, 2), null, DURATION),
     ],
     // Round Joy while she is Jobu, a ring of everything (`void/crown.ts`).
     after: [standing(crown, 0, 0, box(BAGEL.at[0] - 24, BAGEL.at[1] - 24, BAGEL.at[0] + 24, BAGEL.at[1] + 24, 2), crownState, DURATION)],
@@ -182,6 +178,22 @@ function punch(t: number, calm: () => boolean): number {
     c = Math.max(c, s * rise * (u < CRASH_HOLD ? 1 : Math.exp(-(u - CRASH_HOLD) / 0.32)))
   }
   return v + c
+}
+
+/**
+ * The camera is held, not bolted down: it floats a little all the time, a slow drift of its place and a breath of its
+ * scale, so even a held frame is never quite still. Each is a sum of slow waves that never line up, about a hundredth
+ * of the frame at most. It is one function of the clock over the whole show, so at a jump both sides have the same
+ * float and the match cut holds. Not for a viewer who asks for less motion.
+ */
+function float(t: number, calm: () => boolean): { x: number; y: number; z: number } {
+  if (calm()) return { x: 0, y: 0, z: 0 }
+  const TAU = Math.PI * 2
+  return {
+    x: 0.0055 * Math.sin((TAU * t) / 17.3 + 0.4) + 0.0025 * Math.sin((TAU * t) / 7.1 + 2.1),
+    y: 0.0045 * Math.sin((TAU * t) / 13.7 + 1.3) + 0.002 * Math.sin((TAU * t) / 5.9 + 0.2),
+    z: 0.008 * Math.sin((TAU * t) / 23.1 + 0.9) + 0.003 * Math.sin((TAU * t) / 9.7 + 2.6),
+  }
 }
 
 /**
@@ -294,7 +306,6 @@ export function compose(calm?: boolean): { show: MultiverseShow; camera: (t: num
       who: 'evelyn' as const,
       from: JUMPS.eye,
       arrive: true,
-      burst: true,
       gaze: [
         ...GIFT_LOOKS,
         { from: fight(140), to: JUMPS.rocks, at: 'waymond' as const },
@@ -310,8 +321,8 @@ export function compose(calm?: boolean): { show: MultiverseShow; camera: (t: num
         SWELLED('joy'),
       ],
     },
-    // Joy's lands with a light of her own: smaller than her mother's, and in her violet, lifted toward white.
-    { who: 'joy' as const, from: JOY_EYE, arrive: true, burst: { color: '#C9B2F2', size: 0.62, strength: 0.6 },
+    // Joy's arrives as her mother's did, slapped on and whirling.
+    { who: 'joy' as const, from: JOY_EYE, arrive: true,
       // Once its fling has settled, her new eye looks into her mother's; and at home she looks up at her as she nestles.
       gaze: [{ from: 255.3, to: 257.2, at: 'evelyn' as const }, { from: JUMPS.home + 0.3, to: T_DOOR + 0.5, at: 'waymond' as const }, { from: W_TOUCH - 0.3, to: NUZZLE + 0.4, at: 'waymond' as const }, { from: 279.6, to: 282.3, at: 'evelyn' as const }, ...PORTRAIT, DRUM, SWELLED('evelyn')] },
   ]
@@ -392,7 +403,13 @@ export function compose(calm?: boolean): { show: MultiverseShow; camera: (t: num
     const owner = show.owner(t)
     const f = cams[owner](t)
     const [ox, oy] = show.offset(t)
-    return { ...f, x: f.x + ox, y: f.y + oy, cells: f.cells * (1 - punch(t, isCalm)) }
+    // The float is a share of the frame: the same small drift in a close shot and a wide one.
+    const d = float(t, isCalm)
+    const framing: Framing = { ...f, x: f.x + ox + d.x * f.cells, y: f.y + oy + d.y * f.cells, cells: f.cells * (1 - punch(t, isCalm)) * (1 + d.z) }
+    // The last draw-back takes in the whole shop with the family at its left edge: Zoom, a closer look at her, slides
+    // over to keep her in it rather than holding the middle of the row.
+    if (t > SWELL) framing.focus = show.where(t)
+    return framing
   }
   return { show, camera, eyes: specs }
 }

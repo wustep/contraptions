@@ -13,7 +13,7 @@ import { WATER, bodyColor, piling, seaWater, splash, water } from './sea'
  * hatch; the hatch slams; the periscope swings forward and she dives, but
  * only to periscope depth: hull and tower go under, and the periscope
  * crosses the two cells of open sea on its own, a feather of water at its
- * foot, a V of wake and a string of bubbles behind it. She comes up at the
+ * foot and a V of wake behind it. She comes up at the
  * far pier with the water shedding off her tower, the hatch opens, and the
  * ball pops up out of it onto the far deck and rolls on. The periscope
  * turns to watch it go.
@@ -171,14 +171,15 @@ export const submarine = definePiece<{ color: string }>({
     // The sea in front of her, and what she does to it.
     water(p, k, ink, bg, weight, -0.5, 2.5)
     const run = way * over(d, 0.34, DEEP)
-    if (run > 0.05) {
+    if (run > 0.02) {
       // Under way at periscope depth: a feather of water curling up ahead of the tube, and her wake astern of
-      // it, ridges on the surface that widen as they fall behind, in the water's colour.
+      // it, ridges on the surface that widen as they fall behind, in the water's colour. Both thin out as she
+      // gets under way and slows again, instead of being there at full weight the frame she is deep enough.
       const px = x + PERI
       p.push()
       p.noFill()
       p.stroke(sea)
-      p.strokeWeight(weight)
+      p.strokeWeight(weight * Math.min(1, run * 3))
       p.arc((px + 0.045) * k, (WATER - 0.01) * k, 0.09 * k, (0.06 + 0.07 * run) * k, Math.PI, Math.PI * 1.8)
       for (let i = 0; i < 3; i++) {
         const wx = px - 0.1 - i * 0.17 * run
@@ -186,13 +187,8 @@ export const submarine = definePiece<{ color: string }>({
         p.arc(wx * k, (WATER + 0.008) * k, w * 2 * k, (0.06 - 0.012 * i) * k, Math.PI * 1.1, Math.PI * 1.9)
       }
       p.pop()
-      // Bubbles breaking the surface where she has been.
-      solid(p, ink, weight * 0.7, bg)
-      for (let i = 0; i < 3; i++) {
-        const f = ((since * 2.4 + i * 0.33) % 1 + 1) % 1
-        const bx = px - 0.62 - i * 0.13 - f * 0.05
-        if (bx > WEST + 0.06) p.circle(bx * k, (WATER - 0.014 - 0.008 * f) * k, (0.02 + 0.03 * f * (1 - f)) * run * k)
-      }
+      // No string of bubbles after it: at the stage's size they were a row of ink dots on the waterline,
+      // blinking as each came round again, a second wake on top of the wake.
     }
     // The dive: a splash where the tower goes under. The surfacing: water running off the tower's shoulders,
     // drops down either flank to the sea, as she comes up.

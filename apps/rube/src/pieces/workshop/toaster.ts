@@ -10,7 +10,7 @@ import { FLOOR, ROLL, burst, definePiece, fly, mixHex, over, rail, ramp, trace, 
  * dark of the slot between two heating elements, which warm from grey to
  * hot as the timer runs down, the chamber glowing with them and heat rising
  * off the slot — and when the hand reaches the end it pops, up onto the
- * shelf a floor above, and rolls on with a ding.
+ * shelf a floor above, and rolls on.
  * This is the show's other way up, and its silliest.
  */
 const SLOT = -0.04
@@ -125,18 +125,14 @@ export const toaster = definePiece<{ color: string }>({
     }
     p.pop()
 
-    // The ding: two arcs off the corner, and crumbs.
-    if (since > 0 && since < 0.5) {
-      const f = over(since, 0, 0.5)
+    // The pop: crumbs off the slot, and that is all. The two ding arcs off
+    // the corner that went with them were a second mark for the one event,
+    // and hung on for half a second after the ball had gone.
+    if (since > 0 && since < 0.22) {
+      const f = over(since, 0, 0.22)
       p.push()
-      p.noFill()
-      p.stroke(s.color)
-      p.strokeWeight(weight)
-      for (let i = 1; i <= 2; i++) {
-        const r = (0.12 + i * 0.1 + f * 0.2) * k
-        p.arc((BODY_X1 + 0.02) * k, (LID - 0.02) * k, r, r, -Math.PI * 0.7, -Math.PI * 0.1)
-      }
       p.stroke(ink)
+      p.strokeWeight(weight)
       burst(p, SLOT * k, (LID - 0.04) * k, (0.05 + f * 0.2) * k, (0.09 + f * 0.24) * k, 5, 0.3)
       p.pop()
     }
@@ -166,15 +162,19 @@ export const toaster = definePiece<{ color: string }>({
     p.fill(ink)
     p.rect(SLOT * k, LID * k, 0.34 * k, 0.05 * k)
     p.pop()
-    // Heat off the slot while it toasts.
+    // Heat off the slot while it toasts: each wisp comes up out of the paper
+    // and goes back into it at the top of its rise, rather than snapping
+    // from the top back down to the slot, and the first ones come in with
+    // the heat instead of all at once.
     if (toasting) {
       p.push()
       p.noFill()
-      p.stroke(ink)
       p.strokeWeight(weight)
+      const warm = over(t, T_IN, T_IN + 0.3)
       for (const dx of [-0.1, 0, 0.1]) {
         const rise = ((t * 0.6 + dx) % 0.25) / 0.25
         const y = LID - 0.04 - rise * 0.16
+        p.stroke(mixHex(bg, ink, warm * Math.sin(Math.PI * rise)))
         p.bezier((SLOT + dx) * k, y * k, (SLOT + dx + 0.03) * k, (y - 0.03) * k, (SLOT + dx - 0.03) * k, (y - 0.06) * k, (SLOT + dx) * k, (y - 0.09) * k)
       }
       p.pop()

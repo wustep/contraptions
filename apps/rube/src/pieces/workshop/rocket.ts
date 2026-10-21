@@ -55,15 +55,17 @@ export const rocket = definePiece<{ color: string }>({
     solid(p, ink, weight, s.color)
     p.rect(CHOCK * k, (FLOOR - 0.025) * k, 0.08 * k, 0.05 * k)
 
-    // Smoke, behind the sled.
+    // Smoke, behind the sled: each puff swells in as it comes into the
+    // cell and thins away at the end, instead of appearing whole at the
+    // cell's edge and three big puffs vanishing together.
     if (since > 0 && since < 1.8) {
       const f = over(since, 0, 1.8)
       for (let i = 0; i < 3; i++) {
         const back = Math.min(since, BURN)
         const x = lerp(0, STOP, easeInQuad(back / BURN)) - 0.35 - i * 0.28 - f * 0.4
         const y = -0.05 - f * 0.25 * (i + 1) * 0.5
-        const r = (0.05 + 0.09 * f) * (1 - i * 0.2)
-        if (x > -0.45 && f < 0.95) puff(p, k, ink, weight, bg, x, y, r)
+        const r = (0.05 + 0.09 * f) * (1 - i * 0.2) * over(x, -0.45, -0.25) * (1 - easeInQuad(f))
+        if (r > 0.015) puff(p, k, ink, weight, bg, x, y, r)
       }
     }
 
@@ -105,19 +107,14 @@ export const rocket = definePiece<{ color: string }>({
     p.line((rx - 0.15) * k, (ry - 0.05) * k, (rx - 0.2) * k, (ry - 0.08) * k)
     p.line((rx - 0.15) * k, (ry + 0.05) * k, (rx - 0.2) * k, (ry + 0.08) * k)
     p.line((rx - 0.15) * k, (ry - 0.05) * k, (rx - 0.15) * k, (ry + 0.05) * k)
-    // Sputter while it catches; flame while it burns.
-    if (t > ARRIVE + 0.1 && since < 0) {
-      const f = over(t, ARRIVE + 0.1, FIRE)
-      p.push()
-      p.stroke(s.color)
-      p.strokeWeight(weight)
-      burst(p, (rx - 0.22) * k, ry * k, 0.02 * k, (0.03 + 0.06 * f) * k, 5, t * 30)
-      p.pop()
-    }
-    if (since > 0 && since < BURN + 0.15) {
-      const f = 1 - over(since, BURN, BURN + 0.15)
-      const flick = 0.85 + 0.15 * Math.sin(t * 60)
-      const len = 0.42 * f * flick
+    // Sputter while it catches: a short flame guttering at the nozzle, where
+    // a star of ticks spun. Then the flame while it burns, which grows as
+    // the sled pulls away: the nozzle starts at the cell's edge, and a
+    // full flame there reached 0.4 of a cell into the one before.
+    const sputter = t > ARRIVE + 0.1 && since < 0 ? over(t, ARRIVE + 0.1, FIRE) * (0.5 + 0.5 * Math.sin(t * 45)) : 0
+    const burning = since > 0 && since < BURN + 0.15 ? 1 - over(since, BURN, BURN + 0.15) : 0
+    const len = burning > 0 ? Math.min(0.42 * burning * (0.85 + 0.15 * Math.sin(t * 60)), 0.12 + sledX) : 0.1 * sputter
+    if (len > 0.01) {
       solid(p, ink, weight, s.color)
       p.triangle((rx - 0.2) * k, (ry - 0.07) * k, (rx - 0.2) * k, (ry + 0.07) * k, (rx - 0.2 - len) * k, ry * k)
       p.fill(bg)
@@ -125,8 +122,8 @@ export const rocket = definePiece<{ color: string }>({
     }
     p.pop()
     // The sled leaves a cloud of dust where its wheel met the chock.
-    if (since > BURN && since < BURN + 0.3) {
-      const f = over(since, BURN, BURN + 0.3)
+    if (since > BURN && since < BURN + 0.22) {
+      const f = over(since, BURN, BURN + 0.22)
       p.push()
       p.stroke(ink)
       p.strokeWeight(weight)

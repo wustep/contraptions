@@ -88,20 +88,6 @@ export function path(pen: Pen, pts: Pt[], col: string, lw = 0.8): void {
   p.endShape()
 }
 
-/** A soft round light: `col` at `a` in the middle, nothing at radius `r`. */
-export function glow(pen: Pen, c: Pt, r: number, col: string, a: number): void {
-  if (a <= 0.003 || r <= 0) return
-  const { k } = pen
-  const ctx = ctxOf(pen.p)
-  const g = ctx.createRadialGradient(c[0] * k, c[1] * k, 0, c[0] * k, c[1] * k, r * k)
-  g.addColorStop(0, rgba(pen, col, a))
-  g.addColorStop(0.45, rgba(pen, col, a * 0.42))
-  g.addColorStop(1, rgba(pen, col, 0))
-  ctx.save()
-  ctx.fillStyle = g
-  ctx.fillRect((c[0] - r) * k, (c[1] - r) * k, 2 * r * k, 2 * r * k)
-  ctx.restore()
-}
 
 /** A box filled with a vertical gradient through `stops` ([at 0..1, colour, alpha]). */
 export function vgrad(pen: Pen, x0: number, y0: number, x1: number, y1: number, stops: [number, string, number][]): void {
@@ -115,34 +101,16 @@ export function vgrad(pen: Pen, x0: number, y0: number, x1: number, y1: number, 
   ctx.restore()
 }
 
-/** A closed shape filled through a canvas fill (a gradient), in cells. */
-export function fillWith(pen: Pen, pts: Pt[], style: string | CanvasGradient): void {
-  const { k } = pen
-  const ctx = ctxOf(pen.p)
-  ctx.save()
-  ctx.beginPath()
-  pts.forEach(([x, y], i) => (i ? ctx.lineTo(x * k, y * k) : ctx.moveTo(x * k, y * k)))
-  ctx.closePath()
-  ctx.fillStyle = style
-  ctx.fill()
-  ctx.restore()
-}
-
-/** A smooth closed blob through `pts` (a Catmull-Rom loop), filled. */
-export function blob(pen: Pen, pts: Pt[], fill: string, a = 1): void {
-  const { k } = pen
-  const ctx = ctxOf(pen.p)
+/** A smooth closed loop through `pts` (Catmull-Rom), added to `path` in pixels. */
+export function loop(path: Path2D, pts: Pt[], k: number): void {
   const n = pts.length
-  if (n < 3) return
-  ctx.save()
-  ctx.beginPath()
   for (let i = 0; i < n; i++) {
     const p0 = pts[(i - 1 + n) % n]
     const p1 = pts[i]
     const p2 = pts[(i + 1) % n]
     const p3 = pts[(i + 2) % n]
-    if (i === 0) ctx.moveTo(p1[0] * k, p1[1] * k)
-    ctx.bezierCurveTo(
+    if (i === 0) path.moveTo(p1[0] * k, p1[1] * k)
+    path.bezierCurveTo(
       (p1[0] + (p2[0] - p0[0]) / 6) * k,
       (p1[1] + (p2[1] - p0[1]) / 6) * k,
       (p2[0] - (p3[0] - p1[0]) / 6) * k,
@@ -151,26 +119,18 @@ export function blob(pen: Pen, pts: Pt[], fill: string, a = 1): void {
       p2[1] * k,
     )
   }
-  ctx.closePath()
-  ctx.fillStyle = rgba(pen, fill, a)
-  ctx.fill()
-  ctx.restore()
+  path.closePath()
 }
 
-/** A small four-pointed glint: the light catching something. */
-export function glint(pen: Pen, c: Pt, r: number, col: string, a: number): void {
-  if (a <= 0.01) return
-  glow(pen, c, r * 1.6, col, a * 0.5)
-  const s = r * 0.16
-  const { k } = pen
+/** A smooth closed blob through `pts` (a Catmull-Rom loop), filled. */
+export function blob(pen: Pen, pts: Pt[], fill: string, a = 1): void {
+  if (pts.length < 3) return
+  const path = new Path2D()
+  loop(path, pts, pen.k)
   const ctx = ctxOf(pen.p)
   ctx.save()
-  ctx.fillStyle = rgba(pen, col, a)
-  ctx.beginPath()
-  const q: Pt[] = [[c[0], c[1] - r], [c[0] + s, c[1] - s], [c[0] + r, c[1]], [c[0] + s, c[1] + s], [c[0], c[1] + r], [c[0] - s, c[1] + s], [c[0] - r, c[1]], [c[0] - s, c[1] - s]]
-  q.forEach(([x, y], i) => (i ? ctx.lineTo(x * k, y * k) : ctx.moveTo(x * k, y * k)))
-  ctx.closePath()
-  ctx.fill()
+  ctx.fillStyle = rgba(pen, fill, a)
+  ctx.fill(path)
   ctx.restore()
 }
 

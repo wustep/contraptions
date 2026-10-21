@@ -43,6 +43,13 @@ export const STOP = LAST
 export const ON = 235.3
 export const CORNER = { x: 14.2, kerb: 14.55 }
 export const FINAL = { cells: 10, x: 9.7, y: -2.75 }
+/** Then on through the credits, along the street toward the avenue and a little back, never quite still: by the end the two of them are in the middle of it. */
+export const DRIFT = [
+  { t: 249, cells: 10.35, x: 11.0, y: -2.9 },
+  { t: 256.5, cells: 10.7, x: 12.3, y: -3.05 },
+  { t: 264, cells: 11.05, x: 13.6, y: -3.2 },
+  { t: 270, cells: 11.25, x: 14.6, y: -3.3 },
+]
 
 /* ------------------------------------------------------------------ ways */
 

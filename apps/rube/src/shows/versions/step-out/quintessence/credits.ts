@@ -1,6 +1,5 @@
 import { clamp, easeInOutCubic } from '../../../../../../../src/core/ease'
 import type { TitleCard } from '../../../registry'
-import { frame, scenery } from './kit'
 import { CREDITS_AT, DURATION, LAST } from './music'
 import { CHERYL, SEAN, WALTER_WARM } from './worlds'
 
@@ -12,9 +11,8 @@ import { CHERYL, SEAN, WALTER_WARM } from './worlds'
  *
  * The words are the page's: a show's canvas sets no type, and a saved frame or a recorded video has none
  * (`shows/stage.ts`), so the player sets them over the frame from `creditsAt` in its own face. Over the pale morning
- * the page's usual cream all but vanished, so they are set dark (`TitleCard.dark`): graphite, the street's own ink, with
- * a pale glow. The canvas's half is a soft morning haze under them, so they read where they cross a building's front
- * as well as over the sky.
+ * the page's usual cream all but vanished, so they are set dark (`TitleCard.dark`): graphite, the street's own ink.
+ * The canvas lays nothing under them: the street is calm enough behind them to read them over a front or the sky.
  */
 
 export interface Card {
@@ -79,6 +77,8 @@ export const LAST_GONE = (() => {
 const AT: [number, number] = [0.5, 0.1]
 /** The least the cards' unit may be on the page, CSS pixels: so a phone held upright still reads the role and the notes. */
 const LEAST = 4.5
+/** On a phone held upright, how far the cards go up into the pale sky the tall stage shows over the frame, clear of the fronts. */
+const LIFT = 0.6
 
 function lightOf(card: Card, t: number): { light: number; rise: number } {
   const since = t - card.at
@@ -95,43 +95,10 @@ export function creditsAt(t: number): TitleCard[] {
   CARDS.forEach((card, n) => {
     const { light, rise } = lightOf(card, t)
     if (light <= 0.001) return
-    out.push({ key: `quintessence-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: card.place ?? AT, dark: true, least: LEAST })
+    out.push({ key: `quintessence-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: card.place ?? AT, dark: true, lift: LIFT, least: LEAST })
   })
   return out
 }
-
-/** How deep the haze under the words is at `t`: up with the first card, down after the last. */
-const bedAt = (t: number): number => clamp((t - CREDITS_AT + 0.4) / 1.6) * (1 - clamp((t - LAST_GONE + 0.4) / 1.8))
-
-/** The canvas's half: a soft morning haze where the words come, paler than what it lies over. */
-export const credits = scenery<null>({
-  name: 'credits',
-  draw: () => {},
-  over: (p, _s, c) => {
-    const bed = bedAt(c.t)
-    if (bed <= 0.001) return
-    const { k } = c
-    const f = frame(p, k)
-    const ctx = p.drawingContext as CanvasRenderingContext2D
-    const w = Math.min(f.x1 - f.x0, ((f.y1 - f.y0) * 16) / 9)
-    const h = (w * 9) / 16
-    const bx = (f.x0 + f.x1) / 2 - w / 2
-    const by = (f.y0 + f.y1) / 2 - h / 2
-    const cx = (bx + w * AT[0]) * k
-    const cy = (by + h * (AT[1] + 0.12)) * k
-    const rx = w * 0.4 * k
-    ctx.save()
-    ctx.translate(cx, cy)
-    ctx.scale(1, 0.48)
-    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx)
-    g.addColorStop(0, `rgba(250, 248, 242, ${0.5 * bed})`)
-    g.addColorStop(0.55, `rgba(250, 248, 242, ${0.3 * bed})`)
-    g.addColorStop(1, 'rgba(250, 248, 242, 0)')
-    ctx.fillStyle = g
-    ctx.fillRect(-rx, -rx, 2 * rx, 2 * rx)
-    ctx.restore()
-  },
-})
 
 /** For the check: the credits come after the last chord, and the last has gone before the end. */
 export const CREDITS_OK = CREDITS_AT >= LAST + 2 && LAST_GONE <= DURATION - 2

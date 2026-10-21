@@ -211,6 +211,7 @@ export const room = scenery<null>({
     }
 
     drawWindow(p, c, tone, ink, t, day, war)
+    drawShelves(p, c, tone, ink)
     drawStair(p, c, tone, ink)
     drawTable(p, c, tone, ink)
     drawHearth(p, c, tone, ink, t)
@@ -1052,6 +1053,108 @@ function drawPull(p: p5, c: C, tone: Tone, ink: string, t: number): void {
   p.stroke(alpha(p, ink, 0.7))
   p.strokeWeight(W * 0.5)
   p.line(X(lx + 0.05), X(ly - 0.05), X(lx + 0.05), X(TROLLEY.y))
+}
+
+/**
+ * Two open shelves over the table, as a kitchen that has been lived in: on the upper, jars of what the house keeps
+ * (each its own height and width, a cloth or a cork over its mouth) and a tall bottle; on the lower, plates stood on
+ * edge against the wall, a jug and a teapot, and cups hung on hooks under the board. Each board throws a soft shadow
+ * down the plaster (the light is from the window, high on the right). Nothing on them is blue: that is Howl's.
+ */
+const SHELVES: [number, number, number][] = [
+  [-4.2, -2.3, -2.3],
+  [-4.35, -2.05, -1.5],
+]
+function drawShelves(p: p5, c: C, tone: Tone, ink: string): void {
+  const { k, weight: W } = c
+  const X = (v: number) => v * k
+  p.push()
+  // The shadows first, under the boards and the brackets.
+  p.noStroke()
+  for (const [x0, x1, y] of SHELVES) {
+    for (let i = 0; i < 4; i++) {
+      p.fill(alpha(p, tone(ROOM.soot), 0.05))
+      p.rect(X(x0 - 0.05 + i * 0.02), X(y + 0.07), X(x1 - x0 + 0.06 - i * 0.03), X(0.05 + i * 0.05))
+    }
+  }
+  const glass = (x: number, y: number, w: number, h: number, fill: string, lid: string) => {
+    p.stroke(ink)
+    p.strokeWeight(W * 0.7)
+    p.fill(tone(mixHex(ROOM.window, ROOM.plasterShade, 0.35)))
+    p.rect(X(x - w / 2), X(y - h), X(w), X(h), X(0.03))
+    p.noStroke()
+    p.fill(tone(fill))
+    p.rect(X(x - w / 2 + 0.02), X(y - h * 0.68), X(w - 0.04), X(h * 0.68 - 0.02), X(0.02))
+    p.stroke(ink)
+    p.strokeWeight(W * 0.6)
+    p.fill(tone(lid))
+    p.rect(X(x - w / 2 - 0.02), X(y - h - 0.05), X(w + 0.04), X(0.07), X(0.015))
+  }
+  const [ux0, , uy] = SHELVES[0]
+  glass(ux0 + 0.28, uy, 0.3, 0.42, mixHex(ROOM.copper, '#D9A441', 0.5), ROOM.cloth)
+  glass(ux0 + 0.66, uy, 0.24, 0.3, mixHex(ROOM.woodDark, ROOM.wood, 0.5), ROOM.wood)
+  glass(ux0 + 1.0, uy, 0.32, 0.36, mixHex(WASTES.moss, ROOM.cloth, 0.4), mixHex(ROOM.brick, ROOM.plasterShade, 0.3))
+  glass(ux0 + 1.32, uy, 0.2, 0.26, ROOM.plaster, ROOM.wood)
+  // The tall bottle at the end: its body, its neck, the cork.
+  const bx = ux0 + 1.65
+  p.stroke(ink)
+  p.strokeWeight(W * 0.7)
+  p.fill(tone(mixHex(WASTES.moss, ROOM.woodDark, 0.55)))
+  p.rect(X(bx - 0.1), X(uy - 0.4), X(0.2), X(0.4), X(0.04))
+  p.rect(X(bx - 0.04), X(uy - 0.58), X(0.08), X(0.2))
+  p.fill(tone(ROOM.wood))
+  p.rect(X(bx - 0.045), X(uy - 0.64), X(0.09), X(0.07))
+  // The lower shelf: plates on edge, a jug, the teapot.
+  const [lx0, , ly] = SHELVES[1]
+  for (const [i, x] of [lx0 + 0.32, lx0 + 0.5, lx0 + 0.68].entries()) {
+    p.stroke(ink)
+    p.strokeWeight(W * 0.7)
+    p.fill(tone(mixHex(ROOM.plaster, '#FFFFFF', 0.4)))
+    p.circle(X(x), X(ly - 0.24 - 0.01 * i), X(0.46))
+    p.noFill()
+    p.stroke(tone(mixHex(ROOM.brick, ROOM.plaster, 0.35)))
+    p.strokeWeight(W * 0.6)
+    p.circle(X(x), X(ly - 0.24 - 0.01 * i), X(0.34))
+  }
+  const jx = lx0 + 1.22
+  p.stroke(ink)
+  p.strokeWeight(W * 0.7)
+  p.fill(tone(mixHex(ROOM.copper, ROOM.plasterShade, 0.25)))
+  p.beginShape()
+  p.vertex(X(jx - 0.12), X(ly))
+  p.bezierVertex(X(jx - 0.2), X(ly - 0.14), X(jx - 0.16), X(ly - 0.3), X(jx - 0.09), X(ly - 0.36))
+  p.vertex(X(jx + 0.11), X(ly - 0.38))
+  p.bezierVertex(X(jx + 0.16), X(ly - 0.3), X(jx + 0.2), X(ly - 0.14), X(jx + 0.12), X(ly))
+  p.endShape(p.CLOSE)
+  p.noFill()
+  p.arc(X(jx - 0.15), X(ly - 0.22), X(0.14), X(0.2), Math.PI * 0.5, Math.PI * 1.5)
+  const tx = lx0 + 1.75
+  p.fill(tone(mixHex(WASTES.moss, ROOM.woodDark, 0.45)))
+  p.ellipse(X(tx), X(ly - 0.14), X(0.36), X(0.27))
+  p.rect(X(tx - 0.05), X(ly - 0.31), X(0.1), X(0.05), X(0.02))
+  p.line(X(tx + 0.17), X(ly - 0.16), X(tx + 0.3), X(ly - 0.27))
+  p.noFill()
+  p.arc(X(tx - 0.18), X(ly - 0.15), X(0.14), X(0.16), Math.PI * 0.5, Math.PI * 1.5)
+  // The boards, on their brackets.
+  for (const [x0, x1, y] of SHELVES) {
+    p.stroke(ink)
+    p.strokeWeight(W * 0.8)
+    p.fill(tone(ROOM.wood))
+    p.rect(X(x0), X(y), X(x1 - x0), X(0.07))
+    p.fill(tone(ROOM.woodDark))
+    for (const bx2 of [x0 + 0.2, x1 - 0.2]) p.triangle(X(bx2 - 0.03), X(y + 0.07), X(bx2 + 0.03), X(y + 0.07), X(bx2 - 0.03), X(y + 0.27))
+  }
+  // Cups on hooks under the lower board.
+  for (const x of [lx0 + 0.6, lx0 + 0.95, lx0 + 1.3]) {
+    p.stroke(alpha(p, ink, 0.8))
+    p.strokeWeight(W * 0.5)
+    p.line(X(x), X(ly + 0.07), X(x), X(ly + 0.13))
+    p.stroke(ink)
+    p.strokeWeight(W * 0.7)
+    p.fill(tone(mixHex(ROOM.plaster, '#FFFFFF', 0.3)))
+    p.rect(X(x - 0.08), X(ly + 0.13), X(0.16), X(0.15), X(0.02), X(0.02), X(0.05), X(0.05))
+  }
+  p.pop()
 }
 
 function drawHerbs(p: p5, c: C, tone: Tone, ink: string, t: number): void {

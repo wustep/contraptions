@@ -125,19 +125,6 @@ export const organ = definePiece<{ color: string; metal: string; key: string; ne
     outline(p, ink, weight)
     p.line(HINGE * k, (FLOOR + 0.05) * k, CHEST[0] * k, CHEST[2] * k)
 
-    // The wind under each ball that is off its seat: three thin strokes from the mouth up to it.
-    PIPES.forEach((pipe, i) => {
-      const lift = liftAt(i, since)
-      const blown = i === 2 && since >= T_BLOW
-      const jet = blown ? 1 - over(since, T_BLOW, T_BLOW + 0.3) : clamp(lift / 0.05)
-      if (jet <= 0) return
-      const air = p.color(ink)
-      air.setAlpha(120 * jet)
-      p.stroke(air)
-      p.strokeWeight(weight * 0.7)
-      const reach = blown ? pipe.lift + 0.12 : lift
-      for (const dx of [-0.05, 0, 0.05]) p.line((pipe.x + dx) * k, (pipe.top - 0.01) * k, (pipe.x + dx * 1.3) * k, (pipe.top - Math.max(0.02, reach + SEAT - R * 0.8)) * k)
-    })
     // The balls stopping the pipes, the piece's to draw: two for good, the third until it is blown clear.
     PIPES.forEach((pipe, i) => {
       if (i === 2 && since >= T_BLOW) return

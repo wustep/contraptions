@@ -6,8 +6,9 @@ import { gearColor, snow, snowAt, snowWhite } from './snow'
 
 /**
  * A cuckoo clock as tall as a sentry box, on a post in the snow behind the
- * track: a chalet's steep roof under snow, a dial, and a pair of shutters
- * in its side wall at the height of the ball. The ball rolls past the clock
+ * track: a low gable under snow, its eaves well out past both walls, a
+ * dial, and a pair of shutters in its side wall at the height of the ball.
+ * The track runs in front of the case. The ball rolls past the clock
  * onto a plate in the track, and the plate sinks under it, slowing it: the
  * hands jump to the hour, the shutters fly open, and the cuckoo shoots out
  * on a lazy-tongs and punches the ball in the back, which skips off down
@@ -18,25 +19,32 @@ import { gearColor, snow, snowAt, snowWhite } from './snow'
  * reaches the ball's back at the blow, neither before nor through it, and
  * the tongs are whatever that distance makes them.
  */
-/** The case: its walls, its foot and its eaves, and the roof's peak. */
-const WEST = -0.46
-const EAST = -0.2
+/**
+ * The case: its walls, its foot (behind the track, a little under it) and
+ * its eaves. The roof is a low gable, wider than the case by a generous
+ * overhang each side, the west eave on the cell's edge; its pitch, and so
+ * its peak.
+ */
+const WEST = -0.42
+const EAST = -0.12
 const FOOT = 0.2
-const EAVES = -0.7
-const PEAK = -1.0
+const EAVES = -0.4
+const OVERHANG = 0.08
+const PITCH = (37 * Math.PI) / 180
 const MID = (WEST + EAST) / 2
+const PEAK = EAVES - ((EAST - WEST) / 2 + OVERHANG) * Math.tan(PITCH)
 /** The dial. */
-const DIAL: Pt = [MID, -0.46]
-const DIAL_R = 0.095
-/** The shutters' height, either side of the ball's line. */
-const HATCH = 0.12
+const DIAL: Pt = [MID, -0.25]
+const DIAL_R = 0.085
+/** The shutters' height, either side of the ball's line: clear of the track below, so the lower one never lies along the rail. */
+const HATCH = 0.085
 /** The plate in the track, and where the ball is when the blow lands. */
 const PLATE: [number, number] = [-0.12, 0.08]
 const X_BLOW = 0.16
 const SLOWED = 1.1
 const SKIP = 0.2
 /** The cuckoo, beak tip to tail, and where the tongs are made fast inside the case. */
-const BIRD = 0.15
+const BIRD = 0.19
 const ANCHOR = EAST - 0.05
 const TONGS = 4
 const BAR = 0.052
@@ -80,12 +88,8 @@ export const cuckoo = definePiece<{ color: string; bird: string; white: string }
   },
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
     snow(p, k, ink, weight, -0.5, 0.5)
-    rail(p, k, ink, weight, -0.5, 0.5)
-
-    // The plate: proud of the track until the ball is on it, down while it is, and up again after.
-    const onPlate = t >= ROLL_IN.dur ? 1 - over(since, 0.1, 0.3) : 0
-    solid(p, ink, weight, s.bird)
-    p.rect(((PLATE[0] + PLATE[1]) / 2) * k, (FLOOR - 0.018 + 0.018 * onPlate) * k, (PLATE[1] - PLATE[0]) * k, 0.036 * k, 0.01 * k)
+    outline(p, ink, weight)
+    p.line(MID * k, FOOT * k, MID * k, (snowAt(MID) + 0.03) * k)
 
     // The cuckoo on its tongs, drawn first so the case hides all of it that is still indoors.
     const beak = beakAt(since)
@@ -102,22 +106,20 @@ export const cuckoo = definePiece<{ color: string; bird: string; white: string }
     }
     if (beak > EAST) {
       solid(p, ink, weight, s.bird)
-      p.triangle((tail - 0.035) * k, -0.035 * k, (tail - 0.035) * k, 0.02 * k, (tail + 0.03) * k, 0)
-      p.ellipse((tail + 0.065) * k, 0, 0.12 * k, 0.095 * k)
+      p.triangle((tail - 0.03) * k, -0.06 * k, (tail - 0.03) * k, 0.0, (tail + 0.05) * k, 0)
+      p.ellipse((tail + 0.09) * k, 0, 0.15 * k, 0.115 * k)
       solid(p, ink, weight, s.white)
-      p.triangle((tail + 0.112) * k, -0.022 * k, (tail + 0.112) * k, 0.022 * k, beak * k, 0)
+      p.triangle((tail + 0.15) * k, -0.024 * k, (tail + 0.15) * k, 0.024 * k, beak * k, 0.004 * k)
       p.noStroke()
       p.fill(ink)
-      p.circle((tail + 0.085) * k, -0.017 * k, 0.022 * k)
+      p.circle((tail + 0.125) * k, -0.02 * k, 0.026 * k)
     }
 
-    // The post, the case, the roof under its snow, and the dial.
-    outline(p, ink, weight)
-    p.line(MID * k, FOOT * k, MID * k, (snowAt(MID) + 0.03) * k)
+    // The case, the roof under its snow with its eaves out past the walls, and the dial.
     solid(p, ink, weight, s.color)
     p.rect(MID * k, ((EAVES + FOOT) / 2) * k, (EAST - WEST) * k, (FOOT - EAVES) * k)
     solid(p, ink, weight, s.white)
-    p.triangle((WEST - 0.04) * k, EAVES * k, (EAST + 0.04) * k, EAVES * k, MID * k, PEAK * k)
+    p.triangle((WEST - OVERHANG) * k, EAVES * k, (EAST + OVERHANG) * k, EAVES * k, MID * k, PEAK * k)
     solid(p, ink, weight, bg)
     p.circle(DIAL[0] * k, DIAL[1] * k, DIAL_R * 2 * k)
     // The hands stand at two minutes to the hour, and the plate jumps them on to it.
@@ -128,9 +130,15 @@ export const cuckoo = definePiece<{ color: string; bird: string; white: string }
 
     // The shutters in the side wall: shut, they lie along it; open, they stand out from it.
     const open = shuttersAt(since) * (Math.PI / 2)
-    p.strokeWeight(weight * 1.5)
+    p.strokeWeight(weight * 1.3)
     for (const side of [-1, 1]) {
       p.line(EAST * k, side * HATCH * k, (EAST + Math.sin(open) * HATCH * 0.9) * k, side * HATCH * (1 - Math.cos(open) * 0.9) * k)
     }
+
+    // The track runs in front of the case, and the plate is let into it: proud until the ball is on it, down while it is, and up again after.
+    rail(p, k, ink, weight, -0.5, 0.5)
+    const onPlate = t >= ROLL_IN.dur ? 1 - over(since, 0.1, 0.3) : 0
+    solid(p, ink, weight, s.bird)
+    p.rect(((PLATE[0] + PLATE[1]) / 2) * k, (FLOOR - 0.018 + 0.018 * onPlate) * k, (PLATE[1] - PLATE[0]) * k, 0.036 * k, 0.01 * k)
   },
 })

@@ -28,9 +28,10 @@ export const WET = mixHex(NIGHT, STAR.wet, 0.55)
 export const BODY = mixHex(NIGHT, INK, 0.1)
 export const SILVER = mixHex(STAR.rain, INK, 0.45)
 
+/** Alpha is written fixed-point: a tiny one printed as `5e-7` is no colour to p5, which paints it white. */
 export function rgba(hex: string, a: number): string {
   const n = parseInt(hex.slice(1), 16)
-  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${Math.max(0, Math.min(1, a))})`
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${Math.max(0, Math.min(1, a)).toFixed(3)})`
 }
 
 const ctxOf = (p: p5): CanvasRenderingContext2D => p.drawingContext as CanvasRenderingContext2D
@@ -112,53 +113,4 @@ export function smear(p: p5, x: number, y: number, w: number, h: number, hex: st
     ctx.closePath()
     ctx.fill()
   }
-}
-
-/** A four-pointed glint: the star a flashbulb makes, tapered spikes, `r` long (pixels). */
-export function glint(p: p5, x: number, y: number, r: number, hex: string, a: number, turn = 0): void {
-  if (a <= 0.004 || r <= 0.5) return
-  const ctx = ctxOf(p)
-  ctx.save()
-  ctx.translate(x, y)
-  ctx.rotate(turn)
-  ctx.fillStyle = rgba(hex, a)
-  for (let i = 0; i < 4; i++) {
-    const long = i % 2 === 0 ? r : r * 0.62
-    ctx.beginPath()
-    ctx.moveTo(0, -r * 0.07)
-    ctx.lineTo(long, 0)
-    ctx.lineTo(0, r * 0.07)
-    ctx.closePath()
-    ctx.fill()
-    ctx.rotate(Math.PI / 2)
-  }
-  ctx.restore()
-}
-
-/** The blue-white of an anamorphic lens's flare. */
-export const FLARE = '#BFD8FF'
-
-/**
- * An anamorphic flare: the long horizontal streak a widescreen lens throws from a bright light, through (x, y)
- * (pixels), `reach` either side, `h` thick at its heart, at `a`. The movie star's life is shot in widescreen
- * (`film.ts`), so its lights flare the way that lens does.
- */
-export function flare(p: p5, x: number, y: number, reach: number, h: number, a: number, hex = FLARE): void {
-  if (a <= 0.004 || reach <= 1) return
-  const ctx = ctxOf(p)
-  ctx.save()
-  ctx.globalCompositeOperation = 'screen'
-  for (const [th, k] of [[h * 3.2, 0.35], [h, 1]] as const) {
-    const g = ctx.createLinearGradient(x - reach, 0, x + reach, 0)
-    g.addColorStop(0, rgba(hex, 0))
-    g.addColorStop(0.4, rgba(hex, 0.35 * a * k))
-    g.addColorStop(0.5, rgba(hex, a * k))
-    g.addColorStop(0.6, rgba(hex, 0.35 * a * k))
-    g.addColorStop(1, rgba(hex, 0))
-    ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.ellipse(x, y, reach, Math.max(0.5, th / 2), 0, 0, Math.PI * 2)
-    ctx.fill()
-  }
-  ctx.restore()
 }

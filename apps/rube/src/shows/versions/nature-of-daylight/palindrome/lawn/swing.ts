@@ -73,14 +73,11 @@ export const bankAt = (a: number): Pt => [BANK[0] - ROPE * Math.sin(a), BANK[1] 
 type Key = [number, number]
 const SWING_KEYS: Key[] = [
   [22.111, 0],
-  // Still until her first push (24.131), from the bottom.
-  [24.131, 0],
-  [25.397, 9],
-  [27.196, -8.5],
-  [28.706, 13],
-  [30.273, -12.5],
-  [32.311, 17],
-  [34.453, -16.5],
+  // Still while Hannah runs off along the grass and back into her mother (the run, `RUN`), until the first push, from
+  // the bottom, on the chord (30.273).
+  [30.273, 0],
+  [32.311, 13],
+  [34.453, -12.5],
   [36.473, 20.5],
   // The second voice: she is a girl now; the arcs higher; the first time she reaches the leaves (40.902).
   [38.609, -20],
@@ -93,16 +90,9 @@ const SWING_KEYS: Key[] = [
   [52.86, 32],
   [55.449, -31],
   [57.435, 33.5],
+  // The back of the last arc, still for a moment, as the picture cuts to the room years on (59.362): Hannah on the seat
+  // where the stool will have her.
   [59.362, -32.5],
-  // The top of the last big arc: she lets go and leaps (61.365).
-  [61.365, 35],
-  // The empty seat comes back to Louise, who catches it (63.286), and it swings on only a little.
-  [63.286, -23],
-  [65.707, 10],
-  // Hannah back on it, Louise steadying it (68.011); it settles, still, as the light goes.
-  [68.011, -6],
-  [69.927, 2.6],
-  [71.953, 0],
 ]
 /** What she sees in the fog: the same swing on a summer evening, going already; Louise pushes (254.108). */
 const SEES_KEYS: Key[] = [
@@ -114,14 +104,13 @@ const SEES_KEYS: Key[] = [
 ]
 const keysAt = (t: number): Key[] => (t < 150 ? SWING_KEYS : SEES_KEYS)
 
-/** The swing's angle at show time `t`, radians: the pendulum, and the empty seat kicked back as she leaps off it. */
+/** The swing's angle at show time `t`, radians: the pendulum; the still seat kicked back as she hops off it, and
+ * nudged on as she hops back onto it, both died away before the first push. */
 export function theta(t: number): number {
-  const s = t - 61.365
-  const kick = s > 0 && s < 1.6 ? -KICK * (s / KICK_T) * Math.exp(1 - s / KICK_T) : 0
-  return swingAngle(t) + kick
+  return swingAngle(t) + nudge(t - RUN.off, -KICK) + nudge(t - RUN.on, 0.6 * KICK)
 }
-const KICK = 6 * DEG
-const KICK_T = 0.16
+const KICK = 3 * DEG
+const nudge = (s: number, a: number): number => (s > 0 && s < 1.9 ? a * Math.sin(s * 4.6) * Math.exp(-s / 0.38) : 0)
 function swingAngle(t: number): number {
   const keys = keysAt(t)
   if (t <= keys[0][0]) return keys[0][1] * DEG
@@ -144,9 +133,10 @@ export const BRUSHES: { t: number; depth: number }[] = [...SWING_KEYS, ...SEES_K
 
 /* ------------------------------------------------------------------ Hannah */
 
-/** Her size: a child at the swing's start, a girl by the second voice; a young woman in what Louise sees. */
+/** Her size: a small child through the run, growing on the swing to a girl by the spring; a young woman in what
+ * Louise sees. */
 export const hannahScale = (t: number): number =>
-  t < 150 ? HANNAH_AGE.child + (HANNAH_AGE.girl - HANNAH_AGE.child) * smooth(t, 26.5, 61) : HANNAH_AGE.young
+  t < 150 ? HANNAH_AGE.child + (HANNAH_AGE.girl - HANNAH_AGE.child) * smooth(t, 30.3, 58.6) : HANNAH_AGE.young
 
 const dir = (a: number): Pt => [Math.sin(a), Math.cos(a)]
 const tan = (a: number): Pt => [Math.cos(a), -Math.sin(a)]
@@ -172,96 +162,130 @@ export function contactAt(t: number): Pt {
 }
 
 /**
- * Her leap from the top of the last big arc (61.365): off the seat, up out through the leaves, down on the grass on
- * the beat (62.357); she rolls on, turns, comes back, and hops back onto the seat as Louise steadies it (68.011).
+ * Come back to me (22.111 → 30.273): before the swing, the child's game in the film's prologue. On the beat she hops
+ * down off the front of the still seat and runs away along the grass toward the water, looking back at her mother,
+ * who comes a step after her and waits; at the far end she turns with a skip (the beat), and runs back, under the seat,
+ * into her (the chord). She bounces off, and hops up onto the seat (the beat); her mother goes in under it to its back,
+ * for the first push. (The swing alone held one slowly opening framing for its first 16 s.)
  */
-export const LEAP = 61.365
-export const LANDS = 62.357
-export const BACK_ON = 68.011
-const LAND_X = 65.3
-const ROLL_OUT = 0.62
-const HOP_FROM_X = 60.78
+export const RUN = {
+  /** Off the seat. */
+  off: 23.174,
+  /** The skip at the far end, turning. */
+  turn: 25.136,
+  /** Back into her mother. */
+  into: 27.196,
+  /** Onto the seat. */
+  on: 28.241,
+}
 const HOP_T = 0.42
 const groundH = (t: number) => R - R * hannahScale(t)
+/** Where she lands off the seat, how far she runs, and where Louise waits for her. */
+const DOWN_X = 61.15
+const FAR_X = 63.1
+export const WAIT_X = 59.95
+const INTO_X = WAIT_X + R + R * HANNAH_AGE.child
+/** Off her a little, low, still under the seat; then out in front of it, to hop up onto it from there. */
+const BOUNCE_X = INTO_X + 0.25
+const BOUNCE_T = 0.3
+const FRONT_X = 60.95
+/** Leaving the turn, and leaving the bounce for the seat. */
+const BACK_T = 25.55
+const UP_T = RUN.on - HOP_T
 
-const leapFrom = (): Pt => seatedAt(LEAP)
-const leapV = (): Pt => launch(leapFrom(), [LAND_X, groundH(LANDS)], LANDS - LEAP).out
+/** A flight from `a` at `t0` to `b` at `t1` under gravity, at `t`. */
+function flight(a: Pt, b: Pt, t0: number, t1: number, t: number): Pt {
+  const T = t1 - t0
+  const s = t - t0
+  const v = launch(a, b, T).out
+  return [a[0] + v[0] * s, a[1] + v[1] * s + 0.5 * G * s * s]
+}
+/** Running along the grass from `x0` (at `v0`) to `x1` (at `v1`) between two times: a child's run, skipping. */
+function run(x0: number, v0: number, x1: number, v1: number, t0: number, t1: number, t: number): Pt {
+  const T = t1 - t0
+  const u = clamp01((t - t0) / T)
+  const h00 = 2 * u ** 3 - 3 * u ** 2 + 1
+  const h10 = u ** 3 - 2 * u ** 2 + u
+  const h01 = -2 * u ** 3 + 3 * u ** 2
+  const h11 = u ** 3 - u ** 2
+  const x = h00 * x0 + h10 * T * v0 + h01 * x1 + h11 * T * v1
+  const skip = 0.05 * Math.abs(Math.sin((Math.PI * (t - t0)) / 0.3)) * Math.sin(Math.PI * u)
+  return [x, groundH(t) - skip]
+}
 
 /**
- * Where her mark looks (radians, y down): a head, not a wheel. Out toward the lake as she swings; round to the way she
- * runs when she comes back for the seat, and out again once she is on it.
+ * Where her mark looks (radians, y down): a head, not a wheel. Out toward the lake on the seat; back at her mother as
+ * she runs from her and to her; out again once she is on the seat.
  */
 const LOOK_OUT = -0.4
 const LOOK_BACK = -Math.PI + 0.4
 export function hannahLook(t: number): number {
-  if (t > 150 || t < LANDS) return LOOK_OUT
-  const round = smooth(t, LANDS + ROLL_OUT + 0.05, LANDS + ROLL_OUT + 0.6) - smooth(t, BACK_ON + 0.1, BACK_ON + 0.8)
-  return LOOK_OUT + (LOOK_BACK - LOOK_OUT) * round
+  if (t > 150) return LOOK_OUT
+  const back = smooth(t, RUN.off + 0.05, RUN.off + 0.45) - smooth(t, RUN.on + 0.1, RUN.on + 0.8)
+  return LOOK_OUT + (LOOK_BACK - LOOK_OUT) * back
 }
 
 /** Hannah at show time `t` (world cells), and her size; null outside the lawn's two legs. */
 export function hannahAt(t: number): { x: number; y: number; scale: number } | null {
   const scale = hannahScale(t)
-  if (t < LEAP || t >= BACK_ON || t > 150) {
-    const [x, y] = seatedAt(t)
-    return { x, y, scale }
-  }
-  if (t < LANDS) {
-    const s = t - LEAP
-    const [x0, y0] = leapFrom()
-    const [vx, vy] = leapV()
-    return { x: x0 + vx * s, y: y0 + vy * s + 0.5 * G * s * s, scale }
-  }
-  const y = groundH(t)
-  const vx = leapV()[0]
-  const xStop = LAND_X + (vx * ROLL_OUT) / 2
-  if (t < LANDS + ROLL_OUT) {
-    // She lands bouncing, a child's landing: a small hop up off the grass as she runs on. (Rolled flat to a stop and
-    // left there, she read as thrown off the swing, lying still.) Low, about her own height: four times it, caught in
-    // the air she hung against the lake, afloat on it.
-    const s = t - LANDS
-    const u = s / ROLL_OUT
-    return { x: LAND_X + vx * s - (vx * s * s) / (2 * ROLL_OUT), y: y - 0.15 * 4 * u * (1 - u), scale }
-  }
-  const hop = BACK_ON - HOP_T
-  // And straight back for the seat, running, there with a beat in hand to wait for it.
-  const back0 = LANDS + ROLL_OUT + 0.12
-  const back1 = hop - 1.3
-  if (t < hop) {
-    // Running, not eased back: up to pace in a quarter of a second, on at it, skipping as a child runs, and waiting by
-    // the seat for it. (Eased out of a stop over three seconds, she lay where she landed most of a second first, and
-    // the leap read as a child thrown from the swing.)
-    const T = Math.min(2.6, back1 - back0)
-    const a = 0.25
-    const d = Math.max(0, Math.min(T, t - back0))
-    const v = 1 / (T - a)
-    const u = d < a ? (v * d * d) / (2 * a) : d > T - a ? 1 - (v * (T - d) ** 2) / (2 * a) : v * (d - a / 2)
-    const running = d > 0 && d < T ? 1 : 0
-    const skip = running * 0.06 * Math.abs(Math.sin((Math.PI * d) / 0.34))
-    return { x: xStop + (HOP_FROM_X - xStop) * u, y: y - skip, scale }
-  }
-  // The hop onto the seat: a parabola from the grass in front of it onto it, landing on the chord.
-  const [x1, y1] = seatedAt(BACK_ON)
-  const s = (t - hop) / HOP_T
-  const arc = (G * HOP_T * HOP_T) / 8
-  return { x: HOP_FROM_X + (x1 - HOP_FROM_X) * s, y: y + (y1 - y) * s - arc * 4 * s * (1 - s), scale }
+  const at = (p: Pt) => ({ x: p[0], y: p[1], scale })
+  if (t > 150 || t < RUN.off || t >= RUN.on) return at(seatedAt(t))
+  const down: Pt = [DOWN_X, groundH(RUN.off + HOP_T)]
+  if (t < RUN.off + HOP_T) return at(flight(seatedAt(RUN.off), down, RUN.off, RUN.off + HOP_T, t))
+  const vDown = launch(seatedAt(RUN.off), down, HOP_T).in[0]
+  const skipFrom = RUN.turn - 0.28
+  if (t < skipFrom) return at(run(DOWN_X, vDown, FAR_X - 0.06, 0.4, RUN.off + HOP_T, skipFrom, t))
+  // The skip at the far end, turning round on it.
+  if (t < RUN.turn) return at(flight([FAR_X - 0.06, groundH(skipFrom)], [FAR_X, groundH(RUN.turn)], skipFrom, RUN.turn, t))
+  if (t < BACK_T) return at([FAR_X, groundH(t)])
+  // Back to her, under the seat, at a run into her.
+  if (t < RUN.into) return at(run(FAR_X, 0, INTO_X, -2.1, BACK_T, RUN.into, t))
+  // Off her a little, a bounce, out from under the seat, and up onto it from in front.
+  if (t < RUN.into + BOUNCE_T) return at(flight([INTO_X, groundH(RUN.into)], [BOUNCE_X, groundH(RUN.into + BOUNCE_T)], RUN.into, RUN.into + BOUNCE_T, t))
+  if (t < UP_T) return at(run(BOUNCE_X, 0.6, FRONT_X, 0, RUN.into + BOUNCE_T, UP_T, t))
+  return at(flight([FRONT_X, groundH(UP_T)], seatedAt(RUN.on), UP_T, RUN.on, t))
 }
+
+/** Louise through the run: a step after her as she goes, waiting; giving a little as she runs into her; in under the
+ * seat to its back once Hannah is on it, there at rest a beat before the first push. */
+function runX(t: number): number {
+  const X = firstPushX()
+  if (t <= RUN.off + 0.3) return HERE[0]
+  if (t < RUN.off + 1.5) return HERE[0] + (WAIT_X - HERE[0]) * smooth(t, RUN.off + 0.3, RUN.off + 1.5)
+  if (t < RUN.into) return WAIT_X
+  const u = t - RUN.into
+  if (u < 0.8) return WAIT_X - 0.07 * Math.sin((Math.PI * u) / 0.8) * Math.exp(-u / 0.5)
+  if (t < RUN.on + 0.1) return WAIT_X
+  if (t < RUN_END - 0.05) return WAIT_X + (X - WAIT_X) * smooth(t, RUN.on + 0.1, RUN_END - 0.05)
+  return X
+}
+/** The run's end for Louise: under the seat's back, at rest, a beat before the first push. */
+const RUN_END = 29.304
+/** Where she waits under the seat's back for the first push: the spot `louiseLane` hops up from. */
+const firstPushX = (): number => contactAt(SWING_TOUCHES[0].t)[0] - 0.05
+
+/**
+ * The run again, at the end (341.618 → 345.490): the film's own ending brings back its prologue's Hannah as Louise
+ * chooses, so the room by the window cuts for one chord to the run, a little slower, from Hannah running off to her
+ * running back into her mother, on a strong note of the tune (344.276), and up onto the seat. Show time to the run's.
+ */
+export const RECALL = { bump: 344.276, rate: 0.9 }
+export const recallTime = (t: number): number => RUN.into + (t - RECALL.bump) * RECALL.rate
+/** Louise through the run (world cells), for the remembering of it. */
+export const runLouiseAt = (r: number): Pt => [runX(r), rest(runX(r))]
 
 /* ------------------------------------------------------------------ Louise */
 
-/** Every time Louise's front meets the seat: her pushes (at the back of the arc, on the chords), the catch, the steadying. */
+/** Every time Louise's front meets the seat: her pushes, at the back of the arc, on the chords. */
 export interface Touch {
   t: number
   /** How long she stays with the seat, pushing, before it outruns her. */
   carry: number
 }
 export const SWING_TOUCHES: Touch[] = [
-  { t: 24.131, carry: 0.26 },
-  ...[27.196, 30.273, 34.453, 38.609, 43.207, 46.353, 50.486, 55.449, 59.362].map((t) => ({ t, carry: 0.18 })),
-  // The empty seat, caught.
-  { t: 63.286, carry: 0.2 },
-  // Steadying it as Hannah climbs back on.
-  { t: 68.011, carry: 0.3 },
+  // The first push, from the bottom, once Hannah is back on the seat.
+  { t: 30.273, carry: 0.26 },
+  ...[34.453, 38.609, 43.207, 46.353, 50.486, 55.449].map((t) => ({ t, carry: 0.18 })),
 ]
 export const SEES_TOUCHES: Touch[] = [{ t: 254.108, carry: 0.2 }]
 
@@ -352,15 +376,18 @@ let lanes: { swing: Seg[]; sees: Seg[] } | null = null
 /** Louise's lanes for the swing and the vision, in world cells (the parts shift them into their own frames). */
 export function louiseLanes(): { swing: Seg[]; sees: Seg[] } {
   lanes ??= {
-    swing: louiseLane(HERE, SEAM.swing, SWING_TOUCHES, HERE, SEAM.bed, SEAM.bed - 0.75),
-    sees: louiseLane(SEES_FROM, SEAM.sees, SEES_TOUCHES, SEES_TO, SEAM.fog2, SEAM.fog2 - 0.35),
+    swing: [
+      ...carried((t) => [runX(t), rest(runX(t))], SEAM.swing, RUN_END, Math.ceil((RUN_END - SEAM.swing) * 30)),
+      ...louiseLane([firstPushX(), rest(firstPushX())], RUN_END, SWING_TOUCHES, bankAt(32.5 * DEG), SEAM.teen, SEAM.teen - 0.75),
+    ],
+    sees: louiseLane(SEES_FROM, SEAM.sees, SEES_TOUCHES, SEES_TO, SEAM.fog2, SEAM.fog2 - 1.6),
   }
   return lanes
 }
 /** Where Louise is at show time `t` on the lawn (world cells), or null when she is elsewhere. */
 export function louiseAt(t: number): Pt | null {
   const L = louiseLanes()
-  if (t >= SEAM.swing && t <= SEAM.bed) {
+  if (t >= SEAM.swing && t <= SEAM.teen) {
     const p = laneAt({ segs: L.swing, fire: 0 }, t - SEAM.swing)
     return [p.x, p.y]
   }

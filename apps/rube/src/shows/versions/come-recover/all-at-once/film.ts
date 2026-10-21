@@ -13,9 +13,8 @@ import type { WorldKey } from './worlds'
  * - **The kung fu picture** (the dojo) is an old print in scope: faded warm, its blacks lifted, heavy grain that
  *   dances a frame at a time, a scratch or two down the emulsion, dust, and a darker edge.
  *
- * - **The hot dog life** is a soft-focus romance: the full frame, its edges gone to a glowing pink haze as if the
- *   lens were gauzed, and a faint bloom over it. It ends as an old romance does, the picture closing on her in a
- *   heart.
+ * - **The hot dog life** is a soft-focus romance: the full frame, its edges gone to a soft pink haze as if the
+ *   lens were gauzed. It ends as an old romance does, the picture closing on her in a heart.
  * - **Raccacoonie** is a cartoon, drawn clean; it opens on her the way a cartoon does, in a round iris that blooms
  *   out to the frame, and ends with the iris closing on her.
  *
@@ -234,19 +233,14 @@ export function paintPicture(ctx: CanvasRenderingContext2D, look: Look, x: numbe
       paintVignette(ctx, x, y + top, w, bottom - top, 0.5, true)
     }
   } else if (look === 'dream') {
-    // A faint bloom over all of it, and the edges gone soft into a glowing haze.
-    ctx.save()
-    ctx.globalCompositeOperation = 'screen'
-    ctx.fillStyle = 'rgba(255, 228, 232, 0.08)'
-    ctx.fillRect(x, y, w, h)
-    ctx.restore()
+    // The edges gone soft into a pink haze, as through a gauzed lens; the room still there under it.
     ctx.save()
     ctx.translate(x + w / 2, y + h / 2)
     ctx.scale(1, h / w)
-    const g = ctx.createRadialGradient(0, 0, 0.3 * w, 0, 0, 0.66 * w)
+    const g = ctx.createRadialGradient(0, 0, 0.34 * w, 0, 0, 0.68 * w)
     g.addColorStop(0, 'rgba(255, 236, 238, 0)')
-    g.addColorStop(0.6, 'rgba(255, 236, 238, 0.32)')
-    g.addColorStop(1, 'rgba(255, 244, 245, 0.78)')
+    g.addColorStop(0.6, 'rgba(255, 236, 238, 0.2)')
+    g.addColorStop(1, 'rgba(255, 240, 242, 0.5)')
     ctx.fillStyle = g
     ctx.fillRect(-w / 2, -w / 2, w, w)
     ctx.restore()
@@ -329,7 +323,9 @@ export const IRISES: Partial<Record<WorldKey, Iris[]>> = {
 export function irisAt(iris: Iris, t: number): number | null {
   if (t < iris.from || t > iris.to) return null
   const u = (t - iris.from) / (iris.to - iris.from)
-  // Opening: quick from her and slowing to the frame. Closing: slow from the frame, quickening onto her.
+  // Opening: quick from her and slowing to the frame. Closing: slow from the frame, quickening onto her. The heart is
+  // scaled, not grown (`paintIris`), so it closes at an even pace.
+  if (iris.shape === 'heart') return 1 - u
   return iris.open ? 1 - (1 - u) ** 3 : 1 - u * u * u
 }
 
@@ -352,8 +348,11 @@ function heartPath(ctx: CanvasRenderingContext2D, x: number, y: number, r: numbe
 function paintIris(ctx: CanvasRenderingContext2D, iris: Iris, open: number, x: number, y: number, w: number, h: number, cx: number, cy: number, k: number): void {
   // Wide open is past the frame's far corner from her.
   const far = Math.max(Math.hypot(cx - x, cy - y), Math.hypot(cx - x - w, cy - y), Math.hypot(cx - x, cy - y - h), Math.hypot(cx - x - w, cy - y - h))
-  const big = iris.shape === 'heart' ? far * 1.5 : far * 1.05
-  const r = iris.small * k + (big - iris.small * k) * open
+  const small = iris.small * k
+  // A heart's cleft dips to a sixth of it above her: wide open, that is over the frame's top too, so nothing of it is
+  // in the frame until it starts to close; and it shrinks by the same ratio each moment, or the cleft hangs in the
+  // frame alone and the rest of it comes in all at once.
+  const r = iris.shape === 'heart' ? small * (Math.max(far * 1.5, (cy - y) / 0.15) / small) ** open : small + (far * 1.05 - small) * open
   ctx.save()
   ctx.beginPath()
   ctx.rect(x - 2, y - 2, w + 4, h + 4)

@@ -64,9 +64,3 @@ export const registry: Contraption<any>[] = [
   trampoline,
   trapeze,
 ]
-
-export const byName = (name: string): Contraption<any> | undefined =>
-  registry.find((c) => c.name === name)
-
-export const allTags = (): string[] =>
-  [...new Set(registry.flatMap((c) => c.tags ?? []))].sort()

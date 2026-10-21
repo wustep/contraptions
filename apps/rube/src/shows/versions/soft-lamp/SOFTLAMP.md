@@ -1,8 +1,10 @@
 # Soft Lamp (Opus 5.5)
 
-`/shows/soft-lamp/` opens **Soft Lamp**, **Opus 5.5 (Still)** (`/shows/soft-lamp/opus55-still/`), the half hour held in
-one frame, on the **Ambient** shelf beside Gymnopédie. It leads the work (the eighty-ninth pass); the moving camera,
-**Opus 5.5** (`/shows/soft-lamp/opus55/`), is second in the picker.
+`/shows/soft-lamp/` opens **Soft Lamp**, **Opus 5.5** (also `/shows/soft-lamp/opus55-still/`), the half hour held in
+one frame, on the **Ambient** shelf beside Gymnopédie. It is the work's one take: the moving camera (`opus55`) is
+hidden for now (Oct 15: its file is `opus55.ts`, not `opus55.show.ts`; see its header to bring it back), and its old
+link opens the still take. Below, **Opus 5.5 (Still)** is the still take and **Opus 5.5** the moving one, as they were
+labelled side by side.
 
 Half an hour of Lofi Girl's *Best of lofi hip hop 2021*, its first twelve tracks, round a small machine on a study desk
 by a window, from dusk into a rainy night. It is music to study to, and the picture is meant to be left on, in the
@@ -1655,4 +1657,5 @@ last downbeat; the turn at the pot and a walk that never turns back or stops; no
 in the groove, in the cup; the ball in the hollow while it sits; still at the end; the camera under half a frame a
 second and half a frame a second a second; every held frame whole and clear; Zoom; the words; the first snow after the heavy rain, stopped before the shooting
 stars, settled to the end, and the kitten looking up at it in view; the hand's six reaches, each in frame; the still
-take first in the picker and at `/shows/soft-lamp/`.
+take the work's one take, at `/shows/soft-lamp/`, and the moving take's old link opening it. With the moving take
+hidden, these still run on its code, which the still take plays under its own camera.

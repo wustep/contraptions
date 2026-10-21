@@ -1,5 +1,5 @@
-import { R, ROLL, definePiece, laneAt, laneReach, mixHex, over, post, rail, ramp, roll, type BallChange, type Lane } from '../../parts'
-import { glow, score } from './neon'
+import { R, ROLL, definePiece, laneAt, laneReach, mixHex, post, rail, ramp, roll, type BallChange, type Lane } from '../../parts'
+import { score } from './neon'
 import { BEZEL, pixel as square, screen } from './screen'
 
 /**
@@ -67,12 +67,10 @@ export const pixel = definePiece<{ color: string; paint: string; palette: string
     const changes: BallChange[] = [{ at: T_MID, color: paint }]
     return { cells: [[0, 0]], exit: { at: [1, 0], dir: 1 }, lane: LANE, state: { color, paint, palette: theme.colors }, changes }
   },
-  draw: (p, s, { k, t, since, ink, weight }) => {
-    const on = t > T_ON && t < T_OFF ? 1 : t >= T_OFF ? 1 - over(t, T_OFF, T_OFF + 0.5) : 0
+  draw: (p, _s, { k, ink, weight }) => {
     rail(p, k, ink, weight, -0.5, 0.5)
-    // The stand, and the screen's light on the night behind it while it has something to show.
+    // The stand.
     post(p, k, ink, weight, 0, Y1 + BEZEL, 0.5)
-    glow(p, k, since < 0 ? s.color : s.paint, 0, (Y0 + Y1) / 2, 0.26, on)
   },
   // Over the screen's top, clear of the palette and the picture: the screen is what there is to see.
   scores: (p, s, { k, since, bg }) => score(p, k, s.paint, bg, 0, Y0 - BEZEL + 0.1, '+100', since, 1),

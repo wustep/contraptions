@@ -89,6 +89,9 @@ export type Beat = [piece: Piece<any>, note: string]
 export function additions(stock: World, entries: readonly Entry[]): Shelf {
   const borrowed = (name: string) => stock.pieces.find((c) => c.name === name)!
   const finale = stock.pieces.filter((c) => c.finale)
+  // The band is already named for the world it waits on; what its caption adds is how much is new and how much came back.
+  const made = entries.filter(([, status]) => status === 'new').length
+  const counts = [made ? `${made} new` : '', entries.length > made ? `${entries.length - made} restored` : ''].filter(Boolean).join(', ')
   return {
     world: {
       name: `staged-${stock.name}`,
@@ -99,7 +102,7 @@ export function additions(stock: World, entries: readonly Entry[]): Shelf {
       tastes: { even: {} },
       pieces: [borrowed('rail'), ...entries.map(([piece]) => piece), ...finale, borrowed('portal')],
       own: entries.map(([piece]) => piece.name),
-      staged: `waiting to join ${stock.label}`,
+      staged: counts,
     },
     staged: Object.fromEntries(entries.map(([piece, status, note]) => [piece.name, { status, note }])),
   }

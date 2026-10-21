@@ -18,6 +18,8 @@ import {
   toneMarty,
   toneMish,
 } from './draw'
+import { drawCat, drawNearRain } from './night'
+import { drawCrash } from './room'
 import { BONK, END, FOOT, HOTEL_STRIKES, hotelShots, LAND, mishkin, STANDS, WAY } from './geo'
 
 /**
@@ -31,7 +33,8 @@ import { BONK, END, FOOT, HOTEL_STRIKES, hotelShots, LAND, mishkin, STANDS, WAY 
  * above; on bar 55 the last ladder slides down on its counterweight, and he drops to the pavement under the
  * streetlight and comes to rest at its foot.
  *
- * See `geo.ts` for the clock and the ground, `draw.ts` for the drawing.
+ * See `geo.ts` for the clock and the ground, `draw.ts` for the drawing, `night.ts` for the night outside and `room.ts`
+ * for the rooms' life.
  */
 
 export const HOTEL_AT: Pt = [0, 0]
@@ -48,7 +51,9 @@ export const hotelSet = scenery<null>({
     p.push()
     drawOutside(pen, c.t, f)
     drawBuilding(pen, c.t, f)
-    drawFireEscape(pen, c.t)
+    drawFireEscape(pen, c.t, f)
+    drawCat(pen, c.t, f)
+    drawNearRain(pen, c.t, f)
     p.pop()
   },
 })
@@ -82,6 +87,7 @@ export const tub = part<HotelState>(
         drawWallOver(base, frame(p, c.k))
       }
       drawDebris(mish, t)
+      drawCrash(mish, t)
       drawStamp(mish, t)
       p.pop()
     },

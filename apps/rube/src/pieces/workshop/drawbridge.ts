@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine, easeInQuad } from '../../../../../src/core/ease'
-import { FLOOR, ROLL, arrive, arriveAt, burst, definePiece, over, rail, roll, wait, type Lane, type Pt } from '../../parts'
+import { FLOOR, ROLL, arrive, arriveAt, definePiece, over, rail, roll, wait, type Lane, type Pt } from '../../parts'
 
 /**
  * A drawbridge. The bridge stands up against its tower over a gap in the
@@ -93,13 +93,19 @@ export const drawbridge = definePiece<{ color: string }>({
     solid(p, ink, weight, bg)
     p.circle(HINGE[0] * k, HINGE[1] * k, 0.05 * k)
 
-    // The thump.
-    if (since > FALL && since < FALL + 0.25) {
-      const f = over(since, FALL, FALL + 0.25)
+    // The thump: a fan of ticks up off the landing, on the bridge's side.
+    // A full star round the far post (on the cell's edge) put half of it a
+    // fifth of a cell into the next cell, over whatever was there.
+    if (since > FALL && since < FALL + 0.22) {
+      const f = over(since, FALL, FALL + 0.22)
       p.push()
       p.stroke(s.color)
       p.strokeWeight(weight)
-      burst(p, 1.44 * k, (FLOOR - 0.02) * k, (0.06 + 0.14 * f) * k, (0.1 + 0.2 * f) * k, 5, 3.3)
+      for (const a of [-2.7, -2.1, -1.5]) {
+        const r0 = 0.06 + 0.14 * f
+        const r1 = 0.1 + 0.2 * f
+        p.line((1.44 + Math.cos(a) * r0) * k, (FLOOR - 0.02 + Math.sin(a) * r0) * k, (1.44 + Math.cos(a) * r1) * k, (FLOOR - 0.02 + Math.sin(a) * r1) * k)
+      }
       p.pop()
     }
   },

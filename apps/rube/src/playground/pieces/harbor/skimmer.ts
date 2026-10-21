@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../../src/core/draw'
 import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, fly, over, rail, ramp, roll, trace, wait, type Lane, type Pt } from '../../../parts'
-import { WATER, bodyColor, piling, seaWater, seabed, splash, water } from '../../../pieces/harbor/sea'
+import { WATER, bodyColor, piling, seaWater, seabed, water } from '../../../pieces/harbor/sea'
 
 /**
  * A skimmer. The last plank of the deck is not a plank: it is the arm of a
@@ -164,7 +164,7 @@ export const skimmer = definePiece<{ color: string }>({
     outline(p, ink, weight)
     p.line((PX + 0.05) * k, LUG[1] * k, LUG[0] * k, LUG[1] * k)
     const tail: Pt = [PX - TAIL * Math.cos(a), PY - TAIL * Math.sin(a)]
-    const coils = 3
+    const coils = 2
     const sx = tail[0] - LUG[0]
     const sy = tail[1] - LUG[1]
     const len = Math.hypot(sx, sy) || 1
@@ -174,7 +174,7 @@ export const skimmer = definePiece<{ color: string }>({
     for (let i = 0; i < coils * 2; i++) {
       const f = (i + 0.5) / (coils * 2)
       const side = i % 2 ? -1 : 1
-      p.vertex((LUG[0] + sx * f + (-sy / len) * 0.04 * side) * k, (LUG[1] + sy * f + (sx / len) * 0.04 * side) * k)
+      p.vertex((LUG[0] + sx * f + (-sy / len) * 0.045 * side) * k, (LUG[1] + sy * f + (sx / len) * 0.045 * side) * k)
     }
     p.vertex(tail[0] * k, tail[1] * k)
     p.endShape()
@@ -191,8 +191,16 @@ export const skimmer = definePiece<{ color: string }>({
     solid(p, ink, weight, s.color)
     p.circle(PX * k, PY * k, 0.075 * k)
 
-    // The sea, and a ring left on it at every touch.
+    // The sea, and a ring left on it at every touch: a skimmed stone throws up no spray worth the name.
     water(p, k, ink, bg, weight, -0.5, 3.5)
-    TOUCH.forEach(({ x, at }, i) => splash(p, k, sea, weight, x, WATER, over(t, at, at + 0.55), 0.95 - 0.2 * i))
+    p.noFill()
+    p.stroke(sea)
+    TOUCH.forEach(({ x, at }, i) => {
+      const f = over(t, at, at + 0.55)
+      if (f <= 0 || f >= 1) return
+      const size = 0.95 - 0.2 * i
+      p.strokeWeight(weight * (1 - f))
+      p.ellipse(x * k, WATER * k, (0.1 + 0.36 * f) * size * k, (0.03 + 0.1 * f) * size * k)
+    })
   },
 })

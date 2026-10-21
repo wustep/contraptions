@@ -10,9 +10,8 @@ import { ivoryFor, rod } from './parts-a'
  * corner on its shoulder and carries the triangle up ahead of it, swung
  * right over on its loop until the bar lies across the ball's top; the
  * ball goes under, the corner slips off its back, and the triangle swings
- * free, a long way over and back, ringing: the steel shivers where it
- * hangs, and the swings die away. Nothing stops here; a triangle is
- * punctuation.
+ * free, a long way over and back, turning on its loop, and the swings die
+ * away. Nothing stops here; a triangle is punctuation.
  *
  * The triangle is pushed, not animated: its swing while the ball has it is
  * solved for, the least swing that keeps all three bars off the ball.
@@ -99,30 +98,12 @@ const OMEGA = 8.2
 const swingAfter = (since: number) => LET_GO * Math.cos(OMEGA * since) * Math.exp(-since * 1.15)
 /** It turns on its loop as it swings, so we see it narrow and widen. */
 const twist = (since: number) => 1.1 * Math.sin(since * 5.3) * Math.exp(-since * 1.4)
-/** The ring: how far the steel shivers either side of itself. */
-const ring = (since: number) => (since < 0 ? 0 : 0.014 * Math.exp(-since * 2.4))
-
-function bars(p: p5, k: number, ink: string, weight: number, color: string, a: number, narrow: number, dx: number, ghost: boolean): void {
+function bars(p: p5, k: number, ink: string, weight: number, color: string, a: number, narrow: number): void {
   // The west bar stops short of the bottom corner: the open corner.
-  const at = (pt: Pt): Pt => {
-    const [x, y] = swung([pt[0] * narrow, pt[1]], a)
-    return [x + dx, y]
-  }
+  const at = (pt: Pt): Pt => swung([pt[0] * narrow, pt[1]], a)
   const [apex, east, west] = CORNERS
   const open: Pt = [west[0] + (apex[0] - west[0]) * (GAP / SIDE), west[1] + (apex[1] - west[1]) * (GAP / SIDE)]
-  const path = [open, apex, east, west].map(at)
-  if (ghost) {
-    const c = p.color(ink)
-    c.setAlpha(70)
-    p.stroke(c)
-    p.strokeWeight(STEEL * k)
-    p.noFill()
-    p.beginShape()
-    for (const [x, y] of path) p.vertex(x * k, y * k)
-    p.endShape()
-    return
-  }
-  rod(p, k, ink, weight * 0.7, color, path, STEEL)
+  rod(p, k, ink, weight * 0.7, color, [open, apex, east, west].map(at), STEEL)
 }
 
 export const triangle = definePiece<{ steel: string }>({
@@ -144,11 +125,6 @@ export const triangle = definePiece<{ steel: string }>({
     outline(p, ink, weight * 0.7)
     p.line(HOOK[0] * k, -0.5 * k, HOOK[0] * k, HOOK[1] * k)
     p.line(HOOK[0] * k, HOOK[1] * k, ax * k, ay * k)
-    const shiver = ring(since)
-    if (shiver > 0.002) {
-      bars(p, k, ink, weight, s.steel, a, narrow, shiver, true)
-      bars(p, k, ink, weight, s.steel, a, narrow, -shiver, true)
-    }
-    bars(p, k, ink, weight, s.steel, a, narrow, 0, false)
+    bars(p, k, ink, weight, s.steel, a, narrow)
   },
 })

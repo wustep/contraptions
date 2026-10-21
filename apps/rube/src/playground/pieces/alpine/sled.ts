@@ -1,5 +1,6 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../src/core/draw'
+import { clamp } from '../../../../../../src/core/ease'
 import { FLOOR, R, ROLL, definePiece, flick, fly, rail, ramp, trace, type Lane, type Pt } from '../../../parts'
 import { body, ride, rounded, trackOf } from './parts-b'
 import { gearColor, powder, snowWhite } from './snow'
@@ -109,7 +110,7 @@ export const sled = definePiece<{ color: string; white: string }>({
     return { cells, exit: { at: [2, 1], dir: 1 }, lane: LANE, state: { color: gearColor(theme, color, ball.color), white: snowWhite(theme) } }
   },
   draw: (p, s, { k, t, since, ink, weight }) => {
-    body(p, k, ink, weight, s.white, LINE, 1.5, 0.95)
+    body(p, k, ink, weight, s.white, LINE, LINE[LINE.length - 1][1])
     rail(p, k, ink, weight, RAIL_X, 1.5, 1 + FLOOR)
 
     // The sledge: where it is, how it lies, and its tail kicked up about the bow when it sticks.
@@ -127,7 +128,7 @@ export const sled = definePiece<{ color: string; white: string }>({
   },
   over: (p, s, { k, since, ink, weight }) => {
     // The heap, in front of the bow that ploughs into it: a mound on the slope's own line, which slumps when it is hit.
-    const h = since > 0 ? 0.15 : 0.18
+    const h = 0.18 - 0.03 * clamp(since / 0.12)
     const n = 24
     const ground = (x: number) => TRACK.at(TRACK.reach(x)).at[1]
     const top = (i: number): Pt => {
@@ -138,8 +139,8 @@ export const sled = definePiece<{ color: string; white: string }>({
     p.fill(s.white)
     p.beginShape()
     for (let i = 0; i <= n; i++) p.vertex(top(i)[0] * k, top(i)[1] * k)
-    // Filled a line's width into the hill, so the two are one snow; less where the hill thins toward its cell's edge.
-    for (let i = n; i >= 0; i--) p.vertex(top(i)[0] * k, (ground(top(i)[0]) + 0.03 * Math.min(1, Math.max(0, (1.43 - top(i)[0]) / 0.1))) * k)
+    // Filled down to the slope's line and no further, so the line runs on under it as the ground it lies on.
+    for (let i = n; i >= 0; i--) p.vertex(top(i)[0] * k, ground(top(i)[0]) * k - weight / 2)
     p.endShape(p.CLOSE)
     outline(p, ink, weight)
     p.beginShape()

@@ -6,10 +6,10 @@ import type { World } from '../../../../worlds'
  * they exist for this show. A world is a palette and a name for the panel; the pieces are laid by the score, so
  * `pieces` stays empty. **Use only these colours** (plus alpha, plus shades mixed from two of them with `mixHex`).
  *
- * Six places: the lake house (Louise's, where Hannah is: her life, which the film lets us take for the past), the
- * valley in Montana where the shell comes down out of the cloud, the inside of the shell (the chamber and the glass),
- * the fog beyond the glass where the heptapods are, the command tent at the camp (the twelve screens: the world), and
- * the gala in the future where General Shang tells her what to say.
+ * Seven places: the lake house (Louise's, where Hannah is: her life, which the film lets us take for the past), the
+ * valley in Montana where the shell comes down out of the cloud, the shaft up into the shell where gravity turns, the
+ * inside of the shell (the chamber and the glass), the fog beyond the glass where the heptapods are, the command tent
+ * at the camp (the twelve screens: the world), and the gala in the future where General Shang tells her what to say.
  *
  * The show's one warm, saturated colour is Louise's gold. Nothing else is that colour: lamps are paler, wood is
  * greyer, the gala's lights are champagne.
@@ -35,10 +35,10 @@ export const HANNAH = '#DE6F86'
 export const HANNAH_ID = 92
 /**
  * Hannah's size as she grows: a scale on the ball. A ladder a viewer can read across the cuts: a baby, a small child on
- * the swing, a girl near Louise's height by the leap, a young woman nearly her size. (Child 0.58 to girl 0.72, she read
- * as the same small ball from the swing to the bed.)
+ * the swing, a girl near Louise's height by the spring, a teenager at the window, a young woman nearly her size. (Child
+ * 0.58 to girl 0.72, she read as the same small ball from the swing to the bed.)
  */
-export const HANNAH_AGE = { baby: 0.42, child: 0.5, girl: 0.8, young: 0.92 } as const
+export const HANNAH_AGE = { baby: 0.42, child: 0.5, girl: 0.8, teen: 0.87, young: 0.92 } as const
 
 /** General Shang: a deep red ball, only at the gala (the future), where he tells her what to say. */
 export const SHANG = '#A8322D'
@@ -169,6 +169,17 @@ export const SHELL = {
   canary: '#E7D46A',
 }
 
+/** The shaft above the deck: the same dark stone, a tall tunnel up into the shell, the white far up it. */
+export const SHAFT_THEME: Theme = {
+  name: 'shaft',
+  label: 'The Shaft',
+  bg: '#0F1113',
+  ink: '#D8D5CB',
+  colors: ['#212428', '#373C41', '#F3F4F0', '#DADFDC', '#41474C', '#0F1113'],
+  weight: 0.8,
+  note: 'A tall tunnel of dark stone up into the shell, where gravity turns and the wall becomes the floor.',
+}
+
 /* ------------------------------------------------------------------ the fog */
 
 export const FOG_THEME: Theme = {
@@ -222,6 +233,32 @@ export const TENT = {
   keypad: '#A9D8B8',
 }
 
+/* ------------------------------------------------------------------ the lecture hall */
+
+export const HALL_THEME: Theme = {
+  name: 'hall',
+  label: 'The Lecture Hall',
+  bg: '#24211F',
+  ink: '#E3DCCF',
+  colors: ['#2E2A27', '#4B443D', '#6E5A48', '#8A8580', '#F1EFE9', '#131517'],
+  weight: 0.8,
+  note: 'The university: dark wood, rising rows, a screen over the stage; the day they came, and years on.',
+}
+
+export const HALL = {
+  wall: '#2E2A27',
+  wallLit: '#4B443D',
+  dark: '#171514',
+  floor: '#3A3430',
+  wood: '#6E5A48',
+  /** The students: muted, a grey a little above the room, as the gala's guests are. */
+  student: '#8A8580',
+  screen: '#F1EFE9',
+  ink: '#131517',
+  /** The room's lamps years on, paler than her gold. */
+  lamp: '#F2DDB4',
+}
+
 /* ------------------------------------------------------------------ the gala */
 
 export const GALA_THEME: Theme = {
@@ -259,7 +296,9 @@ const world = (name: string, label: string, note: string, theme: Theme): World =
 
 export const WORLDS = {
   house: world('house', 'The Lake House', 'Louise and Hannah: the cradle, the swing, the bed by the window.', HOUSE_THEME),
+  hall: world('hall', 'The Lecture Hall', 'The day they came, her students\' phones lighting with the news; and years on, teaching their language.', HALL_THEME),
   valley: world('valley', 'Montana', 'The shell comes down out of the cloud over the meadow, and goes back up into it.', VALLEY_THEME),
+  shaft: world('shaft', 'The Shaft', 'Up into the shell, where gravity turns.', SHAFT_THEME),
   shell: world('shell', 'The Shell', 'The chamber and the glass: contact, and the language.', SHELL_THEME),
   fog: world('fog', 'Beyond the Glass', 'The heptapods, and what they show her.', FOG_THEME),
   tent: world('tent', 'The Command Tent', 'Twelve screens, one for every shell: the world.', TENT_THEME),

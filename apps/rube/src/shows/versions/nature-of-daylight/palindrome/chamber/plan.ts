@@ -37,8 +37,7 @@ export const PLATE = 5.8
  * presses the plate, then flips up to stand facing the glass, and falls flat again after she steps off.
  */
 export const BOARD = { x: 4.95, w: 0.8, h: 0.6, legs: 0.3 }
-/** Where she stands to begin with (the threshold), where she comes to rest before the glass, and Ian beside her. */
-export const THRESHOLD = 0
+/** Where she comes to rest before the glass, and Ian beside her. */
 export const REST = 5.6
 export const IAN_BY = -0.42
 /** Ian's place while she works the machine: behind her board. */
@@ -69,9 +68,9 @@ export const INTO = 0.9
 const b = (t: number): number => nearestBeat(t)
 
 export const T = {
-  /** Contact: from the threshold in the dark. */
+  /** Contact: in out of the tunnel from the shaft, as the glass wakes. */
   in: SEAM.contact,
-  /** The glass's first light, as she comes in; full on the next chord, when she has come up to it. */
+  /** The glass's first light, and its waking: the moment she comes in. */
   kindle: SEAM.contact,
   wake: b(135.442),
   /** They come out of the white. */
@@ -105,6 +104,14 @@ export const T = {
   flood: b(229.129),
   fog: SEAM.fog,
 }
+
+/**
+ * How fast she comes in out of the tunnel (cells a second), as she came along the shaft, and where she and Ian are at
+ * that moment: each slows evenly from it to rest before the glass, she as Abbott looms, Ian a moment after.
+ */
+export const ENTRY_V = 1.8
+export const ENTER = 4.1 - (ENTRY_V * (T.abbott - T.in)) / 2
+export const IAN_ENTER = 3.66 - (ENTRY_V * (T.abbott + 0.1 - T.in)) / 2
 
 /** Her board up, each time she lands on the plate; and when she steps off it again. */
 export const BOARDS: { t: number; off: number }[] = [
@@ -203,11 +210,11 @@ const at = (t: number, x: number, ease?: Seg['ease'], y = 0): Way => ({ at: t, p
 /** Louise in contact, show times, world cells. */
 function contactWays(): Way[] {
   const w: Way[] = []
-  w.push(at(T.in, THRESHOLD))
-  // In from the threshold, slowly, as the glass comes up; she arrives as it wakes.
-  w.push(at(T.wake, 4.05, 'inout'))
+  // In out of the tunnel at the speed she came along the shaft, slowing to rest before the glass as it wakes; there
+  // as Abbott looms out of the white.
+  w.push(at(T.in, ENTER))
+  w.push({ at: T.abbott, p: [4.1, 0], ramp: [ENTRY_V, 0] })
   // Abbott: she draws back a little, then comes on again; Costello: again.
-  w.push(at(T.abbott, 4.1, 'inout'))
   w.push(at(T.abbott + 0.75, 3.88, 'out'))
   w.push(at(T.costello, 4.02, 'inout'))
   w.push(at(T.costello + 0.7, 3.93, 'out'))
@@ -261,10 +268,9 @@ function contactWays(): Way[] {
 /** Ian in contact. */
 function ianContactWays(): Way[] {
   const w: Way[] = []
-  const x0 = THRESHOLD + IAN_BY
-  w.push(at(T.in, x0))
-  w.push(at(T.wake + 0.15, 4.05 + IAN_BY, 'inout'))
-  w.push(at(T.abbott + 0.1, 3.66, 'inout'))
+  // In behind her, as fast, and to rest a moment after her.
+  w.push(at(T.in, IAN_ENTER))
+  w.push({ at: T.abbott + 0.1, p: [3.66, 0], ramp: [ENTRY_V, 0] })
   w.push(at(T.abbott + 0.9, 3.44, 'out'))
   w.push(at(T.costello + 0.1, 3.58, 'inout'))
   w.push(at(T.costello + 0.8, 3.5, 'out'))
@@ -340,6 +346,19 @@ function ianBombWays(): Way[] {
   thrown(w, x0 - 0.1, T.blast, [-4.6, -4.2], [-2.2, -1.4], T.shard + 0.25)
   w.push(at(T.fog, w[w.length - 1].p[0]))
   return w
+}
+
+/**
+ * The ways from `a` to `b`, both of them times of ways in the list: what one leg of a split scene has (contact is cut
+ * in two by the flash at the lake house).
+ */
+export function between(ways: Way[], a: number, b: number): Way[] {
+  const i = ways.findIndex((w) => Math.abs(w.at - a) < 1e-6)
+  const j = ways.findIndex((w) => Math.abs(w.at - b) < 1e-6)
+  if (i < 0 || j < 0) console.warn(`palindrome: the chamber has no way at ${i < 0 ? a : b}`)
+  const out = ways.slice(Math.max(0, i), j < 0 ? ways.length : j + 1)
+  // The first way of a slice is a start: how it was reached belongs to the slice before.
+  return [{ at: out[0].at, p: out[0].p }, ...out.slice(1)]
 }
 
 /** A lane of world-cell ways, moved into a part's frame. */

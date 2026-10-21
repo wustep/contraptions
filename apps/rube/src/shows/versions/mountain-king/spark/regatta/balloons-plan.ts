@@ -63,8 +63,6 @@ export const AT = {
 
 export const T0 = DOORS.regatta
 export const T1 = DOORS.railway
-/** The return: a streak up and left through B4's flame on the roll. */
-export const BACK = [DOORS.back[0], DOORS.back[1]] as const
 
 /* ------------------------------------------------------------------ the light */
 
@@ -362,8 +360,6 @@ export const BLASTS: Record<'b0' | 'b1' | 'b2' | 'b3' | 'b4', Blast[]> = {
     { on: AT.land4, off: AT.land4 + 0.5 },
     { on: AT.glow, off: AT.glow + 0.7, i: 1.1 },
     { on: AT.blast4, off: T1 + 0.8, i: 1.55 },
-    // Alight for the return, when the spark streaks back up through this flame on the roll.
-    { on: BACK[0] - 0.45, off: BACK[1] + 0.5, i: 1.3 },
   ],
 }
 
@@ -496,8 +492,3 @@ export function sparkAt(t: number): SparkHere {
   return { p: hermite(seat4(SUCK), velocity(seat4, SUCK), EXIT, EXIT_V, T1 - SUCK, u), hidden: false }
 }
 
-/**
- * The return (148.330 to 148.404): a lit burner the spark streaks up and left through. B4's, where it went in, its
- * flame alight then (`BLASTS.b4`). World cells: the middle of its jet.
- */
-export const BURNER_POINT: Pt = add(n4(BACK[0]), [0.02, -0.75])

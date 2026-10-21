@@ -10,7 +10,7 @@ import { lidAt } from '../home/kindness-plan'
 import { KINDNESS_AT } from '../home/kindness'
 import { PANEL_LOOKS, paintPicture, pixelOf, prefersCalm } from '../film'
 import { backdrop, HP, LE, LW, PL, SKINS, skinAt, TH, TILT, WEDGE, type Moment, type Skin, type View } from './skins'
-import { at, circle, glow, hash, lodFor, mix, poly, rect, rgba, type Pen } from './skins-pen'
+import { at, circle, hash, lodFor, mix, poly, rect, rgba, type Pen } from './skins-pen'
 
 /**
  * ALL AT ONCE. Evelyn tips into the bagel's hole (a violet flare off her, the bagel's seeds flung wide) and falls,
@@ -486,7 +486,7 @@ function panel(ctx: CanvasRenderingContext2D, F: Frame, skin: Skin, b: Box, q: n
   seesaw(pen, skin, mc)
   dust(pen, skin, mc)
   if (dark > 0.002) {
-    ctx.fillStyle = rgba(VOID_THEME.bg, dark)
+    ctx.fillStyle = rgba(mix(VOID_THEME.bg, MOONLIT, emerging(mc.m.t)), dark)
     ctx.fillRect(v.x0, v.y0, v.x1 - v.x0, v.y1 - v.y0)
   }
   if (cell && dark < 0.5) family(pen, cell[0], cell[1], mc.m.t, mc.e)
@@ -499,16 +499,19 @@ function panel(ctx: CanvasRenderingContext2D, F: Frame, skin: Skin, b: Box, q: n
   ctx.restore()
 }
 
-/** The tubes coming on: 0 in the dark, 1 lit. A flicker on the half-beat, then on for good on 69, with a stammer. */
+/**
+ * How far the laundromat has come up out of Jobu's dark as she falls into it, 0 to 1 over the three seconds before
+ * the tubes: the dark goes from the bagel's black to the room's own moonlit night (`home/set.ts`), and the room shows
+ * in it, the way eyes get used to the dark.
+ */
+const emerging = (t: number): number => smoothstep((t - (FLICKER - 3.2)) / 3.2)
+/** The laundromat's night, as the room's own light map has it with no tube on. */
+const MOONLIT = '#1B2238'
+
+/** The tubes coming on: 0 in the dark, 1 lit. Up from the half-beat, and on for good on 69, with no flicker. */
 function lights(t: number): number {
-  // In the dark the room comes up a little as she nears it, the way eyes get used to it.
-  if (t < FLICKER) return 0.02 + 0.12 * smoothstep((t - (FLICKER - 3)) / 3)
-  if (t < FLICKER + 0.06) return 0.75
-  if (t < LIGHTS) return 0.12
-  const x = t - LIGHTS
-  if (x < 0.05) return 0.9
-  if (x < 0.1) return 0.45
-  return 1
+  const dark = 0.02 + 0.24 * emerging(t)
+  return dark + (1 - dark) * smoothstep((t - FLICKER) / (LIGHTS - FLICKER))
 }
 
 const smoothstep = (u: number): number => {
@@ -773,8 +776,8 @@ function drawHome(p: p5, ctx: CanvasRenderingContext2D, F: Frame, s: MosaicState
 
 /**
  * The bagel's seeds she falls past in the dark, drifting down slower than she does. On the tip in (the first
- * instant of the leg, fight 59) she comes through the hole with a violet flare off her, and the seeds round her are
- * flung outward, with a spray of new ones from where she broke through; they slow in the dark and drift on.
+ * instant of the leg, fight 59) she comes through the hole, and the seeds round her are flung outward, with a spray
+ * of new ones from where she broke through; they slow in the dark and drift on.
  */
 function seedsInDark(ctx: CanvasRenderingContext2D, F: Frame, s: MosaicState, t: number, q: number, sc: Pt, c: Pt, e: Pt, ink: string): void {
   const pen = penFor(ctx, F, c[0], c[1], q, sc, VOID.sesame)
@@ -809,8 +812,5 @@ function seedsInDark(ctx: CanvasRenderingContext2D, F: Frame, s: MosaicState, t:
     ctx.ellipse(sx, sy, 0.05 * size, 0.024 * size, a + x * 3 * (hash(i, 7, 43) - 0.5), 0, Math.PI * 2)
     ctx.fill()
   }
-  // The flare: violet, off her, gone in a moment; a hot core for the first frames.
-  glow(pen, hit[0], hit[1] + 0.9 * x, 2.1, VOID.glow, 0.9 * Math.exp(-x / 0.16))
-  glow(pen, hit[0], hit[1] + 0.9 * x, 0.7, VOID.rimLight, 0.8 * Math.exp(-x / 0.06))
   evelyn(pen, e, null, ink)
 }

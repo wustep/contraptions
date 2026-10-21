@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInQuad, easeOutCubic, easeOutQuad } from '../../../../../src/core/ease'
 import { FAST, FLOOR, R, ROLL, definePiece, laneReach, over, post, rail, ramp, roll, type Lane, type Pt } from '../../parts'
-import { flash, glow, lamp, score } from './neon'
+import { flash, lamp, score } from './neon'
 
 /**
  * A foosball table two cells long. The rail runs in through one goal
@@ -143,7 +143,6 @@ export const foosball = definePiece<FoosballState>({
     // The goal lamp on its stalk over the far mouth.
     outline(p, ink, weight)
     p.line(LAMP_X * k, MOUTH_TOP * k, LAMP_X * k, -0.36 * k)
-    glow(p, k, s.color, LAMP_X, -0.4, 0.14, scored)
     lamp(p, k, ink, weight, s.color, bg, LAMP_X, -0.4, 0.04, scored)
     // The kick, and the goal.
     flash(p, k, s.men, weight, KICK + 0.05, 0, since, 0.18, 0.12, 0.24)

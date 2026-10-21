@@ -1,9 +1,10 @@
 import type { Pt } from '../../../../../parts'
 import { box, frame, part, scenery, type PartShot } from '../kit'
+import { view } from '../depth'
 import { SEAMS } from '../seams'
 import { CHERYL } from '../worlds'
 import { drawBuilding, drawGround, drawOver, drawPart, drawSky } from './draw'
-import { BEAM, BRAKE, CAR_DOWN, CHERYL_AT, DOOR, DOG_HOME, DRAIN, DREAM_STRIKES, LAND_IN, LEAP_BACK, T0, T1, toneAt, WAY } from './geo'
+import { BRAKE, CHERYL_AT, DOOR, DOG_HOME, DRAIN, DREAM_STRIKES, LAND_IN, LEAP_BACK, T0, T1, toneAt, WAY } from './geo'
 import type { Pen } from './pen'
 
 /**
@@ -30,7 +31,7 @@ export const dreamSet = scenery<null>({
   draw: (p, _s, c) => {
     const pen = penOf(p, c.k, c.ink, c.weight, c.t)
     p.push()
-    drawSky(pen, frame(p, c.k), c.t)
+    drawSky(pen, view(p, c.k), c.t)
     drawBuilding(pen, c.t)
     drawGround(pen, c.t)
     p.pop()
@@ -77,19 +78,20 @@ export const leap = part<LeapState>(
 )
 
 /**
- * The camera: from the seam's close framing on him at the lip, back and up with the leap to see the window take him;
- * across the room with him and the joist; on the car going down; out through the door to her; and as the colour goes,
- * in again on the lip to exactly the framing it opened on, for the cut back to the basement.
+ * The camera: from the seam's close framing on him at the lip, back a little to see the window go and the run; in on
+ * the leap, so the room takes him; then, as he rolls under the joist to the car, all the way back and up, the burning
+ * building whole and the city round it while the dumbwaiter goes down; down again with the car to the street, along
+ * to her under the lamp, in on the three of them while the fire burns over them; and as the colour goes, in again on
+ * the lip to exactly the framing it opened on, for the cut back to the basement.
  */
 function shots(): PartShot[] {
   const hold = (t: number, cells: number, at: Pt): PartShot => ({ t, cells, hold: at, w: 1 })
   const seam = SEAMS.office
   return [
-    hold(T0 + 1.25, 4.3, [2.0, -1.15]),
-    hold(LAND_IN + 0.3, 4.4, [5.0, -1.75]),
-    hold(BEAM + 0.5, 4.4, [6.4, -1.75]),
-    hold(BRAKE + 0.3, 4.5, [6.6, -1.35]),
-    hold(CAR_DOWN + 0.2, 4.5, [6.2, -0.55]),
+    hold(T0 + 0.8, 3.85, [1.3, -1.0]),
+    hold(LAND_IN + 0.15, 3.3, [4.5, -1.65]),
+    hold(WIDEST, 8.6, [6.4, -3.5]),
+    hold(DOOR - 0.55, 4.4, [5.4, -0.6]),
     hold(DOOR + 0.2, 4.4, [4.3, -0.6]),
     hold(DOG_HOME + 0.4, 4.4, [3.4, -0.7]),
     // In on the three of them under the lamp, slowly, while the fire burns over them.
@@ -99,9 +101,16 @@ function shots(): PartShot[] {
   ]
 }
 
+/** The pull-back is widest as the car goes down past the shop's ceiling. */
+const WIDEST = BRAKE + 0.75
+const WIDE_FROM = WIDEST + 0.19
+
 /** Every strike this place makes, in show seconds: what `check:shows` holds against the recording. */
 export const DREAM_HITS: readonly number[] = DREAM_STRIKES
 
-/** Where Walter may be small or out of the Zoom frame in this place: the great wides, stretches of show seconds. Keep them few. */
-export const DREAM_WIDE: [number, number][] = []
+/**
+ * Where Walter may be small or out of the Zoom frame in this place: the great wides, stretches of show seconds. One:
+ * the building whole, as the car takes him down to the shop and the camera comes back down to him.
+ */
+export const DREAM_WIDE: [number, number][] = [[WIDE_FROM, WIDE_FROM + 1.47]]
 

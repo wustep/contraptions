@@ -3,6 +3,7 @@ import { mixHex, R, type Pt } from '../../../../../parts'
 import { hash } from '../kit'
 import { ROCKS } from '../worlds'
 import { INK, rgba } from './ledgeLand'
+import type { Light } from './ledgeLight'
 import { groundAt, type Ledge } from './ledgePath'
 
 /**
@@ -115,7 +116,7 @@ export interface Flush {
  * A stone over a ball whose centre is at (x, y), turned by `turn`, in `color` (the ball's own, faded as it is), lying
  * flat on whichever of `ledges` it would otherwise sink into.
  */
-export function paintStone(p: p5, k: number, weight: number, stone: Stone, x: number, y: number, turn: number, color: string, ledges: Ledge[], flush?: Flush): void {
+export function paintStone(p: p5, k: number, weight: number, stone: Stone, x: number, y: number, turn: number, color: string, ledges: Ledge[], flush?: Flush, light?: Light): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const c = Math.cos(turn)
   const s = Math.sin(turn)
@@ -134,7 +135,8 @@ export function paintStone(p: p5, k: number, weight: number, stone: Stone, x: nu
     return [qx, qy]
   }
   // Its shadow on the ledge under it, fading as it falls away from it. Never under a few pixels across, so in the
-  // canyon's widest shots, where the stone is a speck, there is still a mark of it on the rock it is on.
+  // canyon's widest shots, where the stone is a speck, there is still a mark of it on the rock it is on. As the sun
+  // goes down it lies longer, thrown back from the sun (to the left).
   const below = ledges
     .filter((l) => x >= l.a[0] && x <= l.b[0])
     .map((l) => groundAt(l, x))
@@ -144,10 +146,12 @@ export function paintStone(p: p5, k: number, weight: number, stone: Stone, x: nu
     const h = below - y - R
     const a = Math.max(0, 1 - h / (4 * R))
     if (a > 0.01) {
+      const sh = light?.shadow ?? { stretch: 1, dx: 0, a: 1 }
       const px = Math.max(1.5 * R * k, 9)
-      ctx.fillStyle = rgba(ROCKS.stoneDeep, 0.38 * a)
+      const wx = px * (1 - 0.3 * (1 - a)) * sh.stretch
+      ctx.fillStyle = rgba(ROCKS.stoneDeep, 0.38 * a * sh.a)
       ctx.beginPath()
-      ctx.ellipse(x * k, below * k, px * (1 - 0.3 * (1 - a)), Math.max(0.28 * R * k, 2.2), 0, 0, Math.PI * 2)
+      ctx.ellipse(x * k - (wx - px * (1 - 0.3 * (1 - a))) * 0.85 + sh.dx * k, below * k, wx, Math.max(0.28 * R * k, 2.2), 0, 0, Math.PI * 2)
       ctx.fill()
     }
   }
@@ -189,9 +193,11 @@ export function paintStone(p: p5, k: number, weight: number, stone: Stone, x: nu
   ctx.beginPath()
   ctx.ellipse(x * k, (y + 0.95 * R) * k, 1.6 * R * k, 0.8 * R * k, 0, 0, Math.PI * 2)
   ctx.fill()
-  ctx.fillStyle = rgba(mixHex(color, ROCKS.far, 0.45), 0.7)
+  // In the late light the top catches it warm; at dusk, with the sun low behind, it is a rim along the top's far side.
+  const top = light ? mixHex(mixHex(color, ROCKS.far, 0.45), light.ledgeTop, 0.35 * light.gold + 0.25 * light.dusk) : mixHex(color, ROCKS.far, 0.45)
+  ctx.fillStyle = rgba(top, 0.7)
   ctx.beginPath()
-  ctx.ellipse((x - 0.18 * R) * k, (y - 0.78 * R) * k, 0.78 * R * k, 0.42 * R * k, -0.12, 0, Math.PI * 2)
+  ctx.ellipse((x - 0.18 * R + 0.12 * R * (light?.dusk ?? 0)) * k, (y - 0.78 * R) * k, 0.78 * R * k, 0.42 * R * k, -0.12, 0, Math.PI * 2)
   ctx.fill()
   // Speckles and a crack, on the stone: they turn with it, and show it rolling.
   ctx.fillStyle = rgba(mixHex(color, INK, 0.5), 0.75)

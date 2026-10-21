@@ -2,8 +2,11 @@ import type { Performance } from '../../../registry'
 import { creditsAt } from './credits'
 import { DURATION } from './music'
 import { compose } from './score'
+import { warmLead } from './derelicte/tower-plan'
 
 const { show, camera } = compose()
+// The lead that whips loose on the plug is simulated once; do it while loading, not on the plug's own frame.
+warmLead()
 
 export { show }
 
@@ -11,7 +14,7 @@ export const performance: Performance = {
   show,
   duration: DURATION,
   camera,
-  // No portal anywhere: every change of place is a match cut on Derek, three of them inside a press camera's flash.
+  // No portal anywhere: every change of place is a match cut on Derek, inside a dissolve.
   cuts: () => false,
   // The end credits' words, which the page sets over the Center's sky.
   titles: creditsAt,

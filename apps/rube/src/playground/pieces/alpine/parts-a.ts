@@ -1,7 +1,8 @@
 import type p5 from 'p5'
 import type { Theme } from '../../../../../../src/core/themes'
-import { FLOOR, R, fly, post, rail, type Pt, type Seg } from '../../../parts'
-import { snowWhite } from './snow'
+import { outline } from '../../../../../../src/core/draw'
+import { FLOOR, R, fly, rail, type Pt, type Seg } from '../../../parts'
+import { snowAt, snowWhite } from './snow'
 
 /**
  * What the mountain's ways up share. Four of them throw the ball, and a
@@ -65,10 +66,11 @@ export function ledgeStart(f: Flight, floor: number, turn: 1 | -1, g = G): numbe
   return reach
 }
 
-/** The ledge a throw comes down on: rail from its near end to the cell's edge, on a post to the floor of the piece's own cell. */
-export function ledge(p: p5, k: number, ink: string, weight: number, x0: number, x1: number, floor: number, postX: number, ground = 0.5): void {
+/** The ledge a throw comes down on: rail from its near end to the cell's edge, on a post stood in the snow under it. */
+export function ledge(p: p5, k: number, ink: string, weight: number, x0: number, x1: number, floor: number, postX: number): void {
   rail(p, k, ink, weight, x0, x1, floor + FLOOR)
-  post(p, k, ink, weight, postX, floor + FLOOR, ground)
+  outline(p, ink, weight)
+  p.line(postX * k, (floor + FLOOR) * k, postX * k, (snowAt(postX) + 0.03) * k)
 }
 
 /** A second colour for a piece with two coloured parts: not snow, not the ball's, not the first. */

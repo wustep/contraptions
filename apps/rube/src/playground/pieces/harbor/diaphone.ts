@@ -1,5 +1,5 @@
 import { outline, solid } from '../../../../../../src/core/draw'
-import { easeInOutSine, easeOutCubic } from '../../../../../../src/core/ease'
+import { easeInOutSine } from '../../../../../../src/core/ease'
 import { FLOOR, R, ROLL, definePiece, flick, fly, mixHex, over, rail, ramp, roll, trace, type Lane, type Pt } from '../../../parts'
 import { WATER, bodyColor, luminance, piling, seaWater, seabed, water } from '../../../pieces/harbor/sea'
 
@@ -23,9 +23,8 @@ import { WATER, bodyColor, luminance, piling, seaWater, seabed, water } from '..
  * straight and the air goes on. The ball is shot round the bend, up the
  * cone and out of the mouth, low and fast over the open water onto the far
  * deck. The horn kicks back on its post and rings, the sea shakes where it
- * stands, the sound goes out in widening arcs, and a while later the reel
- * winds the plunger back up out of the bell and the catch swings in under
- * it.
+ * stands, and a while later the reel winds the plunger back up out of the
+ * bell and the catch swings in under it.
  *
  * The ball never touches the plunger. The air does the work. The ball's
  * place along the tube's centre line is one function of time and the
@@ -256,12 +255,6 @@ function faceAt(t: number): number {
   return HANG - 0.03 * (1 - easeInOutSine(over(t, T_HOME + 0.1, T_SEAT)))
 }
 
-/** The sound is this many arcs off the mouth, this far apart in time, each going out this far in this long. */
-const RINGS = 3
-const RING_GAP = 0.11
-const RING_OUT = 0.4
-const RING_T = 0.5
-
 export const diaphone = definePiece<{ color: string; plunger: string }>({
   name: 'diaphone',
   weight: 0.8,
@@ -411,22 +404,6 @@ export const diaphone = definePiece<{ color: string; plunger: string }>({
     solid(p, ink, weight, ink)
     p.circle(CRANK[0] * k, CRANK[1] * k, 0.035 * k)
 
-    // The sound: arcs off the mouth, one after another, widening and thinning to nothing, and cut short under the cell's roof.
-    if (since > 0 && since < RING_T + RINGS * RING_GAP) {
-      const [mx, my] = lineAt(S_MOUTH)
-      const cx = mx - Math.cos(AIM) * MOUTH * 0.35
-      const cy = my + Math.sin(AIM) * MOUTH * 0.35
-      p.noFill()
-      p.stroke(s.color)
-      for (let i = 0; i < RINGS; i++) {
-        const f = over(since - 0.04 - i * RING_GAP, 0, RING_T)
-        if (f <= 0 || f >= 1) continue
-        const r = MOUTH / 2 + RING_OUT * easeOutCubic(f)
-        const roof = Math.asin(Math.min(1, (cy + 0.42) / r))
-        p.strokeWeight(weight * 1.6 * (1 - f))
-        p.arc(cx * k, cy * k, r * 2 * k, r * 2 * k, -Math.min(AIM + 0.55, roof), -AIM + 0.55)
-      }
-    }
     p.pop()
   },
 })

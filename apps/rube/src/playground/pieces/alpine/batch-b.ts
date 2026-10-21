@@ -13,5 +13,5 @@ export const batch: Beat[] = [
   [crevasse, 'onto a crust of snow over a crack in the ice; the crust dips and gives way, and the ball falls a floor or two between walls of blue ice, glancing off one and then the other, onto the snow at the bottom, and out under an arch, on or back'],
   [skijump, 'down the in-run of a ski jump and off the table\u2019s lip, long and low over the knoll of a hill built to the shape of the flight; a glancing touch-down in powder on the landing slope, and out along the out-run a floor down'],
   [sled, 'onto the deck of a sledge at the head of a slope, up against its horns; the thump sends it over the brink and down, faster all the way, into a soft heap at the foot, which stops it dead and pitches the ball out over its bow, a floor down'],
-  [snowball, 'down a slope gathering a snowball round itself, the ball its coloured heart; it breaks on a stump at the foot and the ball hops on bare, a floor down'],
+  [snowball, 'down a slope gathering a snowball round itself, coated white and then lost inside it; it breaks on a stump at the foot in a burst of powder and the ball hops on bare, its own colour, a floor down'],
 ]
