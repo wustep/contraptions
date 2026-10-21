@@ -68,7 +68,7 @@ passengers and the girl on the platform, the lamp.
 | 157.07 | a swell | A cut into the car, its side away: the shadow passengers, still; she and No-Face side by side on the bench; the sunset's window-squares going over them. |
 | 161.5 | the deepest quiet | Dusk (a dissolve). The lonely station in the water: a girl stands on its platform. The train stops beyond her, waits, and goes on; she stays. |
 | 168.46 | the theme returns | Night (a dissolve): the lit car crossing to Swamp Bottom (175.75). They get off; the lamp comes out of the dark wood to meet them on its one leg, a hop an eighth, bows, and lights them back to the cottage's gate. The white dragon comes down out of the sky over the trees; she hops up onto his back (191.98); No-Face stays by the trees. |
-| 193.45 | the summit | **The name** (a cut). Over a sea of cloud under the moon he carries her west. A gap opens under them on a river far below. |
+| 193.45 | the summit | **The name** (a cut). Over a sea of cloud under the moon he carries her west. A gap opens in the cloud on moonlit country far below, a river winding silver through it, and he comes down over it. |
 | 201.55 | the cadence | On the fullest note his scales come off him from the tail forward and the last of the dragon is the boy. They fall together, coming to each other's side, turning over and over, the scales going up past them. |
 | 205.5 | winding down | **Home.** Down through the cloud's pale into the first light; the fall slows to nothing and they come down on the river of stones side by side. On a note she goes back over the stones alone, a stone a note; he stays. Up the meadow with her to the gate. |
 | 231.5 | the fade | At the arch she stops, and does not look back, and goes into the dark. The credits come up over the summer sky; the wind goes on in the grass. |
@@ -185,6 +185,23 @@ for the frames that read as unfinished or busy beside the rest.
   piers and the town's bank with it.
 - **No-Face** hovered over the bridge's deck like something hung there. He sits on its rail, quite still, as they
   pass under him.
+
+**Round 5, the name.** The whole show was played again in real time on a 1440×810 desktop page and a 390×844 phone,
+twice a second, with fresh eyes. The last climax was the weakest stretch.
+- **The river in the gap** was a dark oval with a thin pale curve at its foot, mostly behind the cloud's near rim: on a
+  phone, a hole. The country in it is now moonlit green, hazing as it goes away, and the river winds silver through
+  the middle of it, widening towards us.
+- **The gap was in frame for about a second.** The camera rose with him and left it below. He now comes down nearer
+  the cloud as the gap opens, the camera holds it while he flies in over it, and the cadence finds the whole of him
+  over his river.
+- **The scales** were thin white flicks, left behind in one frame, gone off the frame's edge in a second: they read
+  as hairlines, and on a phone as nothing. They are now fewer and larger, round-backed shells each about his body's
+  width, and each goes on with him at his speed when it comes off, slowed by the air, so he draws away from it.
+  Remembering where each came away also halved the burst's frame time.
+- **The fall** was two specks in a wide sky. The camera now closes on the two of them as the last of the dragon goes,
+  and holds them close down into the cloud.
+- **The landing:** round 4's bush at the steps' foot stood just where they come down, and Haku sat in it like an eye
+  in a shrub. The bush is cut.
 
 ## Known limits
 
