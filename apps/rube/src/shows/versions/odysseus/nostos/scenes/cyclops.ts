@@ -4,7 +4,7 @@ import { G, fly, flightFor, rest, ride, roll, type Move, type Pt } from '../path
 import type { Scene } from '../scene'
 import { END, HELM, WINDOWS, glide, seat } from '../voyage'
 import { floatAt, onShip, type ShipLook } from '../world/ship'
-import { drawArm, drawBody, drawEye, drawRidge, drawRock, PREY, SPLASH_AT, thrownRock, type GiantLight } from './cyclops/giant'
+import { drawArm, drawBody, drawEye, drawRidge, drawRock, handOf, PREY, SPLASH_AT, thrownRock, type GiantLight } from './cyclops/giant'
 import { drawFire, drawIsland, drawSplash, EMBER, FIRELIT, fireAt, INK, openAt } from './cyclops/island'
 import { FLOOR, LEDGE, MOOR, PILLAR, RIDGE, STEP, T, ground } from './cyclops/plan'
 import { carries, drawSheep, FLOCK, REST_X, setCarrying, under } from './cyclops/sheep'
@@ -124,6 +124,9 @@ class Way {
 
 /* ------------------------------------------------------------------ the hero and his men */
 
+/** Where the two he takes are held in his fist, from its middle: one over it, one under. */
+const CLUTCH: Pt[] = [[0.06, -0.37], [-0.12, 0.3]]
+
 /** Entering the mouth: hop from the deck up into it (the ship lies right under it), then in along the floor. */
 const ENTER = { hero: 148.75, men: [148.9, 149.05, 149.2, 149.35, 149.5, 149.65] }
 const LAND_X = { hero: 98.3, men: [98.1, 97.9, 97.7, 97.5, 97.3, 97.1] }
@@ -190,8 +193,20 @@ function manPath(m: number): Move[] {
   if (m >= 4) {
     // The two who go on to the fire: there when the eye opens, and the hand.
     w.wait(151.75 + 0.3 * (m - 4)).rollTo(CREEP_X.men[m], 155.0, r)
+    // The fist closes on them, and they go up in it into the dark and out of the frame's top: one held between the
+    // thumb and the fingers, one under them, each half out of his fist, so the two are seen taken.
     w.wait(T.grab - 0.05)
-    w.push(rest(w.at, T.grab - 0.05, T.gone, { hidden: true }))
+    const from = w.at
+    const grip = handOf(T.grab - 0.05)
+    const held = CLUTCH[m - 4]
+    w.push(
+      ride((t) => {
+        const h = handOf(t)
+        const u = smoother(t, T.grab - 0.05, T.grab + 0.25)
+        return [h[0] + (from[0] - grip[0]) * (1 - u) + held[0] * u, h[1] + (from[1] - grip[1]) * (1 - u) + held[1] * u]
+      }, T.grab - 0.05, T.gone),
+    )
+    w.push(rest(w.at, T.gone, T.gone + 0.01, { hidden: true }))
     return w.moves
   }
   w.wait(151.75 + 0.12 * m).rollTo(CREEP_X.men[m], 155.0, r)
