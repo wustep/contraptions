@@ -47,13 +47,15 @@ export const sleep = scenery<null>({
       if (bottom < f.y0 - 1 || top > f.y1 + 1) continue
       const g = ctx.createLinearGradient(0, top * k, 0, bottom * k)
       const at = (y: number) => (y - top) / (bottom - top)
+      // Whole at the band's edges, where a level's sky or ground begins (at 0.96 the first line of the snow's bright sky,
+      // and limbo's, showed through as a ruled line across the dark on the way down).
       if (sealed) g.addColorStop(0, rgba(SLEEP.deep, 1))
       else {
         g.addColorStop(0, rgba(SLEEP.mid, 0))
-        g.addColorStop(at(band.top), rgba(SLEEP.mid, 0.96))
+        g.addColorStop(at(band.top), rgba(SLEEP.mid, 1))
       }
       g.addColorStop(at(band.mid), rgba(SLEEP.deep, 1))
-      g.addColorStop(at(band.bottom), rgba(SLEEP.mid, 0.96))
+      g.addColorStop(at(band.bottom), rgba(SLEEP.mid, 1))
       g.addColorStop(1, rgba(SLEEP.mid, 0))
       ctx.save()
       ctx.fillStyle = g
@@ -79,7 +81,6 @@ export const sleep = scenery<null>({
     const span = wide?.spans.find(([a, b]) => t >= a && t <= b) ?? (out ? wide?.dream.find(([a, b]) => t >= a && t <= b) : undefined)
     for (const [a, b] of span ? [span] : []) {
       if (!wide || t < a || t > b) continue
-      const far = Math.max(1, (f.y1 - f.y0) / 24)
       const at = wide.where(t)
       // The streak: where he was over the last half second, thinning and fading back along his climb.
       ctx.save()
@@ -91,16 +92,19 @@ export const sleep = scenery<null>({
         const p0 = wide.where(s0)
         const p1 = wide.where(s1)
         ctx.strokeStyle = rgba(SLEEP.mote, 0.5 * (1 - j / 10))
-        ctx.lineWidth = Math.max(1, 0.2 * far * k * (1 - j / 12))
+        ctx.lineWidth = Math.max(1, 2 * R * k * (1 - j / 12))
         ctx.beginPath()
         ctx.moveTo(p0[0] * k, p0[1] * k)
         ctx.lineTo(p1[0] * k, p1[1] * k)
         ctx.stroke()
       }
       ctx.restore()
+      // The spark is the ball's own size, and never under four pixels across: drawn bigger (a disc twice and more his
+      // width, the three of them specks on it) it was a strange orange circle of its own going down into the snow and
+      // up into the vault.
       ctx.fillStyle = COBB
       ctx.beginPath()
-      ctx.arc(at[0] * k, at[1] * k, Math.max(2, 0.19 * far * k), 0, Math.PI * 2)
+      ctx.arc(at[0] * k, at[1] * k, Math.max(2, R * k), 0, Math.PI * 2)
       ctx.fill()
     }
   },
@@ -120,13 +124,11 @@ export const beacon = scenery<null>({
     const { k, t } = c
     if (!wide || R * k >= 2.5) return
     if (!wide.awake.some(([a, b]) => t >= a && t <= b)) return
-    const f = frame(p, k)
-    const far = Math.max(1, (f.y1 - f.y0) / 24)
     const at = wide.where(t)
     const ctx = p.drawingContext as CanvasRenderingContext2D
     ctx.fillStyle = COBB
     ctx.beginPath()
-    ctx.arc(at[0] * k, at[1] * k, Math.max(2, 0.19 * far * k), 0, Math.PI * 2)
+    ctx.arc(at[0] * k, at[1] * k, Math.max(2, R * k), 0, Math.PI * 2)
     ctx.fill()
   },
 })

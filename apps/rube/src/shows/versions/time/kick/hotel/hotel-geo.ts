@@ -230,6 +230,8 @@ export function trainS(t: number): number {
 }
 /** A ball in the drum: round its path, turned with it. */
 export const inDrum = (who: Who, t: number): Pt => add(DRUM, rot(drumAngle(t), around(trainS(t) - BACK[who])))
+/** Its mark there (radians, up to a constant): rolled round the path, and turned with the drum it rolls in. */
+export const drumMark = (who: Who, t: number): number => (trainS(t) - BACK[who]) / R + drumAngle(t)
 /** Where the three are in the drum's own frame (the frame the camera turns with), their middle, smoothed over a second. */
 export function drumLean(t: number): Pt {
   let x = 0

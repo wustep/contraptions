@@ -173,8 +173,8 @@ function polyArea(poly: Pt[]): number {
 }
 
 /** A shard's place and turn at `t`: in the frame, falling (a fall timed to land when it lands), or lying on the deck. */
-function shardAt(s: Shard, t: number): { c: Pt; a: number; lying: boolean } {
-  if (t <= s.go) return { c: s.c, a: 0, lying: false }
+function shardAt(s: Shard, t: number): { c: Pt; a: number; lying: number } {
+  if (t <= s.go) return { c: s.c, a: 0, lying: 0 }
   const T = s.land - s.go
   const bottom = Math.max(...s.poly.map((p) => p[1]))
   const drop = BOT - (s.c[1] + bottom)
@@ -183,11 +183,13 @@ function shardAt(s: Shard, t: number): { c: Pt; a: number; lying: boolean } {
   const u = Math.min(t, s.land) - s.go
   const c: Pt = [s.c[0] + s.v[0] * u, s.c[1] + vy * u + 6 * u * u]
   const a = s.spin * u
-  if (t <= s.land) return { c, a, lying: false }
-  // On the deck: a skid, and still.
+  if (t <= s.land) return { c, a, lying: 0 }
+  // On the deck: a skid, and still. It comes down flat over a moment (still upright on the frame it landed, it lay
+  // flat in the next).
   const w = t - s.land
   const skid = 0.12 * s.v[0] * (1 - Math.exp(-w / 0.18))
-  return { c: [c[0] + skid, c[1]], a: a + 0.3 * s.spin * 0.05 * (1 - Math.exp(-w / 0.18)), lying: true }
+  const e = Math.min(1, w / 0.12)
+  return { c: [c[0] + skid, c[1]], a: a + 0.3 * s.spin * 0.05 * (1 - Math.exp(-w / 0.18)), lying: e * e * (3 - 2 * e) }
 }
 
 /* ------------------------------------------------------------------ the corridor */
@@ -265,9 +267,14 @@ function greatMirror(pen: Pen, t: number, f: Frame): void {
     const cs = Math.cos(a)
     const sn = Math.sin(a)
     // Lying, it lies flat: squashed to a sliver on the deck.
-    const pts = s.poly.map(([x, y]) => (lying ? ([c[0] + x * cs * 0.9, BOT - 0.02 - Math.abs(y * sn) * 0.15] as Pt) : ([c[0] + x * cs - y * sn, c[1] + x * sn + y * cs] as Pt)))
+    const pts = s.poly.map(([x, y]): Pt => {
+      const up: Pt = [c[0] + x * cs - y * sn, c[1] + x * sn + y * cs]
+      if (lying <= 0) return up
+      const flat: Pt = [c[0] + x * cs * 0.9, BOT - 0.02 - Math.abs(y * sn) * 0.15]
+      return [up[0] + (flat[0] - up[0]) * lying, up[1] + (flat[1] - up[1]) * lying]
+    })
     const facing = Math.cos(a * 1.3 + s.c[0] * 3)
-    ;(facing > 0.4 && !lying ? lit : plain).push(pts)
+    ;(facing > 0.4 && lying < 0.5 ? lit : plain).push(pts)
   }
   fillPaths(pen, plain, mixHex(PARIS.glass, PARIS.slate, 0.15), 0.8)
   // A face turned to the sky is the sky in the glass, a little lighter than the glass, and every shard has a firm
@@ -312,6 +319,9 @@ function nearMirror(pen: Pen, t: number): void {
   const side = r * (0.35 + 0.65 * v)
   const ctx = ctxOf(pen.p)
   const { k } = pen
+  // The last of it, swung away to its post, fades (the post stood there whole and went in a frame).
+  ctx.save()
+  ctx.globalAlpha *= Math.min(1, v / 0.25)
   // Its glass, from behind: the faintest cast.
   ctx.save()
   ctx.fillStyle = rgba(SILVER, 0.1 * v)
@@ -322,6 +332,7 @@ function nearMirror(pen: Pen, t: number): void {
   rect(pen, x0, y0, x0 + r, y1, PARIS.iron, 0.7)
   rect(pen, x1 - side, y0, x1, y1, PARIS.iron, 0.7)
   rect(pen, x0, y0 - 0.04, x1, y0 + 0.02, IRON_LIT, 0)
+  ctx.restore()
 }
 
 /** The near mirror, in the bridge's frame (turned with it), over the balls. */

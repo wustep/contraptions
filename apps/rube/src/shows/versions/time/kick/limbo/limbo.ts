@@ -6,7 +6,7 @@ import { FIRST, SEAMS } from '../seams'
 import { beat, half } from '../music'
 import { G } from '../physics'
 import { DOWN, FISCHER_DOWN, FISCHER_UP, ORIGIN, UP, exitFor, local } from '../stack'
-import { FISCHER, KID_DARK, KID_ID, KID_SCALE, LIMBO, SLEEP } from '../worlds'
+import { FISCHER, KID_DARK, KID_ID, KID_SCALE, LIMBO } from '../worlds'
 import {
   BOTTOM,
   BREAK_X,
@@ -30,6 +30,7 @@ import {
   SEA,
   SPOTS,
   TOP_OF_SKY,
+  UPRUSH,
   WAIT_X,
   ariadneAt,
   cabinY,
@@ -41,8 +42,9 @@ import {
   sandY,
   sm,
   smoother,
+  washFront,
 } from './limbo-geo'
-import { drawCity, drawFarSea, drawGarden, drawGardenAir, drawGround, drawSea, drawSeaOver, drawSky, surface } from './limbo-land'
+import { drawCity, drawFarSea, drawGarden, drawGardenAir, drawGround, drawSea, drawSeaOver, drawSky, drawWash, surface } from './limbo-land'
 import { ctxOf, soft, type Pen } from './limbo-pen'
 import { drawTowerBack, drawTowerFront } from './limbo-tower'
 
@@ -137,6 +139,7 @@ export const limboSet = scenery<null>({
     drawCity(pen, t, f)
     drawSea(pen, t, f)
     drawGround(pen, f)
+    drawWash(pen, t, f)
     drawGarden(pen, t, f)
     drawTowerBack(pen, t, f)
     p.pop()
@@ -156,11 +159,6 @@ export const limboSet = scenery<null>({
     drawGardenAir(pen, t, f)
     drawSeaOver(pen, t, f)
     drawTowerFront(pen, t, f)
-    // Mal in the prologue, out of the lamp's light: a still shape in the dark.
-    if (t > MAL_P_FROM && t < P.cut + 0.5) {
-      const m = malPrologue(t)
-      soft(pen, m[0], m[1], 0.4, 0.4, SLEEP.deep, 0.42)
-    }
     drawPlunge(pen, t)
     drawKicks(pen, t)
     p.pop()
@@ -224,10 +222,20 @@ const onGround = (x: number): Pt => [x, sandY(x) - R]
 
 /** A roll along the ground from x0 to x1 between t0 and t1, eased in and out (sine). */
 const rollOver = (x0: number, x1: number) => (u: number): Pt => onGround(lerp(x0, x1, (1 - Math.cos(Math.PI * u)) / 2))
-/** A wave's carry up the sand: pushed hard on the chord, slowing as the wash runs out, lifted a little by the water. */
+/** A wave's carry up the sand once the wash reaches him: taken up, slowing as the wash runs out, lifted a little by the water. */
 const carryUp = (x0: number, x1: number) => (u: number): Pt => {
-  const x = lerp(x0, x1, 1 - (1 - u) * (1 - u))
+  const e = u * u * (3 - 2 * u)
+  const x = lerp(x0, x1, e)
   return [x, sandY(x) - R - 0.07 * Math.sin(Math.PI * u)]
+}
+/**
+ * When a breaker's wash, running up the sand, first reaches a ball lying at x (its seaward edge): the wave carries him
+ * from then (set off on the chord itself, he ran up the beach a cell ahead of the water carrying him).
+ */
+const reaches = (tk: number, x: number): number => {
+  let u = 0
+  while (u < UPRUSH && (washFront(tk, tk + u) ?? BREAK_X) < x - R) u += 1 / 240
+  return tk + u
 }
 /** Sample `fn(u)` for u in [0, 1] between slot times a and b as carried pieces. */
 const over = (fn: (u: number) => Pt, a: number, b: number, n: number): Seg[] => carried((s) => fn((s - a) / (b - a)), a, b, n)
@@ -242,10 +250,12 @@ function shoreLane(): Seg[] {
   const segs: Seg[] = []
   const push = (...s: Seg[]) => segs.push(...s)
   const t = () => segs.reduce((a, s) => a + s.dur, 0)
-  push(still(FIRST_AT, P.wave0))
-  push(...over(carryUp(FIRST_AT[0], SPOTS.wave0[0]), P.wave0, P.wave0 + 1.6, 16))
-  push(still(lastTo(segs), P.wave1 - t()))
-  push(...over(carryUp(SPOTS.wave0[0], SPOTS.wave1[0]), P.wave1, P.wave1 + 1.4, 16))
+  const w0 = reaches(P.wave0, FIRST_AT[0])
+  push(still(FIRST_AT, w0))
+  push(...over(carryUp(FIRST_AT[0], SPOTS.wave0[0]), w0, P.wave0 + 1.6, 16))
+  const w1 = reaches(P.wave1, SPOTS.wave0[0])
+  push(still(lastTo(segs), w1 - t()))
+  push(...over(carryUp(SPOTS.wave0[0], SPOTS.wave1[0]), w1, P.wave1 + 1.4, 16))
   // He lies a moment as the wash runs back, and then he rolls up the sand, up the step and into the lift.
   const wake = 5.652
   push(still(lastTo(segs), wake - t()))
@@ -274,17 +284,19 @@ function limboLane(): Seg[] {
   const T = Q.splash - Q.begin
   const splashAt: Pt = [DOWN.limbo.at[0], SEA]
   push({ from: DOWN.limbo.at, to: splashAt, dur: T, arc: (FALL_G * T * T) / 8 })
-  // Under: the water takes the fall from him quickly.
+  // Under: the water takes the fall from him quickly, and he comes to the bottom (it is shallow here, half a cell: he
+  // went on down into the beach under it, and was drawn along inside it).
   const vIn = DOWN.limbo.v[1] + FALL_G * T
   const TAU = 0.12
-  const sink = (s: number): Pt => [splashAt[0], SEA + vIn * TAU * (1 - Math.exp(-(s - Q.splash) / TAU))]
+  const bottom = (x: number): number => sandY(x) - R
+  const sink = (s: number): Pt => [splashAt[0], Math.min(bottom(splashAt[0]), SEA + vIn * TAU * (1 - Math.exp(-(s - Q.splash) / TAU)))]
   push(...carried((s) => sink(s + b), at(Q.splash), at(Q.under), 12))
   const deep = sink(Q.under)
   // The undertow draws them in along the bottom, the swell lifts them, and the breaker brings them to the shore.
   const toShore = (s: number): Pt => {
     const u = (s - Q.under) / (Q.circle - Q.under)
     const x = lerp(deep[0], BREAK_X + 0.05, smoother(u))
-    const yUnder = lerp(deep[1], SEA + 0.95, sm((s - Q.under) / 1.2))
+    const yUnder = Math.min(bottom(x), lerp(deep[1], SEA + 0.95, sm((s - Q.under) / 1.2)))
     const yFloat = surface(x, s) - 0.02
     return [x, lerp(yUnder, yFloat, smoother((s - Q.lift) / 1.3))]
   }

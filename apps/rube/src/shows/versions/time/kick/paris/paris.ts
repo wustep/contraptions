@@ -128,6 +128,7 @@ export const paris = part<ParisState>(
     const up = (flights: [number, number][]) => (t: number, p: Pt): Pt | null => (flights.some(([a, b]) => t > a && t < b) ? null : restsOn(p))
     const cobbSpin = spinTable(cobbPos, up([]), T, slot.end)
     const ariSpin = spinTable(ariAt, up([[LEVER_ON - 0.56, LEVER_ON], [LEVER_HOME + 0.12, LEVER_HOME + 0.54], [ARI_HOP_OVER, ARI_LAND], [STRIKE, STRIKE + 2]]), T, STRIKE + 1.2)
+    const malSpin = spinTable(malAt, up([]), MAL_FROM, slot.end)
     const company: Company[] = [
       {
         who: 'ariadne',
@@ -145,9 +146,9 @@ export const paris = part<ParisState>(
         to: slot.end,
         at: (t) => {
           const [x, y] = malAt(t)
-          // She does not roll: she glides, and her mark is where she looks: at Ariadne (after her as she is thrown),
-          // and then, on the eighth, round to him.
-          const look = (p: Pt) => Math.atan2(p[1] - y, p[0] - x)
+          // Her mark is where she looks, rolled on as she comes: at Ariadne (after her as she is thrown), and then, on
+          // the eighth, round to him.
+          const look = (p: Pt) => Math.atan2(p[1] - y, p[0] - x) + malSpin(t)
           const a0 = look(ariAt(Math.min(t, STRIKE + 0.35)))
           // Among the black of the projections her wine would sink into them: the light off the stone catches her
           // edge, so she is seen coming out of them.

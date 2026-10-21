@@ -488,9 +488,10 @@ function sunOnFloor(ctx: C2D, k: number): void {
 function leaf(ctx: C2D, k: number, hx: number, W: number, H: number, phi: number, fill: string, w: number, glass: boolean, depth = 0.33): void {
   const s = Math.sin(phi)
   // The glass door hangs in the doorway's front plane, as the wall it opens out of is cut (on the floor's back line it
-  // stood a third of a cell higher than its own opening, and folded open it rose past the wall over it).
-  const hb = glass ? FLOOR : HOUSE.back
-  const fb = FLOOR - depth * (1 - Math.cos(phi))
+  // stood a third of a cell higher than its own opening, and folded open it rose past the wall over it); a little
+  // behind it, so swinging open its foot is behind him as he goes through on the floor's front line, not in him.
+  const hb = glass ? FLOOR - 0.06 : HOUSE.back
+  const fb = (glass ? hb : FLOOR) - depth * (1 - Math.cos(phi))
   const A: Pt = [hx, hb]
   const B: Pt = [hx, hb - H]
   const C: Pt = [hx + W * s, fb - H]
