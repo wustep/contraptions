@@ -17,7 +17,6 @@ import {
   CUT_HALL,
   CUT_IN,
   CUT_OUT,
-  DOWN,
   DOWN_OFF,
   FLOOD,
   FREE,
@@ -31,7 +30,6 @@ import {
   SET_OFF,
   TO,
   TREADLE,
-  WIDE,
 } from './bathhouse/beats'
 import { drawBoiler } from './bathhouse/boiler'
 import { GALLERY, PULLEY, TREAD, drawHallBack, drawHallLamps, drawPulley, drawSpout, drawToken, drawTubBack, drawTubFront, drawTubWater, hauled, hookAt } from './bathhouse/hall'
@@ -177,39 +175,40 @@ openings.boiler.push((t) => (t >= CUT_BOILER && t < CUT_HALL ? 1 : 0))
 /* ------------------------------------------------------------------ the camera */
 
 const SHOTS: Key[] = [
-  // From her at the bridge's foot, up and back to the whole bathhouse, lit, as Haku comes to her.
-  { t: FROM + 0.3, cells: 7.7, at: [39.8, -2.6] },
-  { t: HAKU_THERE, cells: 11.0, at: [45.6, -4.1] },
-  { t: WIDE, cells: 17.4, at: [56.6, -6.3] },
-  { t: DOWN, cells: 17.0, at: [56.9, -6.15] },
+  // At the bridge's foot as Haku comes to her, the bathhouse's lit footings at the frame's edge; then, as they set
+  // off together, up and back to the whole of it lit in the night.
+  { t: FROM + 0.3, cells: 6.6, at: [40.9, -2.45] },
+  { t: HAKU_THERE, cells: 5.4, at: [42.6, -2.15], focus: [41.6, -1.35] },
+  { t: 51.0, cells: 17.4, at: [56.6, -6.3] },
+  { t: 52.4, cells: 17.0, at: [56.9, -6.15] },
   // Down to the door with them.
-  { t: 53.2, cells: 6.6, at: [53.4, -2.55], focus: [54.5, -1.4] },
+  { t: 53.9, cells: 6.4, at: [54.0, -2.55], focus: [54.5, -1.4] },
   { t: AT_DOOR + 0.3, cells: 5.4, at: [58.0, -2.7] },
   // Inside: the hall, the doors opening, the spirit coming in and up into the tub.
   { t: ARRIVE, cells: 5.6, at: [63.9, -2.75] },
   { t: TREADLE - 0.4, cells: 5.2, at: [62.6, -2.65] },
   { t: CUT_BOILER - 0.02, cells: 3.6, at: [61.0, -2.25], focus: [60.3, -1.6] },
   // Down to the boiler room on the note.
-  { t: CUT_BOILER, cells: 3.8, at: [66.75, 2.72], cut: true },
-  { t: CUT_HALL - 0.02, cells: 3.55, at: [66.7, 2.74] },
+  { t: CUT_BOILER, cells: 3.8, at: [67.05, 2.72], cut: true },
+  { t: CUT_HALL - 0.02, cells: 3.55, at: [67.15, 2.74] },
   // Back up as the spout gushes.
   { t: CUT_HALL, cells: 4.2, at: [64.5, -2.6], cut: true },
   { t: FLOOD, cells: 4.6, at: [63.6, -2.6] },
   { t: RIM, cells: 3.8, at: [62.0, -2.6], focus: ON_RIM },
   { t: HOOK, cells: 4.2, at: [61.7, -2.95] },
-  // The haul: the hands on the gallery, the pulley, the thorn, her on the rim.
-  { t: PULLS[0], cells: 4.6, at: [61.4, -3.0] },
-  { t: PULLS[PULLS.length - 1], cells: 4.8, at: [61.6, -3.05] },
-  // Free, and the junk pours out.
-  { t: FREE, cells: 5.4, at: [62.8, -2.85] },
+  // The haul: the hands on the gallery, the pulley, the thorn, her on the rim; closing in pull by pull.
+  { t: PULLS[0], cells: 4.9, at: [61.5, -2.95] },
+  { t: PULLS[PULLS.length - 1], cells: 3.7, at: [61.3, -2.85] },
+  // Free, and the junk pours out: the frame opens to take it.
+  { t: FREE, cells: 5.6, at: [62.8, -2.8] },
   { t: RISE - 0.2, cells: 5.6, at: [63.4, -2.8] },
   // He rises, laughs, and goes.
   { t: RISE + 1.2, cells: 4.4, at: [63.1, -3.0] },
   { t: AWAY, cells: 4.6, at: [63.6, -3.0] },
   { t: CUT_OUT - 0.02, cells: 5.0, at: [65.6, -2.8] },
   // Outside: the ribbon of him rising behind the bathhouse and away over the sea.
-  { t: CUT_OUT, cells: 17.0, at: [64.6, -7.8], cut: true },
-  { t: CUT_IN - 0.02, cells: 17.8, at: [66.8, -8.4] },
+  { t: CUT_OUT, cells: 15.5, at: [66.0, -8.6], cut: true },
+  { t: CUT_IN - 0.02, cells: 16.5, at: [68.2, -9.2] },
   // Back in: the hall settling.
   { t: CUT_IN, cells: 5.0, at: [62.4, -2.7], cut: true },
   { t: 92.5, cells: 4.8, at: [62.4, -2.65] },

@@ -476,10 +476,11 @@ export function drawSpirit(g: Paint, L: Light): void {
 
 /** Outside, wide: the ribbon of him coming up from behind the bathhouse and away east over the sea, smaller and smaller. */
 export function outsideAt(t: number, from: number): { p: Pt; s: number } {
-  const u = smoother(t, from - 0.6, from + 3.4)
-  const a: Pt = [66.4, -5.5]
-  const b: Pt = [69.0, -15.5]
-  const c: Pt = [84.0, -16.5]
+  // Already up over the roofs at the cut, so the shot is never empty: sweeping up and out over the sea, going away.
+  const u = smoother(t, from - 1.0, from + 3.2)
+  const a: Pt = [66.8, -8.6]
+  const b: Pt = [70.5, -17.5]
+  const c: Pt = [86.0, -16.0]
   const v = 1 - u
   const p: Pt = [v * v * a[0] + 2 * v * u * b[0] + u * u * c[0], v * v * a[1] + 2 * v * u * b[1] + u * u * c[1]]
   return { p, s: lerp(1.25, 0.3, u) }
@@ -488,9 +489,10 @@ export function outsideAt(t: number, from: number): { p: Pt; s: number } {
 export function drawSpiritOutside(g: Paint, L: Light, from: number, until: number): void {
   const { t } = g
   if (t < from || t >= until) return
-  const water = mix(mix(WATER, '#FFFFFF', 0.25), L.ambient, 0.3)
-  const pts = ribbon((s) => outsideAt(s, from), t, 5.5, 40)
-  band(g, pts, (i) => (0.3 + 0.25 * (i / pts.length)) * pts[i].s, water, 0.8, 1)
+  // Clear water lit by the moon: paler than the smoke, fuller, with the old face at its head.
+  const water = mix(mix(WATER, '#FFFFFF', 0.5), L.ambient, 0.18)
+  const pts = ribbon((s) => outsideAt(s, from), t, 6.0, 40)
+  band(g, pts, (i) => (0.42 + 0.3 * Math.sin(Math.PI * Math.min(1, i / pts.length + 0.15))) * pts[i].s, water, 0.86, 1)
   const f = outsideAt(t, from)
-  drawFace(g, f.p, f.s * 0.9, 0, L.ambient)
+  drawFace(g, f.p, f.s * 1.05, 0, '#FFFFFF')
 }

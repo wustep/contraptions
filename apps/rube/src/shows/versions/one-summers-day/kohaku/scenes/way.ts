@@ -116,15 +116,15 @@ function heroMoves(): Move[] {
 
 const SHOTS: Key[] = [
   // The gate under its trees in the afternoon, the arch dark.
-  { t: 0, cells: 4.4, at: [-2.5, -1.95] },
-  { t: EMERGED, cells: 4.2, at: [-2.4, -1.85] },
-  { t: PULL, cells: 4.1, at: [-2.1, -1.8] },
-  { t: M.chord4, cells: 4.2, at: [-1.8, -1.8] },
+  { t: 0, cells: 4.0, at: [-2.6, -1.8] },
+  { t: EMERGED, cells: 3.5, at: [-2.7, -1.45], focus: ARCH },
+  { t: PULL, cells: 3.4, at: [-2.0, -1.4], focus: SUNLIT },
+  { t: M.chord4, cells: 3.6, at: [-1.6, -1.45] },
   // The summer opens round her on the brow.
-  { t: M.chord4 + 5, cells: 6.2, at: [1.6, -1.9] },
-  { t: M.theme - 0.4, cells: 9.6, at: [5.4, -2.75] },
+  { t: M.chord4 + 5, cells: 6.0, at: [1.8, -1.85] },
+  { t: M.theme - 0.4, cells: 8.6, at: [5.2, -2.5] },
   // Down the meadow with her, to the river.
-  { t: M.theme + 3.2, cells: 8.2, at: [10.2, -1.9] },
+  { t: M.theme + 3.2, cells: 6.8, at: [10.6, -1.5] },
   { t: STONE_LANDS[0] - 0.6, cells: 5.8, at: [17.4, 0.35] },
   { t: STONE_LANDS[5], cells: 5.4, at: [20.4, 0.15] },
   // Up the steps, and along the street as the light goes.

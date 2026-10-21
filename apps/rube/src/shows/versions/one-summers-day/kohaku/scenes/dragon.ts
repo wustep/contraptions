@@ -62,9 +62,10 @@ const onHim = (t: number, cells: number, dx = -0.6, dy = 0.25): Key => {
 const SHOTS: Key[] = [
   // Dawn: her room open at the left, she on the balcony, the new sea.
   { t: FROM, cells: 6.0, at: [74.4, -6.1], cut: true, focus: BALC },
-  { t: M.rise - 0.5, cells: 6.6, at: [75.4, -6.4], focus: BALC },
+  { t: M.rise - 2.0, cells: 6.6, at: [75.4, -6.4], focus: BALC },
   // A white shape far out over the water, and the swarm about it.
-  { t: CUT_IN - 0.05, cells: 10.5, at: [83.5, -8.4] },
+  { t: M.rise + 1.6, cells: 12.5, at: [89.0, -9.3] },
+  { t: CUT_IN - 0.05, cells: 11.6, at: [89.0, -9.6] },
   // In among them.
   { ...onHim(CUT_IN, 4.6), cut: true },
   onHim(109.4, 4.5),
