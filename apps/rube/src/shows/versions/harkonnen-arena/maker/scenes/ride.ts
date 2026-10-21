@@ -154,6 +154,23 @@ const lagging = (t: number): Pt => {
   return [x - 0.5 * (t - ROLL2), y]
 }
 
+/** How far ahead in time a tracking shot looks (`steady` in lens.ts). */
+const LEAD = 0.15
+/** When the draw back has the whole worm in the frame. */
+const WHOLE = 168.6
+/** The worm's middle, the whole of it: what the draw back comes to. */
+const wormWhole = (t: number): Pt => [headX(t) - 21, -4]
+/** What the stand's long take keeps: him, and from the fall, by degrees, the whole worm. */
+const drawBack = (t: number): Pt => {
+  // The camera holds what it tracks a little ahead in time (`steady` in lens.ts); at the worm's speed that is a cell
+  // or more, so this track runs that much behind, and he sits where the shot puts him.
+  const [px, py] = paulAt(t - LEAD)
+  const [wx, wy] = wormWhole(t - LEAD)
+  // Late against the draw back, so the frame has opened enough to keep him as what it tracks goes back along the worm.
+  const u = smooth(t, M.fall + 1.5, WHOLE + 0.4)
+  return [px + (wx - px) * u, py + (wy - py) * u]
+}
+
 /** An offset from what is tracked that puts it at shares (sx, sy) of a frame `cells` high. */
 const at = (sx: number, sy: number, cells: number): Pt => [(0.5 - sx) * cells * (16 / 9), (0.5 - sy) * cells]
 
@@ -198,12 +215,13 @@ const shots: Shot[] = [
   // Wide and still: the worm comes into the frame from the west and races across it.
   { t: run(39), cut: true, cells: 30, at: [1193, -10.5], focus: paulAt },
   { t: STAND - 0.01, cells: 29, at: [1195, -10.3], focus: paulAt },
-  // He stands: low and close, him upright against the sky over the long back, the desert going by under it; held,
-  // pushing in a little. Then, as the music falls away, the camera draws back and back, and he goes small on it,
-  // riding on toward the sun as the moon comes over it; still for the silence and the dissolve.
-  { t: STAND, cut: true, cells: 7.4, track: paulAt, off: at(0.32, 0.38, 7.4), focus: paulAt },
-  { t: M.fall, cells: 6.4, track: paulAt, off: at(0.33, 0.4, 6.4), focus: paulAt },
-  { t: 170.5, cells: 26, track: paulAt, off: at(0.36, 0.64, 26), focus: paulAt },
+  // He stands: low and close, the worm's back a long curve across the foot of the frame like a horizon, and on the
+  // beat he springs up onto its crown, upright against the sky a little left of the middle, the staves held forward;
+  // held, pushing in a little. Then, as the music falls away, the camera draws back from him to the whole worm and on,
+  // and he goes small on it, riding toward the sun as the moon comes over it; still for the silence and the dissolve.
+  { t: STAND, cut: true, cells: 3.1, track: drawBack, off: at(0.42, 0.63, 3.1), focus: paulAt },
+  { t: M.fall, cells: 2.9, track: drawBack, off: at(0.42, 0.63, 2.9), focus: paulAt },
+  { t: WHOLE, cells: 30, track: drawBack, off: at(0.5, 0.68, 30), focus: paulAt },
   { t: 177.5, cells: 100, at: [1388, -40] },
   { t: 184.3, cells: 112, at: LAST_HOLD },
   { t: TO - 0.001, cells: 112, at: LAST_HOLD },
@@ -214,7 +232,7 @@ const tilt = tiltOf([
   [FROM, 0.2], [PLANT - 0.01, 0.2], [PLANT, 0.36], [drive(13) - 0.01, 0.36], [drive(13), 0.16], [drive(21) - 0.01, 0.16],
   [drive(21), 0.34], [drive(27), 0.34], [125.84, 0.2], [125.846, 0.2], [LEAP, 0.18], [OPEN - 0.01, 0.18], [OPEN, 0.3],
   [SURGE - 0.01, 0.3], [SURGE, 0.14], [CLIMB[0] - 0.01, 0.14], [CLIMB[0], 0.24], [CHANI_AT - 0.01, 0.24], [CHANI_AT, 0.25],
-  [run(39) - 0.01, 0.25], [run(39), 0.14], [STAND - 0.01, 0.14], [STAND, 0.3], [M.fall, 0.3], [177.5, 0.27], [TO, 0.27],
+  [run(39) - 0.01, 0.25], [run(39), 0.14], [STAND - 0.01, 0.14], [STAND, 0.14], [M.fall, 0.14], [WHOLE, 0.24], [177.5, 0.27], [TO, 0.27],
 ])
 
 /* ------------------------------------------------------------------ the drawings */

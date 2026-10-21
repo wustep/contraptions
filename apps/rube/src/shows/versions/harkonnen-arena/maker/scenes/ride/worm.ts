@@ -54,9 +54,14 @@ export const speed = (t: number): number => V0 + (V1 - V0) * smooth(t, SURGE, SU
 /** How far out of the sand it has come, 0 (a swell under the surface) to 1 (its back in the air). */
 export const emerged = (t: number): number => smoother(t, 128.6, 133.2)
 
-/** The back's line behind the head when it is out: the spine's height at `s` cells behind the head. */
+/**
+ * The back's line behind the head when it is out: the spine's height at `s` cells behind the head. It rises from the
+ * plowing head to its crown by the seam the hooks go into, so standing there he stands on the crown.
+ */
 function profile(s: number): number {
-  return -1.7 - 3.0 * smooth(s, 0, 9) + 8.4 * smooth(s, 15, 44)
+  // A gentle arch over the crown, so its line across a close frame is a curve, not a shelf.
+  const arch = 0.5 * Math.exp(-(((s - 9) / 4.5) ** 2))
+  return -1.7 - 3.0 * smooth(s, 0, 6.5) - arch + 8.4 * smooth(s, 15, 44)
 }
 
 /** The spine's height at `s` behind the head, at `t`: rising out of the sand, the surge's heave, a slow breathing bob. */
@@ -230,58 +235,76 @@ export const STAND = beat('run', 50)
 export function paulV(t: number): number {
   const hang = hookV(t) - 0.2
   if (t < CLIMB[0]) return hang
-  // From where the hook left him to the top of the back, in even steps, each one a quick pull and a rest.
+  // From where the hook left him to just under the crown, in even steps, each one a quick pull and a rest.
   const from = hookV(CLIMB[0]) - 0.2
   const steps = CLIMB.length
   let k = 0
   for (let i = 0; i < steps; i++) k += smooth(t, CLIMB[i], CLIMB[i] + 0.22)
-  return from + (0.93 - from) * (k / steps)
+  return from + (CLING - from) * (k / steps)
 }
+
+/** How high on the seam he clings after the climb, under the crown, until he stands. */
+const CLING = 0.82
+/** How long the spring up onto the crown takes, on the stand's beat. */
+const RISE = 0.36
 
 /** Where Paul is on the worm at `t` (from the bite on). */
 export function paulOnWorm(t: number): Pt {
-  if (t < STAND - 0.05) {
-    const [x, y] = onSeam(t, paulV(t))
+  const clinging = (tt: number): Pt => {
+    const [x, y] = onSeam(tt, paulV(tt))
     // He hangs off the seam's near face: a little forward of it, toward the head.
     return [x + 0.12, y]
   }
-  // Standing: on the back's top line above the seam, risen onto it on the stand.
-  const u = smooth(t, STAND - 0.05, STAND + 0.4)
-  const [lx, ly] = onSeam(t, 0.93)
+  if (t <= STAND) return clinging(t)
+  // On the beat he springs up out of the seam onto the crown, in the worm's own frame: an arc up and over, and down.
   const [tx, ty] = onSeam(t, 1, R)
-  return [lx + 0.12 + (tx - lx - 0.12) * u, ly + (ty - ly) * u]
+  if (t >= STAND + RISE) return [tx, ty]
+  const u = (t - STAND) / RISE
+  const [fx, fy] = clinging(t)
+  const e = u * u * (3 - 2 * u)
+  return [fx + (tx - fx) * e, fy + (ty - fy) * e - 0.22 * Math.sin(Math.PI * u)]
 }
 
-/** The hooks' staffs: from the seam, out toward Paul (their ropes in his hands); upright on the back once he stands. */
+/**
+ * The maker hooks: two straight staves, their heads in the seam's flesh as he hangs and climbs, their ropes from the
+ * heads to his hands. Once he stands they are planted at the crown in front of him, leaning forward toward the head, and
+ * the ropes run taut back to him like reins.
+ */
 export function paintHooks(b: Brush, t: number, paul: Pt): void {
   if (t < BITE - 0.02) return
   const { ctx } = b
   const v = hookV(t)
-  const stand = smooth(t, STAND, STAND + 0.6)
-  for (const side of [-1, 1]) {
-    const base = onSeam(t, Math.min(0.99, v + side * 0.07))
-    const lean = side * 0.18
-    // A staff of about two metres, leaning out of the seam; once he stands, pulled forward toward the head, so its rope
-    // runs back from its head to his hands like a rein.
-    const hang = Math.PI * 0.12 + lean
-    const rein = -Math.PI * 0.2 + lean * 0.5
-    const ang = hang + (rein - hang) * stand
-    const len = 0.42 + 0.16 * stand
+  const stand = smooth(t, STAND, STAND + RISE)
+  ctx.lineCap = 'round'
+  for (const side of [0, 1]) {
+    // Hanging: the staves stand out of the seam on either side of the hook point, each pointing at him, so staff and
+    // rope are one taut line from the flesh to his hands.
+    const hb = onSeam(t, Math.min(0.97, v + (side ? 0.06 : -0.04)))
+    const ha = Math.atan2(paul[1] - hb[1], paul[0] - hb[0]) + (side ? 0.12 : -0.12)
+    // Standing: planted at the crown just ahead of him, leaning forward, one a little further on than the other.
+    const sb = onSeam(t, 0.985)
+    sb[0] += 0.14 + 0.1 * side
+    const sa = -Math.PI * (0.27 + 0.05 * side)
+    const base: Pt = [hb[0] + (sb[0] - hb[0]) * stand, hb[1] + (sb[1] - hb[1]) * stand]
+    const ang = ha + (sa - ha) * stand
+    const reach = Math.hypot(paul[0] - hb[0], paul[1] - hb[1])
+    const len = (0.4 + 0.06 * side) * stand + Math.min(0.4, reach * 0.62) * (1 - stand)
     const tip: Pt = [base[0] + Math.cos(ang) * len, base[1] + Math.sin(ang) * len]
     ctx.beginPath()
     ctx.moveTo(base[0], base[1])
     ctx.lineTo(tip[0], tip[1])
     ctx.strokeStyle = b.c('#2A1E16')
-    ctx.lineWidth = Math.max(1.25 * b.px, 0.035)
+    ctx.lineWidth = Math.max(1.25 * b.px, 0.028)
     ctx.stroke()
     // The rope from the staff's head to his hands, taut.
     ctx.beginPath()
     ctx.moveTo(tip[0], tip[1])
-    ctx.lineTo(paul[0] + side * 0.03, paul[1] - 0.02)
-    ctx.strokeStyle = b.c('#2E2118')
-    ctx.lineWidth = Math.max(1.25 * b.px, 0.022)
+    ctx.lineTo(paul[0] + 0.06, paul[1] - 0.03 + 0.03 * side)
+    ctx.strokeStyle = b.c('#3B2B1F')
+    ctx.lineWidth = Math.max(1.25 * b.px, 0.012)
     ctx.stroke()
   }
+  ctx.lineCap = 'butt'
 }
 
 /**
