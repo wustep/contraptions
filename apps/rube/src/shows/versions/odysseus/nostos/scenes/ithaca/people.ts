@@ -22,6 +22,8 @@ const FLOOR = HALL.floor
 /** A ball's centre on a floor, for its size. */
 const on = (floor: number, size = 1) => floor - R * size
 const HERO_ON = on(FLOOR)
+/** Where the son waits on the dead dog's far side for his father. */
+const SON_AT_DOG = 810.62
 const ROOM_ON = (size: number) => on(ROOM.floor, size)
 /** What a suitor is once the colour has gone out of him: darker than the hall's dado behind him, where the living are lighter. */
 const DEAD = '#1F2226'
@@ -64,10 +66,15 @@ export function heroMoves(): Move[] {
   m.push(out)
   const byDog: Pt = [809.45, ON_TOP]
   m.push(roll([top, byDog], out.t1, HOME.atDog))
-  m.push(rest(byDog, HOME.atDog, TRIAL.touch + 0.3))
-  // In with his son, through the gate and the courtyard, to the hall's threshold.
+  // When the dog is dead and his son has come to its far side, he steps over it to him, and they touch on the note.
+  const toSon: Pt = [SON_AT_DOG - R * TELEMACHUS_SIZE - R, ON_TOP]
+  const over = hopTo(byDog, toSon, TRIAL.touch, 0.3)
+  m.push(rest(byDog, HOME.atDog, over.t0))
+  m.push(over)
+  // In behind his son, through the gate and the courtyard, to the hall's threshold.
   const threshold: Pt = [818.45, HERO_ON]
-  m.push(roll([byDog, [GATE.x, ON_TOP], [threshold[0], HERO_ON]], TRIAL.touch + 0.3, TRIAL.inside))
+  m.push(rest(toSon, TRIAL.touch, TRIAL.touch + 1.0))
+  m.push(roll([toSon, [GATE.x, ON_TOP], [threshold[0], HERO_ON]], TRIAL.touch + 1.0, TRIAL.inside))
   m.push(rest(threshold, TRIAL.inside, 483.6))
   // To the stairs' foot; up them a step a note; at their head, in her room.
   const foot: Pt = [STAIRS.x0 - 0.25, HERO_ON]
@@ -156,15 +163,15 @@ function telemachusPath(): Path {
   m.push(...hops([top, ...down, floorFoot], [424.6, 425.0, 425.4, 425.8, 426.2, 426.6, 427.0], 0.05))
   // Out of the gate he stops under the olive at what he sees: the old dog lifting his head to the beggar. He watches the
   // tail go once and the dog die (that is how he knows him, as in the film), and only then comes, slowly, to the dog's
-  // other side: the two of them with the dead dog between them.
+  // other side, the dead dog between them; his father steps over it to him, and they touch (`heroMoves`).
   const watch: Pt = [811.15, ground]
-  const across: Pt = [810.62, ground]
+  const across: Pt = [SON_AT_DOG, ground]
   m.push(roll([floorFoot, [HALL.x0 + 0.1, fy], [GATE.x, ground], watch], 427.0, 429.75))
   m.push(rest(watch, 429.75, 434.2))
-  m.push(roll([watch, across], 434.2, TRIAL.touch, 'inout'))
+  m.push(roll([watch, across], 434.2, 436.09, 'inout'))
   // He leads his father in, into the hall ahead of him, and to the first axe's foot.
   const inHall: Pt = [818.18 + 0.8, fy]
-  m.push(rest(across, TRIAL.touch, TRIAL.touch + 0.6))
+  m.push(rest(across, 436.09, TRIAL.touch + 0.6))
   m.push(roll([across, [GATE.x, ground], inHall], TRIAL.touch + 0.6, TRIAL.inside - 0.2))
   m.push(rest(inHall, TRIAL.inside - 0.2, 448.6))
   const atAxe: Pt = [820.31 - 0.24, fy]

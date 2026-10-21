@@ -51,8 +51,8 @@ export const home: Scene = {
     { t: HOME.sees, cells: 2.6, at: [810.1, -9.62] },
     { t: HOME.dies, cells: 2.0, at: [810.2, -9.5] },
     { t: HOME.dies + 2.5, cells: 2.05, at: [810.2, -9.5] },
-    // His son comes to the dog's other side, the dead dog between them.
-    { t: TRIAL.touch, cells: 2.6, at: [809.9, -9.6] },
+    // His son comes to the dog's far side, and his father steps over the dead dog to him: they touch.
+    { t: TRIAL.touch, cells: 2.3, at: [810.15, -9.55] },
     // In through the gate, the courtyard, to the hall's threshold.
     { t: TRIAL.inside, cells: 3.4, at: [819.2, -9.75] },
     // The hall: the axes come up; on the last one's note, in close on the plate, with the first suitor at the well's lip.
