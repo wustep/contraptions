@@ -125,7 +125,7 @@ export const desert: Scene = {
   shots: [
     // Close on the two of them on the lip, drawing back until the desert is the frame, the machine far off under its
     // plume, and they are two specks on the rock.
-    { t: W.open, cells: 8, at: [PAUL_SEAT[0] - 1.2, PAUL_SEAT[1] - 1.3] },
+    { t: W.open, cells: 4.6, at: [PAUL_SEAT[0] - 0.75, PAUL_SEAT[1] - 0.55] },
     { t: W.machine - 0.01, cells: 44, at: [14, -13.5] },
     // The machine close: low on its scoop biting the sand, craning up and back over the chant to the whole of it and its
     // plume going up.
