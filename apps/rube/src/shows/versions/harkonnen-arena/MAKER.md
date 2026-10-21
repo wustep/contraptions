@@ -92,3 +92,33 @@ under the great blows, the drive, the run, the charge). `apps/rube/checks/maker.
 - the arc of light to its stretches;
 - every ball to never jumping, coming or going in shot, but across a cut or a dissolve;
 - the credits and the soundtrack to what they owe.
+
+## How it was made
+
+The kit (the clock, the grade, paths, the camera, the dunes, the worm's skin) and the deep desert were the director's;
+the ride, the arena and the charge were built in parallel by three builders in their own worktrees to a contract (each
+scene's window, its seams, the cast it owns, the look's rules), and integrated by copying their folders. Each round
+after the first build was a real-speed watch of the whole show at 1440 × 810 and on a phone held upright, with notes back
+to the builders, who kept their context; each weighed cutting as much as adding.
+
+- **First build.** All four scenes end to end on the music.
+- **Round 1.** The opening draws back from the two of them on the rock's lip; the machine's close cranes up from its
+  scoop to its plume; worm sign is a held wide the swell runs across; the swallow is seen close. The stand became the
+  ride's longest shot; Paul is tracked and legible; worm sign in the ride is ground moving, not a curl. The arena gained
+  four viewpoints (it repeated three framings), a crowd of five deep tiers that rocks as one mass (it was nine stripes),
+  and ink that blooms and droops in fine threads (it was a four-armed pinwheel). The charge gained a value structure, a
+  close on the riders, and thirty Fremen running out of the storm. Cut: the curl, the cheer after the stand, the
+  frame-fixed day sun, the striped medium shots, the ink's arms.
+- **Round 2.** The last image (it was a pale haze with two specks): Paul on a crest, Chani going away down the slope
+  toward the sun. The eclipse's silence stays readable (it was a near-black screen for eight seconds), and its draw back
+  takes eight seconds (it went tenfold in four). The open seam under the stand is a dark slit (it read as a flame). The
+  bowl's shadow lies across the arena floor in the shots from the rim (they were plain grey). Fixed: a step in the sky
+  where the stand now runs on into the draw back.
+- **Round 3.** Subtraction: the storm's scalloped billows (a pattern) became a few great lobes; the worms' plates and
+  seams went quieter; the dust at the strike no longer lies over the mouth as a halo; the resting Fremen gather in knots
+  (an even row read as a dotted line); far Sardaukar ranks are one band.
+
+Checked each round: `npm run build` (lint, typecheck, every check suite, the site build); a frame-difference sweep of
+the whole show at 30 fps, whose only flags are the camera's cuts and the worm's strike on the great ship; every frame
+painted at 1600 × 900 in about 0.4 ms (median), 0.7 ms (95th percentile), 4.6 ms at worst (the dissolve into the storm);
+the camera's pan and zoom every 1/60 s; a saved video's credits at 1080p and in the Shorts letterbox.
