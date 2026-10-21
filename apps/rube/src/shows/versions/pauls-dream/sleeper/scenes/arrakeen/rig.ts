@@ -105,7 +105,7 @@ export function drawFrigateUnder(g: Paint, t: number, night: boolean): void {
   // The hold, dark, seen through the hatch while it is open.
   if (hatchOpen(t) > 0.001) {
     rect(ctx, p.x + HATCH_L.x0, p.y + HATCH_L.y0, HATCH_L.x1 - HATCH_L.x0, HATCH_L.y1 - HATCH_L.y0)
-    fill(ctx, night ? '#07090D' : '#1A1714')
+    fill(ctx, night ? '#07090D' : '#6E6254')
     // Its floor, where the family stands.
     rect(ctx, p.x + HATCH_L.x0, p.y + HATCH_L.y1 - 0.06, HATCH_L.x1 - HATCH_L.x0, 0.06)
     fill(ctx, mix(look.belly, '#000000', 0.3))

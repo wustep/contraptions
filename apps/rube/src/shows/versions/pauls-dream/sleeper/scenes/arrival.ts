@@ -84,17 +84,18 @@ const shots: Shot[] = [
   { t: A.touch, cells: 22, at: [31.4, -8.8] },
   { t: A.settle - 0.002, cells: 21.5, at: [31.8, -8.6] },
   // On the blow: close on the hatch as it opens, the ramp, and the three of them coming out into the light.
-  { t: A.settle, cells: 6.6, at: [33.6, -2.5], cut: true },
-  { t: A.jessica, cells: 6.5, at: [35.0, -2.45] },
-  { t: 122.457, cells: 6.4, at: [36.6, -2.4] },
+  { t: A.settle, cells: 3.4, at: [33.0, -1.6], cut: true },
+  { t: A.leto, cells: 3.4, at: [33.6, -1.6] },
+  { t: A.jessica, cells: 3.4, at: [34.6, -1.55] },
+  { t: 122.457, cells: 3.3, at: [35.6, -1.5] },
   // Wide: three small balls going across the field toward the palace.
   { t: 122.46, cells: 32, at: [44.0, -14.6], cut: true },
   { t: A.hall - 0.002, cells: 30, at: [45.6, -14.0] },
   // The great hall: the crate, the winch, the head coming up the wall.
   { t: A.hall, cells: 7.6, at: [81.5, -3.45], cut: true },
-  { t: A.up - 0.1, cells: 4.8, at: [81.5, -2.08] },
-  { t: A.pulls[0], cells: 4.7, at: [81.5, -2.1] },
-  { t: A.to - 0.002, cells: 4.6, at: [81.45, -2.2] },
+  { t: A.up - 0.1, cells: 4.4, at: [82.2, -2.0] },
+  { t: A.pulls[0], cells: 4.0, at: [83.1, -1.95] },
+  { t: A.to - 0.002, cells: 3.9, at: [83.0, -2.0] },
 ]
 
 export const arrival: Scene = {

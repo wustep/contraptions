@@ -155,9 +155,9 @@ const shots: Shot[] = [
   { t: N.roof, cells: 7, at: [88.5, -25.2], cut: true },
   { t: N.watch - 0.002, cells: 7.4, at: [89, -25.5] },
   // Paul at his window in the burning city's light; his mother comes to him; the blast over the window.
-  { t: N.watch, cells: 3.6, at: WINDOW_CLOSE, cut: true },
-  { t: N.mother + 2.3, cells: 3.8, at: [95.0, -16.1] },
-  { t: N.terrace - 0.002, cells: 3.8, at: [95.0, -16.1] },
+  { t: N.watch, cells: 2.8, at: [95.3, -15.85], cut: true },
+  { t: N.mother + 2.3, cells: 2.9, at: [95.15, -15.85] },
+  { t: N.terrace - 0.002, cells: 2.9, at: [95.15, -15.85] },
   // The terrace: the Harkonnen ornithopter comes down out of the smoke onto the pad.
   { t: N.terrace, cells: 9, at: [115.5, -17.6], cut: true },
   { t: N.room - 0.002, cells: 8.6, at: [116, -17.4] },

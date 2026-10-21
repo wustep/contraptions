@@ -18,24 +18,28 @@ import { ATTACK } from './times'
 export function drawShield(g: Paint, t: number): void {
   const from = ATTACK.from
   const out = ATTACK.shieldOut
-  if (t < from || t > out + 3) return
-  const p = smooth(t, out, out + 2.2)
+  if (t < from || t > out + 1.6) return
   const ctx = g.ctx
-  // A faint flat body to it, gone first.
+  // Where the going-out has come down to: from over the crown on the blow to under the feet a second later, with a
+  // short soft edge. Above it the shield is gone; below it, still there.
+  const soft = 0.12
+  const front = -soft - 0.01 + (1 + 2 * soft + 0.02) * smoother(t, out, out + 1.25)
+  const at = (h: number) => smooth(h, front - soft, front + soft)
+  const grad = (a: number, color: string): CanvasGradient => {
+    const gr = ctx.createLinearGradient(0, -SHIELD.h, 0, 0)
+    for (let i = 0; i <= 16; i++) gr.addColorStop(i / 16, rgba(color, a * at(i / 16)))
+    return gr
+  }
+  // A pale veil inside its line, a few percent: the shield itself, there to be lost.
   ctx.beginPath()
   ctx.ellipse(SHIELD.cx, 0, SHIELD.w, SHIELD.h, 0, Math.PI, Math.PI * 2)
   ctx.closePath()
-  fill(ctx, rgba('#9DB3C9', 0.035 * (1 - smooth(p, 0, 0.35))))
-  // The line, one stroke whose strength goes with its height: the crown goes out first, the feet last.
-  const line = ctx.createLinearGradient(0, -SHIELD.h, 0, 0)
-  for (let i = 0; i <= 12; i++) {
-    const h = 1 - i / 12
-    const gone = smooth(p, (1 - h) * 0.6, (1 - h) * 0.6 + 0.4)
-    line.addColorStop(i / 12, rgba('#B5C8DA', 0.42 * (1 - gone)))
-  }
+  ctx.fillStyle = grad(0.08, '#A8BCD0')
+  ctx.fill()
+  // Its line, one stroke.
   ctx.beginPath()
   ctx.ellipse(SHIELD.cx, 0, SHIELD.w, SHIELD.h, 0, Math.PI, Math.PI * 2)
-  ctx.strokeStyle = line
+  ctx.strokeStyle = grad(0.45, '#B5C8DA')
   ctx.lineWidth = 2.2 * g.px
   ctx.stroke()
 }
