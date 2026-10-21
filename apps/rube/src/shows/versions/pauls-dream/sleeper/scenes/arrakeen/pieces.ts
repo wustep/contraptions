@@ -4,7 +4,7 @@ import { mix, ring, standing, type Paint } from '../../paint'
 import { BARON } from '../../cast'
 import { CHAIR, HOOK } from './geo'
 import { inside, isNight, toneAt } from './look'
-import { drawArmada, drawChair, drawDoor, drawFires, drawGas, drawHallLamp, drawHallPool, drawHallWash, drawNearShips, drawRoom, drawRoomLight, drawShield, drawStraps, drawUpperRooms, underlightBull } from './night'
+import { drawArmada, drawChair, drawDoor, drawFires, drawGas, drawHallLamp, drawHallPool, drawNearShips, drawRoom, drawRoomLight, drawShield, drawStraps, drawUpperRooms, underlightBull } from './night'
 import { bullSwing, bullTop, drawCrateFront, drawFrigateOver, drawFrigateUnder, drawHark, drawHarkOver, drawWinch } from './rig'
 import { drawBehind, drawNear, drawPalaceWhole } from './set'
 import { ARRIVAL, ATTACK } from './times'
@@ -69,7 +69,6 @@ function over(g: Paint): void {
   drawFrigateOver(g, t, night, tone.air.sand)
   if (night) {
     drawHarkOver(g, t)
-    if (inside(t)) drawHallWash(g, tone.lamp)
     if (inside(t) && t < ATTACK.hall) drawRoomLight(g, t)
     if (inside(t) && t >= ATTACK.hall) {
       drawStraps(g, DUKE_SEAT, 0.13 * 1.18, '#16120F')

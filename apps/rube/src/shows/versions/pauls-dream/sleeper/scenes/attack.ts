@@ -165,12 +165,10 @@ const shots: Shot[] = [
   { t: N.room, cells: 4.0, at: [96.3, -16.1], cut: true },
   { t: N.taken, cells: 4.0, at: [96.4, -16.1] },
   { t: N.across - 0.002, cells: 4.1, at: [97.4, -16.05] },
-  // Across the terrace with them, into the ornithopter's hold.
+  // Across the terrace with them, into the ornithopter's hold; it lifts and goes up out of the frame.
   { t: N.across, cells: 4.2, at: [114.6, -15.95], cut: true },
-  { t: N.lift - 0.002, cells: 4.3, at: [115.2, -16.1] },
-  // It lifts and goes.
-  { t: N.lift, cells: 8.6, at: [118.5, -17.8], cut: true },
-  { t: N.hall - 0.002, cells: 9, at: [119, -18.4] },
+  { t: N.lift, cells: 4.3, at: [115.2, -16.1] },
+  { t: N.hall - 0.002, cells: 4.7, at: [116.0, -16.9] },
   // The great hall: the Duke bound under the bull, the guards either side.
   { t: N.hall, cells: 5.4, at: [80.6, -2.3], cut: true },
   { t: N.baron[0] - 0.002, cells: 5.2, at: [80.7, -2.2] },

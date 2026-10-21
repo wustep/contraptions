@@ -91,7 +91,8 @@ const shots: Shot[] = [
   { t: 122.46, cells: 32, at: [44.0, -14.6], cut: true },
   { t: A.hall - 0.002, cells: 30, at: [45.6, -14.0] },
   // The great hall: the crate, the winch, the head coming up the wall.
-  { t: A.hall, cells: 4.8, at: [81.5, -2.05], cut: true },
+  { t: A.hall, cells: 7.6, at: [81.5, -3.45], cut: true },
+  { t: A.up - 0.1, cells: 4.8, at: [81.5, -2.08] },
   { t: A.pulls[0], cells: 4.7, at: [81.5, -2.1] },
   { t: A.to - 0.002, cells: 4.6, at: [81.45, -2.2] },
 ]

@@ -1,7 +1,7 @@
 import { drawFrigate, type FrigateLook } from '../../craft/frigate'
 import { blob, drift, ellipse, fill, hash, layer, line, mix, poly, rect, rgba, ring, smooth, smoother, type Layer, type Paint, type Pt } from '../../paint'
 import { hazeAt } from '../../world/desert'
-import { CHAIR, HALL, LAMP, ROOM, ROOM_DOOR, SHIELD, TOP_ROOMS, WEST_ROOM } from './geo'
+import { CHAIR, LAMP, ROOM, ROOM_DOOR, SHIELD, TOP_ROOMS, WEST_ROOM } from './geo'
 import { ATTACK } from './times'
 
 /**
@@ -205,38 +205,30 @@ export function drawHallLamp(g: Paint, t: number, iron: string): void {
   fill(ctx, '#C25A21')
 }
 /**
- * The lamp's light where it falls, under the balls: a pool on the floor round the chair and up the dark wall behind,
- * strongest near the lamp and gone well short of the vault; the floor's front edge lit under it.
+ * The lamp's light where it falls, under the balls, flat: a lit ellipse on the floor round the chair (two steps of
+ * light, a short soft edge), and a trapezoid of light thrown up the wall from the flame, its sides straight, fading
+ * toward its top over the bull. The rest of the hall is left dark.
  */
 export function drawHallPool(g: Paint, lamp: string): void {
   const ctx = g.ctx
   const [x, y] = LAMP
-  ctx.save()
-  ctx.beginPath()
-  ctx.rect(HALL.x0, HALL.ceil, HALL.x1 - HALL.x0, -HALL.ceil)
-  ctx.clip()
-  ctx.translate(x, y + 0.5)
-  ctx.scale(1, 0.82)
-  const r = 3.2
-  const pool = ctx.createRadialGradient(0, 0, 0, 0, 0, r)
-  pool.addColorStop(0, rgba(lamp, 0.34))
-  pool.addColorStop(0.45, rgba(lamp, 0.24))
-  pool.addColorStop(0.8, rgba(lamp, 0.07))
-  pool.addColorStop(1, rgba(lamp, 0))
-  ctx.fillStyle = pool
-  ctx.fillRect(-r, -r, 2 * r, 2 * r)
-  ctx.restore()
-  rect(ctx, x - 3.2, 0, 6.4, 0.35)
-  ctx.fillStyle = (() => {
-    const gr = ctx.createLinearGradient(x - 3.2, 0, x + 3.2, 0)
-    gr.addColorStop(0, rgba(lamp, 0))
-    gr.addColorStop(0.5, rgba(lamp, 0.3))
+  const flame = y - 0.1
+  // Up the wall from the flame: narrow at the bowl, wide over the bull, straight-sided.
+  const top = -4.3
+  poly(ctx, [[x - 0.26, flame], [x + 0.26, flame], [x + 1.25, top], [x - 1.25, top]])
+  fill(ctx, (() => {
+    const gr = ctx.createLinearGradient(0, flame, 0, top)
+    gr.addColorStop(0, rgba(lamp, 0.24))
+    gr.addColorStop(0.65, rgba(lamp, 0.15))
     gr.addColorStop(1, rgba(lamp, 0))
     return gr
-  })()
-  ctx.fill()
+  })())
+  // On the floor round the chair and the lamp's foot: an outer step and an inner one.
+  for (const [rx, ry, a] of [[2.5, 0.34, 0.16], [2.1, 0.27, 0.14], [1.4, 0.2, 0.12]] as [number, number, number][]) {
+    ellipse(ctx, x - 0.3, 0.12, rx, ry, 0)
+    fill(ctx, rgba(lamp, a))
+  }
 }
-
 /**
  * Over the bull (hung at `top`, its plaque's top): the lamp's light from below on it, flat, on the underside of its
  * muzzle, the lower face and the undersides of the horns' sweep. The bull itself is drawn dim; this is all that is lit.
@@ -256,23 +248,6 @@ export function underlightBull(g: Paint, top: Pt, lamp: string, swing = 0): void
     blob(ctx, [[0.18 * s, 0.38], [0.36 * s, 0.25], [0.5 * s, 0.17], [0.4 * s, 0.26], [0.24 * s, 0.38]])
     fill(ctx, rgba(lamp, 0.35))
   }
-  ctx.restore()
-}
-
-/** Over the balls in the lamp's pool: its warm light on them too. */
-export function drawHallWash(g: Paint, lamp: string): void {
-  const ctx = g.ctx
-  const [x, y] = LAMP
-  ctx.save()
-  ctx.translate(x, y + 0.5)
-  ctx.scale(1, 0.82)
-  const r = 3.0
-  const wash = ctx.createRadialGradient(0, 0, 0, 0, 0, r)
-  wash.addColorStop(0, rgba(lamp, 0.16))
-  wash.addColorStop(0.6, rgba(lamp, 0.08))
-  wash.addColorStop(1, rgba(lamp, 0))
-  ctx.fillStyle = wash
-  ctx.fillRect(-r, -r, 2 * r, 2 * r)
   ctx.restore()
 }
 

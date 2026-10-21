@@ -259,7 +259,11 @@ function palaceCut(g: Paint, tone: Tone, t: number): void {
     // By night the hall is dark: its vault lost, its wall dim toward the floor; the one lamp's light is the scene's to draw.
     rect(ctx, HALL.x0, HALL.ceil, HALL.x1 - HALL.x0, HALL.floor - HALL.ceil)
     fill(ctx, vgrad(ctx, HALL.ceil, HALL.floor, [[0, '#07080B'], [0.55, '#101318'], [1, '#1B1C21']]))
-  } else wall(HALL.x0, HALL.ceil, HALL.x1, HALL.floor, [], tone.room, mix(tone.roomDark, tone.cut, 0.35))
+  } else {
+    // By day the same dark stone room, its vault lost overhead: the slits' light is all that lights it.
+    rect(ctx, HALL.x0, HALL.ceil, HALL.x1 - HALL.x0, HALL.floor - HALL.ceil)
+    fill(ctx, vgrad(ctx, HALL.ceil, HALL.floor, [[0, '#18130F'], [0.55, '#33291F'], [1, '#4E3F33']]))
+  }
   hallWall(g, tone, night)
   wall(WEST_ROOM.x0, WEST_ROOM.ceil, WEST_ROOM.x1, WEST_ROOM.floor, night ? [] : [[76.8, -18.0, 0.45, 2.6]], night ? mix(tone.room, tone.lamp, 0.16) : tone.roomDark, mix(tone.roomDark, tone.cut, 0.3))
   wall(TOP_ROOMS.x0, TOP_ROOMS.ceil, TOP_ROOMS.x1, TOP_ROOMS.floor, night ? [] : [[80.8, -22.5, 0.45, 2.6], [92.8, -22.5, 0.45, 2.6]], night ? mix(tone.room, tone.lamp, 0.16) : tone.roomDark, mix(tone.roomDark, tone.cut, 0.3))
@@ -284,7 +288,7 @@ function hallWall(g: Paint, tone: Tone, night: boolean): void {
   for (const x of [68.6, 76.4, 85.6, 93.4]) {
     rect(ctx, x - 0.7, HALL.ceil, 1.4, -HALL.ceil)
     if (!night) {
-      fill(ctx, vgrad(ctx, HALL.ceil, 0, [[0, mix(tone.roomDark, tone.cut, 0.45)], [1, mix(tone.room, tone.cut, 0.18)]]))
+      fill(ctx, vgrad(ctx, HALL.ceil, 0, [[0, '#130F0C'], [0.6, '#2E251E'], [1, '#4C3D31']]))
       continue
     }
     // By night a pier is a dark column going up into the dark, its edge toward the lamp catching a little of its light.
@@ -303,7 +307,7 @@ function hallWall(g: Paint, tone: Tone, night: boolean): void {
     // From the vault's slit down the wall to the floor, leaning with the sun.
     const top = HALL.ceil + 0.2
     poly(ctx, [[x - w / 2, top], [x + w / 2, top], [x + w / 2 - lean * -top, -0.12], [x - w / 2 - lean * -top, -0.12]])
-    fill(ctx, vgrad(ctx, top, 0, [[0, rgba('#F1DDB8', 0.12)], [1, rgba('#F1DDB8', 0.42)]]))
+    fill(ctx, vgrad(ctx, top, 0, [[0, rgba('#F1DDB8', 0.24)], [1, rgba('#F1DDB8', 0.6)]]))
     const fx = x - lean * -top
     poly(ctx, [[fx - w / 2, -0.12], [fx + w / 2, -0.12], [fx + w * 1.6, 0], [fx - w * 0.4, 0]])
     fill(ctx, rgba('#F1DDB8', 0.6))
