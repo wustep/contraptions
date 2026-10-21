@@ -214,16 +214,18 @@ const DRAW_SHOTS: Shot[] = (() => {
 
 
 const shots: Shot[] = [
-  // The mesa, close enough to see him: down its west ridge with the thumper on his back, the Fremen on its top.
+  // The mesa: down its west ridge with the thumper on his back, the Fremen on its top; pushing in to him as he leaves it
+  // and walks out alone onto the sand.
   { t: FROM, cut: true, cells: 15, track: paulWay, off: [3.4, -2.1] },
-  { t: DOWN, cells: 13.5, track: paulWay, off: [2.4, -2.6] },
-  { t: PLANT - 0.01, cells: 12, track: paulWay, off: [1.4, -3.1] },
+  { t: DOWN, cells: 10, track: paulWay, off: [2.0, -1.8] },
+  { t: PLANT - 0.01, cells: 6.2, track: paulWay, off: [0.9, -1.2] },
   // The thumper, close, as he drives it in and it starts.
   { t: PLANT, cut: true, cells: 3.4, at: [1056.9, -0.95] },
   { t: drive(13) - 0.01, cells: 3.2, at: [1056.95, -0.92] },
-  // Up the dune to the crest; the thumper beating behind him.
-  { t: drive(13), cut: true, cells: 12, at: [1050.5, -5.6] },
-  { t: drive(21) - 0.01, cells: 11, at: [1048, -5.6] },
+  // Up the dune to the crest, going with him; the thumper beating behind him.
+  { t: drive(13), cut: true, cells: 8.5, track: paulWay, off: [2.4, -1.6] },
+  { t: ON_TOP, cells: 7.4, track: paulWay, off: [1.6, -1.2] },
+  { t: drive(21) - 0.01, cells: 7.2, track: paulWay, off: [1.5, -1.1] },
   // Worm sign: low, going along with the swell as it runs east under the sand.
   { t: drive(21), cut: true, cells: 15, track: swellAt, off: [-1.5, -3.6], focus: swellAt },
   { t: drive(27), cells: 16, track: swellAt, off: [1.0, -3.8], focus: swellAt },
