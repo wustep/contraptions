@@ -71,6 +71,9 @@ export function drawInland(g: Paint): void {
   }
 }
 
+/** Where the seabed starts to go into the water's dark, and where it has gone. */
+const SEABED_FADE = [8, 14] as const
+
 /** The ground's cut face goes from its first colour to its second between these heights. */
 const EARTH_Y = [-6, 3] as const
 
@@ -139,11 +142,31 @@ export function drawGround(g: Paint, below = false): void {
   const earth = ctx.createLinearGradient(0, EARTH_Y[0], 0, EARTH_Y[1])
   earth.addColorStop(0, earth0)
   earth.addColorStop(1, earth1)
-  {
-    const pts = edge(x0, x1)
-    poly(ctx, [...pts, [x1, bottom], [x0, bottom]])
+  // Out to sea, the seabed goes away into the water's dark over its last cells instead of ending square under the sea:
+  // whole to `whole`, then fading out from a little inside it (so the two never meet on an edge) to the end.
+  const whole = Math.min(x1, SEABED_FADE[0])
+  const from = SEABED_FADE[0] - 0.3
+  const run = SEABED_FADE[1] - from
+  const away = (c: string) => {
+    const grd = ctx.createLinearGradient(from, 0, from + run, 0)
+    grd.addColorStop(0, rgba(c, 1))
+    grd.addColorStop(0.06, rgba(c, 1))
+    grd.addColorStop(1, rgba(c, 0))
+    return grd
+  }
+  if (whole > x0) {
+    const pts = edge(x0, whole)
+    poly(ctx, [...pts, [whole, bottom], [x0, bottom]])
     ctx.fillStyle = earth
     ctx.fill()
+  }
+  if (!below && x1 > from) {
+    const a = Math.max(x0, from)
+    ctx.save()
+    poly(ctx, [...edge(a, x1), [x1, bottom], [a, bottom]])
+    ctx.clip()
+    fadeAway(ctx, earth0, earth1, from, run, bottom)
+    ctx.restore()
   }
   // Past the shore, over the cut-open water, the beach's ground goes on under the seabed and into the water's dark over
   // a few cells, so the sand does not end at the shore as a cut block. It starts a little inside the beach's, whole
@@ -173,17 +196,28 @@ export function drawGround(g: Paint, below = false): void {
   }
   // The sand of the dunes, the beach and the seabed: its surface.
   if (x1 > SAND_FROM) {
-    const a = Math.max(x0, SAND_FROM)
-    const pts = edge(a, x1)
     // The surface itself, a band of lit sand along the top: what a cut through a beach shows of the beach.
-    ctx.beginPath()
-    pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
-    for (let i = pts.length - 1; i >= 0; i--) {
-      const [x, y] = pts[i]
-      ctx.lineTo(x, y + (x > SHORE ? 0.05 : 0.11))
+    const band = (a: number, b: number) => {
+      const pts = edge(a, b)
+      ctx.beginPath()
+      pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
+      for (let i = pts.length - 1; i >= 0; i--) {
+        const [x, y] = pts[i]
+        ctx.lineTo(x, y + (x > SHORE ? 0.05 : 0.11))
+      }
+      ctx.closePath()
     }
-    ctx.closePath()
-    fill(ctx, tone(MAT.sand, t, { lit: 1, fire: fireAll }))
+    const sand = tone(MAT.sand, t, { lit: 1, fire: fireAll })
+    const a = Math.max(x0, SAND_FROM)
+    if (whole > a) {
+      band(a, whole)
+      fill(ctx, sand)
+    }
+    if (!below && x1 > from) {
+      band(Math.max(a, from), x1)
+      ctx.fillStyle = away(sand)
+      ctx.fill()
+    }
   }
   // The hill's surface band, the same way.
   if (x0 < SAND_FROM) {
@@ -196,10 +230,19 @@ export function drawGround(g: Paint, below = false): void {
       fill(ctx, tone(mix(MAT.scrub, MAT.clay, 0.45), t, { lit: 1, fire: firelight(pts[0][0], t) }))
     }
   }
-  // The line of the ground.
+  // The line of the ground, going with the seabed.
   if (!below) {
-    curve(ctx, edge(x0, x1))
-    stroke(g, tone('#2A1D17', t), 1.8)
+    const ink = tone('#2A1D17', t)
+    if (whole > x0) {
+      curve(ctx, edge(x0, whole))
+      stroke(g, ink, 1.8)
+    }
+    if (x1 > from) {
+      curve(ctx, edge(Math.max(x0, from), x1))
+      ctx.strokeStyle = away(ink)
+      ctx.lineWidth = Math.max(1.25 * g.px, 1.8 / 108)
+      ctx.stroke()
+    }
   }
   if (below) ctx.restore()
 }
