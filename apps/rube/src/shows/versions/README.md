@@ -29,7 +29,7 @@ The folder and file names are addresses, so they are chosen once:
   freely: `come-recover` is **Everything**, `heptapod-b` **Logogram**,
   `interstellar` **Voyage**, `la-la-land` **Epilogue**, `bolero` **Ostinato**,
   `nature-of-daylight` **Palindrome**, `relax` **Magnum**, `time` **Kick**, `step-out` **Quintessence**,
-  `rule-the-world` **Rally**, `odysseus` **Nostos**. The write-up says which is which.
+  `rule-the-world` **Rally**, `odysseus` **Nostos**, `harkonnen-arena` **Maker**. The write-up says which is which.
 - **Take**: `<take>.show.ts`, which is also `/shows/<work>/<take>/` and the
   card `public/shows/<work>/<take>.png`. Name it for who made it (`opus55`,
   `fable51`, `grok47`), or with a letter (`take-a`). La La Land's takes keep the
@@ -551,3 +551,20 @@ end credits from `Performance.titles`). The cue keeps no steady beat but in its 
 `scripts/shows/plans/odysseus-onsets.json`; `check:shows` holds the story's strikes to it (`apps/rube/checks/nostos.ts`).
 The report is `apps/rube/src/shows/versions/odysseus/NOSTOS.md`; the research and the cue's structure are in
 `docs/shows/nostos/`.
+
+`harkonnen-arena/opus55` (in the picker, **Maker**, one take, **Opus 5.5**) is **Maker · after Dune: Part Two**: Hans
+Zimmer's *Harkonnen Arena* from Denis Villeneuve's *Dune: Part Two*, the cue of chant and drums under Feyd-Rautha's
+birthday games, played whole by YouTube from WaterTower Music's upload only (UdlvgIFdNZU; no recording is shipped:
+`apps/rube/src/shows/versions/harkonnen-arena/ATTRIBUTION.txt`), and then the end credits into the quiet after it. Every
+piece is new. It follows Part Two's arc of light: the deep desert by day, where worm sign runs in under the flat on the
+booms and the mouth comes up round a harvester on the great blows; another day, the thumper beating with the drive and
+the first worm ride on the run; the eclipse in the cue's silence, the colour drained to infrared and then black and
+white; Giedi Prime's arena under the black sun, the two hardest blows of the cue, and black fireworks; and the colour
+back with the storm, the worms out of it and the Emperor's ship brought down. Paul is a blue ball, Chani madder red, the
+Fremen dun, Feyd-Rautha chalk white. The code is `harkonnen-arena/maker/` (one world of three places on one clock, a
+grade over every colour for the arc of light, scenes laid end to end, an authored camera, dissolves at the changes of
+place, the end credits from `Performance.titles`). `scripts/shows/harkonnen-arena-onsets.py` measures its stretches,
+its onsets and five combs into `scripts/shows/plans/harkonnen-arena-onsets.json`; `check:shows` holds the story's
+strikes and every camera cut to it (`apps/rube/checks/maker.ts`). The report is
+`apps/rube/src/shows/versions/harkonnen-arena/MAKER.md`; the research and the cue's structure are in
+`docs/shows/maker/`.

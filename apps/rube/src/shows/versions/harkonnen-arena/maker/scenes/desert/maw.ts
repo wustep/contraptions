@@ -1,4 +1,4 @@
-import { clamp01, hash, mix, smooth, type Brush } from '../../paint'
+import { hash, mix, smooth, type Brush } from '../../paint'
 import { SAND } from '../../world/land'
 import { SKIN } from '../../world/worm'
 import { MAW_R, W, XH, mawRise } from './plan'
@@ -107,28 +107,6 @@ export function paintMawFront(b: Brush, t: number): void {
   ctx.closePath()
   ctx.fillStyle = b.c(mix(SKIN.plate, SKIN.back, 0.3))
   ctx.fill()
-  // Sand pouring off the lip as it comes up: long thin sheets at either side, falling, thinning as it stops rising.
-  const rising = 1 - smooth(t, W.maw + 6, W.maw + 9)
-  const sinking = smooth(t, W.gone, W.gone + 0.6)
-  const pour = Math.max(rising, 0) * (1 - sinking)
-  if (pour > 0.01) {
-    for (let i = 0; i < 7; i++) {
-      const side = i % 2 ? 1 : -1
-      const along = 0.55 + 0.42 * hash(i, 31)
-      const x = XH + side * rx * along
-      const top = y + ry * Math.sqrt(Math.max(0, 1 - along * along)) * 0.9
-      const w = 0.5 + 0.9 * hash(i, 32)
-      const fall = ((t * 0.9 + hash(i, 33)) % 1) * 0.3
-      ctx.beginPath()
-      ctx.moveTo(x - w / 2, top + fall)
-      ctx.lineTo(x + w / 2, top + fall)
-      ctx.lineTo(x + w * 0.35 + side * 0.4, foot)
-      ctx.lineTo(x - w * 0.35 + side * 0.4, foot)
-      ctx.closePath()
-      ctx.fillStyle = b.ca(SAND.lit, 0.55 * pour * clamp01((foot - top) / 3))
-      ctx.fill()
-    }
-  }
 }
 
 /** The dust it leaves when it goes down: a few great slow clouds going up and west, thinning. */

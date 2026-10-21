@@ -1,10 +1,9 @@
 import { beatsIn } from '../music'
 import { hold } from '../motion'
-import { drawing, layer, mix, poly, smooth, type Brush } from '../paint'
+import { drawing, layer, poly, smooth, type Brush } from '../paint'
 import type { Scene } from '../scene'
 import { T } from '../timeline'
 import { SAND, depthScale, farDesert, horizonOf, paintFar, tiltOf } from '../world/land'
-import { paintRange } from '../world/dunes'
 import type { SkyKey } from '../world/sky'
 import { paintFlat, paintFunnelBack, paintFunnelFront } from './desert/ground'
 import { paintDust, paintMawBack, paintMawFront } from './desert/maw'
@@ -39,20 +38,23 @@ const tilt = tiltOf([
   [T.thumper, 0.17],
 ])
 const FAR = farDesert(10)
-const FORE = { seed: 77, spacing: 90, height: 6, vary: 0.7, foot: 13, soft: true }
 
 function paintRock(b: Brush): void {
   const { ctx, view } = b
-  if (view.x0 > 14 || view.x1 < -27) return
+  if (view.x0 > 14 || view.x1 < -20) return
   poly(ctx, ROCK)
-  ctx.fillStyle = b.c('#5A3A28')
+  ctx.fillStyle = b.c('#4E3122')
   ctx.fill()
-  // Its top and east shoulder take the sun.
-  poly(ctx, [[-19, -5.6], [-15.5, -6.4], [-11, -6.9], [-6, -7.2], [-1.5, -7.0], [2.5, -7.05], [4.6, -6.6], [5.6, -5.2], [4.2, -5.6], [1.5, -6.3], [-4, -6.5], [-10, -6.2], [-15, -5.6]])
-  ctx.fillStyle = b.c('#7C5136')
+  // Its top takes the sun, and its east cliff and the talus under it: the sun is to the east.
+  poly(ctx, [[-15.2, -8.4], [-12.5, -9.3], [-8, -9.8], [-3, -10.2], [1.5, -10.0], [4.6, -10.3], [6.3, -10.05], [5.9, -9.6], [2, -9.55], [-4, -9.7], [-9, -9.2], [-13, -8.6]])
+  ctx.fillStyle = b.c('#80543A')
   ctx.fill()
-  poly(ctx, [[5.6, -5.2], [6.8, -4.6], [8.2, -2.4], [10.5, -1.1], [13, 0.5], [9.5, 0.5], [7.4, -1.6], [6.1, -3.6]])
-  ctx.fillStyle = b.c('#71472E')
+  poly(ctx, [[6.3, -10.05], [7.0, -8.6], [7.6, -6.0], [8.6, -4.2], [10.8, -2.2], [13.5, 0.4], [9.6, 0.4], [7.9, -2.4], [7.0, -5.0], [6.4, -8.0], [5.8, -9.7]])
+  ctx.fillStyle = b.c('#6E4630')
+  ctx.fill()
+  // A band of harder stone across its west face.
+  poly(ctx, [[-17.1, -4.8], [-6, -5.6], [5.2, -5.0], [6.95, -5.2], [6.75, -4.3], [-6, -4.7], [-17.4, -3.9]])
+  ctx.fillStyle = b.c('#432A1D')
   ctx.fill()
 }
 
@@ -66,10 +68,10 @@ function paintTrickle(b: Brush): void {
     const fall = 3.2 * s * s
     const a = 0.75 * (1 - smooth(s, 1.2, 2.2))
     ctx.beginPath()
-    ctx.moveTo(3.0, -7.0 + Math.min(fall, 0.2))
-    ctx.lineTo(3.25, -7.0 + Math.min(fall, 0.2))
-    ctx.lineTo(4.4 + fall * 0.08, -7.0 + fall)
-    ctx.lineTo(4.05 + fall * 0.08, -7.0 + fall)
+    ctx.moveTo(5.9, -10.0 + Math.min(fall, 0.2))
+    ctx.lineTo(6.15, -10.0 + Math.min(fall, 0.2))
+    ctx.lineTo(6.55 + fall * 0.04, -10.0 + fall)
+    ctx.lineTo(6.25 + fall * 0.04, -10.0 + fall)
     ctx.closePath()
     ctx.fillStyle = b.ca('#D9965A', a)
     ctx.fill()
@@ -104,7 +106,7 @@ function paintFarOff(b: Brush, tl: number): void {
     paintEvent(lb)
     ctx.restore()
     // Its own stretch of the flat, in front of whatever has gone down into it.
-    ctx.fillStyle = lb.c(mix(SAND.lit, SAND.air, 0.1))
+    ctx.fillStyle = lb.c(SAND.lit)
     ctx.fillRect(view.x0 - 1, 0, view.w + 2, Math.max(1, view.y1) + 1)
   })
 }
@@ -127,8 +129,8 @@ export const desert: Scene = {
     { t: W.machine, cut: true, cells: 23, at: [harvesterX(W.machine) + 1.5, -8.4] },
     { t: W.boom - 0.01, cells: 21, at: [harvesterX(W.boom) + 0.5, -8.2] },
     // The two of them on the lip, close.
-    { t: W.boom, cut: true, cells: 4.6, at: [1.9, -7.55] },
-    { t: W.sign - 0.01, cells: 4.3, at: [1.95, -7.5] },
+    { t: W.boom, cut: true, cells: 4.6, at: [CHANI_SEAT[0] + 0.7, CHANI_SEAT[1] - 0.25] },
+    { t: W.sign - 0.01, cells: 4.3, at: [CHANI_SEAT[0] + 0.75, CHANI_SEAT[1] - 0.2] },
     // Worm sign: the flat east of the machine, the swell coming in.
     { t: W.sign, cut: true, cells: 34, track: (t) => [swellX(t) - 6, -6.5] },
     { t: W.alarm - 0.01, cells: 40, track: (t) => [swellX(t) - 10, -8] },
@@ -157,8 +159,6 @@ export const desert: Scene = {
       paintFlat(b, b.t)
       if (b.t >= W.machine && b.t < W.gone) paintEvent(b)
       paintRock(b)
-      // Near dunes in shade along the frame's foot, in the widest shots only: the ground the camera stands on.
-      paintRange(b, FORE, 1 / depthScale(b.view.h, 30), horizonOf(b.view, tilt(b.t)), { lit: '#B26F44', shade: '#7F4629' })
     }),
   ],
   front: [

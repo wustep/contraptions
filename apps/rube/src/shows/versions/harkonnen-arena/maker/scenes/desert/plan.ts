@@ -32,14 +32,17 @@ export const W = {
   end: T.thumper,
 } as const
 
-/** The rock the two of them watch from: an outcrop of dark stone over the flat, at the desert's west end. */
+/**
+ * The rock the two of them watch from: a mesa of dark sandstone over the flat at the desert's west end, cliffed on both
+ * sides, its top a little uneven, a talus apron to the east.
+ */
 export const ROCK: Pt[] = [
-  [-26, 0.5], [-24, -2.2], [-21.5, -3.1], [-19, -5.6], [-15.5, -6.4], [-11, -6.9], [-6, -7.2], [-1.5, -7.0], [2.5, -7.05],
-  [4.6, -6.6], [5.6, -5.2], [6.8, -4.6], [8.2, -2.4], [10.5, -1.1], [13, 0.5],
+  [-19, 0.4], [-17.5, -3.5], [-16.8, -6.2], [-15.2, -8.4], [-12.5, -9.3], [-8, -9.8], [-3, -10.2], [1.5, -10.0], [4.6, -10.3],
+  [6.3, -10.05], [7.0, -8.6], [7.6, -6.0], [8.6, -4.2], [10.8, -2.2], [13.5, 0.4],
 ]
-/** Where they sit: on the lip of its top, looking east over the flat. */
-export const PAUL_SEAT: Pt = [2.2, -7.05 - R]
-export const CHANI_SEAT: Pt = [1.1, -7.12 - R * 0.96]
+/** Where they sit: at the east end of its top, looking out over the flat. */
+export const PAUL_SEAT: Pt = [5.25, -10.2 - R]
+export const CHANI_SEAT: Pt = [4.25, -10.27 - R * 0.96]
 
 /** The harvester: its length and height (cells), and where its middle is: it crawls west until it is held. */
 export const RIG = { len: 18, h: 6.4 }
