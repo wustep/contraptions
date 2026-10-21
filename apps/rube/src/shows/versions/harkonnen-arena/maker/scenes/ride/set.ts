@@ -66,15 +66,23 @@ export const SKY: SkyKey[] = [
   // As the camera draws back from him and turns ahead, it comes into the frame from the east, low, and the moon comes
   // over it.
   { t: M.fall, top: '#B88E6A', low: '#EDB880', sun: { x: 1.14, y: 0.4, r: 0.05, color: '#FFE2B8' }, eclipse: 0 },
-  { t: 170.5, top: '#A67A58', low: '#E8A870', sun: { x: 0.56, y: 0.35, r: 0.05, color: '#FFDDB0' }, eclipse: 0.03 },
-  { t: 176.5, top: '#24160F', low: '#6A4630', sun: { x: 0.505, y: 0.335, r: 0.05, color: '#FFE6C4' }, eclipse: 1 },
-  { t: T.arena, top: '#140D09', low: '#3C2A1F', sun: { x: 0.5, y: 0.34, r: 0.05, color: '#FFEAD0' }, eclipse: 1 },
+  { t: 171.5, top: '#A67A58', low: '#E8A870', sun: { x: 0.56, y: 0.35, r: 0.05, color: '#FFDDB0' }, eclipse: 0.03 },
+  // The sun gone: dark, but not black. In the grade's black and white the sky is a dim grey, lighter toward the
+  // horizon, the moon's disc much darker than it and the sun's rim round it pale, and the land darker than the sky.
+  { t: 176.5, top: '#5E4A3C', low: '#866856', sun: { x: 0.505, y: 0.335, r: 0.05, color: '#FFE6C4' }, eclipse: 1 },
+  { t: T.arena, top: '#56443A', low: '#7C6150', sun: { x: 0.5, y: 0.34, r: 0.05, color: '#FFEAD0' }, eclipse: 1 },
 ]
 
-/** The light going under the eclipse, 0 (day) to 1 (the sun gone): the land darkens with the sky. */
+/**
+ * The light going under the eclipse, 0 (day) to 1 (the sun gone): the land darkens with the sky, toward a dusk that
+ * stays a little lighter than the worm on it and darker than the sky over it, so the silence is dark and still and still
+ * reads: dark grey ranges and a darker worm under a dim grey sky.
+ */
 export const dusk = (t: number): number => smooth(t, 169.5, 176.5)
 
-const DARK = '#1C120D'
+const DARK = '#4A3A30'
+/** The haze the far ranges go into under the eclipse: about the sky's own lightness at the horizon. */
+const DUSK_AIR = '#7A5E4C'
 const FAR = farDesert(40)
 
 /** The far ranges at `t`, gone toward the dark as the moon covers the sun. */
@@ -83,14 +91,14 @@ function farAt(t: number): Far[] {
   if (d <= 0.001) return FAR
   return FAR.map((r) => ({
     ...r,
-    look: { lit: mix(r.look.lit, DARK, d), shade: mix(r.look.shade, DARK, d * 0.9), air: mix(r.look.air ?? SAND.air, '#5A3A28', d), pale: r.look.pale },
+    look: { lit: mix(r.look.lit, DARK, d), shade: mix(r.look.shade, DARK, d * 0.9), air: mix(r.look.air ?? SAND.air, DUSK_AIR, d), pale: r.look.pale },
   }))
 }
 
 /** The sand's colours at `t`, darkened under the eclipse. */
 export function sandAt(t: number): { lit: string; shade: string; air: string } {
   const d = dusk(t) * 0.82
-  return { lit: mix(SAND.lit, DARK, d), shade: mix(SAND.shade, DARK, d * 0.9), air: mix(SAND.air, '#5A3A28', d) }
+  return { lit: mix(SAND.lit, DARK, d), shade: mix(SAND.shade, DARK, d * 0.9), air: mix(SAND.air, DUSK_AIR, d) }
 }
 
 /** The sky and the far desert, the horizon at the eye (`tilt`). */
@@ -125,7 +133,8 @@ function paintEclipse(b: Brush, s: SkyKey): void {
   circle(ctx, x, y, r)
   ctx.clip()
   ctx.fillStyle = b.c('#0B0907')
-  circle(ctx, x - (1 - e) * r * 2.05, y, r * 0.965)
+  // A hair smaller than the sun, so its rim is a pale ring round the black disc, not a hairline.
+  circle(ctx, x - (1 - e) * r * 2.05, y, r * 0.91)
   ctx.fill()
   ctx.restore()
 }

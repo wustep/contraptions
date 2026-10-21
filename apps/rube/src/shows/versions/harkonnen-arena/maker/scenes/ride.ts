@@ -156,25 +156,62 @@ const lagging = (t: number): Pt => {
 
 /** How far ahead in time a tracking shot looks (`steady` in lens.ts). */
 const LEAD = 0.15
-/** When the draw back has the whole worm in the frame. */
-const WHOLE = 168.6
-/** The worm's middle, the whole of it: what the draw back comes to. */
-const wormWhole = (t: number): Pt => [headX(t) - 21, -4]
-/** What the stand's long take keeps: him, and from the fall, by degrees, the whole worm. */
-const drawBack = (t: number): Pt => {
-  // The camera holds what it tracks a little ahead in time (`steady` in lens.ts); at the worm's speed that is a cell
-  // or more, so this track runs that much behind, and he sits where the shot puts him.
-  const [px, py] = paulAt(t - LEAD)
-  const [wx, wy] = wormWhole(t - LEAD)
-  // Late against the draw back, so the frame has opened enough to keep him as what it tracks goes back along the worm.
-  const u = smooth(t, M.fall + 1.5, WHOLE + 0.4)
-  return [px + (wx - px) * u, py + (wy - py) * u]
-}
-
-/** An offset from what is tracked that puts it at shares (sx, sy) of a frame `cells` high. */
-const at = (sx: number, sy: number, cells: number): Pt => [(0.5 - sx) * cells * (16 / 9), (0.5 - sy) * cells]
-
 const LAST_HOLD: Pt = [1404, -44]
+
+/** When the draw back has the whole worm in the frame, and when it comes to rest for the silence. */
+const WHOLE = 172.6
+const REST = 184.3
+/** The frame's height through the draw back: close on him, to the whole worm, and on out to the last hold. */
+const DRAW: [number, number][] = [[2.9, 0], [30, 0.2], [112, 0]]
+/**
+ * The draw back's size, cells, at `t`: in even steps of ratio, two eased stretches (Hermite in the log of the size): from
+ * the stand to the whole worm over eight seconds, never opening faster than about 0.4 in log size a second, and on, more
+ * slowly, to the silence's hold.
+ */
+function drawCells(t: number): number {
+  const seg = (t0: number, t1: number, a: [number, number], b: [number, number], tt: number): number => {
+    const T = t1 - t0
+    const u = Math.max(0, Math.min(1, (tt - t0) / T))
+    const p0 = Math.log(a[0])
+    const p1 = Math.log(b[0])
+    const h00 = 2 * u ** 3 - 3 * u ** 2 + 1
+    const h10 = u ** 3 - 2 * u ** 2 + u
+    const h01 = -2 * u ** 3 + 3 * u ** 2
+    const h11 = u ** 3 - u ** 2
+    return Math.exp(h00 * p0 + h10 * T * a[1] + h01 * p1 + h11 * T * b[1])
+  }
+  if (t <= WHOLE) return seg(M.fall, WHOLE, DRAW[0], DRAW[1], t)
+  return seg(WHOLE, REST, DRAW[1], DRAW[2], t)
+}
+/** Where he sits in the frame through the draw back: left of the middle on the stand, a third in from the east edge
+ * once the whole worm is in. */
+const sxAt = (t: number) => 0.42 + (0.745 - 0.42) * smooth(t, M.fall, WHOLE)
+const syAt = (t: number) => 0.63 + (0.55 - 0.63) * smooth(t, M.fall, WHOLE)
+/**
+ * What the stand's long take keeps in the middle of the frame: the point that puts him where `sxAt`, `syAt` say in a
+ * frame `drawCells` high. The camera holds what it tracks a little ahead in time (`steady` in lens.ts), so this runs
+ * that much behind, and he sits where it puts him.
+ */
+const drawBack = (t: number): Pt => {
+  const [px, py] = paulAt(t - LEAD)
+  const c = drawCells(Math.max(M.fall, t))
+  return [px + (0.5 - sxAt(t)) * c * (16 / 9), py + (0.5 - syAt(t)) * c]
+}
+/** Where the last hold comes to rest, still for the silence and the dissolve. */
+const holdAt = (t: number): Pt => {
+  const u = smooth(t, 177.5, REST)
+  return [1388 + (LAST_HOLD[0] - 1388) * u, -40 + (LAST_HOLD[1] + 40) * u]
+}
+/** The draw back as keys every quarter second: its size, what it tracks, and from the whole worm on, letting go to the hold. */
+const DRAW_SHOTS: Shot[] = (() => {
+  const out: Shot[] = []
+  for (let t = M.fall; t < REST - 1e-6; t += 0.25) {
+    out.push({ t, cells: drawCells(t), track: drawBack, at: holdAt(t), w: smooth(t, WHOLE, REST), focus: paulAt })
+  }
+  return out
+})()
+
+
 
 const shots: Shot[] = [
   // The mesa, close enough to see him: down its west ridge with the thumper on his back, the Fremen on its top.
@@ -219,11 +256,10 @@ const shots: Shot[] = [
   // beat he springs up onto its crown, upright against the sky a little left of the middle, the staves held forward;
   // held, pushing in a little. Then, as the music falls away, the camera draws back from him to the whole worm and on,
   // and he goes small on it, riding toward the sun as the moon comes over it; still for the silence and the dissolve.
-  { t: STAND, cut: true, cells: 3.1, track: drawBack, off: at(0.42, 0.63, 3.1), focus: paulAt },
-  { t: M.fall, cells: 2.9, track: drawBack, off: at(0.42, 0.63, 2.9), focus: paulAt },
-  { t: WHOLE, cells: 30, track: drawBack, off: at(0.5, 0.68, 30), focus: paulAt },
-  { t: 177.5, cells: 100, at: [1388, -40] },
-  { t: 184.3, cells: 112, at: LAST_HOLD },
+  { t: STAND, cut: true, cells: 3.1, track: drawBack, w: 0, focus: paulAt },
+  { t: M.fall - 0.25, cells: 2.92, track: drawBack, w: 0, focus: paulAt },
+  ...DRAW_SHOTS,
+  { t: REST, cells: 112, at: LAST_HOLD },
   { t: TO - 0.001, cells: 112, at: LAST_HOLD },
 ]
 
