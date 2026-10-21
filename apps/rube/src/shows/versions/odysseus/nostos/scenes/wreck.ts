@@ -142,7 +142,11 @@ export const wreck: Scene = {
   },
   deaths: { 0: LOST[0], 1: LOST[1], 2: LOST[2] },
   shots: [
-    { t: STRIKE + 0.9, cells: 9.5, at: [533.2, -0.6] },
+    // On the cut, in close on the ship: the bolt down the whole height of the frame into the masthead; held close while
+    // the hull breaks at the mast and he goes down its deck onto the spar; then out to the sea.
+    { t: STRIKE, cells: 5.4, at: [531.3, -1.55], cut: true },
+    { t: STRIKE + 1.0, cells: 5.8, at: [531.8, -1.25] },
+    { t: STRIKE + 2.4, cells: 8.0, at: [532.8, -0.75] },
     { t: 308.6, cells: 9.5, off: [0.3, 0.7] },
     // In the quiet after the cut, in close, looking down through the cut: him alone on the spar at the top of the frame,
     // and under him in the dark water his last three men going down, falling behind, until the dark has them.
