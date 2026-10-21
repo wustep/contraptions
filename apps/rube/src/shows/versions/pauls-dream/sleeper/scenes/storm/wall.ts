@@ -1,4 +1,4 @@
-import { drift, ellipse, fill, hash, layer, mix, rgba, smooth, vgrad, type Paint } from '../../paint'
+import { drift, fill, hash, layer, mix, rgba, smooth, vgrad, type Paint } from '../../paint'
 import { STORM } from './geo'
 
 /**
@@ -16,7 +16,9 @@ const TOP = '#C29469'
 const FACE = '#9A6E47'
 const FOOT = '#3E2D20'
 const BODY_HI = '#8F6847'
-const BODY_LO = '#4E3726'
+const BODY_MID = '#6A4A31'
+const BODY_LO = '#3A281B'
+const CORE = '#1A110B'
 
 /** The wall's fill, by height: one gradient for every shape of it, so its lobes and its body are one. */
 function wallFill(g: Paint): CanvasGradient {
@@ -24,82 +26,79 @@ function wallFill(g: Paint): CanvasGradient {
 }
 
 /**
- * The masses on a face: great swellings of dust, each a few cells out of the face and many tall, rising slowly up it as
- * the storm turns over, swelling out of its foot and sinking back before they come round. Unequal, and few.
+ * The swells on a face: long low swellings of dust, a few cells out of the face and many tall, rising slowly up it as
+ * the storm turns over, from its foot to far above any frame, coming out of it and sinking back before they come round.
+ * Low and long, so the face is a wall that heaves, never a profile.
  */
-interface Mass {
+interface Swell {
   y: number
   out: number
   tall: number
 }
 
-function masses(t: number, seed: number): Mass[] {
-  const out: Mass[] = []
-  const H = 90
-  const n = 7
+function swells(t: number, seed: number): Swell[] {
+  const out: Swell[] = []
+  const H = 170
+  const n = 9
   for (let i = 0; i < n; i++) {
     const life = ((i / n) * H + t * 0.45 * (0.8 + 0.4 * hash(i, seed + 1))) % H
-    const tall = 6 + 8 * hash(i, seed + 2)
-    const swell = smooth(life, 0, 12) * (1 - smooth(life, H - 14, H))
-    // Bigger toward the top, where the storm boils over its own foot.
-    out.push({ y: -life, out: (3 + 7 * hash(i, seed + 3)) * (0.5 + 0.8 * smooth(life, 4, 40)) * swell, tall })
+    const tall = 12 + 12 * hash(i, seed + 2)
+    const swell = smooth(life, 0, 16) * (1 - smooth(life, H - 20, H))
+    out.push({ y: -life, out: (1.5 + 2.5 * hash(i, seed + 3)) * swell, tall })
   }
   return out
 }
 
 /**
- * A face's edge at height `y`: the front leans out over the sand toward its top (the wall overhangs its own foot), the
- * back trails away from its foot as it goes up; each wavers slowly, and its masses swell out of it.
+ * A face's edge at height `y`: the front leans out over the sand as it rises (the wall overhangs its own foot), the
+ * back trails away from its foot; each wavers slowly, and its swells heave it.
  */
-function edge(face: number, side: 1 | -1, y: number, t: number, seed: number, ms: Mass[]): number {
-  const lean = side < 0 ? 9 * smooth(-y, 4, 70) : -16 * smooth(-y, 0, 60) + 3
-  let bulge = 0
-  for (const m of ms) bulge += m.out * Math.exp(-(((y - m.y) / m.tall) ** 2))
-  return face + side * (lean + bulge) + 2.4 * drift(y * 0.02 + t * 0.03, seed)
+function edge(face: number, side: 1 | -1, y: number, t: number, seed: number, ss: Swell[]): number {
+  const lean = side < 0 ? 10 * smooth(-y, 6, 110) : -18 * smooth(-y, 0, 90) + 3
+  let heave = 0
+  for (const m of ss) heave += m.out * Math.exp(-(((y - m.y) / m.tall) ** 2))
+  return face + side * (lean + heave) + 2 * drift(y * 0.012 + t * 0.03, seed)
 }
 
-/** The storm's body as a path: up the front face, across the top, down the back face, and on down under the sand. */
-function body(g: Paint): void {
+/**
+ * The storm's body as a path: up the front face, across far over any frame, down the back face, and across at
+ * `foot`: the sand's surface for the wall seen from outside (the floor runs on under it toward us), or past the frame's
+ * foot from inside, where everything is the storm.
+ */
+function body(g: Paint, foot: number): void {
   const ctx = g.ctx
-  const front = masses(g.t, 5)
-  const back = masses(g.t, 9)
-  const step = 1.5
+  const front = swells(g.t, 5)
+  const back = swells(g.t, 9)
+  const top = Math.min(STORM.top, g.view.y0 - 20)
+  const step = Math.max(1.5, -top / 120)
   ctx.beginPath()
-  ctx.moveTo(edge(STORM.front, -1, 1, g.t, 3, front), 40)
-  for (let y = 1; y >= STORM.top; y -= step) ctx.lineTo(edge(STORM.front, -1, y, g.t, 3, front), y)
-  for (let y = STORM.top; y <= 1; y += step) ctx.lineTo(edge(STORM.back, 1, y, g.t, 7, back), y)
-  ctx.lineTo(edge(STORM.back, 1, 1, g.t, 7, back), 40)
+  ctx.moveTo(edge(STORM.front, -1, foot, g.t, 3, front), foot)
+  for (let y = Math.min(1, foot); y >= top; y -= step) ctx.lineTo(edge(STORM.front, -1, y, g.t, 3, front), y)
+  ctx.lineTo(edge(STORM.front, -1, top, g.t, 3, front), top - 1)
+  ctx.lineTo(edge(STORM.back, 1, top, g.t, 7, back), top - 1)
+  for (let y = top; y <= Math.min(1, foot); y += step) ctx.lineTo(edge(STORM.back, 1, y, g.t, 7, back), y)
+  ctx.lineTo(edge(STORM.back, 1, foot, g.t, 7, back), foot)
   ctx.closePath()
 }
 
-/** The storm from outside: the skirts, the body, and the light on the masses of its faces. */
+/** Where the wall meets the sand, seen from outside: just under the floor's line, so no seam shows between them. */
+const SAND = 0.05
+
+/** The storm from outside: the skirts of dust over the sand, and the body. */
 export function drawWall(g: Paint): void {
   const v = g.view
-  if (v.x1 < STORM.front - 50 || v.x0 > STORM.back + 50) return
+  if (v.x1 < STORM.front - 60 || v.x0 > STORM.back + 60) return
   const ctx = g.ctx
   // The skirts of dust over the sand, ahead of the front face and behind the back one: low and dark.
   for (const [face, side] of [[STORM.front, -1], [STORM.back, 1]] as [number, 1 | -1][]) {
     ctx.beginPath()
-    ctx.moveTo(face + side * 2, 0.5)
-    ctx.quadraticCurveTo(face + side * 10, -1.8, face + side * 26, 0.5)
+    ctx.moveTo(face + side * 2, SAND)
+    ctx.quadraticCurveTo(face + side * 10, -1.8, face + side * 26, SAND)
     ctx.closePath()
     fill(ctx, rgba(FOOT, 0.5))
   }
-  body(g)
+  body(g, SAND)
   fill(ctx, wallFill(g))
-  // The light on the masses: a broad warmer band down each that the low sun reaches, inside the body.
-  ctx.save()
-  body(g)
-  ctx.clip()
-  for (const [face, side, seed] of [[STORM.front, -1, 5], [STORM.back, 1, 9]] as [number, 1 | -1, number][]) {
-    for (const m of masses(g.t, seed)) {
-      if (m.out < 0.3) continue
-      const x = edge(face, side, m.y, g.t, seed === 5 ? 3 : 7, masses(g.t, seed)) - side * m.out * 0.9
-      ellipse(ctx, x, m.y - m.tall * 0.25, m.out * 1.3 + 2, m.tall * 0.7)
-      fill(ctx, rgba('#D3A87A', 0.13 * smooth(-m.y, 5, 30) * Math.min(1, m.out / 3)))
-    }
-  }
-  ctx.restore()
 }
 
 /** How deep in the storm the view's middle is: 0 outside, 1 well in. */
@@ -112,22 +111,36 @@ export function drawInside(g: Paint): void {
   if (k <= 0.002) return
   const ctx = g.ctx
   ctx.save()
-  body(g)
+  body(g, Math.max(40, v.y1 + 20))
   ctx.clip()
-  ctx.fillStyle = vgrad(ctx, v.y0, v.y1, [[0, rgba(BODY_HI, k)], [1, rgba(BODY_LO, k)]])
+  // The body by height in the world: dun where the light still gets in, high up, thickening downward to a dark core
+  // over the sand, so a drop with the wings folded is a fall into it.
+  ctx.fillStyle = vgrad(ctx, -14, 1, [[0, rgba(BODY_HI, k)], [0.45, rgba(BODY_MID, k)], [0.8, rgba(BODY_LO, k)], [1, rgba(CORE, k)]])
   ctx.fillRect(v.x0 - 1, v.y0 - 1, v.w + 2, v.h + 2)
-  // A few big shapes at three depths on the wind, the far ones slower and paler.
-  const wind = 7
-  for (const [d, n, tone, a, span] of [[26, 4, '#A07A57', 0.32, 110], [9, 4, '#5C402B', 0.3, 64], [2.5, 3, '#6E4D33', 0.34, 50]] as [number, number, string, number, number][]) {
+  // A few great masses on the wind at two depths, slow, their edges lost in the dust round them.
+  const wind = 4
+  for (const [d, n, tone, a, span] of [[18, 3, '#9E7957', 0.4, 120], [4, 3, '#2C1E14', 0.5, 70]] as [number, number, string, number, number][]) {
     const L = layer(v, d)
     for (let i = 0; i < n; i++) {
-      const r = 5 + 6 * hash(i, d)
+      const r = 9 + 7 * hash(i, d)
       const speed = wind * (0.7 + 0.5 * hash(i, d + 1))
-      // Each where the wind has it, wrapped round a span about the camera so there are always some, out of the frame.
+      // Each where the wind has it, wrapped round a span about the camera, out of the frame.
       const x = v.cx + ((((hash(i, d + 2) * span - g.t * speed - v.cx) % span) + span) % span) - span / 2
-      const y = -5 + (hash(i, d + 3) - 0.5) * 18 + 2 * drift(g.t * 0.1 + i, d)
-      ellipse(ctx, L.x(x), L.y(y), r * L.s * 1.7, r * L.s)
-      fill(ctx, rgba(tone, a * k))
+      const y = -5 + (hash(i, d + 3) - 0.5) * 14 + 2 * drift(g.t * 0.06 + i, d)
+      const cx = L.x(x)
+      const cy = L.y(y)
+      const rr = r * L.s
+      const gr = ctx.createRadialGradient(cx, cy, 0, cx, cy, rr)
+      gr.addColorStop(0, rgba(tone, a * k))
+      gr.addColorStop(0.55, rgba(tone, a * k * 0.6))
+      gr.addColorStop(1, rgba(tone, 0))
+      ctx.save()
+      ctx.translate(cx, cy)
+      ctx.scale(1.6, 1)
+      ctx.translate(-cx, -cy)
+      ctx.fillStyle = gr
+      ctx.fillRect(cx - rr, cy - rr, rr * 2, rr * 2)
+      ctx.restore()
     }
   }
   ctx.restore()
@@ -139,7 +152,7 @@ export function drawVeil(g: Paint): void {
   if (k <= 0.002) return
   const ctx = g.ctx
   ctx.save()
-  body(g)
+  body(g, Math.max(40, g.view.y1 + 20))
   ctx.clip()
   ctx.fillStyle = rgba('#7A5534', 0.2 * k)
   ctx.fillRect(g.view.x0 - 1, g.view.y0 - 1, g.view.w + 2, g.view.h + 2)

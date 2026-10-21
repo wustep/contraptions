@@ -1,6 +1,6 @@
 import { M } from '../../music'
 import type { Pt } from '../../paint'
-import { DREAM_SHOT, JAMIS_FALLS, RIDER, WINDOWS } from '../../plan'
+import { DREAM_SHOT, JAMIS_FALLS, WINDOWS } from '../../plan'
 
 /**
  * The night desert and the storm: where everything stands and when everything happens.
@@ -36,7 +36,7 @@ export const T = {
   voiceIn: M.voice,
   /** The visions: Chani; the duel; the rider. */
   vision1: [M.voice, 297.2] as [number, number],
-  vision2: [297.494, 300.35] as [number, number],
+  vision2: [297.494, 300.15] as [number, number],
   vision3: [300.507, 309.209] as [number, number],
   /** Dawn greys the tent. */
   dawn: [305.5, 312.4] as [number, number],
@@ -71,8 +71,8 @@ export const VISIONS = {
    * 298.37, 298.95, 299.37 here; 347.98 to 349.37 there), and Jamis goes down on 349.63, here 299.62.
    */
   duel: { at: T.vision2[0] + 50, rate: 1 },
-  /** The worm rising with its rider, slowed. */
-  rider: { at: RIDER.from + 4, rate: 0.6 },
+  /** The worm and its rider, slowed: the shot of it, from its first moment, which holds the rider still in its frame. */
+  rider: { at: 389.1, rate: (393.0 - 389.1) / (309.209 - 300.507) },
 }
 export const JAMIS_IN_VISION = JAMIS_FALLS - 50
 
