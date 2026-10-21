@@ -93,13 +93,14 @@ interface Wall {
 }
 
 /**
- * The three walls, the back one highest; the further back, the more of the air's dust between, so the paler. Each is
- * dense at its foot and thins upward into the sky: dust has no top edge, and a wall with one reads as a cliff.
+ * The three walls, the back one highest, all towering out of the top of the frame, even a phone's: a storm whose top is
+ * seen reads as a mesa. Each is dense at its foot and thins upward into the sky, and they are near one value, so where
+ * one thins in front of the next there is no band (bands read as strata); the further back, only a shade paler.
  */
 const WALLS: Wall[] = [
-  { ahead: -50, height: 250, size: 70, climb: 1.6, seed: 11, body: '#3E281D' },
-  { ahead: -22, height: 160, size: 52, climb: 2.4, seed: 12, body: '#301D15' },
-  { ahead: 0, height: 92, size: 34, climb: 3.4, seed: 13, body: '#26160F' },
+  { ahead: -50, height: 420, size: 70, climb: 1.6, seed: 11, body: '#32201A' },
+  { ahead: -22, height: 270, size: 52, climb: 2.4, seed: 12, body: '#2C1B14' },
+  { ahead: 0, height: 160, size: 34, climb: 3.4, seed: 13, body: '#27170F' },
 ]
 
 /** One wall: its body from the floor up to its crest, west of its front, thinning upward into the sky. */
@@ -127,8 +128,9 @@ function paintWall(b: Brush, wall: Wall, front: number, fall: number, a: number)
   const top = -H - wall.size * 0.85
   const gr = ctx.createLinearGradient(0, 2, 0, top)
   gr.addColorStop(0, b.ca(wall.body, a))
-  gr.addColorStop(0.45, b.ca(wall.body, a))
-  gr.addColorStop(0.8, b.ca(wall.body, a * 0.55))
+  gr.addColorStop(0.4, b.ca(wall.body, a))
+  gr.addColorStop(0.7, b.ca(wall.body, a * 0.45))
+  gr.addColorStop(0.9, b.ca(wall.body, a * 0.1))
   gr.addColorStop(1, b.ca(wall.body, 0))
   ctx.fillStyle = gr
   ctx.fill()
