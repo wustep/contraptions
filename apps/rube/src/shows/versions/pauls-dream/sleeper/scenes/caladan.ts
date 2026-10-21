@@ -107,7 +107,7 @@ const mother = new Walk([SEAT[0], floorOf(TEST.floor - 0.2, MOTHER.size)], T.doo
 /** His shaking in the box: a start on each blow, ringing down, and a small shiver under it while the pain lasts. */
 function tremble(t: number): number {
   const blows = T.blows.reduce((sum, b) => sum + ring(t, b, 7, 0.22), 0)
-  return 0.016 * blows + 0.0035 * painAt(t) * Math.sin(2 * Math.PI * 6.5 * t)
+  return 0.03 * blows + 0.005 * painAt(t) * Math.sin(2 * Math.PI * 6.5 * t)
 }
 
 /** Her flinch outside the door, on his blows: toward the door and back. */
@@ -132,7 +132,15 @@ const shots: Shot[] = [
   { t: T.door, cells: 3.3, at: [-543.4, -20.05], cut: true },
   { t: T.atBox, cells: 3.0, at: [-544.0, -19.95] },
   { t: T.neck, cells: 2.6, at: [-544.3, -19.8] },
-  { t: T.outside - 0.002, cells: 2.2, at: [-544.35, -19.7] },
+  { t: T.blows[1] - 0.002, cells: 2.45, at: [-544.3, -19.76] },
+  // The pain, cut on its blows: close on his side in the box and the needle's point; close on her and the needle; and
+  // closer on him for the worst of it.
+  { t: T.blows[1], cells: 1.25, at: [-543.55, -19.35], cut: true },
+  { t: T.blows[2] - 0.002, cells: 1.18, at: [-543.53, -19.33] },
+  { t: T.blows[2], cells: 1.35, at: [-545.05, -19.45], cut: true },
+  { t: T.worst - 0.002, cells: 1.3, at: [-545.0, -19.44] },
+  { t: T.worst, cells: 1.1, at: [-543.5, -19.3], cut: true },
+  { t: T.outside - 0.002, cells: 1.04, at: [-543.5, -19.29] },
   // Outside the door: Jessica waits against it.
   { t: T.outside, cells: 2.3, at: [-540.55, -19.8], cut: true },
   { t: T.back - 0.002, cells: 2.15, at: [-540.55, -19.75] },
