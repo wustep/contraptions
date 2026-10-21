@@ -140,7 +140,7 @@ export function drawIsland(g: Paint): void {
 }
 
 /**
- * The island's own hills behind the pasture: a long ridge of dry grass with a crown of bare limestone and dark scrub in
+ * The island's own hills behind the pasture: a long ridge of dry grass with an outcrop of bare limestone and dark scrub in
  * its folds, hazier than the near ground, so the cattle graze on a shoulder of land with more of it going back. Faded
  * by the camera's place as it comes and goes, so the piece's edge never cuts it off.
  */
@@ -156,9 +156,12 @@ function drawRidge(g: Paint, air: string): void {
   ]
   poly(ctx, ridge.map(([x, y]) => P(x, y)))
   fill(ctx, rgba(mix(GRASS_SHADE, air, 0.35), a))
-  // Bare limestone breaking through below its highest shoulder: a grey scar of rock, not a cap.
-  poly(ctx, [P(507.2, -3.55), P(508.6, -3.95), P(510.4, -4.05), P(511.6, -3.7), P(510.9, -3.3), P(509.0, -3.45)])
+  // Bare limestone breaking through at its highest shoulder: an outcrop standing a little out of the skyline, its side
+  // away from the sun in shade, so it is rock and not a patch laid on the grass.
+  poly(ctx, [P(507.5, -3.7), P(508.4, -4.3), P(509.2, -4.75), P(510.1, -4.8), P(510.9, -4.45), P(511.5, -3.95), P(510.5, -3.6), P(509.0, -3.65)])
   fill(ctx, rgba(mix('#8F8672', air, 0.35), a))
+  poly(ctx, [P(507.5, -3.7), P(508.4, -4.3), P(509.2, -4.75), P(509.35, -4.2), P(509.0, -3.65)])
+  fill(ctx, rgba(mix('#6F685A', air, 0.35), a))
   // Scrub in its folds: a few broad dark masses, not a scatter.
   for (const [x, y, w, h] of [[503.6, -2.85, 1.3, 0.38], [513.9, -3.6, 1.6, 0.34], [518.9, -2.95, 1.1, 0.3]] as const) {
     ctx.beginPath()
