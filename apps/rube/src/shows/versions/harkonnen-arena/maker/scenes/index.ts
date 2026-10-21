@@ -1,7 +1,9 @@
 import type { Scene } from '../scene'
 import { T, END } from '../timeline'
 import { drawing } from '../paint'
+import { arena } from './arena'
 import { desert } from './desert'
+import { ride } from './ride'
 
 /** Placeholders while the scenes are built: a plain field of colour for each window. */
 function blank(key: string, from: number, to: number, x: number, color: string): Scene {
@@ -22,7 +24,7 @@ function blank(key: string, from: number, to: number, x: number, color: string):
 /** The scenes, in order. */
 export const SCENES: Scene[] = [
   desert,
-  blank('ride', T.thumper, T.arena, 1000, '#C98A50'),
-  blank('arena', T.arena, T.charge, 6000, '#BBBBBB'),
+  ride,
+  arena,
   blank('charge', T.charge, END, 9000, '#8A4A2A'),
 ]

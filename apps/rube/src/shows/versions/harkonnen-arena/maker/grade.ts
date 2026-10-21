@@ -30,7 +30,8 @@ export const GRADE: GradeKey[] = [
   { t: M.fall + 9.5, ir: 0.92, mono: 0 },
   { t: M.silence - 0.5, ir: 1, mono: 0.15 },
   { t: M.return - 0.5, ir: 1, mono: 1 },
-  { t: M.charge - 0.6, ir: 1, mono: 1 },
+  // Held to the charge's dissolve, so the frame it holds under the storm is still black and white.
+  { t: M.charge, ir: 1, mono: 1 },
   { t: M.charge + 1.4, ir: 0, mono: 0 },
 ]
 

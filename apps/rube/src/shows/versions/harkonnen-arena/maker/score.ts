@@ -76,6 +76,7 @@ export function compose(): {
     ...SCENES.flatMap((s) => s.front ?? []),
   ]
   const show = new MakerShow(WORLD, THEME, pieces, END, paul, [chani, ...actors])
+  show.trailOff = (t: number) => SCENES.some((s) => s.trailOff?.(t) ?? false)
 
   const shots: Shot[] = SCENES.flatMap((s) => s.shots)
   const camera = lens(shots)

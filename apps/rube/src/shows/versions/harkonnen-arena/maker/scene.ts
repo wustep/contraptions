@@ -41,4 +41,9 @@ export interface Scene {
    * beat of a comb), and `check:shows` holds it there.
    */
   strikes?: [string, number][]
+  /**
+   * While true, no trail is drawn behind any ball: they ride with the camera (on a worm's back), and the stage's streak
+   * behind a ball moving fast through the world would lie about how they move in the frame.
+   */
+  trailOff?: (t: number) => boolean
 }
