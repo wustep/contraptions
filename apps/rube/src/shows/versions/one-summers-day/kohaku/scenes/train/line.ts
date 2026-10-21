@@ -2,7 +2,7 @@ import type { Light } from '../../light'
 import { box, circle, ellipse, fill, hash, ink, lit, mix, poly, rgba, smooth, sway, type Paint, type Pt } from '../../paint'
 import { SEA_Y } from '../../geo'
 import { reflect, waterline } from '../../world/sea'
-import { BENCH_Y, CAR, HALT_TOP, LANDING, STATION, carX, doorOpen } from './plan'
+import { BENCH_Y, CAR, COTTAGE, HALT_TOP, ISLAND, LANDING, STATION, carX, doorOpen } from './plan'
 import { HALT } from '../../geo'
 
 /**
@@ -44,6 +44,15 @@ const HEAD = CAR.roof + 0.2
 
 /* ------------------------------------------------------------------ the line */
 
+/**
+ * Where the posts stand: every POLE_GAP along the line, but none on Swamp Bottom's island, where the lamp is the only
+ * post (the wire goes over the wood from the post before it to the post after).
+ */
+const postAt = (k: number): number | null => {
+  const x = POLE_X0 + k * POLE_GAP
+  return x > ISLAND.x0 && x < COTTAGE.x0 ? null : x
+}
+
 /** The posts that carry the wire, on the far side of the line, and the wire itself, sagging a little between them. */
 export function drawLine(g: Paint, L: Light, x0: number, x1: number): void {
   const { ctx, view: v } = g
@@ -51,11 +60,18 @@ export function drawLine(g: Paint, L: Light, x0: number, x1: number): void {
   const b = Math.min(x1, v.x1 + 1)
   if (b <= a) return
   const post = lit('#3D3630', L.ambient)
-  const k0 = Math.max(0, Math.floor((a - POLE_X0) / POLE_GAP))
-  const k1 = Math.ceil((b - POLE_X0) / POLE_GAP)
+  // One post either side of the view beyond the skipped ones, so the wire always has both its ends.
+  let k0 = Math.max(0, Math.floor((a - POLE_X0) / POLE_GAP))
+  let k1 = Math.ceil((b - POLE_X0) / POLE_GAP)
+  while (k0 > 0 && postAt(k0) === null) k0--
+  while (postAt(k1) === null) k1++
+  const xs: number[] = []
+  for (let k = k0; k <= k1; k++) {
+    const x = postAt(k)
+    if (x !== null) xs.push(x)
+  }
   const posts = (pass: 'post' | 'reflection') => {
-    for (let k = k0; k <= k1; k++) {
-      const x = POLE_X0 + k * POLE_GAP
+    for (const x of xs) {
       if (x < x0 || x > x1) continue
       box(ctx, x - 0.035, WIRE_Y - 0.12, 0.07, SEA_Y - WIRE_Y + 0.12, post)
       box(ctx, x - 0.035, WIRE_Y - 0.12, 0.42, 0.05, post)
@@ -64,14 +80,14 @@ export function drawLine(g: Paint, L: Light, x0: number, x1: number): void {
   }
   reflect(g, () => posts('reflection'), 0.3)
   posts('post')
-  // The wire, from post to post.
+  // The wire, from post to post, sagging more over a longer span.
   ctx.beginPath()
-  for (let k = k0; k < k1; k++) {
-    const xa = POLE_X0 + k * POLE_GAP + 0.38
-    const xb = xa + POLE_GAP
+  for (let i = 0; i + 1 < xs.length; i++) {
+    const xa = xs[i] + 0.38
+    const xb = xs[i + 1] + 0.38
     if (xb < x0 || xa > x1) continue
     ctx.moveTo(xa, WIRE_Y)
-    ctx.quadraticCurveTo((xa + xb) / 2, WIRE_Y + 0.1, xb, WIRE_Y)
+    ctx.quadraticCurveTo((xa + xb) / 2, WIRE_Y + 0.1 * ((xb - xa) / POLE_GAP), xb, WIRE_Y)
   }
   ink(g, rgba(lit('#2A2622', L.ambient), 0.85), 1.3)
 }
