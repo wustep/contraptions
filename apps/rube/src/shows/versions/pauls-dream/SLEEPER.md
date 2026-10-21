@@ -119,3 +119,27 @@ their own worktrees to a contract (each scene's window, its seams, the cast it o
 by copying their folders.
 
 - **First build.** Every scene end to end on the music.
+- **Round 1.** A real-speed watch of the whole show on desktop and on a phone held upright. Added and changed:
+  - The worm is a creature, not the ribbed pipe it was: a weathered, shaded body thicker where it leaves the sand, low
+    ring bands that follow its curve, and a mouth of three petals peeling back from a dark throat with a fine baleen
+    fringe. It is one drawing (`craft/worm.ts`), shared by the erg and the Fremen's rider, and big enough that its maw
+    is wider than the harvester is long.
+  - The harvester is a low, dark, armoured crawler under one great plume (it was a toy with smokestacks).
+  - The night is close coverage cut on the music (it was ten near-identical wides):
+    - the shield going out on the palace's crown;
+    - ships passing low over the roof;
+    - a roof taking fire;
+    - Paul at his window in the fire's light;
+    - the seizure at cells 4;
+    - the Duke and the Baron face to face under the bull.
+  - Fire is now sheets along roofs under smoke, where it was teardrop icons. The Baron is a sickly grey-pink with a dark
+    rim; the old pale disc read as the moon.
+  - On Caladan, the dream opens in the air above Paul as he sleeps, so he stays in the room under it.
+  - The visions in the stilltent are placed over their subjects. The Voice is close. The storm has a dark core to fall
+    into, and its wall runs past any stage's top, where on a phone it had read as a smoke column. The tent's hold has a
+    cut to a two-shot.
+  - The Fremen's reveal, Stilgar taking Paul in, and the walk are close and tracked, where they were specks in wides. The
+    end keeps the line of them readable to 415.
+  - The frame's bars leave a phone held upright its whole 16:9 frame (a scope strip there was a third of its width).
+  - Cut: the pipe worm and its ring of teeth, the harvester's stacks, the teardrop flames, the long static wides, the
+    storm's scalloped lobes, two Fremen who stood by the ornithopter, a sixth Fremen.
