@@ -30,6 +30,8 @@ export interface ThopterLook {
   belly: string
   wing: string
   glass: string
+  /** How far the canopy is lifted open, 0 shut to 1 open (it hinges up at its back, so riders can get in and out). */
+  canopy?: number
 }
 
 export const ATREIDES: Omit<ThopterLook, 'beat' | 'spread' | 'gear'> = {
@@ -128,11 +130,19 @@ export function drawThopter(g: Paint, p: ThopterPose, look: ThopterLook): void {
 export function drawThopterOver(g: Paint, p: ThopterPose, look: ThopterLook): void {
   const ctx = g.ctx
   enter(g, p)
-  // The canopy: tinted glass over the riders, framed by two struts.
+  // The canopy: tinted glass over the riders, framed by two struts; lifted open about its hinge at the back.
+  const open = Math.max(0, Math.min(1, look.canopy ?? 0))
+  ctx.save()
+  if (open > 0) {
+    ctx.translate(0.32, -0.3)
+    ctx.rotate(-1.05 * open)
+    ctx.translate(-0.32, 0.3)
+  }
   blob(ctx, [[0.32, -0.3], [0.95, -0.34], [1.5, -0.04], [1.4, 0.12], [0.36, 0.12]])
   fill(ctx, rgba(look.glass, 0.32))
   stroke(g, look.belly, 0.03)
   line(g, [0.82, -0.33], [0.84, 0.11], rgba(look.belly, 0.85), 0.025)
+  ctx.restore()
   // The near wings, over everything.
   const [af, ar] = wingAngles(look)
   wing(g, ROOTS[1], ar, look, false)
