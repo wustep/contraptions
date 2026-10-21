@@ -2,6 +2,7 @@ import { M } from '../music'
 import type { Scene } from '../scene'
 import { END, WINDOWS } from '../voyage'
 import type { Pt } from '../path'
+import { FIGHT } from './ithaca/battle'
 import { HOME, TRIAL } from './ithaca/geo'
 import { heroMoves, ithacaActors } from './ithaca/people'
 import { ARROW, arrowTail } from './ithaca/rig'
@@ -26,9 +27,12 @@ import { WEST_CAM } from './ithaca/west'
  * - 494.74   the swell: he drops onto the plate, it goes down, and the bow sings. Antinous goes for the son.
  * - 500.79   he rolls off the plate: the bow looses, and the camera goes with the arrow through all twelve eyes until
  *            it takes Antinous in the air as he leaps at Telemachus in the doorway (501.6).
- * - 503.15   the rest of them give in, drawn together on the dais; Penelope comes down the stairs a step a note; they
- *            meet (508.96).
- * - 512.68   the west: the skiff, the two of them, the sun going down ahead; their son on the cliff's edge behind.
+ * - 503.15   the rest of them come at him, and the hall is a battle, a blow on each note (`battle.ts`): two thrown
+ *            back over the bow, three on his way down the hall, and on the swell's hardest attack (508.96) the last
+ *            three thrown out of the house; the son holds the stairs below his mother. Those who never fought give in.
+ * - 509.39   Penelope comes down the stairs a step a note, and steps off them beside him on the swell's last attack
+ *            (512.68); it dies away on the three of them.
+ * - 514      the west: the skiff, the two of them, the sun going down ahead; their son on the cliff's edge behind.
  */
 export const home: Scene = {
   key: 'home',
@@ -75,12 +79,25 @@ export const home: Scene = {
     ...[0.27, 0.54].map((s) => ({ t: TRIAL.loose + s, cells: 2.3 - 0.4 * s, at: [arrowTail(TRIAL.loose + s) - ARROW - 0.4, -9.58] as Pt })),
     { t: TRIAL.strike + 0.4, cells: 1.75, at: [818.8, -9.38] },
     { t: TRIAL.erupts - 0.05, cells: 1.62, at: [818.75, -9.35] },
-    // On the next, the hall: the rest of them give in, and she comes down to him.
-    { t: TRIAL.erupts, cells: 5.0, at: [822.2, -10.05], cut: true },
-    { t: TRIAL.erupts + 1.5, cells: 4.9, at: [822.0, -10.0] },
-    // The two of them.
-    { t: TRIAL.meet + 0.6, cells: 2.4, at: [820.6, -9.7] },
-    { t: TRIAL.fade - 0.1, cells: 2.2, at: [820.55, -9.66] },
+    // On the next, the whole hall, both doors: they come at him, all of them.
+    { t: TRIAL.erupts, cells: 5.1, at: [822.8, -10.62], cut: true },
+    { t: FIGHT.first[0] - 0.05, cells: 5.0, at: [822.9, -10.58] },
+    // On the first blow, in close at the west end: the first two thrown back over the bow onto the dais.
+    { t: FIGHT.first[0], cells: 2.7, at: [825.5, -9.82], cut: true },
+    { t: FIGHT.sonHit - 0.05, cells: 2.62, at: [825.35, -9.84] },
+    // On the next, the son on the stairs below his mother, driven up a step.
+    { t: FIGHT.sonHit, cells: 2.5, at: [820.4, -9.92], cut: true },
+    { t: FIGHT.rampage[0] - 0.05, cells: 2.45, at: [820.45, -9.92] },
+    // On the next, with him: east down the hall through three of them, one on each note, to the stairs' foot, where on
+    // the swell's hardest attack he and the son throw the last three out through the door.
+    { t: FIGHT.rampage[0], cells: 3.2, at: [824.85, -9.95], cut: true },
+    { t: FIGHT.rampage[1], cells: 3.25, at: [823.75, -9.97] },
+    { t: FIGHT.rampage[2], cells: 3.35, at: [822.65, -10.0] },
+    { t: FIGHT.last, cells: 3.55, at: [820.5, -10.05] },
+    // It is over. The son comes down to his father, and she comes down the stairs to them.
+    { t: 510.2, cells: 3.3, at: [820.45, -10.02] },
+    { t: TRIAL.meet, cells: 2.9, at: [820.4, -9.9] },
+    { t: TRIAL.fade - 0.1, cells: 2.8, at: [820.38, -9.88] },
     // The west, held: their son on the cliff's edge, the skiff casting off and going away from us into the sun.
     { t: TRIAL.fade, cells: WEST_CAM.cells, at: [WEST_CAM.x, WEST_CAM.y], cut: true },
     { t: END, cells: WEST_CAM.cells, at: [WEST_CAM.x, WEST_CAM.y] },

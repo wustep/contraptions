@@ -30,8 +30,8 @@ export interface Card {
 const FORM = 1.3
 const GO = 0.95
 const OVERLAP = 0.25
-/** When the first card comes up: as the skiff's sail fills, in the last of the fade. */
-export const CREDITS_AT = M.fade + 3.0
+/** When the first card comes up: as the skiff's sail fills, in the last of the fade, once the west is up. */
+export const CREDITS_AT = M.fade + 3.4
 
 const script: Omit<Card, 'at'>[] = [
   { hold: 2.6, role: 'Directed by', names: ['Claude Opus 5.5'] },

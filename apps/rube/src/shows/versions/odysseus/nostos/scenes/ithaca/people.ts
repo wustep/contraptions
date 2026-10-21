@@ -8,6 +8,7 @@ import { stepAt } from './palace'
 import { STRUCK, antinousStruck, heroBasketY, plateEnd } from './rig'
 import { weaverX } from './loom'
 import { skiffScale, skiffSeat } from './west'
+import { FIGHT, HERO_MEET, heroFight, penelopeDown, sonFight, suitorFight } from './battle'
 
 /**
  * Who moves on Ithaca, and how: the hero from the beach to the bow and the skiff; Penelope at her loom, at the head of
@@ -89,9 +90,9 @@ export function heroMoves(): Move[] {
   const off = fly(land(TRIAL.loose), byDoor, TRIAL.loose, TRIAL.loose + flightFor(land(TRIAL.loose), byDoor, 0.12))
   m.push(off)
   m.push(rest(byDoor, off.t1, TRIAL.erupts + 0.4))
-  // East through the hall to her, at the stairs' foot.
-  const meet: Pt = [820.66, HERO_ON]
-  m.push(roll([byDoor, meet], TRIAL.erupts + 0.4, TRIAL.meet))
+  // The battle (`battle.ts`): out at the first two, then down the whole hall through the rest, to her at the stairs.
+  m.push(...heroFight(byDoor))
+  const meet: Pt = [HERO_MEET, HERO_ON]
   m.push(rest(meet, TRIAL.meet, TRIAL.fade))
   // The west: in the skiff with her (the dissolve carries him there), going away with it.
   m.push(ride((t) => skiffSeat(t, 0), TRIAL.fade, END, undefined, { scale: skiffScale }))
@@ -117,19 +118,13 @@ function penelopePath(): Path {
   const door: Pt = [822.2, y]
   m.push(roll([near, door], 495.2, 497.0))
   m.push(rest(door, 497.0, 503.3))
-  // Back to the stairs' head and down them, a step a note, and along the floor to him.
+  // Back to the stairs' head, to watch the fight over the hall; down them when it is over, a step a note, to him.
   const head = stepAt(STAIRS.steps - 1)
   const top: Pt = [head[0], y]
   m.push(roll([door, top], 503.3, 503.95))
-  const down = [4, 3, 2, 1, 0].map((i) => {
-    const s = stepAt(i)
-    return [s[0], s[1] + R - R * PENELOPE_SIZE] as Pt
-  })
-  const floorFoot: Pt = [STAIRS.x0 - 0.25, on(FLOOR, PENELOPE_SIZE)]
-  m.push(...hops([top, ...down, floorFoot], [503.95, 504.26, 504.66, 505.83, 506.68, 507.3, 507.79], 0.06))
-  const meet: Pt = [820.66 - R - R * PENELOPE_SIZE, on(FLOOR, PENELOPE_SIZE)]
-  m.push(roll([floorFoot, meet], 507.79, TRIAL.meet))
-  m.push(rest(meet, TRIAL.meet, TRIAL.fade))
+  const down = penelopeDown(top)
+  m.push(...down.moves)
+  m.push(rest(down.end, TRIAL.meet, TRIAL.fade))
   m.push(ride((t) => skiffSeat(t, 1), TRIAL.fade, END, undefined, { scale: skiffScale }))
   return new Path(m, 'penelope')
 }
@@ -174,15 +169,11 @@ function telemachusPath(): Path {
   // Back to the doorway, at his father's east side.
   const doorway: Pt = [818.18, fy]
   m.push(roll([atAxe, inHall, doorway], 451.4, 453.6))
-  // Antinous comes at him and the arrow takes him at his feet. When his mother is down the stairs he goes in to them,
-  // over the dead man.
-  const over: Pt = [819.0, fy]
-  const overAt = 507.45
-  m.push(rest(doorway, 453.6, overAt - flightFor(doorway, over, 0.3)))
-  m.push(hopTo(doorway, over, overAt, 0.3))
-  const beside: Pt = [820.66 - R - 2 * R * PENELOPE_SIZE - R * s, fy]
-  m.push(roll([over, beside], overAt, 510.4, 'out'))
-  m.push(rest(beside, 510.4, TRIAL.fade))
+  // Antinous comes at him and the arrow takes him at his feet. Then over the dead man to the stairs, to stand on them
+  // between the suitors and his mother (`battle.ts`); and down to his father when it is over.
+  const fight = sonFight(doorway)
+  m.push(...fight.moves)
+  m.push(rest(fight.end, TRIAL.meet, TRIAL.fade))
   // The west: on the cliff's edge over the harbour, and a little nearer it as they cast off, watching them go.
   const back: Pt = [CLIFF_W.top - 0.55, ground]
   const brink: Pt = [CLIFF_W.top - 0.25, ground]
@@ -197,9 +188,17 @@ function telemachusPath(): Path {
 /** Where each suitor sits on the dais, east to west, in twos and threes; the last, apart by the bow, is Antinous. */
 const SEATS = [0, 0.29, 0.82, 1.1, 1.38, 1.9, 2.5].map((d) => DAIS.x0 + 0.18 + d)
 const SEAT_Y = DAIS.top - R * SUITOR_SIZE
+/** More of them on their feet on the floor in front of the dais, the house overrun, between the axes: by index, 7 to 12. */
+const STANDS: Record<number, number> = { 7: 822.29, 8: 822.73, 9: 823.61, 10: 824.05, 11: 824.49, 12: 825.4 }
+const STAND_Y = on(FLOOR, SUITOR_SIZE)
+/** How many suitors there are, Antinous among them (index 6). */
+const SUITORS = 13
+const ANTINOUS_I = 6
 
 /** A suitor feasting: a small bob now and then, never in step with the others. */
 const feasting = (i: number) => (t: number): Pt => [SEATS[i], SEAT_Y - 0.014 * Math.max(0, Math.sin(t * (0.7 + 0.13 * i) + i * 1.9)) ** 6]
+/** One standing on the floor: the same, on his feet. */
+const standing = (i: number) => (t: number): Pt => [STANDS[i], STAND_Y - 0.012 * Math.max(0, Math.sin(t * (0.6 + 0.11 * i) + i * 2.3)) ** 6]
 
 /** The three who try: the three nearest the stairs, each landing on the plate on its note, then back to the bench. */
 function trier(i: number, land: number): { moves: Move[]; back: number } {
@@ -267,26 +266,30 @@ function antinous(i: number): Move[] {
   ]
 }
 
-/** Where the rest of them draw together on the dais when he falls: shoulder to shoulder, as far from him as it goes. */
-const HUDDLE = Array.from({ length: 6 }, (_, i) => 823.3 + i * 0.245)
-
-/** The rest, when the hall erupts: off their places along the dais into one knot, and still. They do not run. */
-function yields(i: number, from: number): Move[] {
-  const go = TRIAL.erupts + [0, 0.22, 0.4, 0.12, 0.3, 0.5][i]
-  const there: Pt = [HUDDLE[i], SEAT_Y]
-  return [ride(feasting(i), from, go), roll([feasting(i)(go), there], go, go + 1.1, 'inout'), rest(there, go + 1.1, END)]
-}
-
-function suitorPaths(): Path[] {
-  const out: Path[] = []
-  for (let i = 0; i < SEATS.length; i++) {
-    let moves: Move[]
+/** Up to the bow's note each suitor is at the feast (or trying the bow and back); from it, the fight decides. */
+function suitorPaths(): { path: Path; dies?: number }[] {
+  const hand = FIGHT.sing - 0.0001
+  const out: { path: Path; dies?: number }[] = []
+  for (let i = 0; i < SUITORS; i++) {
+    if (i === ANTINOUS_I) {
+      out.push({ path: new Path(antinous(i), 'antinous') })
+      continue
+    }
+    const before: Move[] = []
+    let where: (t: number) => Pt
     if (i < 3) {
       const t = trier(i, TRIAL.tries[i])
-      moves = [...t.moves, ...yields(i, t.back)]
-    } else if (i === SEATS.length - 1) moves = antinous(i)
-    else moves = yields(i, 0)
-    out.push(new Path(moves, i === SEATS.length - 1 ? 'antinous' : `suitor ${i}`))
+      before.push(...t.moves, ride(feasting(i), t.back, hand))
+      where = feasting(i)
+    } else if (i < ANTINOUS_I) {
+      before.push(ride(feasting(i), 0, hand))
+      where = feasting(i)
+    } else {
+      before.push(ride(standing(i), 0, hand))
+      where = standing(i)
+    }
+    const fate = suitorFight(i, where(hand))
+    out.push({ path: new Path([...before, ...fate.moves], `suitor ${i}`), dies: fate.dies })
   }
   return out
 }
@@ -296,12 +299,20 @@ export function ithacaActors(): Actor[] {
   return [
     { id: PENELOPE_ID, color: PENELOPE, rim: PENELOPE_RIM, size: PENELOPE_SIZE, path: penelopePath() },
     { id: TELEMACHUS_ID, color: TELEMACHUS, rim: TELEMACHUS_RIM, size: TELEMACHUS_SIZE, path: telemachusPath(), turn: -0.6 },
-    // Each suitor faces his own way at the feast, a few towards each other, one at his cup. Antinous, the last, is the
-    // biggest and the darkest of them, and after the arrow the colour goes out of him.
-    ...suitors.map((path, i): Actor =>
-      i === suitors.length - 1
+    // Each suitor faces his own way at the feast, a few towards each other, one at his cup. Antinous is the biggest and
+    // the darkest of them, and after the arrow the colour goes out of him; so it goes out of each of them he throws.
+    ...suitors.map(({ path, dies }, i): Actor =>
+      i === ANTINOUS_I
         ? { id: SUITORS_ID + i, color: ANTINOUS, rim: ANTINOUS_RIM, size: ANTINOUS_SIZE, path, turn: -0.9, colorAt: (t) => mix(ANTINOUS, '#2C3036', 0.45 * smooth(t, TRIAL.strike + 0.3, TRIAL.strike + 2.5)) }
-        : { id: SUITORS_ID + i, color: SUITOR, rim: SUITOR_RIM, size: SUITOR_SIZE, path, turn: [0.5, 2.7, -0.4, 3.3, 0.9, 2.2][i] },
+        : {
+            id: SUITORS_ID + i,
+            color: SUITOR,
+            rim: SUITOR_RIM,
+            size: SUITOR_SIZE,
+            path,
+            turn: [0.5, 2.7, -0.4, 3.3, 0.9, 2.2, 0, 1.4, -1.1, 2.9, 0.3, -0.7, 1.9][i],
+            colorAt: dies === undefined ? undefined : (t) => mix(SUITOR, '#2C3036', 0.68 * smooth(t, dies + 0.15, dies + 1.6)),
+          },
     ),
   ]
 }
