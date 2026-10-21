@@ -326,54 +326,78 @@ function drawHead(g: Paint, sp: Pt[], L: Light, shut: number, size: number): voi
     ctx.lineWidth = Math.max(1.25 * px, w / 108 / s)
     ctx.stroke()
   }
-  // Horns: two, swept back off the brow, pale.
-  for (const [hx, hy, tx, ty] of [
-    [0.32, -0.3, -0.25, -0.62],
-    [0.22, -0.28, -0.32, -0.48],
-  ]) {
+  // Horns: two, swept back off the brow, pale, each with a fork.
+  for (const [hx, hy, tx, ty, far] of [
+    [0.3, -0.3, -0.3, -0.62, 1],
+    [0.36, -0.3, -0.18, -0.7, 0],
+  ] as const) {
+    const c = far ? mix(lit(HORN, L.ambient, 0.5), line, 0.25) : lit(HORN, L.ambient, 0.5)
     ctx.beginPath()
     ctx.moveTo(hx, hy)
-    ctx.quadraticCurveTo(hx - 0.2, hy - 0.22, tx, ty)
-    ctx.quadraticCurveTo(hx - 0.12, hy - 0.08, hx + 0.1, hy + 0.02)
+    ctx.quadraticCurveTo(hx - 0.22, hy - 0.2, tx, ty)
+    ctx.quadraticCurveTo(hx - 0.12, hy - 0.1, hx + 0.12, hy + 0.03)
     ctx.closePath()
-    fill(ctx, lit(HORN, L.ambient, 0.35))
-    inkIn(line, 1.4)
+    fill(ctx, c)
+    inkIn(line, 1.3)
+    // The fork, off the horn's middle.
+    const mx = (hx + tx) / 2 + 0.04
+    const my = (hy + ty) / 2 + 0.02
+    ctx.beginPath()
+    ctx.moveTo(mx, my)
+    ctx.quadraticCurveTo(mx - 0.02, my - 0.12, mx - 0.1, my - 0.16)
+    inkIn(c, 3)
   }
-  // The head: the skull, the long muzzle, the jaw.
+  // The ear: a fin behind the eye, white edged with the mane's green.
+  ctx.beginPath()
+  ctx.moveTo(0.18, -0.2)
+  ctx.quadraticCurveTo(0.0, -0.36, -0.18, -0.34)
+  ctx.quadraticCurveTo(-0.04, -0.24, 0.06, -0.12)
+  ctx.closePath()
+  fill(ctx, lit(MANE, L.ambient, 0.5))
+  // The head: the skull, the long muzzle lifting a little at the nose, the jaw under it.
   ctx.beginPath()
   ctx.moveTo(-0.05, -0.2)
-  ctx.bezierCurveTo(0.1, -0.36, 0.38, -0.34, 0.55, -0.24)
-  ctx.bezierCurveTo(0.75, -0.16, 0.95, -0.12, 1.02, -0.05)
-  ctx.bezierCurveTo(1.05, 0.0, 1.0, 0.05, 0.92, 0.06)
-  ctx.bezierCurveTo(0.7, 0.1, 0.45, 0.22, 0.2, 0.22)
+  ctx.bezierCurveTo(0.08, -0.34, 0.3, -0.36, 0.48, -0.26)
+  ctx.bezierCurveTo(0.56, -0.2, 0.62, -0.17, 0.78, -0.14)
+  ctx.bezierCurveTo(0.92, -0.12, 1.0, -0.13, 1.06, -0.08)
+  ctx.bezierCurveTo(1.09, -0.03, 1.05, 0.02, 0.96, 0.03)
+  ctx.bezierCurveTo(0.72, 0.07, 0.46, 0.2, 0.2, 0.22)
   ctx.bezierCurveTo(0.05, 0.21, -0.06, 0.12, -0.08, 0.0)
   ctx.closePath()
   fill(ctx, white)
   inkIn(line, 1.6)
-  // The mouth's line, and the nostril.
+  // The brow over the eye: a ridge, a stroke of the line.
   ctx.beginPath()
-  ctx.moveTo(1.0, 0.0)
-  ctx.quadraticCurveTo(0.75, 0.04, 0.52, 0.06)
+  ctx.moveTo(0.34, -0.25)
+  ctx.quadraticCurveTo(0.46, -0.27, 0.56, -0.2)
+  inkIn(line, 1.5)
+  // The mouth's line, back under the eye, and the nostril near the tip.
+  ctx.beginPath()
+  ctx.moveTo(1.02, -0.01)
+  ctx.quadraticCurveTo(0.78, 0.03, 0.5, 0.05)
   inkIn(line, 1.2)
-  circle(ctx, 0.96, -0.07, 0.02)
+  circle(ctx, 1.0, -0.08, 0.018)
   fill(ctx, line)
-  // The eye: dark, under the brow; a line when shut.
+  // The eye: sea-green with a dark middle, under the brow; a line when shut.
   if (shut < 0.5) {
     ctx.beginPath()
-    ctx.ellipse(0.46, -0.13, 0.055, 0.045 * (1 - shut * 1.6), -0.2, 0, Math.PI * 2)
-    fill(ctx, '#1E2A2C')
+    ctx.ellipse(0.45, -0.15, 0.06, 0.05 * (1 - shut * 1.6), -0.15, 0, Math.PI * 2)
+    fill(ctx, lit('#3E8C7E', L.ambient, 0.5))
+    ctx.beginPath()
+    ctx.ellipse(0.465, -0.15, 0.028, 0.034 * (1 - shut * 1.6), 0, 0, Math.PI * 2)
+    fill(ctx, '#14201F')
   } else {
     ctx.beginPath()
-    ctx.moveTo(0.4, -0.12)
-    ctx.quadraticCurveTo(0.46, -0.09, 0.52, -0.13)
+    ctx.moveTo(0.39, -0.14)
+    ctx.quadraticCurveTo(0.45, -0.11, 0.51, -0.15)
     inkIn('#1E2A2C', 1.5)
   }
   // A whisker trailing back from the muzzle.
   ctx.beginPath()
-  ctx.moveTo(0.86, 0.02)
+  ctx.moveTo(0.9, 0.02)
   const w = 0.05 * Math.sin(g.t * 2.3)
-  ctx.bezierCurveTo(0.6, 0.18, 0.3, 0.32 + w, 0.0, 0.42 + w)
-  inkIn(lit('#9FB7B0', L.ambient, 0.3), 1.2)
+  ctx.bezierCurveTo(0.62, 0.18, 0.3, 0.32 + w, 0.0, 0.42 + w)
+  inkIn(lit('#9FB7B0', L.ambient, 0.4), 1.2)
   ctx.restore()
 }
 
