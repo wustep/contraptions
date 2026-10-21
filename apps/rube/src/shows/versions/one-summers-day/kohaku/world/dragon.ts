@@ -83,6 +83,17 @@ function normalAt(sp: Pt[], i: number): Pt {
   return [dy / d, -dx / d]
 }
 
+/**
+ * Which side of the spine is his back at point `i`: the side that faces up on the screen, so his back is to the sky
+ * whichever way he goes and however he is coiled; eased through 0 where the spine runs straight up or down, where
+ * he is seen side on to the turn. Multiplies the normal.
+ */
+function sideOf(sp: Pt[], i: number): number {
+  const [, ny] = normalAt(sp, i)
+  return Math.max(-1, Math.min(1, -ny * 2.5))
+}
+const sgn = (v: number) => (v >= 0 ? 1 : -1)
+
 /** The way the head points: from the second spine point to the first. */
 export function heading(sp: Pt[]): number {
   return Math.atan2(sp[0][1] - sp[1][1], sp[0][0] - sp[1][0])
@@ -106,12 +117,13 @@ export function seat(sp: Pt[], up: number, s = 0.13, r = 0.13): Pt {
   const p: Pt = [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u]
   const [nx, ny] = normalAt(sp, i)
   const h = widthAt(s) / 2 + r * 0.92
-  return [p[0] + nx * h * up, p[1] + ny * h * up]
+  const side = sgn(sideOf(sp, i) || up)
+  return [p[0] + nx * h * side, p[1] + ny * h * side]
 }
 
 export interface DragonLook {
-  /** Which way is up for him, eased between -1 and 1 as he rolls over (1: his back to the sky flying east). */
-  up: number
+  /** No longer read: his back is to the sky along the whole of him (`sideOf`). Kept for the callers that pass it. */
+  up?: number
   /** How far the scales have come off him, 0 to 1. */
   burst?: number
   /** How much he is seen, 0 to 1 (into the haze, behind cloud). */
@@ -129,15 +141,14 @@ export interface DragonLook {
 export function drawDragon(g: Paint, sp: Pt[], L: Light, look: DragonLook): void {
   const { ctx } = g
   const n = sp.length - 1
-  const up = look.up
   const burst = look.burst ?? 0
   const alpha = look.alpha ?? 1
   if (alpha <= 0.01) return
   // How much of him is left: the spine from the head back to `keep` of its length.
   const keep = 1 - smooth(burst, 0, 0.85)
   const last = Math.max(1, Math.round(n * keep))
-  const white = lit(WHITE, L.ambient, 0.62)
-  const belly = lit(BELLY, L.ambient, 0.55)
+  const white = lit(WHITE, L.ambient, 0.8)
+  const belly = lit(BELLY, L.ambient, 0.72)
   const line = mix(LINE, L.top, 0.2)
   ctx.save()
   ctx.globalAlpha = alpha
@@ -154,7 +165,7 @@ export function drawDragon(g: Paint, sp: Pt[], L: Light, look: DragonLook): void
       right.push([sp[i][0] - nx * w, sp[i][1] - ny * w])
     }
     // The legs first, so the body covers their roots.
-    drawLegs(g, sp, up, look.reach ?? 0, last, white, line)
+    drawLegs(g, sp, look.reach ?? 0, last, white, line)
     ctx.beginPath()
     ctx.moveTo(left[0][0], left[0][1])
     for (let i = 1; i <= last; i++) ctx.lineTo(left[i][0], left[i][1])
@@ -162,31 +173,34 @@ export function drawDragon(g: Paint, sp: Pt[], L: Light, look: DragonLook): void
     ctx.closePath()
     fill(ctx, white)
     ink(g, line, 1.6)
-    // The belly: a cream band along the underside, a third of the width.
-    const under = up >= 0 ? right : left
+    // The belly: a cream band along the underside, a third of the width, wherever the underside is.
+    const under: Pt[] = []
     const mid: Pt[] = []
     for (let i = 0; i <= last; i++) {
       const u = i / n
       const [nx, ny] = normalAt(sp, i)
-      const w = (widthAt(u) / 2) * 0.35 * -Math.sign(up || 1)
-      mid.push([sp[i][0] + nx * w, sp[i][1] + ny * w])
+      const side = sideOf(sp, i)
+      let w = widthAt(u) / 2
+      if (keep < 1 && i > last - 3) w *= Math.max(0.15, (last - i) / 3)
+      under.push([sp[i][0] - nx * w * side, sp[i][1] - ny * w * side])
+      mid.push([sp[i][0] - nx * w * 0.35 * side, sp[i][1] - ny * w * 0.35 * side])
     }
     ctx.beginPath()
     ctx.moveTo(under[0][0], under[0][1])
     for (let i = 1; i <= last; i++) ctx.lineTo(under[i][0], under[i][1])
     for (let i = last; i >= 0; i--) ctx.lineTo(mid[i][0], mid[i][1])
     ctx.closePath()
-    fill(ctx, rgba(belly, Math.min(1, Math.abs(up) * 1.2)))
+    fill(ctx, belly)
     // The tail's tuft, while there is a tail.
-    if (keep > 0.97) drawTuft(g, sp, up, L)
+    if (keep > 0.97) drawTuft(g, sp, L)
   }
   // The mane, over the neck, and the head.
-  if (keep > 0.01) drawMane(g, sp, up, L, keep)
-  drawHead(g, sp, up, L, look.shut ?? 0, 1 - smooth(burst, 0.82, 1))
+  if (keep > 0.01) drawMane(g, sp, L, keep)
+  drawHead(g, sp, L, look.shut ?? 0, 1 - smooth(burst, 0.82, 1))
   ctx.restore()
 }
 
-function drawLegs(g: Paint, sp: Pt[], up: number, reach: number, last: number, white: string, line: string): void {
+function drawLegs(g: Paint, sp: Pt[], reach: number, last: number, white: string, line: string): void {
   const n = sp.length - 1
   for (const [s, side] of [
     [0.16, 1],
@@ -203,7 +217,8 @@ function drawLegs(g: Paint, sp: Pt[], up: number, reach: number, last: number, w
     const fy = ty / td
     // The hip on the underside; the leg goes down and back (or forward, reaching).
     const w = widthAt(s) / 2
-    const dn: Pt = [-nx * Math.sign(up || 1), -ny * Math.sign(up || 1)]
+    const down = sgn(sideOf(sp, i))
+    const dn: Pt = [-nx * down, -ny * down]
     const hip: Pt = [sp[i][0] + dn[0] * w * 0.4, sp[i][1] + dn[1] * w * 0.4]
     const back = lerp(-0.7, 0.55, reach)
     const knee: Pt = [hip[0] + dn[0] * 0.14 + fx * back * 0.1, hip[1] + dn[1] * 0.14 + fy * back * 0.1]
@@ -230,7 +245,7 @@ function drawLegs(g: Paint, sp: Pt[], up: number, reach: number, last: number, w
   }
 }
 
-function drawMane(g: Paint, sp: Pt[], up: number, L: Light, keep: number): void {
+function drawMane(g: Paint, sp: Pt[], L: Light, keep: number): void {
   const { ctx } = g
   const n = sp.length - 1
   const end = Math.min(Math.round(n * 0.2), Math.round(n * keep))
@@ -254,9 +269,10 @@ function drawMane(g: Paint, sp: Pt[], up: number, L: Light, keep: number): void 
         const w = widthAt(i / n) / 2
         const stir = 0.035 * Math.sin(g.t * 3.4 - i * 0.8 + k * 1.3 + off) * u
         const h = w * 0.7 + lift * Math.sin(Math.PI * Math.min(1, u * 1.15)) * (1 - 0.3 * u) + stir
-        pts.push([sp[i][0] + nx * h * up, sp[i][1] + ny * h * up])
+        const side = sideOf(sp, i)
+        pts.push([sp[i][0] + nx * h * side, sp[i][1] + ny * h * side])
         const h2 = w * 0.55 + lift * 0.25 * (1 - u)
-        back.push([sp[i][0] + nx * h2 * up, sp[i][1] + ny * h2 * up])
+        back.push([sp[i][0] + nx * h2 * side, sp[i][1] + ny * h2 * side])
       }
       ctx.beginPath()
       ctx.moveTo(back[0][0], back[0][1])
@@ -268,7 +284,7 @@ function drawMane(g: Paint, sp: Pt[], up: number, L: Light, keep: number): void 
   }
 }
 
-function drawTuft(g: Paint, sp: Pt[], up: number, L: Light): void {
+function drawTuft(g: Paint, sp: Pt[], L: Light): void {
   const n = sp.length - 1
   const tip = sp[n]
   const prev = sp[n - 3]
@@ -277,7 +293,7 @@ function drawTuft(g: Paint, sp: Pt[], up: number, L: Light): void {
   ctx.save()
   ctx.translate(tip[0], tip[1])
   ctx.rotate(a)
-  ctx.scale(1, up >= 0 ? 1 : -1)
+  ctx.scale(1, sgn(sideOf(sp, n - 2)))
   const stir = 0.03 * Math.sin(g.t * 2.7)
   poly(ctx, [
     [-0.06, 0],
@@ -291,7 +307,7 @@ function drawTuft(g: Paint, sp: Pt[], up: number, L: Light): void {
   ctx.restore()
 }
 
-function drawHead(g: Paint, sp: Pt[], up: number, L: Light, shut: number, size: number): void {
+function drawHead(g: Paint, sp: Pt[], L: Light, shut: number, size: number): void {
   if (size <= 0.01) return
   const { ctx } = g
   const a = heading(sp)
@@ -300,8 +316,9 @@ function drawHead(g: Paint, sp: Pt[], up: number, L: Light, shut: number, size: 
   ctx.translate(sp[0][0], sp[0][1])
   ctx.rotate(a)
   // Flying west he rolls over: his back stays to the sky.
-  ctx.scale(s, s * (up >= 0 ? 1 : -1) * Math.max(0.35, Math.abs(up)))
-  const white = lit(WHITE, L.ambient, 0.62)
+  const side = sideOf(sp, 1)
+  ctx.scale(s, s * sgn(side) * Math.max(0.35, Math.abs(side)))
+  const white = lit(WHITE, L.ambient, 0.8)
   const line = mix(LINE, L.top, 0.2)
   const px = g.px / s
   const inkIn = (c: string, w: number) => {
@@ -368,7 +385,7 @@ function drawHead(g: Paint, sp: Pt[], up: number, L: Light, shut: number, size: 
 export function drawScales(g: Paint, L: Light, bodyAt: (t: number) => Pt[], from: number, dur: number, count = 90): void {
   const { ctx, t } = g
   if (t < from) return
-  const white = lit(WHITE, L.ambient, 0.62)
+  const white = lit(WHITE, L.ambient, 0.8)
   const edge = lit('#C9D6CE', L.ambient, 0.55)
   for (let i = 0; i < count; i++) {
     const te = from + (i / count) * dur * 0.85
