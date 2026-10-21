@@ -43,19 +43,23 @@ const OUTLINE: Pt[] = [
 const SHADE_E: Pt[] = [[805.5, -0.42], [CLIFF_E.foot, -0.9], [806.62, -2.6], [806.95, -3.7], [806.8, -5.3], [807.15, -6.8], [807.1, -8.2], [CLIFF_E.top, TOP], [808.3, TOP], [807.9, -6], [807.7, -2.6], [806.9, 0.3]]
 const SHADE_W: Pt[] = [[CLIFF_W.top, TOP], [831.5, -8.1], [832.0, -6.6], [833.4, -5.7], [833.9, -3.9], [835.3, -3.0], [CLIFF_W.foot, -1.1], [836.9, 0.6], [834.6, 0.6], [833.0, -2.8], [831.2, -6.2], [829.9, TOP]]
 
-/** Bands of the cliff's strata: long, few, each a darker step of the stone, from a face's edge into the rock. */
-const STRATA: { y: number; x0: number; x1: number; h: number }[] = [
-  { y: -2.1, x0: 806.5, x1: 810.5, h: 0.32 },
-  { y: -4.6, x0: 806.9, x1: 810.5, h: 0.26 },
-  { y: -7.1, x0: 807.1, x1: 810.5, h: 0.3 },
-  { y: -4.2, x0: 829.5, x1: 834.0, h: 0.28 },
-  { y: -6.9, x0: 829.8, x1: 832.1, h: 0.24 },
+/**
+ * The cliff's beds: where each ledge comes out of a face (`edge`), how far it runs into the rock before it is lost
+ * (`into`), and the depth of the shadow under it at the face.
+ */
+const LEDGES: { y: number; edge: number; into: number; h: number }[] = [
+  { y: -2.1, edge: 806.55, into: 812.6, h: 0.3 },
+  { y: -4.6, edge: 806.9, into: 811.8, h: 0.24 },
+  { y: -7.1, edge: 807.1, into: 813.2, h: 0.28 },
+  { y: -4.2, edge: 833.6, into: 829.4, h: 0.26 },
+  { y: -6.9, edge: 831.4, into: 828.2, h: 0.22 },
 ]
+
+/** The cliff's foot along the south face, dark where the sea wets it: its top as [x, y], east to west. */
+const WET: Pt[] = [[CLIFF_E.foot, -0.9], [807.4, -0.85], [810.5, -0.95], [813.8, -0.8], [817.2, -1.0], [821.0, -0.85], [825.4, -0.98], [829.6, -0.82], [833.4, -0.92], [CLIFF_W.foot, -1.1]]
 
 /** Scrub in the cliff's ledges and along the top: a few rounded clumps. */
 const SCRUBS: [number, number, number][] = [
-  [806.95, -3.72, 0.28],
-  [807.15, -6.82, 0.26],
   [808.0, -9.02, 0.3],
   [812.6, -9.02, 0.26],
   [829.6, -9.02, 0.32],
@@ -119,24 +123,29 @@ export function drawIsland(g: Paint): void {
   drawFar(g)
   const stone = rock(STONE, t)
   const shade = rock(STONE_SHADE, t)
-  // Whichever face the sun or the moon is on is the lit one; the other is in its own shadow.
+  // Whichever face the sun or the moon is on is the lit one, the other in its own shadow; the face towards us takes a
+  // low sun aslant, a step down from the one it falls full on.
   const disc = skyAt(t).disc
-  const fromWest = disc ? smooth(disc.x, 0.35, 0.65) * Math.min(1, disc.a * 1.5) : 0.5
+  const strength = disc ? Math.min(1, disc.a * 1.5) : 0
+  const fromWest = disc ? smooth(disc.x, 0.35, 0.65) * strength : 0.5
+  const aslant = disc ? Math.abs(smooth(disc.x, 0.35, 0.65) - 0.5) * 2 * strength : 0
   const deep = rock(STONE_DEEP, t)
   const ink = againstSun('#2B261F', t)
-  // The rock under the sea, and the mass itself.
+  // The rock under the sea, and the mass itself, its face towards us.
   blob(ctx, OUTLINE)
-  fill(ctx, stone)
-  // The faces in shade: the east face and the west face, a darker plane each.
+  fill(ctx, mix(stone, shade, 0.28 * aslant))
+  // The east face and the west face, each a plane of its own.
   poly(ctx, SHADE_E)
-  fill(ctx, mix(stone, shade, 0.35 + 0.65 * fromWest))
+  fill(ctx, mix(stone, shade, fromWest))
   poly(ctx, SHADE_W)
-  fill(ctx, mix(stone, shade, 1 - 0.65 * fromWest))
-  // Each stratum comes out of the face's edge and thins away into the rock, never ending square.
-  for (const s of STRATA) {
-    const dir = s.x1 > s.x0 ? 1 : -1
-    const mid = s.x0 + (s.x1 - s.x0) * 0.45
-    poly(ctx, [[s.x0, s.y], [mid, s.y - 0.04 * dir], [s.x1, s.y + s.h * 0.45], [mid, s.y + s.h * 0.9], [s.x0 + 0.1 * dir, s.y + s.h * 1.1]])
+  fill(ctx, mix(stone, shade, 1 - fromWest))
+  // Its foot along the south face, darker where the sea wets it.
+  poly(ctx, [...WET, [CLIFF_W.foot, 0.6], [CLIFF_E.foot, 0.6]])
+  fill(ctx, mix(mix(stone, shade, 0.28 * aslant), rock(ROCK, t), 0.3))
+  // Each bed's ledge: the shadow under it, straight along the bed and thinning away into the rock, never ending square.
+  for (const s of LEDGES) {
+    const u = (f: number) => s.edge + (s.into - s.edge) * f
+    poly(ctx, [[s.edge, s.y], [s.into, s.y], [u(0.55), s.y + s.h * 0.4], [u(0.2), s.y + s.h * 0.85], [s.edge, s.y + s.h]])
     fill(ctx, rgba(deep, 0.4))
   }
   // The island's foot under the water: rock, darker, going down out of sight.
