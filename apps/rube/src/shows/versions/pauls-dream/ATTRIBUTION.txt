@@ -1,0 +1,21 @@
+Paul's Dream — Hans Zimmer
+From Dune (Original Motion Picture Soundtrack), WaterTower Music, 2021; released as a single on 22 July 2021.
+Composed by Hans Zimmer.
+Film: Dune (Dune: Part One), directed by Denis Villeneuve, written by Jon Spaihts, Denis Villeneuve and Eric Roth,
+after the novel by Frank Herbert; Legendary Pictures / Warner Bros. Pictures, 2021.
+
+The recording is the label's own, as uploaded to YouTube by WaterTower Music on its own channel ("Dune Official
+Soundtrack | Paul's Dream – Hans Zimmer | WaterTower"), video BdtiYwSP9ko:
+https://www.youtube.com/watch?v=BdtiYwSP9ko
+Duration 7:03. Copyrighted; no rights are claimed. Demo only.
+
+Playback: YouTube only. No recording of the cue is shipped, and none is committed, in this branch or its history.
+
+Files:
+- scripts/shows/pauls-dream-onsets.py — measures the cue once from a local analysis copy of the video's audio (fetched
+  with yt-dlp into the git-ignored out/dune1/, never committed): its stretches, its landmarks, the click with every
+  tick on its own attack where it is held, every onset, the low swells, its loudness and its high voices.
+- scripts/shows/plans/pauls-dream-onsets.json — what it measured: the show is timed to it and check:shows holds the
+  show to it. It holds times and numbers only, no audio.
+
+Every picture in the show is drawn for it. Nothing from the film's frames, posters, trailers or titles is used.
