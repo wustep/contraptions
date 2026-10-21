@@ -41,7 +41,7 @@ const script: Omit<Card, 'at'>[] = [
       ['Chihiro', 'the rose ball', CHIHIRO],
       ['Haku', 'the white one, and the dragon', HAKU],
       ['No-Face', 'the dark one', NOFACE],
-      ['The bathhouse', 'the cream ones', HAND],
+      ['The bathhouse hands', 'the cream balls', HAND],
     ],
   },
   {

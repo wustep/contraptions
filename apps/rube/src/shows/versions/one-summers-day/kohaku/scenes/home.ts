@@ -77,9 +77,9 @@ const SHOTS: Key[] = [
   { t: PART, cells: 3.6, at: [SHE_LANDS[0] - 0.1, SHE_LANDS[1] - 0.45] },
   // Back over the stones with her; he stays.
   { t: STONE_LANDS[3], cells: 5.0, at: [18.6, 0.9] },
-  // Up the meadow, small in it, to the gate.
-  { t: UP_FROM + 1.5, cells: 7.6, at: [11.0, -1.5] },
-  { t: AT_ARCH - 3.5, cells: 6.4, at: [2.0, -1.6] },
+  // Up the meadow with her, under the trees, to the gate.
+  { t: UP_FROM + 1.2, cells: 5.4, off: [-1.1, -1.05] },
+  { t: AT_ARCH - 3.2, cells: 5.0, off: [-1.3, -1.1] },
   { t: AT_ARCH, cells: 4.4, at: [-2.6, -1.25] },
   { t: GONE, cells: 4.5, at: [-2.6, -1.3] },
   // The summer, wide, for the credits: the gate at the left, the meadow going down to the river.
