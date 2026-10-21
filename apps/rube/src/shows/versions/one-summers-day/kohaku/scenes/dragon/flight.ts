@@ -26,9 +26,9 @@ const KEYS: [number, number, number][] = [
   [M.peak + 0.39, 69.0, -6.22],
   [M.peak + 0.79, 67.4, -6.22],
   [M.peak + 1.09, 66.65, -5.95],
-  [M.peak + 1.39, 67.0, -5.72],
-  [M.peak + 1.69, 68.0, -5.7],
-  [M.peak + 1.94, 68.5, -5.71],
+  [M.peak + 1.39, 67.0, -5.66],
+  [M.peak + 1.69, 68.0, -5.63],
+  [M.peak + 1.94, 68.5, -5.63],
 ]
 
 /** Where he stops, down on the floor, his head towards the door. */
@@ -88,7 +88,11 @@ export function spineAt(t: number): Pt[] {
   // A slow writhe running down him, and a jerk on each blow, dying away; nothing at all once he is still.
   let jolt = 0
   for (const j of JERKS) if (t >= j) jolt += Math.exp(-(t - j) / 0.35) * Math.sin(Math.min(Math.PI, (t - j) * 9))
-  const amp = (0.07 * (1 - smooth(t, 129, STILL)) + 0.05 * jolt) * (1 - smooth(t, STILL - 1, STILL))
+  const quiet = 1 - smooth(t, STILL - 1, STILL)
+  const amp = (0.07 * (1 - smooth(t, 129, STILL)) + 0.08 * jolt) * quiet
+  // On each blow his head comes up off the floor and his back arches, and they go down again; each blow weaker.
+  const rear = JERKS.reduce((s, j, k) => s + (1 - 0.16 * k) * blow(t - j), 0) * quiet
+  const arch = JERKS.reduce((s, j, k) => s + (1 - 0.16 * k) * blow(t - j - 0.08), 0) * quiet
   for (let i = 0; i <= n; i++) {
     const a = base[Math.max(0, i - 1)]
     const b = base[Math.min(n, i + 1)]
@@ -96,10 +100,19 @@ export function spineAt(t: number): Pt[] {
     const dy = a[1] - b[1]
     const d = Math.hypot(dx, dy) || 1
     const u = i / n
-    const w = amp * Math.sin(2 * Math.PI * (u * 1.4 - (t - STOP) * 1.1)) * Math.sin(Math.PI * clamp01(u * 1.2))
-    out.push([base[i][0] + (dy / d) * w, base[i][1] - (dx / d) * w])
+    // Less along the ceiling than on the floor, where he has room.
+    const room = u < 0.45 ? 1 : 0.5
+    const w = amp * room * Math.sin(2 * Math.PI * (u * 1.4 - (t - STOP) * 1.1)) * Math.sin(Math.PI * clamp01(u * 1.2))
+    const lift = 0.3 * rear * Math.pow(Math.max(0, 1 - u / 0.22), 2) + 0.13 * arch * Math.sin(Math.PI * clamp01((u - 0.06) / 0.3))
+    out.push([base[i][0] + (dy / d) * w, base[i][1] - (dx / d) * w - lift])
   }
   return out
+}
+
+/** One blow's heave, `s` seconds after it: up quickly, down again a little slower, then nothing. */
+function blow(s: number): number {
+  if (s <= 0 || s >= 0.75) return 0
+  return s < 0.22 ? Math.sin((Math.PI / 2) * (s / 0.22)) : Math.cos((Math.PI / 2) * ((s - 0.22) / 0.53))
 }
 
 /** Which way is up for him: back to the sky going west over the sea, and as he goes in through the door. */

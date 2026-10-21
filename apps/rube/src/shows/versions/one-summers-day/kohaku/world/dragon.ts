@@ -132,6 +132,8 @@ export interface DragonLook {
   reach?: number
   /** His eyes shut (hurt, asleep): 0 open, 1 shut. */
   shut?: number
+  /** Down on a floor: 0 legs held as `reach` says, 1 folded back along his flanks so he lies on his belly. */
+  lie?: number
 }
 
 /**
@@ -165,7 +167,7 @@ export function drawDragon(g: Paint, sp: Pt[], L: Light, look: DragonLook): void
       right.push([sp[i][0] - nx * w, sp[i][1] - ny * w])
     }
     // The legs first, so the body covers their roots.
-    drawLegs(g, sp, look.reach ?? 0, last, white, line)
+    drawLegs(g, sp, look.reach ?? 0, look.lie ?? 0, last, white, line)
     ctx.beginPath()
     ctx.moveTo(left[0][0], left[0][1])
     for (let i = 1; i <= last; i++) ctx.lineTo(left[i][0], left[i][1])
@@ -200,7 +202,7 @@ export function drawDragon(g: Paint, sp: Pt[], L: Light, look: DragonLook): void
   ctx.restore()
 }
 
-function drawLegs(g: Paint, sp: Pt[], reach: number, last: number, white: string, line: string): void {
+function drawLegs(g: Paint, sp: Pt[], reach: number, lie: number, last: number, white: string, line: string): void {
   const n = sp.length - 1
   for (const [s, side] of [
     [0.16, 1],
@@ -220,9 +222,12 @@ function drawLegs(g: Paint, sp: Pt[], reach: number, last: number, white: string
     const down = sgn(sideOf(sp, i))
     const dn: Pt = [-nx * down, -ny * down]
     const hip: Pt = [sp[i][0] + dn[0] * w * 0.4, sp[i][1] + dn[1] * w * 0.4]
-    const back = lerp(-0.7, 0.55, reach)
-    const knee: Pt = [hip[0] + dn[0] * 0.14 + fx * back * 0.1, hip[1] + dn[1] * 0.14 + fy * back * 0.1]
-    const foot: Pt = [knee[0] + dn[0] * 0.08 + fx * back * 0.13, knee[1] + dn[1] * 0.08 + fy * back * 0.13]
+    // Lying, the leg folds back along the flank: less of it goes down, more of it back.
+    const back = lerp(lerp(-0.7, 0.55, reach), -1.1, lie)
+    const down1 = 0.14 * (1 - 0.7 * lie)
+    const down2 = 0.08 * (1 - lie)
+    const knee: Pt = [hip[0] + dn[0] * down1 + fx * back * 0.1, hip[1] + dn[1] * down1 + fy * back * 0.1]
+    const foot: Pt = [knee[0] + dn[0] * down2 + fx * back * 0.13, knee[1] + dn[1] * down2 + fy * back * 0.13]
     const far = side < 0
     g.ctx.lineCap = 'round'
     g.ctx.beginPath()

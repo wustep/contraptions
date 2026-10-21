@@ -1,11 +1,11 @@
 import type { Light } from '../../light'
-import { box, circle, ellipse, fill, ink, lit, mix, poly, pool, smooth, type Paint } from '../../paint'
+import { box, circle, ellipse, fill, ink, lit, mix, poly, rgba, smooth, type Paint } from '../../paint'
 import { BATH } from '../../geo'
 
 /**
  * Her room, at the bathhouse's east end on the third storey, seen with its front cut away: tatami, paper screens on its
  * back wall, the bedding rolled against the west wall, and in the east wall the door out to the balcony, with a
- * wooden shutter in the lintel over it that drops on a cord. The light comes in at the door and lies on the floor.
+ * wooden shutter in the lintel over it that drops on a cord. The day comes in at the door; the shutter shuts it out.
  */
 
 const R = BATH.room
@@ -46,8 +46,6 @@ export function drawRoom(g: Paint, L: Light): void {
   box(ctx, R.x0 + 0.25, R.y1 - 0.25, 0.08, 0.22, lit('#3C4E7A', L.ambient, 0.3))
   box(ctx, R.x0 + 0.85, R.y1 - 0.3, 0.42, 0.3, lit('#6A4A32', L.ambient, 0.2))
   ink(g, line, 1)
-  // The daylight in at the door, lying on the floor towards the room.
-  pool(ctx, D.x0 - 0.9, R.y1 - 0.02, 0.9, mix(L.low, '#FFF2D8', 0.4), 0.26 * (1 - L.night), 0.18)
   // The west wall's edge.
   box(ctx, R.x0 - 0.06, R.y0, 0.1, R.y1 - R.y0 + 0.1, lit(WOOD, L.ambient, 0.2))
 }
@@ -60,6 +58,11 @@ export function drawEastWall(g: Paint, L: Light, shut: number, knock: number): v
   const { ctx, t } = g
   const line = mix(LINE, L.top, 0.2)
   const wall = lit(PLASTER, L.ambient, 0.15)
+  // With the shutter down the day is shut out: the room and all in it a shade dimmer.
+  if (shut > 0.01) {
+    ctx.fillStyle = rgba(mix(L.shade, '#2A1A12', 0.5), 0.3 * smooth(shut, 0, 1))
+    ctx.fillRect(R.x0 - 0.06, R.y0, D.x0 - R.x0 + 0.06, R.y1 - R.y0)
+  }
   // The wall above the door, and its lintel.
   box(ctx, D.x0, R.y0, D.x1 - D.x0, D.top - R.y0, wall)
   box(ctx, D.x0 - 0.04, D.top - 0.08, D.x1 - D.x0 + 0.08, 0.1, lit(WOOD, L.ambient, 0.2))

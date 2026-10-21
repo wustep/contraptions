@@ -94,7 +94,12 @@ const room = standing('dragon-room', ROOM, END, (g) => {
 const dragon = standing('dragon-dragon', region(64, -16, 125, -3, 2), END, (g) => {
   if (g.t < 99 || g.t >= TO) return
   const t = g.t
-  drawDragon(g, spineAt(t), light(t), { up: upAt(t), reach: smooth(t, M.peak - 0.6, M.peak) * (1 - smooth(t, STOP, STOP + 1)), shut: smooth(t, STILL - 1.2, STILL) })
+  drawDragon(g, spineAt(t), light(t), {
+    up: upAt(t),
+    reach: smooth(t, M.peak - 0.6, M.peak) * (1 - smooth(t, STOP, STOP + 1)),
+    shut: smooth(t, STILL - 1.2, STILL),
+    lie: smooth(t, M.peak + 1.2, M.peak + 1.7),
+  })
 })
 const wall = standing('dragon-wall', ROOM, END, null, (g) => {
   if (roomCut(g.t) > 0) drawEastWall(g, light(g.t), smooth(g.t, SHUT - 0.2, SHUT), KNOCK)
