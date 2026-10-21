@@ -39,23 +39,25 @@ const shots: Shot[] = [
   // The dream shot, held: her on the crest against the sky.
   { t: 338.15, cells: DREAM_CELLS, at: DREAM_AT, cut: true },
   { t: 342.66, cells: DREAM_CELLS * 0.97, at: [DREAM_AT[0] - 0.1, DREAM_AT[1]] },
-  // Back to him: the Fremen are round them. Jamis comes forward.
-  { t: DUEL.challenge, cells: 8.2, at: [1167.6, -1.55], cut: true },
-  { t: DUEL.clash - 0.002, cells: 8.0, at: [1167.4, -1.5] },
+  // Back to him, close: the Fremen coming up out of the sand round them, Jamis stepping forward.
+  { t: DUEL.challenge, cells: 4.9, at: [1165.0, -1.0], cut: true },
+  { t: DUEL.clash - 0.002, cells: 4.8, at: [1165.15, -1.0] },
   // The duel, side on and close.
   { t: DUEL.clash, cells: 3.7, at: [1166.25, -0.8], cut: true },
   { t: 347.0, cells: 3.6, at: [1166.15, -0.8] },
   { t: JAMIS_FALLS, cells: 3.55, at: [1166.5, -0.8] },
   { t: 350.6, cells: 3.85, at: [1167.25, -0.83] },
   { t: 352.49, cells: 4.0, at: [1167.4, -0.85] },
-  // Wider: the body, Stilgar coming past it, the Fremen round, Chani down from the crest.
-  { t: 352.51, cells: 8.2, at: [1169.6, -1.65], cut: true },
-  { t: 356.2, cells: 6.3, at: [1168.5, -1.3] },
-  { t: 364.35, cells: 6.1, at: [1168.9, -1.3] },
-  // The walk, tracking him over the dunes.
-  { t: 364.37, cells: 7.4, off: [1.1, -1.2], cut: true },
-  { t: 372, cells: 7.8, off: [1.4, -1.3] },
-  { t: 379.35, cells: 8.2, off: [1.5, -1.3] },
+  // Close: Stilgar by his man, then past him to Paul; opening a little for Jessica and Chani as they come.
+  { t: 352.51, cells: 4.3, at: [1167.6, -0.95], cut: true },
+  { t: 356.0, cells: 3.8, at: [1167.05, -0.85] },
+  { t: 358.6, cells: 3.8, at: [1167.0, -0.85] },
+  { t: 361.6, cells: 4.7, at: [1168.3, -1.05] },
+  { t: 364.35, cells: 4.8, at: [1168.7, -1.05] },
+  // The walk: close on him and Chani side by side, the others coming and going past the frame's edges.
+  { t: 364.37, cells: 4.9, off: [0.55, -0.85], cut: true },
+  { t: 371, cells: 5.0, off: [0.6, -0.9] },
+  { t: 379.35, cells: 5.2, off: [0.6, -0.95] },
   // Stopped: the crest and the open erg past it, the horizon low; worm sign, then the worm.
   { t: 379.37, cells: 10.5, at: [1202.6, -7.6], cut: true },
   { t: 388.62, cells: 10.0, at: [1203.0, -7.7] },
@@ -68,11 +70,14 @@ const shots: Shot[] = [
   // The answer to the dream: the two of them on the crest against the sky.
   { t: 395.87, cells: DREAM_CELLS, at: [CHANI_CREST[0] - 0.1 * ((DREAM_CELLS * 16) / 9), CHANI_CREST[1] - 0.05 * DREAM_CELLS], cut: true },
   { t: ON, cells: DREAM_CELLS * 0.98, at: [CHANI_CREST[0] - 0.1 * ((DREAM_CELLS * 16) / 9) + 0.1, CHANI_CREST[1] - 0.05 * DREAM_CELLS] },
-  // They go on, and the camera draws back and up until they are a line of specks on the erg.
-  { t: 405, cells: 11.5, at: [1207.5, -8.2] },
-  { t: 413, cells: 19, at: [1216, -11.4] },
-  { t: 426, cells: 23.5, at: [1224, -13.2] },
-  { t: TO, cells: 24.5, at: [1227, -13.6] },
+  // They go on: the camera goes with them a while, a line of balls over the sand, then lets them go and draws back
+  // and up until they walk out of the frame toward the sun.
+  { t: 401.5, cells: 6.0, off: [0.9, -1.5] },
+  { t: 409, cells: 7.4, off: [1.1, -2.1] },
+  { t: 415, cells: 8.8, off: [1.3, -2.7] },
+  { t: 424, cells: 16, at: [1236.5, -10.4] },
+  { t: 432, cells: 21, at: [1239.5, -12.0] },
+  { t: TO, cells: 22, at: [1240.5, -12.3] },
 ]
 
 /** The camera's tilt for each shot: how far under the frame's middle the horizon lies. */
@@ -82,21 +87,22 @@ setTilt([
   [DUEL.challenge, 0.12, true],
   [DUEL.clash, 0.1, true],
   [352.51, 0.12, true],
-  [364.37, 0.13, true],
+  [364.37, 0.16, true],
   [379.37, 0.02, true],
   [INSERT.from, 0.3, true],
   [INSERT.to, 0.3, true],
   [395.87, 0.22, true],
   [ON, 0.22, false],
-  [412, 0.07, false],
-  [TO, 0.03, false],
+  [415, 0.16, false],
+  [430, 0.05, false],
+  [TO, 0.04, false],
 ])
 
 // Worm sign is the far sand itself swelling over the worm.
 setSwell(D, sign)
 
 /** Where the Fremen look while they wait below the crest: up and east, toward the worm they cannot see. */
-const WATCH: [number, number, number][] = [[STOPS[5] + 0.4, TURN + 0.6, -0.65]]
+const WATCH: [number, number, number][] = [[STOPS.together + 0.4, TURN + 0.6, -0.65]]
 
 export const fremen: Scene = {
   key: 'fremen',
@@ -105,7 +111,7 @@ export const fremen: Scene = {
   moves: people.moves,
   looks: { jessica: WATCH, stilgar: WATCH },
   deaths: { jamis: [JAMIS_FALLS, 0.15] },
-  actors: people.actors.map((a) => (a.id === FREMEN.id + 2 || a.id === FREMEN.id + 3 ? { ...a, markAt: looking(WATCH) } : a)),
+  actors: people.actors.map((a) => (a.id > FREMEN.id && a.id <= FREMEN.id + 4 ? { ...a, markAt: looking(WATCH) } : a)),
   shots,
   dissolves: [[FROM, 2.0]],
   pieces: [
@@ -128,8 +134,8 @@ export const fremen: Scene = {
     ...DUEL.fill.map((t, i): [string, number] => [`exchange ${i + 1}`, t]),
     ['Paul\'s blow: Jamis falls', JAMIS_FALLS],
     ['Stilgar takes him in', TAKEN],
-    ...SET_OFF.map((t, i): [string, number] => [`sets off ${i + 1}`, t]),
-    ...STOPS.map((t, i): [string, number] => [`stops ${i + 1}`, t]),
+    ...Object.entries(SET_OFF).map(([who, t]): [string, number] => [`${who} sets off`, t]),
+    ...Object.entries(STOPS).map(([who, t]): [string, number] => [`${who} stops`, t]),
     ['the worm breaches', RIDER.from],
     ['it surges', 388.64],
     ['it surges again', 391.41],

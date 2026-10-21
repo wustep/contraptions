@@ -297,17 +297,17 @@ function drawBoulders(g: Paint, air: Air): void {
   for (const [x, w, h] of BOULDERS) {
     const base = ground(x)
     const pts: Pt[] = [
-      [x - w / 2, base + 0.3],
+      [x - w / 2, base + 1.2],
       [x - w * 0.48, base - h * 0.55],
       [x - w * 0.3, base - h * 0.95],
       [x + w * 0.05, base - h],
       [x + w * 0.35, base - h * 0.9],
       [x + w * 0.5, base - h * 0.45],
-      [x + w / 2, base + 0.3],
+      [x + w / 2, base + 1.2],
     ]
     blob(ctx, pts)
-    fill(ctx, mix(ROCK_SHADE, air.shade, 0.3))
-    blob(ctx, [[x + w * 0.02, base - h * 0.98], [x + w * 0.35, base - h * 0.9], [x + w * 0.5, base - h * 0.45], [x + w / 2, base + 0.3], [x + w * 0.12, base + 0.3], [x + w * 0.08, base - h * 0.5]])
+    fill(ctx, mix(mix(ROCK_SHADE, air.shade, 0.3), air.sand, 0.3))
+    blob(ctx, [[x + w * 0.02, base - h * 0.98], [x + w * 0.35, base - h * 0.9], [x + w * 0.5, base - h * 0.45], [x + w / 2, base + 1.2], [x + w * 0.12, base + 1.2], [x + w * 0.08, base - h * 0.5]])
     fill(ctx, mix(ROCK_LIT, air.sand, 0.2))
   }
 }
@@ -338,7 +338,8 @@ export function drawBack(g: Paint, extra: [number, (g: Paint, air: Air) => void]
 export function drawFront(g: Paint): void {
   const air = airAt(g.t)
   drawThopterOver(g, THOPTER, LANDED)
-  drawSand(g, air)
+  // The boulders before the sand, so their feet are in it and never seen.
   drawBoulders(g, air)
+  drawSand(g, air)
   drawWind(g, air)
 }
