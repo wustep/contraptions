@@ -203,6 +203,18 @@ twice a second, with fresh eyes. The last climax was the weakest stretch.
 - **The landing:** round 4's bush at the steps' foot stood just where they come down, and Haku sat in it like an eye
   in a shrub. The bush is cut.
 
+**Round 6, her room and the lamp.** The dragon's twelve seconds on her floor, after the shutter, played as a still
+picture, and the lamp at Swamp Bottom was hard to tell from the line's posts.
+- **On her floor** his legs went down through the boards into the storey below, and the writhe of his blows was a
+  few pixels. Lying, his legs now fold back along his flanks and he lies on his belly on the floor. On each blow his
+  head comes up off the floor and his back heaves and they go down again, each blow weaker, until he is still.
+- **The shutter** dropped and nothing changed in the room; a soft glow lay on the floor under her as if the day still
+  came in. The glow is cut, and when the shutter drops the day is shut out: the room and all in it go a shade dimmer,
+  and she goes to his head in the dim.
+- **The lamp** hopped beside the line's posts, the same dark height with a crossarm, and read as one more of them. The
+  line sets no posts on Swamp Bottom's island now (the wire goes over the wood to the next one), so the lamp is the
+  only post there.
+
 ## Known limits
 
 - **The bathhouse is long.** The great bath holds the stage from 54 s to 94 s, broken only by the boiler room and the
