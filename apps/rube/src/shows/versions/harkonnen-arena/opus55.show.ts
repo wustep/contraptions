@@ -9,6 +9,6 @@ export default defineShow({
   title: 'Maker',
   label: 'Opus 5.5',
   about: "Hans Zimmer's Harkonnen Arena, from Denis Villeneuve's Dune: Part Two, as a machine of sand with a blue ball for its hero: the harvester taken, the first worm ride, the black sun over the arena, and the charge out of the storm.",
-  still: 91,
+  still: 89.2,
   async load() { return (await import('./maker')).performance },
 })

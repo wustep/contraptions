@@ -152,8 +152,9 @@ function paintPour(b: Brush, t: number, y: number, rx: number, ry: number): void
       for (let j = 0; j <= m; j++) {
         const s = j / m
         const yy = top + (0.4 - top) * s
-        // Narrowing as it falls, spreading where it lands; its edges rippling downward.
-        const hw = (w / 2) * (1 - 0.45 * s + 0.9 * s * s * s) * (1 + 0.12 * noise1((yy - 9 * t) * 0.35, i * 5 + sgn))
+        // Narrowing as it falls, spreading where it lands; its edges rippling downward; a falling tail drawn to a point.
+        const tail = s0 > 0 ? 0.15 + 0.85 * smooth(s, 0, 0.45) : 1
+        const hw = (w / 2) * tail * (1 - 0.45 * s + 0.9 * s * s * s) * (1 + 0.12 * noise1((yy - 9 * t) * 0.35, i * 5 + sgn))
         pts.push([x + sgn * hw, yy])
       }
       return pts
