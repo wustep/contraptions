@@ -184,6 +184,10 @@ export function paintFloor(b: Brush, mode: Mode): void {
 
 /** From the rim: the round sand floor, the black tiers in rings round it, and the two pylons' tops at its ends. */
 const FLOOR_R = 15
+/** The way shadows fall across the floor (radians, on the screen from above), how long the wall's is, and how dark. */
+const LIGHT = 0.46
+const RIM_SHADOW = 11
+const SHADE = 0.3
 function paintFromAbove(b: Brush): void {
   const { ctx, view } = b
   const cy = -0.14
@@ -208,6 +212,18 @@ function paintFromAbove(b: Brush): void {
   circle(ctx, X0, cy, FLOOR_R)
   ctx.fillStyle = b.c(FLOOR_FAR)
   ctx.fill()
+  // The bowl's own shadow: its wall on the side the light comes from throws a long crescent across that side of the
+  // floor, the same light that throws the fighters' shadows. Where the floor is out of the wall's shadow is the floor's
+  // own round, moved along the light by the shadow's length.
+  ctx.save()
+  circle(ctx, X0, cy, FLOOR_R)
+  ctx.clip()
+  ctx.beginPath()
+  ctx.rect(view.x0 - 1, view.y0 - 1, view.w + 2, view.h + 2)
+  ctx.arc(X0 + Math.cos(LIGHT) * RIM_SHADOW, cy + Math.sin(LIGHT) * RIM_SHADOW, FLOOR_R, 0, Math.PI * 2, true)
+  ctx.fillStyle = b.ca('#000000', SHADE)
+  ctx.fill('nonzero')
+  ctx.restore()
   // The pylons, square blocks across the floor's two ends, a way through each along the line the fighters keep.
   for (const side of [-1, 1] as const) {
     const face = side < 0 ? WEST_GATE : EAST_GATE
@@ -276,7 +292,7 @@ export function paintDoor(b: Brush, side: -1 | 1, at: number): void {
 export function paintLong(b: Brush, x: number, size: number): void {
   const { ctx } = b
   const r = 0.13 * size
-  const a = 0.46
+  const a = LIGHT
   const L = r * 9
   const ux = Math.cos(a)
   const uy = Math.sin(a)
@@ -286,7 +302,7 @@ export function paintLong(b: Brush, x: number, size: number): void {
   ctx.quadraticCurveTo(x + ux * (L + r * 0.9), -r + uy * (L + r * 0.9), x + ux * L + uy * r * 0.55, -r + uy * L - ux * r * 0.55)
   ctx.lineTo(x + uy * r * 0.85, -r - ux * r * 0.85)
   ctx.closePath()
-  ctx.fillStyle = b.ca('#000000', 0.3)
+  ctx.fillStyle = b.ca('#000000', SHADE)
   ctx.fill()
 }
 
