@@ -54,8 +54,8 @@ Outside the comb, every strike is on a measured onset (`onsetsIn` and `strongest
 - the shuttle's eleven passes in the prologue;
 - the men down the horse's rope;
 - Agamemnon's host going in under the gate at 114.32;
-- the Trojans struck down in the lower street at 116.85, 117.21 and 117.38, and at Athena's feet at 125.34, 125.74,
-  126.70 and 127.04;
+- the Trojans struck down in the lower street at 116.23, 116.61, 116.85 and 117.21, and at Athena's feet at 125.34,
+  125.74, 126.70 and 127.04;
 - the boulder door at 151.22;
 - the stake at 169.23;
 - Argos at 431.57;
