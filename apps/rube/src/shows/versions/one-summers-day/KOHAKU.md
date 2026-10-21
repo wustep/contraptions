@@ -167,3 +167,16 @@ rolled, so every meeting and parting was carried by motion alone.
   five seconds; and the fall is framed wider, the two of them going down away from them.
 - **The credits** were checked as a saved video paints them, in a 1920×1080 frame and in the 9:16 letterbox: they sit
   in the sky where the page sets them.
+
+**Round 4, the sets that were unfinished.** The whole show was swept again every three seconds at a small size, looking
+for the frames that read as unfinished or busy beside the rest.
+- **The river of stones** was a flat beige band with a row of small ovals. It now has a few boulders lying in it at
+  their own sizes, a pale gravel top, a darker near edge, and grass where it meets its banks.
+- **The far bank** was a bare pyramid of stone over a brown slab. It is now a green bank with the steps set into it as
+  stone slabs, a bush at their foot, and moss along the top of the town's wall.
+- **The great bath's gallery** was a fence of small red balusters over the whole back wall; it is two rails on a few
+  posts. The floor's board joints are half as many.
+- **The gorge** under the bridge was a grey slab lighter than the night over it. It now goes down into the dark, the
+  piers and the town's bank with it.
+- **No-Face** hovered over the bridge's deck like something hung there. He sits on its rail, quite still, as they
+  pass under him.

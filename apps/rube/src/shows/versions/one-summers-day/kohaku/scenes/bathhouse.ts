@@ -119,8 +119,9 @@ const HAKU_MOVES: Move[] = [
 
 /** No-Face hovers at the bridge's rail, a ball's height off the boards, nodding slowly in the air. */
 const NOFACE_R = R * NOFACE_SIZE
-const NOFACE_AT: Pt = [51.6, BRIDGE.y - NOFACE_R - 0.3]
-const nofaceAt = (t: number): Pt => [NOFACE_AT[0], NOFACE_AT[1] + 0.025 * Math.sin(t * 0.9)]
+/** He sits on the bridge's rail, over the deck they cross, quite still. */
+const NOFACE_AT: Pt = [51.6, BRIDGE.y - 0.42 - NOFACE_R]
+const nofaceAt = (_t: number): Pt => NOFACE_AT
 const NOFACE_MOVES: Move[] = [ride(nofaceAt, FROM, TO)]
 
 /** Where his mask looks: ahead, then at her as she comes, following her past him (a little behind her) to the door. */

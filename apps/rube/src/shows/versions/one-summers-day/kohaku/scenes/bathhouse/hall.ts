@@ -129,15 +129,17 @@ export function drawHallBack(g: Paint, L: Light): void {
     [1, lit('#A47A54', IN)],
   ])
   ctx.fill()
-  for (let i = 1; i < 12; i++) {
-    const f = i / 12
+  for (let i = 1; i < 6; i++) {
+    const f = i / 6
     poly(ctx, [[lerp(H.x0, H.x1, f), H.y1], [lerp(B.x0, B.x1, f), B.y1]], false)
     ink(g, rgba(lit('#6A4A32', IN), 0.5), 1)
   }
   // The gallery: its floor along the back wall, seen at eye level as a band; its red rail; brackets under it.
   box(ctx, GALLERY.x0, GALLERY.y, GALLERY.x1 - GALLERY.x0, 0.14, lit('#3A2618', IN))
+  // Its rail: a top rail and a low one, on posts over the brackets, no fence of balusters.
   box(ctx, GALLERY.x0, GALLERY.y - 0.4, GALLERY.x1 - GALLERY.x0, 0.06, lit('#B4432F', IN))
-  for (let x = GALLERY.x0 + 0.2; x <= GALLERY.x1; x += 0.42) box(ctx, x - 0.02, GALLERY.y - 0.4, 0.04, 0.4, lit('#B4432F', IN))
+  box(ctx, GALLERY.x0, GALLERY.y - 0.16, GALLERY.x1 - GALLERY.x0, 0.04, lit('#B4432F', IN))
+  for (let x = GALLERY.x0 + 0.7; x <= GALLERY.x1; x += 2.1) box(ctx, x - 0.035, GALLERY.y - 0.4, 0.07, 0.4, lit('#B4432F', IN))
   for (let x = GALLERY.x0 + 0.7; x < GALLERY.x1; x += 2.1) {
     poly(ctx, [[x, GALLERY.y + 0.14], [x + 0.3, GALLERY.y + 0.14], [x, GALLERY.y + 0.48]])
     fill(ctx, lit('#3A2618', IN))

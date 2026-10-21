@@ -17,10 +17,11 @@ export function drawGorge(g: Paint, L: Light): void {
   const { ctx } = g
   const x0 = STREET.x1 - 1.5
   const x1 = BRIDGE.x1 + 0.3
-  // The far wall of the gorge: dark earth going down into shade.
+  // The far wall of the gorge: dark earth going down into the dark, a step behind the bridge.
   ctx.fillStyle = vgrad(ctx, BRIDGE.y, SEA_Y + 1, [
-    [0, lit('#5E5240', L.ambient)],
-    [1, lit('#2C2620', L.ambient)],
+    [0, lit('#4A4034', L.ambient, 0.0)],
+    [0.5, lit('#262019', L.ambient)],
+    [1, lit('#120F0C', L.ambient)],
   ])
   ctx.fillRect(x0, BRIDGE.y + 0.3, x1 - x0, SEA_Y + 1 - BRIDGE.y)
   // The rails on its floor (sleepers, two rails seen as one line), and the water lying shallow over them.
@@ -30,8 +31,8 @@ export function drawGorge(g: Paint, L: Light): void {
   ctx.fillRect(x0, SEA_Y - 0.01, x1 - x0, 1.2)
   // The town's bank, its stone face going down into the gorge.
   ctx.fillStyle = vgrad(ctx, STREET.y, SEA_Y + 1, [
-    [0, lit('#7D776C', L.ambient)],
-    [1, lit('#3A362F', L.ambient)],
+    [0, lit('#6E685E', L.ambient)],
+    [1, lit('#1E1B17', L.ambient)],
   ])
   poly(ctx, [[STREET.x1 - 1.6, STREET.y + 0.1], [BRIDGE.x0 + 0.2, STREET.y + 0.1], [BRIDGE.x0 - 0.3, SEA_Y + 1], [STREET.x1 - 1.6, SEA_Y + 1]])
   ctx.fill()
@@ -48,8 +49,8 @@ export function drawBridge(g: Paint, L: Light): void {
   for (const px of [x0 + (x1 - x0) * 0.33, x0 + (x1 - x0) * 0.68]) {
     poly(ctx, [[px - 0.3, y + 0.3], [px + 0.3, y + 0.3], [px + 0.45, SEA_Y + 0.6], [px - 0.45, SEA_Y + 0.6]])
     ctx.fillStyle = vgrad(ctx, y, SEA_Y, [
-      [0, lit('#7A6E60', L.ambient)],
-      [1, lit('#3E362E', L.ambient)],
+      [0, lit('#5E554A', L.ambient)],
+      [1, lit('#1E1A16', L.ambient)],
     ])
     ctx.fill()
   }
