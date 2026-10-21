@@ -40,4 +40,9 @@ export interface Scene {
   looks?: Look[]
   /** What Overview frames while this scene has the stage. */
   overview?: Box
+  /**
+   * For a shot of its own between two cuts, how far across the day's cloud is moved, in cells (left for more): another
+   * angle on the same sky, so that what the shot is about is not lost against a cloud.
+   */
+  sky?: (t: number) => number
 }

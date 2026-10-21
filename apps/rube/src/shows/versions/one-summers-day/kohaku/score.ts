@@ -87,7 +87,8 @@ export function compose(): Composed {
     drawSky(g, L)
     // The day's cloud, everywhere but over the cloud floor (the flight), dimmer at night.
     const a = (1 - 0.8 * L.night) * (aloft(g.t) ? 1 - smooth(-g.view.cy, 13.5, 16.5) : 1)
-    drawClouds(g, L, [6, -2.6], FIELD, 0.06, a)
+    const across = SCENES.reduce((d, s) => d + (s.sky?.(g.t) ?? 0), 0)
+    drawClouds(g, L, [6 + across, -2.6], FIELD, 0.06, a)
   })
   const pieces: Placed[] = [sky, ...SCENES.flatMap((s) => s.back ?? []), ...SCENES.flatMap((s) => s.mid ?? []), ...SCENES.flatMap((s) => s.front ?? [])]
 
