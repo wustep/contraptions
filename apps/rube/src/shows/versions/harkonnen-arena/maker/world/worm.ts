@@ -93,14 +93,17 @@ export function paintBody(b: Brush, w: Body): void {
   }
   band(0.35, 1, SKIN.back)
   band(-1, -0.55, SKIN.belly)
-  // The rings: every `ring` cells of body, from the travel, a bowed band with a dark seam on its trailing edge.
+  // The rings: about a radius apart along the body (or every `ring` cells), each a little off the even step, so the body
+  // reads as old armour, not a millipede: a bowed band with a dark seam on its trailing edge.
   const L = lengths(w.spine)
-  const ring = w.ring ?? 2.2
-  const k0 = Math.ceil((w.travel - L[n - 1]) / ring)
-  const k1 = Math.floor(w.travel / ring)
+  const mean = w.radius.reduce((a, r) => a + r, 0) / n
+  const ring = w.ring ?? mean * 1.1
+  const k0 = Math.ceil((w.travel - L[n - 1]) / ring) - 1
+  const k1 = Math.floor(w.travel / ring) + 1
   let j = 0
   for (let kk = k1; kk >= k0; kk--) {
-    const s = w.travel - kk * ring
+    const s = w.travel - (kk + (hash(kk, 9) - 0.5) * 0.45) * ring
+    if (s < 0 || s > L[n - 1]) continue
     while (j < n - 2 && L[j + 1] < s) j++
     const f = clamp01((s - L[j]) / Math.max(1e-6, L[j + 1] - L[j]))
     const p: Pt = [w.spine[j][0] + (w.spine[j + 1][0] - w.spine[j][0]) * f, w.spine[j][1] + (w.spine[j + 1][1] - w.spine[j][1]) * f]
@@ -127,8 +130,8 @@ export function paintBody(b: Brush, w: Body): void {
     ctx.beginPath()
     ctx.moveTo(a[0], a[1])
     ctx.quadraticCurveTo(mid[0] * 2 - (a[0] + c[0]) / 2, mid[1] * 2 - (a[1] + c[1]) / 2, c[0], c[1])
-    ctx.strokeStyle = b.ca(SKIN.seam, 0.7)
-    ctx.lineWidth = Math.max(1.25 * b.px, r * 0.026)
+    ctx.strokeStyle = b.ca(SKIN.seam, 0.55)
+    ctx.lineWidth = Math.max(1.25 * b.px, r * 0.022)
     ctx.stroke()
   }
 }
