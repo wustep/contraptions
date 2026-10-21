@@ -1,5 +1,5 @@
 import { blob, cover, drift, fill, hash, layer, mix, poly, rect, rgba, vgrad, type Paint, type Pt, type View } from '../../paint'
-import { dunes, hazeAt, sky } from '../../world/desert'
+import { dunes, hazeAt, sky, sunAt } from '../../world/desert'
 import {
   FIELD, HALL, HALL_DOOR, LAMP, PALACE, PAD_X, ROOM, ROOM_DOOR, SLITS, TERRACE_Y, TOP_ROOMS, WEST_ROCK, EAST_ROCK,
   WEST_ROOM, WINDOW,
@@ -351,10 +351,7 @@ export function drawPalaceWhole(g: Paint, tone: Tone, t: number): void {
  * sun stands in its last frame, and as big, so through the dissolve into the night the sun becomes the moon.
  */
 function moon(g: Paint): void {
-  const v = g.view
-  const x = v.x0 + v.w * 0.2
-  const y = v.cy - v.h * 0.12
-  const r = v.h * 0.06
+  const [x, y, r] = sunAt(g.view, { x: 0.2, up: 0.12, r: 0.06 })
   g.ctx.beginPath()
   g.ctx.arc(x, y, r, 0, Math.PI * 2)
   fill(g.ctx, '#C9CDD2')

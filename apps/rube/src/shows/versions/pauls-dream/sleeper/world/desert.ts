@@ -1,4 +1,4 @@
-import { cover, drift, fill, layer, mix, rgba, vgrad, type Paint, type Pt } from '../paint'
+import { cover, drift, fill, layer, mix, rgba, vgrad, type Paint, type Pt, type View } from '../paint'
 
 /**
  * Arrakis's air and sand, shared by every desert scene so the planet is one place: a sky graded from the zenith to the
@@ -15,8 +15,8 @@ export interface Air {
   /** Sand in the light, and in its own shade at a dune's foot. */
   sand: string
   shade: string
-  /** The sun: where it sits (shares of the frame across, and up from the horizon in frame heights), its size (a share
-   * of the frame's height) and colour. Left out: no sun in the frame. */
+  /** The sun: where it sits (shares of the composed 16:9 frame across, and up from the horizon in its heights), its size
+   * (a share of its height) and colour. Left out: no sun in the frame. */
   sun?: { x: number; up: number; r: number; color: string }
 }
 
@@ -70,12 +70,20 @@ export function sky(g: Paint, air: Air): void {
   // The horizon is at the camera's height; the zenith colour is reached a frame and a half above it.
   cover(g, vgrad(g.ctx, v.cy - v.h * 1.5, v.cy, [[0, air.zenith], [0.75, mix(air.zenith, air.horizon, 0.6)], [1, air.horizon]]))
   if (air.sun) {
-    const x = v.x0 + v.w * air.sun.x
-    const y = v.cy - v.h * air.sun.up
+    const [x, y, r] = sunAt(v, air.sun)
     g.ctx.beginPath()
-    g.ctx.arc(x, y, v.h * air.sun.r, 0, Math.PI * 2)
+    g.ctx.arc(x, y, r, 0, Math.PI * 2)
     fill(g.ctx, air.sun.color)
   }
+}
+
+/**
+ * Where a disc fixed to the frame (the sun, a moon) stands: its shares measured against the composed 16:9 frame, not
+ * the whole stage, so a phone held upright (whose stage is far taller) sees it where and as big as everyone else does.
+ */
+export function sunAt(v: View, s: { x: number; up: number; r: number }): [number, number, number] {
+  const h = Math.min(v.h, (v.w * 9) / 16)
+  return [v.cx + (s.x - 0.5) * ((h * 16) / 9), v.cy - h * s.up, h * s.r]
 }
 
 /** A range of dunes. */
