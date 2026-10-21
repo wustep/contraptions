@@ -63,7 +63,7 @@ export function checkNostos(perf: Performance, version: ShowVersion, check: Chec
     ['a Trojan struck at his door', KILLS.door],
     ['a Trojan struck in the street', KILLS.street],
     ['a Trojan struck at the steps\' foot', KILLS.foot],
-    ...KILLS.statue.map((t, i): [string, number] => [`a Trojan killed at Athena\'s feet ${i}`, t]),
+    ...KILLS.statue.map((t, i): [string, number] => [`a Trojan killed at Athena's feet ${i}`, t]),
     ['the suitors charge', FIGHT.charge],
     ...FIGHT.first.map((t, i): [string, number] => [`the first blows ${i}`, t]),
     ['the son driven up the stairs', FIGHT.sonHit],
