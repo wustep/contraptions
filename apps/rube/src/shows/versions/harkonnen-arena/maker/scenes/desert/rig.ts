@@ -1,5 +1,5 @@
 import { clamp01, line, noise1, poly, smooth, smoother, type Brush, type Pt } from '../../paint'
-import { LIFT_BEATS, RIG, W, XH, harvesterAt, heave } from './plan'
+import { RIG, W, XH, harvesterAt, tugs } from './plan'
 
 /**
  * The machines: the harvester, the carryall over it, the cables between them, and the harvester's plume.
@@ -146,8 +146,8 @@ export function carryallAt(t: number): { x: number; y: number; a: number } {
   const down = smoother(t, W.alarm, W.lock - 1.5)
   let x = idle[0] + (over[0] - idle[0]) * down
   let y = idle[1] + (over[1] - idle[1]) * down
-  // Held: it strains up a little on each beat of the drum, and is dragged down as the sand goes.
-  for (const at of LIFT_BEATS) y -= 0.35 * heave(t, at)
+  // Held: it strains up on each beat of the drum, and is dragged down as the sand goes.
+  y -= 0.75 * tugs(t)
   y += 2.2 * smooth(t, W.sink, W.maw)
   // Let go: it springs up and away west, banking.
   const free = Math.max(0, t - W.maw)

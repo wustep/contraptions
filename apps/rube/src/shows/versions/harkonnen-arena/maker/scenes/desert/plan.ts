@@ -120,7 +120,8 @@ function inMouth(t: number): number {
  */
 export function harvesterAt(t: number): { x: number; y: number; tilt: number } {
   const x = harvesterX(t)
-  const lift = -0.7 * smooth(t, W.lock + 0.4, W.lock + 6) * (1 - smooth(t, W.sink, W.sink + 2))
+  // Held, it comes up off the sand a little, and on each beat of the drum the carryall's tug lifts it and it settles.
+  const lift = -(0.7 * smooth(t, W.lock + 0.4, W.lock + 6) + 0.28 * tugs(t)) * (1 - smooth(t, W.sink, W.sink + 2))
   let y = lift + funnelDepth(t) * 0.8
   if (t > W.maw - 0.45) {
     const carried = mawRise(t) + inMouth(t)
@@ -132,3 +133,13 @@ export function harvesterAt(t: number): { x: number; y: number; tilt: number } {
 
 /** The beats of the drum under the lift: the carryall heaves on each. */
 export const LIFT_BEATS = beatsIn('phrases', W.lock + 0.3, W.sink - 0.1).map((b) => b.t)
+
+/** The carryall's tugs, one a beat: up over a third of a second, settling back over the next. */
+export function tugs(t: number): number {
+  let u = 0
+  for (const at of LIFT_BEATS) {
+    const s = t - at
+    if (s > 0) u += smooth(s, 0, 0.32) * Math.exp(-Math.max(0, s - 0.32) / 0.75)
+  }
+  return u
+}

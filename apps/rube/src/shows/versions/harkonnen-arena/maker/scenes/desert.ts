@@ -142,9 +142,9 @@ export const desert: Scene = {
     // The alarm: the carryall coming down to the machine.
     { t: W.alarm, cut: true, cells: 46, at: [XH + 3, -20] },
     { t: W.lock - 0.01, cells: 40, at: [XH + 1, -16] },
-    // Held: close enough to see the cables take the weight.
+    // Held: close enough to see the cables take the weight, and pushing in as it strains on each beat of the drum.
     { t: W.lock, cut: true, cells: 30, at: [XH, -11.5] },
-    { t: W.sink - 0.01, cells: 28, at: [XH, -11] },
+    { t: W.sink - 0.01, cells: 23, at: [XH, -10.2] },
     // The sand going down: a slow push in on the machine in its funnel, the carryall straining over it.
     { t: W.sink, cut: true, cells: 50, at: [XH - 2, -12] },
     { t: W.maw - 0.01, cells: 34, at: [XH, -9.5] },
