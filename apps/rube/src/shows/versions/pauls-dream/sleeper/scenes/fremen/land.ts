@@ -319,6 +319,39 @@ const LANDED = thopterLook(HARKONNEN, 0, 0, 1)
 
 /* ------------------------------------------------------------------ the whole of it */
 
+/**
+ * The dune behind the landing: one broad swell a few cells back from the flat where the thopter comes down and Jamis is
+ * fought, so a camera standing a little above them sees sand rising behind them to the skyline, and not a flat line
+ * across the middle of the frame. It stands only behind the basin: the scene shows it only while its camera is there.
+ */
+export const BASIN_D = 5
+export function drawBasin(g: Paint, air: Air): void {
+  const L = far(g, BASIN_D)
+  const v = g.view
+  const lit = mix(air.sand, air.haze, 0.26)
+  const dark = mix(mix(air.sand, air.shade, 0.25), air.haze, 0.22)
+  const hump = (x: number) => {
+    const u = (x - 1163.5) / 15
+    return 2.0 * Math.exp(-u * u * 1.1) * (1 + 0.1 * Math.sin(x * 0.31))
+  }
+  const ctx = g.ctx
+  const xa = v.cx + (v.x0 - v.cx) / L.s - 1
+  const xb = v.cx + (v.x1 - v.cx) / L.s + 1
+  const step = Math.max(0.2, (5 * g.px) / L.s)
+  const foot = v.y1 + 1
+  ctx.beginPath()
+  ctx.moveTo(L.x(xa), foot)
+  let top = Infinity
+  for (let x = xa; x <= xb + 1e-9; x += step) {
+    const [px, py] = L.pt([x, -hump(x)])
+    ctx.lineTo(px, py)
+    top = Math.min(top, py)
+  }
+  ctx.lineTo(L.x(xb), foot)
+  ctx.closePath()
+  fill(ctx, vgrad(ctx, top, L.y(0), [[0, lit], [1, dark]]))
+}
+
 /** Everything behind the people, far to near: the sky and sun, the erg and the jebels in depth order, `extra` things
  * standing out there at their own depths (the worm), the thopter. */
 export function drawBack(g: Paint, extra: [number, (g: Paint, air: Air) => void][] = []): void {

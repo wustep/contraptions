@@ -14,9 +14,9 @@ import { INSERT, riderAt } from './worm'
  * At the foot of the great rock: the stolen thopter, Jessica and Paul by it. The Fremen come up round them: two out of
  * the sand behind Jessica as the picture comes back from Chani, Jamis nearest Paul, Stilgar behind him, one beyond, one
  * on the slope's boulder, one on the boulder by the thopter; Chani alone on the crest above. Jamis is fought on the
- * flat, side on, and falls back toward his own people. Stilgar comes past him to Paul. Then they go east over the dunes,
- * Paul beside Chani and in step with her, the others overtaking them and dropping back; up onto the crest to watch the
- * worm, the others waiting below it out of its sight; and on toward the sun, out of the frame.
+ * flat, side on, and falls back toward his own people. Stilgar steps over him to Paul. Then, on the dune beyond, they go
+ * east in a line that keeps its order: two Fremen and Stilgar ahead, Paul beside Chani and in step with her, Jessica
+ * behind; up onto the crest to watch the worm, the others waiting off its top; and on toward the sun, out of the frame.
  *
  * In a side view everyone is on one line, so the order along it is the staging: nobody crosses anybody at a moment
  * that matters, and where the walk has someone overtake, they do it moving.
@@ -48,12 +48,16 @@ export const DUEL = {
 } as const
 /** Stilgar takes Paul in. */
 export const TAKEN = 357.53
-/** They set off, one on each onset of the fill, Stilgar leading. */
-export const SET_OFF = { stilgar: 362.98, f4: 363.15, f3: 363.37, f2: 363.95, paul: 364.12, jessica: 364.25, f1: 364.62 } as const
-/** Paul comes level with Chani; from here they walk side by side. */
-export const JOIN = 366.0
-/** They stop below the crest, one on each onset of the fill, and Paul and Chani on the crest on its last. */
-export const STOPS = { f4: 377.97, f3: 378.15, stilgar: 378.36, jessica: 378.95, f1: 379.12, f2: 379.25, together: 379.37 } as const
+/**
+ * The walk: on the fill's first onset the picture dissolves from the basin to the troop already in its line on the dune
+ * beyond, in the order it keeps (the two Fremen and Stilgar ahead, Paul with Chani beside him, Jessica behind), and
+ * they set off one on each of its onsets after, Paul and Chani together. Nobody passes anybody.
+ */
+export const WALK_FROM = 362.98
+export const LINE = { jessica: 1179.6, paul: 1181.2, chani: 1181.9, stilgar: 1183.4, f3: 1184.6, f4: 1185.6 } as const
+export const SET_OFF = { f4: 363.15, f3: 363.37, stilgar: 363.95, paul: 364.12, jessica: 364.25 } as const
+/** They stop, one on each onset of the fill: the leaders over the crest, Jessica under it, Paul and Chani on it last. */
+export const STOPS = { f4: 377.97, f3: 378.15, stilgar: 378.36, jessica: 378.95, together: 379.37 } as const
 /** Chani turns to Paul on the last blow. */
 export const TURN = M.last
 /** They go on. */
@@ -118,8 +122,14 @@ function facing(segs: Seg[], name: string, size: number, at: Pt, t0: number, t1:
   return { t0, t1, kind: 'ride', at: () => at, turn: (t) => d * smoother(t, t0, t1) }
 }
 
-/** Where Paul and Chani walk from together and stop on the crest (she a little ahead of him), and their seeds. */
-const PAIR = { from: 1171.5, to: 1199.95, gap: 0.7, seed: 31, endSeed: 37, end: 1271.0 } as const
+/**
+ * The three who lead: where they wait over the crest (a long step apart), and the end's walk, which they make in one
+ * rhythm a little apart in time, so the one behind never comes up on the one ahead.
+ */
+const LEAD = { f4: 1209.4, f3: 1207.8, stilgar: 1206.1, on: 69.0, dur: 35.4, delay: 0.42, seed: 83 } as const
+
+/** Where Paul and Chani stop on the crest (she a little ahead of him), their seeds, and where they go on to. */
+const PAIR = { to: 1199.95, gap: 0.7, seed: 31, endSeed: 37, end: 1271.0 } as const
 
 /* ------------------------------------------------------------------ Paul */
 
@@ -151,9 +161,9 @@ function paul(): Seg[] {
     [DUEL.blow, J(1166.45), 'in'],
     [349.95, 1166.35, 'out'],
   ])
-  // Past the man he killed to where she waits, and from there beside her, in step with her and no one else.
-  w.wait(SET_OFF.paul).roll(over(1166.35, PAIR.from, s), JOIN)
-  sandwalk(w, PAIR.to, JOIN + 0.25, STOPS.together, PAIR.seed, s)
+  // From the line on the dune beyond, beside Chani, in step with her and no one else.
+  w.wait(WALK_FROM).jump(on(LINE.paul, s)).wait(SET_OFF.paul)
+  sandwalk(w, PAIR.to, SET_OFF.paul, STOPS.together, PAIR.seed, s)
   const walked = [...w.segs]
   const stand = on(PAIR.to, s)
   // On the crest he turns to look east, where the worm will come.
@@ -173,10 +183,11 @@ function jessica(): Seg[] {
   // A step back from the two of them as Jamis comes.
   w.roll(over(AT.jessica, 1162.55, s), 343.9).wait(358.0)
   // To her son's side when it is over.
-  w.roll(over(1162.55, 1166.35 - contact(s, SIZE.paul), s), 359.7).wait(SET_OFF.jessica)
-  sandwalk(w, 1194.2, SET_OFF.jessica, STOPS.jessica, 41, s)
+  w.roll(over(1162.55, 1166.35 - contact(s, SIZE.paul), s), 359.7).wait(WALK_FROM)
+  w.jump(on(LINE.jessica, s)).wait(SET_OFF.jessica)
+  sandwalk(w, 1193.6, SET_OFF.jessica, STOPS.jessica, 41, s)
   w.wait(ON + 1.2)
-  sandwalk(w, PAIR.end - 1.4, ON + 1.2, GONE + 0.8, 43, s)
+  sandwalk(w, PAIR.end - 2.4, ON + 1.2, GONE + 0.6, 43, s)
   w.wait(440)
   return w.segs
 }
@@ -221,14 +232,15 @@ function stilgar(): Seg[] {
   const s = SIZE.stilgar
   const w = new Walk(on(AT.stilgar, s), 339.9)
   w.wait(350.4)
-  // Down to his man, a while beside him; then past him to the one who killed him.
-  w.roll(over(AT.stilgar, 1168.6 + contact(SIZE.jamis, s) + 0.04, s), 352.3).wait(355.4)
-  w.roll(over(w.at[0], 1166.35 + contact(SIZE.paul, s), s), TAKEN, 'in').wait(TAKEN + 0.05)
-  w.roll(over(w.at[0], w.at[0] + 0.18, s), TAKEN + 0.5, 'out').wait(SET_OFF.stilgar)
-  // He leads them off, and waits under the crest.
-  sandwalk(w, 1195.1, SET_OFF.stilgar, STOPS.stilgar, 47, s)
-  w.wait(ON + 2.0)
-  sandwalk(w, PAIR.end - 0.5, ON + 2.0, GONE + 0.4, 49, s)
+  // Down to his man, a while beside him; then over him, on the boom, to the one who killed him.
+  w.roll(over(AT.stilgar, 1169.3, s), 352.3).wait(TAKEN - 0.45)
+  w.hop(on(1166.35 + contact(SIZE.paul, s), s), TAKEN).wait(TAKEN + 0.05)
+  w.roll(over(w.at[0], w.at[0] + 0.18, s), TAKEN + 0.5, 'out').wait(WALK_FROM)
+  // He leads them off, and waits over the crest.
+  w.jump(on(LINE.stilgar, s)).wait(SET_OFF.stilgar)
+  sandwalk(w, LEAD.stilgar, SET_OFF.stilgar, STOPS.stilgar, 47, s)
+  w.wait(ON + LEAD.delay * 2)
+  sandwalk(w, LEAD.stilgar + LEAD.on, ON + LEAD.delay * 2, ON + LEAD.delay * 2 + LEAD.dur, LEAD.seed, s)
   w.wait(440)
   return w.segs
 }
@@ -244,9 +256,10 @@ function chani(): Seg[] {
   segs.push({ t0: 339.9, t1: 341.6, kind: 'ride', at: () => crest, turn: (t) => -2.72 * smoother(t, 339.9, 341.6) })
   const w = new Walk(crest, 341.6)
   w.wait(350.4)
-  // Down the dune to the others, behind the boulder and out the other side; and there she waits for him.
-  w.roll(over(AT.chani, PAIR.from + PAIR.gap, s), 357.1)
-  sandwalk(w, PAIR.to + PAIR.gap, JOIN + 0.25, STOPS.together, PAIR.seed, s)
+  // Down the dune to the others, behind the boulder, short of the Fremen; then in the line, beside him.
+  w.roll(over(AT.chani, 1175.0, s), 357.1).wait(WALK_FROM)
+  w.jump(on(LINE.chani, s)).wait(SET_OFF.paul)
+  sandwalk(w, PAIR.to + PAIR.gap, SET_OFF.paul, STOPS.together, PAIR.seed, s)
   const walked = [...segs, ...w.segs]
   const stand = on(PAIR.to + PAIR.gap, s)
   walked.push(facing(walked, 'chani', s, stand, STOPS.together, STOPS.together + 1.0, -0.3))
@@ -261,12 +274,10 @@ function chani(): Seg[] {
 
 /* ------------------------------------------------------------------ the Fremen */
 
-/** Each walker's walk: when they set off and stop, where under the crest, their seed, and the end's [from, to x, by]. */
-const WALKS: Record<number, { off: number; stop: number; at: number; seed: number; end: [number, number, number] }> = {
-  1: { off: SET_OFF.f1, stop: STOPS.f1, at: 1193.3, seed: 61, end: [ON + 2.6, PAIR.end - 4.0, GONE + 1.0] },
-  2: { off: SET_OFF.f2, stop: STOPS.f2, at: 1192.5, seed: 67, end: [ON + 3.1, PAIR.end - 4.8, GONE + 1.3] },
-  3: { off: SET_OFF.f3, stop: STOPS.f3, at: 1196.0, seed: 71, end: [ON + 1.6, PAIR.end - 1.8, GONE + 0.6] },
-  4: { off: SET_OFF.f4, stop: STOPS.f4, at: 1196.8, seed: 79, end: [ON + 2.2, PAIR.end - 2.6, GONE + 0.9] },
+/** The two Fremen who walk ahead: where in the line, when they set off and stop, where over the crest, and on. */
+const WALKS: Record<number, { line: number; off: number; stop: number; at: number; seed: number; end: [number, number, number] }> = {
+  3: { line: LINE.f3, off: SET_OFF.f3, stop: STOPS.f3, at: LEAD.f3, seed: 71, end: [ON + LEAD.delay, LEAD.f3 + LEAD.on, ON + LEAD.delay + LEAD.dur] },
+  4: { line: LINE.f4, off: SET_OFF.f4, stop: STOPS.f4, at: LEAD.f4, seed: 79, end: [ON, LEAD.f4 + LEAD.on, ON + LEAD.dur] },
 }
 
 function fremen(i: number): Actor {
@@ -277,24 +288,24 @@ function fremen(i: number): Actor {
   if (i === 0) {
     // On the boulder by the thopter, and stays: the rock's watch.
     w = new Walk([x, boulderTop(0) - R * s], 339.9).wait(440)
+  } else if (i === 1 || i === 2) {
+    // Up out of the sand behind Jessica as the picture comes back to Paul (one half up on the cut, the other after it);
+    // and they stay with the dead.
+    const [r0, r1] = i === 2 ? [342.25, 343.45] : [342.95, 343.95]
+    w = new Walk([x, ground(x) + R * s + 0.05], 339.9).wait(r0).roll([on(x, s)], r1, 'out').wait(440)
   } else {
     if (i === 4) {
-      // Up from behind the slope's boulder while the picture is on Chani; down off it when they set off.
+      // Up from behind the slope's boulder while the picture is on Chani.
       const top: Pt = [x, boulderTop(1) - R * s]
-      w = new Walk([x, ground(x) + 0.3], 339.9).roll([top], 341.4, 'out').wait(WALKS[4].off)
-      w.hop(on(x + 1.5, s), WALKS[4].off + 0.5)
-    } else if (i === 1 || i === 2) {
-      // Up out of the sand behind Jessica as the picture comes back to Paul: one half up on the cut, the other after it.
-      const [r0, r1] = i === 2 ? [342.25, 343.45] : [342.95, 343.95]
-      w = new Walk([x, ground(x) + R * s + 0.05], 339.9).wait(r0).roll([on(x, s)], r1, 'out')
+      w = new Walk([x, ground(x) + 0.3], 339.9).roll([top], 341.4, 'out')
     } else {
       w = new Walk(on(x, s), 339.9)
     }
     const plan = WALKS[i]
-    w.wait(Math.max(w.time, plan.off))
-    sandwalk(w, plan.at, w.time, plan.stop, plan.seed, s)
+    w.wait(WALK_FROM).jump(on(plan.line, s)).wait(plan.off)
+    sandwalk(w, plan.at, plan.off, plan.stop, plan.seed, s)
     w.wait(plan.end[0])
-    sandwalk(w, plan.end[1], plan.end[0], plan.end[2], plan.seed + 2, s)
+    sandwalk(w, plan.end[1], plan.end[0], plan.end[2], LEAD.seed, s)
     w.wait(440)
   }
   return {

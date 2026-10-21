@@ -5,8 +5,8 @@ import { JAMIS_FALLS, RIDER, WINDOWS } from '../plan'
 import type { Scene } from '../scene'
 import { looking } from '../show'
 import { on } from './fremen/ground'
-import { airAt, drawBack, drawFront, setSwell, setTilt } from './fremen/land'
-import { DUEL, ON, SET_OFF, STOPS, TAKEN, TURN, troop } from './fremen/troop'
+import { BASIN_D, airAt, drawBack, drawBasin, drawFront, setSwell, setTilt } from './fremen/land'
+import { DUEL, ON, SET_OFF, STOPS, TAKEN, TURN, WALK_FROM, troop } from './fremen/troop'
 import { D, INSERT, drawFarWorm, drawNearWorm, drawRopes, riderAt, sign } from './fremen/worm'
 
 /**
@@ -33,29 +33,31 @@ const PAUL_CREST = on(1199.95, 1)
 const CHANI_CREST = on(1200.6, CHANI.size)
 
 const shots: Shot[] = [
-  // Down at the foot of the rock, the frame the storm's last glide dissolves into: the thopter, the two of them.
-  { t: FROM, cells: 6.8, at: [1158.4, -1.45], cut: true },
-  { t: 338.13, cells: 6.7, at: [1158.9, -1.43] },
+  // Down at the foot of the rock, the frame the storm's last glide dissolves into: the thopter, the two of them, the dune
+  // behind the basin rising over them.
+  { t: FROM, cells: 6.8, at: [1158.4, -1.8], cut: true },
+  { t: 338.13, cells: 6.7, at: [1158.9, -1.78] },
   // The dream shot, held: her on the crest against the sky.
   { t: 338.15, cells: DREAM_CELLS, at: DREAM_AT, cut: true },
   { t: 342.66, cells: DREAM_CELLS * 0.97, at: [DREAM_AT[0] - 0.1, DREAM_AT[1]] },
-  // Back to him, close: the Fremen coming up out of the sand round them, Jamis stepping forward.
-  { t: DUEL.challenge, cells: 4.9, at: [1165.0, -1.0], cut: true },
-  { t: DUEL.clash - 0.002, cells: 4.8, at: [1165.15, -1.0] },
+  // Back to him, close and from a little above: the sand rising behind them to the skyline, the Fremen coming up out of
+  // it round them, Jamis stepping forward.
+  { t: DUEL.challenge, cells: 4.9, at: [1165.0, -1.35], cut: true },
+  { t: DUEL.clash - 0.002, cells: 4.8, at: [1165.15, -1.33] },
   // The duel, side on and close.
-  { t: DUEL.clash, cells: 3.7, at: [1166.25, -0.8], cut: true },
-  { t: 347.0, cells: 3.6, at: [1166.15, -0.8] },
-  { t: JAMIS_FALLS, cells: 3.55, at: [1166.5, -0.8] },
-  { t: 350.6, cells: 3.85, at: [1167.25, -0.83] },
-  { t: 352.49, cells: 4.0, at: [1167.4, -0.85] },
-  // Close: Stilgar by his man, then past him to Paul; opening a little for Jessica and Chani as they come.
-  { t: 352.51, cells: 4.3, at: [1167.6, -0.95], cut: true },
-  { t: 356.0, cells: 3.8, at: [1167.05, -0.85] },
-  { t: 358.6, cells: 3.8, at: [1167.0, -0.85] },
-  { t: 361.6, cells: 4.7, at: [1168.3, -1.05] },
-  { t: 364.35, cells: 4.8, at: [1168.7, -1.05] },
-  // The walk: close on him and Chani side by side, the others coming and going past the frame's edges.
-  { t: 364.37, cells: 4.9, off: [0.55, -0.85], cut: true },
+  { t: DUEL.clash, cells: 3.7, at: [1166.25, -0.95], cut: true },
+  { t: 347.0, cells: 3.6, at: [1166.15, -0.94] },
+  { t: JAMIS_FALLS, cells: 3.55, at: [1166.5, -0.93] },
+  { t: 350.6, cells: 3.85, at: [1167.25, -0.98] },
+  { t: 352.49, cells: 4.0, at: [1167.4, -1.02] },
+  // Close: Stilgar by his man, then over him to Paul; opening a little for Jessica as she comes to her son.
+  { t: 352.51, cells: 4.3, at: [1167.6, -1.22], cut: true },
+  { t: 356.0, cells: 3.8, at: [1167.15, -1.08] },
+  { t: 358.6, cells: 3.8, at: [1166.95, -1.08] },
+  { t: 361.6, cells: 4.4, at: [1167.3, -1.2] },
+  { t: WALK_FROM - 0.002, cells: 4.5, at: [1167.4, -1.22] },
+  // The walk, on the dune beyond: close on him and Chani side by side, the line ahead of them and behind.
+  { t: WALK_FROM, cells: 4.9, off: [0.55, -0.85], cut: true },
   { t: 371, cells: 5.0, off: [0.6, -0.9] },
   { t: 379.35, cells: 5.2, off: [0.6, -0.95] },
   // Stopped: the crest and the open erg past it, the horizon low; worm sign, then the worm.
@@ -73,7 +75,7 @@ const shots: Shot[] = [
   // They go on: the camera goes with them a while, a line of balls over the sand, then lets them go and draws back
   // and up until they walk out of the frame toward the sun.
   { t: 401.5, cells: 6.0, off: [0.9, -1.5] },
-  { t: 409, cells: 7.4, off: [1.1, -2.1] },
+  { t: 410, cells: 6.7, off: [1.0, -1.9] },
   { t: 415, cells: 8.8, off: [1.3, -2.7] },
   { t: 424, cells: 16, at: [1236.5, -10.4] },
   { t: 432, cells: 21, at: [1239.5, -12.0] },
@@ -82,12 +84,12 @@ const shots: Shot[] = [
 
 /** The camera's tilt for each shot: how far under the frame's middle the horizon lies. */
 setTilt([
-  [FROM, 0.2, true],
+  [FROM, -0.02, true],
   [338.15, 0.22, true],
-  [DUEL.challenge, 0.12, true],
-  [DUEL.clash, 0.1, true],
-  [352.51, 0.12, true],
-  [364.37, 0.16, true],
+  [DUEL.challenge, -0.05, true],
+  [DUEL.clash, -0.02, true],
+  [352.51, -0.04, true],
+  [WALK_FROM, 0.16, true],
   [379.37, 0.02, true],
   [INSERT.from, 0.3, true],
   [INSERT.to, 0.3, true],
@@ -113,11 +115,13 @@ export const fremen: Scene = {
   deaths: { jamis: [JAMIS_FALLS, 0.15] },
   actors: people.actors.map((a) => (a.id > FREMEN.id && a.id <= FREMEN.id + 4 ? { ...a, markAt: looking(WATCH) } : a)),
   shots,
-  dissolves: [[FROM, 2.0]],
+  dissolves: [[FROM, 2.0], [WALK_FROM, 1.6]],
   pieces: [
     standing('fremen-land', { x0: 1000, y0: -400, x1: 1560, y1: 60 }, (g) => {
       if (g.t < FROM - 1e-6) return
-      drawBack(g, [[D, drawFarWorm]])
+      // The dune behind the basin only while the camera is down in it: not in the dream shot, not after the walk begins.
+      const basin = g.t < 338.15 || (g.t >= DUEL.challenge && g.t < WALK_FROM)
+      drawBack(g, basin ? [[D, drawFarWorm], [BASIN_D, drawBasin]] : [[D, drawFarWorm]])
       drawNearWorm(g, airAt(g.t))
     }, (g) => {
       if (g.t < FROM - 1e-6) return
