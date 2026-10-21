@@ -360,26 +360,6 @@ export function drawRiver(g: Paint, L: Light): void {
 
 /* ------------------------------------------------------------------ the far bank's steps */
 
-/** A rounded bush on the bank: two greens, the sunward half lighter. */
-function bush(ctx: CanvasRenderingContext2D, L: Light, x: number, y: number, s: number, seed: number): void {
-  ctx.beginPath()
-  for (let j = 0; j < 3; j++) {
-    const cx = x + (j - 1) * s * 0.55
-    const r = s * (0.45 + 0.15 * hash(seed, j))
-    ctx.moveTo(cx + r, y - r * 0.8)
-    ctx.arc(cx, y - r * 0.8, r, 0, Math.PI * 2)
-  }
-  fill(ctx, lit('#4E7E36', L.ambient))
-  ctx.beginPath()
-  for (let j = 0; j < 3; j++) {
-    const cx = x + (j - 1) * s * 0.55 - s * 0.08
-    const r = s * (0.32 + 0.12 * hash(seed, j))
-    ctx.moveTo(cx + r, y - r * 1.05)
-    ctx.arc(cx, y - r * 1.05, r, 0, Math.PI * 2)
-  }
-  fill(ctx, lit('#6A9C46', L.ambient))
-}
-
 export function drawStair(g: Paint, L: Light): void {
   const { ctx } = g
   const top = treads[treads.length - 1]
@@ -410,8 +390,6 @@ export function drawStair(g: Paint, L: Light): void {
     rect(ctx, x - w / 2, y, w + 0.12, 0.34)
     ink(g, line, 1.1)
   }
-  // A bush at the flight's foot, on the bank's edge by the bed.
-  bush(ctx, L, STAIR.x0 - 0.35, RIVER.bed + 0.04, 0.4, 3)
   // Moss along the top of the town's wall where the bank meets it.
   box(ctx, STREET.x0 + 0.5, STREET.y + 0.1, 3.0, 0.07, lit('#6E8E46', L.ambient))
 }
