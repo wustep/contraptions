@@ -140,7 +140,8 @@ const LAND = region(-12, -6, 46, 5, 2)
 const far = standing('way-far', region(-40, -14, 120, 8, 3), END, (g) => {
   // The far land belongs to the west: east of the bathhouse it gives way to the sea's horizon, going into the haze
   // as the camera goes, never cut off at once.
-  const a = 1 - smoother(g.view.cx, 57, 67)
+  // Nor are they seen from over the cloud.
+  const a = (1 - smoother(g.view.cx, 57, 67)) * (1 - smoother(-g.view.cy, 13.5, 16.5))
   if (a <= 0.01) return
   g.ctx.save()
   g.ctx.globalAlpha = a
