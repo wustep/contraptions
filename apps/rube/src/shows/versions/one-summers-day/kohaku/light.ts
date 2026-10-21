@@ -155,7 +155,7 @@ const DAWN: Light = {
   shade: '#A49CB4',
   ambient: '#F2E2D2',
   sun: '#FFF3DA',
-  sunX: 0.2,
+  sunX: 0.8,
   sunY: 0.82,
   moon: 0.2,
   night: 0.2,
@@ -183,8 +183,8 @@ const MORNING: Light = {
   mid: '#8CC0E6',
   low: '#E2EFF0',
   ambient: '#FFFCF4',
-  sunX: 0.22,
-  sunY: 0.2,
+  sunX: 0.82,
+  sunY: 0.3,
 }
 
 const at = (t: number, l: Light): Key => ({ t, ...l })

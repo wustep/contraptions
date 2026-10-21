@@ -68,14 +68,23 @@ function monotone(ts: number[], vs: number[], cutAfter: boolean[]): (t: number) 
   }
 }
 
-/** Her position smoothed over a short window leaning a little ahead: what a follow has the camera on. */
-export function follower(where: (t: number) => Pt, lead = 0.15, width = 0.8): (t: number) => Pt {
+/**
+ * Her position smoothed over a short window leaning a little ahead: what a follow has the camera on. The window never
+ * reaches across a cut (`cuts`): on the far side of one she may be somewhere else entirely.
+ */
+export function follower(where: (t: number) => Pt, cuts: number[] = [], lead = 0.15, width = 0.8): (t: number) => Pt {
   return (t: number): Pt => {
     let x = 0
     let y = 0
     let sum = 0
+    let lo = -Infinity
+    let hi = Infinity
+    for (const c of cuts) {
+      if (c <= t + 1e-9) lo = Math.max(lo, c)
+      else hi = Math.min(hi, c - 1e-6)
+    }
     for (let j = -8; j <= 8; j++) {
-      const s = t + lead + (j / 8) * width
+      const s = Math.max(lo, Math.min(hi, t + lead + (j / 8) * width))
       const w = 1 - Math.abs(j) / 9
       const [px, py] = where(s)
       x += px * w
@@ -94,7 +103,7 @@ export interface Director {
 
 export function director(keys: Key[], where: (t: number) => Pt): Director {
   const ks = [...keys].sort((a, b) => a.t - b.t)
-  const follow = follower(where)
+  const follow = follower(where, ks.filter((k) => k.cut).map((k) => k.t))
   const ts = ks.map((k) => k.t)
   const cutAfter = ks.map((_, i) => i + 1 < ks.length && !!ks[i + 1].cut)
   const wOf = (k: Key) => Math.max(0, Math.min(1, k.w ?? (k.at ? 1 : 0)))

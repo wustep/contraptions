@@ -136,8 +136,8 @@ export function drawDragon(g: Paint, sp: Pt[], L: Light, look: DragonLook): void
   // How much of him is left: the spine from the head back to `keep` of its length.
   const keep = 1 - smooth(burst, 0, 0.85)
   const last = Math.max(1, Math.round(n * keep))
-  const white = lit(WHITE, L.ambient, 0.35)
-  const belly = lit(BELLY, L.ambient, 0.35)
+  const white = lit(WHITE, L.ambient, 0.62)
+  const belly = lit(BELLY, L.ambient, 0.55)
   const line = mix(LINE, L.top, 0.2)
   ctx.save()
   ctx.globalAlpha = alpha
@@ -235,8 +235,8 @@ function drawMane(g: Paint, sp: Pt[], up: number, L: Light, keep: number): void 
   const n = sp.length - 1
   const end = Math.min(Math.round(n * 0.2), Math.round(n * keep))
   if (end < 2) return
-  const mane = lit(MANE, L.ambient, 0.3)
-  const dark = lit(MANE_DARK, L.ambient, 0.3)
+  const mane = lit(MANE, L.ambient, 0.5)
+  const dark = lit(MANE_DARK, L.ambient, 0.5)
   // Long locks from the back of the head, lying back along the neck and lifting off it at their ends, streaming in
   // the wind of his going: the far layer darker, the near one lighter, each a few long tapering strands.
   for (const [col, locks, lift, off] of [
@@ -301,7 +301,7 @@ function drawHead(g: Paint, sp: Pt[], up: number, L: Light, shut: number, size: 
   ctx.rotate(a)
   // Flying west he rolls over: his back stays to the sky.
   ctx.scale(s, s * (up >= 0 ? 1 : -1) * Math.max(0.35, Math.abs(up)))
-  const white = lit(WHITE, L.ambient, 0.35)
+  const white = lit(WHITE, L.ambient, 0.62)
   const line = mix(LINE, L.top, 0.2)
   const px = g.px / s
   const inkIn = (c: string, w: number) => {
@@ -368,8 +368,8 @@ function drawHead(g: Paint, sp: Pt[], up: number, L: Light, shut: number, size: 
 export function drawScales(g: Paint, L: Light, bodyAt: (t: number) => Pt[], from: number, dur: number, count = 90): void {
   const { ctx, t } = g
   if (t < from) return
-  const white = lit(WHITE, L.ambient, 0.4)
-  const edge = lit('#C9D6CE', L.ambient, 0.4)
+  const white = lit(WHITE, L.ambient, 0.62)
+  const edge = lit('#C9D6CE', L.ambient, 0.55)
   for (let i = 0; i < count; i++) {
     const te = from + (i / count) * dur * 0.85
     const age = t - te
