@@ -128,10 +128,10 @@ const SHOTS: Key[] = [
   { t: STONE_LANDS[0] - 0.6, cells: 5.8, at: [17.4, 0.35] },
   { t: STONE_LANDS[5], cells: 5.4, at: [20.4, 0.15] },
   // Up the steps, and along the street as the light goes.
-  { t: STEP_LANDS[STEP_LANDS.length - 1], cells: 5.0, at: [24.6, -1.25] },
-  { t: 37.2, cells: 5.6, at: [30.0, -2.1] },
-  { t: 41.0, cells: 6.8, at: [35.6, -2.35] },
-  { t: TO - 0.05, cells: 7.4, at: [39.4, -2.45] },
+  { t: STEP_LANDS[STEP_LANDS.length - 1], cells: 5.0, at: [24.6, -1.45] },
+  { t: 37.2, cells: 5.0, at: [30.0, -2.55] },
+  { t: 41.0, cells: 6.0, at: [35.4, -2.85] },
+  { t: TO - 0.05, cells: 7.0, at: [39.4, -2.95] },
 ]
 
 /* ------------------------------------------------------------------ the drawings */

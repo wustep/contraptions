@@ -52,15 +52,12 @@ export function drawStreet(g: Paint, L: Light): void {
     [1, lit('#4C4840', L.ambient)],
   ])
   ctx.fillRect(x0, STREET.y + 0.12, x1 - x0, 6)
-  const joint = lit('#5B564D', L.ambient)
-  for (let r = 0; r < 6; r++) {
-    const y = STREET.y + 0.12 + r * 0.42
+  // A few long courses, no grid of blocks.
+  const joint = lit('#615B51', L.ambient)
+  for (let r = 1; r < 5; r++) {
+    const y = STREET.y + 0.12 + r * 0.62
     poly(ctx, [[x0, y], [x1, y]], false)
-    ink(g, joint, 1.2)
-    for (let x = Math.floor(x0) + (r % 2) * 0.35; x < x1; x += 0.7) {
-      poly(ctx, [[x, y], [x, y + 0.42]], false)
-      ink(g, joint, 1.2)
-    }
+    ink(g, joint, 1.1)
   }
 }
 
