@@ -46,9 +46,11 @@ export const home: Scene = {
     // Up the cliff with him.
     { t: 420.9, cells: 6.5, off: [0.6, -1.4] },
     { t: HOME.top, cells: 5.0, off: [0.8, -0.9] },
-    // Argos, the beggar beside him, and the son stopped under the olive, watching.
+    // Argos, the beggar beside him, and the son stopped under the olive, watching. As the dog lifts his head, wags and
+    // lays it down, the camera goes in on him, slowly, the son still at the frame's edge; it stays there over him dead.
     { t: HOME.sees, cells: 2.6, at: [810.1, -9.62] },
-    { t: HOME.dies + 2.5, cells: 2.45, at: [810.05, -9.58] },
+    { t: HOME.dies, cells: 2.0, at: [810.2, -9.5] },
+    { t: HOME.dies + 2.5, cells: 2.05, at: [810.2, -9.5] },
     // His son comes to the dog's other side, the dead dog between them.
     { t: TRIAL.touch, cells: 2.6, at: [809.9, -9.6] },
     // In through the gate, the courtyard, to the hall's threshold.
