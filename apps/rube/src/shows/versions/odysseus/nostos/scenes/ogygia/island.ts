@@ -260,13 +260,6 @@ export function drawStone(g: Paint): void {
   fill(ctx, shade)
   poly(ctx, [[667.1, -1.45], [667.35, -1.85], [667.62, -1.9], [667.42, -1.42]])
   fill(ctx, shade)
-  // Its bedding: two long, low ledges running through the block, not a texture.
-  ctx.beginPath()
-  ctx.moveTo(666.5, -1.3)
-  ctx.lineTo(667.9, -1.33)
-  ctx.moveTo(670.3, -1.72)
-  ctx.lineTo(672.05, -1.55)
-  stroke(g, rgba(ink, 0.35), 1.8)
   ctx.restore()
   poly(ctx, STONE)
   stroke(g, ink, 2.4)
