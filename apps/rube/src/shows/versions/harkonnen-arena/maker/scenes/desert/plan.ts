@@ -1,5 +1,5 @@
 import { R } from '../../../../../../parts'
-import { beat, beatsIn, M } from '../../music'
+import { beat, beatsIn, M, onsetNear } from '../../music'
 import { clamp01, smooth, smoother, type Pt } from '../../paint'
 import { T } from '../../timeline'
 
@@ -29,6 +29,8 @@ export const W = {
   maw: M.phrase4,
   /** The fifth: it goes back down. */
   gone: M.phrase5,
+  /** Two seconds on, an accent in the drum: the rock again, from far off. */
+  after: onsetNear(99.5, 0.6, 0.2),
   end: T.thumper,
 } as const
 

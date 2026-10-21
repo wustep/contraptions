@@ -21,7 +21,7 @@ import { paintCables, paintCarryall, paintHarvester, paintPlume } from './desert
  *    58.1     the second: the grapples take hold; it strains up on each beat of the drum
  *    71.7     the third: the sand goes down round the machine, a step a beat
  *    85.3     the fourth: the mouth comes up out of the funnel round it; the cables part; the carryall gets away
- *    97.5     the fifth: back down, with the harvester in it; the dust; the rock again, far off
+ *    97.5     the fifth: back down, with the harvester in it, the dust going up; on 99.5 the rock again, far off
  */
 
 const DAY: SkyKey[] = [
@@ -149,8 +149,10 @@ export const desert: Scene = {
     // The mouth: wider still, for its size.
     { t: W.maw, cut: true, cells: 54, at: [XH - 2, -13] },
     { t: W.gone - 0.01, cells: 50, at: [XH - 1, -12] },
+    // The fifth blow: held as it goes back down with the machine in it, the dust going up.
+    { t: W.after - 0.01, cells: 47, at: [XH - 1, -11] },
     // Gone: the desert again from far off, as at first.
-    { t: W.gone, cut: true, cells: 44, at: [14, -13.5] },
+    { t: W.after, cut: true, cells: 44, at: [14, -13.5] },
     { t: T.thumper, cells: 41, at: [14.5, -13] },
   ],
   back: [
@@ -158,9 +160,9 @@ export const desert: Scene = {
       if (b.t >= T.thumper) return
       paintFar(b, DAY, FAR, tilt(b.t))
       // In the wides from the rock, the machine is a long way off: the same machine, drawn far back.
-      if (b.t < W.machine || b.t >= W.gone) paintFarOff(b, tilt(b.t))
+      if (b.t < W.machine || b.t >= W.after) paintFarOff(b, tilt(b.t))
       paintFlat(b, b.t)
-      if (b.t >= W.machine && b.t < W.gone) paintEvent(b)
+      if (b.t >= W.machine && b.t < W.after) paintEvent(b)
       paintRock(b)
     }),
   ],
@@ -182,5 +184,6 @@ export const desert: Scene = {
     ...STEPS.map((t, i): [string, number] => [`step ${i}`, t]),
     ['the mouth', W.maw],
     ['swallowed', W.gone],
+    ['the rock again', W.after],
   ],
 }
