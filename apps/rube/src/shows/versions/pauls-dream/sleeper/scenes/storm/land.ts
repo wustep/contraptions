@@ -10,7 +10,12 @@ import { REACHES, drawReach } from './wall'
  */
 
 /** The morning past the storm: the sun low ahead, in the east, as they come out. */
-const MORNING: Air = { ...DAWN, sun: { x: 0.8, up: 0.08, r: 0.06, color: '#FFF0D6' } }
+/**
+ * The morning past the storm. Its sun is where the Fremen's first shot has its own, the frame the glide dissolves into
+ * (a share 0.82 across the 16:9 frame and 0.17 of its height over the horizon, 0.049 of its height across), so the
+ * dissolve shows one sun.
+ */
+const MORNING: Air = { ...DAWN, sun: { x: 0.82, up: 0.171, r: 0.049, color: '#FFF1DA' } }
 
 /** The air at `t`: night until the visions end, dawn by the time they take off; the morning past the storm. */
 export function airAt(t: number, viewX: number): Air {
@@ -19,6 +24,18 @@ export function airAt(t: number, viewX: number): Air {
   const past = smooth(viewX, backAt(t) - 2, backAt(t) + 14)
   if (past > 0) return between({ ...a, sun: undefined }, MORNING, past)
   return { ...a, sun: undefined }
+}
+
+/**
+ * The sun, placed as the Fremen's scene places its own: against the composed 16:9 frame (its height, and across its
+ * width from the middle), not the whole stage, so the two frames of the dissolve agree on a tall stage too.
+ */
+function sun(g: Paint, air: Air): void {
+  if (!air.sun) return
+  const v = g.view
+  const h = Math.min(v.h, (v.w * 9) / 16)
+  circle(g.ctx, v.cx + (air.sun.x - 0.5) * ((h * 16) / 9), v.cy - h * air.sun.up, h * air.sun.r)
+  fill(g.ctx, air.sun.color)
 }
 
 /** Stars: a few, fixed, dim; they go out with the dawn. */
@@ -86,7 +103,8 @@ const RANGES = [
 
 export function drawLand(g: Paint): void {
   const air = airAt(g.t, g.view.cx)
-  sky(g, air)
+  sky(g, { ...air, sun: undefined })
+  sun(g, air)
   const night = 1 - smooth(g.t, T.dawn[0], T.out - 0.2)
   stars(g, night)
   // Each range in turn from the farthest, with whatever stands between it and the next farther one drawn first: the
