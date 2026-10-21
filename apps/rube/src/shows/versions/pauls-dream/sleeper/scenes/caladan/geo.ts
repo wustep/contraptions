@@ -9,8 +9,10 @@ import type { Pt } from '../../paint'
  * Cells, up negative; sea level y = 0.
  */
 
+/** The sea's level: the cliff stands 22 cells out of it, the castle on its top. */
+export const SEA = 10
 /** The cliff's top edge, and its foot in the sea. */
-export const CLIFF = { top: -12, edge: -560, foot: -567 } as const
+export const CLIFF = { top: -12, edge: -560, foot: -569 } as const
 
 /** The tower on the cliff's edge, the long block east of it, and the roof's peak. */
 export const TOWER = { x0: -560, x1: -549, top: -30, peak: -32.6 } as const

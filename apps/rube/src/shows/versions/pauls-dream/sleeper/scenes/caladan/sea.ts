@@ -1,5 +1,5 @@
 import { blob, clamp01, cover, drift, fill, hash, layer, mix, poly, rgba, smooth, vgrad, type Layer, type Paint, type Pt, type View } from '../../paint'
-import { CLIFF, T } from './geo'
+import { CLIFF, SEA, T } from './geo'
 
 /**
  * Caladan's weather and water: a low grey-green sky with rain moving through it in curtains, the sea running in from
@@ -16,7 +16,7 @@ export const AIR = {
   deep: '#1E2926',
   crest: '#55665F',
   foam: '#C3CCC6',
-  rain: '#B4C0BA',
+  rain: '#56625D',
   rock: '#202625',
   rockLit: '#353D3B',
   turf: '#36443A',
@@ -63,8 +63,8 @@ export function sea(g: Paint): void {
   if (v.y1 < -40) return
   // The far plane: from the horizon down to the near water.
   const top = v.cy
-  ctx.fillStyle = vgrad(ctx, top, Math.max(top + 0.5, 0.5), [[0, AIR.seaFar], [0.35, mix(AIR.seaFar, AIR.sea, 0.6)], [1, AIR.sea]])
-  ctx.fillRect(v.x0 - 1, top, v.w + 2, Math.max(0, 1 - top))
+  ctx.fillStyle = vgrad(ctx, top, Math.max(top + 0.5, SEA + 0.5), [[0, AIR.seaFar], [0.35, mix(AIR.seaFar, AIR.sea, 0.6)], [1, AIR.sea]])
+  ctx.fillRect(v.x0 - 1, top, v.w + 2, Math.max(0, SEA + 1 - top))
   // Swells across it, each at its depth, a little lighter on their faces.
   for (const d of [90, 22]) {
     const L = layer(v, d)
@@ -72,7 +72,7 @@ export function sea(g: Paint): void {
     const step = Math.max(0.4, (8 * g.px) / L.s)
     const xa = v.cx + (v.x0 - v.cx) / L.s - 2
     const xb = v.cx + (v.x1 - v.cx) / L.s + 2
-    for (let x = xa; x <= xb; x += step) pts.push(L.pt([x, swell(x, g.t, 0.5) - 0.05]))
+    for (let x = xa; x <= xb; x += step) pts.push(L.pt([x, SEA + swell(x, g.t, 0.5) - 0.05]))
     ctx.beginPath()
     ctx.moveTo(pts[0][0], pts[0][1])
     for (const p of pts) ctx.lineTo(p[0], p[1])
@@ -82,22 +82,22 @@ export function sea(g: Paint): void {
   }
 }
 
-/** The near water: its swell along y = 0 from the west to the cliff's foot, and the dark of the water under it. */
+/** The near water: its swell along the sea's level from the west to the cliff's foot, and the dark of the water under it. */
 export function nearWater(g: Paint): void {
   const v = g.view
-  if (v.y1 < -3 || v.x0 > CLIFF.foot + 4) return
+  if (v.y1 < SEA - 3 || v.x0 > CLIFF.foot + 4) return
   const ctx = g.ctx
   const x1 = Math.min(v.x1 + 1, CLIFF.foot + 3)
   const pts: Pt[] = []
   const step = Math.max(0.15, 6 * g.px)
-  for (let x = v.x0 - 1; x <= x1; x += step) pts.push([x, swell(x, g.t)])
+  for (let x = v.x0 - 1; x <= x1; x += step) pts.push([x, SEA + swell(x, g.t)])
   ctx.beginPath()
   ctx.moveTo(pts[0][0], pts[0][1])
   for (const p of pts) ctx.lineTo(p[0], p[1])
   ctx.lineTo(x1, v.y1 + 1)
   ctx.lineTo(v.x0 - 1, v.y1 + 1)
   ctx.closePath()
-  fill(ctx, vgrad(ctx, -0.6, 6, [[0, AIR.crest], [0.12, AIR.sea], [1, AIR.deep]]))
+  fill(ctx, vgrad(ctx, SEA - 0.6, SEA + 6, [[0, AIR.crest], [0.12, AIR.sea], [1, AIR.deep]]))
 }
 
 /** Far headlands to the north, going into the mist: Caladan's coast. */
@@ -105,12 +105,12 @@ export function headlands(g: Paint): void {
   const v = g.view
   for (const [d, x0, w, h] of [[420, -900, 260, 36], [180, -660, 120, 20], [90, -470, 90, 13]] as const) {
     const L = layer(v, d)
-    const pts: Pt[] = [L.pt([x0, 0.5])]
+    const pts: Pt[] = [L.pt([x0, SEA + 0.5])]
     for (let i = 0; i <= 12; i++) {
       const u = i / 12
-      pts.push(L.pt([x0 + w * u, -h * Math.sin(Math.PI * Math.pow(u, 0.7)) * (0.85 + 0.15 * drift(u * 3, d)) - 0.2]))
+      pts.push(L.pt([x0 + w * u, SEA - h * Math.sin(Math.PI * Math.pow(u, 0.7)) * (0.85 + 0.15 * drift(u * 3, d)) - 0.2]))
     }
-    pts.push(L.pt([x0 + w, 0.5]))
+    pts.push(L.pt([x0 + w, SEA + 0.5]))
     poly(g.ctx, pts)
     fill(g.ctx, mix(AIR.rock, AIR.mist, clamp01(0.55 + d / 900)))
   }
@@ -121,21 +121,27 @@ export function cliff(g: Paint): void {
   const v = g.view
   if (v.x1 < CLIFF.foot - 2 || v.y1 < CLIFF.top - 2) return
   const ctx = g.ctx
+  // The face from the edge down to the sea, broken in steps, leaning out a little as it goes down, as sea cliffs do.
+  const H = SEA - CLIFF.top
+  const at = (u: number, dx: number): Pt => [CLIFF.edge + dx, CLIFF.top + H * u]
   const face: Pt[] = [
-    [CLIFF.edge, CLIFF.top],
-    [CLIFF.edge - 0.8, -10.4],
-    [CLIFF.edge - 0.4, -8.6],
-    [CLIFF.edge - 2.1, -6.9],
-    [CLIFF.edge - 1.8, -4.6],
-    [CLIFF.edge - 3.6, -2.8],
-    [CLIFF.edge - 4.2, -0.9],
-    [CLIFF.foot, 0.4],
-    [CLIFF.foot - 0.6, 6],
+    at(0, 0),
+    at(0.07, -0.8),
+    at(0.16, -0.4),
+    at(0.26, -2.1),
+    at(0.38, -1.6),
+    at(0.5, -3.4),
+    at(0.62, -3.0),
+    at(0.74, -5.2),
+    at(0.86, -6.0),
+    [CLIFF.foot, SEA + 0.4],
+    [CLIFF.foot - 0.6, SEA + 6],
   ]
-  poly(ctx, [...face, [-380, 6], [-380, CLIFF.top]])
-  fill(ctx, vgrad(ctx, CLIFF.top, 4, [[0, AIR.rockLit], [0.5, AIR.rock], [1, '#151A19']]))
+  poly(ctx, [...face, [-380, SEA + 6], [-380, CLIFF.top]])
+  fill(ctx, vgrad(ctx, CLIFF.top, SEA + 4, [[0, AIR.rockLit], [0.5, AIR.rock], [1, '#151A19']]))
   // Ledges: the face's broken steps, lit a little on their tops.
-  for (const [x, y, w] of [[-561.1, -10.4, 1.2], [-562.4, -6.9, 1.6], [-564.3, -2.8, 1.4]] as const) {
+  for (const [u, dx, w] of [[0.07, -0.8, 1.2], [0.26, -2.1, 1.6], [0.5, -3.4, 1.4], [0.74, -5.2, 1.8]] as const) {
+    const [x, y] = at(u, dx)
     poly(ctx, [[x, y], [x + w, y - 0.05], [x + w + 0.2, y + 0.18], [x + 0.1, y + 0.22]])
     fill(ctx, AIR.rockLit)
   }
@@ -151,11 +157,12 @@ export function cliff(g: Paint): void {
  */
 export function spray(g: Paint): void {
   const v = g.view
-  if (v.x1 < CLIFF.foot - 8 || v.x0 > CLIFF.foot + 6 || v.y1 < -14) return
+  if (v.x1 < CLIFF.foot - 10 || v.x0 > CLIFF.foot + 8 || v.y1 < SEA - 16) return
   const bursts: [number, number][] = [
-    ...T.waves.map((t): [number, number] => [t, 5]),
-    ...T.answers.map((t): [number, number] => [t, 2.2]),
-    [T.great, 11],
+    ...T.waves.map((t): [number, number] => [t, 7]),
+    ...T.answers.map((t): [number, number] => [t, 3]),
+    [T.great, 15],
+    [T.sea, 6],
   ]
   for (const [at, height] of bursts) {
     const s = g.t - at
@@ -166,18 +173,19 @@ export function spray(g: Paint): void {
       const vi = v0 * (0.55 + 0.45 * hash(i, 7, Math.round(at * 10)))
       const y = -vi * s + 0.5 * 24 * s * s
       if (y > 0.6) continue
+      const yy = SEA + y
       const x = CLIFF.foot - 0.6 - Math.abs(spread) * 2.4 - s * 1.2 * (0.4 + Math.abs(spread))
       const r = (0.5 + 0.5 * hash(i, 11)) * (0.7 + height * 0.2) * (1 + s * 0.6)
       const a = (1 - smooth(s, 0.8, 3.0)) * 0.75
-      blob(g.ctx, [[x - r, y], [x - r * 0.4, y - r * 0.8], [x + r * 0.5, y - r * 0.7], [x + r, y + r * 0.1], [x + r * 0.2, y + r * 0.6], [x - r * 0.7, y + r * 0.5]])
+      blob(g.ctx, [[x - r, yy], [x - r * 0.4, yy - r * 0.8], [x + r * 0.5, yy - r * 0.7], [x + r, yy + r * 0.1], [x + r * 0.2, yy + r * 0.6], [x - r * 0.7, yy + r * 0.5]])
       fill(g.ctx, rgba(AIR.foam, a))
     }
   }
 }
 
 /**
- * Rain: tall curtains of it moving east across the sea, slanted, a little paler than the air behind them. No streaks
- * or drops (a field of small marks reads as noise); the curtains are the rain.
+ * Rain: tall curtains of it moving east across the sea, slanted, a little darker than the air behind them, as showers
+ * at sea are (paler ones read as shafts of light). No streaks or drops (a field of small marks reads as noise).
  */
 export function rain(g: Paint, strength = 1): void {
   const v = g.view
@@ -188,7 +196,7 @@ export function rain(g: Paint, strength = 1): void {
     const w = 14 + 10 * hash(i, 9)
     const x = round(v, L, hash(i, 5) * 3000 + g.t * (2.4 + i * 0.5), w)
     const top = -40
-    const foot = 0.5
+    const foot = SEA + 0.5
     const skew = 6
     const p = (xx: number, yy: number): Pt => L.pt([xx, yy])
     poly(ctx, [p(x, top), p(x + w, top), p(x + w - skew, foot), p(x - skew, foot)])

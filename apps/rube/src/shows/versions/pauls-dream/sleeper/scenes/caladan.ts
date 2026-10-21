@@ -118,8 +118,8 @@ function flinch(t: number): number {
 /** The camera: the sea, the cliff and the window; the room; the test; the hall; the field and the climb. */
 const shots: Shot[] = [
   // The sea, the cliff, the castle on it, one window lit; slowly in.
-  { t: 0, cells: 48, at: [-584, -17.5] },
-  { t: T.rise, cells: 40, at: [-576, -19.5] },
+  { t: 0, cells: 64, at: [-577, -11] },
+  { t: T.rise, cells: 54, at: [-572, -13.5] },
   // Up the cliff and in to the window, through the wall.
   { t: 21, cells: 11, at: [-559.5, -25.5] },
   { t: T.window, cells: 3.2, at: [-556.15, -26.98] },
@@ -144,8 +144,8 @@ const shots: Shot[] = [
   { t: T.hall, cells: 5.1, at: [-555.2, -14.05], cut: true },
   { t: T.sea - 0.002, cells: 4.9, at: [-555.4, -14.0] },
   // From the sea: the two of them small in a window of the tower on its cliff.
-  { t: T.sea, cells: 19, at: [-565.5, -16.0], cut: true },
-  { t: T.inside - 0.002, cells: 17.5, at: [-565.0, -15.8] },
+  { t: T.sea, cells: 24, at: [-567, -11], cut: true },
+  { t: T.inside - 0.002, cells: 22.5, at: [-566.2, -11.3] },
   // Back in: the head comes down into its crate.
   { t: T.inside, cells: 4.7, at: [-554.6, -14.0], cut: true },
   { t: T.lid, cells: 4.4, at: [-554.4, -13.95] },

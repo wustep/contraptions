@@ -42,62 +42,74 @@ export function faceAt(t: number): number {
   return 0
 }
 
-/** The castle seen from outside: its masses, roofs and windows. `a` is how much of it is drawn (its face's share). */
+/**
+ * The castle's silhouette: one stepped mass of stone, its sea face a single sheer wall from the cliff's edge to the
+ * crown, stepping down eastward to a terrace and the field. Walls lean in a little as they rise. Drawn as one path, so a
+ * face fading in or out never shows one mass through another.
+ */
+const MASS: Pt[] = [
+  [CLIFF.edge, CLIFF.top + 0.2],
+  [TOWER.x0 + 0.3, -29.0],
+  [TOWER.x0 + 0.4, TOWER.top - 1.2],
+  [TOWER.x0 - 1.0, TOWER.top - 1.2],
+  [TOWER.x0 - 1.0, TOWER.top - 2.5],
+  [TOWER.x1 + 1.2, TOWER.top - 2.5],
+  [TOWER.x1 + 1.2, TOWER.top - 1.2],
+  [TOWER.x1, TOWER.top - 1.2],
+  [TOWER.x1 + 0.2, -28.8],
+  [-533.3, -28.6],
+  [-533.0, -25.2],
+  [-519.4, -25.0],
+  [-518.6, -21.8],
+  [-518.0, CLIFF.top + 0.2],
+]
+
+/** The castle seen from outside: its mass, its steps' shadows, and its windows. `a` is how much of it is drawn. */
 function exterior(g: Paint, a: number): void {
   if (a <= 0.003) return
   const ctx = g.ctx
   ctx.save()
   ctx.globalAlpha = a
-  // The block, battered (its walls lean in as they rise), under a low broad roof; a shorter tower at its east end.
-  poly(ctx, [[BLOCK.x0, CLIFF.top], [BLOCK.x0 + 0.4, BLOCK.top], [BLOCK.x1 - 0.4, BLOCK.top], [BLOCK.x1, CLIFF.top]])
-  fill(ctx, vgrad(ctx, BLOCK.top, CLIFF.top, [[0, C.stone], [1, C.stoneDark]]))
-  poly(ctx, [[BLOCK.x0 - 0.6, BLOCK.top + 0.1], [BLOCK.x0 + 1.4, BLOCK.top - 1.3], [BLOCK.x1 - 1.4, BLOCK.top - 1.3], [BLOCK.x1 + 0.6, BLOCK.top + 0.1]])
-  fill(ctx, C.roof)
-  const east = { x0: BLOCK.x1 - 6.5, x1: BLOCK.x1 - 0.8, top: BLOCK.top - 5.5 }
-  poly(ctx, [[east.x0, BLOCK.top + 0.1], [east.x0 + 0.3, east.top], [east.x1 - 0.3, east.top], [east.x1, BLOCK.top + 0.1]])
-  fill(ctx, vgrad(ctx, east.top, BLOCK.top, [[0, C.stoneLit], [1, C.stone]]))
-  rect(ctx, east.x0 - 0.5, east.top - 0.7, east.x1 - east.x0 + 1, 0.7)
-  fill(ctx, C.roof)
-  // The great tower on the cliff's edge, with two of its windows open on its face: Paul's room and the hall's sea end
-  // behind them, and anyone in them, are seen through. Its top is a heavy slab that overhangs it. No spires.
+  // The mass, with two of its windows open: Paul's room and the hall's sea end behind them, and anyone in them, are
+  // seen through.
   ctx.beginPath()
-  ctx.rect(TOWER.x0, TOWER.top, TOWER.x1 - TOWER.x0, CLIFF.top - TOWER.top)
+  MASS.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
+  ctx.closePath()
   ctx.rect(ROOM.x0 + 0.5, ROOM.ceil + 0.3, 1.6, ROOM.floor - ROOM.ceil - 0.3)
   ctx.rect(HALL.x0 + 0.35, HALL.floor - 2.2, 2.0, 2.2)
-  ctx.fillStyle = vgrad(ctx, TOWER.top, CLIFF.top, [[0, C.stoneLit], [0.6, C.stone], [1, C.stoneDark]])
+  ctx.fillStyle = vgrad(ctx, TOWER.top - 2.5, CLIFF.top, [[0, C.stoneLit], [0.55, C.stone], [1, C.stoneDark]])
   ctx.fill('evenodd')
-  rect(ctx, TOWER.x0, TOWER.top, 1.1, ROOM.ceil + 0.3 - TOWER.top)
-  fill(ctx, rgba(C.stoneLit, 0.5))
-  rect(ctx, TOWER.x0 - 1.3, TOWER.top - 1.3, TOWER.x1 - TOWER.x0 + 2.6, 1.3)
-  fill(ctx, C.roof)
-  rect(ctx, TOWER.x0 - 1.3, TOWER.top - 1.3, TOWER.x1 - TOWER.x0 + 2.6, 0.18)
-  fill(ctx, mix(C.roof, C.stoneLit, 0.6))
-  // Courses: three dark bands round the tower and the block, where the floors are.
-  for (const y of [-16.9, -21.6, -25.6]) {
-    rect(ctx, TOWER.x0, y, TOWER.x1 - TOWER.x0, 0.25)
-    fill(ctx, rgba(C.stoneDark, 0.8))
-  }
-  // Windows: deep slits, dark, and a few lit: Paul's (the tower's top), the hall's tall one, two in the block.
+  // The sea face takes the sky's light: a paler band down its western edge.
+  poly(ctx, [[CLIFF.edge, CLIFF.top + 0.2], [TOWER.x0 + 0.3, -29.0], [TOWER.x0 + 1.4, -29.0], [CLIFF.edge + 1.1, CLIFF.top + 0.2]])
+  fill(ctx, rgba(C.stoneLit, 0.45))
+  // The crown's slab, its sky-lit edge; the shadows under each step.
+  rect(ctx, TOWER.x0 - 1.0, TOWER.top - 2.5, TOWER.x1 - TOWER.x0 + 2.2, 0.2)
+  fill(ctx, mix(C.roof, C.stoneLit, 0.7))
+  rect(ctx, TOWER.x0 - 1.0, TOWER.top - 1.2, TOWER.x1 - TOWER.x0 + 2.2, 0.35)
+  fill(ctx, rgba('#101413', 0.8))
+  rect(ctx, TOWER.x1 + 0.2, -28.6, -533.3 - TOWER.x1 - 0.2, 0.3)
+  fill(ctx, rgba('#101413', 0.6))
+  rect(ctx, -533.0, -25.0, 13.6, 0.3)
+  fill(ctx, rgba('#101413', 0.6))
+  // Windows: deep slits in rows, a few lit (the house is awake before dawn).
   const slit = (x: number, y0: number, y1: number, w: number, lit: number) => {
     rect(ctx, x, y0, w, y1 - y0)
     fill(ctx, lit > 0 ? mix(C.slit, C.lit, lit) : C.slit)
   }
-  slit(TOWER.x0 + 0.1, -21.2, -20.2, 0.5, 0)
-  for (let i = 0; i < 7; i++) {
-    const x = BLOCK.x0 + 1.6 + i * 3.3
-    slit(x, -20.4, -19.1, 0.45, i === 1 || i === 4 ? 0.85 : 0)
-    slit(x, -15.6, -14.2, 0.45, i === 5 ? 0.7 : 0)
+  for (let i = 0; i < 12; i++) {
+    const x = -548.2 + i * 2.45
+    if (x > -519.5) break
+    slit(x, -20.6, -19.2, 0.42, i === 2 || i === 7 ? 0.85 : 0)
+    slit(x, -15.4, -14.0, 0.42, i === 9 ? 0.7 : 0)
+    if (x < -534) slit(x, -27.4, -26.2, 0.42, i === 4 ? 0.6 : 0)
   }
   ctx.restore()
 }
 
-/** The section's cut face: the castle's mass round the rooms, a little lighter than the night inside them. */
+/** The section's cut face: the castle's mass round the rooms, darker than the rooms in it. */
 function section(g: Paint): void {
-  const ctx = g.ctx
-  rect(ctx, TOWER.x0, TOWER.top, TOWER.x1 - TOWER.x0, CLIFF.top - TOWER.top)
-  fill(ctx, C.cut)
-  rect(ctx, BLOCK.x0, BLOCK.top, BLOCK.x1 - BLOCK.x0, CLIFF.top - BLOCK.top)
-  fill(ctx, C.cut)
+  poly(g.ctx, MASS)
+  fill(g.ctx, C.cut)
 }
 
 /** A room's box: its back wall, warmer low down where the lamp is (`warm`), its floor of boards. */
