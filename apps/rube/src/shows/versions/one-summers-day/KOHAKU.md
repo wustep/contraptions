@@ -106,3 +106,32 @@ every onset with its strength, and the eighths tracked through its rubato, into 
 - every bare camera cut to it;
 - every ball's way whole, and nobody jumping, coming or going in shot but at a cut or across a dissolve;
 - the credits and the soundtrack to what they owe.
+
+## The rounds
+
+*A log, in the order the rounds were made: what each looked at, what it found and what it changed.*
+
+**Round 0, the first build.** The kit, the way in, the dragon, the name and home were built in the director's
+worktree. The bathhouse's night and the train were built in parallel worktrees from the same kit and integrated by
+copying their scene folders. The sea is the train builder's (`world/sea.ts`) and lies under every eastern scene.
+
+**Round 1, at the viewer's size.** The whole show was played in real time, silent, in six parallel 46 s chunks on a
+1440×810 desktop page and screenshotted twice a second, and the key beats were seen on a 390×844 phone held upright.
+A frame-to-frame sweep at 30 fps flagged only the intended cuts.
+- **The gate.** For its first ten seconds she was a dot in a wall of red. The camera now sits closer on the arch as
+  she comes up out of it and goes out into the sun, then opens on the summer.
+- **The bridge.** Haku came to her inside the reveal's pull-back, two specks. The meeting is now seen at the bridge's
+  foot, the bathhouse's lit footings at the frame's edge, and the camera goes up and back to the whole building only as
+  they set off across together.
+- **The crest.** The haul held one medium shot for ten seconds. The camera now closes in pull by pull, and opens as
+  the thorn comes free to take the junk pouring out.
+- **The river spirit's going.** Outside, the ribbon of him came a second late and read as the chimney's smoke. It is
+  paler and fuller, the old face at its head, and already rising over the roofs at the cut.
+- **The boiler room.** The soot carrying the coal was half off the frame's edge; the shot holds a little further right.
+- **The sea's wide.** It was empty for five seconds while the dragon was still out of frame. It is centred further
+  out, and he comes in at its edge.
+- **The car.** Its last camera key before the dusk held still while the car went on, so it slid in the frame for two
+  frames before the dissolve; the camera is keyed to the car to the cut.
+- **The far houses on the sea** stood in an even row like markers; they are fewer, and uneven.
+- **Over the cloud,** on a phone the meadow's far hills showed as a green band over the cloud sea. They are not drawn
+  from that high.
