@@ -6,7 +6,7 @@ import { Run, Walk } from '../path'
 import { PLACES } from '../plan'
 import type { Dream, Scene } from '../scene'
 import type { Actor } from '../show'
-import { HOLD, craftAt, drawCraft, drawCraftOver, drawDoorway, onCraft, pose } from './storm/craft'
+import { HOLD, craftAt, drawCraft, drawCraftOver, drawDoorway, heaveAt, onCraft, pose, wobble } from './storm/craft'
 import { FROM, JAMIS_IN_VISION, LANDING, T, TENT, TO, VISIONS, ground, keyed, onFloor } from './storm/geo'
 import { drawHunters, drawHuntersOver } from './storm/hunters'
 import { drawLand } from './storm/land'
@@ -109,7 +109,9 @@ const LAND_Y = ground(LANDING)
 const TENT_Y = ground(TENT)
 /** Inside the storm: a little behind it, and slower than it to follow it down, so the drop is seen as a drop. */
 const levelY = keyed([[323.5, -5.4], [326.0, -5.0], [329.5, -3.7], [332.5, -3.3]])
-const level = (t: number): Pt => [craftAt(t)[0] - 0.6, levelY(t)]
+/** The camera rides with it a beat behind: some of its heave, some of its roll, so the ride is felt and nothing shakes. */
+const level = (t: number): Pt => [craftAt(t)[0] - 0.6, levelY(t) + 0.5 * heaveAt(t - 0.3)]
+const sway = (t: number): number => 0.4 * wobble(t - 0.35)
 
 /**
  * The tent, in two framings, each a slow push in from one held framing to another, eased from rest to rest (as the
@@ -128,8 +130,8 @@ interface Push {
   /** Where Paul sits in the frame (shares across and down). */
   paul: Pt
 }
-const WIDE: Push = { t0: T.voiceIn, t1: 300.15, c0: 2.65, c1: 2.3, paul: [0.17, 0.85] }
-const TWO: Push = { t0: 300.18, t1: 309.4, c0: 1.62, c1: 1.5, paul: [0.42, 0.86] }
+const WIDE: Push = { t0: T.voiceIn, t1: 300.48, c0: 2.65, c1: 2.3, paul: [0.17, 0.85] }
+const TWO: Push = { t0: T.vision3[0], t1: 309.4, c0: 1.62, c1: 1.5, paul: [0.42, 0.86] }
 const PAUL_IN: Pt = [TENT - 0.2, TENT_Y - 0.13]
 
 /** The held framing that puts Paul at `push.paul` in a frame `cells` tall. */
@@ -181,10 +183,10 @@ const shots: Shot[] = [
   // Close behind, the face of the storm filling the frame: in.
   { t: 322.58, cells: 7, on: craftAt, off: [0.7, -0.3], cut: true },
   // Inside, the camera flies level while the wings fold and it drops, so the drop is seen; the hunters behind it.
-  { t: 324.2, cells: 6.8, on: level },
-  { t: 330.6, cells: 6.6, on: level },
-  { t: 332.5, cells: 6.6, on: craftAt, off: [0.4, -0.2] },
-  { t: T.burst - 0.002, cells: 6.6, on: craftAt, off: [0.4, -0.2] },
+  { t: 324.2, cells: 6.8, on: level, roll: sway },
+  { t: 330.6, cells: 6.6, on: level, roll: sway },
+  { t: 332.5, cells: 6.6, on: craftAt, off: [0.4, -0.2], roll: sway },
+  { t: T.burst - 0.002, cells: 6.6, on: craftAt, off: [0.4, -0.2], roll: sway },
   // Out of the storm's back into the morning.
   { t: T.burst, cells: 17, at: [842, -6.6], cut: true },
   { t: T.glide, cells: 16, at: [844.6, -6.1] },
@@ -226,8 +228,8 @@ const dreams: Dream[] = [
     to: T.vision2[1],
     at: VISIONS.duel.at,
     rate: VISIONS.duel.rate,
-    a: (t) => 0.92 * bell(t, T.vision2[0], T.vision2[0] + 0.75, T.vision2[1] - 0.55, T.vision2[1]),
-    iris: opening(WIDE, T.vision2[0], T.vision2[1], [0.48, 0.64], 0.2, 0.85, 0.55),
+    a: (t) => 0.92 * bell(t, T.vision2[0], T.vision2[0] + 0.75, T.vision2[1] - 0.75, T.vision2[1]),
+    iris: opening(WIDE, T.vision2[0], T.vision2[1], [0.48, 0.6], 0.32, 0.85, 0.75),
   },
   // The worm and its rider: the rider at (0.48, 0.39) of the worm's shot, over the two of them.
   {
@@ -236,7 +238,7 @@ const dreams: Dream[] = [
     at: VISIONS.rider.at,
     rate: VISIONS.rider.rate,
     a: (t) => 0.92 * bell(t, T.vision3[0], T.vision3[0] + 1.2, T.vision3[1] - 1.6, T.vision3[1]),
-    iris: opening(TWO, T.vision3[0], T.vision3[1], [0.49, 0.42], 0.25, 1.8, 1.6),
+    iris: opening(TWO, T.vision3[0], T.vision3[1], [0.49, 0.4], 0.32, 1.8, 1.6),
   },
 ]
 

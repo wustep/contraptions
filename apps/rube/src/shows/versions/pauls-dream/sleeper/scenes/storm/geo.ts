@@ -36,7 +36,7 @@ export const T = {
   voiceIn: M.voice,
   /** The visions: Chani; the duel; the rider. */
   vision1: [M.voice, 297.2] as [number, number],
-  vision2: [297.494, 300.15] as [number, number],
+  vision2: [297.494, 300.48] as [number, number],
   vision3: [300.507, 309.209] as [number, number],
   /** Dawn greys the tent. */
   dawn: [305.5, 312.4] as [number, number],

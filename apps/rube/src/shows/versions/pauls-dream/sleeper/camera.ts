@@ -26,6 +26,11 @@ export interface Shot {
   cut?: boolean
   /** What the shot is about, for Zoom. Left out: the tracked subject, or the held point. */
   focus?: Pt
+  /**
+   * The camera's roll, radians, clockwise, as a function of show time (a slow drift with something buffeted). Eased in
+   * and out between shots like everything else; left out, the picture is square.
+   */
+  roll?: (t: number) => number
 }
 
 /** A Fritsch–Carlson cubic through (ts, vs), flat outside; a segment that ends on a cut holds its left value. */
@@ -118,7 +123,8 @@ export function lens(shots: Shot[], hero: (t: number) => Pt): (t: number) => Fra
     if (only) {
       const s = ks[k]
       const p: Pt = s.at ?? subject(k, t)
-      return { x: p[0], y: p[1], cells, focus: s.focus ?? (s.at ? undefined : hero(t)) }
+      const angle = s.roll ? s.roll(t) : undefined
+      return { x: p[0], y: p[1], cells, focus: s.focus ?? (s.at ? undefined : hero(t)), angle }
     }
     const u = ease((t - ts[i]) / Math.max(1e-9, ts[j] - ts[i]))
     const H: Pt = [hx(t), hy(t)]
@@ -135,6 +141,9 @@ export function lens(shots: Shot[], hero: (t: number) => Pt): (t: number) => Fra
       p = [F[0] + (H[0] - F[0]) * w, F[1] + (H[1] - F[1]) * w]
     }
     const focus = (u < 0.5 ? a.focus : b.focus) ?? (a.at && b.at ? undefined : hero(t))
-    return { x: p[0], y: p[1], cells, focus }
+    const ra = a.roll ? a.roll(t) : 0
+    const rb = b.roll ? b.roll(t) : 0
+    const angle = a.roll || b.roll ? ra + (rb - ra) * u : undefined
+    return { x: p[0], y: p[1], cells, focus, angle }
   }
 }

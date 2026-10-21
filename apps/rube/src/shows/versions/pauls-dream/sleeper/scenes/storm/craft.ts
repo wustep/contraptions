@@ -102,14 +102,23 @@ const pitch = keyed([
 /** How far into the storm it is: 0 outside, 1 a few cells in. */
 export const inStorm = (px: number): number => smooth(px, STORM.front - 1, STORM.front + 4) * (1 - smooth(px, STORM.back - 4, STORM.back + 1))
 
+/**
+ * How the storm rolls it, radians: a slow roll one way and back over two or three seconds, with a smaller slower one
+ * under it, never a judder. The camera inside drifts with it (`storm.ts`).
+ */
+export const wobble = (t: number): number => inStorm(x(t)) * (0.17 * drift(t * 0.38, 47) + 0.05 * drift(t * 0.9, 48))
+
+/** How far the storm heaves it up or down (cells), `s` how far into the storm it is. */
+export const heaveAt = (t: number, s = inStorm(x(t))): number => s * (0.32 * drift(t * 0.9, 41) + 0.1 * drift(t * 1.7, 43))
+
 export function pose(t: number): ThopterPose {
   const px = x(t)
-  // Buffeted inside the storm: slow heaves, never a judder.
+  // Buffeted inside the storm: slow heaves and a slow roll.
   const s = inStorm(px)
-  const heave = s * (0.32 * drift(t * 0.9, 41) + 0.12 * drift(t * 2.3, 43))
+  const heave = heaveAt(t, s)
   // The landing's jolt, rung down.
   const jolt = 0.07 * ring(t, T.land, 2.6, 0.22)
-  return { x: px, y: y(t) + heave + jolt, face: 1, pitch: pitch(t) + s * 0.1 * drift(t * 1.1, 47) }
+  return { x: px, y: y(t) + heave + jolt, face: 1, pitch: pitch(t) + wobble(t) }
 }
 
 /** The wings: beating as it flies, stuttering as it falls, folded on the dune, open at dawn, folded in the storm. */
