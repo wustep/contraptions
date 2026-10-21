@@ -13,7 +13,7 @@ import { paintCables, paintCarryall, paintHarvester, paintPlume } from './desert
 /**
  * The deep desert, by day, on the chant and the first great blows (0 to 104.1).
  *
- *     0       the desert, vast; far off on the flat the harvester at work under its plume; two specks on a rock
+ *     0       two on a rock's lip, close; the camera draws back to the desert, vast, the harvester at work far off
  *    12.6     the machine close: crawling west, scoop down, its plume going up; the carryall high over it
  *    27.9     the first boom: the two of them on the rock's lip; sand runs off it; he looks east
  *    29.5     worm sign: a swell under the flat from the east, heaving on each boom
@@ -122,9 +122,10 @@ export const desert: Scene = {
   paul: [hold(PAUL_SEAT, T.open, W.boom + 0.15, 0), hold(PAUL_SEAT, W.boom + 0.15, W.maw, -0.32), hold(PAUL_SEAT, W.maw, T.thumper, 0.05)],
   chani: [hold(CHANI_SEAT, T.open, W.sign, 0), hold(CHANI_SEAT, W.sign, T.thumper, -0.2)],
   shots: [
-    // The desert, vast: the rock low at the west end, the machine and its plume far off.
-    { t: W.open, cells: 44, at: [14, -13.5] },
-    { t: W.machine - 0.01, cells: 38, at: [16, -12.5] },
+    // Close on the two of them on the lip, drawing back until the desert is the frame, the machine far off under its
+    // plume, and they are two specks on the rock.
+    { t: W.open, cells: 8, at: [PAUL_SEAT[0] - 1.2, PAUL_SEAT[1] - 1.3] },
+    { t: W.machine - 0.01, cells: 44, at: [14, -13.5] },
     // The machine close, going along with it as it crawls.
     { t: W.machine, cut: true, cells: 23, at: [harvesterX(W.machine) + 1.5, -8.4] },
     { t: W.boom - 0.01, cells: 21, at: [harvesterX(W.boom) + 0.5, -8.2] },
