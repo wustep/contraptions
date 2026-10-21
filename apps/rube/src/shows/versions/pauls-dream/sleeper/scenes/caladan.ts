@@ -1,5 +1,5 @@
 import type { Shot } from '../camera'
-import { LETO, MOTHER } from '../cast'
+import { JESSICA, LETO, MOTHER, PAUL } from '../cast'
 import { bell, kick, ring, standing, type Pt } from '../paint'
 import { Walk } from '../path'
 import { DREAM_SHOT, FOLD, PLACES, WINDOWS } from '../plan'
@@ -240,7 +240,7 @@ export const caladan: Scene = {
     ['the fold', T.fold],
   ],
   // They go into the frigate behind its hull.
-  covered: [],
+  covered: [[T.field + 0.9, LETO.id], [T.field + 1.2, JESSICA.id], [T.field + 1.5, PAUL.id]],
 }
 
 /** Where Paul is, for the gom jabbar's point. */
