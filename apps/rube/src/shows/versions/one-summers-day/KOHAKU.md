@@ -135,3 +135,19 @@ A frame-to-frame sweep at 30 fps flagged only the intended cuts.
 - **The far houses on the sea** stood in an even row like markers; they are fewer, and uneven.
 - **Over the cloud,** on a phone the meadow's far hills showed as a green band over the cloud sea. They are not drawn
   from that high.
+
+**Round 2, the camera and the bath.** The camera's pan and zoom were measured every sixtieth of a second over the whole
+show, in frame heights and in log-size a second, and every window over a threshold was looked at.
+- **Into the hall** the camera dived from the bathhouse's wide to the door and swung through the front into the hall at
+  nearly two frame heights a second. The wide now holds while they cross, and on the note she reaches the door the
+  picture cuts in to her at it, the hall's front going away as she goes in.
+- **Before the name** it closed from the gap's wide to the two of them at over one log-unit a second; it now starts
+  sooner and arrives on the cadence. The pull-backs off the balcony, before the sea's wide and as the dragon wheels in,
+  are a second longer each, and the landing's push-in comes a little after they touch down.
+- **The great bath** read murky: dark wood, a row of night windows high in the back wall, a brown room. The wall is
+  the warm wood of a lamplit room, the windows are cut, and once the hot water runs a little steam lifts off it, few
+  and slow.
+- **The dragon's head** was a plain white shape. It now has a sea-green eye under a brow, an ear's fin edged with
+  the mane's green, two forked pale horns, and a muzzle that lifts a little at the nose.
+- The whole show was played again in real time on a 390×844 phone held upright. In the band where the 16:9 frame
+  sits, every beat reads.
