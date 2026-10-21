@@ -1,4 +1,4 @@
-import { clamp01, ellipse, smooth, type Brush } from '../../paint'
+import { clamp01, ellipse, mix, smooth, vgrad, type Brush } from '../../paint'
 import { SAND } from '../../world/land'
 import { FUNNEL_R, MAW_R, W, XH, funnelDepth, swellH, swellX } from './plan'
 
@@ -23,13 +23,23 @@ export function flatAt(x: number, t: number): number {
   return -h * k * k
 }
 
+/**
+ * The flat's fill: lit sand at the horizon, going a little into shade toward the frame's foot, the ground nearest the
+ * camera, so a wide has a near and a far without anything drawn on it.
+ */
+export function flatFill(b: Brush): CanvasGradient {
+  const { view } = b
+  const foot = Math.max(view.y1, 1)
+  return vgrad(b, 0, foot, [[0, SAND.lit], [0.35, SAND.lit], [1, mix(SAND.lit, SAND.shade, 0.22)]])
+}
+
 /** The flat across the frame, with the swell and its shadowed face. */
 export function paintFlat(b: Brush, t: number): void {
   const { ctx, view } = b
   const x0 = view.x0 - 1
   const x1 = view.x1 + 1
   const bottom = Math.max(view.y1 + 1, 2)
-  ctx.fillStyle = b.c(SAND.lit)
+  ctx.fillStyle = flatFill(b)
   ctx.fillRect(x0, 0, x1 - x0, bottom)
   const h = swellH(t)
   if (h <= 0.01) return
@@ -45,7 +55,7 @@ export function paintFlat(b: Brush, t: number): void {
   }
   ctx.lineTo(sx + SWELL_L, 0.05)
   ctx.closePath()
-  ctx.fillStyle = b.c(SAND.lit)
+  ctx.fillStyle = flatFill(b)
   ctx.fill()
   const crest = sx - SWELL_L * 0.12
   ctx.beginPath()
@@ -134,6 +144,6 @@ export function paintFunnelFront(b: Brush, t: number): void {
   ctx.lineTo(XH + wide, bottom)
   ctx.lineTo(XH - wide, bottom)
   ctx.closePath()
-  ctx.fillStyle = b.c(SAND.lit)
+  ctx.fillStyle = flatFill(b)
   ctx.fill()
 }
