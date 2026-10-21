@@ -4,6 +4,7 @@ import { beat, COMBS } from '../../music'
 import { hold, hop, over, ride, Path, type Move } from '../../motion'
 import { hash, type Pt } from '../../paint'
 import type { Actor } from '../../show'
+import { chaniEnding, paulEnding } from './ending'
 import { B, FROM, RISE, TO, ground, leadWorm } from './plan'
 
 /**
@@ -11,8 +12,8 @@ import { B, FROM, RISE, TO, ground, leadWorm } from './plan'
  *
  * Paul and Chani ride the lead worm's back from the moment it comes out of the storm, through the camp, over the rearing
  * and the crash; it lowers them to the sand, and they get down, and go up onto the rise between the ranks and the great
- * ship. He stays there, looking east over the field. After the music she goes, alone, west toward the low sun, and
- * he turns to look after her.
+ * ship. Then the last image (`ending.ts`): on a dune above the field, he looks east over it; after the music she goes,
+ * alone, west toward the low sun, and he turns to look after her.
  *
  * Two Fremen ride ahead of them on the back and get down east of the rise. A dozen more run out of the storm's skirt on
  * foot, a stride on every beat of the charge, and stop in knots by the wreck, east of the rise.
@@ -29,10 +30,7 @@ const onSand = (x: number, size = 1): Pt => [x, ground(x) - R * size]
 /** The charge's beats, by number. */
 const bt = (n: number) => beat('charge', n)
 
-/** When Paul turns from the field to look after Chani. */
-const PAUL_TURNS = 327.5
-
-/** Paul: on the back, down onto the sand on the beat after the worm lowers him, up the rise, and there. */
+/** Paul: on the back, down onto the sand on the beat after the worm lowers him, up the rise; then the last image. */
 export const paulMoves: Move[] = (() => {
   const land = onSand(RISE.x - 3.6)
   return [
@@ -40,16 +38,11 @@ export const paulMoves: Move[] = (() => {
     hop(seat(PAUL_S, 1)(B.off), land, B.off, bt(70)),
     hold(land, bt(70), bt(72), 0),
     over(ground, land[0], RISE.x - 0.25, bt(72), bt(77), 'inout'),
-    hold(onSand(RISE.x - 0.25), bt(77), PAUL_TURNS, -0.08),
-    // When she has gone a little way, he turns to look after her.
-    hold(onSand(RISE.x - 0.25), PAUL_TURNS, TO, Math.PI - 0.25),
+    hold(onSand(RISE.x - 0.25), bt(77), B.last, -0.08),
+    ...paulEnding,
   ]
 })()
 
-/** When Chani leaves him, and how far she goes. */
-export const CHANI_GOES = 321.6
-/** Where she has got to by the end: west, alone, back into the desert. */
-export const CHANI_AWAY = RISE.x - 24
 export const chaniMoves: Move[] = (() => {
   const land = onSand(RISE.x - 7, CHANI_SIZE)
   const top = RISE.x - 2.4
@@ -58,9 +51,8 @@ export const chaniMoves: Move[] = (() => {
     hop(seat(CHANI_S, CHANI_SIZE)(bt(70)), land, bt(70), bt(71)),
     hold(land, bt(71), bt(73), 0),
     over(ground, land[0], top, bt(73), bt(78), 'inout', CHANI_SIZE),
-    hold(onSand(top, CHANI_SIZE), bt(78), CHANI_GOES, 0.1),
-    over(ground, top, CHANI_AWAY, CHANI_GOES, TO - 1.5, 'inout', CHANI_SIZE),
-    hold(onSand(CHANI_AWAY, CHANI_SIZE), TO - 1.5, TO, Math.PI),
+    hold(onSand(top, CHANI_SIZE), bt(78), B.last, 0.1),
+    ...chaniEnding(CHANI_SIZE),
   ]
 })()
 

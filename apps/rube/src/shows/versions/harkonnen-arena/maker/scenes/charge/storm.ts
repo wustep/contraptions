@@ -2,7 +2,7 @@ import { circle, composed, hash, layer, mix, rect, smooth, smoother, vgrad, type
 import { paintRange, type Range } from '../../world/dunes'
 import { depthScale, frameH, horizonOf } from '../../world/land'
 import { skyOf, type SkyKey } from '../../world/sky'
-import { CHORD_DIES, FROM, stormFront, stormLeft } from './plan'
+import { B, CHORD_DIES, FROM, stormFront, stormLeft } from './plan'
 
 /**
  * The storm over the basin, and the sky it leaves.
@@ -16,21 +16,23 @@ import { CHORD_DIES, FROM, stormFront, stormLeft } from './plan'
  * sun low in the west coming out of the last of the dust.
  */
 
-/** The horizon's place in the frame: low, so the sky and the storm have most of it. */
+/** The horizon's place in the frame: low, so the sky and the storm have most of it; in the last image a little higher. */
 export const TILT = 0.2
+export const END_TILT = 0.14
+export const tiltAt = (t: number): number => (t >= B.last ? END_TILT : TILT)
 
 /** The sun is hidden in the storm; it comes out as the dust thins. */
-const SUN_OUT = 315.5
+const SUN_OUT = 313.5
 
 export const SKY: SkyKey[] = [
   { t: FROM, top: '#36231B', low: '#B4805A', sun: { x: 0.24, y: 0.62, r: 0.022, color: '#FFE2B2' }, eclipse: 0 },
   { t: 309, top: '#3C271E', low: '#BA855C', sun: { x: 0.24, y: 0.62, r: 0.022, color: '#FFE2B2' }, eclipse: 0 },
-  { t: CHORD_DIES + 7, top: '#8A6D60', low: '#EAB27C', sun: { x: 0.24, y: 0.62, r: 0.022, color: '#FFE2B2' }, eclipse: 0 },
+  { t: CHORD_DIES + 2.5, top: '#8A6D60', low: '#EAB27C', sun: { x: 0.24, y: 0.585, r: 0.022, color: '#FFE2B2' }, eclipse: 0 },
 ]
 
 /** The sand's light: pale under the storm, so all that stands on it reads; warmer in the evening. */
 export function sandAt(t: number): { lit: string; shade: string; far: string } {
-  const u = smoother(t, 309, CHORD_DIES + 7)
+  const u = smoother(t, 309, CHORD_DIES + 2.5)
   return {
     lit: mix('#C58C5B', '#D49159', u),
     shade: mix('#7C4629', '#93532F', u),
@@ -143,7 +145,7 @@ function paintWall(b: Brush, wall: Wall, front: number, fall: number, a: number)
 /** The basin's sand as one gradient, from the horizon's far sand down to the near sand: anything of the sand uses it. */
 export function basinFill(b: Brush): CanvasGradient {
   const { ctx, view, t } = b
-  const hy = horizonOf(view, TILT)
+  const hy = horizonOf(view, tiltAt(t))
   const sand = sandAt(t)
   const far = mix(sand.far, skyOf(SKY, t).low, 0.3)
   const gr = ctx.createLinearGradient(0, hy, 0, Math.max(hy + 4, 0) + Math.max(6, frameH(view) * 0.25))
@@ -155,8 +157,8 @@ export function basinFill(b: Brush): CanvasGradient {
 
 /** The basin under the sky: one gradient, no edges. */
 export function paintBasin(b: Brush): void {
-  const { ctx, view } = b
-  const hy = horizonOf(view, TILT)
+  const { ctx, view, t } = b
+  const hy = horizonOf(view, tiltAt(t))
   ctx.fillStyle = basinFill(b)
   rect(ctx, view.x0 - 1, hy, view.w + 2, Math.max(0, view.y1 - hy) + 1)
   ctx.fill()
@@ -165,7 +167,7 @@ export function paintBasin(b: Brush): void {
 /** The sky, the far desert under the storm's light, and the wall. */
 export function paintStormSky(b: Brush): void {
   const { ctx, view, t } = b
-  const hy = horizonOf(view, TILT)
+  const hy = horizonOf(view, tiltAt(t))
   const sky = skyOf(SKY, t)
   ctx.fillStyle = vgrad(b, Math.min(view.y0, hy - view.h * 0.6), hy, [[0, sky.top], [0.72, mix(sky.top, sky.low, 0.6)], [1, sky.low]])
   rect(ctx, view.x0 - 1, view.y0 - 1, view.w + 2, Math.max(0, hy - view.y0) + 1)
@@ -183,7 +185,8 @@ export function paintStormSky(b: Brush): void {
   paintBasin(b)
   const sand = sandAt(t)
   paintRange(b, FAR_DUNES, depthScale(frameH(view), 1100), hy, { lit: sand.far, shade: sand.shade, air: sky.low, pale: 0.6 }, 1)
-  const left = stormLeft(t)
+  // The last image is beyond the storm: it has gone by there.
+  const left = t >= B.last ? 0 : stormLeft(t)
   if (left > 0.002) {
     const front = stormFront(t)
     const fall = 1 - left
@@ -201,7 +204,7 @@ export function paintStormSky(b: Brush): void {
  */
 export function paintSkirt(b: Brush): void {
   const { ctx, view, t } = b
-  const left = stormLeft(t)
+  const left = t >= B.last ? 0 : stormLeft(t)
   if (left <= 0.002) return
   const front = stormFront(t) + 24
   const reach = 18

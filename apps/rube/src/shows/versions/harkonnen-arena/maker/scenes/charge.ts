@@ -7,7 +7,8 @@ import { BLOCK_TAKEN, paintCamp, paintSmallShip, toppled } from './charge/camp'
 import { paintPuff, type Puff } from './charge/dust'
 import { chaniMoves, fremen, paulMoves, STRIDE_BEATS } from './charge/people'
 import { B, BREACH, EMPEROR, FROM, GROUND_SWELLS, SHIP1, SHIP2_HIT, TO, ground } from './charge/plan'
-import { basinFill, paintSkirt, paintStormSky, sandAt, SKY, TILT } from './charge/storm'
+import { basinFill, paintSkirt, paintStormSky, sandAt, SKY, tiltAt } from './charge/storm'
+import { ENDING_SHOTS, paintEnding } from './charge/ending'
 import { paintFarWorm, paintLead, SECOND, THIRD, type Far } from './charge/worms'
 
 /**
@@ -25,8 +26,9 @@ import { paintFarWorm, paintLead, SECOND, THIRD, type Far } from './charge/worms
  *   292.5   down onto it; the ship goes over, and lands on 295.4; the worm settles
  *   296.6   close: the worm lowers them to the sand; on 304.0 they get down, and go up onto the rise
  *   306.2   wide: the worms go down into the sand; the third ship down; the storm settling
- *   312.3   the last beat: the evening, the sun low in the west. Paul on the rise; the end credits, the camera slowly back;
- *           Chani goes west, alone, down the dunes toward the sun, and he turns to look after her
+ *   312.3   the last beat: the evening, on a dune above the field, the sun low in the west, the worms' trails out on the
+ *           flat and the great ship on its side far off. Paul on the crest; the end credits; Chani goes down the long
+ *           slope alone toward the sun, smaller and smaller, and he turns to look after her
  */
 
 /** The worms beyond the action's plane, each with a small ship in its layer that it knocks over. */
@@ -108,7 +110,12 @@ function paint(b: Brush): void {
   const t = b.t
   if (t < FROM) return
   paintStormSky(b)
-  const hy = horizonOf(b.view, TILT)
+  // The last image is a place of its own: the sky and the far flat, and its own dune, trails and far wreck.
+  if (t >= B.last) {
+    paintEnding(b, mix(skyOf(SKY, t).low, sandAt(t).far, 0.3))
+    return
+  }
+  const hy = horizonOf(b.view, tiltAt(t))
   const sand = sandAt(t)
   // The far layers, the furthest first; each worm's buried half under its layer's sand. The far riders keep their own
   // colour a little more than the dust round them, so they are seen on their worm's back.
@@ -183,11 +190,8 @@ export const charge: Scene = {
     // Wide: the worms going down, the storm settling over the field.
     { t: B.dive, cut: true, cells: 84, at: [9078, -26] },
     { t: B.last - 0.01, cells: 92, at: [9082, -28] },
-    // The evening: Paul on the rise, the low sun in the west; the camera slowly back as she goes toward it.
-    // (The horizon stays just under the crest, so he stands against the low sky all the way back.)
-    { t: B.last, cut: true, cells: 9, at: [9086.2, -2.8] },
-    { t: 330, cells: 15, at: [9083, -4] },
-    { t: TO, cells: 22, at: [9081, -5.4] },
+    // The last image: on a dune above the field, Paul on its crest; slowly back, and still.
+    ...ENDING_SHOTS,
   ],
   back: [drawing('charge', TO, paint)],
   front: [drawing('charge-skirt', TO, (b) => {
