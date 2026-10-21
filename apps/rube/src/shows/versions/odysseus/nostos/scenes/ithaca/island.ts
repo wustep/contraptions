@@ -44,28 +44,25 @@ const SHADE_E: Pt[] = [[805.5, -0.42], [CLIFF_E.foot, -0.9], [806.62, -2.6], [80
 const SHADE_W: Pt[] = [[CLIFF_W.top, TOP], [831.5, -8.1], [832.0, -6.6], [833.4, -5.7], [833.9, -3.9], [835.3, -3.0], [CLIFF_W.foot, -1.1], [836.9, 0.6], [834.6, 0.6], [833.0, -2.8], [831.2, -6.2], [829.9, TOP]]
 
 /**
- * The cliff's beds: where each ledge comes out of a face (`edge`), how far it runs into the rock before it is lost
- * (`into`), and the depth of the shadow under it at the face.
+ * The cliff's beds: where each ledge comes out of a face (`edge`, run out a little past it, for the island's outline
+ * to cut), how far it runs into the rock before it is lost (`into`), and the depth of the shadow under it at the face.
  */
 const LEDGES: { y: number; edge: number; into: number; h: number }[] = [
-  { y: -2.1, edge: 806.55, into: 812.6, h: 0.3 },
-  { y: -4.6, edge: 806.9, into: 811.8, h: 0.24 },
-  { y: -7.1, edge: 807.1, into: 813.2, h: 0.28 },
-  { y: -4.2, edge: 833.6, into: 829.4, h: 0.26 },
-  { y: -6.9, edge: 831.4, into: 828.2, h: 0.22 },
+  { y: -2.1, edge: 806.2, into: 812.6, h: 0.3 },
+  { y: -4.6, edge: 806.5, into: 811.8, h: 0.24 },
+  { y: -7.1, edge: 806.8, into: 813.2, h: 0.28 },
+  { y: -4.2, edge: 834.2, into: 829.4, h: 0.26 },
+  { y: -6.9, edge: 832.3, into: 828.2, h: 0.22 },
 ]
 
-/** The cliff's foot along the south face, dark where the sea wets it: its top as [x, y], east to west. */
-const WET: Pt[] = [[CLIFF_E.foot, -0.9], [807.4, -0.85], [810.5, -0.95], [813.8, -0.8], [817.2, -1.0], [821.0, -0.85], [825.4, -0.98], [829.6, -0.82], [833.4, -0.92], [CLIFF_W.foot, -1.1]]
+/** The cliff's foot along the south face, dark where the sea wets it: its top as [x, y], east to west, thinning out by the beach. */
+const WET: Pt[] = [[CLIFF_E.foot, 0.3], [807.0, -0.55], [807.9, -0.85], [810.5, -0.95], [813.8, -0.8], [817.2, -1.0], [821.0, -0.85], [825.4, -0.98], [829.6, -0.82], [833.4, -0.92], [CLIFF_W.foot, -1.1]]
 
-/** Scrub in the cliff's ledges and along the top: a few rounded clumps. */
+/** Scrub along the top and at the beach's foot: a few rounded clumps. */
 const SCRUBS: [number, number, number][] = [
   [808.0, -9.02, 0.3],
   [812.6, -9.02, 0.26],
   [829.6, -9.02, 0.32],
-  [831.6, -8.12, 0.26],
-  [833.5, -5.72, 0.3],
-  [835.4, -3.02, 0.26],
   [805.0, -0.4, 0.22],
 ]
 
@@ -142,11 +139,19 @@ export function drawIsland(g: Paint): void {
   // Its foot along the south face, darker where the sea wets it.
   poly(ctx, [...WET, [CLIFF_W.foot, 0.6], [CLIFF_E.foot, 0.6]])
   fill(ctx, mix(mix(stone, shade, 0.28 * aslant), rock(ROCK, t), 0.3))
-  // Each bed's ledge: the shadow under it, straight along the bed and thinning away into the rock, never ending square.
-  for (const s of LEDGES) {
-    const u = (f: number) => s.edge + (s.into - s.edge) * f
-    poly(ctx, [[s.edge, s.y], [s.into, s.y], [u(0.55), s.y + s.h * 0.4], [u(0.2), s.y + s.h * 0.85], [s.edge, s.y + s.h]])
-    fill(ctx, rgba(deep, 0.4))
+  // Each bed's ledge: the shadow under it, straight along the bed and thinning away into the rock, never ending square;
+  // cut off by the face itself, and gone as the island goes dark against the sun at the end.
+  const ledges = 0.4 * (1 - smooth(t, TRIAL.fade - 1.3, TRIAL.fade + 1.0))
+  if (ledges > 0.004) {
+    ctx.save()
+    blob(ctx, OUTLINE)
+    ctx.clip()
+    for (const s of LEDGES) {
+      const u = (f: number) => s.edge + (s.into - s.edge) * f
+      poly(ctx, [[s.edge, s.y], [s.into, s.y], [u(0.55), s.y + s.h * 0.4], [u(0.2), s.y + s.h * 0.85], [s.edge, s.y + s.h]])
+      fill(ctx, rgba(deep, ledges))
+    }
+    ctx.restore()
   }
   // The island's foot under the water: rock, darker, going down out of sight.
   poly(ctx, [[795.6, 2.2], [797.0, 0.4], [836.9, 0.6], [839.0, 3.5], [842.0, 8], [793.5, 8]])
