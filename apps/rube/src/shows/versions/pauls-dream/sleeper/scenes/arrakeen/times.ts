@@ -36,33 +36,42 @@ export const ATTACK = {
   /** Paul at his window; the Duke alone in the hall under the bull. */
   window: boomNear(200.79),
   duke: onsetNear(203.19, 1, 0.05),
-  /** Out to the city; the shield goes out from its crown down. */
-  wide: onsetNear(205.09, 1, 0.05),
+  /** In close on the palace's crown under the shield; the shield goes out from its crown down. */
+  crown: onsetNear(205.09, 1, 0.05),
   shieldOut: boomNear(206.83),
-  /** The armada comes down out of the night. */
+  /** The armada: its near ships passing low over the palace's roof; then all of it over the city. */
   armada: boomNear(210.11),
+  sky: onsetNear(215.0, 1, 0.05),
+  /** In close on the palace's roof as a shell comes in and the roof takes fire. */
+  roof: onsetNear(216.31, 1, 0.05),
+  /** Paul at his window, watching the city burn; his mother comes to him; the blast over the window. */
+  watch: onsetNear(220.08, 1, 0.05),
+  mother: onsetNear(221.08, 1, 0.05),
+  /** The terrace: the Harkonnen ornithopter comes down out of the smoke onto the pad. */
+  terrace: onsetNear(225.69, 1, 0.05),
+  landed: boomNear(226.32),
   /** The bombardment: each a shell's hit. */
   hits: [onsetNear(212.71, 1, 0.05), onsetNear(215.0, 1, 0.05), boomNear(217.38), onsetNear(218.19, 1, 0.05), onsetNear(220.08, 1, 0.05),
-    onsetNear(221.08, 1, 0.05), boomNear(222.1), onsetNear(225.69, 1, 0.05), onsetNear(226.32, 1, 0.05), onsetNear(228.16, 1, 0.05)],
-  /** In close on the palace being hit. */
-  close: onsetNear(220.08, 1, 0.05),
+    onsetNear(221.08, 1, 0.05), boomNear(222.1), onsetNear(225.69, 1, 0.05), onsetNear(228.16, 1, 0.05)],
   /** Back in Paul's room; the door breaks; the soldiers come in off the terrace on the next onsets. */
   room: boomNear(230.08),
   door: onsetNear(232.58, 1, 0.05),
   soldiers: [onsetNear(233.18, 1, 0.05), onsetNear(233.84, 0.8, 0.05), onsetNear(234.93, 1, 0.05), boomNear(235.49)],
-  /** They are taken: out of the door, across the terrace, into the Harkonnen ornithopter on the pad. */
+  /** They are taken: held up between them, out of the door, across the terrace, into the ornithopter on the pad. */
   taken: onsetNear(236.18, 0.8, 0.05),
+  across: onsetNear(238.69, 0.8, 0.05),
   /** It lifts off with them, and turns away east into the dark. */
   lift: onsetNear(243.17, 0.8, 0.05),
   away: onsetNear(243.9, 0.8, 0.05),
-  /** The great hall: the Duke bound in his chair; the Baron comes down out of the vault. */
+  /** The great hall: the Duke bound in his chair under the bull; the Baron comes down out of the vault, a blow a step. */
   hall: onsetNear(245.89, 1, 0.05),
   baron: [boomNear(250.07), onsetNear(252.59, 1, 0.05), boomNear(254.36), boomNear(256.04)],
-  /** The tooth, the gas, the guards going grey, the Baron away, the Duke's death. */
+  /** The tooth, the gas, the guards going grey, the Baron away, the Duke's death, the lamps swinging. */
   bite: onsetNear(260.08, 1, 0.05),
   gas: [boomNear(263.07), boomNear(265.03)],
   guards: [onsetNear(266.33, 1, 0.05), onsetNear(266.9, 1, 0.05)],
   flee: boomNear(267.18),
+  last: onsetNear(269.65, 1, 0.05),
   death: M.great,
   fall: boomNear(272.17),
 } as const

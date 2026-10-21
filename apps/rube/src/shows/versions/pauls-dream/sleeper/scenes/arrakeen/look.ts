@@ -69,9 +69,9 @@ export const toneAt = (t: number): Tone => (isNight(t) ? NIGHT_TONE : DAY_TONE)
  */
 const INSIDE: [number, number][] = [
   [ARRIVAL.hall, ARRIVAL.to],
-  [ATTACK.window, ATTACK.wide],
-  [ATTACK.room, ATTACK.hall],
-  [ATTACK.hall, ATTACK.to + 1],
+  [ATTACK.window, ATTACK.crown],
+  [ATTACK.watch, ATTACK.terrace],
+  [ATTACK.room, ATTACK.to + 1],
 ]
 
 export const inside = (t: number): boolean => INSIDE.some(([a, b]) => t >= a && t < b)

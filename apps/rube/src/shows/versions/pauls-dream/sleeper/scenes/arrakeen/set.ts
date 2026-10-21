@@ -224,6 +224,12 @@ function palaceCut(g: Paint, tone: Tone, t: number): void {
   ctx.rect(ROOM_DOOR.x0, ROOM_DOOR.top, ROOM_DOOR.x1 - ROOM_DOOR.x0, ROOM.floor - ROOM_DOOR.top)
   ctx.fillStyle = tone.cut
   ctx.fill('evenodd')
+  // Its footings, in the same cut stone, down past the frame's foot: a stage taller than the frame sees more palace
+  // under the floor, not empty ground.
+  rect(ctx, 56, 0, 85, Math.max(1, g.view.y1 + 1))
+  fill(ctx, tone.cut)
+  rect(ctx, 56, 0, 85, 0.35)
+  fill(ctx, mix(tone.cut, tone.floor, 0.35))
 
   // The rooms' back walls: lit toward the floor, dark toward the vault; their windows taken out (the air shows).
   const wall = (x0: number, y0: number, x1: number, y1: number, holes: [number, number, number, number][], lo: string, hi: string) => {
@@ -233,10 +239,14 @@ function palaceCut(g: Paint, tone: Tone, t: number): void {
     ctx.fillStyle = vgrad(ctx, y0, y1, [[0, hi], [1, lo]])
     ctx.fill('evenodd')
   }
-  wall(HALL.x0, HALL.ceil, HALL.x1, HALL.floor, [], night ? mix(tone.room, tone.lamp, 0.3) : tone.room, night ? mix(tone.cut, '#000000', 0.2) : mix(tone.roomDark, tone.cut, 0.35))
+  if (night) {
+    // By night the hall is lit by its lamps from the middle of its height down, its vault dark.
+    rect(ctx, HALL.x0, HALL.ceil, HALL.x1 - HALL.x0, HALL.floor - HALL.ceil)
+    fill(ctx, vgrad(ctx, HALL.ceil, HALL.floor, [[0, mix(tone.room, tone.lamp, 0.06)], [0.45, mix(tone.room, tone.lamp, 0.2)], [1, mix(tone.room, tone.lamp, 0.3)]]))
+  } else wall(HALL.x0, HALL.ceil, HALL.x1, HALL.floor, [], tone.room, mix(tone.roomDark, tone.cut, 0.35))
   hallWall(g, tone, night)
-  wall(WEST_ROOM.x0, WEST_ROOM.ceil, WEST_ROOM.x1, WEST_ROOM.floor, [[76.8, -18.0, 0.45, 2.6]], tone.roomDark, mix(tone.roomDark, tone.cut, 0.5))
-  wall(TOP_ROOMS.x0, TOP_ROOMS.ceil, TOP_ROOMS.x1, TOP_ROOMS.floor, [[80.8, -22.5, 0.45, 2.6], [92.8, -22.5, 0.45, 2.6]], tone.roomDark, mix(tone.roomDark, tone.cut, 0.5))
+  wall(WEST_ROOM.x0, WEST_ROOM.ceil, WEST_ROOM.x1, WEST_ROOM.floor, night ? [] : [[76.8, -18.0, 0.45, 2.6]], night ? mix(tone.room, tone.lamp, 0.16) : tone.roomDark, mix(tone.roomDark, tone.cut, 0.3))
+  wall(TOP_ROOMS.x0, TOP_ROOMS.ceil, TOP_ROOMS.x1, TOP_ROOMS.floor, night ? [] : [[80.8, -22.5, 0.45, 2.6], [92.8, -22.5, 0.45, 2.6]], night ? mix(tone.room, tone.lamp, 0.16) : tone.roomDark, mix(tone.roomDark, tone.cut, 0.3))
   wall(HALL_DOOR.x0, HALL_DOOR.top, HALL.x0, 0, [], mix(tone.roomDark, tone.cut, 0.3), mix(tone.roomDark, tone.cut, 0.5))
   wall(ROOM.x0, ROOM.ceil, ROOM.x1, ROOM.floor, [[WINDOW.x0, WINDOW.top, WINDOW.x1 - WINDOW.x0, WINDOW.foot - WINDOW.top]],
     night ? mix(tone.room, tone.lamp, 0.24) : tone.room, mix(tone.roomDark, tone.cut, 0.3))

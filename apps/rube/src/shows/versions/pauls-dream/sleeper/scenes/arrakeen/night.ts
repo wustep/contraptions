@@ -1,16 +1,16 @@
 import { drawFrigate, type FrigateLook } from '../../craft/frigate'
-import { blob, drift, ellipse, fill, hash, layer, line, mix, poly, rect, rgba, ring, smooth, smoother, stroke, type Paint, type Pt } from '../../paint'
+import { blob, drift, ellipse, fill, hash, layer, line, mix, poly, rect, rgba, ring, smooth, smoother, stroke, type Layer, type Paint, type Pt } from '../../paint'
 import { hazeAt } from '../../world/desert'
-import { CHAIR, HALL, ROOM, ROOM_DOOR, SHIELD } from './geo'
+import { CHAIR, HALL, ROOM, ROOM_DOOR, SHIELD, TOP_ROOMS, WEST_ROOM } from './geo'
 import { ATTACK } from './times'
 
 /**
  * The night: the house shield going out, the Harkonnen armada coming down out of the dark, the shells and the fires
  * they leave, the Duke's chair, the hall's lamps, and the gas from his tooth.
  *
- * Nothing here flashes. A hit is a flame that grows in a quarter of a second to a little over its size and settles to
- * burning, and its smoke rises; the fires stay. The shield is a thin pale line, never a glow, and it goes out from its
- * crown down. The gas is a few flat clouds that open and spread.
+ * Nothing here flashes. A hit is a fire that takes where the shell lands and spreads along the roof or ledge it fell
+ * on, a sheet of flame with a slow uneven top under great masses of smoke; the fires stay. The shield is a thin pale
+ * line, never a glow, and it goes out from its crown down. The gas is a few flat clouds that open and spread.
  */
 
 /* ------------------------------------------------------------------ the shield */
@@ -45,7 +45,7 @@ export function drawShield(g: Paint, t: number): void {
 
 const HARK_SHIP: FrigateLook = { hull: '#2A2D33', belly: '#16181C', band: '#1E2126', port: '#8C6A3E', plume: '#4A4E56' }
 
-/** The ships: where each comes to (near-plane x and height at its depth), its depth, size, and when it starts down. */
+/** The far ships: where each comes to (near-plane x and height at its depth), its depth, size, and when it starts down. */
 const SHIPS = Array.from({ length: 7 }, (_, i) => ({
   x: 0 + i * 28 + 12 * (hash(i, 51) - 0.5),
   y: -40 - 24 * hash(i, 52),
@@ -54,10 +54,27 @@ const SHIPS = Array.from({ length: 7 }, (_, i) => ({
   at: ATTACK.armada - 0.6 + 2.6 * hash(i, 55),
 }))
 
+/**
+ * The near ships: two that come in low over the palace's roof as the armada arrives, so big that only their bellies
+ * cross the top of the frame, sliding east and settling a little.
+ */
+const NEAR: { d: number; size: number; x0: number; x1: number; y0: number; y1: number }[] = [
+  { d: 16, size: 2.3, x0: 18, x1: 100, y0: -47, y1: -42 },
+  { d: 0, size: 2.0, x0: 34, x1: 112, y0: -40.5, y1: -37.4 },
+]
+
+function ship(g: Paint, L: Layer, x: number, y: number, size: number, look: FrigateLook, burn: number): void {
+  const ctx = g.ctx
+  ctx.save()
+  ctx.translate(L.x(x), L.y(y))
+  ctx.scale(L.s * size, L.s * size)
+  drawFrigate({ ...g, px: g.px / (L.s * size) }, { x: 0, y: 0, burn }, look)
+  ctx.restore()
+}
+
 /** The ships beyond the bowl's rim (`near` false), or this side of it. */
 export function drawArmada(g: Paint, t: number, near: boolean): void {
   if (t < ATTACK.armada - 1) return
-  const ctx = g.ctx
   // Far ones first.
   for (const s of [...SHIPS].sort((a, b) => b.d - a.d)) {
     if (near !== s.d <= 150) continue
@@ -65,90 +82,104 @@ export function drawArmada(g: Paint, t: number, near: boolean): void {
     const down = smoother(t, s.at, s.at + 4.2)
     const y = s.y - 70 * (1 - down) + 0.4 * Math.sin((t - s.at) * 0.9 + s.x)
     const hz = hazeAt(s.d) * 0.7
-    const look: FrigateLook = { ...HARK_SHIP, hull: mix(HARK_SHIP.hull, '#1E2A3B', hz), belly: mix(HARK_SHIP.belly, '#1E2A3B', hz), band: mix(HARK_SHIP.band, '#1E2A3B', hz) }
-    ctx.save()
-    ctx.translate(L.x(s.x), L.y(y))
-    ctx.scale(L.s * s.size, L.s * s.size)
-    drawFrigate({ ...g, px: g.px / (L.s * s.size) }, { x: 0, y: 0, burn: 0.5 * (1 - down) }, look)
-    ctx.restore()
+    ship(g, L, s.x, y, s.size, { ...HARK_SHIP, hull: mix(HARK_SHIP.hull, '#1E2A3B', hz), belly: mix(HARK_SHIP.belly, '#1E2A3B', hz), band: mix(HARK_SHIP.band, '#1E2A3B', hz) }, 0.5 * (1 - down))
+  }
+}
+
+/** The near ships, low over the roof: drawn after the city, before the near plane. */
+export function drawNearShips(g: Paint, t: number): void {
+  const a = ATTACK.armada - 0.8
+  const b = ATTACK.sky + 1
+  if (t < a || t > b + 6) return
+  for (const n of NEAR) {
+    const u = (t - a) / (b - a)
+    const x = n.x0 + (n.x1 - n.x0) * u
+    const y = n.y0 + (n.y1 - n.y0) * smoother(t, a, b)
+    ship(g, layer(g.view, n.d), x, y, n.size, HARK_SHIP, 0.35)
   }
 }
 
 /* ------------------------------------------------------------------ shells and fires */
 
-/** Each hit: where (near-plane cells at its depth), its depth, and how big a fire it leaves. */
-const HITS: { t: number; x: number; y: number; d: number; size: number }[] = [
-  { x: 40, y: -5.5, d: 24, size: 4.0 },
-  { x: 150, y: -7, d: 70, size: 5.5 },
-  { x: 90, y: -24, d: 0, size: 1.6 },
-  { x: 133, y: -5, d: 24, size: 3.6 },
-  { x: 96.5, y: -21.2, d: 0, size: 1.3 },
-  { x: 18, y: -9, d: 70, size: 6.0 },
-  { x: 131.5, y: -14.8, d: 0, size: 1.2 },
-  { x: 47, y: 0, d: 0, size: 2.2 },
-  { x: 25, y: -3.2, d: 0, size: 2.6 },
-  { x: 84, y: -24, d: 0, size: 1.5 },
+/**
+ * Each hit: where it lands (near-plane cells at its depth, on the roof or ledge it burns along), its depth, how far
+ * the fire spreads either way along the surface (`w`) and how tall it stands (`h`).
+ */
+const HITS: { t: number; x: number; y: number; d: number; w: number; h: number }[] = [
+  { x: 40, y: -5.5, d: 24, w: 6, h: 2.6 },
+  { x: 150, y: -7, d: 70, w: 11, h: 5 },
+  { x: 89, y: -24, d: 0, w: 5.5, h: 1.7 },
+  { x: 133, y: -5, d: 24, w: 6, h: 2.4 },
+  { x: 60, y: -8, d: 70, w: 10, h: 4.6 },
+  { x: 118, y: -9, d: 70, w: 9, h: 4.2 },
+  { x: 96.5, y: -19.4, d: 0, w: 2.6, h: 0.9 },
+  { x: 125.5, y: -14.8, d: 0, w: 3.4, h: 1.3 },
+  { x: 128, y: -6, d: 24, w: 5, h: 2.2 },
 ].map((h, i) => ({ ...h, t: ATTACK.hits[i] }))
 
-/** Fire: a few flat tongues, the outer a deep orange, the core paler; slow, never flickering. */
-function flame(g: Paint, x: number, y: number, s: number, t: number, seed: number): void {
+/**
+ * A fire along a surface: a sheet of flame from `x0` to `x1` standing on `y`, its top a slow uneven edge, darker red
+ * outside and paler toward its root. It moves the way a big fire does, slowly, and never flickers.
+ */
+function sheet(g: Paint, x0: number, x1: number, y: number, h: number, t: number, seed: number, fade: number): void {
   const ctx = g.ctx
-  const tongues: [number, string][] = [[1, '#B9471B'], [0.7, '#E07C2E'], [0.4, '#F2B354']]
-  for (const [k, c] of tongues) {
-    const pts: Pt[] = []
-    const n = 9
-    for (let i = 0; i < n; i++) {
-      const a = Math.PI + (i / (n - 1)) * Math.PI
-      const lick = 1 + 0.35 * drift(t * 0.9 + i * 1.7, seed + i)
-      const r = s * k * (i === 0 || i === n - 1 ? 0.9 : 1)
-      pts.push([x + Math.cos(a) * r * 0.9, y + Math.sin(a) * r * 1.5 * lick])
+  const layers: [number, string][] = [[1, '#8A2C11'], [0.74, '#C24E1C'], [0.48, '#E0782E'], [0.24, '#F0B25A']]
+  const n = Math.max(6, Math.ceil((x1 - x0) / Math.max(0.15, h * 0.35)))
+  for (const [k, c] of layers) {
+    const inset = (1 - k) * 0.35 * (x1 - x0) * 0.5
+    const a = x0 + inset
+    const b = x1 - inset
+    if (b - a < 0.02) continue
+    ctx.beginPath()
+    ctx.moveTo(a, y + 0.02)
+    for (let i = 0; i <= n; i++) {
+      const u = i / n
+      const x = a + (b - a) * u
+      const taper = Math.sqrt(Math.max(0, 1 - Math.pow(2 * u - 1, 2)))
+      const wave = 0.55 + 0.45 * drift(x / Math.max(0.3, h * 0.8) + t * 0.55, seed)
+      ctx.lineTo(x, y - h * k * wave * (0.35 + 0.65 * taper))
     }
-    pts.push([x + s * k * 0.8, y + 0.15 * s], [x - s * k * 0.8, y + 0.15 * s])
-    blob(ctx, pts)
-    fill(ctx, c)
+    ctx.lineTo(b, y + 0.02)
+    ctx.closePath()
+    fill(ctx, rgba(c, fade))
   }
 }
 
-/** Smoke from a fire: dark rounded masses rising from it, growing, leaning with the wind, thinning. */
-function smoke(g: Paint, x: number, y: number, s: number, age: number, seed: number, air: string, hz: number): void {
+/** Smoke over a fire: a few great dark masses rolling up off it and leaning away east, growing, thinning. */
+function smoke(g: Paint, x: number, y: number, w: number, h: number, age: number, seed: number, air: string, hz: number): void {
   const ctx = g.ctx
-  const n = 6
+  const n = 4
   for (let i = 0; i < n; i++) {
-    const life = (age * 0.35 + i / n) % 1
-    if (age * 0.35 < i / n) continue
-    const up = life * 9 * s
-    const r = s * (0.7 + life * 2.2)
-    const a = 0.55 * (1 - life) * smooth(age, 0, 1)
-    ellipse(ctx, x + up * 0.35 + drift(seed + i + age * 0.2, seed) * s, y - 1.2 * s - up, r, r * 0.8, 0)
-    fill(ctx, rgba(mix('#1C1B1E', air, hz), a))
+    const life = (age * 0.12 + i / n) % 1
+    if (age * 0.12 < i / n) continue
+    const up = h * (1.2 + life * 9)
+    const r = (w * 0.45 + h) * (0.6 + life * 1.6)
+    const a = 0.62 * Math.sin(Math.PI * Math.min(1, life * 1.15)) * smooth(age, 0, 1.2)
+    ellipse(ctx, x + up * 0.45 + drift(seed + i + age * 0.08, seed) * w * 0.3, y - up, r, r * 0.62, 0)
+    fill(ctx, rgba(mix('#141316', air, hz), a))
   }
 }
 
 /** The shells in the air and the fires they leave, at the depth `d` only (so each is drawn in its own layer). */
 export function drawFires(g: Paint, t: number, depth: (d: number) => boolean, air: string): void {
-  const ctx = g.ctx
   for (const [i, h] of HITS.entries()) {
     if (!depth(h.d) || t < h.t - 1.1) continue
     const L = layer(g.view, h.d)
     const hz = hazeAt(h.d) * 0.8
-    // The shell: coming down out of the dark from the armada's side, a short hot streak behind it.
+    // The shell: down out of the dark from the armada's side, a short hot streak behind it.
     if (t < h.t) {
       const u = (t - (h.t - 1.1)) / 1.1
       const from: Pt = [h.x - 16, h.y - 26]
       const p = (v: number): Pt => [from[0] + (h.x - from[0]) * v, from[1] + (h.y - from[1]) * v * v]
-      const [ax, ay] = p(Math.max(0, u - 0.12))
-      const [bx, by] = p(u)
-      line(g, L.pt([ax, ay]), L.pt([bx, by]), rgba('#E59A4A', 0.8 * (1 - hz)), 0.06 * L.s)
+      line(g, L.pt(p(Math.max(0, u - 0.12))), L.pt(p(u)), rgba('#E59A4A', 0.8 * (1 - hz)), 0.06 * L.s)
       continue
     }
     const age = t - h.t
-    // It takes, a little past its size, and settles to burning.
-    const s = h.size * L.s * (smoother(age, 0, 0.25) * (1 + 0.25 * Math.exp(-age / 0.5)))
-    smoke(g, L.x(h.x), L.y(h.y), h.size * L.s, age, 70 + i, air, hz)
-    ctx.save()
-    if (hz > 0.01) ctx.globalAlpha = 1 - hz * 0.6
-    flame(g, L.x(h.x), L.y(h.y), s, t, 80 + i)
-    ctx.restore()
+    // It takes where it lands and spreads along the roof either way; it stands up tall at first and settles.
+    const spread = h.w * (0.12 + 0.88 * (1 - Math.exp(-age / 2.4)))
+    const tall = h.h * (0.3 + 0.7 * smoother(age, 0, 0.5)) * (1 + 0.2 * Math.exp(-age / 0.8))
+    smoke(g, L.x(h.x), L.y(h.y), spread * L.s, tall * L.s, age, 70 + i, air, hz)
+    sheet(g, L.x(h.x - spread), L.x(h.x + spread), L.y(h.y), tall * L.s, t, 80 + i, 1 - hz * 0.55)
   }
 }
 
@@ -185,6 +216,19 @@ export function drawRoom(g: Paint, lamp: string, wood: string): void {
   fill(ctx, mix(wood, '#000000', 0.3))
   ellipse(ctx, 92.1, f - 0.63, 0.2, 0.05, 0)
   fill(ctx, lamp)
+}
+
+/** The rooms over the hall and over Paul's: a lamp on a low table in each, so a tall stage sees a palace lived in. */
+export function drawUpperRooms(g: Paint, lamp: string, wood: string): void {
+  const ctx = g.ctx
+  for (const [x, f] of [[84.5, WEST_ROOM.floor], [93.5, TOP_ROOMS.floor], [72.5, TOP_ROOMS.floor]] as [number, number][]) {
+    rect(ctx, x - 0.35, f - 0.42, 0.7, 0.42)
+    fill(ctx, wood)
+    poly(ctx, [[x - 0.25, f - 0.42], [x + 0.25, f - 0.42], [x + 0.15, f - 0.62], [x - 0.15, f - 0.62]])
+    fill(ctx, mix(wood, '#000000', 0.3))
+    ellipse(ctx, x, f - 0.63, 0.2, 0.05, 0)
+    fill(ctx, lamp)
+  }
 }
 
 /** Paul's door, in the east wall onto the terrace: shut, then broken in and lying on the room's floor. */
@@ -225,7 +269,7 @@ export function drawStraps(g: Paint, at: Pt, r: number, color: string): void {
 /** Puffs of the gas from his tooth: when each opens, where it drifts from, how big it grows. */
 const PUFFS = (() => {
   const times = [ATTACK.bite, ATTACK.gas[0], ATTACK.gas[1], ATTACK.guards[0], ATTACK.guards[1], ATTACK.flee, ATTACK.death]
-  return times.map((t, i) => ({ t, dx: (hash(i, 91) - 0.4) * 1.6, dy: -0.2 - 0.5 * hash(i, 92), r: i === 0 ? 0.45 : 0.8 + 0.8 * hash(i, 93) + (i === times.length - 1 ? 0.9 : 0) }))
+  return times.map((t, i) => ({ t, dx: 0.3 + 1.0 * hash(i, 91), dy: -0.2 - 0.5 * hash(i, 92), r: i === 0 ? 0.45 : 0.8 + 0.8 * hash(i, 93) + (i === times.length - 1 ? 0.9 : 0) }))
 })()
 
 export function drawGas(g: Paint, t: number, from: Pt): void {
@@ -245,6 +289,28 @@ export function drawGas(g: Paint, t: number, from: Pt): void {
       [x + r * 0.55, y + ry * 0.7], [x - r * 0.5, y + ry * 0.7],
     ])
     fill(ctx, rgba('#A3AE92', 0.1 * smooth(age, 0, 0.5)))
+  }
+}
+
+/* ------------------------------------------------------------------ the fire's light in Paul's room */
+
+/**
+ * Over the balls in Paul's room once the city is burning: the fire's light coming in at the window, a flat warm wash
+ * over the room and whoever is in it, as strong as the fires are big; and on the blast over the window, dust sifting
+ * down from the ceiling.
+ */
+export function drawRoomLight(g: Paint, t: number): void {
+  const ctx = g.ctx
+  const light = smooth(t, ATTACK.hits[0], ATTACK.hits[5] + 1.5)
+  if (light > 0.002) {
+    rect(ctx, ROOM.x0, ROOM.ceil, ROOM.x1 - ROOM.x0, ROOM.floor - ROOM.ceil)
+    fill(ctx, rgba('#E2782C', 0.16 * light))
+  }
+  const age = t - ATTACK.hits[6]
+  if (age > 0 && age < 2) {
+    const y = ROOM.ceil + (ROOM.floor - ROOM.ceil) * smooth(age, 0, 1.4)
+    rect(ctx, ROOM.x0, y - 0.9, ROOM.x1 - ROOM.x0, 0.9)
+    fill(ctx, rgba('#BBA588', 0.28 * (1 - smooth(age, 0.5, 2))))
   }
 }
 

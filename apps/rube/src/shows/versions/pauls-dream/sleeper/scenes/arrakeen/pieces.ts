@@ -4,7 +4,7 @@ import { mix, standing, type Paint } from '../../paint'
 import { BARON } from '../../cast'
 import { CHAIR, HOOK } from './geo'
 import { inside, isNight, toneAt } from './look'
-import { drawArmada, drawChair, drawDoor, drawFires, drawGas, drawLamps, drawRoom, drawShield, drawStraps } from './night'
+import { drawArmada, drawChair, drawDoor, drawFires, drawGas, drawLamps, drawNearShips, drawRoom, drawRoomLight, drawShield, drawStraps, drawUpperRooms } from './night'
 import { bullSwing, bullTop, drawCrateFront, drawFrigateOver, drawFrigateUnder, drawHark, drawHarkOver, drawWinch } from './rig'
 import { drawBehind, drawNear, drawPalaceWhole } from './set'
 import { ARRIVAL, ATTACK } from './times'
@@ -30,6 +30,7 @@ function under(g: Paint): void {
   const night = isNight(t)
   // The far air, the rim, and between them (by depth) the armada.
   drawBehind(g, tone, t, night ? (near) => drawArmada(g, t, near) : undefined, night ? (d) => drawFires(g, t, (h) => h === d, tone.air.haze) : undefined)
+  if (night) drawNearShips(g, t)
   drawNear(g, tone, t)
   drawFrigateUnder(g, t, night)
   if (night) drawShield(g, t)
@@ -46,6 +47,7 @@ function under(g: Paint): void {
       drawBull(g, { x: HOOK[0], y: HOOK[1], dark: 0.55 })
       drawLamps(g, t, tone.lamp, IRON)
       drawRoom(g, tone.lamp, NIGHT_WOOD)
+      drawUpperRooms(g, tone.lamp, NIGHT_WOOD)
       drawDoor(g, t, '#6A5240')
       if (t >= ATTACK.hall) drawChair(g, mix(NIGHT_WOOD, '#000000', 0.2))
     }
@@ -62,6 +64,7 @@ function over(g: Paint): void {
   drawFrigateOver(g, t, night, tone.air.sand)
   if (night) {
     drawHarkOver(g, t)
+    if (inside(t) && t < ATTACK.hall) drawRoomLight(g, t)
     if (inside(t) && t >= ATTACK.hall) {
       drawStraps(g, DUKE_SEAT, 0.13 * 1.18, '#16120F')
       drawGas(g, t, DUKE_SEAT)

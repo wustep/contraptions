@@ -32,20 +32,20 @@ export const PALACE: Pt[] = [
 export const WALL = 0.9
 
 /** The great hall, at the foot of the west mass: its floor, ceiling and walls, and the door in its west wall. */
-export const HALL = { x0: 66, x1: 96, floor: 0, ceil: -12.6 }
+export const HALL = { x0: 66, x1: 96, floor: 0, ceil: -13.9 }
 export const HALL_DOOR = { x0: 59.5, x1: 66, top: -2.4 }
 /** The slits in the hall's vault the sun comes through: [x middle, width]. */
 export const SLITS: [number, number][] = [[72.5, 0.6], [79.5, 0.6], [86.0, 0.6], [92.5, 0.6]]
 export const SLIT_TOP = -11.6
 export const SLIT_FOOT = -4.2
 /** The bull's hook on the hall's back wall: where the plaque's top hangs. */
-export const HOOK: Pt = [81, -6.25]
+export const HOOK: Pt = [81, -3.4]
 /** The pulley in the vault the hoist's chain runs over, and the winch's ratchet at the foot of the wall. */
 export const PULLEY: Pt = [81, -11.9]
-export const WINCH: Pt = [84.2, -0.75]
+export const WINCH: Pt = [83.4, -0.75]
 /** The winch's foot lever: its pivot, its end (where Paul lands on it), at rest; a step on it swings it down. */
-export const LEVER_PIVOT: Pt = [84.2, -0.75]
-export const LEVER_END: Pt = [86.3, -1.12]
+export const LEVER_PIVOT: Pt = [83.4, -0.75]
+export const LEVER_END: Pt = [85.35, -1.1]
 /** The crate the head came from Caladan in, open on the hall's floor under the hook. */
 export const CRATE = { x0: 80.1, x1: 81.9, top: -0.75 }
 /** The Duke's chair on the night (under the hook). */
@@ -61,7 +61,7 @@ export const VAULT_Y = -12.2
 export const ROOM = { x0: 89, x1: 99.2, floor: -14.8, ceil: -18.6 }
 export const WEST_ROOM = { x0: 66, x1: 88.2, floor: -14.8, ceil: -18.6 }
 export const TOP_ROOMS = { x0: 66, x1: 99.2, floor: -19.4, ceil: -23.1 }
-export const WINDOW = { x0: 92.4, x1: 97.4, top: -18.0, foot: -15.4 }
+export const WINDOW = { x0: 92.4, x1: 97.4, top: -18.0, foot: -15.0 }
 export const ROOM_DOOR = { x0: 99.2, x1: 100, top: -15.85 }
 /** The terrace's top; the pad is a slab on it, its top at PAD's height. */
 export const TERRACE_Y = -14.8
@@ -72,4 +72,4 @@ export const WEST_ROCK = { x0: -60, x1: -6 }
 export const EAST_ROCK = { x0: 146, x1: 200 }
 
 /** The house shield over the palace and the city near it: a dome's middle and its half width and height. */
-export const SHIELD = { cx: 86, w: 68, h: 46 }
+export const SHIELD = { cx: 86, w: 68, h: 28.2 }

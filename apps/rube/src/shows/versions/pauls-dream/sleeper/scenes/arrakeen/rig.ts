@@ -240,7 +240,7 @@ export function drawCrateFront(g: Paint, wood: string): void {
 /* ------------------------------------------------------------------ the Harkonnen ornithopter */
 
 /** It comes in out of the east during the bombardment and sets down on the pad. */
-export const HARK_IN: [number, number] = [ATTACK.hits[6] - 0.1, ATTACK.hits[8]]
+export const HARK_IN: [number, number] = [ATTACK.terrace - 1.4, ATTACK.landed]
 const PERCH: Pt = [PAD[0], PAD[1] - 0.6]
 /** On the pad, its skids on the pad's top; up on the lift, and away east. */
 export function harkAt(t: number): ThopterPose {

@@ -54,11 +54,11 @@ const onLever = (t: number): Pt => {
 function paul(): Walk {
   const w = outOf(-2.2, rP, A.paul - 1.8, A.paul)
   // In the hall: to the lever's side, up onto it, and four steps down on it.
-  w.jump([89.3, -rP]).roll([[87.15, -rP]], A.hall + 1.75, 'inout').wait(A.up)
+  w.jump([87.7, -rP]).roll([[85.85, -rP]], A.hall + 1.75, 'inout').wait(A.up)
   const [p0, p1, p2, p3] = A.pulls
   w.hop(onLever(p0), p0)
-  for (const [now, next] of [[p0, p1], [p1, p2], [p2, p3]] as [number, number][]) {
-    w.ride(onLever, now + 0.1).hop(onLever(next), next)
+  for (const next of [p1, p2, p3]) {
+    w.ride(onLever, next - 0.3).hop(onLever(next), next)
   }
   w.ride(onLever, A.to)
   return w
@@ -66,13 +66,13 @@ function paul(): Walk {
 
 function leto(): Walk {
   const w = outOf(-0.45, rL, A.leto - 0.4, A.leto)
-  w.jump([73.4, -rL]).roll([[79.55, -rL]], A.hall + 2.3, 'inout').wait(A.to)
+  w.jump([75.4, -rL]).roll([[79.55, -rL]], A.hall + 2.3, 'inout').wait(A.to)
   return w
 }
 
 function jessica(): Walk {
   const w = outOf(-1.2, rJ, A.jessica - 0.9, A.jessica)
-  w.jump([71.4, -rJ]).roll([[76.3, -rJ]], A.hall + 2.7, 'inout').wait(A.to)
+  w.jump([74.0, -rJ]).roll([[77.95, -rJ]], A.hall + 2.7, 'inout').wait(A.to)
   return w
 }
 
@@ -91,9 +91,9 @@ const shots: Shot[] = [
   { t: 122.46, cells: 32, at: [44.0, -14.6], cut: true },
   { t: A.hall - 0.002, cells: 30, at: [45.6, -14.0] },
   // The great hall: the crate, the winch, the head coming up the wall.
-  { t: A.hall, cells: 8.0, at: [81.5, -3.05], cut: true },
-  { t: A.pulls[0], cells: 7.8, at: [81.5, -3.15] },
-  { t: A.to - 0.002, cells: 7.5, at: [81.4, -3.3] },
+  { t: A.hall, cells: 4.8, at: [81.5, -2.05], cut: true },
+  { t: A.pulls[0], cells: 4.7, at: [81.5, -2.1] },
+  { t: A.to - 0.002, cells: 4.6, at: [81.45, -2.2] },
 ]
 
 export const arrival: Scene = {
@@ -103,9 +103,9 @@ export const arrival: Scene = {
   moves: { paul: paul().segs, leto: leto().segs, jessica: jessica().segs },
   // Up at the bull's head as it comes up the wall: Paul from the lever, his father and mother from under it.
   looks: {
-    paul: [[A.hall + 1.6, A.to + 0.3, -2.4]],
-    leto: [[A.hall + 2.4, A.to + 0.3, -1.33]],
-    jessica: [[A.hall + 2.9, A.to + 0.3, -0.9]],
+    paul: [[A.hall + 1.6, A.to + 0.3, -2.71]],
+    leto: [[A.hall + 2.4, A.to + 0.3, -1.03]],
+    jessica: [[A.hall + 2.9, A.to + 0.3, -0.7]],
   },
   shots,
   scope: [[OPENING.from, 1], [OPENING.to, 0]],
