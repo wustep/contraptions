@@ -1,7 +1,7 @@
-import type { Shot } from '../camera'
+import { lens, type Shot } from '../camera'
 import { CREW, LETO, PAUL } from '../cast'
 import { drawThopter, drawThopterOver, seat } from '../craft/thopter'
-import { circle, drift, fill, hash, rgba, smooth, standing, type Paint, type Pt } from '../paint'
+import { bell, circle, drift, fill, hash, rgba, smooth, standing, type Paint, type Pt } from '../paint'
 import { DREAM_SHOT } from '../plan'
 import { R } from '../../../../../parts'
 import { Run, Walk } from '../path'
@@ -69,13 +69,14 @@ const crew: Actor[] = T.crew.map((e, i) => {
   // Down the ramp, its foot a little off the hull's end; out across the flat to under the ornithopter's hatch.
   const foot: Pt = [RAMP_FOOT[0] + 0.05, ON_SAND_CREW]
   const under: Pt = [HATCH[0] + 0.85, ON_SAND_CREW]
+  // Down the ramp at a run, so each is seen the whole way down before the next comes out; across the flat; up in.
   const w = new Walk(sill, e)
-    .roll([[DOOR[0] - 0.25, DOOR[1] - r]], e + 0.25, 'in')
-    .roll([foot], e + 0.8, 'none')
-    .roll([under], e + 2.8, 'out')
-    .hop([HATCH[0], HATCH[1]], e + 3.15)
-    .wait(e + 3.4)
-  const gone = e + 3.4
+    .roll([[DOOR[0] - 0.25, DOOR[1] - r]], e + 0.3, 'in')
+    .roll([foot], e + 1.3, 'none')
+    .roll([under], e + 3.3, 'out')
+    .hop([HATCH[0], HATCH[1]], e + 3.65)
+    .wait(e + 3.9)
+  const gone = e + 3.9
   return {
     id: CREW.id + i,
     color: CREW.color,
@@ -117,16 +118,16 @@ const shots: Shot[] = [
   { t: T.look - 0.002, cells: 62, at: [459, -24] },
   // In the cockpit: father and son look up for the carryall that does not come.
   { t: T.look, cells: 3.6, at: [LANDED.x + 0.9, -0.95], cut: true },
-  { t: T.crew[0] - 0.002, cells: 3.4, at: [LANDED.x + 0.9, -1.0] },
-  // The crew come off down the ramp, and the camera goes with the line of them across to the ornithopter's hatch; Paul
-  // gets out, and it goes with him into the spice.
-  { t: T.crew[0], cells: 5.6, at: [411.6, -2.1], cut: true },
-  { t: 159.6, cells: 5.8, at: [408.0, -1.7] },
-  { t: 161.8, cells: 5.9, at: [404.4, -1.5] },
-  { t: 163.6, cells: 6.0, at: [401.3, -1.45] },
-  { t: 165.4, cells: 6.2, at: [402.6, -1.5] },
-  { t: T.stop, cells: 6.4, at: [404.0, -1.5] },
-  { t: T.rise - 0.002, cells: 6.2, at: [403.9, -1.5] },
+  { t: T.crewCut - 0.002, cells: 3.4, at: [LANDED.x + 0.9, -1.0] },
+  // Close on the harvester's door and ramp, near enough on a phone to see each of the crew come out and down; then with
+  // the last of them across to the ornithopter's hatch, where Paul gets out; and with him into the spice, opening out
+  // for his vision.
+  { t: T.crewCut, cells: 4.6, at: [412.6, -1.9], cut: true },
+  { t: 162.6, cells: 4.4, at: [411.8, -1.6] },
+  { t: 164.5, cells: 4.0, at: [401.2, -1.0] },
+  { t: 166.0, cells: 4.8, at: [403.4, -1.3] },
+  { t: T.stop, cells: 5.4, at: [404.6, -1.6] },
+  { t: T.rise - 0.002, cells: 5.6, at: [404.4, -1.6] },
   // The worm: very wide, the tower of it far over the harvester, the two of them and the ornithopter specks under it.
   { t: T.rise, cells: 88, at: [440, -40], cut: true },
   { t: T.bump - 0.002, cells: 86, at: [440, -39] },
@@ -153,17 +154,33 @@ const shots: Shot[] = [
 
 /* ------------------------------------------------------------------ the vision */
 
-/** In the spice he stops, and sees her: the Fremen's dream shot, through an opening that grows out of him. */
+/** The camera, for an opening placed in the frame: built once from the shots, round this scene's own Paul. */
+let cam: ((t: number) => { x: number; y: number; cells: number }) | null = null
+const cameraAt = (t: number) => (cam ??= lens(shots, (s) => paulRun.where(s)))(t)
+
+/**
+ * In the spice he stops, and sees her: an opening like the others, soft and round, growing out of his head up into the
+ * air over him to where she stands in the dream shot (60% across the frame, 55% down), a quarter of the frame high in
+ * radius, its edge narrow; and closing back into him as Leto comes for him.
+ */
 const dream = {
   from: T.stop,
-  to: 170.5,
+  to: T.letoDown,
   at: DREAM_SHOT.from,
-  rate: 0.5,
-  a: (t: number) => 0.92 * smooth(t, T.stop, T.stop + 0.8) * (1 - smooth(t, 169.6, 170.5)),
+  rate: (DREAM_SHOT.to - DREAM_SHOT.from - 0.2) / (T.letoDown - T.stop),
+  a: (t: number) => bell(t, T.stop, T.stop + 0.6, T.letoOut - 0.1, T.letoDown),
   iris: (t: number) => {
-    const [x, y] = paulRun.where(t)
-    const open = smooth(t, T.stop, T.stop + 1.1) * (1 - 0.35 * smooth(t, 169.4, 170.5))
-    return { x, y: y - 0.75, r: 0.2 + 1.0 * open, soft: 0.55 }
+    const grow = bell(t, T.stop, T.stop + 1.3, T.letoOut - 0.6, T.letoDown - 0.05)
+    const [px, py] = paulRun.where(t)
+    const head: Pt = [px, py - 0.12]
+    const f = cameraAt(t)
+    const place: Pt = [f.x + 0.1 * ((f.cells * 16) / 9), f.y + 0.05 * f.cells]
+    return {
+      x: head[0] + (place[0] - head[0]) * grow,
+      y: head[1] + (place[1] - head[1]) * grow,
+      r: 0.06 + 0.25 * f.cells * grow,
+      soft: 0.04 + 0.1 * grow,
+    }
   },
 }
 
@@ -295,8 +312,8 @@ export const erg: Scene = {
   moves: { paul: paul.segs, leto: leto.segs },
   looks: {
     // Down at the sand going by under them; up for the carryall; Paul up at the worm over him.
-    paul: [[T.dip + 0.3, T.climb, 1.05], [T.look + 0.25, T.crew[0], -1.25], [T.rise + 0.2, T.bump, -1.15]],
-    leto: [[T.look + 0.1, T.crew[0], -1.35], [T.rise + 0.4, T.bump - 0.4, -1.0]],
+    paul: [[T.dip + 0.3, T.climb, 1.05], [T.look + 0.25, T.crewCut, -1.25], [T.rise + 0.2, T.bump, -1.15]],
+    leto: [[T.look + 0.1, T.crewCut, -1.35], [T.rise + 0.4, T.bump - 0.4, -1.0]],
   },
   actors: crew,
   shots,
@@ -315,6 +332,7 @@ export const erg: Scene = {
     ['touch down', T.touch],
     ['wings folded', T.settle],
     ['looking up', T.look],
+    ['the door', T.crewCut],
     ...T.crew.map((t, i): [string, number] => [`crew ${i} out`, t]),
     ['Paul out', T.paulOut],
     ['Paul stops in the spice', T.stop],

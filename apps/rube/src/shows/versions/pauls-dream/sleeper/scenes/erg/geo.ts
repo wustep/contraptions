@@ -32,8 +32,9 @@ export const T = {
   settle: 153.83,
   /** Close in the cockpit: they look up for the carryall (a cut, on a beat). */
   look: 155.06,
-  /** The crew come out (a cut, on a beat), one on each of these. */
-  crew: [157.55, 158.2, 159.52, 160.07, 160.97, 161.95],
+  /** The cut to the harvester's door, on a beat; then four of the crew come out, one on each of these. */
+  crewCut: 157.55,
+  crew: [158.2, 159.52, 160.97, 161.95],
   paulOut: 164.47,
   /** He stops in the spice, and sees. */
   stop: 167.15,
