@@ -1,5 +1,6 @@
 import { R } from '../../../../../parts'
 import type { Key } from '../camera'
+import { CHIHIRO_ID, HAKU_ID } from '../cast'
 import { CREDITS_AT, END } from '../credits'
 import { light } from '../light'
 import { M, spread, strongest } from '../music'
@@ -9,7 +10,7 @@ import type { Scene } from '../scene'
 import { GATE, STONES, meadowY, onMeadow } from '../geo'
 import { CLOUD_BOTTOM, CLOUD_TOP, drawMist } from '../world/cloudsea'
 import { drawArchDark } from './way/land'
-import { HE_LANDS, LAND, SHE_LANDS, heFalls, sheFalls } from './sky'
+import { FREE, HE_LANDS, LAND, SHE_LANDS, heFalls, sheFalls } from './sky'
 
 /**
  * Home (M.home → the end): the cue winding down, and its fade.
@@ -106,6 +107,12 @@ export const home: Scene = {
   to: TO,
   hero: heroMoves(),
   haku: { moves: [ride(heFalls, FROM, LAND), rest(HE_LANDS, LAND, TO)] },
+  // Falling, and down on the stones, they look at each other; when she goes he watches her go, all the way. She does
+  // not look back.
+  looks: [
+    { id: CHIHIRO_ID, from: FREE, to: PART, at: HAKU_ID },
+    { id: HAKU_ID, from: FREE, to: TO, at: CHIHIRO_ID },
+  ],
   shots: SHOTS,
   front: [mist, archDark],
   overview: { x0: -9, y0: -6, x1: 24, y1: 3 },

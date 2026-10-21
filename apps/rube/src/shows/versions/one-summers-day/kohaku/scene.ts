@@ -2,7 +2,7 @@ import type { Box } from '../../../../plan'
 import type { Placed } from '../../../../plan'
 import type { Key } from './camera'
 import type { Move } from './path'
-import type { Actor } from './show'
+import type { Actor, Look } from './show'
 
 /**
  * A scene: one stretch of the film, owning a window of show time. Inside its window it says where Chihiro is, who
@@ -36,6 +36,8 @@ export interface Scene {
   back?: Placed[]
   mid?: Placed[]
   front?: Placed[]
+  /** Who looks at what, and when (`Look`): a ball's mark eased round to face it. */
+  looks?: Look[]
   /** What Overview frames while this scene has the stage. */
   overview?: Box
 }

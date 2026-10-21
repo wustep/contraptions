@@ -1,4 +1,5 @@
 import type { Key } from '../camera'
+import { CHIHIRO_ID } from '../cast'
 import { END } from '../credits'
 import { light } from '../light'
 import { M } from '../music'
@@ -67,6 +68,11 @@ export const name: Scene = {
     on: [[HAKU_IN, TO]],
   },
   shots: SHOTS,
+  // Down at the river in the gap as they come over it; then ahead at him, as his name comes back to him.
+  looks: [
+    { id: CHIHIRO_ID, from: M.cadence - 2.6, to: M.cadence - 0.1, at: () => [GAP.x, CLOUD_TOP + 1.1] },
+    { id: CHIHIRO_ID, from: M.cadence - 0.6, to: FREE + 0.6, at: (t) => hakuOut(t) },
+  ],
   back: [far],
   mid: [floor, dragon],
   overview: { x0: 10, y0: -34, x1: 70, y1: -12 },

@@ -91,6 +91,7 @@ export function compose(): Composed {
   const pieces: Placed[] = [sky, ...SCENES.flatMap((s) => s.back ?? []), ...SCENES.flatMap((s) => s.mid ?? []), ...SCENES.flatMap((s) => s.front ?? [])]
 
   const show = new KohakuShow(WORLD, THEME, pieces, END, hero, cast)
+  show.looks = SCENES.flatMap((s) => s.looks ?? [])
 
   const keys: Key[] = SCENES.flatMap((s) => s.shots)
   const camera = director(keys, (t) => show.where(t))

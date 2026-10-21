@@ -1,5 +1,6 @@
 import { R } from '../../../../../parts'
 import type { Key } from '../camera'
+import { CHIHIRO_ID } from '../cast'
 import { END } from '../credits'
 import { light } from '../light'
 import { M, strongest } from '../music'
@@ -107,6 +108,14 @@ export const dragonScene: Scene = {
   hero,
   shots: SHOTS,
   dissolves: [[FROM, 1.8]],
+  // Out to sea at dawn; at the dragon as soon as he is there, and all the way in; at him on the floor.
+  looks: [
+    { id: CHIHIRO_ID, from: FROM, to: M.rise + 1.2, at: () => [96, -8.5] },
+    { id: CHIHIRO_ID, from: M.rise + 0.6, to: GOES_IN, at: (t) => head(t) },
+    { id: CHIHIRO_ID, from: GOES_IN + 1.8, to: KNOCK - 0.14, at: (t) => head(t) },
+    { id: CHIHIRO_ID, from: KNOCK + 0.14, to: TO_HIM, at: (t) => head(t) },
+    { id: CHIHIRO_ID, from: TO_HIM + 1.1, to: TO, at: (t) => head(t) },
+  ],
   mid: [room, dragon],
   front: [wall, birds],
   overview: { x0: 62, y0: -15, x1: 102, y1: 0 },

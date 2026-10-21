@@ -1,6 +1,7 @@
 import { R } from '../../../../../parts'
 import type { Key } from '../camera'
 import { HAKU_SIZE, HAND, HAND_RIM, HAND_SIZE, HANDS_ID, NOFACE_SIZE } from '../cast'
+import { CHIHIRO_ID, HAKU_ID } from '../cast'
 import { END } from '../credits'
 import { BATH, BRIDGE, STREET } from '../geo'
 import { light } from '../light'
@@ -275,6 +276,11 @@ export const bathhouse: Scene = {
   to: TO,
   hero: HERO,
   haku: { moves: HAKU_MOVES, on: [[FROM, TO]] },
+  // He waits on the bridge looking at her; she looks at him as he comes.
+  looks: [
+    { id: HAKU_ID, from: FROM, to: HAKU_GO - 0.06, at: CHIHIRO_ID },
+    { id: CHIHIRO_ID, from: HAKU_GO, to: SET_OFF, at: HAKU_ID },
+  ],
   noface: { moves: NOFACE_MOVES, on: [[FROM, TO]] },
   actors: HANDS,
   shots: SHOTS,

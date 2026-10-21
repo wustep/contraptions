@@ -32,6 +32,21 @@ export interface Actor {
   turn?: number
 }
 
+/**
+ * A look: from `from` to `to`, the ball `id`'s mark turns to face `at` (a point, or another of the cast by id), easing
+ * round over a little under half a second at each end and back to wherever its rolling has it. The mark is where a
+ * ball faces; a look is how the cast see one another without a face. Only ever on a ball that is still or carried.
+ */
+export interface Look {
+  id: number
+  from: number
+  to: number
+  at: ((t: number) => [number, number]) | number
+}
+
+const EASE = 0.45
+const wrap = (a: number) => Math.atan2(Math.sin(a), Math.cos(a))
+
 export class KohakuShow extends Show {
   private readonly u: Universe
   private readonly anchor: Placed
@@ -40,6 +55,8 @@ export class KohakuShow extends Show {
   cameraCuts: number[] = []
   /** Spans where nobody should leave a streak: across a dissolve or a cut, where a ball changes place in one frame. */
   quiet: [number, number][] = []
+  /** Who looks at what, and when. */
+  looks: Look[] = []
 
   constructor(
     world: World,
@@ -102,6 +119,8 @@ export class KohakuShow extends Show {
     if (!on) return null
     const p = a.path.at(time)
     const fade = a.fade ? a.fade(time) : 1
+    let spin: number | null = a.mark === undefined ? a.path.spin(time, 0.13 * a.size) + (a.turn ?? 0) : a.mark
+    if (spin !== null) spin = this.look(a.id, time, p.x, p.y, spin)
     return {
       id: a.id,
       x: p.x,
@@ -111,8 +130,31 @@ export class KohakuShow extends Show {
       scale: a.size * p.scale * fade,
       stretch: 1,
       angle: 0,
-      spin: a.mark === undefined ? a.path.spin(time, 0.13 * a.size) + (a.turn ?? 0) : a.mark,
+      spin,
     }
+  }
+
+  /**
+   * The mark's angle for ball `id` at `t`, turned toward whatever it is looking at, eased in and out. Looks that
+   * overlap are laid on in the order they begin, so a look that starts while another holds takes the mark over from
+   * it smoothly, without letting it fall back between.
+   */
+  private look(id: number, t: number, x: number, y: number, spin: number): number {
+    let a = spin
+    const on = this.looks.filter((l) => l.id === id && t >= l.from && t <= l.to).sort((p, q) => p.from - q.from)
+    for (const l of on) {
+      const u = Math.min(1, (t - l.from) / EASE, (l.to - t) / EASE)
+      const w = u * u * (3 - 2 * u)
+      const [tx, ty] = typeof l.at === 'number' ? this.whereIs(l.at, t) : l.at(t)
+      a += wrap(Math.atan2(ty - y, tx - x) - a) * w
+    }
+    return a
+  }
+
+  /** Where one of the cast is at `t`, by id. */
+  whereIs(id: number, t: number): [number, number] {
+    const a = id === this.hero.id ? this.hero : this.cast.find((c) => c.id === id)
+    return a ? a.path.where(this.clamp(t)) : [0, 0]
   }
 
   override at(t: number): ShowPoint {

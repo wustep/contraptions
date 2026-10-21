@@ -101,6 +101,21 @@ export function checkKohaku(perf: Performance, version: ShowVersion, check: Chec
     .map(([t, d]) => `${a.path.name} ${t.toFixed(3)} (${d.toFixed(3)})`))
   check('kohaku: no ball\'s way is torn while it is on the stage, but at a cut or under a dissolve', torn.length === 0, torn.slice(0, 8).join(', '))
 
+  // A look turns a still or carried ball's mark; on a rolling ball it would slide the mark against the roll.
+  const rolling: string[] = []
+  for (const l of show.looks) {
+    const a = l.id === show.hero.id ? show.hero : show.cast.find((c) => c.id === l.id)
+    if (!a) { rolling.push(`${l.id}: no such ball`); continue }
+    for (let t = l.from; t <= l.to; t += 0.05) {
+      const m = a.path.moveAt(t)
+      if (m.kind !== 'roll') continue
+      const p0 = a.path.where(t)
+      const p1 = a.path.where(t + 0.05)
+      if (Math.hypot(p1[0] - p0[0], p1[1] - p0[1]) > 0.005) { rolling.push(`${a.path.name} ${t.toFixed(2)}`); break }
+    }
+  }
+  check('kohaku: every look is on a ball that is still or carried, never one rolling', rolling.length === 0, rolling.join(', '))
+
   // Nothing jumps in shot: her, the cast and the camera, except at a cut or across a dissolve.
   const step = 0.002
   const inShot = (t: number, x: number, y: number) => {

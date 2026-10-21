@@ -1,6 +1,6 @@
 import { R } from '../../../../../parts'
 import type { Key } from '../camera'
-import { NOFACE_SIZE } from '../cast'
+import { CHIHIRO_ID, NOFACE_SIZE } from '../cast'
 import { END } from '../credits'
 import { BATH, HALT, SEA_Y, SWAMP } from '../geo'
 import { light } from '../light'
@@ -32,6 +32,8 @@ import {
   SWAMP_STOP,
   HALT_STOP,
   carX,
+  headAt,
+  lampAt,
   seatAt,
   spineAt,
 } from './train/plan'
@@ -375,6 +377,11 @@ export const train: Scene = {
   to: TO,
   hero: HER,
   noface: { moves: HIS, on: [[FROM, TO]] },
+  // At the lamp as it comes hopping, and up at the dragon as he comes down.
+  looks: [
+    { id: CHIHIRO_ID, from: 179.5, to: 184.45, at: (t) => [lampAt(t).x, GROUND_Y - 0.85 - lampAt(t).lift] },
+    { id: CHIHIRO_ID, from: FOLLOW[1] + 0.05, to: BOARD_OFF, at: (t) => headAt(t) },
+  ],
   shots: SHOTS,
   dissolves: [
     [FROM, 1.6],
