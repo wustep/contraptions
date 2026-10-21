@@ -323,7 +323,9 @@ export const cyclops: Scene = {
     { t: 167.8, cells: 5.2, at: [110.6, -4.7] },
     { t: 168.6, cells: 6.6, at: [107.8, -5.1] },
     { t: 169.8, cells: 6.6, at: [107.8, -5.1] },
-    { t: 171.2, cells: 8.2, at: [106.2, -5.4] },
+    // Out and up with him as he rears, the hand over the eye: the whole of his agony against his own firelight.
+    { t: 171.3, cells: 9.4, at: [104.5, -6.45] },
+    { t: 172.9, cells: 9.1, at: [104.0, -6.3] },
     { t: 174.2, cells: 7.0, at: [101.6, -4.6] },
     { t: 176.0, cells: 4.6, at: [98.6, -3.4] },
     { t: 179.2, cells: 5.0, at: [97.4, -2.9] },
