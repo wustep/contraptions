@@ -143,3 +143,19 @@ by copying their folders.
   - The frame's bars leave a phone held upright its whole 16:9 frame (a scope strip there was a third of its width).
   - Cut: the pipe worm and its ring of teeth, the harvester's stacks, the teardrop flames, the long static wides, the
     storm's scalloped lobes, two Fremen who stood by the ornithopter, a sixth Fremen.
+- **Round 2.** A director's look at full-size frames and another real-speed watch. Changed:
+  - Caladan's cliff stands 22 cells out of the sea, with the castle on it as one stepped stone mass, its sea face sheer
+    from the cliff's edge to the crown (it was a tower and a row of houses on a low rock). Rain falls as darker showers;
+    the pale curtains read as shafts of light.
+  - Arrakeen is a few huge hazy masses, where it was rows of small trapezoids. The shield is one dome over the whole bowl
+    and goes out from its crown down across the sky; the plain crown shot is cut. The great hall is dark and monumental
+    round one lamp under the bull. Fire has no yellow core and no peaked shapes.
+  - The worm's mouth opens in three blunt lips, where the petals read as horns. Its dive sinks as one curve and leaves no
+    stub. The spice is a haze, where it was rust spots. The near dunes are long uneven swells, where they were a regular
+    wave. The turn home is in close.
+  - The storm wall reads as dust: a soft thinning edge, wisps streaming forward, slow dark masses, the low sun on its
+    top. The ride inside rolls with the buffeting. The visions of the duel and the rider are larger.
+  - The Fremen's basin shots have depth: a dune rises behind them, and the camera is a little above them. Stilgar hops
+    Jamis's body. The walk keeps its order, so nobody passes through anybody.
+  - Cut: the crown shot, two hanging lamps, the city's slits, the fire's yellow, the worm's horns and stub, the spice
+    spots, five seconds of empty wide after the swallow, the overtaking in the walk.
