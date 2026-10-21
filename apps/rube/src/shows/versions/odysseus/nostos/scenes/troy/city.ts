@@ -91,12 +91,15 @@ interface House {
   door: boolean
   /** A lamp in its window at night, before the fire. */
   lamp: boolean
+  /** Where its window is across its front (0 to 1), if not at a quarter. */
+  win?: number
 }
 
 /** The lower town between the steps and the gate tower, behind the street. */
 const LOWER: House[] = [
   { x: -33.85, w: 0.95, h: 1.15, y: STREET.y, door: true, lamp: false },
-  { x: -32.82, w: 1.2, h: 0.92, y: STREET.y, door: true, lamp: true },
+  // Its window past its door, clear of the steps that hide its near end.
+  { x: -32.82, w: 1.2, h: 0.92, y: STREET.y, door: true, lamp: true, win: 0.78 },
   { x: -31.55, w: 0.85, h: 1.32, y: STREET.y, door: false, lamp: false },
   { x: -30.65, w: 0.72, h: 1.02, y: STREET.y, door: true, lamp: false },
 ]
@@ -137,7 +140,7 @@ function drawHouse(g: Paint, h: House, t: number, depth: number, L: { x: (x: num
   const b = burning(h.x, t, depth)
   if (h.lamp && n > 0.4) {
     const s = L ? L.s : 1
-    const wx = x0 + (x1 - x0) * 0.25
+    const wx = x0 + (x1 - x0) * (h.win ?? 0.25)
     const wy = y1 + (y0 - y1) * 0.3
     rect(ctx, wx, wy, 0.14 * s, 0.12 * s)
     // A lamp inside: the window is warm while the night lasts, and goes dark when the roof above it burns.
@@ -375,9 +378,10 @@ export function drawSteps(g: Paint): void {
   const { ctx, t, view } = g
   if (view.x0 > TOWER.x1 + 1 || view.x1 < STEPS.x0 - 2) return
   const fire = firelight(STEPS.x0, t)
-  // The retaining wall under the forecourt's edge, and the lower town in front of it.
+  // The retaining wall under the forecourt's edge, of the town's clay and a step darker than the houses in front of it,
+  // so they stand out of it; and the lower town.
   rect(ctx, STEPS.x0 - 0.02, FORECOURT.y, STREET.x1 - STEPS.x0, STREET.y - FORECOURT.y)
-  fill(ctx, tone(mix(MAT.stone, MAT.clay, 0.5), t, { fire: fire * 0.6, deep: 0.4 }))
+  fill(ctx, tone(mix(MAT.clayDark, MAT.stone, 0.2), t, { fire: fire * 0.6, deep: 0.6 }))
   for (const h of LOWER) drawHouse(g, h, t, 0, null)
   // The steps, a ball high and a ball deep: their treads catch the brazier's light, their risers stay in shadow.
   const stone = mix(tone(MAT.stone, t, { lit: 0.5, fire: fire + brazierLight(t) * 0.9 }), '#FFFFFF', 0.08)
