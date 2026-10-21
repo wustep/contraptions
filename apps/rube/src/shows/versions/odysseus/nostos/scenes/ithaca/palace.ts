@@ -101,7 +101,7 @@ function drawShell(g: Paint): void {
   fill(ctx, shade)
 }
 
-/** The courtyard: its back wall face-on, from the gate to the hall, and the gate's posts and lintel. */
+/** The courtyard: its back wall face-on, from the gate to the hall, the house's great jar by it, and the gate. */
 function drawCourtyard(g: Paint): void {
   const { ctx, t } = g
   const [x0] = GATE.wall
@@ -109,6 +109,7 @@ function drawCourtyard(g: Paint): void {
   fill(ctx, mix(outdoors(STONE, t), outdoors(STONE_SHADE, t), 0.35))
   rect(ctx, x0, TOP - GATE.wallH - 0.06, HALL.x0 - x0, 0.06)
   fill(ctx, outdoors(STONE_SHADE, t))
+  drawJar(g, 816.7, TOP)
   const timber = outdoors(TIMBER, t)
   for (const side of [-1, 1]) {
     rect(ctx, GATE.x + side * GATE.half - (side < 0 ? 0.09 : 0), TOP - GATE.h, 0.09, GATE.h)
@@ -116,6 +117,27 @@ function drawCourtyard(g: Paint): void {
   }
   rect(ctx, GATE.x - GATE.half - 0.14, TOP - GATE.h - 0.09, 2 * GATE.half + 0.28, 0.09)
   fill(ctx, timber)
+}
+
+/** A storage jar, a pithos as tall as a man, against the courtyard's wall: wide in the shoulder, two bands round it. */
+function drawJar(g: Paint, x: number, y: number): void {
+  const { ctx, t } = g
+  ctx.beginPath()
+  ctx.moveTo(x - 0.08, y)
+  ctx.quadraticCurveTo(x - 0.25, y - 0.3, x - 0.16, y - 0.54)
+  ctx.quadraticCurveTo(x - 0.12, y - 0.6, x - 0.08, y - 0.6)
+  ctx.lineTo(x - 0.1, y - 0.65)
+  ctx.lineTo(x + 0.1, y - 0.65)
+  ctx.lineTo(x + 0.08, y - 0.6)
+  ctx.quadraticCurveTo(x + 0.12, y - 0.6, x + 0.16, y - 0.54)
+  ctx.quadraticCurveTo(x + 0.25, y - 0.3, x + 0.08, y)
+  ctx.closePath()
+  fill(ctx, outdoors('#8E6A4A', t))
+  ctx.save()
+  ctx.clip()
+  for (const b of [0.46, 0.33]) rect(ctx, x - 0.3, y - b, 0.6, 0.035)
+  fill(ctx, outdoors('#6A4C35', t))
+  ctx.restore()
 }
 
 /* ------------------------------------------------------------------ the hall */
@@ -434,12 +456,14 @@ export function overPalace(g: Paint): void {
   fill(ctx, stone)
   rect(ctx, ROOM.x1, ROOM.ceil, WALL, ROOM.floor - ROOM.ceil - ROOM_DOOR.h)
   fill(ctx, stone)
-  // The courtyard's front wall, cut, east of the gate.
+  // The courtyard's front wall, cut, east of the gate, and the gate's near post against it, so the gate has both.
   const [x0] = GATE.wall
   rect(ctx, x0, TOP - GATE.wallH, GATE.x - GATE.half - x0, GATE.wallH)
   fill(ctx, stone)
   rect(ctx, x0, TOP - GATE.wallH - 0.05, GATE.x - GATE.half - x0, 0.05)
   fill(ctx, shade)
+  rect(ctx, GATE.x - GATE.half - 0.09, TOP - GATE.h - 0.09, 0.09, GATE.h + 0.09)
+  fill(ctx, outdoors(TIMBER, t))
   void CLOTH
 }
 
