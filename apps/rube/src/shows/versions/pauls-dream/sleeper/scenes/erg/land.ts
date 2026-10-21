@@ -28,7 +28,7 @@ export function airAt(t: number): Air {
 }
 
 /** The worm sign: a long low swell running in under the sand from the east to where the worm will come up. */
-const signX = curve([[T.sign, 493], [155, 481], [160, 471], [165, 463], [170.5, WORM.base], [T.rise, WORM.base]])
+const signX = curve([[T.sign, 508], [155, 499], [160, 491], [165, 484], [170.5, WORM.base], [T.rise, WORM.base]])
 const signH = (t: number): number => 2.8 * smooth(t, T.sign, T.sign + 1.4) * (1 - smooth(t, 170.5, T.rise + 0.3))
 
 /** The near sand's surface at `x`, at `t`: the dunes, the worm sign, the heap round the worm and the hole it leaves. */

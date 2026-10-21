@@ -12,7 +12,7 @@ import { FROM, HARVESTER, LANDED, T, TO } from './erg/geo'
 import { at, look, pose } from './erg/flight'
 import { DOOR, RAMP_FOOT, drawHarvester, drawPlume } from './erg/harvester'
 import { SHADOW, airAt, drawBackdrop, drawGround, drawThopterShadow, ground, inShadow } from './erg/land'
-import { drawSheets, drawWorm, swallowed } from './erg/worm'
+import { drawErgWorm, drawSheets, swallowed } from './erg/worm'
 
 /**
  * The erg (130.664 → 198.252): the ornithopter off the palace roof and out over the dunes, the open erg, the harvester
@@ -32,23 +32,25 @@ const ON_SAND_LETO = -R * LETO.size
 
 // Paul rides beside his father to the harvester; he climbs out once the crew are aboard, rolls out into the spice and
 // stops there; Leto's knock brings him round, and he rolls back and in.
+/** Where Paul stops in the spice, between the ornithopter and the harvester's ramp. */
+const STOP = 405.0
 const paul = new Walk(seatOf(FROM, 1), FROM)
   .ride((t) => seatOf(t, 1), T.paulOut)
-  .hop([408.0, ON_SAND_PAUL], 164.85)
-  .roll([[413.0, ON_SAND_PAUL]], T.stop, 'out')
+  .hop([401.0, ON_SAND_PAUL], 164.85)
+  .roll([[STOP, ON_SAND_PAUL]], T.stop, 'out')
   .wait(T.bump)
-  .roll([[413.36, ON_SAND_PAUL]], 173.3, 'out')
-  .roll([[407.6, ON_SAND_PAUL]], 175.0, 'inout')
+  .roll([[STOP + 0.36, ON_SAND_PAUL]], 173.3, 'out')
+  .roll([[400.6, ON_SAND_PAUL]], 175.0, 'inout')
   .hop(seatOf(T.aboard, 1), T.aboard)
   .ride((t) => seatOf(t, 1), TO)
 
 // Leto flies, waits, looks up for the carryall, comes out for his son, knocks him out of it, and takes them away.
-const LETO_TOUCH = 413.0 - R * (PAUL.size + LETO.size)
+const LETO_TOUCH = STOP - R * (PAUL.size + LETO.size)
 const leto = new Walk(seatOf(FROM, 0), FROM)
   .ride((t) => seatOf(t, 0), T.letoOut)
-  .hop([408.6, ON_SAND_LETO], T.letoDown)
+  .hop([401.6, ON_SAND_LETO], T.letoDown)
   .roll([[LETO_TOUCH, ON_SAND_LETO]], T.bump, 'in')
-  .roll([[409.4, ON_SAND_LETO]], 174.25, 'inout')
+  .roll([[401.8, ON_SAND_LETO]], 174.25, 'inout')
   .hop(seatOf(174.75, 0), 174.75)
   .ride((t) => seatOf(t, 0), TO)
 
@@ -104,39 +106,43 @@ const shots: Shot[] = [
   // The open erg: the ornithopter a speck going across it, its shadow under it.
   { t: T.open, cells: 74, at: [318, -30], cut: true },
   { t: T.ahead - 0.002, cells: 68, at: [330, -27] },
-  // The harvester and its plume; the ornithopter coming in from the west.
-  { t: T.ahead, cells: 30, at: [418, -12.5], cut: true },
-  { t: T.sign - 0.002, cells: 28.5, at: [417, -12] },
+  // The harvester and its plume, huge against the ornithopter coming in from the west.
+  { t: T.ahead, cells: 40, at: [418, -17], cut: true },
+  { t: T.sign - 0.002, cells: 38, at: [416, -16] },
   // Worm sign: the harvester's front at the frame's west edge, the empty sky over it where the carryall should be, and
   // the swell running in under the sand from the east.
-  { t: T.sign, cells: 40, at: [462, -10.5], cut: true },
-  { t: T.look - 0.002, cells: 38, at: [459, -10] },
+  { t: T.sign, cells: 46, at: [470, -12], cut: true },
+  { t: T.look - 0.002, cells: 44, at: [467, -11.5] },
   // In the cockpit: father and son look up for the carryall that does not come.
-  { t: T.look, cells: 3.6, at: [405.9, -0.95], cut: true },
-  { t: T.crew[0] - 0.002, cells: 3.4, at: [405.9, -1.0] },
-  // The crew come off down the ramp and across to the ornithopter; Paul gets out and goes into the spice.
-  { t: T.crew[0], cells: 9.5, at: [410.8, -2.6], cut: true },
-  { t: T.paulOut, cells: 8.8, at: [411.0, -2.3] },
-  { t: T.stop, cells: 7.2, at: [412.1, -1.7] },
-  { t: T.rise - 0.002, cells: 6.8, at: [411.9, -1.65] },
-  // The worm: wide, the tower of it beside the harvester, the two of them specks before it.
-  { t: T.rise, cells: 58, at: [434, -24], cut: true },
-  { t: T.bump - 0.002, cells: 56, at: [434, -23] },
+  { t: T.look, cells: 3.6, at: [LANDED.x + 0.9, -0.95], cut: true },
+  { t: T.crew[0] - 0.002, cells: 3.4, at: [LANDED.x + 0.9, -1.0] },
+  // The crew come off down the ramp, and the camera goes with the line of them across to the ornithopter's hatch; Paul
+  // gets out, and it goes with him into the spice.
+  { t: T.crew[0], cells: 5.6, at: [411.6, -2.1], cut: true },
+  { t: 159.6, cells: 5.8, at: [408.0, -1.7] },
+  { t: 161.8, cells: 5.9, at: [404.4, -1.5] },
+  { t: 163.6, cells: 6.0, at: [401.3, -1.45] },
+  { t: 165.4, cells: 6.2, at: [402.6, -1.5] },
+  { t: T.stop, cells: 6.4, at: [404.0, -1.5] },
+  { t: T.rise - 0.002, cells: 6.2, at: [403.9, -1.5] },
+  // The worm: very wide, the tower of it far over the harvester, the two of them and the ornithopter specks under it.
+  { t: T.rise, cells: 88, at: [440, -40], cut: true },
+  { t: T.bump - 0.002, cells: 86, at: [440, -39] },
   // In its shadow: Leto knocks him out of it; back to the ornithopter and in.
-  { t: T.bump, cells: 7.6, at: [409.8, -2.0], cut: true },
-  { t: T.aboard, cells: 7.6, at: [407.6, -2.0] },
-  { t: T.up - 0.002, cells: 7.8, at: [407.0, -2.2] },
-  // Up, in the worm's shadow, the worm standing over them with its maw open.
-  { t: T.up, cells: 48, at: [437, -21], cut: true },
-  { t: T.arch - 0.002, cells: 46, at: [435, -20] },
-  // The arch: wide, the worm bending over and coming down on the harvester mouth first.
-  { t: T.arch, cells: 74, at: [432, -28], cut: true },
-  { t: T.down, cells: 60, at: [426, -26] },
-  { t: T.swallow, cells: 47, at: [418, -20] },
-  { t: T.above - 0.002, cells: 47.5, at: [417, -20] },
+  { t: T.bump, cells: 7.0, at: [402.4, -1.9], cut: true },
+  { t: T.aboard, cells: 7.2, at: [400.6, -1.9] },
+  { t: T.up - 0.002, cells: 7.4, at: [400.0, -2.1] },
+  // Up, in the worm's shadow, the worm standing far over them with its maw open.
+  { t: T.up, cells: 82, at: [446, -37], cut: true },
+  { t: T.arch - 0.002, cells: 80, at: [445, -36] },
+  // The arch: wider still, the worm bending over and coming down on the harvester mouth first.
+  { t: T.arch, cells: 98, at: [446, -45], cut: true },
+  { t: T.down, cells: 88, at: [440, -40] },
+  { t: T.swallow, cells: 72, at: [432, -32] },
+  { t: T.above - 0.002, cells: 72, at: [431, -32] },
   // From high over it: the dust going down, the ornithopter rising out of it and turning for home.
-  { t: T.above, cells: 84, at: [405, -38], cut: true },
-  { t: 192.6, cells: 80, at: [399, -36] },
+  { t: T.above, cells: 100, at: [418, -46], cut: true },
+  { t: 192.6, cells: 94, at: [410, -43] },
   // And in on it going home: the ornithopter small against the low sun in the west.
   { t: 195.4, cells: 46, on: thopter, off: [0.3 * 46 * (16 / 9), 0.12 * 46] },
   { t: TO, cells: 34, on: thopter, off: [0.3 * 34 * (16 / 9), 0.12 * 34] },
@@ -169,7 +175,7 @@ const land = standing('erg-land', BOX, (g) => {
   const t = g.t
   const air = airAt(t)
   drawBackdrop(g, air)
-  drawPlume(g, t, swallowed(t))
+  drawPlume(g, t)
   drawGround(g, t, air)
   if (t < T.up + 4) drawThopterShadow(g, t, at(t), 1.7)
   drawHarvester(g, t, swallowed(t), inShadow(t, HARVESTER.x))
@@ -204,7 +210,7 @@ const over = standing('erg-over', BOX, null, (g) => {
   const t = g.t
   const air = airAt(t)
   shadeBalls(g, t)
-  drawWorm(g, t, 0.4)
+  drawErgWorm(g, t, air.sand, air.shade)
   drawSheets(g, t, air.sand)
   drawDust(g, t, air.sand)
   drawSpice(g, t)
@@ -250,9 +256,9 @@ function drawSpice(g: Paint, t: number): void {
   const a = smooth(t, 163.6, 165.6) * (1 - smooth(t, T.up, 178.4))
   if (a <= 0.003) return
   const ctx = g.ctx
-  softBox(ctx, SPICE, 0.18 * a, { x0: 402, y0: -3.2, x1: 422, y1: 0.4 }, 6, 6, [[0, 0], [0.55, 1], [0.85, 0.8], [1, 0]])
+  softBox(ctx, SPICE, 0.18 * a, { x0: 394, y0: -3.2, x1: 414, y1: 0.4 }, 6, 6, [[0, 0], [0.55, 1], [0.85, 0.8], [1, 0]])
   for (let i = 0; i < 9; i++) {
-    const x = 407 + hash(i, 11) * 10 + 0.5 * drift(t * 0.25 + i, 31)
+    const x = 399.5 + hash(i, 11) * 10 + 0.5 * drift(t * 0.25 + i, 31)
     const y = -0.2 - ((hash(i, 12) * 2.6 + (t - 163.6) * 0.16) % 2.8)
     const r = 0.045 + 0.02 * hash(i, 13)
     const fade = Math.min(1, (y + 2.8) / 0.6, -y / 0.4)

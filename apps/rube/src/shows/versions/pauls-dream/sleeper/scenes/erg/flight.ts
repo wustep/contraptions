@@ -17,8 +17,8 @@ const padY = curve([[T.lift, PAD_Y], [130.95, PAD_Y], [131.8, PAD_Y - 1.2], [T.o
 
 /** Out over the erg: along, and how high over the crests round it (to its skids' foot: 0 is on the sand). */
 const ergX = curve([
-  [T.out, 212], [T.dip, 236], [T.skim, 262], [T.climb, 276], [T.open, 298], [T.ahead, 360], [T.plume, 380], [T.sign, 395],
-  [151.6, 401.5], [T.touch, LANDED.x],
+  [T.out, 212], [T.dip, 236], [T.skim, 262], [T.climb, 276], [T.open, 298], [T.ahead, 350], [T.plume, 370], [T.sign, 386],
+  [151.6, 394.5], [T.touch, LANDED.x],
 ])
 const ergAlt = curve([
   [T.out, 7.5], [T.dip, 5.0], [T.skim, 1.4], [T.climb, 2.6], [T.open, 6], [T.ahead, 8], [T.plume, 7], [T.sign, 3.2], [151.6, 1.0], [T.touch, 0],
@@ -28,8 +28,8 @@ const ergPitch = curve([
 ])
 
 /** Up and away: straight up off the flat, backing off from the worm, the turn, and west. */
-const awayX = curve([[T.up, LANDED.x], [T.climbing, LANDED.x - 0.4], [T.arch, LANDED.x - 1.5], [T.down, 400], [T.swallow, 395], [T.above, 391], [191.6, 389], [194, 381], [198.252, 352]])
-const awayY = curve([[T.up, LANDED.y], [T.climbing, -3.6], [T.arch, -8.5], [T.down, -13], [T.swallow, -15], [T.above, -17], [191.6, -18], [198.252, -22]])
+const awayX = curve([[T.up, LANDED.x], [T.climbing, LANDED.x - 0.6], [T.arch, LANDED.x - 2.5], [T.down, 391], [T.swallow, 386], [T.above, 382], [191.6, 380], [194, 372], [198.252, 343]])
+const awayY = curve([[T.up, LANDED.y], [T.climbing, -3.6], [T.arch, -9], [T.down, -14], [T.swallow, -17], [T.above, -19], [191.6, -20], [198.252, -24]])
 const awayPitch = curve([[T.up, 0], [177.2, -0.12], [T.arch, -0.06], [T.down, -0.1], [T.above, 0], [191.6, 0], [193, 0.06], [198.252, 0.04]])
 
 /** The turn from east to west, in the high wide shot: drawn as a turn about its upright, so it never flips at once. */

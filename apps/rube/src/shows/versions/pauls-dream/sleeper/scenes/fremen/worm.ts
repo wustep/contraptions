@@ -1,6 +1,7 @@
 import { R } from '../../../../../../parts'
 import { FREMEN } from '../../cast'
 import { M } from '../../music'
+import { drawPour, drawWorm, type Worm } from '../../craft/worm'
 import { clamp01, fill, kick, mix, rgba, smooth, smoother, type Paint, type Pt } from '../../paint'
 import { RIDER } from '../../plan'
 import type { Air } from '../../world/desert'
@@ -16,8 +17,8 @@ import { far } from './land'
  * camera can be close to the rider without a lens the dolly does not have. The rider is a ball: in the insert the
  * stage's own (`riderAt`), out on the erg too small for the stage, drawn here as one.
  *
- * It is drawn as a tube along a spine: an arch of length `ARCH`, the head end leading west into the sand, rings across
- * it, its underside in shade, sand pouring off its flanks. No mouth is seen: this worm is ridden, not feared.
+ * It is the show's one sandworm (`craft/worm.ts`) along a spine: an arch of length `ARCH`, the head end leading west
+ * into the sand, sand pouring off its flanks. No mouth is seen: this worm is ridden, not feared.
  */
 
 /** How far back it is on the erg. */
@@ -83,87 +84,27 @@ function riderOn(hx: number, base: number, a: number, size: number): Pt {
 /** The rider in the insert, where the stage draws him (world cells). */
 export const riderAt = (t: number): Pt => riderOn(INSERT_HEAD(t), INSERT_Y, arch(t), FREMEN.size)
 
-const SKIN = '#8D7862'
-const BELLY = '#58483A'
-const RING = '#4E4034'
+/** Toward the sun, up and to the east of the frame. */
+const SUN: Pt = [0.45, -0.89]
 
-/**
- * The tube, through `map` (the far layer's projection, or none): its flank, its back in the sun along the top, its belly
- * in its own shade, and rings across it, each a band a shade darker, sliding back along it as it goes (`phase`, cells of
- * the worm's own travel).
- */
-function body(g: Paint, hx: number, base: number, a: number, map: (p: Pt) => Pt, air: Air, haze: number, phase: number, n = 90): void {
-  const ctx = g.ctx
-  const skin = mix(mix(SKIN, air.sand, 0.22), air.haze, haze)
-  const back = mix(skin, '#F7E8CF', 0.17)
-  const belly = mix(BELLY, air.haze, haze * 0.9)
-  const ring = mix(RING, air.haze, haze * 0.9)
-  // Points across the tube at each step along it: from its top (side 1) to its bottom (side -1).
-  const at = (u: number, side: number): Pt => {
-    const s = spine(hx, base, a, u)
-    const nn = normal(hx, base, a, u)
-    const w = girth(u) * side
-    return map([s[0] + nn[0] * w, s[1] + nn[1] * w])
-  }
-  const band = (s0: number, s1: number, u0 = 0, u1 = 1, steps = n): Pt[] => {
-    const top: Pt[] = []
-    const bot: Pt[] = []
-    for (let i = 0; i <= steps; i++) {
-      const u = u0 + ((u1 - u0) * i) / steps
-      top.push(at(u, s0))
-      bot.push(at(u, s1))
-    }
-    return [...top, ...bot.reverse()]
-  }
-  const shape = (pts: Pt[], color: string) => {
-    ctx.beginPath()
-    pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
-    ctx.closePath()
-    fill(ctx, color)
-  }
-  shape(band(1, -1), skin)
-  shape(band(0.96, 0.42), back)
-  shape(band(-0.25, -1), belly)
-  // The rings: a band every so often along it, `phase` sliding them toward the head as it goes.
-  const every = 1.15
-  const width = 0.45
-  const off = ((phase % every) + every) % every
-  ctx.fillStyle = rgba(ring, 0.2)
-  for (let c = -off; c < ARCH; c += every) {
-    const u0 = Math.max(0, c / ARCH)
-    const u1 = Math.min(1, (c + width) / ARCH)
-    if (u1 <= u0) continue
-    ctx.beginPath()
-    band(1, -1, u0, u1, 3).forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
-    ctx.closePath()
-    ctx.fill()
+/** The worm as the shared drawing has it: its spine from the tail end to the head (both in the sand), its girth. */
+function worm(hx: number, base: number, a: number, map: (p: Pt) => Pt, air: Air, haze: number, phase: number, n: number): Worm {
+  const pts: Pt[] = []
+  for (let i = 0; i <= n; i++) pts.push(spine(hx, base, a, 1 - i / n))
+  return {
+    spine: pts,
+    radius: (back, len) => girth(back / Math.max(1e-6, len)),
+    sun: SUN,
+    map,
+    phase,
+    tint: (c) => mix(mix(c, air.sand, 0.22), air.haze, haze),
   }
 }
 
-/** Sand sliding off the back: two broad pale sheets falling from its flanks to the sand, soft at their edges. */
-function pour(g: Paint, hx: number, base: number, a: number, air: Air, t: number): void {
+/** Sand sliding off its back: two broad soft sheets from its upper flanks to the sand. */
+function pour(g: Paint, w: Worm, a: number, base: number, air: Air, t: number): void {
   if (a <= 0.5) return
-  const ctx = g.ctx
-  const sand = mix(air.sand, '#FFF4E2', 0.18)
-  for (const [u, side] of [[0.24, -1], [0.62, 1]] as [number, number][]) {
-    const s = spine(hx, base, a, u)
-    const n = normal(hx, base, a, u)
-    const top: Pt = [s[0] + n[0] * girth(u) * 0.7, s[1] + n[1] * girth(u) * 0.7]
-    const sway = Math.sin(t * 0.9 + u * 7) * 0.2
-    const foot = base + 0.2
-    const spread = 1.2 + 0.3 * Math.sin(t * 0.7 + u * 3)
-    ctx.beginPath()
-    ctx.moveTo(top[0] - 0.4, top[1])
-    ctx.quadraticCurveTo(top[0] + side * 0.6 - 0.5 + sway, (top[1] + foot) / 2, top[0] + side * 1.0 - spread + sway, foot)
-    ctx.lineTo(top[0] + side * 1.0 + spread + sway, foot)
-    ctx.quadraticCurveTo(top[0] + side * 0.6 + 0.5 + sway, (top[1] + foot) / 2, top[0] + 0.4, top[1])
-    ctx.closePath()
-    const gr = ctx.createLinearGradient(0, top[1], 0, foot)
-    gr.addColorStop(0, rgba(sand, 0.0))
-    gr.addColorStop(0.35, rgba(sand, 0.4))
-    gr.addColorStop(1, rgba(sand, 0.55))
-    fill(ctx, gr)
-  }
+  drawPour(g, w, 1, t, [[0.76, 1], [0.38, 1]], mix(air.sand, '#FFF4E2', 0.18), base + 0.2)
 }
 
 /**
@@ -188,7 +129,7 @@ export function drawFarWorm(g: Paint, air: Air): void {
   const a = arch(t)
   if (a <= -RW) return
   const hx = ERG_HEAD(t)
-  body(g, hx, 0, a, L.pt, air, haze, t * 1.7, 60)
+  drawWorm(g, worm(hx, 0, a, L.pt, air, haze, t * 1.7, 60))
   // The rider, too small for the stage: a ball drawn here, the troop's own umber, a hair of rope to the hooks.
   if (a > 1.2) {
     const r = Math.max(R * FREMEN.size * L.s, 1.6 * g.px)
@@ -212,9 +153,9 @@ export function drawNearWorm(g: Paint, air: Air): void {
   if (t < INSERT.from - 0.01 || t >= INSERT.to + 0.01) return
   const a = arch(t)
   const hx = INSERT_HEAD(t)
-  const id = (p: Pt): Pt => p
-  body(g, hx, INSERT_Y, a, id, air, 0, t * 1.7, 120)
-  pour(g, hx, INSERT_Y, a, air, t)
+  const w = worm(hx, INSERT_Y, a, (p: Pt): Pt => p, air, 0, t * 1.7, 120)
+  drawWorm(g, w)
+  pour(g, w, a, INSERT_Y, air, t)
 }
 
 /** The rider's ropes in the insert: from his hands to the hooks set in the seam ahead of him. Over the balls. */

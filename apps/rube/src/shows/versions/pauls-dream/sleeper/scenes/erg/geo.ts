@@ -56,11 +56,11 @@ export const T = {
 } as const
 
 /** The harvester: its middle on the flat. It faces east, its door at its west end. */
-export const HARVESTER = { x: 425 } as const
+export const HARVESTER = { x: 430 } as const
 /** Where the ornithopter comes down, west of the harvester, facing it. */
-export const LANDED = { x: 405, y: -0.6 } as const
+export const LANDED = { x: 398, y: -0.6 } as const
 /** The worm comes up here, east of the harvester, and goes down on it. */
-export const WORM = { base: 455, plunge: 425 } as const
+export const WORM = { base: 478, plunge: 430 } as const
 
 /** The wings beat once a tick of the click. */
 export const beatAt = (t: number): number => (2 * Math.PI * (t - 0.057)) / TICK
@@ -72,7 +72,7 @@ export const beatAt = (t: number): number => (2 * Math.PI * (t - 0.057)) / TICK
  * the worm sign to run across), rising to the open dunes either side.
  */
 export function dunesAt(x: number): number {
-  const env = x < 425 ? smooth(425 - x, 46, 64) : smooth(x - 425, 96, 116)
+  const env = x < 430 ? smooth(430 - x, 52, 72) : smooth(x - 430, 130, 152)
   return env * (3.1 + 0.9 * drift(x / 41, 7))
 }
 
