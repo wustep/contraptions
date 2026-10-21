@@ -27,9 +27,9 @@ const hazeOf = (t: number): string => mix(skyAt(t).low, '#716C63', 0.35)
 
 /**
  * How much of the shore there is at `x`, 0 off its ends to 1 along it: at each end the water's edge goes back to the
- * horizon in a straight line, as a coast going away does, not a curl.
+ * horizon as a coast going away does, easing off the water's edge and onto the horizon, never a curl or a corner.
  */
-const along = (x: number): number => clamp01((x - BEACH.x0) / 10) * clamp01((BEACH.x1 - x) / 10)
+const along = (x: number): number => smooth(x, BEACH.x0, BEACH.x0 + 10) * (1 - smooth(x, BEACH.x1 - 10, BEACH.x1))
 
 /**
  * The shore: the beach, its ground from the water's edge back to the horizon, its two ends going away from the water to
