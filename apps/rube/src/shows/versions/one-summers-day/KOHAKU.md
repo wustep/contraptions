@@ -70,7 +70,7 @@ passengers and the girl on the platform, the lamp.
 | 168.46 | the theme returns | Night (a dissolve): the lit car crossing to Swamp Bottom (175.75). They get off; the lamp comes out of the dark wood to meet them on its one leg, a hop an eighth, bows, and lights them back to the cottage's gate. The white dragon comes down out of the sky over the trees; she hops up onto his back (191.98); No-Face stays by the trees. |
 | 193.45 | the summit | **The name** (a cut). Over a sea of cloud under the moon he carries her west. A gap opens in the cloud on moonlit country far below, a river winding silver through it, and he comes down over it. |
 | 201.55 | the cadence | On the fullest note his scales come off him from the tail forward and the last of the dragon is the boy. They fall together, coming to each other's side, turning over and over, the scales going up past them. |
-| 205.5 | winding down | **Home.** Down through the cloud's pale into the first light; the fall slows to nothing and they come down on the river of stones side by side. On a note she goes back over the stones alone, a stone a note; he stays. Up the meadow with her to the gate. |
+| 205.5 | winding down | **Home.** Down through the cloud's pale into the first light; the fall slows to nothing and they come down on the river of stones side by side. On a note she draws slowly away from his side, and goes back over the stones alone, a stone a note; he stays. Up the meadow with her to the gate. |
 | 231.5 | the fade | At the arch she stops, and does not look back, and goes into the dark. The credits come up over the summer sky; the wind goes on in the grass. |
 
 ## How it is made
@@ -223,6 +223,14 @@ picture, and the lamp at Swamp Bottom was hard to tell from the line's posts.
   hall's front comes away. The cut at the door is gone, so there is still one cut there, not two.
 - **Under the bridge's end** a square of the far green hill showed between the bridge and the footings. The footings
   now come out to the building's west end.
+
+**Round 8, a phone held upright, and the parting.** The whole show was played again in real time on desktop and phone.
+- **On a phone** the day's cloud and the far hills faded out whenever a wide shot's view reached high, as it does on a
+  tall screen: over the bathhouse's reveal the hills and the cloud went in half a second, and at the dawn sea the great
+  cumulus was missing, a bare blue sky. The fade was meant only for the flight over the cloud. It now acts only while
+  they are up there and coming down through it, so a phone sees the same sky as a desktop.
+- **The parting** was one hop: on a note she was simply on the first stone. Now, on the note, she draws slowly away
+  from his side, a little way over the bed, while he watches, and goes from there on the phrase's even notes.
 
 ## Known limits
 
