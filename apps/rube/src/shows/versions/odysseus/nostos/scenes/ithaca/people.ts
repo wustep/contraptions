@@ -23,6 +23,8 @@ const FLOOR = HALL.floor
 const on = (floor: number, size = 1) => floor - R * size
 const HERO_ON = on(FLOOR)
 const ROOM_ON = (size: number) => on(ROOM.floor, size)
+/** What a suitor is once the colour has gone out of him: darker than the hall's dado behind him, where the living are lighter. */
+const DEAD = '#1F2226'
 
 /** Step-hops up or down a flight: one flight a step, each landing on its note. */
 function hops(points: Pt[], times: number[], lift = 0.12): Move[] {
@@ -310,7 +312,7 @@ export function ithacaActors(): Actor[] {
     // the darkest of them, and after the arrow the colour goes out of him; so it goes out of each of them he throws.
     ...suitors.map(({ path, dies }, i): Actor =>
       i === ANTINOUS_I
-        ? { id: SUITORS_ID + i, color: ANTINOUS, rim: ANTINOUS_RIM, size: ANTINOUS_SIZE, path, turn: -0.9, colorAt: (t) => mix(ANTINOUS, '#2C3036', 0.45 * smooth(t, TRIAL.strike + 0.3, TRIAL.strike + 2.5)), under: (t) => t > TRIAL.strike + 0.4 }
+        ? { id: SUITORS_ID + i, color: ANTINOUS, rim: ANTINOUS_RIM, size: ANTINOUS_SIZE, path, turn: -0.9, colorAt: (t) => mix(ANTINOUS, DEAD, 0.9 * smooth(t, TRIAL.strike + 0.2, TRIAL.strike + 1.4)), under: (t) => t > TRIAL.strike + 0.4 }
         : {
             id: SUITORS_ID + i,
             color: SUITOR,
@@ -318,7 +320,7 @@ export function ithacaActors(): Actor[] {
             size: SUITOR_SIZE,
             path,
             turn: [0.5, 2.7, -0.4, 3.3, 0.9, 2.2, 0, 1.4, -1.1, 2.9, 0.3, -0.7, 1.9][i],
-            colorAt: dies === undefined ? undefined : (t) => mix(SUITOR, '#2C3036', 0.7 * smooth(t, dies, dies + 0.45)),
+            colorAt: dies === undefined ? undefined : (t) => mix(SUITOR, DEAD, 0.9 * smooth(t, dies - 0.12, dies + 0.1)),
             under: dies === undefined ? undefined : (t) => t >= dies,
           },
     ),
