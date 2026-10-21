@@ -175,12 +175,11 @@ const dream = {
     const head: Pt = [px, py - 0.12]
     const f = cameraAt(t)
     const place: Pt = [f.x + 0.1 * ((f.cells * 16) / 9), f.y + 0.05 * f.cells]
-    return {
-      x: head[0] + (place[0] - head[0]) * grow,
-      y: head[1] + (place[1] - head[1]) * grow,
-      r: 0.06 + 0.25 * f.cells * grow,
-      soft: 0.04 + 0.1 * grow,
-    }
+    const x = head[0] + (place[0] - head[0]) * grow
+    const y = head[1] + (place[1] - head[1]) * grow
+    // Never over him: the opening's lower edge stays clear of his head, so he is seen standing under his vision.
+    const clear = Math.hypot(px - x, py - y) - 0.13 - 0.12
+    return { x, y, r: Math.max(0.04, Math.min(0.06 + 0.25 * f.cells * grow, clear)), soft: 0.04 + 0.1 * grow }
   },
 }
 
