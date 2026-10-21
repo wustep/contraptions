@@ -97,13 +97,22 @@ function gapAt(t: number): number {
   return clamp01((96.6 - b[0]) / (96.6 - 94.0))
 }
 
+/**
+ * The way through the west wall, from the cave's roof at its inner edge out to the mouth: a throat whose roof comes
+ * down towards the day, rounded at the outer lip, so it is rock and not a door's lintel.
+ */
+function throat(ctx: CanvasRenderingContext2D): void {
+  ctx.lineTo(MOUTH.x1, MOUTH.top)
+  ctx.quadraticCurveTo(MOUTH.x0 + 0.2, MOUTH.top - 0.05, MOUTH.x0, MOUTH.top + 0.75)
+}
+
+/** The inside of the cave and the way through its west wall, as one outline (two would cancel where they overlap). */
 function inCave(ctx: CanvasRenderingContext2D): void {
   ctx.beginPath()
-  CAVE.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
-  // And the gap through the west wall, joined on.
-  ctx.lineTo(MOUTH.x1, MOUTH.top)
+  ctx.moveTo(MOUTH.x0, FLOOR)
+  CAVE.slice(1).forEach(([x, y]) => ctx.lineTo(x, y))
+  throat(ctx)
   ctx.closePath()
-  ctx.rect(MOUTH.x0, MOUTH.top, MOUTH.x1 - MOUTH.x0 + 0.05, FLOOR - MOUTH.top)
 }
 
 export function drawIsland(g: Paint, t: number, inside: () => void): void {
@@ -254,8 +263,7 @@ function drawInside(g: Paint, t: number): void {
   // The rock's cut edge round the inside.
   ctx.beginPath()
   CAVE.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
-  ctx.lineTo(MOUTH.x1, MOUTH.top)
-  ctx.lineTo(MOUTH.x0, MOUTH.top)
+  throat(ctx)
   stroke(g, CUT, 9)
   stroke(g, INK, 2.2)
   // The step, the ledge and the pillar of fallen rock at the back; the stone under the club. Lit by the fire as they
