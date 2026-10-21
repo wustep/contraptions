@@ -10,6 +10,6 @@ export default defineShow({
   title: 'Kohaku',
   label: 'Opus 5.5',
   about: "Joe Hisaishi's One Summer's Day, from Hayao Miyazaki's Spirited Away, as a Rube Goldberg machine: the tunnel, the bathhouse at night, the train over the water, and the white dragon whose name she gives back.",
-  still: 60,
+  still: 154.5,
   async load() { return (await import('./kohaku')).performance },
 })
