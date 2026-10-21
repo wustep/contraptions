@@ -101,8 +101,8 @@ const SUN: Pt = [0.78, -0.62]
 
 /** The worm at `t`, and the sand it pours, over the sand at y = 0. */
 export function drawErgWorm(g: Paint, t: number, sand: string, shade: string): void {
-  // The slump round its foot while it stands, behind it.
-  const stand = smooth(t, T.rise, T.rise + 1.0) * (1 - smooth(t, T.over, T.down))
+  // The sand slumping into a ring round its foot as it breaks through, and while it stands.
+  const stand = smooth(t, T.rise - 0.15, T.rise + 0.7) * (1 - smooth(t, T.over, T.down))
   drawSlump(g, [WORM.base, 0.2], RADIUS, stand, sand, shade)
   // The hole's slump, after it has gone.
   drawSlump(g, [WORM.plunge, 0.2], RADIUS * 0.9, smooth(t, SINK_FROM, SINK_TO) * (1 - smooth(t, 194, 198)), sand, shade)
@@ -135,12 +135,12 @@ export function drawErgWorm(g: Paint, t: number, sand: string, shade: string): v
     phase: s1 - hi + Math.max(0, head(t) - UNDER),
   }
   drawWorm(g, worm)
-  // Sand pouring off it as it comes up and stands, thinning as it settles.
-  const pour = smooth(t, T.rise, T.rise + 0.4) * (1 - 0.6 * smooth(t, 173.5, 176)) * (1 - smooth(t, 178.5, T.arch))
-  drawPour(g, worm, pour, t, [[0.62, 1], [0.8, -1], [0.92, 1]], sand, 0)
+  // Sand sliding off it in long sheets as it comes up through it, thinning as it stands.
+  const pour = smooth(t, T.rise, T.rise + 0.25) * (1 - 0.6 * smooth(t, 173.5, 176)) * (1 - smooth(t, 178.5, T.arch))
+  drawPour(g, worm, pour, t, [[0.45, -1], [0.62, 1], [0.8, -1], [0.92, 1]], sand, 0)
 }
 
-/** Sand thrown up where it breaks the surface and where it goes back in: great flat sheets that rise and fall. */
+/** Sand thrown up where it goes back in on the harvester: great flat sheets that rise and fall. */
 interface Sheet {
   at: number
   x: number
@@ -150,10 +150,6 @@ interface Sheet {
   foot: number
 }
 const SHEETS: Sheet[] = [
-  { at: T.rise - 0.05, x: WORM.base - 14, lean: -0.42, v: 26, foot: 11 },
-  { at: T.rise, x: WORM.base + 14, lean: 0.4, v: 27, foot: 11.5 },
-  { at: T.rise + 0.2, x: WORM.base - 19, lean: -0.75, v: 18, foot: 8 },
-  { at: T.rise + 0.3, x: WORM.base + 19, lean: 0.8, v: 17, foot: 8 },
   { at: 186.6, x: WORM.plunge - 17, lean: -0.55, v: 24, foot: 12 },
   { at: T.swallow, x: WORM.plunge + 17, lean: 0.5, v: 26, foot: 12 },
   { at: T.swallow + 0.3, x: WORM.plunge - 22, lean: -0.9, v: 17, foot: 9 },

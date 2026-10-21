@@ -130,8 +130,7 @@ export function drawWorm(g: Paint, w: Worm): void {
     ctx.clip()
   }
   const edge = (s: Section, x: number): Pt => M([s.p[0] + s.n[0] * s.r * x, s.p[1] + s.n[1] * s.r * x])
-  const colorAt = (b: number) => (b < 0.5 ? mix(shade, hide, b / 0.5) : mix(hide, lit, (b - 0.5) / 0.5))
-  const XS = [1, 0.7, 0.35, 0, -0.35, -0.7, -1]
+  const across = shading(hide, lit, shade, w.sun)
   // The body: a quad between each section and the next, a little overlapping (no seams), filled with the light across it.
   for (let i = 0; i + 1 < all.length; i++) {
     const a = all[i]
@@ -143,10 +142,7 @@ export function drawWorm(g: Paint, w: Worm): void {
     ctx.beginPath()
     q.forEach(([x, y], k) => (k ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
     ctx.closePath()
-    const lx = a.n[0] * w.sun[0] + a.n[1] * w.sun[1]
-    const gr = ctx.createLinearGradient(...edge(a, 1), ...edge(a, -1))
-    for (const x of XS) gr.addColorStop((1 - x) / 2, colorAt(lambert(x, lx * 0.9, 0.4)))
-    ctx.fillStyle = gr
+    ctx.fillStyle = across(ctx, edge(a, 1), edge(a, -1), a.n)
     ctx.fill()
   }
   // The ring bands: broad, low, curved round it toward the head, darkest on its shaded side and gone on its lit side.
@@ -186,12 +182,27 @@ export function drawWorm(g: Paint, w: Worm): void {
     ctx.fillStyle = gr
     ctx.fill()
   }
-  if (w.mouth) drawMouth(g, w, all[all.length - 1], look, tint, M, scale)
+  if (w.mouth) drawMouth(g, w, all[all.length - 1], look, tint, M, scale, across)
   ctx.restore()
 }
 
 /** Three petals, the throat and its baleen: a bud while shut, a flower peeling back as it opens. */
-function drawMouth(g: Paint, w: Worm, h: Section, look: WormLook, tint: (c: string) => string, M: (p: Pt) => Pt, scale: number): void {
+/**
+ * A fill that lights a cylinder across its width: from its edge at `a` (on the side `n` points to) to its edge at `b`,
+ * lit as the sun would light it, so every part of the body (and its shut head) is shaded the same way.
+ */
+type Across = (ctx: CanvasRenderingContext2D, a: Pt, b: Pt, n: Pt) => CanvasGradient
+function shading(hide: string, lit: string, shade: string, sun: Pt): Across {
+  const colorAt = (b: number) => (b < 0.5 ? mix(shade, hide, b / 0.5) : mix(hide, lit, (b - 0.5) / 0.5))
+  return (ctx, a, b, n) => {
+    const lx = n[0] * sun[0] + n[1] * sun[1]
+    const gr = ctx.createLinearGradient(a[0], a[1], b[0], b[1])
+    for (const x of [1, 0.7, 0.35, 0, -0.35, -0.7, -1]) gr.addColorStop((1 - x) / 2, colorAt(lambert(x, lx * 0.9, 0.4)))
+    return gr
+  }
+}
+
+function drawMouth(g: Paint, w: Worm, h: Section, look: WormLook, tint: (c: string) => string, M: (p: Pt) => Pt, scale: number, across: Across): void {
   const ctx = g.ctx
   const m = w.mouth!
   const open = clamp01(m.open)
@@ -249,7 +260,37 @@ function drawMouth(g: Paint, w: Worm, h: Section, look: WormLook, tint: (c: stri
   }
   // Two lips at its sides and a third that, shut, closes the bud between them and, opening, folds away behind the head:
   // side on, an open mouth shows its two sides, and nothing crosses the throat.
-  petal(Math.PI / 2, 1 - smoothstep(e, 0.12, 0.42))
+  // Shut, its head is a smooth blunt dome, the three lips closed flush, a faint seam where each meets the next; opening,
+  // the dome flattens into the rim and the lips come away from it.
+  const shut = 1 - e
+  if (shut > 0.01) {
+    const L = r0 * 1.2 * shut
+    const dome: Pt[] = []
+    for (let i = 0; i <= 28; i++) {
+      const a = (i / 28) * Math.PI
+      dome.push(M([C[0] + h.n[0] * r0 * Math.cos(a) + h.d[0] * L * Math.sin(a), C[1] + h.n[1] * r0 * Math.cos(a) + h.d[1] * L * Math.sin(a)]))
+    }
+    // A little behind the head too, so it closes over the body's end with no seam.
+    dome.push(M([C[0] - h.n[0] * r0 - h.d[0] * 0.3, C[1] - h.n[1] * r0 - h.d[1] * 0.3]), M([C[0] + h.n[0] * r0 - h.d[0] * 0.3, C[1] + h.n[1] * r0 - h.d[1] * 0.3]))
+    ctx.beginPath()
+    dome.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
+    ctx.closePath()
+    ctx.fillStyle = across(ctx, M([C[0] + h.n[0] * r0, C[1] + h.n[1] * r0]), M([C[0] - h.n[0] * r0, C[1] - h.n[1] * r0]), h.n)
+    ctx.fill()
+    const tip = M([C[0] + h.d[0] * L, C[1] + h.d[1] * L])
+    ctx.strokeStyle = rgba(tint(look.band), 0.38 * shut)
+    ctx.lineWidth = Math.max(1.25 * g.px, 0.035 * r0 * scale)
+    for (const k of [0.55, -0.55]) {
+      const foot = M([C[0] + h.n[0] * r0 * k - h.d[0] * 0.2, C[1] + h.n[1] * r0 * k - h.d[1] * 0.2])
+      const bend = M([C[0] + h.n[0] * r0 * k * 0.75 + h.d[0] * L * 0.7, C[1] + h.n[1] * r0 * k * 0.75 + h.d[1] * L * 0.7])
+      ctx.beginPath()
+      ctx.moveTo(foot[0], foot[1])
+      ctx.quadraticCurveTo(bend[0], bend[1], tip[0], tip[1])
+      ctx.stroke()
+    }
+  }
+  const lips = smoothstep(e, 0.04, 0.3)
+  petal(Math.PI / 2, lips * (1 - smoothstep(e, 0.12, 0.42)))
   // The throat comes in as the bud parts, never all at once.
   const seen = smoothstep(e, 0.02, 0.2)
   if (seen > 0.002) {
@@ -287,8 +328,8 @@ function drawMouth(g: Paint, w: Worm, h: Section, look: WormLook, tint: (c: stri
     ctx.stroke()
     ctx.globalAlpha = was
   }
-  petal(0)
-  petal(Math.PI)
+  petal(0, lips)
+  petal(Math.PI, lips)
 }
 
 const fract = (v: number): number => v - Math.floor(v)

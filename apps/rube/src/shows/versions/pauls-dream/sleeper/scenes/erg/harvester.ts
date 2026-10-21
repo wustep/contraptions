@@ -1,4 +1,4 @@
-import { circle, fill, line, mix, poly, rgba, smooth, vgrad, type Paint, type Pt } from '../../paint'
+import { circle, drift, fill, line, mix, poly, rgba, smooth, vgrad, type Paint, type Pt } from '../../paint'
 import { HARVESTER, T } from './geo'
 
 /**
@@ -96,44 +96,60 @@ export function drawHarvester(g: Paint, t: number, sunk: number, shade = 0): voi
 }
 
 /**
- * The plume: spice dust driven up from the vent, one great soft column leaning west as it rises and thinning to
- * nothing, laid in three widths so its edge is soft, a few large slow billows climbing it. On the drums' blow at `plume`
- * it bellies out; once the harvester has gone under it is cut off at its foot and drifts up and away.
+ * The plume: spice dust driven up from the vent in one soft column, tapering, leaning west with the wind as it rises,
+ * darker at its foot and paling into the haze as it thins, its edge wandering slowly and unevenly. It is laid as thin
+ * slices up its height, each soft across its width, so it has no edge and no discs. On the drums' blow at `plume` it
+ * bellies out low down; once the harvester has gone under it is cut off at its foot and drifts up and away.
  */
-export function drawPlume(g: Paint, t: number): void {
+export function drawPlume(g: Paint, t: number, haze: string): void {
   const ctx = g.ctx
   const gone = smooth(t, T.swallow - 0.6, 197)
   if (gone >= 0.999) return
   const foot = 60 * smooth(t, T.swallow - 0.6, 198) ** 0.7
-  const H = 68
+  const H = 70
   const belly = Math.exp(-(((t - T.plume - 0.9) / 1.3) ** 2))
-  const along = (h: number): Pt => [VENT[0] - 0.3 * h - 0.0035 * h * h, VENT[1] - h]
-  const half = (h: number): number => 1.6 + 0.24 * h + 2.4 * belly * Math.exp(-(((h - 12) / 10) ** 2))
-  for (const [k, a] of [[1.0, 0.15], [0.7, 0.15], [0.42, 0.15]] as [number, number][]) {
-    const left: Pt[] = []
-    const right: Pt[] = []
-    for (let h = foot; h <= H; h += 1.5) {
-      const [x, y] = along(h)
-      const w = half(h) * k
-      left.push([x - w, y])
-      right.push([x + w, y])
-    }
-    if (left.length < 2) continue
-    poly(ctx, [...left, ...right.reverse()])
-    const y0 = along(foot)[1]
-    const y1 = along(H)[1]
-    fill(ctx, vgrad(ctx, y0, y1, [[0, rgba(SPICE, a * (1 - gone))], [0.55, rgba(SPICE, a * 0.7 * (1 - gone))], [1, rgba(SPICE, 0)]]))
-  }
-  for (let i = 0; i < 4; i++) {
-    const period = 13
-    const u = (((t / period + i / 4) % 1) + 1) % 1
-    const h = foot + 3 + u * (H - foot - 6)
-    if (h > H - 3) continue
-    const [x, y] = along(h)
-    const r = half(h) * 0.9
-    const a = 0.11 * Math.sin(Math.PI * u) * (1 - gone)
-    ctx.beginPath()
-    ctx.ellipse(x + 0.5 * Math.sin(i * 1.7 + t * 0.2), y, r, r * 0.7, 0, 0, Math.PI * 2)
-    fill(ctx, rgba(SPICE, a))
+  const along = (h: number): number => VENT[0] - 0.3 * h - 0.0035 * h * h + 1.4 * drift(h / 16 - t * 0.05, 3) * Math.min(1, h / 10)
+  const half = (h: number): number => (1.4 + 0.25 * h) * (1 + 0.16 * drift(h / 9 + t * 0.07, 5)) + 2.6 * belly * Math.exp(-(((h - 12) / 10) ** 2))
+  // Slices meet exactly, each boundary on a whole row of the canvas's pixels, so no row is painted twice (a stripe) or
+  // half by each (a seam).
+  const m = ctx.getTransform()
+  const snap = (y: number): number => (Math.round(m.d * y + m.f) - m.f) / m.d
+  // Finer low down, where its colour and strength change fastest.
+  const stepAt = (h: number): number => 0.25 + 0.45 * smooth(h, foot + 2, foot + 14)
+  let ya = snap(VENT[1] - foot)
+  for (let h = foot; h < H; h += stepAt(h)) {
+    const y0 = ya
+    const y1 = snap(VENT[1] - Math.min(H, h + stepAt(h)))
+    ya = y1
+    if (y1 >= y0) continue
+    const hA = VENT[1] - y0
+    const hB = VENT[1] - y1
+    const c0 = along(hA)
+    const c1 = along(hB)
+    const w0 = half(hA)
+    const w1 = half(hB)
+    // Darker at the foot, paling into the haze; thinning as it goes up, and over its last stretch to nothing.
+    const u = hA / H
+    const color = mix(mix('#8A5530', SPICE, smooth(hA, 0, 18)), haze, 0.55 * smooth(hA, 14, H))
+    // Out of the vent at once, dark; once cut off, its foot thins away softly.
+    const a = 0.46 * (1 - gone) * (1 - u) ** 1.3 * smooth(hA, foot, foot + (foot > 0.5 ? 6 : 1.5))
+    if (a <= 0.003) continue
+    poly(ctx, [[c0 - w0, y0], [c0 + w0, y0], [c1 + w1, y1], [c1 - w1, y1]])
+    // Across the column, square to its lean, so the soft edge runs along it rather than stepping slice by slice.
+    const ax = c1 - c0
+    const ay = y1 - y0
+    const al = Math.hypot(ax, ay) || 1
+    const nx = -ay / al
+    const ny = ax / al
+    const mx = (c0 + c1) / 2
+    const my = (y0 + y1) / 2
+    const wp = ((w0 + w1) / 2) * (Math.abs(ay) / al)
+    const gr = ctx.createLinearGradient(mx - nx * wp, my - ny * wp, mx + nx * wp, my + ny * wp)
+    gr.addColorStop(0, rgba(color, 0))
+    gr.addColorStop(0.32, rgba(color, a))
+    gr.addColorStop(0.68, rgba(color, a))
+    gr.addColorStop(1, rgba(color, 0))
+    ctx.fillStyle = gr
+    ctx.fill()
   }
 }

@@ -194,7 +194,7 @@ const land = standing('erg-land', BOX, (g) => {
   const t = g.t
   const air = airAt(t)
   drawBackdrop(g, air)
-  drawPlume(g, t)
+  drawPlume(g, t, air.haze)
   drawGround(g, t, air)
   if (t < T.up + 4) drawThopterShadow(g, t, at(t), 1.7)
   drawHarvester(g, t, swallowed(t), inShadow(t, HARVESTER.x))
