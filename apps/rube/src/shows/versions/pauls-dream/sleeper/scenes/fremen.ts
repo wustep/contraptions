@@ -1,12 +1,12 @@
 import type { Shot } from '../camera'
 import { CHANI, FREMEN } from '../cast'
-import { standing, type Pt } from '../paint'
+import { ellipse, fill, mix, rgba, smooth, standing, type Paint, type Pt } from '../paint'
 import { JAMIS_FALLS, RIDER, WINDOWS } from '../plan'
 import type { Scene } from '../scene'
 import { looking } from '../show'
-import { on } from './fremen/ground'
+import { ground, on } from './fremen/ground'
 import { BASIN_D, airAt, drawBack, drawBasin, drawFront, setSwell, setTilt } from './fremen/land'
-import { DUEL, ON, SET_OFF, STOPS, TAKEN, TURN, WALK_FROM, troop } from './fremen/troop'
+import { DUEL, ON, SET_OFF, STOPS, TAKEN, THROWN, TURN, WALK_FROM, troop } from './fremen/troop'
 import { D, INSERT, drawFarWorm, drawNearWorm, drawRopes, riderAt, sign } from './fremen/worm'
 
 /**
@@ -48,14 +48,14 @@ const shots: Shot[] = [
   { t: DUEL.clash, cells: 3.7, at: [1166.25, -0.95], cut: true },
   { t: 347.0, cells: 3.6, at: [1166.15, -0.94] },
   { t: JAMIS_FALLS, cells: 3.55, at: [1166.5, -0.93] },
-  { t: 350.6, cells: 3.85, at: [1167.25, -0.98] },
-  { t: 352.49, cells: 4.0, at: [1167.4, -1.02] },
-  // Close: Stilgar by his man, then over him to Paul; opening a little for Jessica as she comes to her son.
-  { t: 352.51, cells: 4.3, at: [1167.6, -1.22], cut: true },
-  { t: 356.0, cells: 3.8, at: [1167.15, -1.08] },
-  { t: 358.6, cells: 3.8, at: [1166.95, -1.08] },
-  { t: 361.6, cells: 4.4, at: [1167.3, -1.2] },
-  { t: WALK_FROM - 0.002, cells: 4.5, at: [1167.4, -1.22] },
+  // On without a cut: Paul over the man he killed; Stilgar walking in from the ring to his man, and over him to Paul on
+  // the boom; Jessica coming to her son.
+  { t: 350.8, cells: 3.9, at: [1167.35, -1.0] },
+  { t: 353.6, cells: 4.7, at: [1168.7, -1.18] },
+  { t: 356.4, cells: 4.2, at: [1167.9, -1.1] },
+  { t: 358.0, cells: 3.9, at: [1167.2, -1.05] },
+  { t: 361.2, cells: 4.3, at: [1166.9, -1.12] },
+  { t: WALK_FROM - 0.002, cells: 4.2, at: [1166.8, -1.1] },
   // The walk, on the dune beyond: close on him and Chani side by side, the line ahead of them and behind.
   { t: WALK_FROM, cells: 4.9, off: [0.55, -0.85], cut: true },
   { t: 371, cells: 5.0, off: [0.6, -0.9] },
@@ -82,18 +82,31 @@ const shots: Shot[] = [
   { t: TO, cells: 22, at: [1240.5, -12.3] },
 ]
 
+/** Where Jamis comes down, and bounces: a skirt of sand kicked up and settling, flat, low, gone in under a second. */
+function kicked(g: Paint): void {
+  for (const [x, at, size] of [[THROWN.land, THROWN.at, 1], [THROWN.bounce, THROWN.at + 0.2, 0.6]] as const) {
+    const u = (g.t - at) / 0.75
+    if (u < 0 || u > 1) continue
+    const air = airAt(g.t)
+    const y = ground(x)
+    ellipse(g.ctx, x, y - 0.03 - 0.05 * u * size, (0.12 + 0.42 * Math.sqrt(u)) * size, (0.05 + 0.06 * u) * size)
+    fill(g.ctx, rgba(mix(air.sand, '#FFF4E2', 0.28), 0.55 * (1 - smooth(u, 0.2, 1))))
+  }
+}
+
 /** The camera's tilt for each shot: how far under the frame's middle the horizon lies. */
 setTilt([
   [FROM, -0.02, true],
   [338.15, 0.22, true],
   [DUEL.challenge, -0.05, true],
   [DUEL.clash, -0.02, true],
-  [352.51, -0.04, true],
+  [353.6, -0.04, false],
   [WALK_FROM, 0.16, true],
   [379.37, 0.02, true],
   [INSERT.from, 0.3, true],
-  [INSERT.to, 0.3, true],
-  [395.87, 0.22, true],
+  // The reaction and the answer from a little lower, so the worm stands up over the crest behind them, not a hump.
+  [INSERT.to, -0.12, true],
+  [395.87, 0.08, true],
   [ON, 0.22, false],
   [415, 0.16, false],
   [430, 0.05, false],
@@ -126,6 +139,7 @@ export const fremen: Scene = {
     }, (g) => {
       if (g.t < FROM - 1e-6) return
       drawFront(g)
+      kicked(g)
       drawRopes(g)
     }),
   ],

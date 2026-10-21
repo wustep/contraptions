@@ -284,10 +284,7 @@ function drawWind(g: Paint, air: Air): void {
 }
 
 /** The boulders the Fremen stand on and come up behind: [x, width, height]. Drawn over the balls. */
-export const BOULDERS: [number, number, number][] = [
-  [1150.3, 2.4, 1.05],
-  [1177.6, 1.7, 0.75],
-]
+export const BOULDERS: [number, number, number][] = [[1177.6, 1.7, 0.75]]
 
 /** The top of boulder `i` at its middle (where one stands on it). */
 export const boulderTop = (i: number): number => ground(BOULDERS[i][0]) - BOULDERS[i][2]
