@@ -209,7 +209,9 @@ function paintSeam(b: Brush, t: number): void {
   const pts: Pt[] = []
   const m = 10
   for (let i = 0; i <= m; i++) pts.push(onSeam(t, a + ((c - a) * i) / m))
-  const wide = 0.06 + 0.42 * o
+  // Once he stands the hooks hold it only a little open, a dark slit, not the wound it was while he hung from it.
+  const shut = smooth(t, STAND, STAND + 1.6)
+  const wide = 0.06 + 0.42 * o * (1 - 0.72 * shut)
   ctx.beginPath()
   ctx.moveTo(pts[0][0], pts[0][1])
   for (let i = 1; i <= m; i++) {
@@ -223,7 +225,7 @@ function paintSeam(b: Brush, t: number): void {
     ctx.lineTo(pts[i][0] - bulge * 0.5, pts[i][1])
   }
   ctx.closePath()
-  ctx.fillStyle = b.c(mix(SKIN.flesh, SKIN.seam, 0.15 * (1 - o)))
+  ctx.fillStyle = b.c(mix(SKIN.flesh, SKIN.seam, 0.15 * (1 - o) + 0.4 * shut))
   ctx.fill()
 }
 
