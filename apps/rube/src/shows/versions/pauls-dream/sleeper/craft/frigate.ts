@@ -62,11 +62,12 @@ export function drawFrigate(g: Paint, p: FrigatePose, look: FrigateLook = FRIGAT
   fill(ctx, look.band)
   poly(ctx, [[-6.0, 1.45], [6.2, 1.4], [6.5, 1.62], [0, 1.86], [-6.2, 1.66]])
   fill(ctx, look.belly)
-  // The ports: a row of small slots along the band.
-  for (let i = 0; i < 9; i++) {
-    const x = -5.2 + i * 1.25
-    poly(ctx, [[x, 0.27], [x + 0.42, 0.27], [x + 0.42, 0.4], [x, 0.4]])
-    fill(ctx, rgba(look.port, 0.85))
+  // A keel ridge along the top, and three long slots in the band: the ship is a stone, not a liner.
+  poly(ctx, [[-5.5, -2.0], [4.6, -1.95], [3.9, -2.36], [-4.8, -2.42]])
+  fill(ctx, mix(look.hull, '#000000', 0.25))
+  for (const x of [-4.6, -1.0, 2.6]) {
+    poly(ctx, [[x, 0.28], [x + 1.6, 0.28], [x + 1.6, 0.36], [x, 0.36]])
+    fill(ctx, rgba(look.port, 0.45))
   }
   // The vents.
   for (const vx of [-4.2, 0, 4.2]) {
