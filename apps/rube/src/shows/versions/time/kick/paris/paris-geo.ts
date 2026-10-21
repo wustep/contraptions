@@ -481,10 +481,17 @@ export function reflections(t: number, here: Pt = deck(COBB_S)): { at: Pt; scale
   if (here[0] < H + MIRROR.s0 + 0.12 || here[0] > H + MIRROR.s1 - 0.12) return []
   // One honest reflection once the great mirror is home and he is before it; the endless run once the near one shuts.
   const n = t >= MIRROR_A ? DEEP : 1
+  // Each comes up out of the glass's own silver (fade 1.45 is the mirror's colour, rim and all): the first as the great
+  // mirror comes home, the run of them with the corridor opening behind them (all at full strength in one frame, they
+  // were there before the frames that hold them).
+  const first = Math.min(1, (t - B_HOME) / 0.15)
+  const rest = t >= MIRROR_A ? 1 - Math.exp(-(t - MIRROR_A) / 0.12) : 0
   const out: { at: Pt; scale: number; fade: number }[] = []
   for (let i = 1; i <= n; i++) {
     const s = 1 / (1 + 0.46 * i)
-    out.push({ at: [VANISH[0] + (here[0] - VANISH[0]) * s, VANISH[1] + (here[1] - VANISH[1]) * s], scale: s, fade: 1 - Math.pow(0.83, i) })
+    const f = 1 - Math.pow(0.83, i)
+    const on = i === 1 ? first : rest
+    out.push({ at: [VANISH[0] + (here[0] - VANISH[0]) * s, VANISH[1] + (here[1] - VANISH[1]) * s], scale: s, fade: f + (1.45 - f) * (1 - on) })
   }
   return out
 }

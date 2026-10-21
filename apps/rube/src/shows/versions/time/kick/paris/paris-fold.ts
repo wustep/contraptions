@@ -172,8 +172,11 @@ function lever(pen: Pen, t: number, f: Frame): void {
   shape(pen, [[end[0] - 0.19, floor - 0.1], [end[0] + 0.19, floor - 0.1], [end[0] + 0.13, floor + 0.02], [end[0] - 0.13, floor + 0.02]], IRON_LIT, 0.6)
   // On the stop: a knock of dust off the square.
   const u = t - LEVER_HOME
-  if (u > 0 && u < 1.5) puff(pen, [end[0] + 0.1, Y_S - 0.05], 0.2 + 0.4 * u, mixHex(PARIS.stone, PARIS.sky, 0.3), 0.25 * Math.exp(-u / 0.5))
+  if (u > 0 && u < 1.5) puff(pen, [end[0] + 0.1, Y_S - 0.05], 0.2 + 0.4 * u, mixHex(PARIS.stone, PARIS.sky, 0.3), 0.25 * kicked(u) * Math.exp(-u / 0.5))
 }
+
+/** Dust knocked out by a blow comes up over a moment: at full strength from its first frame, it popped in. */
+const kicked = (u: number): number => 1 - Math.exp(-u / 0.06)
 
 /* ------------------------------------------------------------------ the curve */
 
@@ -198,14 +201,16 @@ function curve(pen: Pen, t: number, f: Frame): void {
   const joints: Pt[][] = []
   const knuckles: Pt[][] = []
   const d = JOINT / R
-  for (let phi = th - d * 0.5; phi > 0; phi -= d) {
-    joints.push([at(phi, R), at(phi, R + 0.1)])
-    const k0 = at(phi - 0.035, R + CURVE_T)
+  // Each knuckle grows out of the slot with the strip (drawn whole once its joint was out, it popped in at 38.98).
+  for (let phi = th - d * 0.5; phi > -0.035; phi -= d) {
+    if (phi > 0) joints.push([at(phi, R), at(phi, R + 0.1)])
+    const lo = Math.max(0, phi - 0.035)
+    const k0 = at(lo, R + CURVE_T)
     const k1 = at(phi + 0.035, R + CURVE_T)
     const k2 = at(phi + 0.035, R + CURVE_T + 0.1)
-    const k3 = at(phi - 0.035, R + CURVE_T + 0.1)
+    const k3 = at(lo, R + CURVE_T + 0.1)
     knuckles.push([k0, k1, k2, k3])
-    joints.push([at(phi, R + 0.14), at(phi, R + CURVE_T - 0.04)])
+    if (phi > 0) joints.push([at(phi, R + 0.14), at(phi, R + CURVE_T - 0.04)])
   }
   strokePaths(pen, joints, mixHex(PARIS.iron, SLAB, 0.4), 0.4)
   fillPaths(pen, knuckles, IRON_LIT)
@@ -215,7 +220,7 @@ function curve(pen: Pen, t: number, f: Frame): void {
     let j = 0
     for (let phi = th - d * 0.5; phi > 0; phi -= d, j++) {
       const r = 0.25 + 0.5 * (1 - Math.exp(-w / 0.4))
-      puff(pen, at(phi, R + CURVE_T + 0.15 + 0.35 * (1 - Math.exp(-w / 0.5))), r, mixHex(PARIS.stone, PARIS.sky, 0.25), 0.32 * Math.exp(-w / 0.7) * (0.7 + 0.3 * hash(j, 9)))
+      puff(pen, at(phi, R + CURVE_T + 0.15 + 0.35 * (1 - Math.exp(-w / 0.5))), r, mixHex(PARIS.stone, PARIS.sky, 0.25), 0.32 * kicked(w) * Math.exp(-w / 0.7) * (0.7 + 0.3 * hash(j, 9)))
     }
   }
   // The sun along the paving's face.
@@ -294,7 +299,8 @@ function leafContent(pen: Pen, t: number, f: Frame): void {
     const slosh = (x: number) => {
       const u = t - LOCK
       if (u <= 0) return 0
-      return 0.16 * Math.exp(-u / 0.9) * Math.sin(1.3 * (x - L) - 5 * u)
+      // Gathering over a moment (at full height in the frame the bridge slammed, the river changed shape in it).
+      return 0.16 * (1 - Math.exp(-u / 0.08)) * Math.exp(-u / 0.9) * Math.sin(1.3 * (x - L) - 5 * u)
     }
     const top: Pt[] = []
     for (let x = L + 0.8; x <= L + DECK_END - 0.2 + 1e-6; x += 0.4) top.push([x, WATER_Y + slosh(x)])
@@ -458,15 +464,17 @@ function leafCrowd(pen: Pen, t: number): void {
   // The crowd ahead: one mass in two ranks, the back one a little smaller (further off). They part where Mal comes
   // through them, and close behind her.
   const mal = malS(t)
-  const inside = t >= MAL_FROM && mal > 10.6
+  // How far they part for her: closing as she comes out of their front (all at once, it shifted a rank in a frame).
+  const inside = t >= MAL_FROM ? Math.max(0, Math.min(1, (mal - 10.3) / 0.4)) : 0
   for (let i = 0; i < 32; i++) {
     const s = 10.95 + i * 0.22 + 0.08 * hash(i, 101)
     const drift = -0.35 * Math.max(0, Math.min(1, (t - 53.7) / 4))
     let x = s + drift
-    if (inside) {
-      const d = x - mal
-      const near = Math.max(0, 1 - Math.abs(d) / 0.55)
-      x += Math.sign(d || 1) * 0.28 * near * near * (3 - 2 * near)
+    if (inside > 0) {
+      // Away from her either side, most at a quarter cell off and nothing where she is (a figure she went past jumped
+      // from one side of her to the other in a frame, half a cell).
+      const d = Math.max(-1, Math.min(1, (x - mal) / 0.55))
+      x += inside * 0.28 * Math.sin(Math.PI * d)
     }
     const back = i % 2 === 1
     // Milling about, as a crowd does; on bar 15 they stop dead and turn to him, in a ripple out from her.
@@ -492,7 +500,7 @@ function leaf(pen: Pen, t: number): void {
   leafCrowd(pen, t)
   // The latches' dust shaken off its joints when it slams home.
   const u = t - LOCK
-  if (u > 0 && u < 3) for (let i = 0; i < 6; i++) puff(pen, [H + 0.6 + i * 1.3, Y_S - 0.2 - 0.25 * u * (0.5 + hash(i, 7))], 0.35 + 0.35 * u, mixHex(PARIS.stone, PARIS.sky, 0.3), 0.3 * Math.exp(-u / 0.8))
+  if (u > 0 && u < 3) for (let i = 0; i < 6; i++) puff(pen, [H + 0.6 + i * 1.3, Y_S - 0.2 - 0.25 * u * (0.5 + hash(i, 7))], 0.35 + 0.35 * u, mixHex(PARIS.stone, PARIS.sky, 0.3), 0.3 * kicked(u) * Math.exp(-u / 0.8))
   p.pop()
 }
 

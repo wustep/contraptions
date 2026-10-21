@@ -251,8 +251,9 @@ export function plume(pen: Pen, at: Pt, age: number, size: number, seed: number)
     ctx.fill()
     ctx.restore()
   }
-  // The mist, spreading and thinning.
-  puff(p, k, [x0, y0 - 1.1 * size], (1.2 + 2.2 * age) * size, RAIN.rain, 0.42 * Math.exp(-age / (0.6 + 1.1 * size)))
+  // The mist, spreading and thinning, to nothing by the plume's end (still there at a twentieth, the whole frame
+  // stepped darker in the frame it ended).
+  puff(p, k, [x0, y0 - 1.1 * size], (1.2 + 2.2 * age) * size, RAIN.rain, 0.42 * Math.exp(-age / (0.6 + 1.1 * size)) * fade)
   // The crown: jets thrown up and out, each on its own arc; each thins away as it tops out and falls back as drops.
   ctx.save()
   ctx.lineCap = 'round'

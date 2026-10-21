@@ -221,6 +221,12 @@ export function drawAirframe(pen: Pen, t: number, f: Frame): void {
   if (f.y0 < CAB.cy - CAB.rOut) {
     shape(pen, [[cx - 0.2, CAB.cy - CAB.rOut + 0.3 + dy], [cx - 0.09, -10.5 + dy], [cx + 0.09, -10.5 + dy], [cx + 0.2, CAB.cy - CAB.rOut + 0.3 + dy]], skin, 0.7)
   }
+  // The main gear: under the body and the wings, behind the nose gear; swung down with it, out from behind the wings
+  // (drawn over them, it stood out beside them at full size in the frame it began to come down).
+  const down = gearDown(t)
+  if (down > 0.01) {
+    for (const d of [-3.6, -1.35, 1.35, 3.6]) drawMainGear(pen, t, cx + d, Math.abs(d) > 2 ? wingY(Math.abs(d)) + 0.25 : CAB.cy + Math.sqrt(CAB.rOut ** 2 - d * d) - 0.3, down, dy, day)
+  }
   // The wings, each side, rising gently outward; their undersides in shade.
   for (const s of [-1, 1]) {
     const pts: Pt[] = []
@@ -248,11 +254,6 @@ export function drawAirframe(pen: Pen, t: number, f: Frame): void {
     shape(pen, [...pts, ...lower.reverse()], skin, 0.7)
     polyline(pen, lower.map(([x, y]) => [x, y - 0.06] as Pt), under, 1.6)
     ctx.restore()
-  }
-  // The main gear: under the body and the wings, behind the nose gear; swung down with it.
-  const down = gearDown(t)
-  if (down > 0.01) {
-    for (const d of [-3.6, -1.35, 1.35, 3.6]) drawMainGear(pen, t, cx + d, Math.abs(d) > 2 ? wingY(Math.abs(d)) + 0.25 : CAB.cy + Math.sqrt(CAB.rOut ** 2 - d * d) - 0.3, down, dy, day)
   }
   // The engines: four, hung under the wings, their fans turning.
   for (const s of [-1, 1]) {
@@ -316,6 +317,8 @@ function drawMainGear(pen: Pen, t: number, x: number, top: number, down: number,
   const len0 = GROUND - 0.45 - top
   const axle: Pt = [x + Math.sin(a) * len0, top + dy + Math.cos(a) * len]
   pen.ctx.save()
+  // Out of the wing as it starts down: its tyres are taller than the wing is deep, and came out whole in a frame.
+  pen.ctx.globalAlpha *= Math.min(1, (down - 0.01) / 0.12)
   shape(pen, [[x - 0.15, top + dy], [x + 0.15, top + dy], [axle[0] + 0.12, axle[1] - 0.3], [axle[0] - 0.12, axle[1] - 0.3]], strut, 0.6)
   box(pen, axle[0] - 0.07, axle[1] - 0.32, axle[0] + 0.07, axle[1], mixHex(strut, PLANE.hull, 0.35), 0.5)
   box(pen, axle[0] - 0.44, axle[1] - 0.06, axle[0] + 0.44, axle[1] + 0.06, strut, 0.5)

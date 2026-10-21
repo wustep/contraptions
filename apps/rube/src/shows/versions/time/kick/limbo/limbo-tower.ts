@@ -469,8 +469,9 @@ export function drawTowerFront(pen: Pen, t: number, f: Frame): void {
   const cut = cutaway(t)
   if (cut > 0.001) {
     drawLiftFront(pen, t)
-    // The dark under the room, in the weight's slot: whatever goes down there is gone.
-    vwash(pen, SLOT.x0, SLOT.x1, ROOM - 0.25, ROOM + FLOOR_SLAB, [
+    // The dark under the room, in the weight's slot: whatever goes down there is gone. From the floor's line down (from
+    // above it, it darkened him in hard-edged halves as he rolled across the slot from the cage).
+    vwash(pen, SLOT.x0, SLOT.x1, ROOM, ROOM + FLOOR_SLAB, [
       [0, SLEEP.deep, 0],
       [1, SLEEP.deep, 0.85],
     ])

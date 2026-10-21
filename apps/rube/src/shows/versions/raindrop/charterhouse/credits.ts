@@ -65,6 +65,13 @@ export const DURATION = Math.ceil(Math.max(RECORDING, LAST_GONE) + 1.0 - 1e-6)
 
 /** Where a card's top middle sits, as shares of the 16:9 frame: in the night west of the cell, high. */
 const AT: [number, number] = [0.2, 0.2]
+/**
+ * On a phone held upright the frame is about 220px high: a floor on the cards' unit keeps the role and the notes read
+ * there without growing the names over the cell's window, and the cards go up into the night the tall stage shows
+ * over the frame. On any larger stage neither does anything.
+ */
+const LEAST = 4.5
+const LIFT = 0.6
 
 function lightOf(card: Card, t: number): { light: number; rise: number } {
   const up = clamp((t - card.at) / UP)
@@ -78,7 +85,7 @@ export function creditsAt(t: number): TitleCard[] {
   CARDS.forEach((card, i) => {
     const { light, rise } = lightOf(card, t)
     if (light <= 0) return
-    out.push({ key: `raindrop-${i}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: AT, scale: 0.9, least: 9 })
+    out.push({ key: `raindrop-${i}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: AT, lift: LIFT, scale: 0.9, least: LEAST })
   })
   return out
 }

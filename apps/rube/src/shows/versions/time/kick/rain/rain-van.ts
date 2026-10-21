@@ -190,12 +190,19 @@ export function drawVanFront(p: p5, k: number, ink: string, w: number, pose: Pos
   if (t >= SPLASH) return
   p.push()
   toPose(p, k, pose)
-  // On the street and the bridge, its underside and its wheels over whatever is behind it; not once the floor has gone
-  // soft, so the three are seen to sink out through it, and are seen to come back up into it from the river.
-  if (t < T_SINK) {
+  // On the street and the bridge, its underside over whatever is behind it; not once the floor has gone soft, so the
+  // three are seen to sink out through it between the wheels, and to come back up into it from the river. Its near
+  // wheels stay in front of them (left to the body behind, they went flat grey in a frame and the three sank over them).
+  // The underside fades as the floor goes soft (it went in a frame, the railing all at once under the van).
+  const under = 1 - Math.max(0, Math.min(1, (t - T_SINK) / 0.3))
+  if (under > 0) {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    ctx.save()
+    ctx.globalAlpha *= under
     drawUnder(p, k)
-    drawWheels(p, k, ink, w, t)
+    ctx.restore()
   }
+  drawWheels(p, k, ink, w, t)
   drawShell(p, k, ink, w, t, 0)
   p.pop()
 }
