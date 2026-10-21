@@ -79,25 +79,30 @@ export const home: Scene = {
     ...[0.27, 0.54].map((s) => ({ t: TRIAL.loose + s, cells: 2.3 - 0.4 * s, at: [arrowTail(TRIAL.loose + s) - ARROW - 0.4, -9.58] as Pt })),
     { t: TRIAL.strike + 0.4, cells: 1.75, at: [818.8, -9.38] },
     { t: TRIAL.erupts - 0.05, cells: 1.62, at: [818.75, -9.35] },
-    // On the next, the whole hall, both doors: they come at him, all of them.
-    { t: TRIAL.erupts, cells: 5.1, at: [822.8, -10.62], cut: true },
-    { t: FIGHT.first[0] - 0.05, cells: 5.0, at: [822.9, -10.58] },
-    // On the first blow, in close at the west end: the first two thrown back over the bow onto the dais.
+    // On the next, they come at him: the wall of them that pressed up against the bow, charging him at the west door.
+    { t: TRIAL.erupts, cells: 4.1, at: [824.2, -10.0], cut: true },
+    { t: FIGHT.first[0] - 0.05, cells: 4.0, at: [824.4, -9.98] },
+    // On the first blow, in close at the west end: the first two hurled back into the hall.
     { t: FIGHT.first[0], cells: 2.7, at: [825.5, -9.82], cut: true },
     { t: FIGHT.sonHit - 0.05, cells: 2.62, at: [825.35, -9.84] },
     // On the next, the son on the stairs below his mother, driven up a step.
     { t: FIGHT.sonHit, cells: 2.5, at: [820.4, -9.92], cut: true },
     { t: FIGHT.rampage[0] - 0.05, cells: 2.45, at: [820.45, -9.92] },
-    // On the next, with him: east down the hall through three of them, one on each note, to the stairs' foot, where on
-    // the swell's hardest attack he and the son throw the last three out through the door.
+    // On the next, with him: east down the hall through three of them, one on each note, past the ones he has thrown.
     { t: FIGHT.rampage[0], cells: 3.2, at: [824.85, -9.95], cut: true },
     { t: FIGHT.rampage[1], cells: 3.25, at: [823.75, -9.97] },
     { t: FIGHT.rampage[2], cells: 3.35, at: [822.65, -10.0] },
-    { t: FIGHT.last, cells: 3.55, at: [820.5, -10.05] },
-    // It is over. The son comes down to his father, and she comes down the stairs to them.
-    { t: 510.2, cells: 3.3, at: [820.45, -10.02] },
-    { t: TRIAL.meet, cells: 2.9, at: [820.4, -9.9] },
-    { t: TRIAL.fade - 0.1, cells: 2.8, at: [820.38, -9.88] },
+    { t: FIGHT.last - 0.05, cells: 3.5, at: [820.7, -10.03] },
+    // On the swell's hardest attack, in close at the stairs' foot and the door: he and the son strike together, and the
+    // last three go out of his house.
+    { t: FIGHT.last, cells: 2.5, at: [819.05, -9.62], cut: true },
+    { t: FIGHT.down[1] - 0.05, cells: 2.55, at: [819.1, -9.64] },
+    // On the next, the whole hall: what it cost. The dead on the floor, those who never fought in their corner, the son
+    // come down beside his father, and his mother coming down the stairs to them; and in, to the three of them.
+    { t: FIGHT.down[1], cells: 5.3, at: [822.75, -10.8], cut: true },
+    { t: FIGHT.down[3], cells: 5.1, at: [822.4, -10.7] },
+    { t: TRIAL.meet, cells: 3.0, at: [820.3, -9.95] },
+    { t: TRIAL.fade - 0.1, cells: 2.85, at: [820.28, -9.92] },
     // The west, held: their son on the cliff's edge, the skiff casting off and going away from us into the sun.
     { t: TRIAL.fade, cells: WEST_CAM.cells, at: [WEST_CAM.x, WEST_CAM.y], cut: true },
     { t: END, cells: WEST_CAM.cells, at: [WEST_CAM.x, WEST_CAM.y] },

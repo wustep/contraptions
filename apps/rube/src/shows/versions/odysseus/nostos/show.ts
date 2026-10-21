@@ -34,6 +34,8 @@ export interface Actor {
   mark?: number | null
   /** Where its mark starts, radians: which way it is facing before it has rolled at all (a crowd does not all look one way). */
   turn?: number
+  /** Whether it lies under the rest at `t` (the dead, drawn first so the living pass over them). */
+  under?(t: number): boolean
 }
 
 export class NostosShow extends Show {
@@ -119,10 +121,12 @@ export class NostosShow extends Show {
     const time = this.clamp(t)
     const h = this.hero.path.at(time)
     const balls: ShowBall[] = []
+    const under: ShowBall[] = []
     for (const a of this.cast) {
       const b = this.ball(a, time)
-      if (b && (b.scale ?? 1) > 0.001) balls.push(b)
+      if (b && (b.scale ?? 1) > 0.001) (a.under?.(time) ? under : balls).push(b)
     }
+    balls.unshift(...under)
     const hero = this.ball(this.hero, time)
     if (hero && (hero.scale ?? 1) > 0.001) balls.push(hero)
     return {

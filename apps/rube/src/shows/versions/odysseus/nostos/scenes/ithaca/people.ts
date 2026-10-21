@@ -249,7 +249,8 @@ function trier(i: number, land: number): { moves: Move[]; back: number } {
 
 /**
  * Antinous, who would not try: by the bow, at its note he goes down off the dais and east along the hall towards the
- * door where the son stands; on the loose he leaps at him, and the arrow, through the twelve eyes, takes him in the air.
+ * door where the son stands, and stalks him; on the loose he leaps at him, and the arrow, through the twelve eyes,
+ * takes him in the air.
  */
 function antinous(i: number): Move[] {
   const fy = on(FLOOR, ANTINOUS_SIZE)
@@ -257,10 +258,15 @@ function antinous(i: number): Move[] {
   const down: Pt = [SEATS[i] - 0.32, fy]
   const leapFrom: Pt = [STRUCK[0] + 0.5, fy]
   const leap = flightFor(leapFrom, STRUCK, 0.0001)
+  // Quickly clear of the rest, who are closing in on the bow, then stalking the son, and a rush into the leap.
+  const clear: Pt = [821.4, fy]
+  const near: Pt = [820.2, fy]
   return [
     ride(feasting(i), 0, go),
     fly(feasting(i)(go), down, go, go + 0.32),
-    roll([down, leapFrom], go + 0.32, TRIAL.strike - leap, 'in'),
+    roll([down, clear], go + 0.32, 497.0, 'inout'),
+    roll([clear, near], 497.0, 500.6, 'inout'),
+    roll([near, leapFrom], 500.6, TRIAL.strike - leap, 'in'),
     fly(leapFrom, STRUCK, TRIAL.strike - leap, TRIAL.strike),
     ride(antinousStruck, TRIAL.strike, END),
   ]
@@ -303,7 +309,7 @@ export function ithacaActors(): Actor[] {
     // the darkest of them, and after the arrow the colour goes out of him; so it goes out of each of them he throws.
     ...suitors.map(({ path, dies }, i): Actor =>
       i === ANTINOUS_I
-        ? { id: SUITORS_ID + i, color: ANTINOUS, rim: ANTINOUS_RIM, size: ANTINOUS_SIZE, path, turn: -0.9, colorAt: (t) => mix(ANTINOUS, '#2C3036', 0.45 * smooth(t, TRIAL.strike + 0.3, TRIAL.strike + 2.5)) }
+        ? { id: SUITORS_ID + i, color: ANTINOUS, rim: ANTINOUS_RIM, size: ANTINOUS_SIZE, path, turn: -0.9, colorAt: (t) => mix(ANTINOUS, '#2C3036', 0.45 * smooth(t, TRIAL.strike + 0.3, TRIAL.strike + 2.5)), under: (t) => t > TRIAL.strike + 0.4 }
         : {
             id: SUITORS_ID + i,
             color: SUITOR,
@@ -311,7 +317,8 @@ export function ithacaActors(): Actor[] {
             size: SUITOR_SIZE,
             path,
             turn: [0.5, 2.7, -0.4, 3.3, 0.9, 2.2, 0, 1.4, -1.1, 2.9, 0.3, -0.7, 1.9][i],
-            colorAt: dies === undefined ? undefined : (t) => mix(SUITOR, '#2C3036', 0.68 * smooth(t, dies + 0.15, dies + 1.6)),
+            colorAt: dies === undefined ? undefined : (t) => mix(SUITOR, '#2C3036', 0.7 * smooth(t, dies, dies + 0.45)),
+            under: dies === undefined ? undefined : (t) => t >= dies,
           },
     ),
   ]

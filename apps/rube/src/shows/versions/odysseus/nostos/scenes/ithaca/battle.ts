@@ -1,5 +1,5 @@
 import { PENELOPE_SIZE, SUITOR_SIZE, TELEMACHUS_SIZE } from '../../cast'
-import { fly, flightFor, ramp, rest, roll, type Move, type Pt } from '../../path'
+import { fly, flightFor, ramp, rest, ride, roll, type Move, type Pt } from '../../path'
 import { DAIS, HALL, R, STAIRS, TRIAL } from './geo'
 import { stepAt } from './palace'
 
@@ -64,13 +64,18 @@ const stepFor = (i: number, r: number): Pt => {
 /** A hop from `a` that lands at `b` exactly at `t`, peaking `lift` over the higher end. */
 const hopTo = (a: Pt, b: Pt, t: number, lift = 0.12): Move => fly(a, b, t - flightFor(a, b, lift), t)
 
-/** Thrown at `t` from `a` to `land` (peaking `lift` over the higher), a short roll on the way it went, and still. */
-function thrown(a: Pt, land: Pt, t: number, lift: number, roll0 = 0.14): { moves: Move[]; down: number } {
+/**
+ * Thrown at `t` from `a`: hurled hard and flat (peaking `lift` over the higher end) to `land`, where he hits the floor,
+ * bounces once on the way he was going (`bounce` cells), rolls a little, and is still. A blow, not a hop.
+ */
+function thrown(a: Pt, land: Pt, t: number, lift: number, bounce = 0.3): { moves: Move[]; down: number } {
   const T = flightFor(a, land, lift)
   const dir = Math.sign(land[0] - a[0]) || 1
-  const lie: Pt = [land[0] + dir * roll0, land[1]]
+  const off: Pt = [land[0] + dir * bounce, land[1]]
+  const B = flightFor(land, off, 0.07)
+  const lie: Pt = [off[0] + dir * 0.08, off[1]]
   return {
-    moves: [fly(a, land, t, t + T), roll([land, lie], t + T, t + T + 0.4, 'out'), rest(lie, t + T + 0.4, 560)],
+    moves: [fly(a, land, t, t + T), fly(land, off, t + T, t + T + B), roll([off, lie], t + T + B, t + T + B + 0.3, 'out'), rest(lie, t + T + B + 0.3, 560)],
     down: t + T,
   }
 }
@@ -217,45 +222,49 @@ export function suitorFight(i: number, p: Pt): Fate {
   }
   wait(t0)
   switch (i) {
-    // The five at him, by the west door. 12, 11 and 10 stand on the floor at the dais's west end; 2 and 1 come down off it.
+    // The five at him. While his weight holds the bow drawn they close in on him a step a note, a wall of them pressed
+    // up against the bow; when the arrow has gone they come on. 12, 11 and 10 stand on the floor; 2 and 1 come down
+    // off the dais. Each one he meets is hurled back into the hall.
     case 12: {
       wait(FIGHT.charge)
       go(at(826.05), FIGHT.charge, FIGHT.first[0], 'in')
-      return hit(at(825.25, DY), FIGHT.first[0], 0.75)
+      return hit(at(824.2), FIGHT.first[0], 0.38, 0.35)
     }
     case 11: {
-      go(at(824.9), 497.2, 498.4)
-      wait(FIGHT.charge + 0.1)
+      step(at(824.7), DRAW[1])
+      step(at(824.9), DRAW[3])
+      step(at(825.05), DRAW[5])
       go(at(826.05), FIGHT.charge + 0.1, FIGHT.first[1], 'in')
-      return hit(at(824.95, DY), FIGHT.first[1], 0.9)
+      return hit(at(823.3), FIGHT.first[1], 0.45, 0.3)
     }
     case 10: {
-      go(at(824.55), 497.5, 498.6)
-      wait(FIGHT.charge + 0.2)
+      step(at(824.25), DRAW[0])
+      step(at(824.5), DRAW[2])
+      step(at(824.7), DRAW[4])
       go(at(825.55), FIGHT.charge + 0.2, 504.55, 'in')
-      // He falters when the two go back over the bow, and gives ground; the hero comes on.
+      // He falters when the two go back past him, and gives ground; the hero comes on.
       go(at(825.15), 504.75, 505.6, 'inout')
-      wait(506.3)
       go(at(825.4), 506.3, FIGHT.rampage[0], 'inout')
-      return hit(at(824.55, DY), FIGHT.rampage[0], 0.55)
+      return hit(at(824.45), FIGHT.rampage[0], 0.3, 0.15)
     }
     case 2: {
-      down(at(824.2), 498.9)
-      wait(FIGHT.charge + 0.3)
+      down(at(823.95), DRAW[1])
+      step(at(824.4), DRAW[5])
       go(at(824.95), FIGHT.charge + 0.3, 504.7, 'in')
       go(at(824.6), 504.9, 505.9, 'inout')
-      wait(506.7)
+      // Backing away from him as he comes, too slowly.
       go(at(824.3), 506.7, FIGHT.rampage[1], 'inout')
-      return hit(at(823.15, DY), FIGHT.rampage[1], 0.6, 0.02)
+      return hit(at(822.5), FIGHT.rampage[1], 0.42, 0.22)
     }
     case 1: {
-      down(at(823.95), 499.3)
-      wait(FIGHT.charge + 0.35)
+      down(at(823.6), DRAW[2])
+      step(at(823.85), DRAW[4])
+      step(at(824.1), DRAW[5])
       go(at(824.55), FIGHT.charge + 0.35, 504.8, 'in')
-      go(at(822.8), 505.0, 507.2, 'inout')
+      go(at(822.85), 505.0, 507.2, 'inout')
       // He turns and leaps at him; the hero goes under, and he goes on over him and down behind.
       go(at(823.2), 507.2, FIGHT.rampage[2], 'in')
-      return hit(at(824.6), FIGHT.rampage[2], 0.85, 0.2)
+      return hit(at(824.9), FIGHT.rampage[2], 0.8, 0.22)
     }
     // The three who go after Antinous, and stop short when the arrow takes him; then at the son on the stairs. 7 gets up
     // onto them at him; 8 and 0 come round to their foot. On the last blow all three go out of the door.
@@ -265,14 +274,14 @@ export function suitorFight(i: number, p: Pt): Fate {
       const s1 = stepFor(1, RS)
       down(s1, FIGHT.sonHit, 0.08)
       wait(FIGHT.last)
-      return hit(at(817.1), FIGHT.last, 0.1, 0.18)
+      return hit(at(817.2), FIGHT.last, 0.1, 0.25)
     }
     case 8: {
       go(at(821.6), 499.5, 501.9, 'inout')
       go(at(820.95), FIGHT.charge + 0.3, 504.9, 'inout')
       go(at(819.72), 506.0, 507.6, 'inout')
       wait(FIGHT.last + 0.04)
-      return hit(at(817.45), FIGHT.last + 0.04, 0.72, 0.16)
+      return hit(at(817.55), FIGHT.last + 0.04, 0.55, 0.22)
     }
     case 0: {
       down(at(822.6), 500.4)
@@ -280,33 +289,56 @@ export function suitorFight(i: number, p: Pt): Fate {
       go(at(821.3), FIGHT.charge + 0.45, 505.0, 'inout')
       go(at(819.99), 506.1, 507.9, 'inout')
       wait(FIGHT.last)
-      return hit(at(817.8), FIGHT.last, 0.48, 0.14)
+      return hit(at(817.9), FIGHT.last, 0.4, 0.2)
     }
-    // Those who never fight: they draw together on the dais, and stay there among the dead.
+    // Those who never fight: back into the dais's far corner, against the wall, as far from him as it goes, and they
+    // stay there through all of it, flinching at every blow.
+    case 9: {
+      go(at(823.05), 495.9, 497.0)
+      down(at(COWER[0], DY), 501.3, 0.12)
+      return cower(0)
+    }
     case 3: {
-      go(at(823.55, DY), 499.0, 500.2)
-      break
+      go(at(COWER[1], DY), 499.5, 500.6)
+      return cower(1)
     }
     case 4: {
-      go(at(823.85, DY), 498.4, 499.6)
-      break
+      go(at(COWER[2], DY), 499.8, 500.9)
+      return cower(2)
     }
     case 5: {
-      go(at(824.15, DY), 497.6, 499.0)
-      break
-    }
-    case 9: {
-      go(at(822.95), 499.9, 501.0)
-      down(at(822.85, DY), 501.35, 0.12)
-      break
+      go(at(COWER[3], DY), 500.0, 501.1)
+      return cower(3)
     }
   }
-  // Each flinches as the last blow lands, and is still.
-  const here = last(m)
-  wait(FIGHT.last + 0.05)
-  m.push(roll([here, [here[0] + 0.04, here[1]], here], FIGHT.last + 0.05, FIGHT.last + 0.6, 'inout'))
-  m.push(rest(here, FIGHT.last + 0.6, 560))
   return { moves: m }
+
+  /** A step towards him that lands on note `t`. */
+  function step(to: Pt, t: number) {
+    go(to, t - 0.32, t, 'inout')
+  }
+  /** Huddled at their place in the corner from now on, shrinking from each blow. */
+  function cower(k: number): Fate {
+    const x0 = COWER[k]
+    const t1 = m[m.length - 1].t1
+    m.push(ride((t) => [x0 - shrink(t), DY], t1, 560))
+    return { moves: m }
+  }
+}
+
+/** The steps they take towards him while the bow is drawn: on the swell's notes. */
+const DRAW = [495.72, 496.49, 497.47, 498.28, 498.77, 499.46]
+/** Where the four who never fight huddle on the dais, from its east end. */
+const COWER = [822.75, 823.0, 823.25, 823.5]
+/** How far they shrink east from each blow, out and back. */
+const BLOWS = [...FIGHT.first, ...FIGHT.rampage, FIGHT.last]
+function shrink(t: number): number {
+  let s = 0
+  for (const b of BLOWS) {
+    const d = t - b
+    if (d > 0 && d < 1.2) s += 0.04 * (d / 0.1) * Math.exp(1 - d / 0.1)
+  }
+  return s
 }
 
 const last = (m: Move[]): Pt => {
