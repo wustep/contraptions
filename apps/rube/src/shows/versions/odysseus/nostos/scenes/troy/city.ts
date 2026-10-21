@@ -1,4 +1,4 @@
-import { blob, clamp01, fill, hash, mix, poly, rect, rgba, smooth, stroke, type Paint } from '../../draw'
+import { blob, clamp01, fill, hash, mix, poly, rect, rgba, smooth, stroke, vgrad, type Paint } from '../../draw'
 import { M } from '../../music'
 import type { Pt } from '../../path'
 import { layer } from '../../world/depth'
@@ -58,26 +58,34 @@ export function flame(ctx: CanvasRenderingContext2D, x: number, y: number, w: nu
 }
 
 /**
- * A column of smoke off a fire at (x, y): a few big soft rounds going up and spreading, leaning off with the wind. Each
- * is born small over the fire, unseen, and fades out as it nears the top, so the column is the same few shapes rising
- * for ever: a pure function of the time, with nothing popping in or out.
+ * A column of smoke off a fire at (x, y): soft rounds going up and spreading, leaning off with the wind, filled
+ * as one shape, so it is one column thinning upwards and not a string of puffs. Each is born small over the fire and is
+ * gone by the top, so the column is the same few shapes rising for ever: a pure function of the time, with nothing
+ * popping in or out.
  */
 export function smoke(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, a: number, t: number, seed: number, color: string = FLAME.smoke): void {
   if (a <= 0.01) return
-  const n = 6
+  // Close enough that each round overlaps the next even where they are small, over the fire.
+  const n = 16
   const life = 7.5
   const rise = 4.2 * size
+  const top = 0.8
+  ctx.beginPath()
   for (let i = 0; i < n; i++) {
-    const u = (((t / life + i / n + hash(seed, i) * 0.12) % 1) + 1) % 1
+    const u = (((t / life + i / n + hash(seed, i) * 0.04) % 1) + 1) % 1
+    if (u > top) continue
     const px = x + u * rise * 0.7 + Math.sin(t * 0.3 + seed + i) * 0.15 * size
     const py = y - u * rise
     const r = size * (0.22 + 0.7 * u)
-    const alpha = a * 0.3 * Math.sin(Math.PI * Math.min(1, u * 1.2))
-    if (alpha <= 0.004) continue
-    ctx.beginPath()
+    ctx.moveTo(px + r, py)
     ctx.ellipse(px, py, r, r * 0.78, 0, 0, Math.PI * 2)
-    fill(ctx, rgba(color, alpha))
   }
+  ctx.fillStyle = vgrad(ctx, y - top * rise - size * 0.5, y, [
+    [0, rgba(color, 0)],
+    [0.55, rgba(color, 0.3 * a)],
+    [1, rgba(color, 0.12 * a)],
+  ])
+  ctx.fill()
 }
 
 /* ------------------------------------------------------------------ houses */
