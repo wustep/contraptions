@@ -76,11 +76,13 @@ export function smoke(ctx: CanvasRenderingContext2D, x: number, y: number, size:
     if (u > top) continue
     const px = x + u * rise * 0.7 + Math.sin(t * 0.3 + seed + i) * 0.15 * size
     const py = y - u * rise
-    const r = size * (0.22 + 0.7 * u)
+    // Born at nothing over the fire, so a new one never pops in at the foot.
+    const r = size * (0.22 * Math.min(1, u / 0.08) + 0.7 * u)
     ctx.moveTo(px + r, py)
     ctx.ellipse(px, py, r, r * 0.78, 0, 0, Math.PI * 2)
   }
-  ctx.fillStyle = vgrad(ctx, y - top * rise - size * 0.5, y, [
+  // Gone to nothing below the top of the rounds next under the last, so the last is never seen to go.
+  ctx.fillStyle = vgrad(ctx, y - 3.5 * size, y, [
     [0, rgba(color, 0)],
     [0.55, rgba(color, 0.3 * a)],
     [1, rgba(color, 0.12 * a)],
