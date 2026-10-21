@@ -1,5 +1,5 @@
 import type { Light } from '../../light'
-import { M, onsetsIn } from '../../music'
+import { M, onsetNear, onsetsIn } from '../../music'
 import { hash, lit, smooth, type Paint, type Pt } from '../../paint'
 import { BATH } from '../../geo'
 import { head } from './flight'
@@ -12,10 +12,10 @@ import { head } from './flight'
 
 const N = 34
 
-/** When the shutter is down. */
-export const SHUT = M.peak + 1.4
+/** When the shutter is down: on the note after his tail is through the door. */
+export const SHUT = onsetNear(M.peak + 1.8, 0.45, 0.35)
 /** The ones that go on into the shutter, one a note, and where each strikes it. */
-const SLAMS = onsetsIn(SHUT + 0.2, SHUT + 4.8, 0.45, 0.32).slice(0, 8)
+export const SLAMS = onsetsIn(SHUT + 0.2, SHUT + 4.8, 0.45, 0.32).slice(0, 8)
 
 interface Bird {
   lag: number

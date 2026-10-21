@@ -25,9 +25,9 @@ export const FROM = M.home
 export const TO = END
 
 /** They part on a note, a while after they come down. */
-const PART = strongest(LAND + 2.6, LAND + 3.6)
+export const PART = strongest(LAND + 2.6, LAND + 3.6)
 /** She lands on each stone on a note, west, and then the bank. */
-const STONE_LANDS = spread(PART + 0.45, PART + 5.6, 6)
+export const STONE_LANDS = spread(PART + 0.45, PART + 5.6, 6)
 const AIR = 0.34
 const BANK: Pt = onMeadow(15.12)
 const stonePts: Pt[] = [SHE_LANDS, ...[...STONES].reverse().map(([x, y]): Pt => [x, y - R]), BANK]

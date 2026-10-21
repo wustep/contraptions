@@ -64,6 +64,7 @@ import { performance as softLampMoving } from '../src/shows/versions/soft-lamp/l
 import { checkQuintessence } from './quintessence'
 import { checkRally } from './rally'
 import { checkNostos } from './nostos'
+import { checkKohaku } from './kohaku'
 import { checkRaindrop } from './raindrop'
 
 let failures = 0
@@ -674,6 +675,7 @@ async function main(): Promise<void> {
       if (work.work === 'step-out' && version.take === 'opus55') checkQuintessence(perf, version, check)
       if (work.work === 'rule-the-world' && version.take === 'opus55') checkRally(perf, version, check)
       if (work.work === 'odysseus' && version.take === 'opus55') checkNostos(perf, version, check)
+      if (work.work === 'one-summers-day' && version.take === 'opus55') checkKohaku(perf, version, check)
       if (work.work === 'raindrop' && version.take === 'opus55') checkRaindrop(perf, version, check)
 
       if (work.work === 'interstellar' && version.take === 'opus55') {

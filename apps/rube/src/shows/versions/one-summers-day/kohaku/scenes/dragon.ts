@@ -2,7 +2,7 @@ import { R } from '../../../../../parts'
 import type { Key } from '../camera'
 import { END } from '../credits'
 import { light } from '../light'
-import { M, onsetNear } from '../music'
+import { M, strongest } from '../music'
 import { region, smooth, standing, type Pt } from '../paint'
 import { hop, rest, roll } from '../path'
 import type { Scene } from '../scene'
@@ -36,7 +36,7 @@ const BY_HIM: Pt = [69.34, FLOOR - R]
 
 /** She goes in on the height, knocks the cord as his tail is through, and goes to him once he is still. */
 const GOES_IN = M.height
-const KNOCK = SHUT - 0.24
+export const KNOCK = SHUT - 0.24
 const TO_HIM = STILL + 0.3
 
 const hero = [
@@ -50,8 +50,8 @@ const hero = [
 ]
 
 /** The camera's cuts, each on an onset. */
-const CUT_IN = onsetNear(106.0, 0.5, 0.6)
-const CUT_BACK = onsetNear(112.7, 0.5, 0.6)
+const CUT_IN = strongest(107.2, 108.0)
+const CUT_BACK = strongest(112.1, 113.3)
 
 /** A moving hold on his head, a little behind and above it. */
 const onHim = (t: number, cells: number, dx = -0.6, dy = 0.25): Key => {
@@ -67,8 +67,7 @@ const SHOTS: Key[] = [
   { t: CUT_IN - 0.05, cells: 10.5, at: [83.5, -8.4] },
   // In among them.
   { ...onHim(CUT_IN, 4.6), cut: true },
-  onHim(107.6, 4.4),
-  onHim(109.4, 4.6),
+  onHim(109.4, 4.5),
   onHim(111.2, 4.8, -0.8, 0.0),
   onHim(CUT_BACK - 0.05, 5.0, -0.6, -0.2),
   // Back to her, watching from the balcony.

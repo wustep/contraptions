@@ -2,13 +2,12 @@ import { R } from '../../../../../parts'
 import type { Key } from '../camera'
 import { light } from '../light'
 import { M, eighthsIn, spread } from '../music'
-import { knock, region, smooth, standing, type Pt } from '../paint'
+import { knock, region, smooth, smoother, standing, type Pt } from '../paint'
 import { hop, rest, ride, roll, type Move } from '../path'
 import type { Scene } from '../scene'
 import { GATE, STONES, STREET, meadowY, onMeadow, treads } from '../geo'
-import { drawClouds } from '../world/sky'
 import { END } from '../credits'
-import { drawArchDark, drawGate, drawHills, drawMeadow, drawRiver, drawStair } from './way/land'
+import { drawArchDark, drawGate, drawHills, drawMeadow, drawRiver, drawStair, drawStone, drawTree } from './way/land'
 import { LAMPS, drawStreet, drawTown, drawTownBack } from './way/town'
 
 /**
@@ -116,11 +115,11 @@ function heroMoves(): Move[] {
 /* ------------------------------------------------------------------ the camera */
 
 const SHOTS: Key[] = [
-  // Close on the gate's face, the arch dark.
-  { t: 0, cells: 2.75, at: [-3.25, -1.02] },
-  { t: EMERGED, cells: 2.9, at: [-3.0, -1.0] },
-  { t: PULL, cells: 3.15, at: [-2.55, -1.05] },
-  { t: M.chord4, cells: 3.35, at: [-2.25, -1.1] },
+  // The gate under its trees in the afternoon, the arch dark.
+  { t: 0, cells: 4.4, at: [-2.5, -1.95] },
+  { t: EMERGED, cells: 4.2, at: [-2.4, -1.85] },
+  { t: PULL, cells: 4.1, at: [-2.1, -1.8] },
+  { t: M.chord4, cells: 4.2, at: [-1.8, -1.8] },
   // The summer opens round her on the brow.
   { t: M.chord4 + 5, cells: 6.2, at: [1.6, -1.9] },
   { t: M.theme - 0.4, cells: 9.6, at: [5.4, -2.75] },
@@ -138,29 +137,33 @@ const SHOTS: Key[] = [
 /* ------------------------------------------------------------------ the drawings */
 
 const LAND = region(-12, -6, 46, 5, 2)
-/** The summer's cloud, far off: [x, base over the horizon, width (frame heights), seed]. */
-const CLOUDS: [number, number, number, number][] = [
-  [-9, 0.12, 0.42, 3],
-  [-3, 0.16, 0.3, 17],
-  [3.5, 0.14, 0.5, 7],
-  [10, 0.11, 0.34, 21],
-  [16, 0.15, 0.46, 11],
-  [23, 0.12, 0.38, 5],
-  [30, 0.16, 0.5, 13],
-  [37, 0.11, 0.36, 29],
-  [44, 0.14, 0.44, 31],
-]
-
-const far = standing('way-far', region(-25, -12, 50, 6, 3), END, (g) => {
-  const L = light(g.t)
-  // The far land belongs to the west end: it goes into the haze as the camera comes on to the bridge.
-  drawClouds(g, L, [6, -2.6], CLOUDS, 0.06, 1 - L.night * 0.85)
-  drawHills(g, L)
+const far = standing('way-far', region(-40, -14, 120, 8, 3), END, (g) => {
+  // The far land belongs to the west: east of the bathhouse it gives way to the sea's horizon, going into the haze
+  // as the camera goes, never cut off at once.
+  const a = 1 - smoother(g.view.cx, 64, 76)
+  if (a <= 0.01) return
+  g.ctx.save()
+  g.ctx.globalAlpha = a
+  drawHills(g, light(g.t))
+  g.ctx.restore()
 })
-const gate = standing('way-gate', region(-9, -5, 1, 1, 1), END, (g) => drawGate(g, light(g.t)))
+const gust = (t: number) => knock(t, PULL, 0.25, 0.9)
+/** The trees about the gate, behind it, and the ones on the meadow. */
+const trees = standing('way-trees', region(-12, -6, 14, 1, 1), END, (g) => {
+  const L = light(g.t)
+  drawTree(g, L, -8.3, 0.02, 4.6, 3, gust(g.t))
+  drawTree(g, L, -5.6, 0.02, 3.4, 9, gust(g.t))
+  drawTree(g, L, 1.15, meadowY(1.15) + 0.02, 3.9, 5, gust(g.t))
+  drawTree(g, L, 9.6, meadowY(9.6) + 0.02, 2.3, 13, gust(g.t))
+})
+const gate = standing('way-gate', region(-9, -5, 3, 1, 1), END, (g) => {
+  const L = light(g.t)
+  drawGate(g, L)
+  drawStone(g, L, 1.95)
+})
 const meadow = standing('way-meadow', LAND, END, (g) => {
   const L = light(g.t)
-  drawMeadow(g, L, knock(g.t, PULL, 0.25, 0.9))
+  drawMeadow(g, L, gust(g.t))
   drawRiver(g, L)
   drawStair(g, L)
 })
@@ -179,7 +182,7 @@ export const way: Scene = {
   hero: heroMoves(),
   shots: SHOTS,
   back: [far],
-  mid: [gate, meadow, town],
+  mid: [trees, gate, meadow, town],
   front: [archDark],
   overview: { x0: -9, y0: -6, x1: 44, y1: 3 },
 }

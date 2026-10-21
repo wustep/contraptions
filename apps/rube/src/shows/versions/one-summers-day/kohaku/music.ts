@@ -84,21 +84,21 @@ export const M = {
   fade: data.landmarks.fade,
 } as const
 
-/** The onset nearest `t` at least `s` strong, within `tol` seconds; `t` itself if there is none. */
+/** The onset nearest `t` at least `s` strong, within `tol` seconds; else the eighth nearest `t`. */
 export function onsetNear(t: number, s = 0.5, tol = 0.5): number {
   let best: Onset | null = null
   for (const o of ONSETS) {
     if (o.s < s || Math.abs(o.t - t) > tol) continue
     if (!best || Math.abs(o.t - t) < Math.abs(best.t - t)) best = o
   }
-  return best ? best.t : t
+  return best ? best.t : eighthNear(t).t
 }
 
-/** The strongest onset between `a` and `b`; their middle if there is none. */
+/** The strongest onset between `a` and `b`; else the eighth nearest their middle. */
 export function strongest(a: number, b: number): number {
   let best: Onset | null = null
   for (const o of ONSETS) if (o.t >= a && o.t <= b && (!best || o.s > best.s)) best = o
-  return best ? best.t : (a + b) / 2
+  return best ? best.t : eighthNear((a + b) / 2).t
 }
 
 /** Onsets between `a` and `b` at least `s` strong and at least `gap` seconds apart (the stronger kept), in order. */

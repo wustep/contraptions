@@ -1,4 +1,4 @@
-import { M, onsetNear } from '../../music'
+import { M, spread } from '../../music'
 import { clamp01, smooth, type Pt } from '../../paint'
 import { trail } from '../../world/dragon'
 
@@ -34,7 +34,7 @@ const KEYS: [number, number, number][] = [
 /** Where he stops, down on the floor, his head towards the door. */
 export const STOP = KEYS[KEYS.length - 1][0]
 /** He is through the door: his tail's end passes it about here. */
-export const THROUGH = M.peak + 1.05
+export const THROUGH = M.peak + 1.4
 
 /** A Hermite curve through the keys, each tangent from its neighbours (non-uniform in time); held at the ends. */
 export function head(t: number): Pt {
@@ -69,7 +69,7 @@ export function head(t: number): Pt {
 }
 
 /** The blows of the thrashing: the onsets he jerks on, dying away to stillness. */
-export const JERKS = [125.9, 127.0, 128.3, 129.6, 131.1].map((t) => onsetNear(t, 0.4, 0.4))
+export const JERKS = spread(125.6, 131.6, 5)
 /** He lies still from here. */
 export const STILL = 133.6
 

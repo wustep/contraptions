@@ -75,7 +75,7 @@ function lobesOf(x: number, y: number, w: number, h: number, seed: number): Lobe
   return out
 }
 
-function heap(ctx: CanvasRenderingContext2D, lobes: Lobe[], x: number, y: number, w: number, dx = 0, dy = 0, grow = 1): void {
+function heap(ctx: CanvasRenderingContext2D, lobes: Lobe[], y: number, dx = 0, dy = 0, grow = 1): void {
   ctx.beginPath()
   for (const l of lobes) {
     ctx.moveTo(l.x + dx + l.r * grow, l.y + dy)
@@ -83,9 +83,9 @@ function heap(ctx: CanvasRenderingContext2D, lobes: Lobe[], x: number, y: number
   }
   // The body under the lobes, down to the flat base.
   const sorted = [...lobes].sort((a, b) => a.x - b.x)
-  ctx.moveTo(x - w / 2 + dx, y + dy)
+  ctx.moveTo(sorted[0].x + dx, y + dy)
   for (const l of sorted) ctx.lineTo(l.x + dx, l.y + dy)
-  ctx.lineTo(x + w / 2 + dx, y + dy)
+  ctx.lineTo(sorted[sorted.length - 1].x + dx, y + dy)
   ctx.closePath()
 }
 
@@ -101,17 +101,17 @@ export function cumulus(g: Paint, x: number, y: number, w: number, h: number, se
   ctx.beginPath()
   ctx.rect(x - w, y - h * 3, w * 2, h * 3)
   ctx.clip()
-  heap(ctx, lobes, x, y, w)
+  heap(ctx, lobes, y)
   fill(ctx, rgba(L.shade, a))
   ctx.save()
-  heap(ctx, lobes, x, y, w)
+  heap(ctx, lobes, y)
   ctx.clip()
   // A middle tone where the lobes turn away, then the lit face: the heap lifted up and to the sun's side, so the shade
   // keeps the underside and a rim down the far side. Three flat tones, not a gradient.
   const lift = h * 0.22
-  heap(ctx, lobes, x, y, w, -w * 0.012, -lift * 0.45, 0.99)
+  heap(ctx, lobes, y, -w * 0.012, -lift * 0.45, 0.99)
   fill(ctx, rgba(mix(L.cloud, L.shade, 0.45), a))
-  heap(ctx, lobes, x, y, w, -w * 0.025, -lift, 0.97)
+  heap(ctx, lobes, y, -w * 0.025, -lift, 0.97)
   fill(ctx, rgba(L.cloud, a))
   ctx.restore()
   ctx.restore()
@@ -130,7 +130,7 @@ export function drawClouds(g: Paint, L: Light, at: Pt, heaps: [number, number, n
       const W = w * v.h
       const cx = x + g.t * 0.02
       if (cx + W < v.x0 || cx - W > v.x1) continue
-      cumulus(g, cx, hy - dy * v.h, W, W * (0.5 + 0.25 * hash(seed, 9)), seed, L, a)
+      cumulus(g, cx, hy - dy * v.h, W, W * (w > 0.33 ? 0.6 + 0.12 * hash(seed, 9) : 0.4 + 0.14 * hash(seed, 9)), seed, L, a)
     }
   })
 }
@@ -151,3 +151,15 @@ export function drawBank(g: Paint, L: Light, a = 1): void {
   ctx.rect(v.x0 - 1, hy - r * 0.4, v.w + 2, r)
   fill(ctx, rgba(mix(L.cloud, L.low, 0.55), a))
 }
+
+/**
+ * The day's cloud over the whole world, west to east, [x, base over the horizon and width in frame heights, seed]:
+ * mostly small heaps, now and then a great tower, a few low and wide. Over the cloud (the flight) they are under the
+ * camera and are not drawn.
+ */
+export const FIELD: [number, number, number, number][] = Array.from({ length: 64 }, (_, i): [number, number, number, number] => {
+  const kind = hash(i, 14)
+  const w = kind > 0.8 ? 0.42 + 0.12 * hash(i, 13) : kind > 0.4 ? 0.18 + 0.1 * hash(i, 13) : 0.1 + 0.07 * hash(i, 13)
+  const base = kind > 0.8 ? 0.04 + 0.04 * hash(i, 12) : 0.12 + 0.17 * hash(i, 12)
+  return [-30 + i * 5.6 + hash(i, 11) * 3.2, base, w, i * 7 + 3]
+})

@@ -364,3 +364,73 @@ export function drawStair(g: Paint, L: Light): void {
 }
 
 export { curve }
+
+/* ------------------------------------------------------------------ trees, and the stone by the path */
+
+/**
+ * A summer tree: a short dark trunk and a great crown of rounded heaps, its underside and far side in shade, its sunward
+ * top lit, three flat greens. `h` tall from the ground at `y`; it stirs a little in the wind.
+ */
+export function drawTree(g: Paint, L: Light, x: number, y: number, h: number, seed: number, gust: number): void {
+  const { ctx } = g
+  const w = wind(g.t, gust)
+  const lean = 0.03 * h * w
+  box(ctx, x - h * 0.045, y - h * 0.42, h * 0.09, h * 0.42 + 0.05, lit('#4A3A2C', L.ambient))
+  // Two limbs into the crown.
+  poly(ctx, [[x - h * 0.03, y - h * 0.38], [x - h * 0.2 + lean, y - h * 0.6], [x - h * 0.16 + lean, y - h * 0.62], [x + h * 0.01, y - h * 0.42]])
+  fill(ctx, lit('#4A3A2C', L.ambient))
+  const lobes: [number, number, number][] = []
+  const n = 9
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2 + hash(seed, i) * 0.5
+    const rr = h * (0.18 + 0.08 * hash(seed, i + 10))
+    lobes.push([x + lean + Math.cos(a) * h * 0.24, y - h * 0.66 + Math.sin(a) * h * 0.17, rr])
+  }
+  lobes.push([x + lean, y - h * 0.7, h * 0.26])
+  const heap = (dx: number, dy: number, k: number) => {
+    ctx.beginPath()
+    for (const [cx, cy, r] of lobes) {
+      ctx.moveTo(cx + dx + r * k, cy + dy)
+      ctx.arc(cx + dx, cy + dy, r * k, 0, Math.PI * 2)
+    }
+  }
+  heap(0, 0, 1)
+  fill(ctx, lit('#3F6B32', L.ambient))
+  ctx.save()
+  heap(0, 0, 1)
+  ctx.clip()
+  heap(-h * 0.03, -h * 0.05, 0.92)
+  fill(ctx, lit('#568A3E', L.ambient))
+  heap(-h * 0.06, -h * 0.1, 0.78)
+  fill(ctx, lit('#6FA24A', L.ambient))
+  ctx.restore()
+}
+
+/** The little stone figure by the path, mossed, a face worn into it. */
+export function drawStone(g: Paint, L: Light, x: number): void {
+  const { ctx } = g
+  const y = meadowY(x) + 0.03
+  blob(ctx, [
+    [x - 0.13, y],
+    [x - 0.15, y - 0.2],
+    [x - 0.09, y - 0.38],
+    [x + 0.09, y - 0.38],
+    [x + 0.15, y - 0.2],
+    [x + 0.13, y],
+  ])
+  fill(ctx, lit('#8E9282', L.ambient))
+  ink(g, lit('#3E4238', L.ambient), 1.2)
+  // Moss on its shoulders; the face: shut eyes and a small smile.
+  ellipse(ctx, x - 0.04, y - 0.33, 0.07, 0.03)
+  fill(ctx, lit('#6C8A48', L.ambient))
+  for (const d of [-0.045, 0.045]) {
+    ctx.beginPath()
+    ctx.moveTo(x + d - 0.025, y - 0.24)
+    ctx.quadraticCurveTo(x + d, y - 0.215, x + d + 0.025, y - 0.24)
+    ink(g, lit('#3E4238', L.ambient), 1.1)
+  }
+  ctx.beginPath()
+  ctx.moveTo(x - 0.03, y - 0.17)
+  ctx.quadraticCurveTo(x, y - 0.15, x + 0.03, y - 0.17)
+  ink(g, lit('#3E4238', L.ambient), 1.1)
+}
