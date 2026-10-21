@@ -2,7 +2,7 @@ import { R } from '../../../../../../parts'
 import { CHANI_SIZE, FREMEN, FREMEN_ID, FREMEN_RIM, FREMEN_SIZE } from '../../cast'
 import { beat, COMBS } from '../../music'
 import { hold, hop, over, ride, Path, type Move } from '../../motion'
-import type { Pt } from '../../paint'
+import { hash, type Pt } from '../../paint'
 import type { Actor } from '../../show'
 import { B, FROM, RISE, TO, ground, leadWorm } from './plan'
 
@@ -11,7 +11,7 @@ import { B, FROM, RISE, TO, ground, leadWorm } from './plan'
  *
  * Paul and Chani ride the lead worm's back from the moment it comes out of the storm, through the camp, over the rearing
  * and the crash; it lowers them to the sand, and they get down, and go up onto the rise between the ranks and the great
- * ship. He stays there, looking east over the field. After the music she goes, alone, west back into the desert, and
+ * ship. He stays there, looking east over the field. After the music she goes, alone, west toward the low sun, and
  * he turns to look after her.
  *
  * Two Fremen ride ahead of them on the back and get down east of the rise. A dozen more run out of the storm's skirt on
@@ -81,46 +81,43 @@ function rider(i: number): Actor {
 }
 
 /**
- * Where each runner waits in the skirt, the beat he sets off on, and where he stops. The first away go furthest, and
- * every one is past the rise before Paul and Chani get down onto it. They stop in three knots, near the wreck.
+ * The Fremen on foot: thirty of them, waiting in the dust of the skirt, who burst out of it in a wave over six beats and
+ * run east across the floor a stride on every beat, the line of them going on past the blocks and the rise to the great
+ * ship. Each one's stride is a little his own; every one is past the rise before Paul and Chani get down onto it, and the
+ * first away go furthest: they stop in a crowd by the wreck.
  */
-const RUNNERS: { x0: number; go: number; stop: number }[] = [
-  { x0: 8932, go: 2, stop: 9122.4 },
-  { x0: 8926, go: 2, stop: 9121.8 },
-  { x0: 8936, go: 3, stop: 9121.1 },
-  { x0: 8921, go: 3, stop: 9120.5 },
-  { x0: 8929, go: 4, stop: 9114.6 },
-  { x0: 8917, go: 4, stop: 9113.9 },
-  { x0: 8934, go: 5, stop: 9113.3 },
-  { x0: 8924, go: 5, stop: 9112.6 },
-  { x0: 8930, go: 6, stop: 9106.8 },
-  { x0: 8933, go: 6, stop: 9106.2 },
-  { x0: 8936, go: 7, stop: 9105.4 },
-  { x0: 8928, go: 7, stop: 9104.8 },
-]
-/** A stride, cells: one a beat. */
-const STRIDE = 3
+const RUNNERS: { x0: number; go: number; stop: number; stride: number }[] = (() => {
+  const out: { x0: number; go: number; stop: number; stride: number }[] = []
+  const n = 30
+  for (let i = 0; i < n; i++) {
+    const go = 9 + Math.floor((i * 6) / n)
+    const stride = 2.85 + 0.3 * hash(i, 41)
+    const x0 = Math.max(8946 + 4 * hash(i, 42), 9100 - stride * (68 - go))
+    out.push({ x0, go, stride, stop: 9127.5 - (i * 25) / (n - 1) + 0.4 * (hash(i, 43) - 0.5) })
+  }
+  return out
+})()
 
 function runner(i: number): Actor {
-  const { x0, go, stop } = RUNNERS[i]
+  const { x0, go, stop, stride } = RUNNERS[i]
   const beats = COMBS.charge.beats
   const moves: Move[] = []
   let x = x0
   let n = go
   moves.push(hold(onSand(x, FREMEN_SIZE), FROM, bt(n), 0))
   while (x < stop - 1e-6 && n + 1 < beats.length) {
-    const nx = Math.min(stop, x + STRIDE)
+    const nx = Math.min(stop, x + stride)
     moves.push(hop(onSand(x, FREMEN_SIZE), onSand(nx, FREMEN_SIZE), bt(n), bt(n + 1), 4.5))
     x = nx
     n++
   }
-  moves.push(hold(onSand(x, FREMEN_SIZE), bt(n), TO, [0, -0.25, 0.3, -0.1, 0.15, 0.4, -0.35, 0.05, 0.25, -0.2, 0.1, -0.4][i]))
+  moves.push(hold(onSand(x, FREMEN_SIZE), bt(n), TO, (hash(i, 44) - 0.5) * 0.9))
   return { id: FREMEN_ID + 60 + i, color: FREMEN, rim: FREMEN_RIM, size: FREMEN_SIZE, path: new Path(moves, `runner ${i}`, FREMEN_SIZE), turn: hashTurn(i) }
 }
 
 const hashTurn = (i: number) => ((i * 2.399) % (Math.PI * 2)) - Math.PI
 
-/** The beats the runners land on, for the strikes: every one is a beat of the comb by construction; a few to name. */
-export const STRIDE_BEATS = RUNNERS.map((r) => bt(r.go + 1))
+/** The beats the wave sets off on: every stride is a beat of the comb by construction; these are its first. */
+export const STRIDE_BEATS = [...new Set(RUNNERS.map((r) => r.go))].map((g) => bt(g + 1))
 
 export const fremen: Actor[] = [...[0, 1].map(rider), ...RUNNERS.map((_, i) => runner(i))]

@@ -13,9 +13,10 @@ import { B, EMPEROR, RANKS, SHIP1, ground, headX } from './plan'
  * tall thing falls; it lands on the beat, rocks once and lies still.
  */
 
-const HULL = '#2B2420'
-const HULL_LIT = '#4B3A2F'
-const HULL_DARK = '#1C1714'
+// Dark against the pale floor: the hulls are the camp's silhouette, with only a narrow face turned to the light.
+const HULL = '#221C19'
+const HULL_LIT = '#3A2E27'
+const HULL_DARK = '#17120F'
 
 /** How far over a struck thing has gone: 0 standing, `most` lying; from `hit` it falls, landing at `land`, then rocks. */
 export function toppled(t: number, hit: number, land: number, most = Math.PI / 2 - 0.04): number {
