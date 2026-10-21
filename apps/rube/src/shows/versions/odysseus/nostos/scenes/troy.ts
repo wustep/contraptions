@@ -3,6 +3,7 @@ import { M } from '../music'
 import type { Scene } from '../scene'
 import { WINDOWS } from '../voyage'
 import { SURGE } from './troy/host'
+import { KILLS } from './troy/sack'
 import { HE_STOPS, SHIP0, SHIP1, SHIP2 } from './troy/plan'
 
 /**
@@ -53,15 +54,23 @@ const shots: Key[] = [
   // the town from the gate up, and under it all the men come along the drain.
   { t: SURGE - 0.05, cells: 4.5, at: [-28.45, -3.75] },
   { t: SURGE, cells: 11.5, at: [-24.4, -3.4], cut: true },
-  { t: 120.6, cells: 11, at: [-23.9, -3.2] },
+  { t: KILLS.door - 0.05, cells: 11.3, at: [-24.2, -3.33] },
+  // On the next note, into the lower street as its roofs catch: the Trojans running out of their doors, the Greeks come
+  // in round the tower's foot with their torches, and a blow on each note. Then the music holds its breath, and the
+  // camera with it, over the dead in the street, as the torches go on up the steps after the rest.
+  { t: KILLS.door, cells: 4.0, at: [-31.35, -4.0], cut: true },
+  { t: 118.0, cells: 3.95, at: [-31.6, -4.08] },
+  { t: 120.6, cells: 3.8, at: [-32.2, -4.3] },
   // On the next note, down to the drain's mouth: him out of it and down the hill through them, the other way.
   { t: 120.73, cells: 6.5, at: [-21.2, -2.3], cut: true },
   { t: 122.6, cells: 7, off: [1.2, -0.75] },
   { t: 125.0, cells: 6.6, off: [1.1, -0.7] },
-  // On the cue's hardest notes, out to the whole of it from the sea: Troy burning on its hill from end to end, and
-  // them running down to the ships under it.
-  { t: 125.07, cells: 14, at: [-33.5, -6.9], cut: true },
-  { t: 128.9, cells: 14.6, at: [-31.0, -6.6] },
+  // On the cue's hardest notes, up on the height: the last of them have run to Athena's statue, the one sanctuary in the
+  // city, and the Greeks come across the forecourt and kill them at her feet, one on each note, beside the horse. Then
+  // out, from there, to the whole of it from the sea: Troy burning on its hill from end to end.
+  { t: 125.07, cells: 4.8, at: [-36.5, -6.45], cut: true },
+  { t: KILLS.statue[3] + 0.3, cells: 5.4, at: [-36.2, -6.5] },
+  { t: 129.6, cells: 14.6, at: [-31.0, -6.6] },
   // Put out at first light, Troy smoking behind.
   { t: 134, cells: 11.5, off: [2.1, -1.7] },
   { t: 138.8, cells: 15.6, off: [2.45, -2.15] },

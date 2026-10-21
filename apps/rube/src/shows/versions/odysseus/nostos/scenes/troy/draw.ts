@@ -8,6 +8,7 @@ import { FORECOURT, PLINTH } from './geo'
 import { BRAZIER } from './city'
 import { drawCrowd, drawTrojans, spearsInside } from './crowd'
 import { drawHost } from './host'
+import { drawSack as drawKilling } from './sack'
 import { drawHorse, horseAt } from './horse'
 import { drawGround, drawInland, drawLogs, drawRopes, drawTroyFar } from './land'
 import { HATCH_OPENS, LAUNCH, PLANK_FOOT, PLANK_TOP, ROPE_ENDS, ROPE_SET, ROPE_THROWN, SLIPS, headAt, onRope, ropeLoad, statueTilt } from './plan'
@@ -130,6 +131,9 @@ export function troyPieces(): { back: Placed[]; mid: Placed[]; front: Placed[] }
       drawTemple(g)
       drawSteps(g)
     }),
+    // The Trojans and the Greeks in the street and on the height: in front of the houses and the steps, behind the gate
+    // tower (the Greeks come in round its foot) and behind the horse and Athena.
+    standing('troy-sack', TROY, END, (g) => drawKilling(g)),
     standing('troy-tower', TROY, END, (g) => {
       drawTower(g)
       drawBucketBack(g)
