@@ -153,8 +153,16 @@ export function drawIsland(g: Paint): void {
   fill(ctx, rock(ROCK, t))
   poly(ctx, [[794.8, 4.4], [840.6, 5.4], [842.0, 8], [793.5, 8]])
   fill(ctx, rock(ROCK_DEEP, t))
-  // The beach: the sand where he comes ashore, flat, running into the water.
-  poly(ctx, [[797.0, 0.45], [BEACH.x0, BEACH.sand], [BEACH.x1, BEACH.sand], [805.5, -0.42], [805.7, 0.6]])
+  // The beach: the sand where he comes ashore, flat, running into the water, lying on the rock as a bank that thins
+  // away to both ends under the water.
+  ctx.beginPath()
+  ctx.moveTo(797.0, 0.4)
+  ctx.lineTo(BEACH.x0, BEACH.sand)
+  ctx.lineTo(BEACH.x1, BEACH.sand)
+  ctx.lineTo(805.5, -0.42)
+  ctx.quadraticCurveTo(805.2, 0.3, 802.6, 0.62)
+  ctx.quadraticCurveTo(799.6, 0.8, 797.0, 0.4)
+  ctx.closePath()
   fill(ctx, againstSun(SAND_C, t))
   blob(ctx, OUTLINE)
   stroke(g, ink, 1.6)
