@@ -52,7 +52,7 @@ import {
  * Joy is waiting on a bench halfway down. Evelyn comes to rest against her (226.56), close, and where they touch
  * their colour comes back first, spreading over each stone from there. Joy goes on (227.76), and Evelyn goes with
  * her, a beat behind, landing where Joy landed, down the gorge on the soft beats of the swell; on the long scree the
- * camera draws back once to show how far down they are, and comes in again for the last steps to the floor. At the bottom is a dark ring lying in the sand: the bagel. Joy drops into it on 241.35, and
+ * camera draws back once to show how far down they are, and comes in again for the last steps to the floor. At the bottom the everything bagel lies in the sand. Joy drops into it on 241.35, and
  * Evelyn after her on 241.755, the jump.
  */
 
@@ -209,7 +209,7 @@ export const ledge = part<State>(
         },
       )
       paintWall(p, k, f, s.land, weight, light)
-      paintRing(p, k, f, s.land, weight * 0.9, false, show)
+      paintRing(p, k, f, s.land, weight * 0.9, false, light)
       for (const w of s.pebbles) {
         const at = pebbleAt(w, show)
         if (at && at.x > f.x0 - 1 && at.x < f.x1 + 1 && at.y > f.y0 - 1 && at.y < f.y1 + 1) paintPebble(p, k, w.pb, at, weight)
@@ -247,8 +247,8 @@ export const ledge = part<State>(
         const flush = flushOf(1, (mex - EVELYN_SEAT) / R, EVELYN, show)
         if (!at.hidden && seen(at.x, at.y)) paintStone(p, k, weight, EVELYN_ROCK, at.x, at.y, (at.x - EVELYN_SEAT) / R, color, s.plan.ledges, flush, light)
       }
-      // The ring's near half over them, so what falls in goes down behind its lip.
-      paintRing(p, k, f, s.land, weight * 0.9, true, show, weight)
+      // The bagel's near part over them, so what falls in goes down behind its lip.
+      paintRing(p, k, f, s.land, weight * 0.9, true, light, weight)
     },
   },
   (slot) => {

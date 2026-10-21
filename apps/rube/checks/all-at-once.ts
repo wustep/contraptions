@@ -12,6 +12,8 @@ import { JOY_EYE } from '../src/shows/versions/come-recover/all-at-once/void/pea
 import { compose } from '../src/shows/versions/come-recover/all-at-once/score'
 import { keepIn, keepOf } from '../src/shows/versions/come-recover/all-at-once/film'
 import { surfLookAt } from '../src/shows/versions/come-recover/all-at-once/multi/surf'
+import { STEPS } from '../src/shows/versions/come-recover/all-at-once/multi/mosaic'
+import { SCREENS, SKINS, skinAt } from '../src/shows/versions/come-recover/all-at-once/multi/skins'
 import type { MultiverseShow } from '../src/shows/versions/come-recover/all-at-once/show'
 import { REVEAL } from '../src/shows/versions/come-recover/all-at-once/rocks/ledge'
 import { REVERSES } from '../src/shows/versions/come-recover/all-at-once/void/pull'
@@ -46,6 +48,39 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
   // With the cut itself, no more than two flickers a jump keeps the frame's light under three flashes a second.
   check('all at once: no more than two flickers before any jump, so a jump never flashes more than three times a second',
     jumpTimes.every((j) => show.flickers.filter((f) => j - f.from > 0 && j - f.from < 1.0).length <= 2))
+
+  // Everywhere at once is one wall that only grows. Each grid the mosaic lays is the screen the worlds are dealt for,
+  // and holds the one before it; a world is only ever in one panel of it, home's at the middle, so every panel keeps
+  // its world and its place through every break and a break only adds worlds not on the wall before. The film's own
+  // lives come first, and the wall of 144 shows every world once.
+  const laid = STEPS.map(({ g }) => ({ i0: g.ox - (g.cols - 1) / 2, i1: g.ox + (g.cols - 1) / 2, j0: g.oy - (g.rows - 1) / 2, j1: g.oy + (g.rows - 1) / 2 }))
+  const wrong: string[] = []
+  laid.forEach((g, s) => {
+    const want = SCREENS[s]
+    if (!want || g.i0 !== want.i0 || g.i1 !== want.i1 || g.j0 !== want.j0 || g.j1 !== want.j1) wrong.push(`screen ${s} laid ${JSON.stringify(g)}`)
+    const was = SCREENS[s - 1]
+    if (was && !(want.i0 <= was.i0 && want.i1 >= was.i1 && want.j0 <= was.j0 && want.j1 >= was.j1)) wrong.push(`screen ${s} does not hold ${s - 1}`)
+  })
+  const home = new Map<string, string>()
+  let added = 0
+  SCREENS.forEach((g, s) => {
+    for (let j = g.j0; j <= g.j1; j++) {
+      for (let i = g.i0; i <= g.i1; i++) {
+        const key = skinAt(i, j).key
+        const was = home.get(key)
+        if (was === undefined) {
+          home.set(key, `${i},${j}`)
+          added++
+        } else if (was !== `${i},${j}`) wrong.push(`${key} at ${was} and ${i},${j} by screen ${s}`)
+      }
+    }
+    const n = (g.i1 - g.i0 + 1) * (g.j1 - g.j0 + 1)
+    if (added !== n) wrong.push(`screen ${s} has ${n} panels and ${added} worlds`)
+  })
+  if (home.get('home') !== '0,0') wrong.push(`home at ${home.get('home')}`)
+  if (home.get('premiere') !== '1,0') wrong.push(`the premiere at ${home.get('premiere')}`)
+  check('all at once: the wall only grows: every panel keeps its world and its place through every break, home at its middle, each break adds only worlds not seen before, and the 144 show every world once',
+    STEPS.length === SCREENS.length && wrong.length === 0 && added === Object.keys(SKINS).length && added === 144, wrong.slice(0, 4).join(' | '))
 
   // One ball, one path: in its world it never jumps; at a jump the camera carries it, so on the screen it holds still.
   const cam = perf.camera!

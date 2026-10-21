@@ -35,8 +35,9 @@ import { at, circle, hash, lodFor, mix, poly, rect, rgba, type Pen } from './ski
  * The part draws everything in its `over`, in the screen's own place: a panel is a world (`skins.ts`) with its own
  * little camera on the machine. At one panel that camera is the stage's own, so the leg opens and closes on the
  * show's framing exactly; the stage's ball is under the paint, and each panel draws its own Evelyn from the same
- * function the lane is sampled from. A panel's detail drops as it gets small. Every break brings a new screen of
- * worlds, none seen on a screen before it (`skinAt`); only home's panel stays.
+ * function the lane is sampled from. A panel's detail drops as it gets small. The wall only grows: every panel keeps
+ * its world and its place in the wall through every break, and a break only adds new worlds round the old (`skinAt`),
+ * so the camera goes back and back over one wall.
  */
 
 const B = fight
@@ -58,14 +59,14 @@ const LAST = 121
 const FLICKER = B(68.5)
 const LIGHTS = B(69)
 
-/** How the wall is laid, beat by beat: columns, rows, and which panel is in the middle. */
+/** How the wall is laid, beat by beat: columns, rows, and which panel is in the middle (home's is 0, 0). */
 interface Grid {
   cols: number
   rows: number
   ox: number
   oy: number
 }
-const STEPS: { at: number; g: Grid; snap: number }[] = [
+export const STEPS: { at: number; g: Grid; snap: number }[] = [
   { at: B(72), g: { cols: 2, rows: 1, ox: 0.5, oy: 0 }, snap: 0.13 },
   { at: B(76), g: { cols: 2, rows: 2, ox: 0.5, oy: 0.5 }, snap: 0.12 },
   { at: B(88), g: { cols: 3, rows: 3, ox: 0, oy: 0 }, snap: 0.12 },
@@ -223,13 +224,6 @@ function blend(a: Grid, b: Grid, u: number): Grid {
     ox: lerp(a.ox, b.ox, u),
     oy: lerp(a.oy, b.oy, u),
   }
-}
-
-/** Which screen of worlds the wall shows at `t`: each break brings a new one (`skinAt`). */
-function screenAt(t: number): number {
-  let s = 0
-  for (let j = 0; j < STEPS.length; j++) if (t >= STEPS[j].at) s = j
-  return s
 }
 
 /** How long the breath before step `i` takes: less when the steps come quick. */
@@ -495,7 +489,9 @@ function panel(ctx: CanvasRenderingContext2D, F: Frame, skin: Skin, b: Box, q: n
   if (skin.front && dark < 0.5) skin.front(pen, mc.m, v)
   // Every panel is the picture its life is in: a wall of every kind of film at once (`film.ts`).
   const look = PANEL_LOOKS[skin.key]
-  if (look && dark < 0.5) paintPicture(ctx, look, v.x0, v.y0, v.x1 - v.x0, v.y1 - v.y0, mc.m.t + hash(Math.round(b.cx), Math.round(b.cy), 7), prefersCalm(), pixelOf(ctx), 0.6, pen.lod >= 1)
+  // Each panel's print runs on its own clock, kept by its cell as the wall goes back round it.
+  const clock = cell ? hash(cell[0], cell[1], 7) : 0
+  if (look && dark < 0.5) paintPicture(ctx, look, v.x0, v.y0, v.x1 - v.x0, v.y1 - v.y0, mc.m.t + clock, prefersCalm(), pixelOf(ctx), 0.6, pen.lod >= 1)
   ctx.restore()
 }
 
@@ -638,7 +634,6 @@ function paint(p: p5, s: MosaicState, c: Ctx, time: number): void {
   ctx.lineJoin = 'round'
 
   const { g, split } = early ? { g: STEPS[5].g, split: 1 } : gridAt(t)
-  const screen = early ? 5 : screenAt(t)
   // The dive into home's panel: how far (0..1), how much closer the wall is, and how far home's panel has become the
   // stage's own view (its scale and its middle), which it is wholly on the great hit.
   const dv = early ? 0 : diveAt(t)
@@ -710,7 +705,7 @@ function paint(p: p5, s: MosaicState, c: Ctx, time: number): void {
       const home = i === 0 && j === 0
       // From the dive, home's panel is home itself, drawn after the rest (below).
       if (home && t >= DIVE[0]) continue
-      const skin = home ? SKINS.home : skinAt(screen, i, j)
+      const skin = home ? SKINS.home : skinAt(i, j)
       const dark = home ? 0.97 * (1 - lights(t)) : 0
       // The family in every life but home's own panel.
       panel(ctx, F, skin, b, qD, scD, 1, mc, back, dark, home ? undefined : [i, j])

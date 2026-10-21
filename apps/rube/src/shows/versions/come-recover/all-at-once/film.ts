@@ -111,13 +111,16 @@ function paintVignette(ctx: CanvasRenderingContext2D, x: number, y: number, w: n
 /** The old print's wear: a scratch or two, and dust, each lasting a frame or a few. */
 function paintWear(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, t: number, px: number): void {
   const f = Math.floor(t * FPS)
+  // The thinnest a scratch goes: a pixel of the canvas, in the drawing's own units. (Not 1: in a panel of everywhere at
+  // once the units are scene cells, and a scratch a cell wide was a broad grey bar across the dojo's panel.)
+  const hair = pixelOf(ctx)
   ctx.save()
   // Scratches: a long one that stays a while and wanders, and short ones now and then.
   const run = Math.floor(f / 30)
   if (hash(run, 21) < 0.7) {
     const sx = x + w * (0.12 + 0.76 * hash(run, 22)) + Math.sin(f * 0.7) * px * 1.5
     ctx.strokeStyle = `rgba(250, 240, 220, ${0.16 + 0.08 * hash(f, 23)})`
-    ctx.lineWidth = Math.max(1, px * 0.9)
+    ctx.lineWidth = Math.max(hair, px * 0.9)
     ctx.beginPath()
     ctx.moveTo(sx, y)
     ctx.lineTo(sx + px * 2 * (hash(run, 24) - 0.5), y + h)
@@ -127,7 +130,7 @@ function paintWear(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
     const sx = x + w * hash(f, 26)
     const y0 = y + h * hash(f, 27) * 0.6
     ctx.strokeStyle = `rgba(20, 12, 6, ${0.22 + 0.15 * hash(f, 28)})`
-    ctx.lineWidth = Math.max(1, px * 0.7)
+    ctx.lineWidth = Math.max(hair, px * 0.7)
     ctx.beginPath()
     ctx.moveTo(sx, y0)
     ctx.lineTo(sx, y0 + h * (0.15 + 0.3 * hash(f, 29)))
