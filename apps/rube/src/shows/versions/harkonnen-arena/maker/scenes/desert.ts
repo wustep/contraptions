@@ -134,9 +134,10 @@ export const desert: Scene = {
     { t: W.boom, cut: true, cells: 4.6, at: [CHANI_SEAT[0] + 0.7, CHANI_SEAT[1] - 0.25] },
     { t: W.sign - 0.01, cells: 4.3, at: [CHANI_SEAT[0] + 0.75, CHANI_SEAT[1] - 0.2] },
     // Worm sign: the flat east of the machine, the swell coming in.
-    // Held wide east of the machine (at the frame's west edge): the swell runs in across the frame toward it.
-    { t: W.sign, cut: true, cells: 78, at: [176, -19] },
-    { t: W.alarm - 0.01, cells: 70, at: [160, -17] },
+    // Low over the flat east of the machine and held still, so the swell's crest stands against the sky and it is seen to
+    // travel: in from the east edge, across a desert that does not move, heaving on each boom.
+    { t: W.sign, cut: true, cells: 58, at: [188, -10] },
+    { t: W.alarm - 0.01, cells: 55, at: [184, -9.5] },
     // The alarm: the carryall coming down to the machine.
     { t: W.alarm, cut: true, cells: 46, at: [XH + 3, -20] },
     { t: W.lock - 0.01, cells: 40, at: [XH + 1, -16] },

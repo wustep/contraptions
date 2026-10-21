@@ -245,7 +245,7 @@ export const FIGHT_STRIKES: [string, number][] = [
   ['he comes over his dead', A.clash1],
   ...A.flurry.map((t, i): [string, number] => [`stroke ${i + 1}`, t]),
   ['they clash', A.clash2],
-  ['they clash, wide', A.wide],
+  ['they clash again', A.wide],
   ['the ram', A.ram],
   ['down', A.down],
   ['up', A.up],

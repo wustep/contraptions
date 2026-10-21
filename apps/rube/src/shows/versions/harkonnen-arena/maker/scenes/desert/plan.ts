@@ -63,8 +63,8 @@ export function swellX(t: number): number {
 /** How high the swell stands: it rises from the first boom, heaves on each boom and blow, and is gone into the hole. */
 export function swellH(t: number): number {
   if (t < W.boom || t > W.sink + 3) return 0
-  let h = 2.6 + 3.0 * smooth(t, W.boom, W.alarm)
-  for (const b of beatsIn('booms', W.boom - 0.01, W.alarm)) h += 1.3 * b.s * heave(t, b.t)
+  let h = 3.4 + 3.6 * smooth(t, W.boom, W.alarm)
+  for (const b of beatsIn('booms', W.boom - 0.01, W.alarm)) h += 1.6 * b.s * heave(t, b.t)
   for (const at of [W.alarm, W.lock]) h += 1.8 * heave(t, at)
   return h * (1 - smooth(t, W.sink - 1, W.sink + 2.5))
 }

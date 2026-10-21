@@ -19,8 +19,6 @@ export const VIEWS: [number, Mode][] = [
   [A.floor, 'low'],
   [A.above, 'high'],
   [A.clash2, 'close'],
-  [A.wide, 'wide'],
-  [A.back, 'close'],
   [A.circle, 'high'],
   [A.clash3, 'close'],
   [A.close, 'low'],
