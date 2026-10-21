@@ -11,11 +11,12 @@ import { firelight, tone } from './tone'
  * roofs catch, the Trojans who hauled the horse in at dusk come running out of their doors into the lower street, and
  * the Greeks come in round the gate tower's foot with their torches and cut them down, one on each of the music's notes,
  * each in his own place, a sweep up the street from the gate to the steps: one at his own door, one in the street, one
- * at the steps' foot, one on the steps. The rest get up the steps to Athena's statue, the one sanctuary on the height,
- * and stand there round her, headless now, while the torches climb the steps after them in the music's held breath and
- * wait at the top. On the cue's hardest notes the Greeks come over the top and across the forecourt, and kill them at
- * her feet. Every death is the same and nothing more: a blow from behind, a short fall, and the colour going out of
- * them. They lie where they fell as the city burns, and he leaves past it.
+ * at the steps' foot, one on the steps. The rest get up the steps onto the height, where an old man stands at their
+ * head, and wait there between him and Athena's statue, the one sanctuary, while the torches climb the steps after them
+ * in the music's held breath and wait at the top. On the cue's hardest notes the Greeks come over the top and sweep the
+ * forecourt to her: the old man where he stands, then each of the rest as they back away towards her, the last at her
+ * feet. Every death is the same and nothing more: a blow, a short fall, and the colour going out of them at once. Each
+ * lies apart where he fell, his killer standing over him, as the city burns, and he leaves past it.
  *
  * Trojans and Greeks alike are drawn here, as the stage draws a ball (`token`), in the plane of the street: they never
  * touch the cast.
@@ -76,12 +77,12 @@ class Way {
     for (let i = from; i >= to; i--) this.hop(i >= 0 ? onStep(i) : TOP, this.t + dt)
     return this
   }
-  /** Struck from behind at `at`: thrown on `by` the way he was going (west), down, a short roll, and still. */
-  struck(at: number, by: number, lift = 0.16): number {
+  /** Struck at `at`: thrown on `by` the way he was going (west), down, a short roll of `slide`, and still. */
+  struck(at: number, by: number, lift = 0.16, slide = 0.1): number {
     this.wait(at)
     const land = on(this.p[0] - by)
     const T = flightFor(this.p, land, lift)
-    const lie = on(land[0] - 0.1)
+    const lie = on(land[0] - slide)
     this.m.push(fly(this.p, land, at, at + T), roll([land, lie], at + T, at + T + 0.35, 'out'), rest(lie, at + T + 0.35, 141))
     return at
   }
@@ -104,8 +105,13 @@ const DOOR_1 = -32.06
 /** Out of his door at `t`: he comes out of the dark doorway into the street. */
 const out = (door: number, t: number): Way => new Way(on(door), t)
 
-/** Where those who reach the height stand round Athena's statue, and the old man by the brazier. */
-const HUDDLE = { a: -36.5, f: -36.15, g: -35.75, h: -35.15 }
+/**
+ * Where those who reach the height wait through the held breath (the old man at the top of the steps, the rest back
+ * towards Athena), and where each is when he is struck: far enough apart that every body lies clear of the next and of
+ * the man who kills the next, the brazier between the second and the third, the last against her plinth.
+ */
+const HUDDLE = { a: -36.45, f: -35.9, g: -35.0, h: -34.55 }
+const FALL = { a: -36.72, f: -36.1, g: -35.25, h: HUDDLE.h }
 
 function trojans(): Body[] {
   const b: Body[] = []
@@ -130,26 +136,26 @@ function trojans(): Body[] {
     const w = out(DOOR_1, 116.82).hop(onStep(6), 117.0).hop(onStep(5), 117.15)
     add(w, 'trojan e', 116.82, w.struck(KILLS.street[3], 0.26, 0.14))
   }
-  // Those who get up to the height, to the statue, and are killed there on the hardest notes, backing against her.
+  // Those who get up to the height, and are killed there on the hardest notes as they back away towards her.
   {
     const w = out(DOOR_3, 115.85).run(STREET.x0 + 0.08, 116.6, 'in').up(STEPS.n - 2, -1, 0.15)
-    w.run(HUDDLE.a, w.t + 1.6, 'out').wait(125.07).run(HUDDLE.a - 0.15, KILLS.statue[3] - 0.2, 'inout')
-    add(w, 'trojan a', 115.85, w.struck(KILLS.statue[3], 0.0, 0.08))
+    w.run(HUDDLE.a, w.t + 1.6, 'out').wait(125.07).run(FALL.a, KILLS.statue[3] - 0.2, 'inout')
+    add(w, 'trojan a', 115.85, w.struck(KILLS.statue[3], 0.0, 0.08, 0.02))
   }
   {
     const w = out(DOOR_1, 116.38).up(STEPS.n - 2, -1, 0.15)
-    w.run(HUDDLE.f, w.t + 1.5, 'out').wait(125.07).run(HUDDLE.f - 0.15, KILLS.statue[1] + 0.1, 'inout')
-    add(w, 'trojan f', 116.38, w.struck(KILLS.statue[2], 0.05, 0.1))
+    w.run(HUDDLE.f, w.t + 1.5, 'out').wait(125.07).run(FALL.f, KILLS.statue[2] - 0.15, 'inout')
+    add(w, 'trojan f', 116.38, w.struck(KILLS.statue[2], 0.06, 0.1, 0.04))
   }
   {
     const w = out(DOOR_1, 116.62).up(STEPS.n - 2, -1, 0.14)
-    w.run(HUDDLE.g, w.t + 1.7, 'out').wait(125.07).run(HUDDLE.g - 0.1, KILLS.statue[1] - 0.1, 'inout')
-    add(w, 'trojan g', 116.62, w.struck(KILLS.statue[1], 0.1, 0.12))
+    w.run(HUDDLE.g, w.t + 1.7, 'out').wait(125.07).run(FALL.g, KILLS.statue[1] - 0.1, 'inout')
+    add(w, 'trojan g', 116.62, w.struck(KILLS.statue[1], 0.04, 0.1, 0.02))
   }
-  // An old man who was up on the height by the brazier already, and does not run.
+  // An old man who was up on the height already, at the top of the steps, and does not run: he is the first.
   {
     const w = new Way(on(HUDDLE.h), 114)
-    add(w, 'trojan h', 114, w.struck(KILLS.statue[0], 0.25))
+    add(w, 'trojan h', 114, w.struck(KILLS.statue[0], 0.06, 0.12, 0.04))
   }
   return b
 }
@@ -174,19 +180,20 @@ function greek(t0: number, street: { x: Pt; at: number }, wait: number, statue: 
     from = STEPS.n - 2
   } else w.wait(w.t + 0.5)
   w.up(from, wait, 0.45)
-  // Over the top on the cue's hardest notes, and across the forecourt at the run.
+  // Over the top on the cue's hardest notes, and across the forecourt at the run to the one he kills; then he stands
+  // over him, where he struck.
   w.wait(125.07).up(wait - 1, -1, 0.11)
   w.run(statue.x + R_T * 2 + 0.03, statue.at, 'in')
-  w.run(statue.x + R_T * 2 - 0.15, statue.at + 0.5, 'out').wait(141)
+  w.run(statue.x + R_T * 2 + 0.06, statue.at + 0.3, 'out').wait(141)
   return { path: w.path(name), from: t0, greek: true }
 }
 
 function greeks(): Body[] {
   return [
-    greek(115.95, { x: on(DOOR_3 - 0.1), at: KILLS.street[0] }, 0, { x: HUDDLE.h, at: KILLS.statue[0] }, 'greek a'),
-    greek(116.1, { x: on(-31.0), at: KILLS.street[1] }, 1, { x: HUDDLE.g - 0.1, at: KILLS.statue[1] }, 'greek b'),
-    greek(116.2, { x: on(-31.95), at: KILLS.street[2] }, 2, { x: HUDDLE.f - 0.15, at: KILLS.statue[2] }, 'greek c'),
-    greek(116.4, { x: onStep(5), at: KILLS.street[3] }, 3, { x: HUDDLE.a - 0.15, at: KILLS.statue[3] }, 'greek d'),
+    greek(115.95, { x: on(DOOR_3 - 0.1), at: KILLS.street[0] }, 0, { x: FALL.h, at: KILLS.statue[0] }, 'greek a'),
+    greek(116.1, { x: on(-31.0), at: KILLS.street[1] }, 1, { x: FALL.g, at: KILLS.statue[1] }, 'greek b'),
+    greek(116.2, { x: on(-31.95), at: KILLS.street[2] }, 2, { x: FALL.f, at: KILLS.statue[2] }, 'greek c'),
+    greek(116.4, { x: onStep(5), at: KILLS.street[3] }, 3, { x: FALL.a, at: KILLS.statue[3] }, 'greek d'),
   ]
 }
 
@@ -209,8 +216,9 @@ export function drawSack(g: Paint): void {
     const [x, y] = p.path.where(t)
     const fire = firelight(x, t)
     const alive = tone(TROJAN, t, { fire: 0.4 + 0.6 * fire })
-    const gone = p.dies === undefined ? 0 : smooth(t, p.dies + 0.1, p.dies + 0.9)
-    const color = mix(alive, tone(ASH, t, { fire: 0.25 * fire }), 0.75 * gone)
+    // The colour goes out of him with the blow, at once, so each note is one more of them gone.
+    const gone = p.dies === undefined ? 0 : smooth(t, p.dies, p.dies + 0.16)
+    const color = mix(alive, tone(ASH, t, { fire: 0.25 * fire }), 0.85 * gone)
     const come = smooth(t, p.from, p.from + 0.18)
     token(g, x, y, R_T * come, color, tone(TROJAN_RIM, t), p.path.spin(t, R_T))
   }
