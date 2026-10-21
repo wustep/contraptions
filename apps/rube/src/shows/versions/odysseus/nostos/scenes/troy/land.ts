@@ -71,6 +71,46 @@ export function drawInland(g: Paint): void {
   }
 }
 
+/** The ground's cut face goes from its first colour to its second between these heights. */
+const EARTH_Y = [-6, 3] as const
+
+let fade: { canvas: HTMLCanvasElement; g: CanvasRenderingContext2D } | null = null
+const FADE = 32
+
+/**
+ * The ground's cut face from `x` over `run` cells and down to `bottom`, going from whole to nothing across: the face's
+ * own darkening with depth and the fade across in one small picture stretched over it, so it meets the face beside it
+ * without a seam at any depth.
+ */
+function fadeAway(ctx: CanvasRenderingContext2D, c0: string, c1: string, x: number, run: number, bottom: number): void {
+  if (typeof document === 'undefined') return
+  fade ??= (() => {
+    const canvas = document.createElement('canvas')
+    canvas.width = FADE
+    canvas.height = FADE
+    return { canvas, g: canvas.getContext('2d')! }
+  })()
+  const { g } = fade
+  const y0 = -1
+  const py = (y: number) => ((y - y0) / (bottom - y0)) * FADE
+  g.globalCompositeOperation = 'source-over'
+  g.clearRect(0, 0, FADE, FADE)
+  const down = g.createLinearGradient(0, py(EARTH_Y[0]), 0, py(EARTH_Y[1]))
+  down.addColorStop(0, c0)
+  down.addColorStop(1, c1)
+  g.fillStyle = down
+  g.fillRect(0, 0, FADE, FADE)
+  g.globalCompositeOperation = 'destination-in'
+  const across = g.createLinearGradient(0.5, 0, FADE - 0.5, 0)
+  across.addColorStop(0, 'rgba(0,0,0,1)')
+  across.addColorStop(0.06, 'rgba(0,0,0,1)')
+  across.addColorStop(1, 'rgba(0,0,0,0)')
+  g.fillStyle = across
+  g.fillRect(0, 0, FADE, FADE)
+  ctx.imageSmoothingEnabled = true
+  ctx.drawImage(fade.canvas, x, y0, run, bottom - y0)
+}
+
 /** The ground, cut open: from its surface down past the bottom of the frame. `below` keeps only what is under y = -0.25 (the cover over the sea's cutaway). */
 export function drawGround(g: Paint, below = false): void {
   const { ctx, t, view } = g
@@ -81,7 +121,7 @@ export function drawGround(g: Paint, below = false): void {
   if (below) {
     ctx.save()
     ctx.beginPath()
-    ctx.rect(x0 - 1, -0.25, x1 - x0 + 2, bottom + 2)
+    ctx.rect(x0 - 1, -0.25, x1 - x0 + 8, bottom + 2)
     ctx.clip()
   }
   const edge = (a: number, b: number): Pt[] => {
@@ -94,13 +134,40 @@ export function drawGround(g: Paint, below = false): void {
   const fireAll = firelight(-40, t) * 0.4
   // The ground cut open, under the city's hill and the dunes and the beach alike: one dark face, a little warmer near
   // the surface and going down into the dark, so what is under the action is a quiet base and not a wall of colour.
+  const earth0 = tone(mix(MAT.earthDeep, MAT.sand, 0.12), t, { fire: fireAll * 0.25, deep: 0.5 })
+  const earth1 = mix(earth0, '#0B0C10', 0.6)
+  const earth = ctx.createLinearGradient(0, EARTH_Y[0], 0, EARTH_Y[1])
+  earth.addColorStop(0, earth0)
+  earth.addColorStop(1, earth1)
   {
     const pts = edge(x0, x1)
     poly(ctx, [...pts, [x1, bottom], [x0, bottom]])
-    const top = tone(mix(MAT.earthDeep, MAT.sand, 0.12), t, { fire: fireAll * 0.25, deep: 0.5 })
-    const grd = ctx.createLinearGradient(0, -6, 0, 3)
-    grd.addColorStop(0, top)
-    grd.addColorStop(1, mix(top, '#0B0C10', 0.6))
+    ctx.fillStyle = earth
+    ctx.fill()
+  }
+  // Past the shore, over the cut-open water, the beach's ground goes on under the seabed and into the water's dark over
+  // a few cells, so the sand does not end at the shore as a cut block. It starts a little inside the beach's, whole
+  // there, so the two never meet on an edge.
+  if (below && view.x1 > SHORE) {
+    const from = SHORE - 0.3
+    const run = 5.3
+    const b = Math.min(from + run, view.x1 + 0.5)
+    const pts = edge(from, b)
+    ctx.save()
+    poly(ctx, [...pts, [b, bottom], [from, bottom]])
+    ctx.clip()
+    fadeAway(ctx, earth0, earth1, from, run, bottom)
+    ctx.restore()
+    // The sand's surface along the seabed, thinning from the beach's to the seabed's.
+    ctx.beginPath()
+    pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
+    for (let i = pts.length - 1; i >= 0; i--) ctx.lineTo(pts[i][0], pts[i][1] + 0.05 + 0.06 * clamp01(1 - (pts[i][0] - SHORE) / 1.5))
+    ctx.closePath()
+    const sand = tone(MAT.sand, t, { lit: 1, fire: fireAll })
+    const grd = ctx.createLinearGradient(from, 0, from + run, 0)
+    grd.addColorStop(0, rgba(sand, 1))
+    grd.addColorStop(0.06, rgba(sand, 1))
+    grd.addColorStop(1, rgba(sand, 0))
     ctx.fillStyle = grd
     ctx.fill()
   }
