@@ -62,34 +62,43 @@ interface Section {
   back: number
 }
 
-/** The spine walked from the head back, a section every `step` cells: where, which way, and how thick. */
-function sections(w: Worm, step: number): { all: Section[]; len: number } {
+/**
+ * The spine walked from its tail end to the head, a section every `step` cells of the body itself (set to the body, so
+ * the sections move with it and nothing drawn from them swims along it as it goes), and one at each end: where, which
+ * way, and how thick.
+ */
+function sections(w: Worm, step: number): { all: Section[]; len: number; at(back: number): Section } {
   const pts = w.spine
   const lens = [0]
   for (let i = 1; i < pts.length; i++) lens.push(lens[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]))
   const len = lens[lens.length - 1]
-  const at = (s: number): Pt => {
+  const along = (s: number): Pt => {
     let i = 1
     while (i < lens.length - 1 && lens[i] < s) i++
     const f = (s - lens[i - 1]) / Math.max(1e-9, lens[i] - lens[i - 1])
     return [pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * f, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * f]
   }
   const phase = w.phase ?? 0
-  const n = Math.max(2, Math.ceil(len / step))
-  const all: Section[] = []
-  for (let i = 0; i <= n; i++) {
-    const s = (len * i) / n
-    const p = at(s)
-    const a = at(Math.max(0, s - 0.3))
-    const b = at(Math.min(len, s + 0.3))
+  const section = (back: number): Section => {
+    const s = len - back
+    const p = along(s)
+    const a = along(Math.max(0, s - 0.3))
+    const b = along(Math.min(len, s + 0.3))
     const l = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1
     const d: Pt = [(b[0] - a[0]) / l, (b[1] - a[1]) / l]
-    const back = len - s
     // Weathered: the outline wanders a little, in long swells and shorter ones, set to the body.
-    const wear = 1 + 0.035 * drift((back + phase) / 5.5, 3) + 0.016 * drift((back + phase) / 1.9, 5)
-    all.push({ p, d, n: [-d[1], d[0]], r: Math.max(0, w.radius(back, len) * wear), back })
+    const wear = 1 + 0.035 * drift((back + phase) / 5.5, 3) + 0.014 * drift((back + phase) / 2.6, 5)
+    return { p, d, n: [-d[1], d[0]], r: Math.max(0, w.radius(back, len) * wear), back }
   }
-  return { all, len }
+  // Backs from the tail end (len) to the head (0): the ends, and every `step` of the body between.
+  const backs: number[] = [len]
+  const first = Math.floor((len + phase) / step)
+  for (let j = first; j * step - phase > 0; j--) {
+    const back = j * step - phase
+    if (back < len - 1e-6) backs.push(back)
+  }
+  backs.push(0)
+  return { all: backs.map(section), len, at: section }
 }
 
 /** Brightness across a lit cylinder, at `x` from -1 to 1 along the side normal, for light `lx` along it and `lz` toward us. */
@@ -106,7 +115,8 @@ export function drawWorm(g: Paint, w: Worm): void {
     const b = M([1, 0])
     return Math.hypot(b[0] - a[0], b[1] - a[1])
   })()
-  const { all } = sections(w, Math.max(0.3, (4 * g.px) / Math.max(1e-3, scale)))
+  // A fixed step along the body (not the screen), so a zoom never moves where the sections fall.
+  const { all, at } = sections(w, 0.6)
   if (all.length < 2) return
   const hide = tint(look.hide)
   const lit = tint(look.lit)
@@ -140,19 +150,16 @@ export function drawWorm(g: Paint, w: Worm): void {
     ctx.fill()
   }
   // The ring bands: broad, low, curved round it toward the head, darkest on its shaded side and gone on its lit side.
-  const spacing = Math.max(1.2, all[Math.floor(all.length / 2)].r * 0.95)
+  // Their spacing from its girth at one fixed place on the body (never from whichever section is in the middle, which
+  // changes as sections come and go at its ends and would jolt every band).
+  const spacing = Math.max(1.2, w.radius(Math.min(30, all[0].back), all[0].back) * 0.95)
   const phase = w.phase ?? 0
-  const near = (back: number): Section => {
-    let best = all[0]
-    for (const s of all) if (Math.abs(s.back - back) < Math.abs(best.back - back)) best = s
-    return best
-  }
   const len = all[0].back
   const first = (((spacing * 0.6 - phase) % spacing) + spacing) % spacing
   for (let k = first; k < len; k += spacing) {
-    const s0 = near(k)
-    const s1 = near(k + spacing * 0.34)
-    if (s0.r < 0.05 || s1.r < 0.05 || s1 === s0) continue
+    const s0 = at(k)
+    const s1 = at(Math.min(len, k + spacing * 0.34))
+    if (s0.r < 0.05 || s1.r < 0.05 || s1.back - s0.back < 0.05) continue
     const arc = (s: Section, x: number): Pt => {
       const bow = s.r * 0.22 * Math.sqrt(Math.max(0, 1 - x * x))
       return M([s.p[0] + s.n[0] * s.r * x + s.d[0] * bow, s.p[1] + s.n[1] * s.r * x + s.d[1] * bow])
@@ -243,7 +250,11 @@ function drawMouth(g: Paint, w: Worm, h: Section, look: WormLook, tint: (c: stri
   // Two lips at its sides and a third that, shut, closes the bud between them and, opening, folds away behind the head:
   // side on, an open mouth shows its two sides, and nothing crosses the throat.
   petal(Math.PI / 2, 1 - smoothstep(e, 0.12, 0.42))
-  if (e > 0.02) {
+  // The throat comes in as the bud parts, never all at once.
+  const seen = smoothstep(e, 0.02, 0.2)
+  if (seen > 0.002) {
+    const was = ctx.globalAlpha
+    ctx.globalAlpha = was * seen
     // The throat, and the fine pale baleen inside the rim.
     const th: Pt[] = []
     for (let i = 0; i <= 40; i++) th.push(M(rimAt((i / 40) * Math.PI * 2, 0.9)))
@@ -274,6 +285,7 @@ function drawMouth(g: Paint, w: Worm, h: Section, look: WormLook, tint: (c: stri
     ctx.strokeStyle = tint(mix(look.hide, look.lit, 0.3))
     ctx.lineWidth = Math.max(1.25 * g.px, 0.07 * rm * scale)
     ctx.stroke()
+    ctx.globalAlpha = was
   }
   petal(0)
   petal(Math.PI)

@@ -129,7 +129,8 @@ export function drawFarWorm(g: Paint, air: Air): void {
   const a = arch(t)
   if (a <= -RW) return
   const hx = ERG_HEAD(t)
-  drawWorm(g, worm(hx, 0, a, L.pt, air, haze, t * 1.7, 60))
+  // Nothing of it below its own sand: it breaches, rather than appearing whole over the sand in front of it.
+  drawWorm(g, { ...worm(hx, 0, a, L.pt, air, haze, t * 1.7, 60), ground: 0.15 })
   // The rider, too small for the stage: a ball drawn here, the troop's own umber, a hair of rope to the hooks.
   if (a > 1.2) {
     const r = Math.max(R * FREMEN.size * L.s, 1.6 * g.px)

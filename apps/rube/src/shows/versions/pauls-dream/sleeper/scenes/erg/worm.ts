@@ -85,8 +85,10 @@ export const out = (t: number): boolean => head(t) > S_OUT && t < SINK_TO
 export function height(t: number): number {
   const s = head(t)
   if (s <= S_OUT) return 0
-  if (s <= UP) return s - S_OUT + MAW * 0.4 * openAt(t)
-  return UP - S_OUT + R_ARC + RADIUS
+  const flare = MAW * 0.4 * openAt(t)
+  if (s <= UP) return s - S_OUT + flare
+  // Over the arch its top goes on up to the arch's crown, and stays there: never a jump.
+  return UP - S_OUT + R_ARC * Math.sin(Math.min(Math.PI / 2, (s - UP) / R_ARC)) + flare
 }
 
 /** Where the middle of its maw is at `t`. */
@@ -117,16 +119,17 @@ export function drawErgWorm(g: Paint, t: number, sand: string, shade: string): v
   const n = Math.max(8, Math.ceil((hi - lo) / 1.0))
   for (let i = 0; i <= n; i++) {
     const [x, y] = rail(lo + ((hi - lo) * i) / n, at).p
-    spine.push([WORM.plunge + (x - WORM.plunge) * (1 - 0.6 * sink), y * (1 - 0.7 * sink) + 17 * sink])
+    spine.push([WORM.plunge + (x - WORM.plunge) * (1 - 0.6 * sink), y * (1 - 0.7 * sink) + 36 * sink])
   }
   const d = rail(hi, at).d
   // Raised over them it is seen a little from below its open side; side on (the arch), three-quarter; coming down, its
   // rim is seen nearly edge on, a bell going down over the harvester.
-  const facing = d[1] < -0.5 ? 0.42 : 0.14 + 0.4 * Math.abs(d[0])
+  const facing = 0.14 + 0.4 * Math.abs(d[0]) + 0.28 * Math.max(0, -d[1])
   const worm = {
     spine,
     radius: (back: number) => radius(back + (s1 - hi)),
-    mouth: s1 <= S_IN + 1 ? { open: openAt(t), facing, size: MAW } : undefined,
+    // Drawn until its lips, folded back along it, are under too.
+    mouth: s1 <= S_IN + MAW ? { open: openAt(t), facing, size: MAW } : undefined,
     sun: SUN,
     ground: 0.4,
     phase: s1 - hi + Math.max(0, head(t) - UNDER),

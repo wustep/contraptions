@@ -109,13 +109,12 @@ const shots: Shot[] = [
   // The open erg: the ornithopter a speck going across it, its shadow under it.
   { t: T.open, cells: 74, at: [318, -30], cut: true },
   { t: T.ahead - 0.002, cells: 68, at: [330, -27] },
-  // The harvester and its plume, huge against the ornithopter coming in from the west.
-  { t: T.ahead, cells: 40, at: [418, -17], cut: true },
-  { t: T.sign - 0.002, cells: 38, at: [416, -16] },
-  // Worm sign: the harvester's front at the frame's west edge, the empty sky over it where the carryall should be, and
-  // the swell running in under the sand from the east.
-  { t: T.sign, cells: 46, at: [470, -12], cut: true },
-  { t: T.look - 0.002, cells: 44, at: [467, -11.5] },
+  // The harvester and its plume, huge against the ornithopter coming in from the west; once it is down, the camera
+  // draws back east over the empty sky where the carryall should be, and the swell runs in under the open flat.
+  { t: T.ahead, cells: 40, at: [421, -17], cut: true },
+  { t: T.sign, cells: 44, at: [426, -18] },
+  { t: 152.4, cells: 58, at: [448, -23] },
+  { t: T.look - 0.002, cells: 62, at: [459, -24] },
   // In the cockpit: father and son look up for the carryall that does not come.
   { t: T.look, cells: 3.6, at: [LANDED.x + 0.9, -0.95], cut: true },
   { t: T.crew[0] - 0.002, cells: 3.4, at: [LANDED.x + 0.9, -1.0] },
