@@ -8,8 +8,8 @@ import { B, CHORD_DIES, FROM, stormFront, stormLeft } from './plan'
  * The storm over the basin, and the sky it leaves.
  *
  * The values are the picture: the wall of the storm is the darkest thing in it, heavy, three great walls one before the
- * other, each topped by a crest of rolling billows that catches the low light as a flat paler band; the floor of the
- * basin is the palest, so the dark ships, the dark Sardaukar and the grey worms stand out against it; the sky between is
+ * other, each dense at its foot and thinning upward into the sky, the further ones paler with the dust between; the
+ * floor of the basin is the palest, so the dark ships, the dark Sardaukar and the grey worms stand out against it; the sky between is
  * a dim brown, palest at the horizon. The wall's front rolls as it comes, and its foot is a skirt of dark blown sand along
  * the floor that the worms come out of. It is far behind the action's plane (a layer), so it barely moves as the camera
  * does: it is the size of the world. After the music it settles into itself and thins, and behind it is the evening, the
@@ -90,59 +90,47 @@ interface Wall {
   climb: number
   seed: number
   body: string
-  band: string
 }
 
-/** The three walls, the back one highest and darkest; each crest catches the light as a band of its own. */
+/**
+ * The three walls, the back one highest; the further back, the more of the air's dust between, so the paler. Each is
+ * dense at its foot and thins upward into the sky: dust has no top edge, and a wall with one reads as a cliff.
+ */
 const WALLS: Wall[] = [
-  { ahead: -50, height: 250, size: 70, climb: 1.6, seed: 11, body: '#21140F', band: '#4E3326' },
-  { ahead: -22, height: 160, size: 52, climb: 2.4, seed: 12, body: '#2C1A13', band: '#5F3F2C' },
-  { ahead: 0, height: 92, size: 34, climb: 3.4, seed: 13, body: '#3B2418', band: '#764D34' },
+  { ahead: -50, height: 250, size: 70, climb: 1.6, seed: 11, body: '#3E281D' },
+  { ahead: -22, height: 160, size: 52, climb: 2.4, seed: 12, body: '#301D15' },
+  { ahead: 0, height: 92, size: 34, climb: 3.4, seed: 13, body: '#26160F' },
 ]
 
-/** One wall: its body from the floor up to its crest, west of its front, and the crest's band of light. */
+/** One wall: its body from the floor up to its crest, west of its front, thinning upward into the sky. */
 function paintWall(b: Brush, wall: Wall, front: number, fall: number, a: number): void {
   const { ctx, view, t } = b
   // Settling, it falls back into the west and down a little, and thins away: never squats into pillars.
   const base = front + wall.ahead - (60 + 40 * (2 - WALLS.indexOf(wall))) * fall
   const H = wall.height * (1 - 0.3 * fall)
-  const band = Math.max(3, H * 0.075)
   const n = 60
   const fx = (y: number) => frontAt(base, y, t, wall.seed, wall.size, wall.climb)
   const topX = fx(-H)
   const west = view.x0 - 10
   const m = 72
-  // The crest, from the front's top west to the frame's edge.
-  const crest: [number, number][] = []
-  for (let i = 0; i <= m; i++) {
-    const x = topX - ((topX - west) * i) / m
-    crest.push([x, -H - crestAt(x, t, wall.seed, wall.size)])
-  }
   ctx.beginPath()
   ctx.moveTo(west, 2)
   for (let i = 0; i <= n; i++) {
     const y = 2 + ((-H - 2) * i) / n
     ctx.lineTo(Math.max(west, fx(y)), y)
   }
-  for (const [x, y] of crest) ctx.lineTo(Math.max(west, x), y)
-  ctx.closePath()
-  ctx.fillStyle = b.ca(wall.body, a)
-  ctx.fill()
-  // The band: the crest and a strip under it, flat and paler, where the low light still reaches the top of the dust.
-  ctx.beginPath()
   for (let i = 0; i <= m; i++) {
-    const [x, y] = crest[i]
-    if (i) ctx.lineTo(Math.max(west, x), y)
-    else ctx.moveTo(Math.max(west, x), y)
-  }
-  for (let i = m; i >= 0; i--) {
-    const [x, y] = crest[i]
-    // Thickest over the heads of the billows, thin in the dips between them: the light lies on what stands up.
-    const head = Math.min(1, (-H - y) / (wall.size * 2.6 * 0.32 * 0.45))
-    ctx.lineTo(Math.max(west, x), y + band * (0.35 + 1.1 * head))
+    const x = topX - ((topX - west) * i) / m
+    ctx.lineTo(Math.max(west, x), -H - crestAt(x, t, wall.seed, wall.size))
   }
   ctx.closePath()
-  ctx.fillStyle = b.ca(wall.band, a)
+  const top = -H - wall.size * 0.85
+  const gr = ctx.createLinearGradient(0, 2, 0, top)
+  gr.addColorStop(0, b.ca(wall.body, a))
+  gr.addColorStop(0.45, b.ca(wall.body, a))
+  gr.addColorStop(0.8, b.ca(wall.body, a * 0.55))
+  gr.addColorStop(1, b.ca(wall.body, 0))
+  ctx.fillStyle = gr
   ctx.fill()
 }
 
@@ -189,7 +177,9 @@ export function paintStormSky(b: Brush): void {
   paintBasin(b)
   const sand = sandAt(t)
   paintRange(b, FAR_DUNES, depthScale(frameH(view), 1100), hy, { lit: sand.far, shade: sand.shade, air: sky.low, pale: 0.6 }, 1)
-  // The last image is beyond the storm: it has gone by there.
+  paintRange(b, NEAR_DUNES, depthScale(frameH(view), 380), hy, { lit: sand.far, shade: sand.shade, air: sky.low, pale: 0.32 }, 1)
+  // The storm stands in front of both ranges: what is behind it is hidden in it. The last image is beyond the storm: it
+  // has gone by there.
   const left = t >= B.last ? 0 : stormLeft(t)
   if (left > 0.002) {
     const front = stormFront(t)
@@ -198,7 +188,6 @@ export function paintStormSky(b: Brush): void {
       for (const wall of WALLS) paintWall(lb, wall, front, fall, (wall.ahead === 0 ? 0.96 : 0.99) * left * left)
     })
   }
-  paintRange(b, NEAR_DUNES, depthScale(frameH(view), 380), hy, { lit: sand.far, shade: sand.shade, air: sky.low, pale: 0.32 }, 1)
 }
 
 /**
