@@ -198,3 +198,10 @@ by copying their folders.
   - The duel is framed at cells 3, so each blow and Jamis's fall read on a phone.
   - Caladan opens from far out over the sea and glides in to the castle. The camera pushes in on Paul through his
     dream, which never covers him. The cliff runs on below any frame.
+- **Round 6.** Full-size frames through the whole show, and every dissolve looked at in the middle of its fade.
+  - Through the dissolve into the night, the erg's low sun becomes the moon: the moon is set where the sun was, at
+    the same size.
+  - The dissolve from the storm into the Fremen's morning had two suns; the morning sun now stands where the Fremen's
+    does from the moment the craft is out of the storm.
+  - The worm breaks the sand as a smooth blunt dome, with sand sliding off it; it had read as a crumpled bag between
+    two flaps. The harvester's plume is one soft column, where it had been stacked discs.
