@@ -60,7 +60,7 @@ export function drawEastWall(g: Paint, L: Light, shut: number, knock: number): v
   const wall = lit(PLASTER, L.ambient, 0.15)
   // With the shutter down the day is shut out: the room and all in it a shade dimmer.
   if (shut > 0.01) {
-    ctx.fillStyle = rgba(mix(L.shade, '#2A1A12', 0.5), 0.3 * smooth(shut, 0, 1))
+    ctx.fillStyle = rgba(mix(L.shade, '#2A1A12', 0.5), 0.24 * smooth(shut, 0, 1))
     ctx.fillRect(R.x0 - 0.06, R.y0, D.x0 - R.x0 + 0.06, R.y1 - R.y0)
   }
   // The wall above the door, and its lintel.
