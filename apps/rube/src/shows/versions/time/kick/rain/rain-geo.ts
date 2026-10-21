@@ -401,6 +401,8 @@ const underX = (t: number): number => herm(t, T_SINK, UNDER, X_SINK, DOWN.hotel.
 const underY = (t: number): number => keyed(SINK_KEYS, t)
 /** When his lane leaves the van's floor and the deck (for the sink's pools): the seat, and the deck's underside. */
 export const SINK_AT = { seat: T_SINK, deck: T_DROP }
+/** When each has settled into a seat in the van (and rides it from there, not rolling). */
+export const SEATED = { cobb: T_C_IN + 0.7, fischer: T_F_IN + 0.85, ariadne: T_A_IN }
 
 /** Cobb, through the rain part (world cells). */
 export function cobbRain(t: number): Pt {
@@ -411,7 +413,7 @@ export function cobbRain(t: number): Pt {
   }
   if (t <= T_C_UP_HOP) return [herm(t, T_HIT, T_C_UP_HOP, C_HIT_X, C_HOP.x, 0, C_HOP.v), LANE_Y]
   if (t <= T_C_IN) return hopAt(t, T_C_UP_HOP, T_C_IN, [C_HOP.x, LANE_Y], onBench(T_C_IN, BENCH_IN))
-  const settle = T_C_IN + 0.7
+  const settle = SEATED.cobb
   if (t <= settle) return onBench(t, herm(t, T_C_IN, settle, BENCH_IN, SEAT_U.cobb, 0.8, 0))
   if (t <= T_SINK) return seatAt(t, SEAT_U.cobb)
   return [underX(t), underY(t)]
@@ -425,7 +427,7 @@ export function fischerRain(t: number): Pt {
   if (t <= T_HIT) return F_REST
   if (t <= T_F_UP_HOP) return [herm(t, T_HIT, T_F_UP_HOP, F_REST[0], F_HOP.x, V_HIT * 0.95, F_HOP.v), LANE_Y]
   if (t <= T_F_IN) return hopAt(t, T_F_UP_HOP, T_F_IN, [F_HOP.x, LANE_Y], onBench(T_F_IN, BENCH_IN))
-  const settle = T_F_IN + 0.85
+  const settle = SEATED.fischer
   if (t <= settle) return onBench(t, herm(t, T_F_IN, settle, BENCH_IN, SEAT_U.fischer, 1.9, 0))
   if (t <= T_SINK + 0.07) return seatAt(t, SEAT_U.fischer)
   return [underX(t) + SEAT_U.fischer, underY(t - 0.07)]

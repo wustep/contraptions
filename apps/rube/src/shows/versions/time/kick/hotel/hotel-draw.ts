@@ -451,14 +451,16 @@ function drawSection(g: Pen, f: View, t: number): void {
   if (seen(f, x0, B.top - 0.1, x1, B.top + 0.1)) {
     rect(g, x0, B.top, Math.min(x1, shaft0), B.top + 0.09, H.carpet)
     if (x1 > shaft1) rect(g, Math.max(x0, shaft1), B.top, x1, B.top + 0.09, H.carpet)
-    rect(g, x0, B.slab - 0.09, x1, B.slab, C.plaster)
   }
+  // The ceiling's plaster under it, whenever it is in view (with the carpet, it went once the slab's top was out of
+  // the frame, still on screen at its foot).
+  if (seen(f, x0, B.slab - 0.1, x1, B.slab + 0.1)) rect(g, x0, B.slab - 0.09, x1, B.slab, C.plaster)
   span(B.mid, B.slab2, C.concrete)
   if (seen(f, x0, B.mid - 0.1, x1, B.mid + 0.1)) {
     rect(g, x0, B.mid, Math.min(x1, shaft0), B.mid + 0.09, H.carpetDark)
     if (x1 > shaft1) rect(g, Math.max(x0, shaft1), B.mid, x1, B.mid + 0.09, H.carpetDark)
-    rect(g, x0, B.slab2 - 0.09, x1, B.slab2, C.plaster)
   }
+  if (seen(f, x0, B.slab2 - 0.1, x1, B.slab2 + 0.1)) rect(g, x0, B.slab2 - 0.09, x1, B.slab2, C.plaster)
   if (seen(f, x0, B.lobby, x1, B.foot)) {
     rect(g, x0, B.lobby, x1, B.foot, C.concreteDark, g.ink, 0.8)
     rect(g, x0, B.lobby, x1, B.lobby + 0.1, H.marble)

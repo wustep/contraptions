@@ -105,6 +105,12 @@ export class Motion {
     const p = this.phase(t)
     return p.at(Math.max(p.t0, Math.min(p.t1, t)))
   }
+  /** When his last stretch on skis ends (he steps out of them, or lies down in them by the gate). */
+  get skisOff(): number {
+    let end = this.t0
+    for (const p of this.phases) if (p.ski && p.ski((p.t0 + p.t1) / 2) !== null) end = p.t1
+    return end
+  }
   /** The skis' tilt at `t`, or null when he is off them. */
   ski(t: number): number | null {
     const p = this.phase(t)
@@ -479,7 +485,14 @@ function fischerIn(): Phase[] {
   const T2x = T.shot - F_GATE_T
   const L2 = LOWER.len - LOWER_GATE
   const v2 = (2 * L2) / T2x - F_GATE_V
-  const skiOff = (t: number) => (t < F_GATE_T - 0.05 ? LOWER.heading(run(knots, t - F_J2)) : null)
+  // Down the lower branch the skis lie along its line either side of him, so they turn through its first corner (along
+  // the corner's two straights, they snapped round from level to steep in a frame).
+  const line = (s: number): number => {
+    const a = LOWER.at(Math.max(0, s - 0.15))
+    const b = LOWER.at(s + 0.15)
+    return Math.atan2(b[1] - a[1], b[0] - a[0])
+  }
+  const skiOff = (t: number) => (t < F_GATE_T - 0.05 ? line(run(knots, t - F_J2)) : null)
   return [
     { t0: F_J2, t1: F_GATE_T, at: (t) => LOWER.at(run(knots, t - F_J2)), ski: skiOff },
     { t0: F_GATE_T, t1: T.shot, at: (t) => LOWER.at(LOWER_GATE + F_GATE_V * (t - F_GATE_T) + (0.5 * (v2 - F_GATE_V) * (t - F_GATE_T) ** 2) / T2x) },
@@ -769,7 +782,8 @@ export function kickTears(): { x: number; y: number; t: number; who: 'c' | 'a' |
     ['f', FISCHER_VAULT],
   ]
   for (const [who, m] of list) {
-    for (const surface of [FORT.ceil + DROP, FORT.roof + DROP]) {
+    // Up through the ceiling only: the roof's slit stood in the open sky over the roof as the fortress came down.
+    for (const surface of [FORT.ceil + DROP]) {
       let lo = T.kick
       let hi = T.vOut
       if (m.at(hi)[1] > surface) continue
