@@ -61,7 +61,7 @@ passengers and the girl on the platform, the lamp.
 | 80.36 | settling | The river spirit, clean, rises out of the tub, an old man's smiling face on a column of water; laughs twice; and goes out through the east doors over the sea (84.22), a long ribbon of water going away east, seen from outside (86.54). Back in the hall the hands cheer, and it goes still. |
 | 94.0 | the first quiet | **Dawn** (a dissolve). The plain is a sea. She is on the balcony at the bathhouse's east end, her room open behind her. |
 | 101.99 | the theme rising | **The dragon.** A white shape far out over the water with a swarm of white about it: the dragon, the paper birds cutting at him. A cut in among them on 107.79; a cut back to her on 112.80. |
-| 115.82 | the height | She goes in to the shutter's cord; he wheels in over the sea for her door. On the peak (123.36) he comes in through it over her and down on the floor; on the next note the shutter drops on the birds, and they strike it one a note and fall. |
+| 115.82 | the height | She goes in to the shutter's cord; he wheels, and comes in low over the sea for her door. On the peak (123.36) he comes in through it over her and down on the floor; on the next note the shutter drops on the birds, and they strike it one a note and fall. |
 | 125–137 | the height's end, and the high light | He thrashes, the blows going through him less and less, and lies still, his eyes shut; she goes to his head. |
 | 137.40 | the high light | **Over the water** (a dissolve). Late afternoon at the bathhouse's east foot. She steps down onto the water and goes along the rails a step a note, rings spreading, No-Face behind her, up onto the little halt. |
 | 147.5 | quiet | The train comes out from under the bathhouse's footings and stops at the halt; they go in and sit. It runs east over the sea in a long wide, small under the low sun, its reflection under it. |
@@ -231,6 +231,15 @@ picture, and the lamp at Swamp Bottom was hard to tell from the line's posts.
   they are up there and coming down through it, so a phone sees the same sky as a desktop.
 - **The parting** was one hop: on a note she was simply on the first stone. Now, on the note, she draws slowly away
   from his side, a little way over the bed, while he watches, and goes from there on the phrase's even notes.
+
+**Round 9, the white dragon on the white cloud.** At a desktop's size the sea's wide put the dragon right across the
+day's great cumulus for three seconds, and again as he wheeled in for her door: white on white, only his ink line
+showing, at the moment the film shows him clearest. The day's cloud keeps its place on the screen in a wide, so the
+fix is in where he goes and where the camera looks.
+- **Far out,** the wide is framed higher, so he goes low over the water under the cloud, white on the sea's blue-green,
+  the birds about him.
+- **Coming in,** he no longer comes down across the cloud from high up: after the wheel he comes in low over the water
+  straight at her door. The sea is empty for two seconds while she goes in to the cord, and then he is there.
 
 ## Known limits
 
