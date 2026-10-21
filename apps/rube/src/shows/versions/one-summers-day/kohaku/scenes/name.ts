@@ -36,10 +36,12 @@ const SHOTS: Key[] = [
   // Over the gap: the river far below in it, and the two of them over it.
   { t: M.cadence - 2.6, cells: 11.5, at: [GAP.x + 0.6, -22.7], w: 0.8 },
   { t: M.cadence - 1.9, cells: 9.5, at: [GAP.x - 0.8, -23.4], w: 0.6 },
-  // In close for the name.
-  { t: M.cadence - 0.1, cells: 4.4, off: [-0.4, 0.25] },
-  { t: FREE + 0.6, cells: 3.5, off: [0, 0.1] },
-  { t: TO - 0.05, cells: 4.3, off: [0, 0.65] },
+  // The whole of him for the name: the scales come off from his tail up to her.
+  { t: M.cadence - 0.1, cells: 6.6, off: [1.5, 0.15] },
+  { t: M.cadence + 1.2, cells: 5.6, off: [0.7, 0.0] },
+  // Falling together, the scales streaming away up over them.
+  { t: FREE + 0.5, cells: 5.2, off: [0.4, -1.1] },
+  { t: TO - 0.05, cells: 5.0, off: [0.2, -0.2] },
 ]
 
 const far = standing('name-cloud-sea', region(-40, -60, 120, 0, 6), END, (g) => {
@@ -52,10 +54,10 @@ const floor = standing('name-cloud-floor', region(-10, CLOUD_TOP - 3, 90, CLOUD_
   drawCloudFloor(g, light(g.t))
 })
 const dragon = standing('name-dragon', region(-10, -34, 90, -14, 2), END, (g) => {
-  if (g.t < FROM - 0.001 || g.t > BURST.at + BURST.dur + 3.4) return
+  if (g.t < FROM - 0.001 || g.t > BURST.at + BURST.dur + 5.4) return
   const L = light(g.t)
   if (g.t <= BURST.at + BURST.dur) drawDragon(g, spineAt(g.t), L, { up: UP, burst: burstAt(g.t), reach: 0 })
-  drawScales(g, L, spineAt, BURST.at, BURST.dur, 110)
+  drawScales(g, L, spineAt, BURST.at, BURST.dur, 170)
 })
 
 export const name: Scene = {

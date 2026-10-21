@@ -151,3 +151,19 @@ show, in frame heights and in log-size a second, and every window over a thresho
   the mane's green, two forked pale horns, and a muzzle that lifts a little at the nose.
 - The whole show was played again in real time on a 390×844 phone held upright. In the band where the 16:9 frame
   sits, every beat reads.
+
+**Round 3, the looks and the name.** The cast had no way to look at one another: a ball's mark turned only as it
+rolled, so every meeting and parting was carried by motion alone.
+- **The looks.** While a ball is still or carried its mark now turns to what it looks at and back, eased over a little
+  under half a second (`Look` in `show.ts`); looks that overlap hand over without falling back between, and
+  `check:shows` holds every look to a ball that is not rolling. Haku watches her from the bridge, and she him as he
+  comes. She watches the sea at dawn, the dragon all the way in over it, and him on the floor. At Swamp Bottom she
+  watches the lamp hop to her, and the dragon come down. Over the cloud she looks down at the river in the gap, then
+  at him as his name comes back. Falling, and on the stones, they face each other. When she goes, he watches her go
+  all the way to the gate; she does not look back.
+- **The name** was the show's climax staged small: the camera tight on her, the scales starting off-frame at his tail,
+  a quick scatter of thin flakes gone in a second. The cadence now frames the whole of him; the white comes off him in
+  a wave from the tail to her over two seconds, the scales larger, drifting back and up over the place and lingering
+  five seconds; and the fall is framed wider, the two of them going down away from them.
+- **The credits** were checked as a saved video paints them, in a 1920×1080 frame and in the 9:16 letterbox: they sit
+  in the sky where the page sets them.

@@ -69,7 +69,7 @@ function heroMoves(): Move[] {
 
 const SHOTS: Key[] = [
   // Down with them through the cloud.
-  { t: FROM + 0.05, cells: 4.4, off: [0, 0.7] },
+  { t: FROM + 0.05, cells: 5.0, off: [0.2, -0.2] },
   { t: FROM + 2.4, cells: 5.6, off: [0, 1.2] },
   // Out under it into the dawn: the meadow and the river of stones below.
   { t: FROM + 4.1, cells: 7.6, off: [-0.4, 1.9] },

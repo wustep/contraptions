@@ -409,35 +409,41 @@ function drawHead(g: Paint, sp: Pt[], L: Light, shut: number, size: number): voi
 export function drawScales(g: Paint, L: Light, bodyAt: (t: number) => Pt[], from: number, dur: number, count = 90): void {
   const { ctx, t } = g
   if (t < from) return
-  const white = lit(WHITE, L.ambient, 0.8)
-  const edge = lit('#C9D6CE', L.ambient, 0.55)
+  const white = lit(WHITE, L.ambient, 0.75)
+  const edge = lit('#C9D6CE', L.ambient, 0.65)
+  const LIFE = 5.2
   for (let i = 0; i < count; i++) {
     const te = from + (i / count) * dur * 0.85
     const age = t - te
-    if (age < 0 || age > 3.2) continue
+    if (age < 0 || age > LIFE) continue
     const sp = bodyAt(te)
     const n = sp.length - 1
     const keep = 1 - smooth(te, from, from + dur * 0.85)
-    const at = sp[Math.max(0, Math.min(n, Math.round(n * keep)))]
+    // From where the vanishing end was when it came away, a little either side of the spine.
+    const k = Math.max(0, Math.min(n, Math.round(n * keep)))
+    const at = sp[k]
     const h1 = hash(i, 101)
     const h2 = hash(i, 102)
-    // Off the way he was going and up, slowing.
-    const a = heading(sp) + Math.PI + (h1 - 0.5) * 1.6
-    const v = 0.7 + 1.2 * h2
-    const go = (1 - Math.exp(-age * 1.3)) / 1.3
-    const x = at[0] + Math.cos(a) * v * go
-    const y = at[1] + Math.sin(a) * v * go - 0.25 * age + 0.04 * age * age
-    const fade = 1 - smooth(age, 1.6, 3.2)
-    const spin = age * (2 + 3 * h1) + i
-    const r = 0.045 + 0.03 * hash(i, 103)
+    const h3 = hash(i, 104)
+    // Off back the way he came and up, slowing to a drift, fluttering as paper does, lingering over the place.
+    const a = heading(sp) + Math.PI + (h1 - 0.5) * 2.0
+    const v = 0.9 + 1.6 * h2
+    const go = (1 - Math.exp(-age * 1.1)) / 1.1
+    const flutter = 0.12 * Math.sin(age * (2.2 + 1.6 * h3) + i)
+    const x = at[0] + Math.cos(a) * v * go + flutter
+    const y = at[1] + Math.sin(a) * v * go * 0.7 - (0.32 + 0.25 * h3) * age + 0.025 * age * age + (h1 - 0.5) * 0.2
+    const fade = smooth(age, 0, 0.15) * (1 - smooth(age, 2.6 + 1.6 * h2, LIFE))
+    if (fade <= 0.01) continue
+    const spin = age * (1.4 + 2.2 * h1) + i
+    const r = 0.06 + 0.05 * hash(i, 103)
     ctx.save()
     ctx.translate(x, y)
     ctx.rotate(spin)
-    ctx.scale(1, 0.45 + 0.55 * Math.abs(Math.cos(age * 3 + i)))
+    ctx.scale(1, 0.4 + 0.6 * Math.abs(Math.cos(age * 2.4 + i)))
     ctx.beginPath()
     ctx.moveTo(-r, 0)
-    ctx.quadraticCurveTo(0, -r * 1.1, r, 0)
-    ctx.quadraticCurveTo(0, -r * 0.35, -r, 0)
+    ctx.quadraticCurveTo(0, -r * 1.15, r, 0)
+    ctx.quadraticCurveTo(0, -r * 0.3, -r, 0)
     ctx.closePath()
     fill(ctx, rgba(i % 3 ? white : edge, fade))
     ctx.restore()

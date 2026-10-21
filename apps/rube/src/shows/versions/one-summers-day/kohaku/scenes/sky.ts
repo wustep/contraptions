@@ -22,7 +22,7 @@ export function head(t: number): Pt {
 export const UP = -1
 
 /** The scales come off him on the cadence, quickly; the last of him is the boy. */
-export const BURST = { at: M.cadence, dur: 1.3 }
+export const BURST = { at: M.cadence, dur: 2.0 }
 export const burstAt = (t: number) => clamp01((t - BURST.at) / BURST.dur)
 
 /** His spine at `t`. */
