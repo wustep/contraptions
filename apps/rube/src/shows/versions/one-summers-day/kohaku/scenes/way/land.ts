@@ -1,5 +1,5 @@
 import type { Light } from '../../light'
-import { blob, box, circle, curve, ellipse, fill, hash, ink, layer, lit, mix, poly, rgba, sway, vgrad, type Paint, type Pt, type View } from '../../paint'
+import { blob, box, circle, curve, ellipse, fill, hash, ink, layer, lit, mix, poly, rect, rgba, sway, vgrad, type Paint, type Pt, type View } from '../../paint'
 import { horizonOf } from '../../world/sky'
 import { GATE, RIVER, STAIR, STONES, STREET, meadowY, treads } from '../../geo'
 
@@ -281,30 +281,64 @@ export function drawArchDark(g: Paint, a: number): void {
 
 /* ------------------------------------------------------------------ the river of stones */
 
+/** The boulders lying in the bed: [x, half width, height], a few, at their own sizes, none where she steps. */
+const BOULDERS: [number, number, number][] = [
+  [15.85, 0.22, 0.16],
+  [16.8, 0.12, 0.09],
+  [17.85, 0.3, 0.2],
+  [18.95, 0.14, 0.1],
+  [20.15, 0.24, 0.15],
+  [21.3, 0.18, 0.14],
+]
+
+/** A rounded stone sitting on the bed: its body in shade, its top lit, flat. */
+function boulder(ctx: CanvasRenderingContext2D, L: Light, x: number, y: number, w: number, h: number, seed: number): void {
+  blob(ctx, [
+    [x - w, y + 0.02],
+    [x - w * 0.95, y - h * 0.5],
+    [x - w * 0.45, y - h],
+    [x + w * 0.5, y - h * 0.95],
+    [x + w, y - h * 0.4],
+    [x + w * 0.9, y + 0.02],
+  ])
+  fill(ctx, lit(mix('#8C887E', '#9A9486', hash(seed, 1)), L.ambient))
+  ellipse(ctx, x - w * 0.12, y - h * 0.72, w * 0.62, h * 0.26)
+  fill(ctx, lit('#C2BDAF', L.ambient))
+}
+
 export function drawRiver(g: Paint, L: Light): void {
   const { ctx } = g
-  const bed = lit('#B8AD94', L.ambient)
-  const bank = lit('#8A7A5E', L.ambient)
-  // The bed, between the meadow's bank and the far bank's foot.
+  const bed = lit('#C3B79C', L.ambient)
+  const near = lit('#9C8E72', L.ambient)
+  // The bed, between the meadow's bank and the far bank's foot: lighter far, darker at its near edge.
   poly(ctx, [
     [RIVER.x0 - 0.2, meadowY(RIVER.x0 - 0.2)],
     [RIVER.x0 + 0.3, RIVER.bed],
-    [RIVER.x1, RIVER.bed],
-    [RIVER.x1, 8],
+    [RIVER.x1 + 0.2, RIVER.bed],
+    [RIVER.x1 + 0.2, 8],
     [RIVER.x0 - 0.2, 8],
   ])
-  ctx.fillStyle = vgrad(ctx, RIVER.bed, 5, [
+  ctx.fillStyle = vgrad(ctx, RIVER.bed, RIVER.bed + 1.2, [
     [0, bed],
-    [0.3, bank],
-    [1, lit('#5E5240', L.ambient)],
+    [0.18, near],
+    [1, lit('#6A5C44', L.ambient)],
   ])
   ctx.fill()
-  // Pebbles along the bed's top: low and few, a texture of the place, not a field of marks.
-  for (let i = 0; i < 22; i++) {
-    const x = RIVER.x0 + 0.45 + (i / 22) * (RIVER.x1 - RIVER.x0 - 0.6) + hash(i, 31) * 0.15
-    const r = 0.04 + 0.04 * hash(i, 32)
-    ellipse(ctx, x, RIVER.bed + 0.01, r * 1.4, r * 0.75)
-    fill(ctx, lit(mix('#9C9484', '#C9C0AC', hash(i, 33)), L.ambient))
+  // The bed's top: a band of pale gravel the stones lie on.
+  box(ctx, RIVER.x0 + 0.25, RIVER.bed - 0.02, RIVER.x1 - RIVER.x0 - 0.05, 0.06, lit('#D3C8AE', L.ambient))
+  BOULDERS.forEach(([x, w, h], i) => boulder(ctx, L, x, RIVER.bed + 0.02, w, h, i))
+  // Grass along both banks, where the bed meets them.
+  const grass = lit('#6E9E44', L.ambient)
+  for (const [bx, d] of [[RIVER.x0 + 0.25, 1], [RIVER.x1 - 0.1, -1]] as const) {
+    for (let j = 0; j < 6; j++) {
+      const x = bx + d * j * 0.07
+      const hh = 0.12 + 0.1 * hash(j, d + 5)
+      ctx.beginPath()
+      ctx.moveTo(x - 0.03, RIVER.bed + 0.02)
+      ctx.quadraticCurveTo(x + d * 0.02, RIVER.bed - hh * 0.6, x + d * 0.05, RIVER.bed - hh)
+      ctx.quadraticCurveTo(x + d * 0.03, RIVER.bed - hh * 0.5, x + 0.03, RIVER.bed + 0.02)
+      fill(ctx, grass)
+    }
   }
   // The stones she crosses on: big, rounded, flat on top.
   STONES.forEach(([x, y], i) => {
@@ -319,7 +353,6 @@ export function drawRiver(g: Paint, L: Light): void {
       [x + w, RIVER.bed + 0.06],
     ])
     fill(ctx, lit('#8F8D86', L.ambient))
-    // Its lit top.
     ellipse(ctx, x - w * 0.05, y + 0.035, w * 0.72, 0.05)
     fill(ctx, lit('#C4C0B4', L.ambient))
   })
@@ -327,40 +360,60 @@ export function drawRiver(g: Paint, L: Light): void {
 
 /* ------------------------------------------------------------------ the far bank's steps */
 
+/** A rounded bush on the bank: two greens, the sunward half lighter. */
+function bush(ctx: CanvasRenderingContext2D, L: Light, x: number, y: number, s: number, seed: number): void {
+  ctx.beginPath()
+  for (let j = 0; j < 3; j++) {
+    const cx = x + (j - 1) * s * 0.55
+    const r = s * (0.45 + 0.15 * hash(seed, j))
+    ctx.moveTo(cx + r, y - r * 0.8)
+    ctx.arc(cx, y - r * 0.8, r, 0, Math.PI * 2)
+  }
+  fill(ctx, lit('#4E7E36', L.ambient))
+  ctx.beginPath()
+  for (let j = 0; j < 3; j++) {
+    const cx = x + (j - 1) * s * 0.55 - s * 0.08
+    const r = s * (0.32 + 0.12 * hash(seed, j))
+    ctx.moveTo(cx + r, y - r * 1.05)
+    ctx.arc(cx, y - r * 1.05, r, 0, Math.PI * 2)
+  }
+  fill(ctx, lit('#6A9C46', L.ambient))
+}
+
 export function drawStair(g: Paint, L: Light): void {
   const { ctx } = g
-  const earth = lit('#7E6E52', L.ambient)
-  // The bank behind the steps, up to the street's level, and under the street.
+  const top = treads[treads.length - 1]
+  // The bank: grass going up from the bed to the street's level, earth showing low down where the river has cut it.
   poly(ctx, [
-    [STAIR.x0 - 0.35, STAIR.bottom + 0.25],
-    [STAIR.x0 - 0.1, STAIR.bottom - 0.4],
-    [STAIR.x1 - 0.4, STAIR.top - 0.02],
-    [STREET.x0 + 0.5, STREET.y],
-    [STREET.x0 + 0.5, 8],
-    [STAIR.x0 - 0.35, 8],
+    [STAIR.x0 - 0.45, RIVER.bed + 0.05],
+    [STAIR.x0 - 0.2, STAIR.bottom - 0.25],
+    [top[0] - 0.4, STAIR.top + 0.02],
+    [STREET.x0 + 0.6, STREET.y],
+    [STREET.x0 + 0.6, 8],
+    [STAIR.x0 - 0.45, 8],
   ])
-  ctx.fillStyle = vgrad(ctx, STAIR.top, 5, [
-    [0, lit('#6F8E4A', L.ambient)],
-    [0.2, earth],
-    [1, lit('#4E432F', L.ambient)],
+  ctx.fillStyle = vgrad(ctx, STAIR.top, RIVER.bed + 0.9, [
+    [0, lit('#7AA44E', L.ambient)],
+    [0.75, lit('#5E8A3C', L.ambient)],
+    [1, lit('#6E5E44', L.ambient)],
   ])
   ctx.fill()
-  // The steps: a block each, its tread lit.
-  const stone = lit('#A59E90', L.ambient)
-  const tread = lit('#CFC8B8', L.ambient)
-  const line = lit('#4A443C', L.ambient)
-  for (let i = 1; i < treads.length; i++) {
+  // The flight: a stone slab under each tread, set into the bank, each a little proud of the one below.
+  const stone = lit('#A8A194', L.ambient)
+  const tread = lit('#D2CBBA', L.ambient)
+  const line = lit('#5A544A', L.ambient)
+  for (let i = 0; i < treads.length; i++) {
     const [x, y] = treads[i]
-    const [px] = treads[i - 1]
-    const w = x - px
-    box(ctx, px + w * 0.5, y, (STAIR.x1 - x) + w * 0.5 + 0.02, treads[i - 1][1] - y, stone)
-    box(ctx, px + w * 0.5, y, (STAIR.x1 - x) + w * 0.5 + 0.02, 0.035, tread)
-    poly(ctx, [[px + w * 0.5, y], [px + w * 0.5, treads[i - 1][1]]], false)
-    ink(g, line, 1.4)
+    const w = 0.42
+    box(ctx, x - w / 2, y, w + 0.12, 0.34, stone)
+    box(ctx, x - w / 2, y, w + 0.12, 0.04, tread)
+    rect(ctx, x - w / 2, y, w + 0.12, 0.34)
+    ink(g, line, 1.1)
   }
-  // The bottom step, on the bed.
-  box(ctx, STAIR.x0 - 0.15, treads[0][1], 0.5, RIVER.bed - treads[0][1] + 0.05, stone)
-  box(ctx, STAIR.x0 - 0.15, treads[0][1], 0.5, 0.035, tread)
+  // A bush at the flight's foot, on the bank's edge by the bed.
+  bush(ctx, L, STAIR.x0 - 0.35, RIVER.bed + 0.04, 0.4, 3)
+  // Moss along the top of the town's wall where the bank meets it.
+  box(ctx, STREET.x0 + 0.5, STREET.y + 0.1, 3.0, 0.07, lit('#6E8E46', L.ambient))
 }
 
 export { curve }
