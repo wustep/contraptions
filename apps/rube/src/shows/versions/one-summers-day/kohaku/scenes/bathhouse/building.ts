@@ -145,7 +145,7 @@ function footings(g: Paint, L: Light, cut: Cut): void {
     [0, lit('#2E221B', L.ambient)],
     [1, lit('#17110C', L.ambient)],
   ])
-  ctx.fillRect(BATH.x0 + 0.3, top, BATH.x1 - BATH.x0 - 0.6, bottom - top)
+  ctx.fillRect(BATH.x0, top, BATH.x1 - BATH.x0 - 0.3, bottom - top)
   const post = lit('#5A4232', L.ambient)
   const brace = lit('#4A3628', L.ambient)
   const xs: number[] = []

@@ -18,8 +18,8 @@ export const HAKU_THERE = onsetNear(47.57)
 export const SET_OFF = onsetNear(47.95)
 /** The camera has drawn back to the whole bathhouse, and holds it while they cross. */
 export const WIDE = onsetNear(49.32)
-/** It comes down to the door with them. */
-export const DOWN = onsetNear(51.78)
+/** A cut in at the bridge's end, the note after they have passed under No-Face: his mask turned after her. */
+export const PAST = onsetNear(53.02)
 /** He stops by the door; she goes on in. */
 export const AT_DOOR = onsetNear(54.13)
 

@@ -25,6 +25,7 @@ import {
   HAKU_GO,
   HAKU_THERE,
   HOOK,
+  PAST,
   PULLS,
   RIM,
   RISE,
@@ -43,8 +44,9 @@ import { drawBicycle, drawJunk, drawMound, drawSpirit, drawSpiritOutside, drawTh
  *
  * On the swell the camera rises off her at the bridge's foot and draws back until the whole bathhouse stands lit in
  * the night over its bridge, its smoke going up past the moon. Haku has been waiting on the bridge: he comes to her,
- * and they cross together, he a little ahead, under No-Face, who hovers at the rail, his mask turning after her. At
- * the door Haku stays back; she goes in, and the front of the great bath's hall comes away.
+ * and they cross together, he a little ahead, under No-Face, who sits on the rail, his mask turning after her. A cut
+ * in at the bridge's end as they go on past him: at the door Haku stays back; she goes in, and the front of the great
+ * bath's hall comes away.
  *
  * Inside, the back doors slide open on the night sea, and the river's spirit comes in through them, a heaving mound of
  * sludge, and heaves himself up into the tub. She lands on the treadle by the tub, and the herbal token goes off its
@@ -182,9 +184,11 @@ const SHOTS: Key[] = [
   { t: FROM + 0.3, cells: 6.9, at: [39.8, -2.85] },
   { t: HAKU_THERE, cells: 5.4, at: [42.6, -2.15], focus: [41.6, -1.35] },
   { t: 51.6, cells: 17.4, at: [56.6, -6.3] },
-  { t: AT_DOOR - 0.01, cells: 16.8, at: [57.0, -6.1] },
-  // A cut in on the note she reaches the door: the hall's front going away as she goes in.
-  { t: AT_DOOR, cells: 5.3, at: [58.8, -2.7], cut: true },
+  { t: PAST - 0.002, cells: 17.1, at: [56.85, -6.2] },
+  // A cut in at the bridge's end once they are past No-Face: his mask turned after her, Haku stopping at the porch,
+  // and she going on in, the hall's front going away as she goes.
+  { t: PAST, cells: 4.3, at: [54.8, -2.3], cut: true },
+  { t: AT_DOOR + 0.4, cells: 5.1, at: [58.2, -2.6] },
   // Inside: the hall, the doors opening, the spirit coming in and up into the tub.
   { t: ARRIVE, cells: 5.5, at: [62.6, -2.75] },
   { t: TREADLE - 0.4, cells: 5.2, at: [62.6, -2.65] },
