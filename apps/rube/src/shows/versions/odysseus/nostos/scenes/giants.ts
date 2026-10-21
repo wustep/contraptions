@@ -54,8 +54,10 @@ const fleetAt = (t: number): number => {
  * coming for, so the boulder falls into the frame and through the deck; and out with his own ship as it gets away.
  */
 const shots: Key[] = [
-  { t: k(2), cells: 12, off: [-2.6, -1.5], w: 0 },
-  { t: k(10), cells: 13, off: [-2.2, -1.9], w: 0 },
+  // In close enough on his ship that its oars are seen to bite on the beat as it arrives, the next ship behind it in the
+  // fog; easing out as they row on, so the cut to the cliff opens wide.
+  { t: k(2), cells: 8.5, off: [-1.9, -1.1], w: 0 },
+  { t: k(10), cells: 10.5, off: [-2.2, -1.6], w: 0 },
   // The cliff, the wood on it, and the fog: the giants come out of it here.
   { t: k(12), cells: 25, at: [fleetAt(k(12)) + 9, -9.8], cut: true },
   { t: k(22), cells: 25, at: [fleetAt(k(22)) + 4.5, -9.8] },
