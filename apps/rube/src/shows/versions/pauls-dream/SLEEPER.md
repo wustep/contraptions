@@ -190,3 +190,11 @@ by copying their folders.
   - Caladan's swells are broad bands rolling in toward the cliff; the spray is one burst of broken water up the rock
     on every figure.
   - Cut: two of the crew, the walk's loose framing, the wide hatch shot, the storm's churn ellipses and blur.
+- **Round 5.** Another fresh real-speed watch.
+  - Paul and Chani meet. She is the girl from his dream, and the show had never had them meet: she was simply beside
+    him in the walk. Now, after Stilgar takes him in, she comes to him out of the Fremen and stops in front of him, and
+    they turn and look at each other until the walk. To make room for her the duel is mirrored, and Jessica stays by
+    the ornithopter, cut off by the ring.
+  - The duel is framed at cells 3, so each blow and Jamis's fall read on a phone.
+  - Caladan opens from far out over the sea and glides in to the castle. The camera pushes in on Paul through his
+    dream, which never covers him. The cliff runs on below any frame.
