@@ -43,7 +43,7 @@ const SIGN = { from: 377.4, to: RIDER.from } as const
 export function arch(t: number): number {
   const up = smoother(t, RIDER.from - 0.25, RIDER.from + 1.6)
   const down = smoother(t, M.last + 0.15, M.last + 2.6)
-  const surge = SURGES.reduce((a, s) => a + 0.55 * kick(t, s, 0.12, 0.9), 0)
+  const surge = SURGES.reduce((a, s) => a + 0.42 * kick(t, s, 0.24, 1.1), 0)
   return -RW * 1.3 + (8 + RW * 1.3 + surge * 1.6) * up * (1 - down)
 }
 
