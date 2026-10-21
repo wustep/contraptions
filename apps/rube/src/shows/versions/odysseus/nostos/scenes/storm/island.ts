@@ -72,9 +72,18 @@ const INK = '#2E2A22'
 /** The fire's smoke: green wood and fat, dark against the gold. */
 const SMOKE = '#3A3631'
 
+/**
+ * How far the island has gone into the storm's shadow: in the sun while they graze, taken down with the light as the
+ * sky closes over it, so it is never a gold field under a black sky. The fire's own light is not. Set as it is drawn.
+ */
+let gloom = 0
+const STORM = '#262A2B'
+const lit = (c: string): string => (gloom > 0.001 ? mix(c, STORM, gloom) : c)
+
 export function drawIsland(g: Paint): void {
   const { ctx, t, view } = g
   if (view.x1 < 488 || view.x0 > 532) return
+  gloom = 0.55 * smooth(t, 292.5, 301.5)
   const air = skyAt(t).low
   // Far hills of the same island, behind, paler.
   const L = layer(view, 30)
@@ -85,7 +94,7 @@ export function drawIsland(g: Paint): void {
   }
   far.push([L.x(523), L.y(0.3)], [L.x(499), L.y(0.3)])
   poly(ctx, far)
-  fill(ctx, mix(GRASS_SHADE, air, 0.55))
+  fill(ctx, mix(lit(GRASS_SHADE), air, 0.55))
   drawRidge(g, air)
   // The land: grass over the whole hill, darkening towards the water; under the water it goes on down and out, a
   // mound that the cut sea darkens.
@@ -94,16 +103,16 @@ export function drawIsland(g: Paint): void {
   const land: Pt[] = [...pts, [525.6, 1.5], [527.2, 2.6], [492.2, 2.6], [493.8, 1.5]]
   poly(ctx, land)
   ctx.fillStyle = vgrad(ctx, -2.1, 0.4, [
-    [0, GRASS],
-    [0.55, mix(GRASS, GRASS_SHADE, 0.35)],
-    [1, GRASS_SHADE],
+    [0, lit(GRASS)],
+    [0.55, mix(lit(GRASS), lit(GRASS_SHADE), 0.35)],
+    [1, lit(GRASS_SHADE)],
   ])
   ctx.fill()
   // The beaches: a band of sand along the ground where it meets the water, either side.
   for (const [a, b] of [[495.6, 499.6], [520.2, 523.8]] as const) {
     const top = pts.filter(([x]) => x >= a && x <= b)
     poly(ctx, [...top, ...[...top].reverse().map(([x, y]): Pt => [x, y + 0.22])])
-    fill(ctx, SAND)
+    fill(ctx, lit(SAND))
   }
   // Dry scrub on the near slope, below the pasture's edge: a few low dark clumps, bigger as they come down towards us.
   for (const [x, dy, w] of [[501.2, 0.55, 0.42], [505.0, 0.95, 0.55], [510.6, 0.7, 0.5], [515.2, 1.1, 0.6], [520.4, 0.6, 0.4]] as const) {
@@ -112,10 +121,10 @@ export function drawIsland(g: Paint): void {
     ctx.ellipse(x, y, w, w * 0.42, 0, Math.PI, 0)
     ctx.ellipse(x + w * 0.55, y + 0.02, w * 0.55, w * 0.3, 0, Math.PI, 0)
     ctx.closePath()
-    fill(ctx, mix(OLIVE, GRASS_SHADE, 0.35))
+    fill(ctx, mix(lit(OLIVE), lit(GRASS_SHADE), 0.35))
   }
   poly(ctx, pts, false)
-  stroke(g, INK, 2)
+  stroke(g, lit(INK), 2)
   // Two olive trees on the skyline, dark and still.
   drawOlive(g, 517.6, 1.0)
   drawOlive(g, 519.2, 0.75)
@@ -133,7 +142,7 @@ export function drawIsland(g: Paint): void {
       ctx.moveTo(FIRE.x - 0.14 * d, fy + 0.01)
       ctx.lineTo(FIRE.x + 0.1 * d, fy - 0.07)
       ctx.lineCap = 'round'
-      stroke(g, BARK, 2.2)
+      stroke(g, lit(BARK), 2.2)
     }
     flame(ctx, FIRE.x, fy - 0.02, 0.24 * burn, 0.34 * burn, t, 5)
   }
@@ -155,19 +164,19 @@ function drawRidge(g: Paint, air: string): void {
     [511.2, -4.2], [513.4, -3.7], [515.8, -3.9], [518.4, -3.2], [521.0, -2.0], [523.6, 0.05],
   ]
   poly(ctx, ridge.map(([x, y]) => P(x, y)))
-  fill(ctx, rgba(mix(GRASS_SHADE, air, 0.35), a))
+  fill(ctx, rgba(mix(lit(GRASS_SHADE), air, 0.35), a))
   // Bare limestone breaking through at its highest shoulder: an outcrop standing a little out of the skyline, its side
   // away from the sun in shade, so it is rock and not a patch laid on the grass.
   poly(ctx, [P(507.5, -3.7), P(508.4, -4.3), P(509.2, -4.75), P(510.1, -4.8), P(510.9, -4.45), P(511.5, -3.95), P(510.5, -3.6), P(509.0, -3.65)])
-  fill(ctx, rgba(mix('#8F8672', air, 0.35), a))
+  fill(ctx, rgba(lit(mix('#8F8672', air, 0.35)), a))
   poly(ctx, [P(507.5, -3.7), P(508.4, -4.3), P(509.2, -4.75), P(509.35, -4.2), P(509.0, -3.65)])
-  fill(ctx, rgba(mix('#6F685A', air, 0.35), a))
+  fill(ctx, rgba(lit(mix('#6F685A', air, 0.35)), a))
   // Scrub in its folds: a few broad dark masses, not a scatter.
   for (const [x, y, w, h] of [[503.6, -2.85, 1.3, 0.38], [513.9, -3.6, 1.6, 0.34], [518.9, -2.95, 1.1, 0.3]] as const) {
     ctx.beginPath()
     ctx.ellipse(L.x(x), L.y(y), w * L.s, h * L.s, 0, Math.PI, 0)
     ctx.closePath()
-    fill(ctx, rgba(mix(OLIVE, air, 0.4), a))
+    fill(ctx, rgba(mix(lit(OLIVE), air, 0.4), a))
   }
 }
 
@@ -211,8 +220,8 @@ function drawOlive(g: Paint, x: number, size: number): void {
   ctx.lineTo(x + 0.1 * size, y - 0.82 * size)
   ctx.quadraticCurveTo(x + 0.02 * size, y - 0.45 * size, x + 0.08 * size, y + 0.05)
   ctx.closePath()
-  fill(ctx, BARK)
-  stroke(g, INK, 1.6)
+  fill(ctx, lit(BARK))
+  stroke(g, lit(INK), 1.6)
   blob(ctx, [
     [x - 0.75 * size, y - 1.0 * size],
     [x - 0.45 * size, y - 1.45 * size],
@@ -222,8 +231,8 @@ function drawOlive(g: Paint, x: number, size: number): void {
     [x + 0.3 * size, y - 0.82 * size],
     [x - 0.35 * size, y - 0.8 * size],
   ])
-  fill(ctx, OLIVE)
-  stroke(g, INK, 1.6)
+  fill(ctx, lit(OLIVE))
+  stroke(g, lit(INK), 1.6)
 }
 
 /**
@@ -254,10 +263,10 @@ function drawCow(g: Paint, x: number, y: number, dir: 1 | -1, ph: number, down: 
     ctx.lineTo(knee[0], knee[1])
     ctx.lineTo(lx + 0.01 - 0.08 * fold, y - 0.005 - 0.02 * fold)
     ctx.lineCap = 'round'
-    ctx.strokeStyle = INK
+    ctx.strokeStyle = lit(INK)
     ctx.lineWidth = 0.05 + 2 / 108
     ctx.stroke()
-    ctx.strokeStyle = mix(HIDE_SHADE, HOOF, 0.35)
+    ctx.strokeStyle = mix(lit(HIDE_SHADE), lit(HOOF), 0.35)
     ctx.lineWidth = 0.05
     ctx.stroke()
   }
@@ -273,16 +282,16 @@ function drawCow(g: Paint, x: number, y: number, dir: 1 | -1, ph: number, down: 
     [-L / 2 + 0.06, bodyY + 0.12],
   ]
   blob(ctx, body)
-  fill(ctx, HIDE)
+  fill(ctx, lit(HIDE))
   poly(ctx, [[-L / 2, bodyY + 0.02], [L / 2, bodyY + 0.02], [L / 2 - 0.08, bodyY + 0.12], [-L / 2 + 0.06, bodyY + 0.12]])
-  fill(ctx, rgba(HIDE_SHADE, 0.7))
+  fill(ctx, rgba(lit(HIDE_SHADE), 0.7))
   blob(ctx, body)
-  stroke(g, INK, 1.8)
+  stroke(g, lit(INK), 1.8)
   // The tail, swinging slowly.
   ctx.beginPath()
   ctx.moveTo(-L / 2 + 0.02, bodyY - 0.08)
   ctx.quadraticCurveTo(-L / 2 - 0.06 + tail * 0.2, bodyY + 0.06, -L / 2 - 0.02 + tail * 0.3, bodyY + 0.18)
-  stroke(g, INK, 1.6)
+  stroke(g, lit(INK), 1.6)
   // The head on its neck: down to the grass, or up.
   const hx = L / 2 + 0.1
   const hy = bodyY - 0.12 + headDrop
@@ -292,16 +301,16 @@ function drawCow(g: Paint, x: number, y: number, dir: 1 | -1, ph: number, down: 
   ctx.lineTo(hx + 0.02, hy + 0.06)
   ctx.lineTo(L / 2 - 0.04, bodyY + 0.02)
   ctx.closePath()
-  fill(ctx, HIDE)
-  stroke(g, INK, 1.6)
+  fill(ctx, lit(HIDE))
+  stroke(g, lit(INK), 1.6)
   const head: Pt[] = [[hx - 0.05, hy - 0.06], [hx + 0.08, hy - 0.04], [hx + 0.13, hy + 0.06], [hx + 0.09, hy + 0.1], [hx - 0.04, hy + 0.06]]
   blob(ctx, head)
-  fill(ctx, HIDE)
-  stroke(g, INK, 1.6)
+  fill(ctx, lit(HIDE))
+  stroke(g, lit(INK), 1.6)
   // The muzzle, and the horns: up and out, and turning in at their tips.
   ctx.beginPath()
   ctx.ellipse(hx + 0.11, hy + 0.06, 0.035, 0.03, 0, 0, Math.PI * 2)
-  fill(ctx, HOOF)
+  fill(ctx, lit(HOOF))
   ctx.beginPath()
   ctx.moveTo(hx - 0.01, hy - 0.05)
   ctx.quadraticCurveTo(hx - 0.2, hy - 0.1, hx - 0.13, hy - 0.24)
@@ -310,6 +319,6 @@ function drawCow(g: Paint, x: number, y: number, dir: 1 | -1, ph: number, down: 
   ctx.quadraticCurveTo(hx + 0.2, hy - 0.1, hx + 0.13, hy - 0.24)
   ctx.lineTo(hx + 0.16, hy - 0.28)
   ctx.lineCap = 'round'
-  stroke(g, INK, 2.4)
+  stroke(g, lit(INK), 2.4)
   ctx.restore()
 }
