@@ -104,11 +104,12 @@ export const home: Scene = {
     { t: FIGHT.last, cells: 2.5, at: [819.05, -9.62], cut: true },
     { t: FIGHT.down[1] - 0.05, cells: 2.55, at: [819.1, -9.64] },
     // On the next, the whole hall: what it cost. The dead on the floor, those who never fought in their corner, the son
-    // come down beside his father, and his mother coming down the stairs to them; and in, to the three of them.
+    // come down beside his father, and his mother coming down the stairs to them; and in, steadily, to the three of them
+    // together, the dead man with the arrow in him and the hearth behind; closer still as the swell dies.
     { t: FIGHT.down[1], cells: 5.3, at: [822.75, -10.8], cut: true },
-    { t: FIGHT.down[3], cells: 5.1, at: [822.4, -10.7] },
-    { t: TRIAL.meet, cells: 3.0, at: [820.3, -9.95] },
-    { t: TRIAL.fade - 0.1, cells: 2.85, at: [820.28, -9.92] },
+    { t: FIGHT.down[2], cells: 5.15, at: [822.55, -10.75] },
+    { t: TRIAL.meet, cells: 2.45, at: [820.1, -9.47] },
+    { t: TRIAL.fade - 0.1, cells: 2.2, at: [820.12, -9.43] },
     // The west, held: their son on the cliff's edge, the skiff casting off and going away from us into the sun.
     { t: TRIAL.fade, cells: WEST_CAM.cells, at: [WEST_CAM.x, WEST_CAM.y], cut: true },
     { t: END, cells: WEST_CAM.cells, at: [WEST_CAM.x, WEST_CAM.y] },
