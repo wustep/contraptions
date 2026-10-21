@@ -1,4 +1,4 @@
-import { circle, clamp01, mix, rect, vgrad, type Brush } from '../paint'
+import { circle, clamp01, composed, mix, rect, vgrad, type Brush } from '../paint'
 
 /**
  * Arrakis's sky, by show time: a gradient from the zenith down to the haze over the horizon, and the sun, a flat disc
@@ -7,7 +7,7 @@ import { circle, clamp01, mix, rect, vgrad, type Brush } from '../paint'
  * black disc in a rim of light, and the sky goes down with it (the grade takes the colour away at the same time).
  *
  * The sun stands in the frame, not in the world: it is too far to move as the camera moves, so it is placed as shares of
- * the frame, keyed through the show like the light.
+ * the composed 16:9 frame (`composed`), keyed through the show like the light.
  */
 
 export interface SkyKey {
@@ -59,9 +59,11 @@ export function paintSky(b: Brush, s: SkyKey, hy: number): void {
 /** The sun as a flat disc; covered, the moon's black disc over it, sliding in from the left, and a thin rim of light. */
 export function paintSun(b: Brush, s: SkyKey): void {
   const { ctx, view } = b
-  const r = s.sun.r * view.h
-  const x = view.x0 + s.sun.x * view.w
-  const y = view.y0 + s.sun.y * view.h
+  // Shares of the composed 16:9 frame, so a phone held upright has it where a wide screen does.
+  const f = composed(view)
+  const r = s.sun.r * f.h
+  const x = f.cx + (s.sun.x - 0.5) * f.h * (16 / 9)
+  const y = f.cy + (s.sun.y - 0.5) * f.h
   if (x + r < view.x0 || x - r > view.x1 || y + r < view.y0 || y - r > view.y1) return
   const e = clamp01(s.eclipse)
   ctx.fillStyle = b.c(s.sun.color)

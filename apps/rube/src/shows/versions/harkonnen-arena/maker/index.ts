@@ -1,6 +1,7 @@
 import type { Performance } from '../../../registry'
 import { DURATION, compose } from './score'
 import { YOUTUBE } from './music'
+import { TALL } from './paint'
 
 const { show, camera, blend, titles, overview } = compose()
 
@@ -16,7 +17,7 @@ export const performance: Performance = {
   titles,
   overview,
   // A phone held upright sees more sky over the desert than sand under it.
-  tall: 0.7,
+  tall: TALL,
   soundtrack: {
     offset: 0,
     credit: 'Hans Zimmer · Harkonnen Arena · Dune: Part Two (2024)',

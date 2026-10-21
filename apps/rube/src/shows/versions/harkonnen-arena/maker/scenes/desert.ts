@@ -3,7 +3,7 @@ import { hold } from '../motion'
 import { drawing, layer, poly, smooth, type Brush } from '../paint'
 import type { Scene } from '../scene'
 import { T } from '../timeline'
-import { SAND, depthScale, farDesert, horizonOf, paintFar, tiltOf } from '../world/land'
+import { SAND, depthScale, farDesert, frameH, horizonOf, paintFar, tiltOf } from '../world/land'
 import type { SkyKey } from '../world/sky'
 import { paintFlat, paintFunnelBack, paintFunnelFront } from './desert/ground'
 import { paintDust, paintMawBack, paintMawFront } from './desert/maw'
@@ -99,7 +99,7 @@ function paintEvent(b: Brush): void {
 const FAR_D = 60
 const FAR_X = 82
 function paintFarOff(b: Brush, tl: number): void {
-  layer(b, depthScale(b.view.h, FAR_D), horizonOf(b.view, tl), (lb) => {
+  layer(b, depthScale(frameH(b.view), FAR_D), horizonOf(b.view, tl), (lb) => {
     const { ctx, view } = lb
     ctx.save()
     ctx.translate(FAR_X - XH, 0)

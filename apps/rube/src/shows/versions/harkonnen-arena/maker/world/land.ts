@@ -1,4 +1,4 @@
-import { clamp01, lerp, type Brush, type View } from '../paint'
+import { clamp01, composed, lerp, type Brush, type View } from '../paint'
 import { paintRange, type DuneLook, type Range } from './dunes'
 import { paintSky, skyOf, type SkyKey } from './sky'
 
@@ -19,8 +19,14 @@ import { paintSky, skyOf, type SkyKey } from './sky'
 /** How big a layer `d` cells behind the action's plane is drawn, in a frame `h` cells high. */
 export const depthScale = (h: number, d: number): number => h / (h + Math.max(0, d))
 
-/** The horizon in world y for a frame: `tilt` of the frame's height below its middle. */
-export const horizonOf = (view: View, tilt: number): number => view.cy + view.h * tilt
+/** The horizon in world y for a frame: `tilt` of the composed frame's height below its middle. */
+export const horizonOf = (view: View, tilt: number): number => {
+  const f = composed(view)
+  return f.cy + f.h * tilt
+}
+
+/** The composed frame's height in cells: what a far layer's depth is measured against (`depthScale`). */
+export const frameH = (view: View): number => composed(view).h
 
 export interface Far {
   range: Range
@@ -46,7 +52,7 @@ export function farDesert(seed: number): Far[] {
 export function paintFar(b: Brush, sky: SkyKey[], ranges: Far[], tilt: number): void {
   const hy = horizonOf(b.view, tilt)
   paintSky(b, skyOf(sky, b.t), hy)
-  for (const r of ranges) paintRange(b, r.range, depthScale(b.view.h, r.d), hy, r.look)
+  for (const r of ranges) paintRange(b, r.range, depthScale(frameH(b.view), r.d), hy, r.look)
 }
 
 /** A tilt keyed through time: [t, tilt] pairs, eased between. */

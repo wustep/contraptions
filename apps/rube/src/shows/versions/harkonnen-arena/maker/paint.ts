@@ -63,6 +63,22 @@ function viewOf(ctx: CanvasRenderingContext2D, p: p5, k: number): View {
   return { x0, y0, x1, y1, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, w: x1 - x0, h: y1 - y0 }
 }
 
+/**
+ * In a stage taller than 16:9 (a phone held upright), the share of the extra picture that lies above the composed frame
+ * (`Performance.tall`): more sky over the desert than sand under it.
+ */
+export const TALL = 0.7
+
+/**
+ * The composed 16:9 frame inside the view: its middle and its height in cells. A stage wider than 16:9 shows more round
+ * it, a taller one more above and below it (by `TALL`); the composition, the horizon and the depth of far things go by
+ * this frame, not the stage, so a phone sees the same picture with more sky.
+ */
+export function composed(view: View): { cx: number; cy: number; h: number } {
+  const h = Math.min(view.h, (view.w * 9) / 16)
+  return { cx: view.cx, cy: view.cy + (TALL - 0.5) * (view.h - h), h }
+}
+
 export type Drawer = (b: Brush) => void
 
 /**
