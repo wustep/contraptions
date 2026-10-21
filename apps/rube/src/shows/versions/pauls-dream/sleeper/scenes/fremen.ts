@@ -57,11 +57,11 @@ const shots: Shot[] = [
   { t: 361.2, cells: 4.3, at: [1166.9, -1.12] },
   { t: WALK_FROM - 0.002, cells: 4.2, at: [1166.8, -1.1] },
   // The walk, on the dune beyond: close on him and Chani side by side, the line ahead of them and behind.
-  { t: WALK_FROM, cells: 4.9, off: [0.55, -0.85], cut: true },
-  { t: 371, cells: 5.0, off: [0.6, -0.9] },
-  { t: 379.35, cells: 5.2, off: [0.6, -0.95] },
-  // Stopped: the crest and the open erg past it, the horizon low; worm sign, then the worm.
-  { t: 379.37, cells: 10.5, at: [1202.6, -7.6], cut: true },
+  { t: WALK_FROM, cells: 4.1, off: [0.35, -0.7], cut: true },
+  { t: 371, cells: 4.0, off: [0.4, -0.72] },
+  { t: 377.968, cells: 4.0, off: [0.4, -0.72] },
+  // On the fill, wide: the crest and the open erg past it, the troop stopping one by one; worm sign, then the worm.
+  { t: 377.97, cells: 10.5, at: [1202.6, -7.6], cut: true },
   { t: 388.62, cells: 10.0, at: [1203.0, -7.7] },
   // The insert: the rider on its back, the back curving away under him, the sky over him.
   { t: INSERT.from, cells: 7.0, on: riderAt, off: [0.4, 0.75], cut: true },
@@ -102,7 +102,7 @@ setTilt([
   [DUEL.clash, -0.02, true],
   [353.6, -0.04, false],
   [WALK_FROM, 0.16, true],
-  [379.37, 0.02, true],
+  [377.97, 0.02, true],
   [INSERT.from, 0.3, true],
   // The reaction and the answer from a little lower, so the worm stands up over the crest behind them, not a hump.
   [INSERT.to, -0.12, true],
