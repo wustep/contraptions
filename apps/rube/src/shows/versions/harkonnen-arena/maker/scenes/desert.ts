@@ -148,11 +148,11 @@ export const desert: Scene = {
     // The sand going down: a slow push in on the machine in its funnel, the carryall straining over it.
     { t: W.sink, cut: true, cells: 50, at: [XH - 2, -12] },
     { t: W.maw - 0.01, cells: 34, at: [XH, -9.5] },
-    // The mouth: wider, as it breaks the sand round the machine; craning up and back as it stands, and held while the
-    // machine goes down its throat.
+    // The mouth: wider, as it breaks the sand round the machine; craning up and back as it stands, then a slow push in
+    // on it while the machine goes down its throat and it stands open.
     { t: W.maw, cut: true, cells: 46, at: [XH - 2, -11] },
     { t: W.maw + 6.5, cells: 54, at: [XH + 1, -17] },
-    { t: W.gone - 0.01, cells: 51, at: [XH + 1, -16.5] },
+    { t: W.gone - 0.01, cells: 46, at: [XH + 1, -18] },
     // The fifth blow: it goes straight back down with the machine in it, the dust going up.
     { t: W.after - 0.01, cells: 48, at: [XH + 1, -12.5] },
     // Gone: the desert again from far off, as at first.
