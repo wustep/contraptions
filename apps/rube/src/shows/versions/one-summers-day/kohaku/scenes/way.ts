@@ -9,6 +9,7 @@ import { GATE, STONES, STREET, meadowY, onMeadow, treads } from '../geo'
 import { END } from '../credits'
 import { drawArchDark, drawGate, drawHills, drawMeadow, drawRiver, drawStair, drawStone, drawTree } from './way/land'
 import { LAMPS, drawStreet, drawTown, drawTownBack } from './way/town'
+import { aloft } from './sky'
 
 /**
  * The way in (0 → M.swell): the four chords, the theme.
@@ -141,7 +142,7 @@ const far = standing('way-far', region(-40, -14, 120, 8, 3), END, (g) => {
   // The far land belongs to the west: east of the bathhouse it gives way to the sea's horizon, going into the haze
   // as the camera goes, never cut off at once.
   // Nor are they seen from over the cloud.
-  const a = (1 - smoother(g.view.cx, 57, 67)) * (1 - smoother(-g.view.cy, 13.5, 16.5))
+  const a = (1 - smoother(g.view.cx, 57, 67)) * (aloft(g.t) ? 1 - smoother(-g.view.cy, 13.5, 16.5) : 1)
   if (a <= 0.01) return
   g.ctx.save()
   g.ctx.globalAlpha = a

@@ -22,6 +22,12 @@ export function head(t: number): Pt {
   return [64 - 4.1 * u, -25.4 + down + 0.5 * Math.sin(0.85 * u) - 0.25 * Math.sin(0.37 * u + 1)]
 }
 
+/**
+ * While they are up over the cloud and coming down through it: the only time the camera is high enough that the day's
+ * cloud and the far hills are not seen. Elsewhere a tall phone's view can reach as high in a wide shot, and they stay.
+ */
+export const aloft = (t: number): boolean => t >= M.summit - 0.01 && t < M.home + 8
+
 /** His back is to the sky flying west. */
 export const UP = -1
 

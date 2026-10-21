@@ -17,7 +17,8 @@ import { FREE, HE_LANDS, LAND, SHE_LANDS, heFalls, sheFalls } from './sky'
  *
  * They fall on down into the cloud, through its pale, and out under it into the first light, the meadow and the river
  * of stones below them, and the fall slows to nothing: they come down on the dry bed side by side. They stay so a
- * while. Then, on a note, she goes: back over the stones alone, a stone a note, and he does not follow; up the meadow
+ * while. Then, on a note, she draws slowly away from his side, and goes: back over the stones alone, a stone a note,
+ * and he does not follow; up the meadow
  * to the red gate; at the arch she stops, and does not look back; and as the music fades she goes into the dark. The
  * credits come up over the summer sky, and the wind goes on in the grass.
  */
@@ -25,13 +26,15 @@ import { FREE, HE_LANDS, LAND, SHE_LANDS, heFalls, sheFalls } from './sky'
 export const FROM = M.home
 export const TO = END
 
-/** They part on a note, a while after they come down. */
+/** They part on a note, a while after they come down: she draws slowly away from his side, and then she goes. */
 export const PART = strongest(LAND + 2.6, LAND + 3.6)
-/** She lands on each stone on a note, west, and then the bank. */
-export const STONE_LANDS = spread(PART + 0.45, PART + 5.6, 6)
+const SLIP = 1.0
+const SLIPPED: Pt = [SHE_LANDS[0] - 0.22, SHE_LANDS[1]]
+/** She lands on each stone on a note, west, and then the bank: the phrase's even notes after the one she slips away on. */
+export const STONE_LANDS = [...spread(PART + 0.45, PART + 5.6, 6).slice(1), strongest(PART + 5.6, PART + 6.3)]
 const AIR = 0.34
 const BANK: Pt = onMeadow(15.12)
-const stonePts: Pt[] = [SHE_LANDS, ...[...STONES].reverse().map(([x, y]): Pt => [x, y - R]), BANK]
+const stonePts: Pt[] = [SLIPPED, ...[...STONES].reverse().map(([x, y]): Pt => [x, y - R]), BANK]
 
 /** Up the meadow to the gate, the stop at its arch, and into the dark. */
 const UP_FROM = STONE_LANDS[5] + 0.35
@@ -47,9 +50,9 @@ const groundPath = (a: number, b: number): Pt[] => {
 }
 
 function heroMoves(): Move[] {
-  const out: Move[] = [ride(sheFalls, FROM, LAND), rest(SHE_LANDS, LAND, STONE_LANDS[0] - AIR)]
+  const out: Move[] = [ride(sheFalls, FROM, LAND), rest(SHE_LANDS, LAND, PART), roll([SHE_LANDS, SLIPPED], PART, PART + SLIP, 'inout')]
   let at = stonePts[0]
-  let t = STONE_LANDS[0] - AIR
+  let t = PART + SLIP
   STONE_LANDS.forEach((land, i) => {
     const off = land - AIR
     if (off > t + 1e-6) out.push(rest(at, t, off))
