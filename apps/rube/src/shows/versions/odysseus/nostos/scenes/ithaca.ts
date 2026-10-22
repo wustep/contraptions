@@ -17,9 +17,9 @@ export const ithaca: Scene = {
   // The horse's beach fades into Ithaca's night.
   dissolves: [[M.second, 2.2]],
   shots: [
-    // The island low in the frame under the night and the moon, the lit house on it the one bright thing.
+    // The island low in the frame under the night and the moon, the lit house on it the one bright thing; and one even
+    // move in from the sea to the house, which reads as lit and inhabited well before it fills the frame.
     { t: M.second, cells: 25, at: [818.8, -10.2], cut: true },
-    { t: 43.2, cells: 17, at: [820.0, -10.3] },
     // The palace, cut open: everyone at once.
     { t: 50.4, cells: 4.6, at: [822.7, -10.45] },
     // The hall's west end: the suitors at the bench, the bow on its stand, the axes lying in their trench; and over

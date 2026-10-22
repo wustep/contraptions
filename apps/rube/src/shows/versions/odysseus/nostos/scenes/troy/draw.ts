@@ -8,6 +8,7 @@ import { FORECOURT, PLINTH } from './geo'
 import { BRAZIER } from './city'
 import { drawCrowd, drawTrojans, spearsInside } from './crowd'
 import { drawHost } from './host'
+import { drawSack as drawKilling } from './sack'
 import { drawHorse, horseAt } from './horse'
 import { drawGround, drawInland, drawLogs, drawRopes, drawTroyFar } from './land'
 import { HATCH_OPENS, LAUNCH, PLANK_FOOT, PLANK_TOP, ROPE_ENDS, ROPE_SET, ROPE_THROWN, SLIPS, headAt, onRope, ropeLoad, statueTilt } from './plan'
@@ -21,6 +22,8 @@ import { MAT, burning, firelight, night, sun, tone } from './tone'
  */
 
 const TROY = region(-70, -14, 14, 6, 2)
+/** Troy far off from the sea: a far layer, which trails the camera well past the city as the ships go, so its own region reaches out over the sea after them (`drawTroyFar` fades it into the haze before its end). */
+const TROY_FAR = region(-70, -14, 60, 6, 2)
 
 /** The horse's look at `t`: the dusk's sun on its seaward side, then the brazier's fire; its hatch, open from the night's first notes. */
 function drawTheHorse(g: Paint): void {
@@ -116,10 +119,8 @@ function drawSack(g: Paint): void {
 
 export function troyPieces(): { back: Placed[]; mid: Placed[]; front: Placed[] } {
   const back: Placed[] = [
-    standing('troy-inland', TROY, END, (g) => {
-      drawInland(g)
-      drawTroyFar(g)
-    }),
+    standing('troy-inland', TROY, END, (g) => drawInland(g)),
+    standing('troy-far', TROY_FAR, END, (g) => drawTroyFar(g)),
     standing('troy-town', TROY, END, (g) => drawTownBehind(g)),
     standing('troy-crowd', TROY, END, (g) => {
       drawCrowd(g)
@@ -130,6 +131,9 @@ export function troyPieces(): { back: Placed[]; mid: Placed[]; front: Placed[] }
       drawTemple(g)
       drawSteps(g)
     }),
+    // The Trojans and the Greeks in the street and on the height: in front of the houses and the steps, behind the gate
+    // tower (the Greeks come in round its foot) and behind the horse and Athena.
+    standing('troy-sack', TROY, END, (g) => drawKilling(g)),
     standing('troy-tower', TROY, END, (g) => {
       drawTower(g)
       drawBucketBack(g)
