@@ -11,6 +11,7 @@ import { defineShow } from '../../registry'
 export default defineShow({
   title: 'Logogram',
   label: 'Opus 5.5',
+  film: 'Arrival',
   about: "Jóhann Jóhannsson's Heptapod B, from Arrival, as a Rube Goldberg machine that goes up into the shell and learns to write in circles.",
   still: 16.4,
   async load() { return (await import('./logogram')).performance },

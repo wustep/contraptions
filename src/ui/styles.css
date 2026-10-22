@@ -448,6 +448,11 @@ input.seed:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* The film a show is after, beside its title: the same face, in italics, quieter. Where the list is too narrow for
+   both, the film goes down a line whole, with the star. */
+.lb-aside { font-style: italic; color: var(--dim); }
+.lb-tail { white-space: nowrap; }
+.lb-opt .lb-label:has(.lb-tail) { white-space: normal; }
 .lb-note {
   display: block;
   font-size: 10.5px;
@@ -1010,6 +1015,8 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 .pool-play:hover { background: transparent; color: var(--text); }
 .pool-play:active { transform: none; }
 .pool-play > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* A name with its film wraps, the film whole on its own line (`.lb-tail`), rather than losing the film to the edge. */
+.pool-play > span:has(.lb-tail) { white-space: normal; }
 .pool-play svg { width: 9px; height: 9px; fill: currentColor; flex: none; opacity: 0; transition: opacity 120ms ease-out; }
 .pool-play:hover svg, .pool-play:focus-visible svg { opacity: 1; }
 .pool-row.on { color: var(--accent); }

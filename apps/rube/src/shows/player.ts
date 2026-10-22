@@ -429,8 +429,9 @@ panelRoot.append(showCard)
 const workList = createListbox({
   label: 'Show',
   value: current?.work ?? '',
-  // On their shelves (`registry.ts`): Machine, Movies, Ambient, each with its favourites starred and first.
-  items: shelves(works).flatMap((s) => s.works.map((w) => ({ value: w.work, label: w.title, group: s.section, mark: w.favorite === undefined ? undefined : icon(ICON.star) }))),
+  // On their shelves (`registry.ts`): Machine, Movies, Ambient, each with its favourites starred and first, and a
+  // film's work with the film it is after.
+  items: shelves(works).flatMap((s) => s.works.map((w) => ({ value: w.work, label: w.title, aside: w.film, group: s.section, mark: w.favorite === undefined ? undefined : icon(ICON.star) }))),
   onChange: (work) => {
     const next = pickVersion(works, work, null)
     // Under a host a pick goes on as its next one would, and the running order carries on after it.

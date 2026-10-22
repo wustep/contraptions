@@ -47,6 +47,17 @@ function nameOf(v: Version): string {
   return work && work.versions.length > 1 && v.label !== v.title ? `${v.title} · ${v.label}` : v.title
 }
 
+/**
+ * A take's name with the film its work is after, in italics, as in the Shows picker (`.lb-aside`): the film and
+ * anything after it (a favourite's star) kept together, so a name that wraps takes them down a line whole.
+ */
+function titleOf(v: Version, after: HTMLElement[] = []): (string | HTMLElement)[] {
+  return v.film ? [nameOf(v), ' ', el('span', { class: 'lb-tail' }, [el('span', { class: 'lb-aside' }, [`(${v.film})`]), ...after])] : [nameOf(v), ...after]
+}
+
+/** The same, said in words: for a screen reader. */
+const spokenName = (v: Version): string => (v.film ? `${nameOf(v)} (${v.film})` : nameOf(v))
+
 function readOn(): Set<string> {
   try {
     const v = localStorage.getItem(ON_STORE)
@@ -82,7 +93,7 @@ function mount(shell: Shell): () => void {
 
   function sync(): void {
     const up = playlist.peek()
-    if (nextName) nextName.textContent = up ? nameOf(byId.get(up)!) : '—'
+    if (nextName) nextName.replaceChildren(...(up ? titleOf(byId.get(up)!) : ['—']))
     if (count) count.textContent = `${playlist.pool.length} of ${takes.length}`
     for (const { id, box, row } of rows) {
       box.checked = on.has(id)
@@ -149,12 +160,12 @@ function mount(shell: Shell): () => void {
         return shelfTakes.map((v) => {
           const id = idOf(v)
           // The box says whether it is in the running order; the name puts it on now, in or out.
-          const box = el('input', { type: 'checkbox', 'aria-label': `${nameOf(v)} in the running order`, title: 'In the running order' })
+          const box = el('input', { type: 'checkbox', 'aria-label': `${spokenName(v)} in the running order`, title: 'In the running order' })
           box.addEventListener('change', () => setIn(id, box.checked))
           // A favourite is starred, as in the Shows picker.
           const star = favoriteIds.has(id) ? [el('span', { class: 'pool-star', title: 'A favourite', 'aria-label': 'favourite' }, [icon(ICON.star)])] : []
           const name = el('button', { type: 'button', class: 'pool-play', title: v.note ? `Play now: ${v.note}` : 'Play now' }, [
-            el('span', {}, [nameOf(v), ...star]),
+            el('span', {}, titleOf(v, star)),
             icon(ICON.play),
           ])
           name.addEventListener('click', () => play(v))
