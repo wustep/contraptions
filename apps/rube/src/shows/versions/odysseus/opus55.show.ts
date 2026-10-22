@@ -8,6 +8,7 @@ import { defineShow } from '../../registry'
 export default defineShow({
   title: 'Nostos',
   label: 'Opus 5.5',
+  film: 'The Odyssey',
   about: "Ludwig Göransson's Odysseus, from Christopher Nolan's The Odyssey, as a Rube Goldberg machine with a bronze ball for its hero: from the fall of Troy, through the trials of the sea, home to the bow and Penelope.",
   still: 24,
   async load() { return (await import('./nostos')).performance },

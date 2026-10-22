@@ -7,6 +7,7 @@ import { defineShow } from '../../registry'
 export default defineShow({
   title: 'Magnum',
   label: 'Opus 5.5',
+  film: 'Zoolander',
   about: "Frankie Goes to Hollywood's Relax, the song Zoolander makes a trigger of, as a Rube Goldberg machine that ends in one look.",
   still: 186.62,
   async load() { return (await import('./magnum')).performance },

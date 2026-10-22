@@ -9,6 +9,7 @@ import { defineShow } from '../../registry'
 export default defineShow({
   title: 'Rally',
   label: 'Opus 5.5',
+  film: 'Marty Supreme',
   about: "Tears for Fears' Everybody Wants to Rule the World, the song Marty Supreme ends on, as a Rube Goldberg machine with a table-tennis ball for its hero.",
   still: 248.4,
   async load() { return (await import('./rally')).performance },
