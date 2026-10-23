@@ -200,7 +200,7 @@ export default defineConfig({
   optimizeDeps: { include: ['@anthropic-ai/sdk'] },
   build: {
     target: 'es2022',
-    rollupOptions: {
+    rolldownOptions: {
       input: {
         machine: `${here}machine/index.html`,
         home: `${here}index.html`,
