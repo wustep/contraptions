@@ -1394,8 +1394,9 @@ Five polish waves after the coat hanger, each a fresh watch of the whole show on
 - **Wave 1.** The premiere's volley drew three flashes' washes and glows on top of one another, a white smear over
   the press; guns that fire together now share one flash of the frame. The portrait's flash peaked at a full white-out
   of the frame for a few frames; it now lights the room from the camera's side, the room still there through it. On a
-  phone the credits are lifted into the dark over the room and centred, but the dark under them stayed where a 16:9
-  frame would have them, a smudge off to the left; it now goes up, over and as wide as they are.
+  phone the credits are lifted into the dark over the room, and the long ones widen to the stage's middle, but the
+  dark under them stayed where a 16:9 frame would have it, a smudge off to the left; it now goes up with them, and
+  wide enough to lie under a short card left of middle and a long one across the stage.
 
 ## The looks
 

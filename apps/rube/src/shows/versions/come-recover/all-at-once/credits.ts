@@ -357,16 +357,17 @@ export const credits = scenery<null>({
     const w = f.x1 - f.x0
     const h = f.y1 - f.y0
     // Under the words wherever the page sets them. On a stage taller than 16:9 they are lifted into the room's dark,
-    // and their floor on size widens them until the page centres them on the stage, so the bed goes with them: up,
-    // over to the middle and as wide as they are, not left behind as a smudge off to one side.
+    // and their floor on size widens them: a short card stays left of middle, a long one the page slides in to the
+    // stage's middle. So the bed goes up with them, and wide enough, a little right of where it was, to lie under
+    // either, not left behind as a smudge off to one side.
     const fh = Math.min(h, (w * 9) / 16)
     const spare = h - fh
     const s = clamp(spare / fh / 0.6)
-    const cx = (f.x0 + w * (AT[0] + 0.2 * s)) * k
+    const cx = (f.x0 + w * (AT[0] + 0.1 * s)) * k
     const cy = (f.y0 + spare / 2 + (AT[1] + 0.13) * fh - CREDITS_LIFT * (spare / 2)) * k
     // Deep enough at its heart that what is behind the names (the window's unlit neon) recedes under them, and no
     // wider than the words, so the lanterns and the family keep their light.
-    const rx = w * (0.3 + 0.22 * s) * k
+    const rx = w * (0.3 + 0.2 * s) * k
     ctx.save()
     ctx.translate(cx, cy)
     ctx.scale(1, 0.5 - 0.2 * s)
