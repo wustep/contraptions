@@ -432,3 +432,70 @@ export function lastOf(times: readonly number[], t: number): { i: number; ago: n
 }
 
 export type Ctx = PieceCtx
+
+/**
+ * A puff of dust or smoke, as `parts`' puff draws it (the same four lobes), but as one shape: the lobes filled as one
+ * union and inked only along the outside. Faded with a global alpha, `parts`' puff showed each lobe's ink ring through
+ * the others' fills, a cluster of ghost circles; this one fades whole.
+ */
+export function puff(p: p5, k: number, ink: string, weight: number, bg: string, x: number, y: number, r: number): void {
+  if (!(r > 0)) return
+  const lobes: [number, number, number][] = [
+    [x * k, y * k, r * k],
+    [(x + r * 0.72) * k, (y + r * 0.22) * k, r * 0.72 * k],
+    [(x - r * 0.66) * k, (y + r * 0.26) * k, r * 0.66 * k],
+    [(x + r * 0.1) * k, (y - r * 0.5) * k, r * 0.6 * k],
+  ]
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.beginPath()
+  for (const [cx, cy, cr] of lobes) {
+    ctx.moveTo(cx + cr, cy)
+    ctx.arc(cx, cy, cr, 0, Math.PI * 2)
+  }
+  ctx.fillStyle = bg
+  ctx.fill()
+  // Each lobe's rim, less the arcs inside another lobe.
+  ctx.beginPath()
+  for (const [i, [cx, cy, cr]] of lobes.entries()) {
+    const covered: [number, number][] = []
+    let hidden = false
+    for (const [j, [ox, oy, or]] of lobes.entries()) {
+      if (i === j) continue
+      const d = Math.hypot(ox - cx, oy - cy)
+      if (d >= cr + or) continue
+      if (d + cr <= or) {
+        hidden = true
+        break
+      }
+      if (d + or <= cr) continue
+      const half = Math.acos(Math.max(-1, Math.min(1, (cr * cr + d * d - or * or) / (2 * cr * d))))
+      const mid = Math.atan2(oy - cy, ox - cx)
+      covered.push([mid - half, mid + half])
+    }
+    if (hidden) continue
+    // The open arcs, walked round from 0 to a full turn.
+    const N = 96
+    let open = false
+    for (let s = 0; s <= N; s++) {
+      const a = (s / N) * Math.PI * 2
+      const inside = covered.some(([a0, a1]) => {
+        const u = (((a - a0) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)
+        return u <= a1 - a0
+      })
+      const px = cx + cr * Math.cos(a)
+      const py = cy + cr * Math.sin(a)
+      if (!inside) {
+        if (open) ctx.lineTo(px, py)
+        else ctx.moveTo(px, py)
+        open = true
+      } else open = false
+    }
+  }
+  ctx.strokeStyle = ink
+  ctx.lineWidth = weight
+  ctx.lineJoin = 'round'
+  ctx.lineCap = 'round'
+  ctx.stroke()
+  ctx.restore()
+}

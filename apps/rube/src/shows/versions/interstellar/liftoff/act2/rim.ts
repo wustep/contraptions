@@ -1305,21 +1305,13 @@ function drawLouvres(p: p5, s: Plan, c: Ctx, t: number): void {
       p.fill(alpha(p, DUST.shade, 0.55 * (1 - open)))
       p.rect(X(PANEL / 2), X(-SHADE_H / 2), X(PANEL), X(SHADE_H))
       if (open > 0) {
-        // Down from the spindle, through the slats, onto the tray: in the bay, not a beam across the station's air.
-        const reach = 1.5
-        const g = ctx.createLinearGradient(0, X(-reach), 0, 0)
-        g.addColorStop(0, 'rgba(255, 244, 214, 0)')
-        g.addColorStop(0.45, `rgba(255, 244, 214, ${0.38 * open})`)
-        g.addColorStop(0.84, `rgba(255, 244, 214, ${0.62 * open})`)
-        g.addColorStop(1, `rgba(255, 246, 220, ${0.9 * open})`)
+        // Down through the slats onto the tray, between the posts: under the shade alone. (It reached twice the shade's
+        // height, so over each open bay stood a pale wedge with hard slanting sides, a lit triangle in the air.)
+        const g = ctx.createLinearGradient(0, X(-SHADE_H), 0, 0)
+        g.addColorStop(0, `rgba(255, 244, 214, ${0.2 * open})`)
+        g.addColorStop(1, `rgba(255, 246, 220, ${0.75 * open})`)
         ctx.fillStyle = g
-        ctx.beginPath()
-        ctx.moveTo(X(0.06), 0)
-        ctx.lineTo(X(PANEL - 0.02), 0)
-        ctx.lineTo(X(PANEL + 0.18), X(-reach))
-        ctx.lineTo(X(-0.14), X(-reach))
-        ctx.closePath()
-        ctx.fill()
+        ctx.fillRect(X(0.03), X(-SHADE_H), X(PANEL - 0.06), X(SHADE_H))
       }
       // The seed tray along the bay's floor, and its seedlings: they droop in the shade and lift to the light.
       solid(p, ink, weight * 0.7, DUST.wood)

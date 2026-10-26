@@ -84,7 +84,8 @@ export const cornrow = part<RowState>(
       const f = frame(p, k)
       const X = (x: number) => x * k
       const x0 = Math.max(-0.5, f.x0 - 1)
-      const x1 = Math.min(s.length + 1.5, f.x1 + 1)
+      // Out to where its taper has brought it down to nothing: cut short, it ended in a wall with a straight side.
+      const x1 = Math.min(s.length + 3, f.x1 + 1)
       const show = t + s.begin
       // Behind: the field below the bank, a sea of tassels out to the dust.
       cornWall(p, k, ink, weight, { x0, x1, foot: 1 + FLOOR, h: 1.55, t, fill: DUST.husk, seed: 21, taper: [-0.5, s.length + 3] })

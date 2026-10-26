@@ -463,6 +463,11 @@ export const gargantua = part<GargState>(
         const angle = Math.atan2(C[1] - hero.y, C[0] - hero.x)
         return [{ ...hero, stretch: 1 + 0.55 * pull, angle, scale: (hero.scale ?? 1) * (1 - 0.18 * pull) }]
       }
+      // In the room he wears the room's ink, as the room does, from the moment he comes down into the pillow. In the
+      // dark's bone ink, under the room's night, he had read as a ghost for the whole wake, and then his outline and
+      // mark turned dark all at once on the cut to Act II.
+      const home = smooth(t, at(IN_BED) - 0.25, at(IN_BED) + 0.1)
+      if (home > 0) return [{ ...hero, rim: mixHex(VOID.ink, FARM.ink, home) }]
       // Each push is a lean away from us, into the lander and each book.
       const lean = shoveAt(t)
       if (Math.abs(lean) < 0.002) return null

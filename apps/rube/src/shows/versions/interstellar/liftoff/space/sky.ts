@@ -209,10 +209,12 @@ function drawEarth(p: p5, c: Drawn, f: Frame, s: VoidState, gone: number): void 
   ctx.save()
   ctx.translate(X(nx), X(cy - R))
   ctx.rotate(lean)
-  ctx.fillStyle = `rgba(8, 14, 32, ${0.3 * on})`
-  ctx.fillRect(X(-0.7), X(-2), X(0.7), X(2 * R + 4))
-  ctx.fillStyle = `rgba(8, 14, 32, ${0.62 * on})`
-  ctx.fillRect(0, X(-2), X(2 * R + 4), X(2 * R + 4))
+  // One soft ramp from day into night across the dusk: two flat steps of shade read as two seams down the planet.
+  const ng = ctx.createLinearGradient(X(-1.1), 0, X(0.5), 0)
+  ng.addColorStop(0, 'rgba(8, 14, 32, 0)')
+  ng.addColorStop(1, `rgba(8, 14, 32, ${0.62 * on})`)
+  ctx.fillStyle = ng
+  ctx.fillRect(X(-1.1), X(-2), X(2 * R + 5.1), X(2 * R + 4))
   ctx.restore()
   for (const [u, d, h] of towns) {
     const [x, y] = at(u, d)
@@ -235,18 +237,28 @@ function drawEarth(p: p5, c: Drawn, f: Frame, s: VoidState, gone: number): void 
   }
   p.noFill()
   p.strokeCap(p.SQUARE)
-  // (Day, then a step of dusk as wide as the dusk on the ground, then night.)
+  // (Day, dimming through the dusk as the ground does, to night: one stroke each, its light turning with the angle, so
+  // it fades rather than stepping where the dusk begins and ends.)
   const dusk = 0.7 / R
-  const spans: [number, number, number][] = [[th0 - 0.05, term - dusk, 1], [term - dusk, term, 0.6], [term, th1 + 0.05, 0.3]]
+  const TAU = Math.PI * 2
+  const ice = DARK.ice.slice(1).match(/../g)!.map((h) => parseInt(h, 16)).join(', ')
   for (const [dr, wd, a] of [[0.05, 0.1, 0.5], [0.19, 0.16, 0.16]] as [number, number, number][]) {
-    p.strokeWeight(X(wd))
-    for (const [from, to, m] of spans) {
-      const a0 = Math.max(th0 - 0.05, from)
-      const a1 = Math.min(th1 + 0.05, to)
-      if (a1 <= a0) continue
-      p.stroke(alpha(p, DARK.ice, a * m * on))
-      p.arc(X(cx), X(cy), X(2 * (R + dr)), X(2 * (R + dr)), a0, a1)
+    // Stops round the planet's middle, from where the dusk begins on the day side.
+    const from = term - 1.6 * dusk
+    const g = ctx.createConicGradient(from, X(cx), X(cy))
+    const span = 2.3 * dusk
+    for (let i = 0; i <= 8; i++) {
+      const u = i / 8
+      g.addColorStop((u * span) / TAU, `rgba(${ice}, ${a * (1 - 0.7 * smooth(u, 0, 1)) * on})`)
     }
+    // Round the far side of the planet, out of any frame, from night back to day.
+    g.addColorStop((span + 1.8) / TAU, `rgba(${ice}, ${a * 0.3 * on})`)
+    g.addColorStop((TAU - 1.8) / TAU, `rgba(${ice}, ${a * on})`)
+    ctx.strokeStyle = g
+    ctx.lineWidth = X(wd)
+    ctx.beginPath()
+    ctx.arc(X(cx), X(cy), X(R + dr), th0 - 0.05, th1 + 0.05)
+    ctx.stroke()
   }
   p.stroke(alpha(p, DARK.ice, 0.75 * on))
   p.strokeWeight(Math.max(0.8, c.weight * 0.7))

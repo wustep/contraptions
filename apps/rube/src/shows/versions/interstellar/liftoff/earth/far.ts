@@ -517,9 +517,19 @@ export function base(F: Far): void {
   // The service road, and the crews' trucks pulling back down it from the pad, each with its plume of dust.
   {
     const gy = groundOf(F, ROAD)
-    p.stroke(alpha(p, ink, 0.3 * (1 - up)))
-    p.strokeWeight(w * 0.6)
-    p.line(X(f.x0), X(gy + 0.02), X(f.x1), X(gy + 0.02))
+    // A pale strip of graded dirt, soft at its edges: a ruled ink line here ran across the whole base as a seam.
+    {
+      const ctx = p.drawingContext as CanvasRenderingContext2D
+      const road = haze(F, DUST.bone, ROAD)
+      const rgb = [1, 3, 5].map((i) => parseInt(road.slice(i, i + 2), 16)).join(', ')
+      const a = 0.4 * (1 - up)
+      const g = ctx.createLinearGradient(0, X(gy - 0.03), 0, X(gy + 0.07))
+      g.addColorStop(0, `rgba(${rgb}, 0)`)
+      g.addColorStop(0.5, `rgba(${rgb}, ${a})`)
+      g.addColorStop(1, `rgba(${rgb}, 0)`)
+      ctx.fillStyle = g
+      ctx.fillRect(X(f.x0 - 1), X(gy - 0.03), X(f.x1 - f.x0 + 2), X(0.1))
+    }
     for (const cr of CREW) {
       if (t < cr.t0 - 2) continue
       // Off from rest, at its own pace.
