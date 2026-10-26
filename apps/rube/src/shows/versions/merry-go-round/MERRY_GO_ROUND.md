@@ -183,6 +183,10 @@ Wave 2: the mist between the hills' ranges ended at its thickest in a straight l
 the war's return) sat as a lit box in a flat dark void; the dark past its cut ceiling and floor is now the castle's
 own riveted iron, dim, barely seen in a wide frame.
 
+Wave 3, the phone held upright: the moor in front of the castle's collapse (243 → 260) ended in a ruled vertical side
+standing on the screen; past its end it now falls away ever steeper, out of the frame. The flower fields' near rows of
+flowers stopped in a line over a bare slab of green; they now go on down, nearer and bigger, to the frame's foot.
+
 ## Chrome, credits, checks
 
 - In the picker the work is **Merry-Go-Round** and its one take **Opus 5.5**: the Version row hides by itself. No
