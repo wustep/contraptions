@@ -8,6 +8,7 @@ import { dropTime, hop } from '../physics'
 import { DUST, MURPH_SMALL, MURPH_YOUNG } from '../worlds'
 import { cornWall, stalk } from './corn'
 import { drawFence } from './fence'
+import { farLand } from './sky'
 
 /**
  * The truck, and Cooper drives it. It is waiting on the field road under the
@@ -725,6 +726,18 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
     cornWall(p, k, ink, weight, { x0: Math.max(f.x0 - 1, s.b0 + 1.4), x1: wx1, foot: GROUND - 0.1, h: 1.25, t: t + 1, fill: DUST.sage, seed: 32, tassels: false, taper: [s.b0 + 1.4, s.edge - 0.1] })
   }
   drawFlush(p, s, c, t, f)
+  // The road's bank, down to the field past the dam: the dam's face is its end. Without it, once the camera came down
+  // below the road at the dam, the far land's horizon stood lower than the road and under the road was sky, with the
+  // telegraph wires running through it. In the land's own colours, so along the chase it reads as the land did.
+  if (s.edge > f.x0 - 1) {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const g = ctx.createLinearGradient(0, X(GROUND), 0, X(GROUND + 3))
+    g.addColorStop(0, farLand.land[0])
+    g.addColorStop(0.35, farLand.land[1])
+    g.addColorStop(1, farLand.land[2])
+    ctx.fillStyle = g
+    ctx.fillRect(X(f.x0 - 1), X(GROUND), X(s.edge - f.x0 + 1), X(3))
+  }
   // (The bank ends square at the flume's end, the channel's own face: the truck is backed up to it. A slope down to the
   // road ran on under the tailgate and the back wheel.)
   // The road, with the irrigation ditch across it and the dirt lip before it.
@@ -779,11 +792,16 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
     if (x < -1.5 || x > s.edge - 0.2) continue
     p.line(X(x), X(GROUND + 0.08), X(x + 0.14), X(GROUND + 0.08))
   }
-  // The dam: the road stops at a concrete lip, and the face goes down.
-  solid(p, ink, weight, DUST.bone)
-  p.rect(X(s.edge + 0.08), X(GROUND + 1.5), X(0.16), X(3))
-  outline(p, ink, weight * 0.6)
-  for (let y = GROUND + 0.4; y < GROUND + 3; y += 0.5) p.line(X(s.edge), X(y), X(s.edge + 0.16), X(y))
+  // The dam: the road stops at a concrete crest, and the face goes down, leaning out as a dam's downstream face does.
+  // A wall with body, its pours as faint joints: a thin strip ruled every half cell read as a ladder stood on end.
+  const face: Pt[] = [[s.edge, GROUND], [s.edge + 0.22, GROUND], [s.edge + 0.62, GROUND + 3], [s.edge, GROUND + 3]]
+  solid(p, ink, weight, mixHex(DUST.bone, DUST.tin, 0.3))
+  p.beginShape()
+  for (const [x, y] of face) p.vertex(X(x), X(y))
+  p.endShape(p.CLOSE)
+  p.stroke(alpha(p, ink, 0.16))
+  p.strokeWeight(Math.max(1, weight * 0.5))
+  for (let y = GROUND + 0.75; y < GROUND + 3; y += 0.75) p.line(X(s.edge), X(y), X(s.edge + 0.22 + (y - GROUND) * (0.4 / 3)), X(y))
 
   // The fence: two posts and two rails across the field; on the downbeat the grille takes the rails (`fence.ts`).
   drawFence(p, k, ink, weight, s.fence, GROUND, t - FENCE, CHASE_PACE)

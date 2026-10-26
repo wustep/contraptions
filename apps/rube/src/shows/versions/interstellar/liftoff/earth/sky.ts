@@ -25,6 +25,8 @@ export const HORIZON = 1.13
 /** How much of the camera's move the far distance makes, across and up. */
 const FAR_X = 0.22
 const FAR_Y = 0.3
+/** The far land's colours as last drawn, top to foot: for a part's own bank to be the same earth. */
+export const farLand = { land: [DUST.husk, DUST.husk, DUST.husk] }
 /** The top of the cloud: above this, the farm's sky is no longer drawn. */
 export const CLOUD_BASE = -26
 
@@ -61,6 +63,7 @@ export const sky = scenery<SkyState>({
     p.fill(alpha(p, mixHex(day.sun, '#FFFFFF', 0.25), 0.62 * lit + 0.25 * day.warm * (1 - up)))
     p.circle(X(sunX), X(sunY), X(day.sunR * 2))
 
+    farLand.land = day.land
     if (hy > f.y1 + 1) return
     const far: Far = { p, c, ctx, f, hy, day, up }
     // The dust wall on the horizon: a low bank in the morning, a storm towering behind the launch.
