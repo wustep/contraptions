@@ -1006,7 +1006,8 @@ function figure(pen: Pen, f: Figure): void {
   const toSh: Pt = [fr[0] - f.bat[0], fr[1] - f.bat[1]]
   const dl = Math.hypot(toSh[0], toSh[1]) || 1
   const hd: Pt = [toSh[0] / dl, toSh[1] / dl]
-  const hand: Pt = [f.bat[0] + hd[0] * 0.27, f.bat[1] + hd[1] * 0.27]
+  // The hand on the bat's handle, clear of the blade, so the handle shows between them.
+  const hand: Pt = [f.bat[0] + hd[0] * 0.34, f.bat[1] + hd[1] * 0.34]
   const mid = lerpPt(fr, hand, 0.5)
   const elbow: Pt = [mid[0] + 0.1, mid[1] + 0.16]
   path(pen, [fr, elbow], C.white, 7 * s)

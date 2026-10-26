@@ -55,7 +55,6 @@ import {
   CLACK,
   CLUMSY,
   COUNTER,
-  CURB,
   DECK_END,
   DEPTH,
   DOOR_SHUT,
@@ -413,8 +412,10 @@ function figure(pen: Pen, f: Fig): Pt {
   // The near arm, and what it holds.
   const nearS: Pt = [sx + 0.05 * s, shY + 0.1]
   const na = joint(nearS, f.near, 0.62, 0.58, 1)
-  limb(pen, nearS, na.j, 0.16, 0.14, f.coat)
-  limb(pen, na.j, na.h, 0.14, 0.11, f.coat)
+  // A shade under the coat, so an arm across the body reads against it.
+  const sleeve = mix(f.coat, '#000000', 0.14)
+  limb(pen, nearS, na.j, 0.16, 0.14, sleeve)
+  limb(pen, na.j, na.h, 0.14, 0.11, sleeve)
   ellipse(pen, na.h, 0.075, 0.075, f.skin)
   f.holding?.(na.h)
   return head
@@ -1207,7 +1208,7 @@ function player(pen: Pen, t: number): void {
   HEADS.player = head
 }
 
-const HEADS: { player: Pt; bettor: Pt } = { player: [MARK_X - 0.27, FB - 2.93], bettor: [MARK2_X + 0.05, FB - 2.93] }
+const HEADS: { player: Pt; bettor: Pt } = { player: [MARK_X - 0.27, FB - 2.93], bettor: [MARK2_X + 0.05, FB - 0.12 - 2.93] }
 
 /* ------------------------------------------------------------------ the mark who bets, and Wally */
 
@@ -1239,10 +1240,16 @@ function wad(pen: Pen, hand: Pt, n: number): void {
   }
 }
 
+/**
+ * The bettor stands a step back toward the counter, so that over the rack his shoes are clear of the house balls'
+ * tops rather than resting on them.
+ */
+const BY = FB - 0.12
+
 function bettor(pen: Pen, t: number): void {
   // He reaches across to Wally with the raise, and slaps it into his hand.
   const reach = RAISE - 0.32
-  const rest: Pt = [MARK2_X + 0.42, FB - 1.95]
+  const rest: Pt = [MARK2_X + 0.42, BY - 1.95]
   let near: Pt = rest
   let holds = t < RAISE ? 1 : 0
   if (t > reach && t < RAISE + 0.35) {
@@ -1252,16 +1259,16 @@ function bettor(pen: Pen, t: number): void {
   if (t >= RAISE) holds = 0
   // Before the first point, talking it over: the stake pointed at the ball and the table, and back.
   const says = t < NET_HIT ? bettorSays(t) : 0
-  if (says > 0) near = lerp(near, [MARK2_X + 0.8, FB - 2.5 - 0.15 * Math.sin(t * 7)], says)
+  if (says > 0) near = lerp(near, [MARK2_X + 0.8, BY - 2.5 - 0.15 * Math.sin(t * 7)], says)
   // The strike: both hands up to his head.
   const dismay = t > STRIKE ? clamp01((t - STRIKE) / 0.2) * (1 - clamp01((t - HATS - 0.6) / 0.4)) : 0
-  if (dismay > 0) near = lerp(near, [MARK2_X + 0.22, FB - 3.25], dismay)
+  if (dismay > 0) near = lerp(near, [MARK2_X + 0.22, BY - 3.25], dismay)
   const laughing = t > NET_HIT + 0.1 && t < PAN_BACK - 0.2 ? clamp01(Math.min(t - NET_HIT - 0.1, PAN_BACK - 0.2 - t) / 0.2) : 0
   const sore = t > STRIKE ? clamp01((t - STRIKE) / 0.5) : 0
   const lean = -0.04 + 0.08 * sore + watching(t) + shift(t, 2)
   const bob = laughing * 0.04 * Math.abs(Math.sin((t - NET_HIT) * Math.PI * 4)) + 0.012 * Math.sin(t * 1.3 + 1) + 0.025 * says * Math.abs(Math.sin(t * 9))
   // His beer: on the counter by him, then, once the raise is down, a long nervous pull at it through the rally.
-  const mouth: Pt = [MARK2_X + lean + 0.05 + 0.22, FB - 2.93 + bob + 0.1]
+  const mouth: Pt = [MARK2_X + lean + 0.05 + 0.22, BY - 2.93 + bob + 0.1]
   const drink = bettorDrink(t, rest, mouth)
   if (drink.hand) near = drink.hand
   if (!drink.held) {
@@ -1270,7 +1277,7 @@ function bettor(pen: Pen, t: number): void {
   }
   const head = figure(pen, {
     x: MARK2_X,
-    y: FB,
+    y: BY,
     face: 1,
     coat: C.brown,
     trousers: C.brownDark,
@@ -1283,7 +1290,7 @@ function bettor(pen: Pen, t: number): void {
     bob,
     laugh: laughing * (0.5 + 0.5 * Math.abs(Math.sin((t - NET_HIT) * 8))),
     near,
-    far: [MARK2_X - 0.15, FB - 1.6],
+    far: [MARK2_X - 0.15, BY - 1.6],
     rim: C.warm,
     holding: (h) => {
       if (holds) wad(pen, h, 1)
@@ -1330,8 +1337,8 @@ function wally(pen: Pen, t: number): void {
   const sink = w.sink * 1.6
   // His answer, before the first point: a nod, and his free hand opening out.
   const answers = t < NET_HIT && !walking ? wallySays(t) : 0
-  // Behind the cab, only what shows over its body: nothing of him under it.
-  const behind = w.x < CURB
+  // Out of the door he is behind the cab's nose: only what shows over its body, nothing of him under it.
+  const behind = w.x < WALL[0] - 0.02
   const ctx = ctxOf(pen.p)
   if (behind) {
     ctx.save()

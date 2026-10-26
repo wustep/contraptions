@@ -135,6 +135,8 @@ const HAIR = '#2B231D'
 const NEWSPRINT = '#E6E0D0'
 const NAVY = '#27304A'
 const BLOUSE = '#ECE8DC'
+/** Her sleeve, a shade under the jacket, so the arm reads against it. */
+const SLEEVE = '#1A2135'
 
 /** A piece, wound the way a disc is so that pieces of one colour that cross add up and never cut each other. */
 function piece(path: Path2D, pts: Pt[]): void {
@@ -243,12 +245,17 @@ export function drawAisle(pen: Pen, t: number): void {
   const shoulder = turn([sx, F - 1.5 - bob], hip, -0.38 * b)
   const elbow = turn([sx - 0.02, F - 1.17 - bob], hip, -0.25 * b)
   const hands: Pt = turn([sx - 0.12, F - 1.06 - bob], hip, -0.15 * b)
-  piece(navy, [[shoulder[0] - 0.04, shoulder[1]], [shoulder[0] + 0.05, shoulder[1]], [elbow[0] + 0.04, elbow[1]], [elbow[0] - 0.04, elbow[1]]])
-  piece(navy, [[elbow[0] - 0.04, elbow[1] - 0.02], [elbow[0] + 0.04, elbow[1] + 0.02], [hands[0] + 0.02, hands[1] + 0.03], [hands[0] - 0.01, hands[1] - 0.03]])
+  const sleeve = bag()
+  piece(sleeve, [[shoulder[0] - 0.04, shoulder[1]], [shoulder[0] + 0.05, shoulder[1]], [elbow[0] + 0.04, elbow[1]], [elbow[0] - 0.04, elbow[1]]])
+  piece(sleeve, [[elbow[0] - 0.04, elbow[1] - 0.02], [elbow[0] + 0.04, elbow[1] + 0.02], [hands[0] + 0.02, hands[1] + 0.03], [hands[0] - 0.01, hands[1] - 0.03]])
+  // The blouse's cuff at her wrist.
+  const cuff: Pt = [hands[0] + (elbow[0] - hands[0]) * 0.2, hands[1] + (elbow[1] - hands[1]) * 0.2]
+  disc(white, cuff[0], cuff[1], 0.026)
   disc(skin, hands[0], hands[1], 0.032)
   fill(pen, legs, STOCKING, 1)
   fill(pen, shoes, SHOE, 1)
   fill(pen, navy, NAVY, 1)
+  fill(pen, sleeve, SLEEVE, 1)
   fill(pen, white, BLOUSE, 1)
   fill(pen, skin, SKIN, 1)
   fill(pen, hair, HAIR, 1)

@@ -457,3 +457,98 @@ pillow's, and no second in the show is nearly still. In Chrome (headed, 2384 × 
 before and after painted back to back) no frame takes 20 ms: 1.6 ms a frame on average, 3.9 ms at the 95th percentile
 and 8.6 ms at worst, against 1.8, 4.1 and 13.2 before, a difference within the run's noise (London, which this pass did
 not touch, moved as much). The cabin's two people and the ward's thicker snow cost nothing that shows.
+
+## The polish wave
+
+A careful watch for what looks wrong or cheap, in the wide frame and the tall (phone) one, then a timing audit.
+
+- *The alley's door* (136 s): Wally walked out of the alley a step back from the door, so his feet hung in its glass
+  over the step. He now comes forward across the carpet to the sill, goes through on it, and steps down behind the
+  cab's nose into the road. The mark who bets stood with his shoes on the house balls' tops over the rack; he stands a
+  step back toward the counter, clear of them.
+- *Murray's shadow* (51–52.5 s): the arm that comes out over the safe was a plank of even width with no hand. It is a
+  coat sleeve now, bent a little at the elbow and narrowing to the wrist, and a hand whose fingers spread as it comes,
+  in the same shape as the rest of him, so it is no darker where it meets the coat.
+- *The store in a tall frame*: the clutter near the lens stood on a fixed line, so in a phone's frame it floated as dark
+  slabs in the middle of the floor. It stands below the foot of the frame however tall the frame is.
+- *The ward's near things*: the palm, the trolley and the chair close to the lens were drawn at seven tenths, so the
+  bench and the wainscot read through the palm's pot. They are solid, as London's and Tokyo's front rows are.
+- *The finale in a tall frame*: the El's columns ran on down to the foot of a phone's frame, ribbing its lower third.
+  They stand on footings in the near street, which goes dark toward the lens; a wide frame never reaches it.
+
+**Timing.** Every cut is on its downbeat within 17 ms of the measured landmark, and the four story hits land on their
+beats: the dead ball on bar 41, the floor giving on bar 48, the cut to the winner on bar 89, the blind going up on bar
+99. Nothing was retimed.
+
+## Polish wave 2
+
+Another watch from the top, wide and tall, looking for what still reads cheap.
+
+- *The safe's open door* (42–52 s): swung back on its hinges it showed a plain dark slab beside the safe, its inner
+  plate barely a shade off its face and its hinges not drawn, so it read as a second black box. Its inner face now
+  shows the bolt-work the door hid (the lock's case, its three bars out to the bolts, the upright that throws them) on
+  a plate a shade lighter, and the hinge knuckles join it to the safe.
+- *London's bats*: a player's hand was drawn on the blade's very edge, so the handle never showed and Endo's sponge
+  read as a plate held by its rim. The hand now closes on the handle a little way off the blade, and the handle shows
+  between them.
+- *The stewardess* (174–178 s): her arm was the jacket's navy over the jacket, so only her hand showed, floating at her
+  waist. The sleeve is a shade darker than the jacket, with the blouse's cuff at the wrist.
+
+Looked at and left alone: Mishkin leaning out (he goes out through the open window, not the wall), the farmhouse's
+men, the airfield, the alley's hustle.
+
+## Polish wave 3
+
+The phone held upright, and the ward's people.
+
+- *The tall frame*: a stage taller than 16:9 set the composed frame midway, so on a phone each place sat on a slab of
+  bare floor or dark field as tall as itself. Every place stands on a floor or the ground with a ceiling, the stands
+  or the sky over it, so the frame now sits lower (`tall: 0.7`): London's glass roof, Tokyo's upper tiers, the night
+  over New Jersey and the dawn over the finale's roofs, and less floor. The credits, set at the top of the 16:9 box,
+  came down with it onto the roofline; they rise into the dawn sky in a tall frame (`lift`), and a wide one is as it
+  was.
+- *New Jersey's stars* stopped two thirds of the way up the sky, which a tall frame now showed as a bare band over the
+  barn. They go on up, as thick; a wide frame never sees the new ones.
+- *Arms in the ward*: the people seen front on had arms the colour of their coats, so the father asleep on the bench
+  had two hands on his chest and no arms. Their arms are in the coat's shade now, as the folded ones already were.
+- *The corridor's pigeon* strutted on the ledge right over the sleeping father, so it stood on his hat's brim. It keeps
+  to the ledge's far end.
+
+## Polish wave 4
+
+Staging and transitions: every seam a quarter of a second either side, the four story beats frame by frame, and the
+visual hits against the beat.
+
+- *The tub through the floor* (bar 48): the heap of plaster over Mishkin flew up and faded as he burst out, so for a
+  quarter of a second he showed through it like a ghost. Nothing fades now: the heap slumps flat onto the bed as he
+  comes up out of it, its pieces and the laths are thrown off to either side, and they come down on the blanket and
+  lie there.
+
+**Timing.** The store's lamps, the hotel floor's cracks and the finale's rooms all come from the measured beats (the
+first room starts to light on bar 113's downbeat, 240.95 s, and is up within a fifth of a second); the seams open on
+Marty on their downbeats. Looked at and left alone: the six seams, the winning point's cuts, the lost point, the
+finale's last frames.
+
+## Polish wave 5
+
+Detail at full size, at stills set between the earlier waves', for the same faults the last waves found elsewhere.
+
+- *The alley's arms*: everyone in the alley had a near arm the colour of their coat, so the hustler's bat arm vanished
+  into his grey coat and the bat hung at his waist on nothing. The near arm is a shade under the coat now, as in the
+  ward.
+- *Endo's bat in Tokyo* was held by the blade's edge, as London's were before the second wave; his hand closes on the
+  handle a little way off the sponge.
+
+**Measured.** The phone runs of the earlier waves showed sixteen frames over 20 ms and one of about a fifth of a
+second. Timed against the clock, every one falls on the harness's own screenshot, taken every fifteen seconds of a page
+at three times the pixels; between them the show drops none.
+
+## Polish wave 6
+
+A last watch end to end, wide and tall, that found little left to change; the rest is a record of what held.
+
+- *The ward's side-on people* had their near arm in the coat's own colour (the far one was already in its shade), so
+  the orderly's arm was lost in his white coat. The near arm sits between the two now.
+
+Looked at again and kept: the store and the hotel in a tall frame (the tin ceiling and the storeys over his room are
+the extra picture, and read as such), the seams, the four story beats, and the credits wide and tall.

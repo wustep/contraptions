@@ -443,7 +443,8 @@ export function drawEndo(pen: Pen, t: number): void {
   const batC: Pt = bat ?? [shoulder[0] + face * 0.12, shoulder[1] + 1.25]
   const toS: Pt = [shoulder[0] - batC[0], shoulder[1] - batC[1]]
   const ls = Math.hypot(toS[0], toS[1]) || 1
-  const hand: Pt = [batC[0] + (toS[0] / ls) * 0.3, batC[1] + (toS[1] / ls) * 0.3]
+  // His hand on the handle, clear of the blade, so the handle shows between them.
+  const hand: Pt = [batC[0] + (toS[0] / ls) * 0.37, batC[1] + (toS[1] / ls) * 0.37]
   const elbow = ik(shoulder, hand, 0.6, 0.6, face > 0 ? -1 : 1)
   line(pen, shoulder, elbow, tone(C.shirt), 4)
   line(pen, elbow, hand, tone(C.skin), 3)
