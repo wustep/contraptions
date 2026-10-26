@@ -548,6 +548,16 @@ the weakest moments, a phone frame, then the strikes against the cue.
 - Looked at and left: both white-outs and every cut of the visions (her place holds on every one), the starter's
   bucket winding back up (a recoil starter's spring), gravity's turn.
 
+## Polish wave 5
+
+A timing audit and close looks; nothing in the picture changed.
+- **Every strike against the recording**: all 216 land exactly on a measured pulse or onset (0.0 ms off). 27 are on
+  soft pulses (under half the round's 90th percentile): the deck's steps, the mast's lamps a pulse at a time, the hops
+  down the shaft, the visions' small moves, all quiet actions. The one story beat among them, the reunion's touch
+  (195.344), is on one of the stronger pulses left as the pulse thins; only 195.820 is harder, and it stays.
+- Looked at and left: Hannah's run and spring onto the bench, the helicopter's skids onto the pad, the lift through
+  the fog band, the second vision and the crescent, the shaft mouth's lip.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
