@@ -7,7 +7,7 @@ import { floatAt, onShip, type ShipLook } from '../world/ship'
 import { drawArm, drawBody, drawEye, drawRidge, drawRock, handOf, PREY, SPLASH_AT, thrownRock, type GiantLight } from './cyclops/giant'
 import { drawFire, drawIsland, drawSplash, EMBER, FIRELIT, fireAt, INK, openAt } from './cyclops/island'
 import { FLOOR, LEDGE, MOOR, PILLAR, RIDGE, STEP, T, ground } from './cyclops/plan'
-import { carries, drawSheep, FLOCK, REST_X, setCarrying, under } from './cyclops/sheep'
+import { carries, drawSheep, FLOCK, HAND_X, REST_X, setCarrying, under } from './cyclops/sheep'
 import { drawClub, onClub } from './cyclops/stake'
 
 /**
@@ -254,16 +254,31 @@ const island = standing('cyclops-island', region(84, -30, 145, 4, 3), END, (g) =
 const TUCKED: [number, number][] = [0, 1, 2, 3, 4].map((i) => (i === 4 ? [175.75, 179.85] : [175.5 + 0.05 * i, clearsMouth(i)]))
 setCarrying((i, t) => t >= TUCKED[i][0] && t < TUCKED[i][1])
 
+/**
+ * A ewe out on the shelf with no man in its wool: it stands behind the ships lying off the shelf, so it is drawn
+ * before them, and a sail going up is in front of it, never under its feet.
+ */
+const outside = (i: number, t: number): boolean => FLOCK[i].x(t) < HAND_X - 0.5 && !carries(i, t)
+
+const grazing = standing('cyclops-grazing', region(90, -12, 100, 2, 2), END, (g) => {
+  for (let i = FLOCK.length - 1; i >= 0; i--) {
+    if (!outside(i, g.t)) continue
+    drawSheep(g, FLOCK[i], g.t, '#D8D0BD', '#2F2925', INK)
+    drawSheep(g, FLOCK[i], g.t, '#D8D0BD', '#2F2925', INK, true)
+  }
+})
+
 const flock = standing(
   'cyclops-flock',
   region(90, -12, 116, 2, 2),
   END,
   (g) => {
-    for (let i = FLOCK.length - 1; i >= 0; i--) if (!carries(i, g.t)) drawSheep(g, FLOCK[i], g.t, '#D8D0BD', '#2F2925', INK)
+    for (let i = FLOCK.length - 1; i >= 0; i--) if (!carries(i, g.t) && !outside(i, g.t)) drawSheep(g, FLOCK[i], g.t, '#D8D0BD', '#2F2925', INK)
   },
   (g) => {
     const open = openAt(g.t)
     for (let i = FLOCK.length - 1; i >= 0; i--) {
+      if (outside(i, g.t)) continue
       // A ewe with a man in its wool is drawn whole over him; any other, only its near legs over whoever passes.
       if (carries(i, g.t)) drawSheep(g, FLOCK[i], g.t, '#D8D0BD', '#2F2925', INK)
       drawSheep(g, FLOCK[i], g.t, '#D8D0BD', '#2F2925', INK, true)
@@ -362,7 +377,7 @@ export const cyclops: Scene = {
     { t: 184.0, cells: 38, at: [118.2, -16.4] },
     { t: 186.4, cells: 20, off: [2.5, -2.8] },
   ],
-  back: [island],
+  back: [island, grazing],
   mid: [flock],
   front: [throwing],
 }
