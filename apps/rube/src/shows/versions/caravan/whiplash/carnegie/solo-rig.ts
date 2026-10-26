@@ -391,12 +391,14 @@ export function drawTorso(p: p5, c: Ctx, L: Pt, R: Pt, H: Pt, drop: number, slum
   const l = local(L)
   const r = local(R)
   const h = local(H)
-  // The seat: a black cushion under him, on the throne's post (upright, not tilted).
+  // The seat: the throne's post stands on the stage where he sits (it does not fly with him), and a black cushion,
+  // as wide as his waist, comes down under him onto it (upright, not tilted). The cushion was twice his
+  // waist and hung on its post: it flew in as a T, and its end stuck out past the rack tom like a pan's handle.
   p.noStroke()
-  p.fill(HALL_BLACK)
-  p.rect((P[0] - 0.62) * k, (P[1] - 0.03) * k, 1.24 * k, 0.2 * k, 0.09 * k)
   p.fill(mixHex(HALL_BLACK, KIT.chrome, 0.2))
-  p.rect((P[0] - 0.05) * k, (P[1] + 0.15) * k, 0.1 * k, 0.9 * k)
+  p.rect((PIVOT[0] - 0.05) * k, (PIVOT[1] + 0.15) * k, 0.1 * k, 0.9 * k)
+  p.fill(HALL_BLACK)
+  p.rect((P[0] - 0.32) * k, (P[1] - 0.03) * k, 0.64 * k, 0.2 * k, 0.09 * k)
   const right = side(r, h, 1)
   const left = side(l, h, -1)
   ctx.save()
