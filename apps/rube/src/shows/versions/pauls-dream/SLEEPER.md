@@ -209,3 +209,17 @@ by copying their folders.
   found was on the phone: the sun, and the moon that now matches it, were sized by the whole stage's height, so on a
   tall phone they came out two or three times too big, and the moon was cut by the window. Both are now placed and
   sized against the composed 16:9 frame (`sunAt` in `world/desert.ts`). On a desktop nothing moves.
+- **Polish wave.** A fresh watch on desktop and an upright phone for things that look wrong on a careful look, and a
+  timing pass over the cue's great strikes.
+  - The bull's head hung out through the bottom of its Caladan crate, which was smaller than the head. The crate is
+    now one the head fits in, with battens at its ends; the head goes all the way down into it and the lid shuts over
+    its horns. Its chain meets the plaque, where it had stopped short and left the head floating. Leto waits beside the
+    crate, not half behind it.
+  - The Harkonnen ornithopter's hold was a black box standing off the hull. It is now a doorway set into the hull, dark
+    in the hull's own colour, in the seizure and in the desert. Its door shuts as a panel with a seam.
+  - The moon's dark side left a bright sliver at the rim, so the moon looked bitten. It is now a true crescent.
+  - The stilltent's last vision is lowered, so the rider stands at its top over the worm's ribbed back, where it had
+    been mostly pale sky.
+  - Timing: the needle, the lid, the fold, the hook, the breach, the rim, the shield, the tooth, Leto's colour, the
+    storm wall, Jamis's fall, the rider's breach and the last blow were each read 0.1 s either side. All land, so no
+    timing changed.
