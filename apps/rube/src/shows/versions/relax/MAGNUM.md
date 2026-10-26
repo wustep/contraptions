@@ -303,6 +303,13 @@ A careful watch, wide and tall, for what looked wrong or cheap:
 - **The night outside the spa** stopped in hard lines over and under a tall frame, a grey block under the street: it
   goes on above and below.
 
+## Polish wave 6
+
+- **The Center's far hills** were polylines, six straight runs a crown, blended straight from one crown's height to
+  the next: in the close on the model alone they stood as a long straight ramp across the sky with a corner in it.
+  They are eased crown to crown, and the far range has more, smaller crowns, so every framing sees a rolling ridge.
+- Read and left: the four dissolves in 0.15 s steps (no flash), the fling, the steam clearing, and the end to 4:23.
+
 ## Zoolander nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the song.
