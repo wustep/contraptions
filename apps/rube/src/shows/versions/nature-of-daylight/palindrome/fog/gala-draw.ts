@@ -493,11 +493,12 @@ function number(ctx: Ctx, k: number, t: number): void {
     const w = KEY_W * k
     const h = (foot - top) * k
     if (lit > 0.01) {
-      const g = ctx.createRadialGradient(x0 + w / 2, y0 + h / 2, 0, x0 + w / 2, y0 + h / 2, KEY_W * 1.3 * k)
-      g.addColorStop(0, rgba(TENT.keypad, 0.75 * lit * up))
+      // Its light just round it (wider and stronger, a green halo hung in the room, the one glow in the gala).
+      const g = ctx.createRadialGradient(x0 + w / 2, y0 + h / 2, 0, x0 + w / 2, y0 + h / 2, KEY_W * 0.8 * k)
+      g.addColorStop(0, rgba(TENT.keypad, 0.4 * lit * up))
       g.addColorStop(1, rgba(TENT.keypad, 0))
       ctx.fillStyle = g
-      ctx.fillRect(x0 - KEY_W * 1.3 * k + w / 2, y0 - KEY_W * 1.3 * k + h / 2, KEY_W * 2.6 * k, KEY_W * 2.6 * k)
+      ctx.fillRect(x0 - KEY_W * 0.8 * k + w / 2, y0 - KEY_W * 0.8 * k + h / 2, KEY_W * 1.6 * k, KEY_W * 1.6 * k)
     }
     // Bright enough, lit, to catch at speed: fainter, the hand-off was easy to miss.
     ctx.fillStyle = rgba(mix(TENT.keypad, '#FFFFFF', 0.15 + 0.45 * lit), (0.2 + 0.8 * lit) * up)
