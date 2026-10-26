@@ -218,8 +218,6 @@ by copying their folders.
   - The Harkonnen ornithopter's hold was a black box standing off the hull. It is now a doorway set into the hull, dark
     in the hull's own colour, in the seizure and in the desert. Its door shuts as a panel with a seam.
   - The moon's dark side left a bright sliver at the rim, so the moon looked bitten. It is now a true crescent.
-  - The stilltent's last vision is lowered, so the rider stands at its top over the worm's ribbed back, where it had
-    been mostly pale sky.
   - Timing: the needle, the lid, the fold, the hook, the breach, the rim, the shield, the tooth, Leto's colour, the
     storm wall, Jamis's fall, the rider's breach and the last blow were each read 0.1 s either side. All land, so no
     timing changed.
@@ -253,3 +251,12 @@ by copying their folders.
   - The sliding door Jessica waits against through the test was a plain bright slab, the brightest thing in the frame,
     and read as a light. It is now a paper screen in a timber frame like the room's others, its paper a step down.
   - Playing through the worm, the night, the storm and the rider, frames hold at 16.7 ms.
+- **Regret fixes.** A side-by-side watch of the show before and after the polish waves.
+  - The rider's vision in the stilltent goes back up to where it was, clear of Paul and Chani: lowered, it had come down
+    over the tent's arch and onto them, for a little more of the worm's back.
+  - The worm came down on the harvester with its open mouth a flat disc, a lid over it. Coming down, its head now
+    flares into a bell and its lips swing forward as jaws, wide over the harvester, and shut over it as it reaches the
+    sand.
+  - In the basin, from the challenge to the walk, the near sand was a band in front of everyone, cutting their feet off
+    flat. Seen from a little above, they now stand on it, whole; the sand is laid over them only while they come up
+    out of it, and round the boulder's foot.

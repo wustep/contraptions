@@ -6,7 +6,7 @@ import type { Scene } from '../scene'
 import { looking } from '../show'
 import { ground, on } from './fremen/ground'
 import { BASIN_D, airAt, drawBack, drawBasin, drawFront, setSwell, setTilt } from './fremen/land'
-import { DUEL, MEET_LOOKS, ON, SET_OFF, STOPS, TAKEN, THROWN, TURN, WALK_FROM, troop } from './fremen/troop'
+import { DUEL, MEET_LOOKS, ON, RISES, SET_OFF, STOPS, TAKEN, THROWN, TURN, WALK_FROM, troop } from './fremen/troop'
 import { D, INSERT, drawFarWorm, drawNearWorm, drawRopes, riderAt, sign } from './fremen/worm'
 
 /**
@@ -19,6 +19,9 @@ import { D, INSERT, drawFarWorm, drawNearWorm, drawRopes, riderAt, sign } from '
 
 const [FROM, TO] = WINDOWS.fremen
 const people = troop()
+
+/** Whether the camera is down in the basin: not in the dream shot, not after the walk begins. */
+const inBasin = (t: number): boolean => t < 338.15 || (t >= DUEL.challenge && t < WALK_FROM)
 
 /**
  * The dream shot: Chani at about 60% across and 55% down (where the Caladan dream's opening is), the horizon well under
@@ -132,15 +135,16 @@ export const fremen: Scene = {
   pieces: [
     standing('fremen-land', { x0: 1000, y0: -400, x1: 1560, y1: 60 }, (g) => {
       if (g.t < FROM - 1e-6) return
-      // The dune behind the basin only while the camera is down in it: not in the dream shot, not after the walk begins.
-      const basin = g.t < 338.15 || (g.t >= DUEL.challenge && g.t < WALK_FROM)
+      // The dune behind the basin only while the camera is down in it; there, seen from a little above, they stand on the
+      // sand: it is under them.
+      const basin = inBasin(g.t)
       // The far worm just behind its own range, so it goes down into that range's sand along the crest, not at a line.
       const worm: [number, typeof drawFarWorm] = [D + 1, drawFarWorm]
-      drawBack(g, basin ? [worm, [BASIN_D, drawBasin]] : [worm])
+      drawBack(g, basin ? [worm, [BASIN_D, drawBasin]] : [worm], basin)
       drawNearWorm(g, airAt(g.t))
     }, (g) => {
       if (g.t < FROM - 1e-6) return
-      drawFront(g)
+      drawFront(g, inBasin(g.t), RISES)
       kicked(g)
       drawRopes(g)
     }),

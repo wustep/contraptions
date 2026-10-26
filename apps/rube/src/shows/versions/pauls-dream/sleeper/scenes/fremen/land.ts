@@ -1,3 +1,4 @@
+import { R } from '../../../../../../parts'
 import { blob, cover, drift, fill, hash, mix, rgba, smooth, vgrad, type Paint, type Pt, type View } from '../../paint'
 import { between, crest, hazeAt, type Air, type Range } from '../../world/desert'
 import { HARKONNEN, drawThopter, drawThopterOver, thopterLook, type ThopterPose } from '../../craft/thopter'
@@ -346,15 +347,19 @@ export function drawBasin(g: Paint, air: Air): void {
   }
   ctx.lineTo(L.x(xb), foot)
   ctx.closePath()
-  // Darkest low on its face, and at its foot halfway back toward the floor's own light, so where it meets the floor
-  // of the basin is a soft change and not a ruled line.
+  // Darkest low on its face, and at its foot halfway back toward the floor's own light; below that, the basin's floor
+  // coming toward us, all the way to the floor's own light where they stand, so the sand under them is one surface and
+  // there is no line at their feet.
   const floor = mix(air.sand, '#FFFFFF', 0.05)
-  fill(ctx, vgrad(ctx, top, L.y(0), [[0, lit], [0.7, dark], [1, mix(dark, floor, 0.5)]]))
+  const near = Math.max(L.y(0) + 0.5, 0)
+  const k = (L.y(0) - top) / (near - top)
+  fill(ctx, vgrad(ctx, top, near, [[0, lit], [0.7 * k, dark], [k, mix(dark, floor, 0.5)], [1, floor]]))
 }
 
 /** Everything behind the people, far to near: the sky and sun, the erg and the jebels in depth order, `extra` things
- * standing out there at their own depths (the worm), the thopter. */
-export function drawBack(g: Paint, extra: [number, (g: Paint, air: Air) => void][] = []): void {
+ * standing out there at their own depths (the worm), the thopter. With `floor`, the near sand too, under the people, so
+ * they stand on it (the basin, seen from a little above): it is never a band across their feet. */
+export function drawBack(g: Paint, extra: [number, (g: Paint, air: Air) => void][] = [], floor = false): void {
   const air = airAt(g.t)
   drawSky(g, air)
   const layers: [number, () => void][] = [
@@ -364,15 +369,34 @@ export function drawBack(g: Paint, extra: [number, (g: Paint, air: Air) => void]
   ]
   layers.sort((a, b) => b[0] - a[0])
   for (const [, fn] of layers) fn()
+  if (floor) drawSand(g, air)
   drawThopter(g, THOPTER, LANDED)
 }
 
-/** Everything in front of them: the thopter's glass, the near sand, the boulders. */
-export function drawFront(g: Paint): void {
+/**
+ * Everything in front of them: the thopter's glass, the near sand, the boulders. With `floor` (the near sand already
+ * under them), the sand is laid over them again only where something is still in it: at `rises` ([x, size, up]),
+ * someone coming up out of it until they are up, and round the boulders' feet. The same sand, so no seam shows.
+ */
+export function drawFront(g: Paint, floor = false, rises: [number, number, number][] = []): void {
   const air = airAt(g.t)
+  const ctx = g.ctx
   drawThopterOver(g, THOPTER, LANDED)
   // The boulders before the sand, so their feet are in it and never seen.
   drawBoulders(g, air)
-  drawSand(g, air)
+  if (floor) {
+    ctx.save()
+    ctx.beginPath()
+    const bottom = g.view.y1 + 1
+    for (const [x, size, up] of rises) {
+      if (g.t >= up) continue
+      const half = R * size * 1.3
+      ctx.rect(x - half, ground(x) - 0.02, 2 * half, bottom - ground(x))
+    }
+    for (const [x, w] of BOULDERS) ctx.rect(x - w / 2 - 0.1, ground(x) - 0.3, w + 0.2, bottom - ground(x) + 0.3)
+    ctx.clip()
+    drawSand(g, air)
+    ctx.restore()
+  } else drawSand(g, air)
   drawWind(g, air)
 }
