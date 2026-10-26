@@ -121,16 +121,17 @@ function drawSprays(ctx: C2D, k: number, t: number): void {
     if (u < 0 || u > 1.3) continue
     const grow = 1 - Math.exp(-u / 0.25)
     const fade = Math.exp(-u / 0.45) * (1 - clamp01((u - 1.0) / 0.3))
-    // A few soft lobes, thrown the way the skis threw them, settling.
+    // A few soft lobes, thrown the way the skis threw them, low along the snow, settling (risen round the ball and as
+    // big as it, a landing read as a white glow round whoever landed, plainest under Zoom).
     for (let i = 0; i < 4; i++) {
       const spread = s.dir === null ? (i / 4) * TAU : s.dir + (i - 1.5) * 0.35
       const reach = s.size * (0.25 + 0.55 * grow) * (0.6 + 0.4 * hash(i, Math.round(s.t * 10), 5))
       const x = s.at[0] + Math.cos(spread) * reach * (s.dir === null ? 0.8 : 1)
-      const y = s.at[1] - 0.15 * s.size * grow + Math.sin(spread) * reach * 0.35 + u * u * 0.3
-      const r = s.size * (0.22 + 0.4 * grow)
+      const y = s.at[1] - 0.05 * s.size * grow + Math.sin(spread) * reach * 0.2 + u * u * 0.3
+      const r = s.size * (0.14 + 0.26 * grow)
       const g = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, r * k)
-      g.addColorStop(0, rgba(SNOW.snow, 0.75 * fade))
-      g.addColorStop(0.5, rgba(SNOW.snow, 0.35 * fade))
+      g.addColorStop(0, rgba(SNOW.snow, 0.55 * fade))
+      g.addColorStop(0.5, rgba(SNOW.snow, 0.25 * fade))
       g.addColorStop(1, rgba(SNOW.snow, 0))
       ctx.fillStyle = g
       ctx.fillRect((x - r) * k, (y - r) * k, 2 * r * k, 2 * r * k)

@@ -653,6 +653,14 @@ Round 1:
 - **The glass door onto the garden, open** (251 to 255): its glass was so faint that, swung out, it was a wooden frame
   with two bars across it, a ladder leaning on the house. Its glass is tinted now, a glazed door.
 
+Round 2 (a tall frame, Zoom and Overview):
+- **The ground under the rain street** (69 to 92, in a tall frame): half the picture, it was flat dark earth ruled with
+  evenly spaced pale strata, a striped slab. It lies in soft bands now, darker going down, as under the house and the
+  runway.
+- **The powder off a landing** (123 to 140, plainest under Zoom): its soft lobes rose round the skier and were as big
+  as the ball, so a landing read as a white glow round whoever landed. They stay low along the snow, smaller and
+  fainter, thrown from the skis.
+
 ## Inception nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
