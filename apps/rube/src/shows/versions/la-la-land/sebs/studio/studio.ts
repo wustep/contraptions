@@ -68,7 +68,7 @@ export function clothDrop(t: number): number {
 /** The cloth's extent, in this frame (landed). */
 const CLOTH_X0 = -9
 const CLOTH_X1 = 44
-const CLOTH_TOP = -19
+const CLOTH_TOP = -40
 
 /** The painted mountain the sign stands on, in the Hollywood part's frame (x from its door), landed. */
 const H = (x: number) => x + EXIT[0]
@@ -653,12 +653,12 @@ function drawFloor(p: p5, c: Ctx, t: number): void {
   ctx.fillRect(X(k, x0), X(k, front), X(k, x1 - x0), X(k, 0.8))
   ctx.restore()
   // Once the colour has come, the stage face below the painted street goes to the dark of the house, so the number
-  // is framed by night and not by a strip of studio paper.
+  // is framed by night and not by a strip of studio paper. It goes down all at once, as house lights do: swept out
+  // from the door with the paint, it was a hard dark column crossing half a phone's tall frame.
   if (reach > 0) {
     const face = mixHex(M.skyTop, ink, 0.62)
     const bottom = Math.max(f.y1 + 1, front + 1)
-    const tint = (col: string) => (col === white ? M.paper : face)
-    for (const [a, b, from, to] of bands) if (b > a && (from !== white || to !== white)) fill(a, b, front, bottom, tint(from), tint(to))
+    fill(x0, x1, front, bottom, mixHex(M.paper, face, smooth(t, BURST, BURST + 0.4)), mixHex(M.paper, face, smooth(t, BURST, BURST + 0.4)))
   }
   outline(p, ink, weight * 0.7)
   p.line(X(k, x0), X(k, front), X(k, x1), X(k, front))

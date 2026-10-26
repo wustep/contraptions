@@ -11,9 +11,6 @@ import { APEX, LIFT, POLE, scatter, skyAngle, UPSTAGE } from './painted-waltz'
  * - The cove: round the foot of the dome, the city's skyline in silhouette, as Griffith's planetarium has it: the
  *   hills, the towers downtown, palms, and the observatory on its own hill. It stands on the horizon behind painted
  *   Paris, so when the painted roofs fly out it is what was behind them.
- * - The seats: the front row, near, along the foot of the picture, coming up through the floor in a wave out from the
- *   projector once they have pushed off, and sliding by faster than the room as the camera moves. Empty: the two of
- *   them are alone in it.
  * - What the projector throws besides the stars: two planets on their slow paths, a ringed one and a red one, turning
  *   with the sky.
  */
@@ -23,8 +20,6 @@ const rot = (q: Pt, a: number): Pt => [q[0] * Math.cos(a) - q[1] * Math.sin(a), 
 
 /** The silhouettes' ink: darker than the night at the horizon, so they read against its glow. */
 const SIL = '#080C27'
-/** The projected sky's light on the tops of things. */
-const RIM = '#5A78D8'
 
 /* ------------------------------------------------------------------ the cove */
 
@@ -151,69 +146,6 @@ export function drawCove(p: p5, k: number, T: number, shown: number, mirror: boo
   coveShape(ctx, T, mirror, f.x0, f.x1)
   ctx.fillStyle = mirror ? mixHex(SIL, NIGHT_MAT.cobalt, 0.25) : SIL
   ctx.fill('nonzero')
-  ctx.restore()
-}
-
-/* ------------------------------------------------------------------ the seats */
-
-/** When the seat at `x` has come up through the floor: once they have pushed off, in a wave out from the projector. */
-function seatRisen(T: number, x: number): number {
-  const a = LIFT + 0.3 + 1.1 * Math.min(1, Math.abs(x - 11) / 9)
-  return smooth(T, a, a + 1.2)
-}
-
-/**
- * The front row: near, so larger, and sliding past faster than the room as the camera moves (half as far again
- * across, a third again up and down), along the foot of the picture, with an aisle down the middle where the two of
- * them pushed off and the projector stands. Seen from behind, each seat is a tall back with a rounded head, an arm
- * lower between each two; the projected sky's light lies along their tops. Drawn over the balls: it is between us
- * and them.
- */
-const NEAR = { top: 0.5, back: 0.44, gap: 0.62, aisle: [8.35, 12.35] as [number, number], par: [1.45, 1.3] as [number, number], ref: [10.25, -1.8] as Pt }
-export function drawNearSeats(p: p5, k: number, T: number): void {
-  if (T < LIFT + 0.3) return
-  const f = frame(p, k)
-  const dx = -(f.cx - NEAR.ref[0]) * (NEAR.par[0] - 1)
-  const dy = -(f.cy - NEAR.ref[1]) * (NEAR.par[1] - 1)
-  if (NEAR.top + dy > f.y1 + 0.05) return
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  const bottom = f.y1 + 1
-  const body = new Path2D()
-  const rims = new Path2D()
-  const n0 = Math.floor((f.x0 - dx - 1) / NEAR.gap)
-  const n1 = Math.ceil((f.x1 - dx + 1) / NEAR.gap)
-  for (let n = n0; n <= n1; n++) {
-    const cx = n * NEAR.gap + NEAR.gap / 2
-    if (cx > NEAR.aisle[0] && cx < NEAR.aisle[1]) continue
-    const up = seatRisen(T, cx)
-    if (up <= 0.002) continue
-    // The row curves round the room: further from the middle, a little nearer us and lower in the picture.
-    const top = NEAR.top + dy + 0.012 * (cx - 10.3) ** 2 + (1 - up) * 1.6
-    const x = cx + dx
-    const hw = NEAR.back / 2
-    const lean = 0.04
-    const head = 0.2
-    // The back: straight sides up to a rounded head, leaning back a little.
-    body.moveTo(x - hw, bottom)
-    body.lineTo(x - hw + lean * 0.5, top + head)
-    body.bezierCurveTo(x - hw + lean * 0.5, top + 0.02, x - hw * 0.4 + lean, top - 0.012, x + lean, top - 0.012)
-    body.bezierCurveTo(x + hw * 0.4 + lean, top - 0.012, x + hw + lean * 0.5, top + 0.02, x + hw + lean * 0.5, top + head)
-    body.lineTo(x + hw, bottom)
-    body.closePath()
-    // The arm on its right, low, unless the aisle is there.
-    const ax = cx + NEAR.gap / 2
-    if (!(ax > NEAR.aisle[0] - 0.01 && ax < NEAR.aisle[1] + 0.01)) body.rect(x + hw - 0.02, top + 0.42, NEAR.gap - NEAR.back + 0.04, bottom - top - 0.42)
-    rims.moveTo(x - hw * 0.72 + lean * 0.6, top + 0.07)
-    rims.bezierCurveTo(x - hw * 0.4 + lean, top + 0.004, x + hw * 0.4 + lean, top + 0.004, x + hw * 0.72 + lean * 0.6, top + 0.07)
-  }
-  ctx.save()
-  ctx.scale(k, k)
-  ctx.fillStyle = '#05081B'
-  ctx.fill(body)
-  ctx.strokeStyle = rgba(RIM, 0.75)
-  ctx.lineWidth = Math.max(1.2 / k, 0.016)
-  ctx.lineCap = 'round'
-  ctx.stroke(rims)
   ctx.restore()
 }
 

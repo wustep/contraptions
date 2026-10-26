@@ -57,11 +57,14 @@ const COUNT = [0, 1, 2, 3].map((i) => BAND - 0.4515 * (4 - i))
 /** Where the two of them go out of shot, and are let go. */
 const GONE = 467.55
 
-/** Her nod: the ball dips, squashed on the floor, and comes back up; deep enough to read in her close shot. */
+/**
+ * Her nod: the ball dips, a little squashed on the floor, and comes back up. Her close shot is near enough that a
+ * small dip reads; a deep one flattened her into a blob, a sigh and not a smile.
+ */
 function nodded([x, y]: Pt, t: number) {
   const u = (t - NOD_MIA) / 0.58
   const n = u <= 0 || u >= 1 ? 0 : Math.sin(Math.PI * Math.pow(u, 0.7))
-  return n ? { x, y: y + R * 0.3 * n, stretch: 1 - 0.3 * n, angle: Math.PI / 2 } : { x, y }
+  return n ? { x, y: y + R * 0.15 * n, stretch: 1 - 0.15 * n, angle: Math.PI / 2 } : { x, y }
 }
 
 /** A close shot held on `at` from `a` to `b`: a cut in (the key a frame after the last one), a slow push, and out at `b`. */
@@ -332,10 +335,11 @@ export const finale = part<FinaleState>(
     ...closeOn(CUTS.nod, CUTS.out, F([keyRest(LAST_KEY)[0] - 0.05, -0.2]), 1.75),
     // Out to her going: the doorway, her on its threshold and David waiting on the pavement beyond.
     { t: CUTS.out, cells: 4.2, hold: F([-12.4, 2.05]) },
-    // After her to the door, out; the door swings shut. Back across the empty room to him, the band's lamps behind him.
+    // After her to the door, out; the door swings shut. Back across the empty room to him, the band's lamps behind him,
+    // at the pace of the show's other moves (it had been the fastest in it, 0.78 frame widths a second).
     { t: 466.9, cells: 4.6, hold: F([-11.3, 1.45]) },
-    { t: 468.3, cells: 4.6, hold: F([-11.5, 1.45]) },
-    { t: 469.8, cells: 7, hold: F([-2.5, 0.8]) },
+    { t: 468.2, cells: 4.8, hold: F([-11.4, 1.45]) },
+    { t: 470.1, cells: 7.2, hold: F([-3.0, 0.8]) },
     // Him at the keys and the whole bandstand beside him, the piano left of centre and the band right of it, so the lamps come up in the frame as he looks back
     // at the door; and closer still on him for the count-in, his nods to the band.
     { t: 472.0, cells: 7.6, hold: F([6.0, 0.5]) },
