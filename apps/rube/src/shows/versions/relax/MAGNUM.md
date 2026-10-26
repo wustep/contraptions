@@ -261,7 +261,6 @@ A careful watch, wide and tall, for what looked wrong or cheap:
 - **Derelicte's press** read as a row of bottles with caps: the crowd is one mass filled down from its top edge, so a
   flash gun's head on its thin stem became a solid column the width of the head. The guns are drawn on their own over
   the mass now, a stem and a head, and the photographers read as photographers.
-- **The spa's robes** hung from a brass stub that pointed up into the air: each hangs by its loop on a wall hook.
 - **The candles' shine on the spa's floor** was a dim half-disc with an edge: a soft streak down the gloss.
 - **The Center's trees** had trunks the leaves' green, so the old tree read as a painted pole: bark, grey-brown, with a
   little flare at the root.
