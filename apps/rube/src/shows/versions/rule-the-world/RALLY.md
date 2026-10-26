@@ -528,3 +528,17 @@ visual hits against the beat.
 first room starts to light on bar 113's downbeat, 240.95 s, and is up within a fifth of a second); the seams open on
 Marty on their downbeats. Looked at and left alone: the six seams, the winning point's cuts, the lost point, the
 finale's last frames.
+
+## Polish wave 5
+
+Detail at full size, at stills set between the earlier waves', for the same faults the last waves found elsewhere.
+
+- *The alley's arms*: everyone in the alley had a near arm the colour of their coat, so the hustler's bat arm vanished
+  into his grey coat and the bat hung at his waist on nothing. The near arm is a shade under the coat now, as in the
+  ward.
+- *Endo's bat in Tokyo* was held by the blade's edge, as London's were before the second wave; his hand closes on the
+  handle a little way off the sponge.
+
+**Measured.** The phone runs of the earlier waves showed sixteen frames over 20 ms and one of about a fifth of a
+second. Timed against the clock, every one falls on the harness's own screenshot, taken every fifteen seconds of a page
+at three times the pixels; between them the show drops none.
