@@ -1,6 +1,6 @@
 import { R } from '../../../../../../parts'
 import { FREMEN, FREMEN_RIM } from '../../cast'
-import { circle, clamp01, hash, smooth, type Brush } from '../../paint'
+import { circle, clamp01, hash, noise1, smooth, type Brush, type Pt } from '../../paint'
 import { paintBody, paintMouth, SKIN } from '../../world/worm'
 import { paintPuff } from './dust'
 import { B, LEAD, SECOND, THIRD, ground, mouthOpen, rearing, wormAt, wormOn, type WormBody, type WormSpec } from './plan'
@@ -101,15 +101,31 @@ function paintPour(b: Brush): void {
     if (y > -0.4) continue
     const half = 0.5 + 0.35 * hash(s, 3)
     const drift = -0.6 - 0.5 * hash(s, 4)
+    // Necking as it falls and spreading where it lands, its edges wavering downward, so it reads as sand falling and not
+    // as a pale ruled strip from the belly to the floor.
+    const m = 14
+    const edge = (sgn: number): Pt[] => {
+      const pts: Pt[] = []
+      for (let j = 0; j <= m; j++) {
+        const u = j / m
+        const yy = y + (0.2 - y) * u
+        const hw = half * (1 - 0.6 * u + 0.8 * u * u * u) * (1 + 0.35 * noise1((yy - 10 * t) * 0.25, s * 3 + sgn))
+        pts.push([x + drift * u * u + sgn * hw, yy])
+      }
+      return pts
+    }
+    const l = edge(-1)
+    const r = edge(1)
     ctx.beginPath()
-    ctx.moveTo(x - half, y)
-    ctx.lineTo(x + half, y)
-    ctx.lineTo(x + half * 0.45 + drift, 0.2)
-    ctx.lineTo(x - half * 0.45 + drift, 0.2)
+    ctx.moveTo(l[0][0], l[0][1])
+    for (const p of l) ctx.lineTo(p[0], p[1])
+    for (let j = m; j >= 0; j--) ctx.lineTo(r[j][0], r[j][1])
     ctx.closePath()
     const gr = ctx.createLinearGradient(0, y, 0, 0.2)
-    gr.addColorStop(0, b.ca(color, 0.75 * a))
-    gr.addColorStop(1, b.ca(color, 0.18 * a))
+    gr.addColorStop(0, b.ca(color, 0.3 * a))
+    gr.addColorStop(0.08, b.ca(color, 0.7 * a))
+    gr.addColorStop(0.5, b.ca(color, 0.35 * a))
+    gr.addColorStop(1, b.ca(color, 0.1 * a))
     ctx.fillStyle = gr
     ctx.fill()
   }
