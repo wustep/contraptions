@@ -255,6 +255,61 @@ A second look, the same way:
   beyond, a shade apart. Under the credits the kids at the lit sills drift on their own slow clocks, each inside its
   pane, looking the way they go.
 
+## The polish wave (October 2026)
+
+A careful watch, wide and tall, for what looked wrong or cheap:
+- **Derelicte's press** read as a row of bottles with caps: the crowd is one mass filled down from its top edge, so a
+  flash gun's head on its thin stem became a solid column the width of the head. The guns are drawn on their own over
+  the mass now, a stem and a head, and the photographers read as photographers.
+- **The spa's robes** hung from a brass stub that pointed up into the air: each hangs by its loop on a wall hook.
+- **The candles' shine on the spa's floor** was a dim half-disc with an edge: a soft streak down the gloss.
+- **The Center's trees** had trunks the leaves' green, so the old tree read as a painted pole: bark, grey-brown, with a
+  little flare at the root.
+- **The awards' front row**, in a tall frame, showed hairlines of the house between bodies all the way down: below the
+  shoulders the row is one mass.
+- The landmarks were read a tenth of a second either side (Blue Steel, the drums, the four cuts, the call, the title,
+  the wash, the plug, Magnum, the band back, the last hit): all land, so no timing changed.
+
+## Polish wave 2
+
+- **Derelicte in a tall frame**: the riser crowd and the floor crowd each dropped to the foot of the screen in a sheer
+  black edge, with the bare floor running down between them. A nearer row of the house, under the frame's foot in a
+  wide frame, now carries on toward us in a tall one.
+- **The walk-off in a tall frame**: the near crowd ended in a ragged line halfway down the screen, and the slab over
+  the ceiling was a flat grey lid. The crowd runs to the frame's foot, and the slab, lit only from below, falls away
+  into the dark.
+- **The photographer outside the spa** was a black post with a camera on it: a man in a coat, on two legs.
+
+## Polish wave 3
+
+- **The spa's target**, knocked down on the call, went over sideways and lay level on its post top in the air: a little
+  table. It comes down on a brass catch on a short arm off the post, a little past level, so it lies knocked out on
+  something. Derek still comes down clear past its tip.
+- **The steam over the rig** was the brightest mass in the show, so thick the machine was gone under it: each billow is
+  a quarter thinner, and the console, the horn and the recliner's foot read through it until it clears.
+
+## Polish wave 4
+
+- **The walk-off crowd's rim** was two offset copies of every head and arm above it, a ghost echo in a close frame:
+  half as deep, a line of light on the edges that face it.
+- Read and left: the credits on a phone (every card legible over the dusk, clear of the building), the call and
+  answer (they hop in turn), the three stomps on their calls.
+
+## Polish wave 5
+
+- **Into the booth**, Hansel's last hop off the rails went up through the deck's boards. The deck has a trap over the
+  left bay: his head lifts its lid as he comes through, it stands open while he lands, and it falls shut behind him
+  on the next beat (beat 345), well before he rolls back along the deck to the bucket.
+- **The night outside the spa** stopped in hard lines over and under a tall frame, a grey block under the street: it
+  goes on above and below.
+
+## Polish wave 6
+
+- **The Center's far hills** were polylines, six straight runs a crown, blended straight from one crown's height to
+  the next: in the close on the model alone they stood as a long straight ramp across the sky with a corner in it.
+  They are eased crown to crown, and the far range has more, smaller crowns, so every framing sees a rolling ridge.
+- Read and left: the four dissolves in 0.15 s steps (no flash), the fling, the steam clearing, and the end to 4:23.
+
 ## Zoolander nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the song.

@@ -222,6 +222,14 @@ export const HIT_OFF: Pt[] = [
   [0.0, 0.08],
   [0.0, 0.0],
 ]
+/** How far over the target lies when knocked down, resting on the catch on its post (radians from upright). */
+export const TARGET_DOWN = Math.PI / 2 + 0.2
+/** The catch it comes down on: a brass stop on a short arm off the post, just under the board's root. */
+export const CATCH: Pt = (() => {
+  const along: Pt = [Math.sin(TARGET_DOWN), -Math.cos(TARGET_DOWN)]
+  const under: Pt = [Math.cos(TARGET_DOWN), Math.sin(TARGET_DOWN)]
+  return [HINGE[0] + 0.3 * along[0] + 0.0 * under[0], HINGE[1] + 0.3 * along[1] + 0.0 * under[1]]
+})()
 /** The return chute: his centre along it, from the recliner's foot up to under the target. */
 export const CHUTE = { x0: P[0] + 0.1, y0: 0.12, x1: XT - 0.32, y1: -0.3 }
 export function chuteY(x: number): number {
@@ -298,8 +306,9 @@ export function targetTip(t: number): number {
     a += size[i] * Math.exp(-u / 0.28) * Math.sin(u * 16) * (u < 0.1 ? 1 : 1)
   })
   if (t >= HIT4) {
-    // Knocked over: it goes back under the blow, gathering, and slams flat on the loud off-beat after; one bounce.
-    const flat = Math.PI / 2 - 0.02
+    // Knocked over: it goes back under the blow, gathering, and slams down on its catch on the loud off-beat after,
+    // a little past level (a board lying level on a post is a table); one bounce.
+    const flat = TARGET_DOWN
     if (t < FLAT) {
       const u = (t - HIT4) / (FLAT - HIT4)
       return flat * (0.35 * u + 0.65 * u * u)

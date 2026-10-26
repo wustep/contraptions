@@ -34,6 +34,8 @@ import {
   RAIL_Y,
   RIG,
   SKIRT,
+  HATCH,
+  hatchOpen,
   SPK,
   SUB,
   SUB_X,
@@ -343,10 +345,22 @@ function drawDeck(d: Draw, on: number): void {
   const { p } = d
   // The rail behind the gear, and the deck's boards.
   tube(d, [X0, RAIL_Y], [X1, RAIL_Y])
-  box(d, BX0, DECK, BX1, DECK + 0.1, BOARD_C, 0.55)
-  p.noStroke()
-  p.fill(lit(d, BOARD_C, mixHex(BOARD_TOP, DERELICTE.spot, 0.45 * on)))
-  p.rect(X(d, BX0 + 0.01), X(d, DECK + 0.005), X(d, BX1 - BX0 - 0.02), Math.max(1, X(d, 0.024)))
+  // Either side of the trap over the left bay, and its lid, which he lifts coming up into the booth and which falls
+  // shut behind him.
+  const board = (a: number, b: number) => {
+    box(d, a, DECK, b, DECK + 0.1, BOARD_C, 0.55)
+    p.noStroke()
+    p.fill(lit(d, BOARD_C, mixHex(BOARD_TOP, DERELICTE.spot, 0.45 * on)))
+    p.rect(X(d, a + 0.01), X(d, DECK + 0.005), X(d, b - a - 0.02), Math.max(1, X(d, 0.024)))
+  }
+  board(BX0, HATCH.x0)
+  board(HATCH.x1, BX1)
+  p.push()
+  p.translate(X(d, HATCH.x0), X(d, DECK))
+  p.rotate(-hatchOpen(d.t))
+  p.translate(-X(d, HATCH.x0), -X(d, DECK))
+  board(HATCH.x0, HATCH.x1)
+  p.pop()
 }
 
 /** The power: the box, its socket, and the plug in it while it is in. */
