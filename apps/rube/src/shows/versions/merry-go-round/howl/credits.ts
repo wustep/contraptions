@@ -1,6 +1,6 @@
 import { clamp, easeInOutCubic } from '../../../../../../../src/core/ease'
 import type { TitleCard } from '../../../registry'
-import { frame, scenery } from './kit'
+import { composed, frame, scenery, TALL } from './kit'
 import { CHORD, CREDITS_AT, DURATION } from './music'
 import { mixHex } from '../../../../parts'
 import { CALCIFER, HOWL, MARKL, SOPHIE_SILVER, SOPHIE_YOUNG, TURNIP, WITCH } from './worlds'
@@ -86,10 +86,11 @@ export const LAST_GONE = (() => {
 /** Where a card's top middle sits, as shares of the 16:9 frame: high and a little left, over the sky (the castle walks
  * away low on the right). */
 const AT: [number, number] = [0.4, 0.11]
-/** In a phone's tall frame, how far the cards lift into the sky over the 16:9 box (a share of that extra height): the
+/** In a phone's tall frame, how far the cards lift into the sky over the 16:9 box (a share of half that extra height): the
  * castle sits higher in the tall frame, and the cards' type floor widens them, so left in the box their right-hand
- * lines ran across the castle. */
-const LIFT = 0.6
+ * lines ran across the castle. The box itself is set high (`TALL`); the cards stay where a centred box lifted 0.6 had
+ * them, a fifth of the extra height down from the top. */
+const LIFT = 0.6 + 2 * (TALL - 0.5)
 
 function lightOf(card: Card, t: number): { light: number; rise: number } {
   const since = t - card.at
@@ -124,12 +125,12 @@ export const credits = scenery<null>({
     const { k } = c
     const f = frame(p, k)
     const ctx = p.drawingContext as CanvasRenderingContext2D
-    // The 16:9 box the page sets the words in (as wide as the frame, or as tall; centred): the shade goes under the
-    // words wherever the frame is taller than wide, never in the empty sky over them.
-    const w = Math.min(f.x1 - f.x0, ((f.y1 - f.y0) * 16) / 9)
-    const h = (w * 9) / 16
+    // The 16:9 box the page sets the words in (as wide as the frame, or as tall; set high in a tall one): the shade goes
+    // under the words wherever the frame is taller than wide, never in the empty sky over them.
+    const { h, my } = composed(f)
+    const w = (h * 16) / 9
     const bx = (f.x0 + f.x1) / 2 - w / 2
-    const by = (f.y0 + f.y1) / 2 - h / 2
+    const by = my - h / 2
     const cx = (bx + w * AT[0]) * k
     // (Lifted with the words in a tall frame, as the page lifts them.)
     const cy = (by + h * (AT[1] + 0.13) - LIFT * Math.max(0, (f.y1 - f.y0 - h) / 2)) * k
