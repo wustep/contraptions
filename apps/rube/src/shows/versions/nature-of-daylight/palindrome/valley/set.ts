@@ -299,8 +299,9 @@ function drawLand(ctx: Ctx, k: number, f: Frame, t: number): void {
     silhouette(ctx, k, f, (x) => MEADOW - treeline(x), MEADOW + 0.5, tg, -Infinity, Infinity, CROWNS)
     const close = 1 - smooth(f.y1 - f.y0, 10, 30)
     if (d.sun > 0.01 && close > 0.01) {
-      // Light through the leaves at the crowns' edge, soft into them: a glow, not a drawn line.
-      for (const [w, a] of [[0.025, 0.32], [0.07, 0.2], [0.16, 0.1]] as const) rim(ctx, k, f, (x) => MEADOW - treeline(x), w, rgba(VALLEY.floodlight, a * d.sun * close), CROWNS)
+      // Light through the leaves at the crowns' edge, soft into them, in many faint steps: in three, the deepest
+      // left a second pale line under the crowns, close, and the treeline read as cut out and outlined.
+      for (let i = 1; i <= RIM_STEPS; i++) rim(ctx, k, f, (x) => MEADOW - treeline(x), 0.13 * (i / RIM_STEPS) ** 1.6, rgba(VALLEY.floodlight, (0.42 / RIM_STEPS) * d.sun * close), CROWNS)
     }
   }
   // The meadow toward us: pale in the haze at the valley floor, darker nearer, with the shadows of the cloud on it.
@@ -319,6 +320,8 @@ function drawLand(ctx: Ctx, k: number, f: Frame, t: number): void {
   }
 }
 
+/** How many rims the crowns' edge light is laid in: each faint enough that its lower edge is not a line. */
+const RIM_STEPS = 12
 /** A rim of light along a silhouette's top edge, `w` cells deep. */
 function rim(ctx: Ctx, k: number, f: Frame, yAt: (x: number) => number, w: number, fill: string, corners: number[] = []): void {
   const xs = along(f.x0 - 1, f.x1 + 1, k, corners)
@@ -558,12 +561,13 @@ function drawCamp(ctx: Ctx, k: number, f: Frame, t: number): void {
   for (let i = 1; i < TENTS.length; i++) drawTent(ctx, k, t, i, false)
   drawTruck(ctx, k, t, -21.2, 1)
   drawTruck(ctx, k, t, 34.2, -1)
+  // The decon tent and the helicopter's pad: by the morning after, both have been struck. (The pad's matting, lit by
+  // the low sun at the edge of the reunion's frame, read as a pale seam along the grass.)
+  if (t > 200) return
   // The pad the helicopter comes down over: a square of matting.
   ctx.fillStyle = lit(mix(VALLEY.road, VALLEY.oliveDark, 0.35), t)
   ctx.fillRect(7.9 * k, (MEADOW - 0.02) * k, 3.4 * k, 0.09 * k)
-  // The decon tent: its shadow and flaps under them, its canvas over them while they go through it. By the morning
-  // after, it has been struck.
-  if (t > 200) return
+  // The decon tent: its shadow and flaps under them, its canvas over them while they go through it.
   blob(ctx, k, TENTS[0].x, MEADOW + 0.05, TENTS[0].w * 0.75, 0.22, VALLEY.oliveDark, 0.35, 0.5)
   drawFlaps(ctx, k, t)
   if (!deconOver(t)) drawTent(ctx, k, t, 0, true)
@@ -734,14 +738,26 @@ function drawTheShell(ctx: Ctx, p: p5, k: number, f: Frame, t: number): void {
     // its middle it stood narrow under the wide cut, a T.
     const hw = w / 2
     ctx.globalAlpha *= doors
-    ctx.moveTo((cx - hw) * k, (foot + 0.02) * k)
+    ctx.moveTo((cx - hw) * k, (foot - 0.01) * k)
     ctx.lineTo((cx - hw) * k, (belly - 0.1 - r) * k)
     ctx.quadraticCurveTo((cx - hw) * k, (belly - 0.08) * k, (cx - hw + r) * k, (belly - 0.08) * k)
     ctx.lineTo((cx + hw - r) * k, (belly - 0.08) * k)
     ctx.quadraticCurveTo((cx + hw) * k, (belly - 0.08) * k, (cx + hw) * k, (belly - 0.1 - r) * k)
-    ctx.lineTo((cx + hw) * k, (foot + 0.02) * k)
+    ctx.lineTo((cx + hw) * k, (foot - 0.01) * k)
     ctx.closePath()
     ctx.fill()
+    // The slot's light carried on down the throat, dying toward the belly: stopped at the slot's foot, the lit cut sat
+    // on a flat black block, a hard line across the opening.
+    if (slot.light > 0.01) {
+      const ff = ctx.createLinearGradient(0, foot * k, 0, belly * k)
+      ff.addColorStop(0, rgba(SHELL.fogLit, 0.2 * slot.light))
+      ff.addColorStop(0.55, rgba(SHELL.fogLit, 0.05 * slot.light))
+      ff.addColorStop(1, rgba(SHELL.fogLit, 0))
+      ctx.globalCompositeOperation = 'screen'
+      ctx.fillStyle = ff
+      ctx.fill()
+      ctx.globalCompositeOperation = 'source-over'
+    }
     // Its cut faces: the stone's thickness catching a little of the light inside, down either side.
     const edge = Math.max(0.04, 0.05 * w)
     for (const side of [-1, 1]) {
