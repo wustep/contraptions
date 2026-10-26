@@ -395,14 +395,19 @@ function drawBoulder(g: Paint, t: number): void {
   ctx.restore()
 }
 
-/** The rock's splash: a white column that rises and falls, sheets thrown off it, and a ring spreading on the water. */
+/**
+ * The rock's splash: a column of the sea's own water that rises and falls, sheets thrown off it, and a ring spreading
+ * on the water. Water, not paint: the colour of the light on the sea, a little paler, and seen through, with no ink
+ * round it, so it is never a white tree standing in front of the ships.
+ */
 export function drawSplash(g: Paint, t: number, x: number, at: number): void {
   const s = t - at
   if (s < 0 || s > 3.2) return
   const { ctx } = g
   const sky = skyAt(t)
-  const white = mix('#E6E8E2', sky.low, 0.25)
-  const grey = mix('#B7C2BF', sky.low, 0.2)
+  const water = mix(sky.lit, sky.far, 0.35)
+  const white = mix(water, '#E6E8E2', 0.4)
+  const grey = water
   // The column: up fast, hanging, falling back; its top thrown open into a crown that droops as it falls.
   const rise = smooth(s, 0, 0.55)
   const fall = smooth(s, 0.9, 2.4)
@@ -421,10 +426,8 @@ export function drawSplash(g: Paint, t: number, x: number, at: number): void {
     ctx.quadraticCurveTo(x + crown, -H * 0.95 + droop, x + W * 0.45, -H * 0.86)
     ctx.quadraticCurveTo(x + W * 0.35, -H * 0.5, x + W, 0.1)
     ctx.closePath()
-    ctx.fillStyle = rgba(white, a)
+    ctx.fillStyle = rgba(white, 0.75 * a)
     ctx.fill()
-    ctx.lineJoin = 'round'
-    stroke(g, rgba(INK, 0.45 * a), 1.8)
     // The sheets thrown off its foot, either side.
     for (const side of [-1, 1]) {
       const sx = x + side * (W + 0.8 * rise + 1.2 * fall)
@@ -435,7 +438,7 @@ export function drawSplash(g: Paint, t: number, x: number, at: number): void {
       ctx.quadraticCurveTo(sx, -sh * 1.1, sx + side * 0.6, -sh * 0.2)
       ctx.lineTo(sx + side * 0.25, 0.1)
       ctx.closePath()
-      ctx.fillStyle = rgba(grey, a)
+      ctx.fillStyle = rgba(grey, 0.7 * a)
       ctx.fill()
     }
   }
