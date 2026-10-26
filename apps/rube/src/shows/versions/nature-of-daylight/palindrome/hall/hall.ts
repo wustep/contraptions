@@ -200,11 +200,12 @@ function drawHall(p: p5, k: number, t: number): void {
   ctx.quadraticCurveTo(px(LECTERN.x + LECTERN.w + 0.02), px(lamp[1]), px(lamp[0]), px(lamp[1]))
   ctx.stroke()
   if (lampOn > 0) {
-    const lg = ctx.createRadialGradient(px(lamp[0]), px(lamp[1] + 0.06), 0, px(lamp[0]), px(lamp[1] + 0.06), px(0.7))
-    lg.addColorStop(0, rgba(HALL.lamp, 0.5))
+    // A small pool round the shade and down onto the reading desk, not a halo round the whole podium.
+    const lg = ctx.createRadialGradient(px(lamp[0]), px(lamp[1] + 0.06), 0, px(lamp[0]), px(lamp[1] + 0.06), px(0.4))
+    lg.addColorStop(0, rgba(HALL.lamp, 0.38))
     lg.addColorStop(1, rgba(HALL.lamp, 0))
     ctx.fillStyle = lg
-    ctx.fillRect(px(lamp[0] - 0.7), px(lamp[1] - 0.64), px(1.4), px(1.4))
+    ctx.fillRect(px(lamp[0] - 0.4), px(lamp[1] - 0.34), px(0.8), px(0.8))
   }
   ctx.fillStyle = lampOn > 0 ? mix(HALL.lamp, '#FFFFFF', 0.3) : mix(HALL.wood, HALL.dark, 0.2)
   ctx.beginPath()
@@ -306,11 +307,12 @@ function student(ctx: Ctx, k: number, t: number, s: Student, L: number): void {
   // The phone, held in front, lit: the news.
   const fx = x - r * 0.95
   const fy = s.y + r * 0.35
-  const glow = ctx.createRadialGradient(px(fx), px(fy), 0, px(fx), px(fy), px(0.32))
-  glow.addColorStop(0, rgba(TENT.screenOn, 0.45 * lit * (1 - haze)))
+  // Its light only on the hands and face over it: wider, every row wore a haze of halos.
+  const glow = ctx.createRadialGradient(px(fx), px(fy), 0, px(fx), px(fy), px(0.17))
+  glow.addColorStop(0, rgba(TENT.screenOn, 0.3 * lit * (1 - haze)))
   glow.addColorStop(1, rgba(TENT.screenOn, 0))
   ctx.fillStyle = glow
-  ctx.fillRect(px(fx - 0.32), px(fy - 0.32), px(0.64), px(0.64))
+  ctx.fillRect(px(fx - 0.17), px(fy - 0.17), px(0.34), px(0.34))
   ctx.fillStyle = rgba(mix(TENT.screenOn, '#FFFFFF', 0.4), lit * (1 - 0.4 * haze))
   ctx.fillRect(px(fx - 0.025), px(fy - 0.045), px(0.05), px(0.09))
 }
