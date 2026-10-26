@@ -552,3 +552,10 @@ A last watch end to end, wide and tall, that found little left to change; the re
 
 Looked at again and kept: the store and the hotel in a tall frame (the tin ceiling and the storeys over his room are
 the extra picture, and read as such), the seams, the four story beats, and the credits wide and tall.
+
+## Regret fix
+
+- *The telegraph wires under the credits* (≈4:04–4:16, tall frame): wide, they climb away up to the left over the
+  roofs; on a phone that climb ran straight through the lifted cards, a wire across "Tears for Fears" and the fine
+  print, and the wires stopped short in the sky inside the frame. In a tall frame they now go off level with the
+  pole's cross-arms, sagging under the cards and out past the frame's left edge. Wide is unchanged, pixel for pixel.
