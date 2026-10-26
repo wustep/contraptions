@@ -27,7 +27,7 @@ import {
 } from './painted-waltz'
 import { lampLight } from './stars-sky'
 import { drawPianoFigure } from '../piano-figure'
-import { drawNearSeats, drawPlanets, drawPushRings } from './planetarium'
+import { drawPlanets, drawPushRings } from './planetarium'
 
 /**
  * The stars: the painted Paris flies out, and they are alone on a dark floor
@@ -389,15 +389,6 @@ export const stars = part<StarsState>(
       // Where they push off, the glass takes the step: two rings spread out under them on the dark glass, as their steps
       // did on the wet quay.
       drawPushRings(p, k, T, centre(LIFT)[0])
-      p.pop()
-    },
-    over(p, s, c) {
-      const T = s.begin + c.t
-      if (T < NIGHT_FROM) return
-      p.push()
-      p.translate(-s.o[0] * c.k, -s.o[1] * c.k)
-      // The front row of seats, between us and them.
-      drawNearSeats(p, c.k, T)
       p.pop()
     },
   },
