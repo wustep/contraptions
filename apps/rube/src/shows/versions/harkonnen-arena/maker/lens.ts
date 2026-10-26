@@ -75,15 +75,20 @@ function monotone(ts: number[], vs: number[], cutAfter: boolean[]): (t: number) 
   }
 }
 
-/** A track smoothed over a short window that leans a little ahead: what a tracking shot has the camera on. */
+/**
+ * A track smoothed over a short window that leans a little ahead: what a tracking shot has the camera on. Sampled
+ * finely (every 1/40 s), so where the tracked thing turns sharply, as on a leap, the camera's speed changes smoothly
+ * and not in a staircase of steps a sample apart.
+ */
+const STEADY_N = 32
 export function steady(where: (t: number) => Pt, lead = 0.15, span = 0.8): (t: number) => Pt {
   return (t: number): Pt => {
     let x = 0
     let y = 0
     let sum = 0
-    for (let j = -8; j <= 8; j++) {
-      const s = t + lead + (j / 8) * span
-      const w = 1 - Math.abs(j) / 9
+    for (let j = -STEADY_N; j <= STEADY_N; j++) {
+      const s = t + lead + (j / STEADY_N) * span
+      const w = 1 - Math.abs(j) / (STEADY_N + 1)
       const [px, py] = where(s)
       x += px * w
       y += py * w
