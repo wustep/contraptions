@@ -269,7 +269,8 @@ export function droneAcross(t: number): number | null {
 
 /**
  * The drone, as in the film: a long slender wing high over the field, out of the west at the end of the piano and
- * coming down across the sunset to skim the far rows as the organ gathers, with the pickup on the ground after it. Seen
+ * coming down across the sunset toward the far rows as the organ gathers, with the pickup on the ground after it. It
+ * stays in clear sky over the farm: brought any lower, the wing ended lying across the windpump's vanes. Seen
  * a little from below, so the wing has its chord and its sweep, and in the haze of the distance, paler than the
  * machine's ink: drawn edge on in the ink, it read as a stray length of rail beside the machine's floors.
  */
@@ -280,7 +281,7 @@ export function drone(s: Screen, t: number, hy: number, ink: string, sky: string
   const W = (f * 16) / 9
   const u = (t - DRONE[0]) / (DRONE[1] - DRONE[0])
   const x = cx - W / 2 + across * W
-  const y = hy - (0.46 - 0.4 * smooth(u, 0.15, 1)) * f + 0.006 * f * Math.sin(t * 0.9)
+  const y = hy - (0.46 - 0.34 * smooth(u, 0.15, 1)) * f + 0.006 * f * Math.sin(t * 0.9)
   const span = f * 0.07
   const bank = 0.04 * Math.sin(t * 0.55)
   ctx.save()

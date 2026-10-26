@@ -67,10 +67,12 @@ const NIGHT: Light = {
 
 /**
  * The night has its own arc, as the afternoon had the sun's: the moon climbs the sky through the chase, and the fair's
- * glow on the horizon swells with the full organ and settles for the photograph. The moon starts just over the fair's
- * floor, clear of it: lower, the drop's booths and the chase's top floor stood on it, the crescent sitting on their beams.
+ * glow on the horizon swells with the full organ and settles for the photograph. The moon keeps to the high sky on the
+ * right, which the chase's floors leave clear as the camera climbs them: on the left, low, the booths' frames and rails
+ * went past in front of it and one stood under it like a cup on a stem.
  */
-const moonHeight = (t: number): number => 0.6 + 0.07 * smooth(t, 41, 117)
+const MOON_X = 0.85
+const moonHeight = (t: number): number => 0.64 + 0.05 * smooth(t, 41, 117)
 /**
  * The fair's glow on the sky, from the midway's lights: a little from the drop, more as each ride comes on, all of it
  * once the full organ has the whole midway lit. On beat 132 it flares as well, and settles over a bar.
@@ -133,7 +135,7 @@ export function nightLand(p: p5, c: PieceCtx, col: number, line: number, begin: 
   const l = nightAt(t, take.horizon(t))
   const hy = sky(s, l)
   stars(s, t, hy, dawnAt(t))
-  body(s, hy, 0.17, moonHeight(t), 0.03, '#ECE6F7', undefined, true)
+  body(s, hy, MOON_X, moonHeight(t), 0.03, '#ECE6F7', undefined, true)
   clouds(s, t, hy, { ...l.cloud, sky: l.mid, alpha: 0.7 }, true)
   // The smoke takes the midway's light as it comes on, and the dawn's blue in the blue hour.
   smoke(s, t, hy, camAt, mixHex(mixHex('#5E527F', '#86668E', glowAt(t)), '#6E82A8', dawnAt(t)))
