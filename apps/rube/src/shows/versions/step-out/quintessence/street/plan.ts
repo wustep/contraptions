@@ -12,6 +12,8 @@ import { Way } from '../negatives/plan'
 
 export const PAVE = 0.13
 export const KERB = 0.52
+/** The road's near kerb, past the near lane, and the camera's own pavement beyond it. */
+export const NEAR_KERB = KERB + 2.2
 export const IN = SEAM.street
 export const V_IN = 1.2
 
