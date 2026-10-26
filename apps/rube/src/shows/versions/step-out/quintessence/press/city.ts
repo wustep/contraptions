@@ -1,6 +1,6 @@
 import type { Pt } from '../../../../../parts'
 import { hash } from '../kit'
-import { layer, type View } from '../depth'
+import { composed, layer, type View } from '../depth'
 import { steam } from './steam'
 
 /**
@@ -81,7 +81,7 @@ export function cityThrough(ctx: C2, v: View, panes: { x: number; y0: number; y1
   }
   // The sky, by where the city's horizon is at this frame.
   const at = (z: number, y: number) => {
-    const s = Math.pow(v.h / REF, 1 - z)
+    const s = Math.pow(composed(v) / REF, 1 - z)
     const oy = ANCHOR[1] + z * (v.cy - ANCHOR[1])
     return v.cy + (y - oy) * s
   }
@@ -92,7 +92,7 @@ export function cityThrough(ctx: C2, v: View, panes: { x: number; y0: number; y1
   ctx.fill(glass)
   // The towers of the two farther planes, cut to each pane.
   for (const pl of PLANES.slice(0, 2)) {
-    const s = Math.pow(v.h / REF, 1 - pl.z)
+    const s = Math.pow(composed(v) / REF, 1 - pl.z)
     const ox = ANCHOR[0] + pl.z * (v.cx - ANCHOR[0])
     const oy = ANCHOR[1] + pl.z * (v.cy - ANCHOR[1])
     const wx = (x: number) => v.cx + (x - ox) * s

@@ -85,10 +85,13 @@ const C = {
 
 /* ------------------------------------------------------------------ the room */
 
-export function drawRoom(pen: Pen, t: number, f: { x0: number; y0: number; x1: number; y1: number }): void {
+/** The roof over the ceiling, seen only in a phone's tall frame: where its eaves are, its ridge, how far it overhangs. */
+const ROOF = { eave: CEIL - 0.3, ridge: CEIL - 1.55, over: 0.35 }
+
+export function drawRoom(pen: Pen, t: number, f: { x0: number; y0: number; x1: number; y1: number; cx: number; cy: number }): void {
   const g = ctxOf(pen.p)
   const k = pen.k
-  const v: View = { ...f, cx: (f.x0 + f.x1) / 2, cy: (f.y0 + f.y1) / 2, w: f.x1 - f.x0, h: f.y1 - f.y0, k }
+  const v: View = { ...f, w: f.x1 - f.x0, h: f.y1 - f.y0, k }
   const x0 = DOOR_IN[1]
   const x1 = WALL_OUT[0]
   // Outside both doors: the harbour (`harbour.ts`), on its own planes behind the room.
@@ -96,6 +99,8 @@ export function drawRoom(pen: Pen, t: number, f: { x0: number; y0: number; x1: n
   g.beginPath()
   g.rect((f.x0 - 1) * k, (f.y0 - 1) * k, (x0 - f.x0 + 1) * k, (f.y1 - f.y0 + 2) * k)
   g.rect(x1 * k, (f.y0 - 1) * k, (f.x1 - x1 + 1) * k, (f.y1 - f.y0 + 2) * k)
+  // And over the roof, which only a phone's tall frame sees.
+  if (f.y0 < ROOF.eave) g.rect(x0 * k, (f.y0 - 1) * k, (x1 - x0) * k, (ROOF.eave - f.y0 + 1) * k)
   g.clip()
   drawHarbour(g, v, t)
   g.restore()
@@ -126,8 +131,20 @@ export function drawRoom(pen: Pen, t: number, f: { x0: number; y0: number; x1: n
   rect(pen, (wx0 + wx1) / 2 - 0.03, wy0, (wx0 + wx1) / 2 + 0.03, wy1, C.beam)
   rect(pen, wx0, (wy0 + wy1) / 2 - 0.03, wx1, (wy0 + wy1) / 2 + 0.03, C.beam)
   drawWallThings(g, k, t)
-  // The ceiling and its beams.
-  rect(pen, x0, CEIL - 3, x1, CEIL, C.beam)
+  // The ceiling and its beams; over it the roof, cut through like the walls: a low pitch of planking with the eaves
+  // out past the walls, the harbour's grey sky over it.
+  rect(pen, x0, ROOF.eave, x1, CEIL, C.beam)
+  if (f.y0 < ROOF.eave) {
+    const [a, b] = [DOOR_IN[0] - ROOF.over, WALL_OUT[1] + ROOF.over]
+    const mid = (a + b) / 2
+    shape(pen, [[a, ROOF.eave + 0.08], [mid, ROOF.ridge], [b, ROOF.eave + 0.08], [b, ROOF.eave + 0.24], [mid, ROOF.ridge + 0.2], [a, ROOF.eave + 0.24]], C.beam)
+    line(pen, [a, ROOF.eave + 0.08], [mid, ROOF.ridge], C.greyDark, 0.6)
+    line(pen, [mid, ROOF.ridge], [b, ROOF.eave + 0.08], C.greyDark, 0.6)
+    shape(pen, [[x0, ROOF.eave + 0.2], [mid, ROOF.ridge + 0.2], [x1, ROOF.eave + 0.2], [x1, ROOF.eave], [x0, ROOF.eave]], C.wall)
+    // The loft's tie beam and king post, dark against the wall's end.
+    rect(pen, x0, ROOF.eave - 0.12, x1, ROOF.eave, C.beam)
+    rect(pen, mid - 0.06, ROOF.ridge + 0.15, mid + 0.06, ROOF.eave, C.beam)
+  }
   for (let x = x0 + 0.4; x < x1; x += 1.3) rect(pen, x, CEIL, x + 0.18, CEIL + 0.22, C.beam)
   // The floor, and the piles and the water under it.
   drawUnderFloor(g, v, t, DOOR_IN[0] - 0.05, x1 + 0.3)
@@ -150,7 +167,7 @@ function quay(pen: Pen, v: View, t: number, x0: number, x1: number): void {
 }
 
 function wallWithDoor(pen: Pen, x0: number, x1: number): void {
-  rect(pen, x0, CEIL - 3, x1, HEAD, C.beam)
+  rect(pen, x0, ROOF.eave, x1, HEAD, C.beam)
   rect(pen, x0 - 0.04, HEAD - 0.06, x1 + 0.04, HEAD, C.counterTop)
   rect(pen, x0, FLOOR - 0.03, x1, FLOOR + 0.02, C.counterEdge)
 }

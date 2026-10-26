@@ -66,9 +66,7 @@ export function layer(ctx: C2, v: View, z: number, anchor: Pt, ref: number, draw
   ctx.translate(v.cx * k, v.cy * k)
   ctx.scale(s, s)
   ctx.translate(-ox * k, -oy * k)
-  const hw = v.w / 2 / s
-  const hh = v.h / 2 / s
-  draw({ x0: ox - hw, y0: oy - hh, x1: ox + hw, y1: oy + hh, cx: ox, cy: oy, w: 2 * hw, h: 2 * hh, k })
+  draw({ x0: ox + (v.x0 - v.cx) / s, y0: oy + (v.y0 - v.cy) / s, x1: ox + (v.x1 - v.cx) / s, y1: oy + (v.y1 - v.cy) / s, cx: ox, cy: oy, w: v.w / s, h: v.h / s, k })
   ctx.restore()
 }
 

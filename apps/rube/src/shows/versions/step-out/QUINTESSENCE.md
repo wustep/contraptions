@@ -450,7 +450,8 @@ the sky. Each card holds 3.4 to 5 s; the last is gone by 266.7 s.
 - **Polish wave 2** (the whole show again, wide and in a phone's tall frame, and a scan at 30 a second):
   - on a phone the street's road ran on to the frame's foot under the credits, the crossing's stripes down it like a
     ladder, and the man who crosses stopped where his way ended, standing in the middle of it to the end. The road now
-    ends at a near kerb with the camera's own pavement in the shade past it, and he walks on along it;
+    ends at a near kerb with the camera's own pavement in the shade past it, and he walks on along it (see the regret
+    fixes: only on a phone now);
   - the snow sifting onto the ledge was a tapering wedge of white that read as a beam of light. It falls as flakes now;
   - the scan found only the meant pops: the tubes, the enlarger and the cuts on strikes.
 - **Polish wave 3** (every passage a tenth of a second at a time, the machines up close, and the whole show again on
@@ -475,6 +476,18 @@ the sky. Each card holds 3.4 to 5 s; the last is gone by 266.7 s.
   - nothing was worth changing. Played through at speed it holds 60 frames a second on both, with no late frames on
     the desk and none that came back on the phone; the openings and the shutter reach the phone's edges; the sheer
     curtain at home reads as one.
+- **Regret fixes** (a last look over every polish change):
+  - the Himalayan bands and the outcrop over the ledge are back to the slabs with their lip of snow. Without it they
+    read as stones floating on the face, not strata in it, and the snow at 2:53 sifted off a rock with none on it.
+    The face running to the foot of a tall frame and the sift's flakes stay;
+  - the man who crosses at the end steps down out of the wide frame's foot again. Sent along the near pavement, only
+    his head had slid along the foot under the credits for eight seconds, through the parked car's wheel. Only a frame
+    that sees the whole of him there (a phone's) has him walk along it, to the left, clear of the car;
+  - on a phone the street sat in a strip over a slab of blank pavement, and the bar under a slab of dark beam. A tall
+    stage now sets the composed frame low (`TALL`, three quarters of the extra above it), since every place has its
+    sky, roofs or upper floor over the action and only ground or water under it; the planes are placed from the
+    composed frame's middle so they do not move for it, and the credits go up into the sky with it. The bar has the
+    shack's roof over its ceiling, and the harbour's sky over that. The wide frame is unchanged.
 
 ## Judgment calls
 

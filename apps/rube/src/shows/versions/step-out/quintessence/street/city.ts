@@ -296,19 +296,27 @@ export function drawPeople(ctx: C2, v: View, t: number): void {
 
 /**
  * On the walk sign, a man crosses this street at the corner, on the crossing beside the two of them: he has come down
- * the avenue toward the camera as the light changed and waits at the kerb, then goes down off it, over, up onto the
- * near pavement and along it out of the frame: the frame's foot in the wide, its side in a phone's tall frame. Seen from the front, a leg lifting at each step, small far up the avenue and larger the nearer he
- * comes. His way is [time, x, y] stops, walking between them.
+ * the avenue toward the camera as the light changed and waits at the kerb, then goes down off it and out of the
+ * frame's foot. A phone's tall frame sees on past that foot to the near pavement, so there he goes up onto it and along
+ * it out of the frame's side, away from the parked car, instead (`tall`). Seen from the front, a leg lifting at each step, small far up the avenue and
+ * larger the nearer he comes. His way is [time, x, y] stops, walking between them.
  */
-const CROSSERS: { way: [number, number, number][]; h: number; coat: string }[] = [
-  { way: [[255.2, CORNER.kerb + 0.95, -0.35], [259.6, CORNER.kerb + 0.75, PAVE + 0.3], [WALK + 0.3, CORNER.kerb + 0.75, PAVE + 0.3], [WALK + 3.2, CORNER.kerb + 0.7, NEAR_KERB + 0.4], [WALK + 12, CORNER.kerb + 8, NEAR_KERB + 0.4]], h: 1.14, coat: '#4B4F44' },
+const CROSSERS: { way: [number, number, number][]; tall: [number, number, number][]; h: number; coat: string }[] = [
+  {
+    way: [[255.2, CORNER.kerb + 0.95, -0.35], [259.6, CORNER.kerb + 0.75, PAVE + 0.3], [WALK + 0.3, CORNER.kerb + 0.75, PAVE + 0.3], [WALK + 5.0, CORNER.kerb + 0.68, 4.2], [WALK + 6.6, CORNER.kerb + 0.66, 5.5]],
+    tall: [[255.2, CORNER.kerb + 0.95, -0.35], [259.6, CORNER.kerb + 0.75, PAVE + 0.3], [WALK + 0.3, CORNER.kerb + 0.75, PAVE + 0.3], [WALK + 3.2, CORNER.kerb + 0.6, NEAR_KERB + 0.4], [WALK + 12, CORNER.kerb - 8, NEAR_KERB + 0.4]],
+    h: 1.14,
+    coat: '#4B4F44',
+  },
 ]
 
 export function drawCrossers(ctx: C2, v: View, t: number): void {
   const k = v.k
   const kerb = PAVE + 0.3
+  // A frame that sees the whole of him on the near pavement (a phone's) has him walk along it; any other loses him off its foot.
+  const tall = v.y1 > NEAR_KERB + 1.2
   for (const c of CROSSERS) {
-    const w = c.way
+    const w = tall ? c.tall : c.way
     if (t < w[0][0]) continue
     let [, x, y] = w[w.length - 1]
     let step = 0
