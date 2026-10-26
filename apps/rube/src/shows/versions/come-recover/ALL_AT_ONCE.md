@@ -1336,6 +1336,8 @@ Each in its own commit; cards and shows that do not use them are as before.
   `TitleCard.said`, spoken through a visually hidden polite live region; `Performance.captions` and
   `TitleCard.caption`, with the player's "Sound captions" row and the C key.
 - `shows/stage.ts`: a saved video leaves sound captions out. `src/ui/styles.css`: the captions' box and row.
+- `shows/player.ts`: a card grown by `least` is kept above the stage's foot as well as within its sides (polish
+  wave 3).
 
 ### Three fixes
 
@@ -1403,6 +1405,12 @@ Five polish waves after the coat hanger, each a fresh watch of the whole show on
   pass reads as contact. Under the credits the passing car's headlight was a hard-edged wedge that showed before the
   car did, like a torch held up in the dark; it is a soft pool thrown ahead of the lamp. And the credits' shade is a
   lower, flatter band that eases out, where it was an oval that clouded the ceiling as the camera drew back.
+- **Wave 3.** Every jump was watched frame by frame across its second (the flickers, the match cuts, the irises and
+  the dive into home): they held. The copy of her eye that flies to each jumper carried a soft gold halo as well as its
+  trail; the halo is gone, and the trail shows the gift going. On a phone held sideways (a stage wider and shorter than
+  16:9) *Everywhere*'s chapter card, grown by its floor on size, ran off the stage's foot and was cut; the page now keeps
+  such a card above it (`shows/player.ts`). And there the credits' shade had been laid against the whole canvas, not the
+  16:9 box the page sets the words in, so it drifted off them.
 
 ## The looks
 
