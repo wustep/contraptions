@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
-import { drawShell, shellHalf } from '../cast'
+import { drawShell } from '../cast'
 import { box, composedCells, frame, hash, scenery } from '../kit'
 import { BURST1, pulse } from '../music'
 import { VALLEY } from '../worlds'
@@ -21,7 +21,7 @@ import { band, clamp01, fbm, lerp, lobe, lobeR, rgbOf, sm, softBeam, vnoise } fr
  * The fog pours over the ridges like a slow waterfall: over the far range's saddles, and, the hero of it, over the
  * near ridge on the left: the bank of cloud piled on it, which the helicopter comes out of. A band of fog hangs under
  * the shell's belly, 7 to 9 cells over the meadow. By show time the slot opens in six steps on the first burst; at
- * the end the shell rises into the cloud and goes to vapour, the cloud opens over the valley and the fog lifts.
+ * the end the shell rises into the cloud and pales into it, the cloud opens over the valley and the fog lifts.
  */
 
 /** The great wide of the flight: where the camera looks, and how much it shows, when the shell is revealed. */
@@ -677,29 +677,6 @@ function drawSlotLight(ctx: CanvasRenderingContext2D, k: number, f: F, t: number
 }
 
 /**
- * What comes off the shell as it goes: soft vapour shed from its flanks, all the way up, rising and spreading into
- * the cloud above (which is drawn over it). Never along a line.
- */
-function drawVapour(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, vanish: number, rise: number): void {
-  if (vanish <= 0.01 || vanish >= 0.999) return
-  const cloud = rgbOf(VALLEY.cloud)
-  const shade = rgbOf(mixHex(VALLEY.cloud, VALLEY.cloudShade, 0.5))
-  const m = 34
-  for (let i = 0; i < m; i++) {
-    const born = 0.02 + 0.7 * hash(i, 1, 63)
-    const life = clamp01((vanish - born) / 0.28)
-    if (life <= 0 || life >= 1) continue
-    const u = 0.22 + 0.72 * hash(i, 2, 63)
-    const side = hash(i, 3, 63) < 0.5 ? -1 : 1
-    const x = SHELL_X + side * shellHalf(u) * SHELL_W * (0.82 + 0.16 * hash(i, 4, 63)) + side * life * 7
-    const y = BELLY + rise - SHELL_H * (1 - u) - life * 20 - 3 * Math.sin(t * 0.3 + i)
-    const r = (5 + 6 * hash(i, 5, 63)) * (0.8 + 0.9 * life)
-    if (x + r < f.x0 || x - r > f.x1 || y + r < f.y0 || y - r > f.y1) continue
-    lobe(ctx, k, x, y, r, r * 0.6, hash(i, 6, 63) < 0.35 ? shade : cloud, 0.34 * Math.sin(Math.PI * life), 0.45)
-  }
-}
-
-/**
  * The low cloud the shell goes up into at the end, in front of it: a deck of soft billowed volumes whose underside
  * takes the shell from the top as it rises, thin wisps drifting below it over what is left, and at last an opening
  * over where it was, the light coming through (the shafts, drawn after the land).
@@ -778,7 +755,8 @@ function drawDeck(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, ope
       const x = j * g3 + drift * 1.4 + (hash(j, 6, 57) - 0.5) * g3
       const y = deckUnder(x, t) + 5 + 22 * hash(j, 7, 57)
       const rad = 8 + 8 * hash(j, 8, 57)
-      lobe(ctx, k, x, y, rad, rad * 0.3, fog, 0.24 * thin * (1 - hole(x)), 0.45)
+      // Deep and faint, so over the shell they veil it: thin and bright, they striped it across.
+      lobe(ctx, k, x, y, rad, rad * 0.55, fog, 0.15 * thin * (1 - hole(x)), 0.4)
     }
   }
 }
@@ -826,8 +804,8 @@ function drawValley(p: p5, k: number, t: number, ink: string, weight: number): v
     drawFold(ctx, k, f, L, t, lift)
   })
 
-  // The shell, over the meadow: the air between pales it a little in the wide; at the end it rises and goes to
-  // vapour.
+  // The shell, over the meadow: the air between pales it a little in the wide; at the end it rises and pales
+  // into the cloud.
   // Until the helicopter tops the ridge it stands paler in the mist, and on that pulse (16.283) it resolves.
   const mist = t > 11 && t < REVEAL_AT + 0.4 ? 0.3 * (1 - sm(t, REVEAL_AT - 0.3, REVEAL_AT + 0.05)) * sm(t, 11, 11.3) : 0
   const haze = 0.04 + 0.12 * sm(Math.log(cells), Math.log(18), Math.log(190)) + 0.3 * vanish + mist
@@ -841,7 +819,6 @@ function drawValley(p: p5, k: number, t: number, ink: string, weight: number): v
     ctx.restore()
   }
   drawSlotLight(ctx, k, f, t, vanish, rise)
-  drawVapour(ctx, k, f, t, vanish, rise)
   drawCrown(ctx, k, f, t, open, rise)
   drawDeck(ctx, k, f, t, open)
 
