@@ -231,7 +231,23 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 161 (latest)
+## Polish pass 162 (latest)
+
+The polish wave (Oct 25 2026): fresh eyes on the whole show, a frame every 3 s and again offset by 1.5 s, in the wide frame and an upright phone's, for what looks wrong or cheap on a careful watch. Then a timing audit. Every change is a fix to something already there; nothing new was added to the story.
+
+**Round 1, the wide frame.**
+- **The dam** (52 to 56 s, `earth/truck.ts`). Its face was a strip a sixth of a cell wide, ruled every half cell, which read as a ladder stood on end. It is a concrete wall now, leaning out as a dam's downstream face does, with faint pour joints. And the road stands on a bank: once the camera came down past the road, the far land's horizon was below it, and under the road was sky with the telegraph wires running through it. The bank is filled with the far land's own gradient, in the same place on the screen (`farLand` in `earth/sky.ts`), so along the chase it is invisible and only covers the sky.
+- **The sunrise shadows** (the credits, `shadow` in `act2/edmunds-farm.ts`). They were hard-edged wedges to the frame's foot, a fan of dark stripes. Each one is sharp at its caster and blurs wider as it runs, as a shadow from the sun's disc does: five wedges, each a little wider at its far end.
+- **The louvres' light** (152 to 156 s, `act2/rim.ts`). It reached twice the shade's height, so a pale wedge with hard slanting sides stood in the air over each open bay. It falls through the slats onto the tray, between the posts, and no further.
+- **The station's far fields** (`act2/depth.ts`). Under the haze the crops were far enough apart in tone to read as hard blocks of colour with the camera near the ring. Drawn closer together in tone.
+
+**Round 2, the tall frame and the dark.**
+- **The cloud deck from above** (89 to 96 s, `cloud.ts`). Past the punch its flat base hung in the dark as a white bar with night under it, plainest on a phone. From above it now thins down into the air over the Earth.
+- **The Earth's dusk** (89 to 104 s, `space/sky.ts`). The night came across in two flat steps of shade, and the air at the limb dimmed in two steps with it: two hard seams down the planet under the orbit. Both are one soft ramp now (the limb's air is one stroke with a conic gradient).
+
+**Round 3, timing.** Read a tenth of a second either side of the scored hits: the liftoff (85.0 s), the cloud punch (88.76), the station's lamps on the accent (127.5), the iris (207.5), the touchdown (251.5) and the lamp (255.5). All land; nothing was retimed. `check:shows` holds every strike to its onset.
+
+## Polish pass 161
 
 Stephen: Miller's water "is a little too busy. Calm and simplify it: fewer ripples and elements, less motion noise, while keeping the giant wave beat clearly readable." And three more for the same round: when Cooper gets into the ship, the bottom of the ball drew in front of it; the moving lines on the ground in the last scene were excessive; and the front layer along the bottom of the frame had visual issues, in every scene that had one (fix it or remove it).
 

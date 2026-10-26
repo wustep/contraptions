@@ -306,7 +306,7 @@ export function shadow(p: p5, c: Ctx, v: Plain, site: Site, x0: number, x1: numb
   // the shadow goes from what casts it, so each one is a soft band by the frame's foot, not a hard-edged stripe. Drawn
   // as a few wedges, each a little wider at its far end, that add up to the whole shadow where they all overlap.
   const span = out(x1) - out(x0)
-  const n = 8
+  const n = 5
   for (let i = 0; i < n; i++) {
     const spread = (i / (n - 1) - 0.5) * 0.9 * span
     const g = ctx.createLinearGradient(0, X(y), 0, X(bottom))
