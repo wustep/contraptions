@@ -1542,12 +1542,13 @@ function chuteAt(T: number): { mouth: Pt; dir: Pt; r: number; attached: boolean;
     const a = attachedAt(T)
     return { mouth: [a.anchor[0] + a.dir[0] * a.out, a.anchor[1] + a.dir[1] * a.out], dir: a.dir, r, attached: true, line: a.out }
   }
-  // Cut: it stops in the air and drifts off, spilling.
+  // Cut: it stops in the air and drifts off downwind (the cirrus's way), spilling. Upwind, it had risen out of the
+  // frame through Gargantua, its cut bridle hanging across the dark.
   const a = attachedAt(CUT)
   const m0: Pt = [a.anchor[0] + a.dir[0] * a.out, a.anchor[1] + a.dir[1] * a.out]
   const d = T - CUT
   const keep = 0.35 * (1 - Math.exp(-d / 0.35))
-  const mouth: Pt = [m0[0] + vxAt(CUT) * keep - 0.3 * d, m0[1] + vyAt(CUT) * keep - 0.12 * d]
+  const mouth: Pt = [m0[0] + vxAt(CUT) * keep + 0.45 * d, m0[1] + vyAt(CUT) * keep - 0.12 * d]
   const tilt = 0.5 * smooth(d, 0, 2)
   const dir: Pt = [a.dir[0] * Math.cos(tilt) - a.dir[1] * Math.sin(tilt), a.dir[0] * Math.sin(tilt) + a.dir[1] * Math.cos(tilt)]
   return { mouth, dir, r: r * (1 - 0.35 * smooth(d, 0, 2.5)), attached: false, line: a.out }
