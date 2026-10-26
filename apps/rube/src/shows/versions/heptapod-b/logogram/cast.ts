@@ -534,7 +534,7 @@ export function drawPalm(p: p5, k: number, at: Pt, r: number, col: string, phase
   p.translate(at[0] * k, at[1] * k)
   p.circle(0, 0, r * 0.7 * k)
   // Seven fingers, each a living thing: a full root out of the palm, a long taper with a little curl of its own, and a
-  // soft round pad at its tip where it presses. A hand of seven, never a star of seven points.
+  // soft round end where it presses. A hand of seven, never a star of seven points.
   const n = 10
   // How far the fingers have fanned out from lying together, pointing on down out of the limb.
   const v = clamp01((open - 0.12) / 0.75)
@@ -550,7 +550,7 @@ export function drawPalm(p: p5, k: number, at: Pt, r: number, col: string, phase
     const curl = (behind ? 0 : 0.16 * Math.sin(i * 1.7 + 0.6) + 0.04 * Math.sin(phase * 0.2 + i)) * spread
     // Lying together they are fuller, so a closed hand reads as one bud, not a fringe of pads.
     const w0 = r * (0.19 + 0.07 * (1 - spread))
-    const w1 = r * (0.078 + 0.04 * (1 - spread))
+    const w1 = r * (0.088 + 0.04 * (1 - spread))
     const left: Pt[] = []
     const right: Pt[] = []
     let tip: Pt = [0, 0]
@@ -571,7 +571,8 @@ export function drawPalm(p: p5, k: number, at: Pt, r: number, col: string, phase
     for (const [x, y] of left) p.vertex(x * k, y * k)
     for (let j = right.length - 1; j >= 0; j--) p.vertex(right[j][0] * k, right[j][1] * k)
     p.endShape(p.CLOSE)
-    p.circle(tip[0] * k, tip[1] * k, w1 * 2.25 * k)
+    // Its pad: the finger's own round end, exactly its width: any fuller, it stood on a neck as a knob.
+    p.circle(tip[0] * k, tip[1] * k, w1 * 2 * k)
   }
   p.pop()
 }
