@@ -538,6 +538,16 @@ the weakest moments, a phone frame, then the strikes against the cue.
   line), the valley's sky and the shell, Costello's head whole over the great ring. The 16:9 frame is unchanged.
 - Looked at and left: Costello's jet beginning the next ring in the fog (145), the rain at the window, the coda.
 
+## Polish wave 4
+
+- **The palm's fingers** (118.7 → 133): each ended in a pad a little wider than the finger's end, so every finger
+  stood on a neck with a knob on it, a toy asterisk more than a hand. The pad is the finger's own round end now.
+- **Rimmed at the glass** (93 → 130): the shell's bone ink rims them so they read on the shaft's dark stone; in front
+  of the lit glass the same rim stood round them as a pale halo. Each turns to a dark rim as it comes into the
+  glass's light (by its own distance from the glass's edge), as every ball on a light ground has.
+- Looked at and left: both white-outs and every cut of the visions (her place holds on every one), the starter's
+  bucket winding back up (a recoil starter's spring), gravity's turn.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
