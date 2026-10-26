@@ -231,7 +231,17 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 166 (latest)
+## Polish pass 167 (latest)
+
+Polish wave 6 (Oct 26 2026): the end credits on the player's page on a phone, upright and on its side; the farm at full size again; and the cost of what these six waves added, measured against pass 162.
+
+**The credits on a phone.** Every card reads over the stars, upright (390 × 844) and on its side (844 × 390): the cards gather, hold and go out of focus in the sky above the camp, clear of the lander, the lamp and the dome. Nothing changed.
+
+**Round 1, the yard's pit** (20 to 25 s, `earth/yard.ts`). The windmill's bucket sits in a shallow pit at the tower's foot, but the yard's ground line ran straight across the pit's mouth and the pit was the yard's own colour, so the bucket stood in front of the ground rather than down in it. The ground line opens over the pit now, and the pit's inside is a shade darker than the yard, behind the bucket.
+
+**Round 2, the cost.** Pass 162's tree and this one served side by side and painted on demand at 1920 × 1080, 30 frames a second, through every range these waves touched, twice each (headless, CPU raster, so the numbers are high and only the difference counts). The same within the noise everywhere but the camp (246 to 262 s), where pass 165's soft lamp cone had added about 2.8 ms at the median. The cone is three wedges now instead of five, which looks the same; the difference is about 1.8 ms there, and nothing elsewhere.
+
+## Polish pass 166
 
 Polish wave 5 (Oct 26 2026): the transitions, in motion. Every change of scene stepped through a tenth of a second at a time or finer: the whip to Miller (103.8 s), the bridge into the bed and the cut to Act II (124 to 128.3), the lift across the station to the far side (164.5 to 172.3), the spoke into the hub (188.5 to 193.3), the wormhole's far side opening onto Edmunds' plain (233.5 to 236.5), and the show's first and last seconds. None of them pops or flashes; the whip dims for a frame as it goes through the sphere, and the wormhole's window opens over a quarter of a second, both as scored. One fix.
 
