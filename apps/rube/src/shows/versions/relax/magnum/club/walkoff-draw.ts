@@ -340,7 +340,7 @@ function figures(p: p5, k: number, list: Figure[], t: number, f: F, lift: number
  * the light behind them, so only their top edges catch it: rimmed where the light falls, never a row of outlined heads.
  */
 function crowd(p: p5, k: number, list: Figure[], t: number, f: F, lift: number, derek: Pt | null, front: boolean, rim: string): void {
-  const w = Math.max(1.2 / k, 0.026)
+  const w = Math.max(1.2 / k, 0.013)
   p.push()
   p.rectMode(p.CORNER)
   p.noStroke()
