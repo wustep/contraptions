@@ -3,7 +3,7 @@ import { mixHex, type Pt } from '../../../../../parts'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { hash, type Ctx } from '../kit'
 import { ROAD } from '../worlds'
-import { BRIDGE, CURB_X, LAMP_X, LOT_LAMP_X, LOT_ON, LOT_Y, POST_LAMP, ROAD_Y, lampAt, postLean } from './crash-clock'
+import { BRIDGE, CURB_X, LAMP_X, LOT_LAMP_X, LOT_ON, LOT_Y, POST_LAMP, ROAD_Y, lampAt, postLean, warm } from './crash-clock'
 import { cone, glow, hexA, kick, pool, poly, rect, wash } from './crash-paint'
 
 /**
@@ -295,7 +295,7 @@ export function drawLamps(p: p5, c: Ctx, f: Frame, t: number, light: boolean): v
 }
 
 /** The lot's lamp: dark behind the hall until its loading door rolls up, then on with a flare. */
-const lotLamp = (t: number): number => (t < LOT_ON ? 0 : 0.85 + 0.45 * kick(t - LOT_ON, 0.3))
+const lotLamp = (t: number): number => (t < LOT_ON ? 0 : (0.85 + 0.45 * kick(t - LOT_ON, 0.3)) * warm(t - LOT_ON))
 
 /** How much lamplight falls at road x (the car's paint, the truck's). */
 export function lightAt(x: number, t: number): number {
