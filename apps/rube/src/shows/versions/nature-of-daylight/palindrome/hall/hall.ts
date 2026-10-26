@@ -245,8 +245,10 @@ function drawHall(p: p5, k: number, t: number): void {
 const LENS: Pt = [6.4, -3.45]
 function beam(ctx: Ctx, k: number, t: number, on: number): void {
   const px = (v: number) => v * k
-  const a: Pt = [SCREEN.x + SCREEN.w * 0.2, SCREEN.y + 0.08]
-  const c: Pt = [SCREEN.x + SCREEN.w * 0.95, SCREEN.y + SCREEN.h - 0.08]
+  // To the screen's near edge, top to foot: the light meets the screen there and does not lie over the news in a
+  // wedge (it ended on a diagonal across the picture).
+  const a: Pt = [SCREEN.x + SCREEN.w, SCREEN.y + 0.04]
+  const c: Pt = [SCREEN.x + SCREEN.w, SCREEN.y + SCREEN.h - 0.04]
   const g = ctx.createLinearGradient(px(LENS[0]), px(LENS[1]), px(SCREEN.x + SCREEN.w * 0.6), px(SCREEN.y + SCREEN.h / 2))
   g.addColorStop(0, rgba(TENT.screenOn, 0.2 * on))
   g.addColorStop(1, rgba(TENT.screenOn, 0.05 * on))
