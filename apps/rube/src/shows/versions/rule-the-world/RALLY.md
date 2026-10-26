@@ -496,3 +496,20 @@ Another watch from the top, wide and tall, looking for what still reads cheap.
 
 Looked at and left alone: Mishkin leaning out (he goes out through the open window, not the wall), the farmhouse's
 men, the airfield, the alley's hustle.
+
+## Polish wave 3
+
+The phone held upright, and the ward's people.
+
+- *The tall frame*: a stage taller than 16:9 set the composed frame midway, so on a phone each place sat on a slab of
+  bare floor or dark field as tall as itself. Every place stands on a floor or the ground with a ceiling, the stands
+  or the sky over it, so the frame now sits lower (`tall: 0.7`): London's glass roof, Tokyo's upper tiers, the night
+  over New Jersey and the dawn over the finale's roofs, and less floor. The credits, set at the top of the 16:9 box,
+  came down with it onto the roofline; they rise into the dawn sky in a tall frame (`lift`), and a wide one is as it
+  was.
+- *New Jersey's stars* stopped two thirds of the way up the sky, which a tall frame now showed as a bare band over the
+  barn. They go on up, as thick; a wide frame never sees the new ones.
+- *Arms in the ward*: the people seen front on had arms the colour of their coats, so the father asleep on the bench
+  had two hands on his chest and no arms. Their arms are in the coat's shade now, as the folded ones already were.
+- *The corridor's pigeon* strutted on the ledge right over the sleeping father, so it stood on his hat's brim. It keeps
+  to the ledge's far end.
