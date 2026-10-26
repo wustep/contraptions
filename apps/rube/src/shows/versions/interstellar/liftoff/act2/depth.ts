@@ -26,7 +26,11 @@ const SLIDE = 0.32
 const BANDS = 15
 const sAt = (i: number): number => 1 / (1 + (i / BANDS) * (1 / S_FAR - 1))
 
-const FIELDS = ['#9BA56C', '#C4AF72', '#ADA867', '#B7A077', '#92A065', '#CFBB7E']
+/**
+ * The crops, drawn close together in tone: under the haze, fields in full contrast read as hard-edged blocks of colour
+ * stood in the air whenever the camera came in near the ring.
+ */
+const FIELDS = ['#9BA56C', '#C4AF72', '#ADA867', '#B7A077', '#92A065', '#CFBB7E'].map((h) => mixHex(h, '#B2AA72', 0.5))
 
 /** Where a slice of the station is centred, given the camera. */
 export function sliceCentre(axis: Pt, cam: Pt, s: number): Pt {
