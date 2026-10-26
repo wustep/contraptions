@@ -1,4 +1,4 @@
-import { fill, mix, poly, rect, rgba, stroke, type Paint } from '../../draw'
+import { fill, hash, mix, poly, rect, rgba, stroke, type Paint } from '../../draw'
 import { M } from '../../music'
 import { skyAt } from '../../world/sky'
 import type { Pt } from '../../path'
@@ -82,24 +82,29 @@ function drawSunPath(g: Paint): void {
   const r = d.r * view.h
   const low = smoother(t, M.fade, 549)
   const near = Math.min(view.y1, 0.1)
-  // Broken by the swell into flat slivers, as light on water is: each a little longer and thicker nearer us, and fewer
-  // and fainter as they come, so it is the sea lit, not a beam.
+  // Broken by the swell into flat slivers, as light on water is: one, two or three to a row, of uneven lengths and set
+  // off the middle by uneven amounts, the rows unevenly spaced and closing up towards the horizon, so it is the sea lit
+  // and not a ladder; each a little longer and thicker nearer us, drifting slowly as the swell moves under it.
   ctx.fillStyle = rgba(d.color, 0.2 + 0.1 * low)
   ctx.beginPath()
-  const n = 11
+  const n = 17
   for (let i = 0; i < n; i++) {
-    const u = (i + 0.5) / n
+    const u = (i + 0.3 + 0.4 * hash(i, 41)) / n
+    if (u > 0.86) continue
     const v = u * u
     const y = hy + (near - hy) * v
-    const half = r * (0.5 + 2.2 * v) * (0.55 + 0.45 * Math.sin(i * 2.3 + t * 0.5) ** 2)
-    const h = Math.max(2.5 * g.px, (0.03 + 0.08 * v) * (1 - 0.4 * u))
-    if (u > 0.85) continue
-    const cx = x + r * 0.25 * Math.sin(i * 1.7 + t * 0.3)
-    ctx.moveTo(cx - half, y)
-    ctx.lineTo(cx + half, y)
-    ctx.lineTo(cx + half * 0.92, y + h)
-    ctx.lineTo(cx - half * 0.92, y + h)
-    ctx.closePath()
+    const span = r * (0.45 + 2.0 * v)
+    const h = Math.max(1.6 * g.px, (0.025 + 0.07 * v) * (1 - 0.4 * u))
+    const pieces = 1 + (hash(i, 43) > 0.4 ? 1 : 0) + (v > 0.2 && hash(i, 47) > 0.55 ? 1 : 0)
+    for (let j = 0; j < pieces; j++) {
+      const cx = x + (hash(i, 51 + j) - 0.5) * span * 1.3 + r * 0.18 * Math.sin(t * 0.35 + i * 1.3 + j * 2.1)
+      const half = span * (0.16 + 0.3 * hash(i, 61 + j)) * (0.7 + 0.3 * Math.sin(t * 0.55 + i * 2.1 + j * 1.7) ** 2)
+      ctx.moveTo(cx - half, y)
+      ctx.lineTo(cx + half, y)
+      ctx.lineTo(cx + half * 0.9, y + h)
+      ctx.lineTo(cx - half * 0.9, y + h)
+      ctx.closePath()
+    }
   }
   ctx.fill()
 }

@@ -37,6 +37,11 @@ const OUTLINE: Pt[] = [
   [836.9, 0.6],
   [839.0, 3.5],
   [842.0, 8],
+  // On down out of sight under the water, so no frame, however tall, sees its floor.
+  [845.5, 15],
+  [850.0, 40],
+  [786.0, 40],
+  [790.0, 15],
 ]
 
 /** The faces in shade, east and west: each a darker plane from the foot to the top. */
@@ -154,9 +159,10 @@ export function drawIsland(g: Paint): void {
     ctx.restore()
   }
   // The island's foot under the water: rock, darker, going down out of sight.
-  poly(ctx, [[795.6, 2.2], [797.0, 0.4], [836.9, 0.6], [839.0, 3.5], [842.0, 8], [793.5, 8]])
+  const under: Pt[] = [[842.0, 8], [845.5, 15], [850.0, 40], [786.0, 40], [790.0, 15], [793.5, 7]]
+  poly(ctx, [[795.6, 2.2], [797.0, 0.4], [836.9, 0.6], [839.0, 3.5], ...under])
   fill(ctx, rock(ROCK, t))
-  poly(ctx, [[794.8, 4.4], [840.6, 5.4], [842.0, 8], [793.5, 8]])
+  poly(ctx, [[794.8, 4.4], [840.6, 5.4], ...under])
   fill(ctx, rock(ROCK_DEEP, t))
   // The beach: the sand where he comes ashore, flat, running into the water, lying on the rock as a bank that thins
   // away to both ends under the water.
@@ -220,7 +226,8 @@ export function drawOlive(g: Paint, x: number, ground: number, h: number, lean: 
 /** The harbour's jetty: a stone pier on the west side, its top just over the water. */
 function drawJetty(g: Paint): void {
   const { ctx, t } = g
-  poly(ctx, [[JETTY.x0, JETTY.top], [JETTY.x1, JETTY.top], [JETTY.x1 + 0.1, 3], [JETTY.x0 - 0.4, 3]])
+  // Its stones go down to the rock it stands on, so it is never a box hung in the water.
+  poly(ctx, [[JETTY.x0, JETTY.top], [JETTY.x1, JETTY.top], [JETTY.x1 + 0.1, 6.4], [JETTY.x0 - 0.4, 0.9]])
   fill(ctx, againstSun(STONE_SHADE, t))
   poly(ctx, [[JETTY.x0, JETTY.top], [JETTY.x1, JETTY.top], [JETTY.x1, JETTY.top + 0.2], [JETTY.x0, JETTY.top + 0.2]])
   fill(ctx, againstSun(STONE, t))
