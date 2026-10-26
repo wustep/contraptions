@@ -231,7 +231,19 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 163 (latest)
+## Polish pass 164 (latest)
+
+Polish wave 3 (Oct 26 2026): frames every 4 s at full size and every 3.5 s upright, then the weak spots zoomed to twice the frame's size, where the drawing's own faults show. The player's page was looked at on a phone as well: there the stage is nearly square, and the credits read over the stars.
+
+**Round 1, the puffs** (`puff` in `kit.ts`, used for every puff in the show). `parts`' puff draws four lobes, each inked and then filled. Faded with a global alpha, as the dust and the exhaust behind the truck are (33 to 36 s), every lobe's ink ring showed through the others' fills, a little cluster of ghost circles. The show's own puff fills the four lobes as one shape and inks only the arcs on its outside, so it looks the same while it is opaque and fades whole.
+
+**Round 2, the corn's edges** (`earth/corn.ts`, `earth/field.ts`).
+- Where a wall of corn comes down to nothing at its end, its leaves still swayed at full swing, so the inked top ended in a flick lying along the foot. It sways now only as much as it stands, and the ink stops where the wall has a little height.
+- The field below the channel's bank stopped a cell and a half short of where its taper ends, at full height: a straight side, a pale seam up the background behind the truck. It runs on now to where its taper brings it down to nothing.
+
+**Round 3, timing.** Frames a tenth of a second either side of strikes not read in pass 162: the porch step (18.67 s), the ball out of the combine's stack (57.2), the bat's lever at the ballpark (159.0), and the far-side house's floor (177.5). Each lands on its strike. Nothing was retimed.
+
+## Polish pass 163
 
 Polish wave 2 (Oct 26 2026): the whole show again with fresh eyes, a frame every 2 s in the wide frame, every 3 s on an upright phone, and every 4 s at full size offset from both, for the next-weakest moments. Each fix is to something already there; one thing was cut.
 
