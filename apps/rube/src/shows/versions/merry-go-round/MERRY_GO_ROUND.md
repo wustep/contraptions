@@ -191,6 +191,10 @@ Wave 4, the iconic beats close up: Calcifer's roar (128.0), the first time we se
 the chimney that both bursts of smoke went out of the top at once, a dark smudge on the frame's edge. The wide is a
 little wider now (31.5 cells, its feet where they were), with sky over the chimney for the smoke to billow up in.
 
+Wave 5, transitions and the last details: every change of place was read a frame either side and holds. On a phone
+the hills' ground (108 → 121) was one row of heather drifts over bare green; the drifts now go on down in tiers. On a
+phone held on its side the Music card's long fine print ran into the castle's flag; it is two lines now.
+
 ## Chrome, credits, checks
 
 - In the picker the work is **Merry-Go-Round** and its one take **Opus 5.5**: the Version row hides by itself. No
