@@ -1063,7 +1063,6 @@ export const GIFT_LOOKS: { from: number; to: number; at: (t: number) => Pt }[] =
  */
 export function drawGivenEyes(pen: Pen, t: number, her: (t: number) => Pt): void {
   const { p, k } = pen
-  const ctx = p.drawingContext as CanvasRenderingContext2D
   for (const g of GIVEN) {
     const u = t - (g.at - FLIGHT)
     if (u < 0 || u >= FLIGHT) continue
@@ -1082,7 +1081,8 @@ export function drawGivenEyes(pen: Pen, t: number, her: (t: number) => Pt): void
     const r0 = 0.6 * R
     const swell = 1 + 0.45 * Math.sin(Math.PI * s)
     const r = (r0 + (g.target(g.at).r - r0) * s) * (0.7 + 0.3 * Math.min(1, s / 0.2)) * swell
-    // It carries the great hit's lantern gold with it: a trail of its arc, and a soft light round it.
+    // It carries the great hit's lantern gold with it: a trail of its arc. (No light round it: the trail shows where
+    // it goes, and a halo on the pale tile read as a glow.)
     const fade = Math.sin(Math.PI * Math.min(1, s * 1.15))
     p.noStroke()
     for (let i = 7; i >= 1; i--) {
@@ -1092,14 +1092,6 @@ export function drawGivenEyes(pen: Pen, t: number, her: (t: number) => Pt): void
       p.fill(alpha(p, HOME.gold, 0.55 * fade * (1 - i / 8)))
       p.circle(tx * k, ty * k, r * 1.1 * (1 - i / 10) * k)
     }
-    const gr = r * 3.2 * k
-    const glowG = ctx.createRadialGradient(x * k, y * k, r * 0.8 * k, x * k, y * k, gr)
-    glowG.addColorStop(0, `rgba(255, 201, 90, ${0.55 * fade})`)
-    glowG.addColorStop(1, 'rgba(255, 201, 90, 0)')
-    ctx.save()
-    ctx.fillStyle = glowG
-    ctx.fillRect(x * k - gr, y * k - gr, 2 * gr, 2 * gr)
-    ctx.restore()
     propEye(pen, x, y, r, s * Math.PI * 2.6 + 0.5 * Math.sin(s * 19), 0.7 * Math.sin(Math.PI * s))
   }
 }
