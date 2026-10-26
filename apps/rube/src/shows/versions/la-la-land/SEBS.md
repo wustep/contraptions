@@ -699,3 +699,11 @@ A fresh watch of the whole show in the wide frame and the tall one, contact shee
 **Seams.** The piano's shadow on the velvet was a hard-edged polygon, which in the close shots of the dream's club and the band read as a dark panel stuck on the curtain; the house's light is broad, so its edge is soft now, a penumbra a quarter of a cell wide (`club/room.ts`). The home movie's hedge was drawn at 80%, so at the pool the car going by on the street beyond it sat on a box of its own body seen through it, and next door's fence ran down through it; it is solid, in the same teal (`movie/movie-sets.ts`).
 
 **Timing.** The kiss, the hush, the burst, the sign's six hits, the door past the lens, the slam, the dip, the last chord and the band's hit all land. The iris begins to close on the second knock and is shut 70 ms later, which reads as the knock shutting it, and stays. The club's door at the end did not: seen edge on in the section, the leaf's width is the cosine of its swing, so it looked shut a quarter second before its note (467.866) and the last of the swing was too thin to see. The swing is now timed by the width that shows, growing faster and faster until the leaf is whole on the note (`club/room.ts`).
+
+## Round 74: polish wave 2, the tall frame's edges
+
+A fresh watch, wide and tall, every three seconds, then every quarter second through each change of place and full frames of a dozen beats. The changes of place are all covers as meant, and the beats read; what was left was in the tall frame, where the stage shows a phone more world above and below the 16:9.
+
+**The home movie on a phone (345.9 to 393.05).** The film's gate opened to the whole frame, so on a phone the eight-millimetre picture was a tall rounded box, two thirds of it empty lawn, sand and floor. It now opens to the frame's width at the film's own four by three, with the dark of the room above and below it; the room's screen, chair and projector stay in the dark while the film fills the width, and come back as it closes to the screen. In the wide frame nothing changes (`movie/movie.ts`).
+
+**The painted sky (143.6 to 172).** In the tall frame the cloth's top edge, and the white studio's flies above it, showed as a pale band over the magic hour as the camera climbed with the number. The cloth is painted higher now, past any frame (`studio/studio.ts`).
