@@ -85,8 +85,11 @@ function fillBand(ctx: CanvasRenderingContext2D, k: number, b: { outer: Pt[]; in
   ctx.fill()
 }
 
-/** A link's glow: widths (shares of the link's) and the alpha of each. */
-const GLOW: [number, number][] = [[4.2, 0.03], [3.4, 0.035], [2.7, 0.045], [2.1, 0.06], [1.6, 0.08]]
+/**
+ * A link's light on the canvas round it: widths (shares of the link's) and the alpha of each. Only a soft edge just
+ * past the link (out to four times its width it read as a neon tube, a halo round the whole ring).
+ */
+const GLOW: [number, number][] = [[2.0, 0.04], [1.5, 0.07]]
 
 /** The inset of a link's ends from the mounts, radians: room for the hinge blocks. */
 const INSET = 0.05
@@ -286,10 +289,11 @@ function drawGlow(ctx: CanvasRenderingContext2D, k: number, i: number, t: number
   const red = redCast(i, t)
   if (on <= 0.01 && red <= 0.01) return
   const [cx, cy] = turned(i, tilt(th), PW / 2, -PH / 2)
-  const r = PW * 1.25 * k
+  // Close round the screen and faint: wider, the twelve overlapped into a lit haze round a dark hole in the middle.
+  const r = PW * 0.95 * k
   const g = ctx.createRadialGradient(cx * k, cy * k, PW * 0.3 * k, cx * k, cy * k, r)
   const col = red > 0.01 ? mix(TENT.screenGlow, SHANG, red) : TENT.screenGlow
-  g.addColorStop(0, rgba(col, 0.2 * Math.max(on, red)))
+  g.addColorStop(0, rgba(col, 0.12 * Math.max(on, red)))
   g.addColorStop(1, rgba(col, 0))
   ctx.fillStyle = g
   ctx.fillRect(cx * k - r, cy * k - r, 2 * r, 2 * r)
@@ -333,13 +337,13 @@ export function drawRing(p: p5, k: number, t: number): void {
   for (let i = 0; i < 12; i++) drawGlow(ctx, k, i, t, th[i], on[i])
   const flare = Math.max(closeFlare(t), 0.8 * shareFlare(t))
   // The flare as it closes (and as the shared word's halves meet): a soft light all round the ring, wider than it,
-  // dying away.
+  // dying away. (Close to the ring and fainter than it was, so it reads as the links' light, not a halo.)
   if (flare > 0.01) {
-    const r0 = (RM - 1.8) * k
-    const r1 = (RM + 1.8) * k
+    const r0 = (RM - 1.3) * k
+    const r1 = (RM + 1.3) * k
     const g = ctx.createRadialGradient(CENTRE[0] * k, CENTRE[1] * k, r0, CENTRE[0] * k, CENTRE[1] * k, r1)
     g.addColorStop(0, rgba(TENT.screenGlow, 0))
-    g.addColorStop(0.5, rgba(TENT.screenGlow, 0.32 * flare))
+    g.addColorStop(0.5, rgba(TENT.screenGlow, 0.22 * flare))
     g.addColorStop(1, rgba(TENT.screenGlow, 0))
     ctx.fillStyle = g
     ctx.fillRect(CENTRE[0] * k - r1, CENTRE[1] * k - r1, 2 * r1, 2 * r1)
