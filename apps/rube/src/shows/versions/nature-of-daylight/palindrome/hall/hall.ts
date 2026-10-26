@@ -66,8 +66,9 @@ const STUDENTS: Student[] = (() => {
       const order = (ROWS.n - 1 - r) * 2 + (near ? 0 : 1)
       out.push({ x, y, s, near, seed: r * 2 + (near ? 1 : 0), phone: PINGS[Math.min(PINGS.length - 1, Math.floor(order * 0.9))], later: false })
     }
-    // Years on, a third in every row, between the two.
-    out.push({ x: ROWS.x0 + r * ROWS.w + 0.42, y: rowTop(r) - R * 0.93 - 0.015, s: 0.93, near: false, seed: 40 + r, phone: Infinity, later: true })
+    // Years on, a third in every row, between the two and a seat further back: up a little, smaller and hazier, so the
+    // row has depth. (Level with them, three overlapping balls in a line read as one long grub.)
+    out.push({ x: ROWS.x0 + r * ROWS.w + 0.42, y: rowTop(r) - R * 0.78 - 0.1, s: 0.78, near: false, seed: 40 + r, phone: Infinity, later: true })
   }
   return out.sort((p, q) => Number(p.near) - Number(q.near))
 })()
@@ -276,7 +277,7 @@ function beam(ctx: Ctx, k: number, t: number, on: number): void {
 function student(ctx: Ctx, k: number, t: number, s: Student, L: number): void {
   const px = (v: number) => v * k
   const r = R * s.s
-  const haze = s.near ? 0 : 0.3
+  const haze = s.near ? 0 : s.later ? 0.5 : 0.3
   const body = mix(mix(HALL.student, HALL.dark, 0.35 * (1 - L)), HALL.wall, haze)
   const drift = 0.01 * Math.sin(t * 0.5 + s.seed * 1.3)
   const x = s.x + drift
