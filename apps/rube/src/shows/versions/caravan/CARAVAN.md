@@ -285,6 +285,14 @@ second.
 - Watched and left: the nod (Fletcher's chest tipped to Andrew, the frame's answer) and the stick thrown end over end on
   the solo's biggest hit both read.
 
+## Polish wave 6 (Oct 26)
+
+A regression sweep and a frame-rate check; nothing changed in the show. The 30 fps probe over the whole show, after
+waves 2 to 5: no strobes, the two match cuts no longer jump (Overbrook and Carnegie both open out of the same dark), and
+what it flags is all scored (the hall's wake, the burst, the last chord, the cut-off) beside the solo's whips. Playback
+in Chrome holds 60 fps (no frame over 16.8 ms) in every part, at 1280×720 and at a phone's 390×844 at 3×. On a phone
+the practice room's floor meets the dark under it at a line, as a lit room in the dark does; left as it is.
+
 ## How to run it
 
 ```
