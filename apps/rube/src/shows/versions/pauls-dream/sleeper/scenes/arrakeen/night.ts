@@ -1,5 +1,5 @@
 import { drawFrigate, type FrigateLook } from '../../craft/frigate'
-import { blob, drift, ellipse, fill, hash, layer, line, mix, poly, rect, rgba, ring, smooth, smoother, type Layer, type Paint, type Pt } from '../../paint'
+import { blob, drift, ellipse, fill, hash, layer, line, mix, poly, rect, rgba, ring, smooth, smoother, vgrad, type Layer, type Paint, type Pt } from '../../paint'
 import { hazeAt } from '../../world/desert'
 import { CHAIR, LAMP, ROOM, ROOM_DOOR, SHIELD, TOP_ROOMS, WEST_ROOM } from './geo'
 import { ATTACK } from './times'
@@ -361,9 +361,11 @@ export function drawRoomLight(g: Paint, t: number): void {
   }
   const age = t - ATTACK.hits[6]
   if (age > 0 && age < 2) {
+    // A soft band, thickest at its middle, fading out above and below: no edge to it.
     const y = ROOM.ceil + (ROOM.floor - ROOM.ceil) * smooth(age, 0, 1.4)
-    rect(ctx, ROOM.x0, y - 0.9, ROOM.x1 - ROOM.x0, 0.9)
-    fill(ctx, rgba('#BBA588', 0.28 * (1 - smooth(age, 0.5, 2))))
+    const a = 0.28 * (1 - smooth(age, 0.5, 2))
+    rect(ctx, ROOM.x0, y - 1.3, ROOM.x1 - ROOM.x0, 1.6)
+    fill(ctx, vgrad(ctx, y - 1.3, y + 0.3, [[0, rgba('#BBA588', 0)], [0.6, rgba('#BBA588', a)], [1, rgba('#BBA588', 0)]]))
   }
 }
 
