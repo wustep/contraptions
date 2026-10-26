@@ -1154,6 +1154,17 @@ window.
     balloon passing behind the bay's post as he comes in (210.5 to 212.5 s, as it would); the credits on a phone
     (390 × 844), which read over the snow and run to the end.
 
+- **Polish wave 3 (October 2026).** The whole show again on the odd seconds (between wave 2's frames), then Zoom
+  every 4 s.
+  - *Round 1, the church's light.* Where the windows' shafts cross the pews (`drawLitPews`) the light was cut to the
+    shaft's hard edges, plainest at the funeral (a pale stripe up the middle pew, 193 to 201 s). It is now one
+    gradient across each shaft, square to its slant, clear a little outside each edge and full a little inside, so the
+    light on the wood has a penumbra; the patches on the floor (`drawFloorLight`) feather their ends the same way. A
+    first try, five clipped layers, cost the wedding 3.4 ms a frame; the gradient costs about 0.4 (9.6 → 10.0 ms).
+  - *Round 2, Zoom.* Every 4 s under Zoom. *Looked at and kept:* the ward's balloon at Zoom's top edge (the known
+    limit below); the funeral's dawn on her picture (the window's shape on the plaster, by design); her limp slide
+    back down the slope and its squash as she lands (174.4 to 176 s).
+
 ## Known limits
 
 - In the named reveals (the house made new, about 10 cells; the storm, about 17) the two of them are small. It is
