@@ -245,6 +245,18 @@ second.
   every half second (now up over three frames from the beat, `crash-clock.ts` `warm`). Everything else it flagged is
   scored: the two match cuts, the burst, the last chord and the cut-off, each within a frame of its music.
 
+## Polish wave 2 (Oct 26)
+
+- **The bridge** (the drive, 216 to 220 s): its roadway is as deep as the land's (the asphalt to the near curb, the girder
+  under that, `crash-road.ts` `GIRDER`). The deck was a thin strip under the wheels, so at its end the rail and the road
+  stopped in the air and the land's road went on a step below.
+- **Backstage at Overbrook**: the tubes' light is a wash down the wall only; a bright disc round each tube read as bloom,
+  a white blob at the top of every backstage frame.
+- **The drummer's bare stand at Overbrook** stands low by the hi-hat (`DRUM_STAND`), as a seated drummer's does. At a
+  band player's height its desk was where Fletcher's point on the last hit ended: his hand in it for a second and a half.
+- **The burst** (504.0) is the board's own slam to white. A white sheet laid over the whole frame on top of it (the cue's
+  `flash`) overshot by half again and washed every black grey for half a second; it is gone.
+
 ## How to run it
 
 ```
