@@ -1415,6 +1415,10 @@ Five polish waves after the coat hanger, each a fresh watch of the whole show on
   ending square where the ground turns up the slope, a hard seam across open stone; both now thin out at the ledge's
   back over the same short way, so they meet with no step. The tax counter, the alley, the dojo's dummies, the
   piano, the kitchen, the drop out of the washer and the portrait were looked at closely and left as they are.
+- **Wave 5.** A last watch for what the others had not: the show played at real speed in eight stretches of eight
+  seconds (a median frame of 16.7 ms and a 95th percentile of 16.8 ms in every one), the tubes catching in the first
+  two seconds, the room going down to the dark at the end, and the dialogue turned on, on a desktop and an upright
+  phone. Nothing was worth changing, so nothing was changed.
 
 ## The looks
 
