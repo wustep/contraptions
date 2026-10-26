@@ -492,8 +492,13 @@ export function drawBand(p: p5, c: Ctx, s: BandLook): void {
       } else {
         p.translate((x - 0.2) * k, (floor - 2.3 + 0.35 * (1 - s.up)) * k)
         p.rotate(0.35 - 0.25 * a * s.up + 0.3 * (1 - s.up))
-        rect(p, k, -0.05, 0, 0.05, 0.95, 0.03)
-        poly(p, k, [[-0.05, 0.9], [0.05, 0.95], [-0.12, 1.12], [-0.34, 1.02], [-0.3, 0.9], [-0.18, 0.96]])
+        // The body, the U-bend at its foot and the bell flaring back up beside it: a saxophone (a straight tube with a
+        // flat foot read as a hockey stick).
+        rect(p, k, -0.05, 0, 0.05, 0.92, 0.03)
+        poly(p, k, [
+          [-0.05, 0.9], [0.05, 0.9], [0.05, 1.0], [0.0, 1.1], [-0.1, 1.15], [-0.21, 1.12], [-0.28, 1.02],
+          [-0.31, 0.86], [-0.4, 0.74], [-0.17, 0.74], [-0.2, 0.86], [-0.19, 0.98], [-0.14, 1.04], [-0.08, 1.03], [-0.05, 0.98],
+        ])
       }
       p.pop()
     })
