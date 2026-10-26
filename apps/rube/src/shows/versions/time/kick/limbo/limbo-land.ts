@@ -617,35 +617,28 @@ export function drawGround(pen: Pen, f: Frame): void {
   // The seabed's skin and the sand's cross-fade under the water's edge, so the shore runs down into the sea and is
   // not cut off square at the waterline (the sea over it is clear enough to show a square end); over a cell either side
   // of it, as over a third of one the change from the dark seabed to the pale sand read as a seam down the beach.
+  // One wet band, from under the water up the beach: two butted at the waterline left a hairline seam down it where
+  // their edges met, plainest in the show's first frame.
   const M = 1
-  const fade = (x0: number, x1: number, col: string, th: number, a0: number, a1: number) => {
-    const lo = Math.max(xa, x0)
-    const hi = Math.min(xb, x1)
-    if (hi <= lo) return
-    const pts: Pt[] = []
-    for (let x = lo; x <= hi + 1e-9; x += Math.min(step, 0.05)) pts.push([x, sandY(x)])
-    pts.push([hi, sandY(hi)])
-    hgradFill(pen, [...pts, ...pts.slice().reverse().map(([x, y]): Pt => [x, y + th])], x0, x1, [
-      [0, col, a0],
-      [1, col, a1],
-    ])
-  }
   // One depth for all three, so no strip of one is left showing under another (a dark band under the beach).
   const TH = 0.36
   // The sand runs on down under the sea, which darkens it as it deepens (a darker seabed's skin cross-faded into it
   // across the waterline stood there as a smudge down the beach).
   band(-200, 200, LIMBO.sand, 1, TH)
-  fade(WATERLINE - M - 0.1, WATERLINE - 0.1, LIMBO.sandWet, TH, 0, 0.9)
   {
-    const lo = Math.max(xa, WATERLINE - 0.1)
-    const hi = Math.min(xb, -3.6)
+    const w0 = WATERLINE - M - 0.1
+    const w1 = -3.6
+    const lo = Math.max(xa, w0)
+    const hi = Math.min(xb, w1)
     if (hi > lo) {
       const pts: Pt[] = []
-      for (let x = lo; x <= hi + 1e-9; x += step) pts.push([x, sandY(x)])
+      for (let x = lo; x <= hi + 1e-9; x += Math.min(step, 0.05)) pts.push([x, sandY(x)])
       pts.push([hi, sandY(hi)])
-      hgradFill(pen, [...pts, ...pts.slice().reverse().map(([x, y]): Pt => [x, y + TH])], WATERLINE - 0.1, -3.6, [
-        [0, LIMBO.sandWet, 0.9],
-        [0.45, LIMBO.sandWet, 0.6],
+      const at = (x: number) => (x - w0) / (w1 - w0)
+      hgradFill(pen, [...pts, ...pts.slice().reverse().map(([x, y]): Pt => [x, y + TH])], w0, w1, [
+        [0, LIMBO.sandWet, 0],
+        [at(WATERLINE - 0.1), LIMBO.sandWet, 0.9],
+        [at(lerp(WATERLINE - 0.1, w1, 0.45)), LIMBO.sandWet, 0.6],
         [1, LIMBO.sandWet, 0],
       ])
     }
