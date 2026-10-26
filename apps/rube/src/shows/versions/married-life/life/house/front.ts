@@ -372,7 +372,8 @@ function lampPost(p: p5, k: number, weight: number, x: number, at: number, T: nu
 
 /**
  * The light from the lit room out through the bay, falling on the lawn and the pavement in front of it: brightest on
- * the grass under the glass, fainter where it reaches the pavement (two flat layers).
+ * the grass under the glass, fainter where it reaches the pavement: seven flat layers, each a little smaller, so it
+ * falls off evenly with no rim.
  */
 function spill(p: p5, k: number, T: number): void {
   const L = lookAt(T)
@@ -380,10 +381,14 @@ function spill(p: p5, k: number, T: number): void {
   if (a <= 0.01) return
   const { x0, x1 } = HOUSE.bay
   p.noStroke()
-  p.fill(alpha(p, HOME.lamp, 0.12 * a))
-  p.quad((x0 - 0.1) * k, G * k, (x1 + 0.1) * k, G * k, (x1 + 0.75) * k, (G + 0.62) * k, (x0 - 0.75) * k, (G + 0.62) * k)
-  p.fill(alpha(p, HOME.lamp, 0.13 * a))
-  p.quad((x0 + 0.1) * k, G * k, (x1 - 0.1) * k, G * k, (x1 + 0.25) * k, (G + 0.4) * k, (x0 - 0.25) * k, (G + 0.4) * k)
+  p.fill(alpha(p, HOME.lamp, 0.036 * a))
+  for (let i = 0; i < 7; i++) {
+    const u = i / 6
+    const inset = -0.1 + 0.35 * u
+    const flare = 0.75 - 0.6 * u
+    const deep = G + 0.62 - 0.4 * u
+    p.quad((x0 + inset) * k, G * k, (x1 - inset) * k, G * k, (x1 + flare) * k, deep * k, (x0 - flare) * k, deep * k)
+  }
 }
 
 function drawFront(p: p5, k: number, weight: number, T: number): void {
