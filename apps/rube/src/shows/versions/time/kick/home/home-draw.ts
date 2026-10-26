@@ -190,7 +190,12 @@ function garden(ctx: C2D, k: number, f: Frame, t: number, w: number): void {
   fillBox(ctx, k, GARDEN.terrace, GARDEN.back, x1, FLOOR, lawn)
   fillBox(ctx, k, GARDEN.terrace, GARDEN.back, x1, FLOOR, vgrad(ctx, k, GARDEN.back, FLOOR, [[0, HOME.lawnDark, 0.45], [0.35, HOME.lawnDark, 0], [1, HOME.lawnDark, 0]]))
   // The lawn comes on toward us, richer in the house's shade; the terrace's stone with it.
-  const near = vgrad(ctx, k, FLOOR - 0.02, FLOOR + 2.2, [[0, mixHex(HOME.lawn, HOME.sun, 0.12), 1], [0.35, HOME.lawn, 1], [1, mixHex(HOME.lawnDark, HOME.tree, 0.45), 1]])
+  const NEAR_LAWN = mixHex(HOME.lawn, HOME.sun, 0.12)
+  // The far lawn's sun goes over into it before the line he rolls on (met there, the two fills ruled a hard line across
+  // the grass under them all).
+  const fade = Math.max(GARDEN.back, FLOOR - 0.7)
+  fillBox(ctx, k, GARDEN.terrace, fade, x1, FLOOR, vgrad(ctx, k, fade, FLOOR, [[0, NEAR_LAWN, 0], [1, NEAR_LAWN, 1]]))
+  const near = vgrad(ctx, k, FLOOR - 0.02, FLOOR + 2.2, [[0, NEAR_LAWN, 1], [0.35, HOME.lawn, 1], [1, mixHex(HOME.lawnDark, HOME.tree, 0.45), 1]])
   // It ends a little toward us, cut, and under it the earth as under the house: in a tall frame (a phone held
   // upright) the ground is near half the picture, and the lawn and the terrace's stone ran on down to its foot.
   const cut = Math.min(f.y1 + 1, NEAR_EDGE)
