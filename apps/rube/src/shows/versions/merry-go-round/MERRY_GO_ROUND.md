@@ -164,7 +164,40 @@ the deck line a moment after each landing (`onBody` follows it, so riders and th
   coming half-way down the frame so every row of the cards (their gold fine print too) is over it, and a light shade
   sits under them. The sky's gradient and the shade are both placed from the page's
   16:9 box, so a phone held upright sees the same sky under the words. A veil of the sky's own gradient takes the land away below as the
-  castle climbs, so the credits come over sky and clouds.
+  castle climbs, so the credits come over sky and clouds. On a phone held upright the cards lift into the sky over the
+  16:9 box (`LIFT`, the shade with them), since there the castle sits higher and the cards' 9px type floor widens them;
+  and below the box the evening's gold is only a band at the horizon, the haze under it dimming toward the sky's blue.
+
+## Polish wave (October 2026)
+
+A careful watch at 1×, wide and on a phone, fixed what read wrong: the lake's far shore folded into steps (it was
+stepped by world x at a varying depth, so points far off the middle came back past their neighbours; it is stepped on
+the screen now); the war's crater fire lay over the pit as a flat dish of flame (it now burns taller than wide, up out
+of the hole); a soft dark patch behind Sophie on the porch at dusk read as smoke at her head (cut); the porch
+lantern's chain was ink on dark iron, so the lantern hung on nothing (dull brass now, at the walk and the finale); and
+the phone's credits and evening haze (above). The cue's landmarks (101.309, 178.051, 243.635, 272.370, 302.243) were
+read frame by frame: all land, and no timing changed.
+
+Wave 2: the mist between the hills' ranges ended at its thickest in a straight line, so the fog over the hills
+(108 → 122) was crossed by hard bands; it now goes on down to the frame's foot. On a phone the room (152 → 178 and
+the war's return) sat as a lit box in a flat dark void; the dark past its cut ceiling and floor is now the castle's
+own riveted iron, dim, barely seen in a wide frame.
+
+Wave 3, the phone held upright: the moor in front of the castle's collapse (243 → 260) ended in a ruled vertical side
+standing on the screen; past its end it now falls away ever steeper, out of the frame. The flower fields' near rows of
+flowers stopped in a line over a bare slab of green; they now go on down, nearer and bigger, to the frame's foot.
+
+Wave 4, the iconic beats close up: Calcifer's roar (128.0), the first time we see the engine, was framed so tight on
+the chimney that both bursts of smoke went out of the top at once, a dark smudge on the frame's edge. The wide is a
+little wider now (31.5 cells, its feet where they were), with sky over the chimney for the smoke to billow up in.
+
+Wave 5, transitions and the last details: every change of place was read a frame either side and holds. On a phone
+the hills' ground (108 → 121) was one row of heather drifts over bare green; the drifts now go on down in tiers. On a
+phone held on its side the Music card's long fine print ran into the castle's flag; it is two lines now.
+
+Wave 6, a last fresh watch: the two soldiers marching off into the side passage (43.8 → 44.8) went see-through as
+they went, the stone and the passage's light showing through them; they now deepen, solid, into the passage's dark,
+and only go once they are all but it (`drawSoldier`'s `into`).
 
 ## Chrome, credits, checks
 

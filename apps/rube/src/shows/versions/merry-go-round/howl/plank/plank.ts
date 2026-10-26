@@ -463,13 +463,18 @@ function drawCrumbs(p: p5, k: number, W: number, ink: string, t: number) {
 const NEAR = { par: 1.45, eye: 3.4, end: 14 }
 const NEAR_TURF = mixHex(mixHex(WASTES.moss, WASTES.rockDark, 0.5), WASTES.night, 0.14)
 function nearTop(b: number): number {
-  return YG + 0.55 + 0.08 * Math.sin(b * 0.83 + 0.3) + 0.05 * Math.sin(b * 2.3) + 3.6 * smooth(b, NEAR.end - 9, NEAR.end)
+  // Past its end it goes on falling away, ever steeper, so a tall frame (a phone held upright) that sees below its
+  // brow sees it curve down out of the frame, never a ruled side standing on the screen.
+  const past = Math.max(0, b - NEAR.end)
+  return YG + 0.55 + 0.08 * Math.sin(b * 0.83 + 0.3) + 0.05 * Math.sin(b * 2.3) + 3.6 * smooth(b, NEAR.end - 9, NEAR.end) + 1.6 * past * past
 }
 function drawNear(p: p5, k: number, W: number, ink: string, f: View) {
   const sx = f.cx * (1 - NEAR.par)
   const sy = (f.cy - NEAR.eye) * (1 - NEAR.par)
   const b0 = f.x0 - sx - 1
-  const b1 = Math.min(f.x1 - sx + 1, NEAR.end + 0.5)
+  let end = NEAR.end + 0.5
+  while (nearTop(end) + sy < f.y1 + 2 && end < NEAR.end + 12) end += 0.25
+  const b1 = Math.min(f.x1 - sx + 1, end)
   if (b1 <= b0) return
   const step = Math.max(0.15, (f.x1 - f.x0) / 140)
   const bs: number[] = []

@@ -31,6 +31,8 @@ export interface SoldierPose {
   pipe?: boolean
   /** 0..1: fading into the dark of a doorway. */
   light?: number
+  /** The doorway's dark, if he goes into one: he deepens into it, solid, rather than going see-through. */
+  into?: string
   /** Scale (1 is 1.36 cells tall). */
   scale?: number
   /** Toward night (the set's tone). */
@@ -47,8 +49,13 @@ export function drawSoldier(p: p5, k: number, weight: number, ink: string, o: So
   const L = o.light ?? 1
   if (L <= 0.01) return
   const s = (o.scale ?? 1) * k
-  const tone = (hex: string) => alpha(p, mixHex(hex, TOWN.night, (o.dark ?? 0) * 0.55), L)
-  const inkA = alpha(p, ink, L)
+  // Into a doorway's dark he deepens to its colour, solid, and only once he is all but it does he go, so no wall shows
+  // through him on his way in.
+  const dim = o.into ? 1 - L : 0
+  const A = o.into ? Math.min(1, L / 0.12) : L
+  const deep = (hex: string) => (o.into ? mixHex(hex, o.into, dim) : hex)
+  const tone = (hex: string) => alpha(p, deep(mixHex(hex, TOWN.night, (o.dark ?? 0) * 0.55)), A)
+  const inkA = alpha(p, deep(ink), A)
   const stride = o.stride ?? 0
   const cross = o.cross ?? 0
   const stiff = o.stiff ?? 0
@@ -135,7 +142,7 @@ export function drawSoldier(p: p5, k: number, weight: number, ink: string, o: So
   p.vertex(0.09 * s, -1.08 * s)
   p.vertex(0.03 * s, -1.085 * s)
   p.endShape(p.CLOSE)
-  p.fill(alpha(p, ink, L))
+  p.fill(inkA)
   p.circle(0.05 * s, -1.16 * s, 0.022 * s)
   p.stroke(inkA)
   p.strokeWeight(weight * 0.7)
