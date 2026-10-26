@@ -26,6 +26,9 @@ const OUTLINE: Pt[] = [
   [807.15, -6.8],
   [807.1, -8.2],
   [CLIFF_E.top, TOP],
+  // A second knot on the top at each edge, so the rounding is the edge's own and the plateau runs level right to it.
+  [CLIFF_E.top + 0.3, TOP],
+  [CLIFF_W.top - 0.3, TOP],
   [CLIFF_W.top, TOP],
   [831.0, -8.85],
   [831.5, -8.1],
@@ -136,11 +139,16 @@ export function drawIsland(g: Paint): void {
   // The rock under the sea, and the mass itself, its face towards us.
   blob(ctx, OUTLINE)
   fill(ctx, mix(stone, shade, 0.28 * aslant))
-  // The east face and the west face, each a plane of its own.
+  // The east face and the west face, each a plane of its own, inside the mass's own (rounded) outline: their corners
+  // are sharp, and past it they would stand off the top as a slab.
+  ctx.save()
+  blob(ctx, OUTLINE)
+  ctx.clip()
   poly(ctx, SHADE_E)
   fill(ctx, mix(stone, shade, fromWest))
   poly(ctx, SHADE_W)
   fill(ctx, mix(stone, shade, 1 - fromWest))
+  ctx.restore()
   // Its foot along the south face, darker where the sea wets it.
   poly(ctx, [...WET, [CLIFF_W.foot, 0.6], [CLIFF_E.foot, 0.6]])
   fill(ctx, mix(mix(stone, shade, 0.28 * aslant), rock(ROCK, t), 0.3))
@@ -177,11 +185,16 @@ export function drawIsland(g: Paint): void {
   fill(ctx, againstSun(SAND_C, t))
   blob(ctx, OUTLINE)
   stroke(g, ink, 1.6)
-  // The top's skin: a band of earth and dry grass along the plateau, so the ground he stands on is ground.
+  // The top's skin: a band of earth and dry grass along the plateau, so the ground he stands on is ground; inside the
+  // outline, so it rounds over the cliff's edge with it.
+  ctx.save()
+  blob(ctx, OUTLINE)
+  ctx.clip()
   poly(ctx, [[CLIFF_E.top, TOP], [CLIFF_W.top, TOP], [CLIFF_W.top - 0.4, TOP + 0.16], [CLIFF_E.top + 0.3, TOP + 0.2]])
   fill(ctx, againstSun('#8C7F5E', t))
   poly(ctx, [[CLIFF_E.top, TOP], [CLIFF_W.top, TOP], [CLIFF_W.top - 0.2, TOP + 0.05], [CLIFF_E.top + 0.15, TOP + 0.06]])
   fill(ctx, againstSun('#A8996C', t))
+  ctx.restore()
   for (const [x, y, r] of SCRUBS) drawScrub(g, x, y, r)
   for (const [x, h, lean] of OLIVES) drawOlive(g, x, TOP, h, lean)
   drawJetty(g)
