@@ -549,10 +549,14 @@ function glass(ctx: Ctx, k: number, t: number, f: Frame, wake: number): void {
       ctx.fillRect(x - 0.12 * k, cy - h, w + 0.12 * k, 2 * h)
     }
     // The hand's print: where its pads meet the glass opposite her, a soft warm light blooms on the pane between them,
-    // and stays while it presses.
+    // and stays while it presses. In the pane only: let out of it, it lay on the dark wall our side and round the
+    // fingers theirs, a bloom, not a mark on the glass.
     const print = smooth(t, T.palm - 0.05, T.palm + 0.7) - smooth(t, T.palm + 2.2, T.palm + 3.6)
     if (print > 0.01) {
       ctx.save()
+      ctx.beginPath()
+      ctx.rect(x, top * k, w, (FLOOR - top) * k)
+      ctx.clip()
       ctx.translate((GX + GT / 2) * k, PALM[1] * k)
       ctx.scale(0.6, 1)
       const pg = ctx.createRadialGradient(0, 0, 0, 0, 0, 0.6 * k)
