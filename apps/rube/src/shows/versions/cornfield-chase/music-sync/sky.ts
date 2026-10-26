@@ -149,8 +149,6 @@ export function shadows(s: Screen, t: number, hy: number, color: string, strengt
   if (strength <= 0.01) return
   const { ctx, cx, f, w } = s
   const half = w / 2 / f
-  const outer = new Path2D()
-  const inner = new Path2D()
   for (let i = 0; i < 5; i++) {
     const d = 1.15 + 3.6 * hash(i, 41)
     const y = groundY(s, hy, d)
@@ -161,15 +159,18 @@ export function shadows(s: Screen, t: number, hy: number, color: string, strengt
     const u = wrap(i * 1.37 + (0.018 * t) / d - groundAlong(s, d), 6.5 / d)
     if (Math.abs(u) > half + rw / f) continue
     const x = cx + u * f
-    // Feathered: a wide faint oval and a narrower one inside it, so the edge is soft as a cloud's shadow is.
-    outer.moveTo(x + rw, y)
-    outer.ellipse(x, y, rw, rh, 0, 0, Math.PI * 2)
-    inner.moveTo(x + rw * 0.72, y)
-    inner.ellipse(x + rw * 0.04, y, rw * 0.72, rh * 0.62, 0, 0, Math.PI * 2)
+    // Soft to its edge, as a cloud's shadow is: two flat ovals one in the other drew two rings on the rows.
+    const shade = ctx.createRadialGradient(0, 0, 0, 0, 0, rw)
+    shade.addColorStop(0, rgba(color, 0.1 * strength))
+    shade.addColorStop(0.5, rgba(color, 0.08 * strength))
+    shade.addColorStop(1, rgba(color, 0))
+    ctx.save()
+    ctx.translate(x, y)
+    ctx.scale(1, rh / rw)
+    ctx.fillStyle = shade
+    ctx.fillRect(-rw, -rw, rw * 2, rw * 2)
+    ctx.restore()
   }
-  ctx.fillStyle = rgba(color, 0.05 * strength)
-  ctx.fill(outer)
-  ctx.fill(inner)
 }
 
 /**
