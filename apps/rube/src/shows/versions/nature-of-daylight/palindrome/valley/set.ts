@@ -299,8 +299,9 @@ function drawLand(ctx: Ctx, k: number, f: Frame, t: number): void {
     silhouette(ctx, k, f, (x) => MEADOW - treeline(x), MEADOW + 0.5, tg, -Infinity, Infinity, CROWNS)
     const close = 1 - smooth(f.y1 - f.y0, 10, 30)
     if (d.sun > 0.01 && close > 0.01) {
-      // Light through the leaves at the crowns' edge, soft into them: a glow, not a drawn line.
-      for (const [w, a] of [[0.025, 0.32], [0.07, 0.2], [0.16, 0.1]] as const) rim(ctx, k, f, (x) => MEADOW - treeline(x), w, rgba(VALLEY.floodlight, a * d.sun * close), CROWNS)
+      // Light through the leaves at the crowns' edge, soft into them, in many faint steps: in three, the deepest
+      // left a second pale line under the crowns, close, and the treeline read as cut out and outlined.
+      for (let i = 1; i <= RIM_STEPS; i++) rim(ctx, k, f, (x) => MEADOW - treeline(x), 0.13 * (i / RIM_STEPS) ** 1.6, rgba(VALLEY.floodlight, (0.42 / RIM_STEPS) * d.sun * close), CROWNS)
     }
   }
   // The meadow toward us: pale in the haze at the valley floor, darker nearer, with the shadows of the cloud on it.
@@ -319,6 +320,8 @@ function drawLand(ctx: Ctx, k: number, f: Frame, t: number): void {
   }
 }
 
+/** How many rims the crowns' edge light is laid in: each faint enough that its lower edge is not a line. */
+const RIM_STEPS = 12
 /** A rim of light along a silhouette's top edge, `w` cells deep. */
 function rim(ctx: Ctx, k: number, f: Frame, yAt: (x: number) => number, w: number, fill: string, corners: number[] = []): void {
   const xs = along(f.x0 - 1, f.x1 + 1, k, corners)
