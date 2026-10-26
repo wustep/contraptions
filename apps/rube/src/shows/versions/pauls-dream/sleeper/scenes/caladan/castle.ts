@@ -270,7 +270,7 @@ export function painAt(t: number): number {
 /**
  * The box over his hand in it, and the gom jabbar. The box is a black cube on the floor with a mouth in its side; his
  * near part is in it. Its heat is the pain: the seam round the mouth goes ember while it lasts (a flat line, no light
- * comes out of it). The needle is held from her, over the box, to his neck.
+ * comes out of it). She sits at the box's other side, close, and holds the needle across its top to his neck.
  */
 function boxOver(g: Paint, paul: Pt): void {
   const ctx = g.ctx
@@ -293,7 +293,7 @@ function boxOver(g: Paint, paul: Pt): void {
   if (up > 0.002) {
     const from: Pt = [SEAT[0] + 0.22, SEAT[1] - 0.12]
     const to: Pt = [paul[0] + 0.02, paul[1] - 0.15]
-    const lift = Math.sin(Math.PI * up) * 0.35
+    const lift = Math.sin(Math.PI * up) * 0.12
     const tip: Pt = [from[0] + (to[0] - from[0]) * up, from[1] + (to[1] - from[1]) * up - lift]
     line(g, from, tip, '#A3A8AB', 0.016)
   }

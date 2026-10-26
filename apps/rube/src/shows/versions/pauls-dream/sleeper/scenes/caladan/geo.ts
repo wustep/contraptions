@@ -27,7 +27,7 @@ export const BED = { x0: -555.7, x1: -554.15, top: -26.22 } as const
 export const TEST = { x0: -546.6, x1: -541.4, floor: -19, ceil: -21.2, door: -541.4, hall1: -538.4 } as const
 /** The box on its low table, the Reverend Mother's seat, where Jessica waits outside. */
 export const BOX = { x: -543.7, top: -19.44, w: 0.46, h: 0.44 } as const
-export const SEAT: Pt = [-545.35, -19.2 - 0.13 * 1.3]
+export const SEAT: Pt = [-544.5, -19.2 - 0.13 * 1.3]
 export const OUTSIDE: Pt = [-540.85, -19.0 - 0.13]
 
 /** The hall in the tower's foot: its tall window onto the sea, the bull's head on its back wall, the crate. */

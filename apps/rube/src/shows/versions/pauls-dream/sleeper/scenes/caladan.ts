@@ -137,8 +137,8 @@ const shots: Shot[] = [
   // closer on him for the worst of it.
   { t: T.blows[1], cells: 1.25, at: [-543.55, -19.35], cut: true },
   { t: T.blows[2] - 0.002, cells: 1.18, at: [-543.53, -19.33] },
-  { t: T.blows[2], cells: 1.35, at: [-545.05, -19.45], cut: true },
-  { t: T.worst - 0.002, cells: 1.3, at: [-545.0, -19.44] },
+  { t: T.blows[2], cells: 1.35, at: [-544.3, -19.45], cut: true },
+  { t: T.worst - 0.002, cells: 1.3, at: [-544.25, -19.44] },
   { t: T.worst, cells: 1.1, at: [-543.5, -19.3], cut: true },
   { t: T.outside - 0.002, cells: 1.04, at: [-543.5, -19.29] },
   // Outside the door: Jessica waits against it.
