@@ -173,8 +173,15 @@ function ceiling(p: p5, k: number, weight: number, x0: number, x1: number, f: F)
   p.rectMode(p.CORNER)
   p.noStroke()
   const top = Math.min(f.y0 - 1, CEIL - 2)
-  p.fill(CLUB.concrete)
+  // Lit only from below, so it falls away into the dark over the beams: no flat grey lid over a tall frame.
+  p.fill(CLUB.dark)
   p.rect(X(x0), X(top), X(x1 - x0), X(CEIL - top))
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const g = ctx.createLinearGradient(0, X(CEIL), 0, X(CEIL - 1.4))
+  g.addColorStop(0, CLUB.concrete)
+  g.addColorStop(1, rgba(CLUB.concrete, 0))
+  ctx.fillStyle = g
+  ctx.fillRect(X(x0), X(CEIL - 1.4), X(x1 - x0), X(1.4))
   for (const bx of [-7.2, -3.9, 0.3, 9.3, 13.1, 17.0]) {
     if (bx < x0 - 1 || bx > x1 + 1) continue
     p.fill(CLUB.concrete)
@@ -276,7 +283,7 @@ function figures(p: p5, k: number, list: Figure[], t: number, f: F, lift: number
     const bx = fg.x + sway * 0.4
     // Shoulders and the body under them, one mass.
     p.ellipse(X(bx), Y(sy + 0.08 * s), X(2 * sw), X(0.36 * s))
-    p.rect(X(bx - 1.25 * sw), Y(sy + 0.12 * s), X(2.5 * sw), X(front ? 3 : FLOOR + 0.2 - sy))
+    p.rect(X(bx - 1.25 * sw), Y(sy + 0.12 * s), X(2.5 * sw), X(front ? Math.max(3, f.y1 + 0.2 - sy) : FLOOR + 0.2 - sy))
     p.quad(X(hx - 0.07 * s), Y(hy + 0.1 * s), X(hx + 0.07 * s), Y(hy + 0.1 * s), X(hx + 0.1 * s), Y(sy + 0.05 * s), X(hx - 0.1 * s), Y(sy + 0.05 * s))
     // The head, and its shape: bare, a quiff, a bob, a cap, a hood, long hair. No hats.
     const hs = fg.side
