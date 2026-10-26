@@ -23,7 +23,6 @@ import { HALL, TENT } from '../worlds'
  */
 
 const b = (t: number): number => nearestBeat(t)
-const clamp01 = (v: number) => Math.max(0, Math.min(1, v))
 
 /* ------------------------------------------------------------------ the room */
 
