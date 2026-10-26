@@ -322,7 +322,7 @@ export function paintSand(b: Brush, t: number, sand: { lit: string; shade: strin
   if (hx + 12 < view.x0 || hx - LENGTH - 80 > view.x1) return
   // The swell: worm sign, a long low rise of the ground running east under the sand toward the thumper, growing as it
   // nears, gone into the body as it breaks out. Its front, steep, takes the sun; its long west back is in shade, crisp
-  // at the crest and soft at the foot; sand spills off the crest down the back, and a thin veil trails behind it.
+  // at the crest and soft at the foot.
   const sw = smooth(t, 118.1, 119.6) * (1 + 0.5 * smooth(t, 121, 130)) * (1 - smooth(t, 131.5, 134))
   if (sw > 0.001) {
     const h = 2.0 * sw
@@ -362,25 +362,6 @@ export function paintSand(b: Brush, t: number, sand: { lit: string; shade: strin
     gr.addColorStop(0.65, b.ca(sand.shade, 0.9))
     gr.addColorStop(1, b.ca(sand.shade, 0))
     ctx.fillStyle = gr
-    ctx.fill()
-    // Sand spilling off the crest down the shaded back: one pale tongue, sliding.
-    const spill = 0.55 * Math.min(1, sw)
-    const sl = (t * 0.6) % 1
-    ctx.beginPath()
-    ctx.moveTo(crestX + 0.2, at(crestX) + 0.05)
-    ctx.quadraticCurveTo(crestX - L * (0.12 + 0.05 * sl), at(crestX - L * 0.1) + 0.05, crestX - L * (0.3 + 0.08 * sl), at(crestX - L * 0.3) + 0.2)
-    ctx.quadraticCurveTo(crestX - L * 0.12, at(crestX - L * 0.12) + h * 0.35, crestX + 0.2, at(crestX) + 0.05)
-    ctx.closePath()
-    ctx.fillStyle = b.ca(sand.lit, spill)
-    ctx.fill()
-    // The veil: sand blown off the crest, a long thin sliver trailing west behind it, low over its back.
-    const top = at(crestX)
-    ctx.beginPath()
-    ctx.moveTo(crestX + 0.4, top + 0.05)
-    ctx.quadraticCurveTo(crestX - L * 0.3, top - h * 0.5, crestX - L * 1.05, top + h * 0.2)
-    ctx.quadraticCurveTo(crestX - L * 0.45, top + h * 0.12, crestX + 0.4, top + 0.05)
-    ctx.closePath()
-    ctx.fillStyle = b.ca(mix(sand.lit, sand.air, 0.25), 0.5 * Math.min(1, h / 2.6))
     ctx.fill()
   }
   if (e <= 0.001) return
