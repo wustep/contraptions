@@ -320,15 +320,21 @@ function lawn(p: p5, k: number, weight: number, f: Frame, T: number): void {
 
 /**
  * By day the sun is high on the left: the house's shadow lies on the lawn to its right, deepest by the wall and soft
- * where it runs out (two flat layers, no gradient).
+ * where it runs out: seven flat layers, each a little shorter, so it thins out evenly with no step on the grass.
  */
 function sunShadow(p: p5, k: number, T: number): void {
   if (darkAt(T) > 0) return
   const x = HOUSE.x1 + 0.1
   p.noStroke()
-  p.fill(alpha(p, '#2F3D2C', 0.09))
-  p.quad(x * k, G * k, (x + 3.6) * k, G * k, (x + 2.5) * k, (G + 0.24) * k, x * k, (G + 0.24) * k)
-  p.quad(x * k, G * k, (x + 2.3) * k, G * k, (x + 1.5) * k, (G + 0.24) * k, x * k, (G + 0.24) * k)
+  p.fill(alpha(p, '#2F3D2C', 0.026))
+  for (let i = 0; i < 7; i++) {
+    const u = i / 6
+    const top = 3.8 - 2.8 * u
+    const foot = 2.7 - 2.1 * u
+    // Its near edge comes in over a short way from the wall's corner, not ruled down the lawn.
+    const near = x + 0.3 * u
+    p.quad(near * k, G * k, (x + top) * k, G * k, (x + foot) * k, (G + 0.24) * k, near * k, (G + 0.24) * k)
+  }
 }
 
 /** A street lamp: an iron post and a lantern; lit on its note, the glass warm and its pool of light on the pavement under it. */
