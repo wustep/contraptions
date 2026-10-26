@@ -215,8 +215,8 @@ function hall(g: Paint): void {
   fill(ctx, '#7E6A55')
   // The bull's head: on its hook until it is lowered into the crate, a pull on each note.
   const drop = bullDrop(t)
-  const chain = HOOK[1] - 0.25
-  if (drop > 0) line(g, [HOOK[0], HALL.ceil], [HOOK[0], chain + drop], '#1C1A18', 0.03)
+  // Its chain runs down from the vault to the plaque's top.
+  if (drop > 0) line(g, [HOOK[0], HALL.ceil], [HOOK[0], HOOK[1] + drop + 0.03], '#1C1A18', 0.03)
   const swing = drop > 0 && drop < CRATE_DEPTH() ? 0.03 * Math.sin(t * 3.1) : 0
   drawBull(g, { x: HOOK[0], y: HOOK[1] + drop, swing, dark: 0.15 })
   // The crate on the floor below it: its far side and floor drawn here, its near side over the head (`hallOver`).
@@ -224,8 +224,8 @@ function hall(g: Paint): void {
   fill(ctx, '#4A3B2B')
 }
 
-/** How far the head has come down its chain into the crate (cells). */
-const CRATE_DEPTH = () => HALL.floor - CRATE.h + 0.3 - (HOOK[1] + 0)
+/** How far the head has come down its chain into the crate (cells): all the way in, its horns under the lid. */
+const CRATE_DEPTH = () => HALL.floor - CRATE.h + 0.3 - HOOK[1]
 function bullDrop(t: number): number {
   if (t < T.lower[0]) return 0
   const depth = CRATE_DEPTH()
@@ -240,7 +240,12 @@ function hallOver(g: Paint): void {
   const y0 = HALL.floor - CRATE.h
   rect(ctx, CRATE.x - CRATE.w / 2, y0 + 0.08, CRATE.w, CRATE.h - 0.08)
   fill(ctx, '#6A543B')
-  for (const yy of [y0 + 0.22, y0 + 0.4]) line(g, [CRATE.x - CRATE.w / 2, yy], [CRATE.x + CRATE.w / 2, yy], '#4A3B2B', 0.025)
+  for (const yy of [y0 + 0.4, y0 + 0.72, y0 + 1.04]) line(g, [CRATE.x - CRATE.w / 2, yy], [CRATE.x + CRATE.w / 2, yy], '#4A3B2B', 0.025)
+  // The battens at its ends, so it reads as a crate.
+  for (const x of [CRATE.x - CRATE.w / 2, CRATE.x + CRATE.w / 2 - 0.12]) {
+    rect(ctx, x, y0 + 0.08, 0.12, CRATE.h - 0.08)
+    fill(ctx, '#5A4732')
+  }
   const lid = smooth(t, T.lid - 0.35, T.lid)
   if (lid > 0) {
     const a = (1 - lid) * -1.25

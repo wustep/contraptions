@@ -37,7 +37,7 @@ const nearBox: Pt = [BOX.x + BOX.w / 2 + 0.55, floorOf(TEST.floor)]
 const inBox: Pt = [BOX.x + BOX.w / 2 + R - 0.11, floorOf(TEST.floor)]
 const hallIn: Pt = [HALL.x1 + 0.6, floorOf(HALL.floor)]
 const byLeto: Pt = [HALL.x0 + 1.45, floorOf(HALL.floor)]
-const underHead: Pt = [-553.55, floorOf(HALL.floor)]
+const underHead: Pt = [-553.35, floorOf(HALL.floor)]
 const rampFoot = (i: number): Pt => [RAMP.foot[0] - 0.8 - i * 0.75, floorOf(-12)]
 const aboard: Pt = [RAMP.top[0] + 0.5, RAMP.top[1] - 0.05]
 
@@ -96,7 +96,7 @@ const jessicaSegs = jessica.segs.filter((s) => !(s.t0 >= T.hall - 1e-6 && s.t1 <
 
 const leto = new Walk([HALL.x0 + 0.85, floorOf(HALL.floor, LETO.size)], T.hall)
   .wait(T.inside + 0.4)
-  .roll([[underHead[0] - 0.5, floorOf(HALL.floor, LETO.size)]], T.lower[0] - 0.4, 'inout')
+  .roll([[-555.45, floorOf(HALL.floor, LETO.size)]], T.lower[0] - 0.4, 'inout')
   .wait(T.field)
   .jump(rampFoot(0))
   .roll([RAMP.foot, aboard], T.field + 0.9, 'in')

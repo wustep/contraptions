@@ -33,7 +33,7 @@ export const OUTSIDE: Pt = [-540.85, -19.0 - 0.13]
 /** The hall in the tower's foot: its tall window onto the sea, the bull's head on its back wall, the crate. */
 export const HALL = { x0: -558.2, x1: -551.4, floor: -12.6, ceil: -16.4, win: { x: -558.2, y0: -15.7, y1: -13.1 } } as const
 export const HOOK: Pt = [-554.4, -15.2]
-export const CRATE = { x: -554.4, w: 0.9, h: 0.55 } as const
+export const CRATE = { x: -554.4, w: 1.55, h: 1.3 } as const
 
 /** The landing field, the frigate on it, its ramp. */
 export const FIELD = { x0: -524, x1: -440 } as const
