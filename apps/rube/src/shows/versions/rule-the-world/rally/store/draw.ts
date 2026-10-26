@@ -1245,12 +1245,6 @@ export function drawMurray(pen: Pen, t: number): void {
   ctx.clip()
   const col = rgba(pen, C.shade, 0.58 * fade) as unknown as string
   ctx.fillStyle = col
-  const poly = (pts: Pt[]) => {
-    ctx.beginPath()
-    pts.forEach(([x, y], i) => (i ? ctx.lineTo(x * k, y * k) : ctx.moveTo(x * k, y * k)))
-    ctx.closePath()
-    ctx.fill()
-  }
   // The coat, the head, the hat; one shape, so where they overlap it is no darker.
   ctx.beginPath()
   const coat: Pt[] = [[cx - 0.4 * h, F], [cx + 0.4 * h, F], [cx + 0.36 * h, top + 0.25 * h], [cx + 0.22 * h, top], [cx - 0.22 * h, top], [cx - 0.36 * h, top + 0.25 * h]]
@@ -1261,15 +1255,49 @@ export function drawMurray(pen: Pen, t: number): void {
   ctx.ellipse(head[0] * k, head[1] * k, 0.17 * h * k, 0.2 * h * k, 0, 0, Math.PI * 2)
   ctx.rect((head[0] - 0.32 * h) * k, (head[1] - 0.17 * h) * k, 0.64 * h * k, 0.06 * h * k)
   ctx.rect((head[0] - 0.18 * h) * k, (head[1] - 0.42 * h) * k, 0.36 * h * k, 0.27 * h * k)
-  ctx.fill('nonzero')
-  // The arm: up and out toward the safe on the last two steps.
+  // The arm: up and out toward the safe on the last two steps, a coat sleeve narrowing to the wrist and a hand whose
+  // fingers open as it comes; in the same shape, so where it meets the coat it is no darker.
   const reach = ease((t - MURRAY_STEPS[5]) / 0.5)
   if (reach > 0) {
-    const sh: Pt = [cx + 0.3 * h, top + 0.18 * h]
-    const hand: Pt = [sh[0] + (0.35 + 0.75 * reach) * h * 1.4, sh[1] + (0.6 - 0.2 * reach) * h]
-    const n = 0.09 * h
-    poly([[sh[0], sh[1] - n], [hand[0], hand[1] - n * 0.8], [hand[0] + 0.1 * h, hand[1]], [hand[0], hand[1] + n * 0.8], [sh[0], sh[1] + n * 1.4]])
+    const sh: Pt = [cx + 0.26 * h, top + 0.2 * h]
+    const wr: Pt = [sh[0] + (0.3 + 0.62 * reach) * h * 1.3, sh[1] + (0.62 - 0.22 * reach) * h]
+    const ang = Math.atan2(wr[1] - sh[1], wr[0] - sh[0])
+    const nx = -Math.sin(ang)
+    const ny = Math.cos(ang)
+    const at = (p: Pt, d: number, s: number): Pt => [p[0] + Math.cos(ang) * d * h + nx * s * h, p[1] + Math.sin(ang) * d * h + ny * s * h]
+    // Each piece is wound the coat's way round, so that the overlaps fill rather than cancel.
+    const area = (pts: Pt[]) => pts.reduce((sum, [x, y], i) => sum + x * pts[(i + 1) % pts.length][1] - pts[(i + 1) % pts.length][0] * y, 0)
+    const wind = Math.sign(area(coat))
+    const add = (pts: Pt[]) => {
+      const ps = Math.sign(area(pts)) === wind ? pts : [...pts].reverse()
+      ps.forEach(([x, y], i) => (i ? ctx.lineTo(x * k, y * k) : ctx.moveTo(x * k, y * k)))
+      ctx.closePath()
+    }
+    // Upper arm and forearm, the elbow a little low, narrowing to the wrist.
+    const el = at([(sh[0] + wr[0]) / 2, (sh[1] + wr[1]) / 2], 0, 0.07 * reach)
+    add([at(sh, 0, -0.15), at(el, 0, -0.1), at(el, 0, 0.11), at(sh, 0, 0.17)])
+    add([at(el, 0, -0.1), at(wr, 0, -0.06), at(wr, 0, 0.065), at(el, 0, 0.11)])
+    // The hand, turned down over the safe, its fingers spreading as it comes.
+    const ha = ang + 0.25 + 0.2 * reach
+    const palm: Pt = [wr[0] + Math.cos(ha) * 0.1 * h, wr[1] + Math.sin(ha) * 0.1 * h]
+    add(Array.from({ length: 12 }, (_, i): Pt => {
+      const u = (i / 12) * Math.PI * 2
+      const [px, py] = [0.12 * Math.cos(u) * h, 0.09 * Math.sin(u) * h]
+      return [palm[0] + px * Math.cos(ha) - py * Math.sin(ha), palm[1] + px * Math.sin(ha) + py * Math.cos(ha)]
+    }))
+    const spread = 0.1 + 0.12 * reach
+    for (let i = 0; i < 5; i++) {
+      const thumb = i === 4
+      const a = ha + (thumb ? -1.0 : (i - 1.5) * spread)
+      const len = (thumb ? 0.14 : i === 0 || i === 3 ? 0.18 : 0.21) * h
+      const base: Pt = [palm[0] + Math.cos(a) * 0.08 * h, palm[1] + Math.sin(a) * 0.08 * h]
+      const tip: Pt = [base[0] + Math.cos(a) * len, base[1] + Math.sin(a) * len]
+      const w = 0.026 * h
+      const [sx, sy] = [-Math.sin(a), Math.cos(a)]
+      add([[base[0] + sx * w, base[1] + sy * w], [tip[0] + sx * w * 0.7, tip[1] + sy * w * 0.7], [tip[0] - sx * w * 0.7, tip[1] - sy * w * 0.7], [base[0] - sx * w, base[1] - sy * w]])
+    }
   }
+  ctx.fill('nonzero')
   ctx.restore()
 }
 
