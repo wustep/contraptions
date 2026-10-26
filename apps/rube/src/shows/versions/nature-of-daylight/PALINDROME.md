@@ -1312,6 +1312,16 @@ A hundred-and-twenty-eighth, polish wave 4: the chamber and the white beyond the
 - Looked at and left alone: Hannah's last moment inside the closing ring (257.5 s), where the small Hannah in Costello's
   ring sits a little off the lawn's; it is under half a second and reads as her going into the ring.
 
+A hundred-and-twenty-ninth, polish wave 5: the opening, the ending, and the dominoes at half a second a still.
+
+- **Winter** (46.353 s): the year turned smoothly from 44 to 48.5 s, straight across the cut to winter, so the winter
+  shot opened on autumn's full crowns over a snowy limb, and a second in they broke up into specks. The year now steps
+  on the cut: autumn holds to it, and winter opens bare.
+- **The searchlight in the room** (107 to 110 s): one hard-sided wedge, a blade laid across the window and the floor.
+  It is feathered now, twelve nested wedges each too faint to show its edge, the way the slot's light falls down the lift.
+- Looked at and left alone: the sun's sweep across the valley floor (322 to 327 s), already a broad soft cloud
+  shadow; the dominoes falling and standing again; the ending in the room.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
