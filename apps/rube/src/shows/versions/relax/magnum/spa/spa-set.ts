@@ -4,7 +4,7 @@ import { beam, flashBurst, pool, rgba } from '../cast'
 import { hash } from '../kit'
 import { CLUB, SPA } from '../worlds'
 import { BALCONY, CAB, clamp01, DOOR_X, DOORS, DRYER, FLOOR_Y, PRESS_FLASH, ROBES, sm, STRIPS, STRIPS_X, windAt, X_END, XT } from './spa-geo'
-import { ctxOf, box, hwash, line, polyline, shape, vwash, type Pen } from './spa-kit'
+import { ctxOf, box, disc, hwash, line, polyline, rbox, shape, vwash, type Pen } from './spa-kit'
 
 /**
  * The spa's room (the set, handed show time): black marble to a dark ceiling, a wainscot with a brass rail, candles in
@@ -92,22 +92,23 @@ function drawCandle(pen: Pen, x: number, i: number, t: number): void {
   )
 }
 
-/** A candle's light down the floor's black gloss: a soft smear. */
+/** A candle's light down the floor's black gloss: a soft streak, narrow and long, with no edge of its own. */
 function floorShine(pen: Pen, x: number, i: number, t: number): void {
   const ctx = ctxOf(pen.p)
   const { k } = pen
   const f = flameAt(i, t)
-  const g = ctx.createLinearGradient(0, FLOOR_Y * k, 0, FLOOR_LIP * k)
-  g.addColorStop(0, rgba(SPA.candle, 0.16 * f))
-  g.addColorStop(1, rgba(SPA.candle, 0))
   ctx.save()
   ctx.beginPath()
   ctx.rect((x - 0.4) * k, FLOOR_Y * k, 0.8 * k, (FLOOR_LIP - FLOOR_Y) * k)
   ctx.clip()
+  ctx.translate(x * k, FLOOR_Y * k)
+  ctx.scale(0.13 * k, (FLOOR_LIP - FLOOR_Y) * k)
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1)
+  g.addColorStop(0, rgba(SPA.candle, 0.14 * f))
+  g.addColorStop(0.5, rgba(SPA.candle, 0.05 * f))
+  g.addColorStop(1, rgba(SPA.candle, 0))
   ctx.fillStyle = g
-  ctx.beginPath()
-  ctx.ellipse(x * k, FLOOR_Y * k, 0.24 * k, 0.26 * k, 0, 0, Math.PI * 2)
-  ctx.fill()
+  ctx.fillRect(-1, 0, 2, 1)
   ctx.restore()
 }
 
@@ -172,6 +173,9 @@ function drawRobe(pen: Pen, x: number, t: number, i: number): void {
   const { p, k } = pen
   p.push()
   p.translate(hook[0] * k, hook[1] * k)
+  // The hook on the wall: a brass plate and its peg, which the robe's loop hangs over.
+  rbox(pen, -0.045, -0.2, 0.045, 0.02, 0.02, SPA.brass, 0)
+  disc(pen, [0, -0.045], 0.04, 0.04, SPA.brass, 0)
   // The body swings about the hook; the hem swings further (a cloth, not a board).
   const bend = (u: number): Pt => {
     const a = sway + lift * u * u
@@ -215,7 +219,8 @@ function drawRobe(pen: Pen, x: number, t: number, i: number): void {
   const w = bend(0.45)
   line(pen, [w[0] - half(0.45), w[1]], [w[0] + half(0.45), w[1]], SPA.towelShade, 1.0)
   line(pen, [w[0] + 0.05, w[1]], [w[0] + 0.1 + 0.2 * lift, w[1] + 0.2], SPA.towelShade, 0.8)
-  line(pen, [0, -0.06], [0, 0.1], SPA.brass, 0.8)
+  // Its loop, from the collar up over the peg.
+  polyline(pen, [[n[0] - 0.045, n[1] + 0.03], [0, -0.085], [n[0] + 0.045, n[1] + 0.03]], SPA.towelShade, 0.9)
   p.pop()
 }
 
