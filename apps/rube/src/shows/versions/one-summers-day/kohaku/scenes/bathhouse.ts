@@ -148,7 +148,9 @@ function handAt(i: number): (t: number) => Pt {
     const cheer = knock(t, CHEER[i % 2] + 0.06 * Math.floor(i / 2), 0.09, 0.22) * 0.16
     // Watching before the haul: each sways a little at the rail.
     const lean = 0.012 * Math.sin(t * 1.3 + i * 1.1) * (1 - smooth(t, HOOK, HOOK + 0.5))
-    return [HAND_X[i] - hauled(t) - tumble + lean, HAND_Y - bounce - cheer]
+    // Each pull a heave back on the rope, down the line one after another, eased back as they take the next grip.
+    const heave = PULLS.reduce((h, p) => h + 0.14 * knock(t, p + 0.035 * i, 0.07, 0.3), 0) * (t < FREE ? 1 : 0)
+    return [HAND_X[i] - hauled(t) - tumble + lean - heave, HAND_Y - bounce - cheer]
   }
 }
 
