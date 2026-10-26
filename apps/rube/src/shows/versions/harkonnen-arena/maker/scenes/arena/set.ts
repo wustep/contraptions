@@ -224,15 +224,13 @@ function paintFromAbove(b: Brush): void {
   ctx.fillStyle = b.ca('#000000', SHADE)
   ctx.fill('nonzero')
   ctx.restore()
-  // The pylons, square blocks across the floor's two ends, a way through each along the line the fighters keep.
+  // The pylons, square blocks across the floor's two ends: their roofs, plain, since from above the gate through each
+  // foot is under the stone.
   for (const side of [-1, 1] as const) {
     const face = side < 0 ? WEST_GATE : EAST_GATE
     const xa = Math.min(face, face + side * PYLON_W)
     rect(ctx, xa, cy - 2.4, PYLON_W, 4.8)
     ctx.fillStyle = b.c(PYLON)
-    ctx.fill()
-    rect(ctx, xa, cy - GATE_W / 4, PYLON_W, GATE_W / 2)
-    ctx.fillStyle = b.c(DOOR)
     ctx.fill()
   }
 }
