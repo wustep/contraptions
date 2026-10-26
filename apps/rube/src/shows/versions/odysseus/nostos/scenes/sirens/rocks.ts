@@ -73,12 +73,15 @@ export function drawRocks(g: Paint): void {
   const air = skyAt(t).low
   drawFar(g, air)
   const ship = shipPose(t)
+  // Under the water they all stand on one reef that goes on down out of sight, so no frame sees a rock end in a floor
+  // through the cut-open sea.
+  reef(g)
   for (const [x, w, h] of TEETH) {
     const pts: Pt[] = [[x - w, 0.5], [x - w * 0.6, -h * 0.55], [x - w * 0.15, -h], [x + w * 0.2, -h * 0.7], [x + w * 0.55, -h * 0.85], [x + w, 0.5]]
     poly(ctx, pts)
     fill(ctx, STONE_SHADE)
     washed(g, pts)
-    poly(ctx, pts)
+    outline(ctx, pts)
     stroke(g, INK, 1.6)
     surf(g, x, w * 1.1, 0.1, x * 0.7)
   }
@@ -91,7 +94,7 @@ export function drawRocks(g: Paint): void {
     poly(ctx, [foot, ...rock.pts.slice(1, rock.pts.indexOf(top) + 1), [top[0] + 0.15, top[1] + 0.9], [top[0] - 0.3, 0.6]])
     fill(ctx, rgba(STONE_SHADE, 0.92))
     washed(g, rock.pts)
-    poly(ctx, rock.pts)
+    outline(ctx, rock.pts)
     stroke(g, INK, 2)
     // Surf round its foot: two broad lobes of foam that rise and fall with the sea, slowly.
     for (let k = 0; k < 2; k++) {
@@ -100,6 +103,39 @@ export function drawRocks(g: Paint): void {
     }
     if (rock.siren) drawSiren(g, rock.siren, i, ship.x)
   }
+}
+
+/** A rock's outline open along its foot: inked over its points, not across the bottom it has under the water. */
+function outline(ctx: CanvasRenderingContext2D, pts: Pt[]): void {
+  ctx.beginPath()
+  ctx.moveTo(pts[0][0], pts[0][1])
+  for (const p of pts.slice(1)) ctx.lineTo(p[0], p[1])
+}
+
+/**
+ * The reef the rocks and teeth stand on: from each one's foot it goes on down, dipping a little between them, and widens
+ * away into the dark at both ends.
+ */
+function reef(g: Paint): void {
+  const { ctx } = g
+  const feet: [number, number][] = [...TEETH.map(([x, w]): [number, number] => [x - w, x + w]), ...ROCKS.map((r): [number, number] => [r.pts[0][0], r.pts[r.pts.length - 1][0]])]
+  feet.sort((p, q) => p[0] - q[0])
+  // A tooth awash at a rock's foot is one foot with it.
+  for (let k = feet.length - 1; k > 0; k--) {
+    if (feet[k][0] <= feet[k - 1][1] + 0.3) {
+      feet[k - 1] = [feet[k - 1][0], Math.max(feet[k - 1][1], feet[k][1])]
+      feet.splice(k, 1)
+    }
+  }
+  const top: Pt[] = []
+  for (const [k, [a, b]] of feet.entries()) {
+    if (k > 0) top.push([(feet[k - 1][1] + a) / 2, 0.55 + 0.2 * hash(k, 3)])
+    top.push([a + 0.05, 0.35], [b - 0.05, 0.35])
+  }
+  const x0 = feet[0][0]
+  const x1 = feet[feet.length - 1][1]
+  poly(ctx, [...top, [x1 + 0.6, 2.5], [x1 + 4, 40], [x0 - 4, 40], [x0 - 0.6, 2.5]])
+  fill(ctx, WET)
 }
 
 /** The band of wet stone the swell washes, from just above the water down: the outline's own foot, darker. */
@@ -120,7 +156,8 @@ function surf(g: Paint, x: number, w: number, h: number, ph: number): void {
   const lift = 0.09 * Math.sin(t * 1.3 + ph)
   ctx.beginPath()
   ctx.ellipse(x, -0.02 + lift, w, h + 0.05 * Math.sin(t * 0.9 + ph), 0, Math.PI, Math.PI * 2)
-  fill(ctx, rgba('#F7F5EE', 0.9))
+  // Broken water, seen through: never a white plank laid on the sea.
+  fill(ctx, rgba('#F7F5EE', 0.6))
 }
 
 /** Two low islets far off on the sea behind, paler with the haze. */
