@@ -163,9 +163,15 @@ const BANDS: [number, number, number, number][] = [
 const TILT = -0.09
 
 /** The face's outline, and its bands of rock, each with the snow lying on its top (made once). */
-let faceGeo: { outline: Path2D; bands: { rock: Path2D; lit: Path2D; top: Path2D; y: number }[] } | null = null
+/** A cap of snow, and how high and low it goes: the slope's snow is filled into each over only its own rows. */
+type Cap = { path: Path2D; y0: number; y1: number }
+const capOf = (pts: readonly Pt[]): Cap => ({ path: shape(pts), y0: Math.min(...pts.map((p) => p[1])), y1: Math.max(...pts.map((p) => p[1])) })
+
+let faceGeo: { outline: Path2D; bands: { rock: Path2D; lit: Path2D }[]; caps: Cap[] } | null = null
 function faceOf() {
-  return (faceGeo ??= {
+  if (faceGeo) return faceGeo
+  const caps: Cap[] = []
+  faceGeo = {
     outline: shape(FACE),
     bands: BANDS.map(([xa, y0, len, th], j) => {
       // Tilted with the strata, ragged along its top where the snow lies.
@@ -185,14 +191,13 @@ function faceOf() {
       const cap = top.map(([x, y], i): Pt => [x, y + th * (0.2 + 0.2 * hash(j * 31, i + 300, 47)) * Math.sin((Math.PI * i) / n) ** 0.6])
       // Its upper side, toward the sky, takes more light than its face.
       const lit = top.map(([x, y], i): Pt => [x, y + (low[i][1] - y) * (0.5 + 0.15 * hash(j * 31, i + 400, 53))])
-      return {
-        rock: shape([...top, ...[...low].reverse()]),
-        lit: shape([...top, ...lit.reverse()]),
-        top: shape([...top.map(([x, y]): Pt => [x, y - 0.2]), ...cap.reverse()]),
-        y: y0 - th,
-      }
+      caps.push(capOf([...top.map(([x, y]): Pt => [x, y - 0.2]), ...cap.reverse()]))
+      return { rock: shape([...top, ...[...low].reverse()]), lit: shape([...top, ...lit.reverse()]) }
     }),
-  })
+    caps,
+  }
+  caps.push(capOf(SIFT_LIP))
+  return faceGeo
 }
 
 /** The face's own snow at `t`, filled into `clip` (or over its whole outline): the bands' caps are the slope's own. */
@@ -228,10 +233,7 @@ export function drawFace(pen: Pen, f: Frame, t: number): void {
     c.fillStyle = mix(tn.faceRock, tn.faceShade, 0.72)
     for (const b of g.bands) c.fill(b.lit)
     c.fill(shape(SIFT_LIT))
-    const caps = new Path2D()
-    for (const b of g.bands) caps.addPath(b.top)
-    caps.addPath(shape(SIFT_LIP))
-    faceSnow(c, f, t, tn, -14, 0, caps)
+    for (const b of g.caps) if (b.y1 > f.y0 && b.y0 < f.y1) faceSnow(c, f, t, tn, b.y0, b.y1, b.path)
     // The snow the climb starts in, along the foot.
     if (f.y1 > R - 0.5) {
       c.fillStyle = mix(tn.faceSnow, '#FFFFFF', 0.25)

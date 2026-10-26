@@ -432,6 +432,21 @@ the sky. Each card holds 3.4 to 5 s; the last is gone by 266.7 s.
     (the piano's 157 are 49, the press's 362 are 181); the ones left are strikes, the passages, the rotors turning,
     edges moving across calm fills, and the camera's own moves. A frame paints in 1.1 ms at the median instead of
     1.4 (2560 × 1600, with the GPU), and in under half the time from the basement to the sea.
+- **The polish wave** (three rounds over the whole show in the wide frame, a phone's tall frame and Zoom):
+  - the phone saw past the world: the Himalayan face and the snow at its foot stopped 9 cells down, so a tall frame
+    showed pale rectangles and a hard vertical edge under the climb; the daydream's platform and pavement stopped 6
+    cells under the tracks, with the sky again below them. Both now run past the bottom of any frame;
+  - the Himalayan rock read as boards floating on the face, with a bright white lip. The bands' snow is the slope's
+    own now, their feet are broken and their tops lit, and the outcrop over the ledge is a chunk with an overhanging
+    tip that the snow sifts off;
+  - cut: the street's mailbox, the near plane's one thing, which stood in the near lane with the taxi behind it;
+  - the lamp post outside the press stood with its foot on the conveyor and then right through him at the cut. It is
+    further along the kerb. The hall's dark edges ease off over the bright pavement outside, where they lay as dirty
+    lobes in the corners;
+  - the daydream and the snow came up in their frames in 0.15 s and 0.12 s, a snap from near white. Each now comes up
+    over its whole lead-in;
+  - timing: the turns were read a tenth of a second either side (the band in, the drop under, the band back, the last
+    hit, the pulse, the build, the peak, the last chord). All of them land, so nothing was retimed.
 
 ## Judgment calls
 
