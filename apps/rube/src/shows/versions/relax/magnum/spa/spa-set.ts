@@ -243,7 +243,7 @@ function drawOutside(pen: Pen, out: number, x1: number, open: number): void {
   const X = (v: number) => v * k
   const warm = 0.4 + 0.6 * open
   // The night: blue-black over the street, a little less dark down at the street's level.
-  box(pen, out, CEIL - 1, x1 + 1, FLOOR_Y, NIGHT, 0)
+  box(pen, out, CEIL - 30, x1 + 1, FLOOR_Y, NIGHT, 0)
   vwash(pen, out, x1 + 1, FLOOR_Y - 3, FLOOR_Y, [
     [0, NIGHT_LOW, 0],
     [1, NIGHT_LOW, 0.85],
@@ -252,7 +252,7 @@ function drawOutside(pen: Pen, out: number, x1: number, open: number): void {
   beam(p, k, [out - 0.05, FLOOR_Y - 1.15], [out + 3.4, FLOOR_Y - 0.25], 2.2, 1.2, SPA.candle, 0.16 * warm)
   // The pavement, wet: black gloss, its edge catching the light near the door; the door's light pooled on it and
   // mirrored down into it as a soft streak; a puddle's glint further out.
-  box(pen, out, FLOOR_Y, x1 + 1, FLOOR_LIP + 3, CLUB.dark, 0)
+  box(pen, out, FLOOR_Y, x1 + 1, FLOOR_LIP + 30, CLUB.dark, 0)
   vwash(pen, out, x1 + 1, FLOOR_Y, FLOOR_Y + 1.3, [
     [0, NIGHT_LOW, 0.9],
     [1, CLUB.dark, 0],
