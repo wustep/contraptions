@@ -271,9 +271,16 @@ function drawOutside(pen: Pen, out: number, x1: number, open: number): void {
     p.rectMode(p.CENTER)
     for (const s of PRESS) {
       const [hx, hy] = headOf(s)
-      const sy = hy + 0.5
-      p.rect(X(hx + 0.05), X((sy + FLOOR_Y) / 2), X(0.74), X(FLOOR_Y - sy))
-      p.ellipse(X(hx + 0.05), X(sy), X(0.84), X(0.4))
+      const sy = hy + 0.42
+      // A coat from the shoulders to the knee, then two legs and shoes turned to the door: a man, not a post.
+      const cx = hx + 0.05
+      const hem = FLOOR_Y - 0.44
+      p.ellipse(X(cx), X(sy + 0.06), X(0.62), X(0.26))
+      p.quad(X(cx - 0.31), X(sy + 0.06), X(cx + 0.31), X(sy + 0.06), X(cx + 0.26), X(hem), X(cx - 0.29), X(hem))
+      p.quad(X(cx - 0.2), X(hem - 0.02), X(cx - 0.06), X(hem - 0.02), X(cx - 0.11), X(FLOOR_Y - 0.03), X(cx - 0.24), X(FLOOR_Y - 0.03))
+      p.quad(X(cx + 0.04), X(hem - 0.02), X(cx + 0.18), X(hem - 0.02), X(cx + 0.19), X(FLOOR_Y - 0.03), X(cx + 0.06), X(FLOOR_Y - 0.03))
+      p.rect(X(cx - 0.22), X(FLOOR_Y - 0.035), X(0.22), X(0.07), X(0.03))
+      p.rect(X(cx + 0.1), X(FLOOR_Y - 0.035), X(0.2), X(0.07), X(0.03))
       p.rect(X(hx), X(hy + 0.26), X(0.16), X(0.2))
       p.ellipse(X(hx), X(hy), X(0.32), X(0.4))
       // Bare heads: a quiff swept up at the front, or a bob to the jaw.
@@ -281,7 +288,7 @@ function drawOutside(pen: Pen, out: number, x1: number, open: number): void {
       else p.ellipse(X(hx + 0.03), X(hy + 0.02), X(0.42), X(0.44))
       if (!s.cam) continue
       // The arm up to the camera; the camera at the face; the flash gun's stem up to its reflector.
-      p.quad(X(hx - 0.3), X(sy + 0.02), X(hx - 0.42), X(sy - 0.12), X(hx - 0.2), X(hy + 0.12), X(hx - 0.08), X(hy + 0.28))
+      p.quad(X(hx - 0.14), X(sy + 0.14), X(hx - 0.32), X(sy + 0.04), X(hx - 0.22), X(hy + 0.12), X(hx - 0.08), X(hy + 0.26))
       p.rect(X(hx - 0.24), X(hy + 0.05), X(0.36), X(0.24), X(0.03))
       p.rect(X(hx - 0.34), X(hy - 0.2), X(0.04), X(0.28))
       const [rx, ry] = reflectorOf(s)
