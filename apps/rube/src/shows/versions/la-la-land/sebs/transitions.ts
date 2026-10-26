@@ -157,9 +157,15 @@ function drawCover(p: p5, k: number, c: Cover, f: number, t: number): void {
   const H = (fr.y1 - fr.y0 + 2 * pad) * k
   ctx.save()
   if (c.kind === 'black') {
-    const shutter = c.flicker ? 0.93 + 0.07 * Math.sin(t * 2 * Math.PI * 18) * Math.sin(t * 2 * Math.PI * 2.3 + 1) : 1
-    ctx.fillStyle = rgba(c.color ?? '#000000', f * shutter)
+    ctx.fillStyle = rgba(c.color ?? '#000000', f)
     ctx.fillRect(X0, Y0, W, H)
+    // A projector's light flickers in its brightness, not its reach: the cover stays whole, and only dims a little
+    // with the shutter (letting the world through instead showed, on a phone, the dark room round the screen in bands).
+    if (c.flicker) {
+      const dim = 0.035 * (1 - Math.sin(t * 2 * Math.PI * 18) * Math.sin(t * 2 * Math.PI * 2.3 + 1))
+      ctx.fillStyle = rgba('#000000', f * dim)
+      ctx.fillRect(X0, Y0, W, H)
+    }
     if (c.spark && f > 0.02) {
       // The composed frame is 16 to 9, whole on the canvas, about its centre.
       const fw = Math.min(fr.x1 - fr.x0, ((fr.y1 - fr.y0) * 16) / 9)
