@@ -913,11 +913,13 @@ function lakeOutline(f: Frame): { pts: Pt[]; lip: number[] } {
     const sc = lerp(S_NEAR - S_TURN, S_SHORE, i / 72)
     at(leftShore(sc), sc, leftLip(sc))
   }
-  const xl = leftShore(S_SHORE)
-  const xr = cx + (f.x1 + 1 - cx) / S_SHORE
-  for (let i = 0; i <= 40; i++) {
-    const x = lerp(xl, xr, i / 40)
-    at(x, farShore(x), 0.06)
+  // Along the far shore, stepped evenly on the screen: stepped by world x, its waves of depth threw points far off
+  // the middle back past their neighbours, and the shore folded into steps and notches.
+  const Xl = depthX(leftShore(S_SHORE), S_SHORE, cx)
+  for (let i = 0; i <= 120; i++) {
+    const X = lerp(Xl, f.x1 + 1, i / 120)
+    pts.push([X, depthY(GW, farShore(cx + (X - cx) / S_SHORE))])
+    lip.push(0.06)
   }
   // Down the right, off the frame, to where it began.
   pts.push([Math.max(f.x1 + 1, pts[0][0]), pts[pts.length - 1][1]], [Math.max(f.x1 + 1, pts[0][0]), pts[0][1]])
