@@ -180,20 +180,20 @@ export function drawCity(pen: Pen, f: View, te: number): void {
     const x1 = Math.min(QUAY_R, f.x1 + 1)
     ctx.fillStyle = mixHex(STONE_DARK, RAIN.far, 0.5)
     ctx.fillRect(x0 * k, MID_BASE * k, (x1 - x0) * k, (RAIN_GEO.river - MID_BASE) * k)
-    if (k > 8) {
-      // Its courses, faint in the mist (at half strength, in the close shots of the river they ran the frame's whole
-      // width as scan lines behind the van).
-      ctx.fillStyle = rgba(RAIN.far, 0.22)
-      for (let y = MID_BASE + 0.9; y < RAIN_GEO.river - 0.4; y += 1.1) ctx.fillRect(x0 * k, y * k, (x1 - x0) * k, Math.max(1, 0.05 * k))
-    }
+    // No courses: even faint, in the close shots of the river they ran the frame's whole width as scan lines behind
+    // the van and the balls in the water.
     const g = ctx.createLinearGradient(0, MID_BASE * k, 0, RAIN_GEO.river * k)
     g.addColorStop(0, rgba(RAIN.skyLow, 0.5))
     g.addColorStop(0.6, rgba(RAIN.skyLow, 0.18))
     g.addColorStop(1, rgba(RAIN.skyLow, 0.32))
     ctx.fillStyle = g
     ctx.fillRect(x0 * k, MID_BASE * k, (x1 - x0) * k, (RAIN_GEO.river - MID_BASE) * k)
-    ctx.fillStyle = rgba(RAIN.riverLight, 0.75)
-    ctx.fillRect(x0 * k, (RAIN_GEO.river - 0.32) * k, (x1 - x0) * k, 0.32 * k)
+    // The far reach of the water, catching the sky: a soft band brightening down to the surface, not a strip.
+    const reach = ctx.createLinearGradient(0, (RAIN_GEO.river - 0.6) * k, 0, RAIN_GEO.river * k)
+    reach.addColorStop(0, rgba(RAIN.riverLight, 0))
+    reach.addColorStop(1, rgba(RAIN.riverLight, 0.6))
+    ctx.fillStyle = reach
+    ctx.fillRect(x0 * k, (RAIN_GEO.river - 0.6) * k, (x1 - x0) * k, 0.6 * k)
   }
 }
 
