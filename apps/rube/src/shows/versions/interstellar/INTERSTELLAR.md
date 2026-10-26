@@ -231,7 +231,17 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 164 (latest)
+## Polish pass 165 (latest)
+
+Polish wave 4 (Oct 26 2026): Act I's dark and all of Act II at full size, a frame every 5 s, and then the props that carry the last scenes zoomed to twice the frame's size. One fix and one cut.
+
+**Round 1, the lamp** (255 s to the end, `drawLampLight` in `act2/edmunds.ts`). Its cone was one flat wedge. With the camera in close for the meeting, it stood behind the two of them as a big pale wedge with hard slanting sides, and its foot ruled a line across the ramp and the sand either side of the pool. It is five wedges now, each a little narrower, so its sides soften outward, and each fades down to nothing at the ground, where the pool takes over.
+
+**Round 2, the hub's arm** (194 to 206 s, `drawArm` in `act2/hub.ts`). Cut: the hydraulic ram along its upper arm. It was a hairline a shade outside the arm's edge, so it read as a stray second outline, not a ram.
+
+**Round 3, timing.** Frames a tenth of a second either side of the shield's fall (239.0 s), the chute's bloom (244.0), Cooper out of his seat (253.99) and the railcar's stop (146.01). Each lands on its strike. Nothing was retimed.
+
+## Polish pass 164
 
 Polish wave 3 (Oct 26 2026): frames every 4 s at full size and every 3.5 s upright, then the weak spots zoomed to twice the frame's size, where the drawing's own faults show. The player's page was looked at on a phone as well: there the stage is nearly square, and the credits read over the stars.
 
