@@ -1131,10 +1131,18 @@ export function drawSafeDoor(pen: Pen, t: number): void {
   }
   shape(pen, [P(HINGE_X, yT), P(edge, yT), P(edge, yB), P(HINGE_X, yB)], inside ? '#2A2826' : C.safe, 0.5, C.safeEdge)
   if (inside) {
-    // Its inner face: the bolt-work under a plate, a gilt line round it.
-    shape(pen, [P(HINGE_X + 0.2, yT + 0.2), P(edge - 0.2, yT + 0.2), P(edge - 0.2, yB - 0.2), P(HINGE_X + 0.2, yB - 0.2)], '#36332F')
-    shape(pen, [P(HINGE_X + 0.12, yT + 0.12), P(edge - 0.12, yT + 0.12), P(edge - 0.12, yB - 0.12), P(HINGE_X + 0.12, yB - 0.12)], null, 0.5, C.gilt)
-    for (const y of [yT + 0.35, (yT + yB) / 2, yB - 0.35]) shape(pen, [P(edge - 0.02, y - 0.05), P(edge + 0.1, y - 0.05), P(edge + 0.1, y + 0.05), P(edge - 0.02, y + 0.05)], C.chrome)
+    // Its inner face: a plate, a gilt line round it, and on the plate the bolt-work it hid: the lock's case behind
+    // the dial, its three bars out to the bolts, and the upright that throws them together.
+    const q = (x0: number, y0: number, x1: number, y1: number): Pt[] => [P(x0, y0), P(x1, y0), P(x1, y1), P(x0, y1)]
+    shape(pen, q(HINGE_X + 0.2, yT + 0.2, edge - 0.2, yB - 0.2), '#3A3632')
+    shape(pen, q(HINGE_X + 0.12, yT + 0.12, edge - 0.12, yB - 0.12), null, 0.5, C.gilt)
+    const bolts = [yT + 0.35, (yT + yB) / 2, yB - 0.35]
+    const lockX = DIAL[0]
+    for (const y of bolts) shape(pen, q(lockX, y - 0.025, edge - 0.02, y + 0.025), C.chromeDark)
+    shape(pen, q(edge - 0.34, bolts[0] - 0.04, edge - 0.27, bolts[2] + 0.04), C.chromeDark)
+    shape(pen, q(lockX - 0.26, (yT + yB) / 2 - 0.3, lockX + 0.26, (yT + yB) / 2 + 0.3), '#24211F', 0.4, C.giltDark)
+    for (const y of bolts) shape(pen, q(edge - 0.02, y - 0.05, edge + 0.1, y + 0.05), C.chrome)
+    for (const y of [yT + 0.2, yB - 0.25]) shape(pen, q(HINGE_X - 0.02, y, HINGE_X + 0.06, y + 0.22), '#2A2624', 0.3, C.safeEdge)
     return
   }
   // The face's gilt: a double line round the panel, scrolls at the corners, a landscape oval (shapes only).
