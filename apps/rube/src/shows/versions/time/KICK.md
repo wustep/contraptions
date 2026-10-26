@@ -712,6 +712,15 @@ Round 2 (Zoom):
 Round 3: the hits not read last time (the café's three blasts on bar 9, the taxi, the train and its impact on bars
 19 to 20, Mal's shot on bar 38, the children's turn on bar 67) are all on the grid; nothing moved.
 
+Polish wave 3 (every world crossing frame by frame, from three quarters of a second before to a second after; the whole
+show under Overview; full frames of the beats not yet looked at close):
+- **The crossings** (30.86, 61.34, the blink on 68.97, 91.82, 122.29, 152.77, 213.72, the veil on 244.19): each is a
+  clean match cut or its blink or veil, with no flash and no frame of the wrong world. Nothing changed.
+- **Overview**: the stack, Paris, the plane and home each read whole. Nothing changed.
+- **The lawn** (251 to 274.6): the far lawn, lit by the low sun, and the near lawn were two fills meeting on the line
+  they roll on, a hard line ruled across the grass under all three of them. The far lawn's light goes over into the
+  near lawn's colour in the last part of a cell before it.
+
 ## Inception nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
