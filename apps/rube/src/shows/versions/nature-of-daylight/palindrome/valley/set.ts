@@ -738,14 +738,26 @@ function drawTheShell(ctx: Ctx, p: p5, k: number, f: Frame, t: number): void {
     // its middle it stood narrow under the wide cut, a T.
     const hw = w / 2
     ctx.globalAlpha *= doors
-    ctx.moveTo((cx - hw) * k, (foot + 0.02) * k)
+    ctx.moveTo((cx - hw) * k, (foot - 0.01) * k)
     ctx.lineTo((cx - hw) * k, (belly - 0.1 - r) * k)
     ctx.quadraticCurveTo((cx - hw) * k, (belly - 0.08) * k, (cx - hw + r) * k, (belly - 0.08) * k)
     ctx.lineTo((cx + hw - r) * k, (belly - 0.08) * k)
     ctx.quadraticCurveTo((cx + hw) * k, (belly - 0.08) * k, (cx + hw) * k, (belly - 0.1 - r) * k)
-    ctx.lineTo((cx + hw) * k, (foot + 0.02) * k)
+    ctx.lineTo((cx + hw) * k, (foot - 0.01) * k)
     ctx.closePath()
     ctx.fill()
+    // The slot's light carried on down the throat, dying toward the belly: stopped at the slot's foot, the lit cut sat
+    // on a flat black block, a hard line across the opening.
+    if (slot.light > 0.01) {
+      const ff = ctx.createLinearGradient(0, foot * k, 0, belly * k)
+      ff.addColorStop(0, rgba(SHELL.fogLit, 0.2 * slot.light))
+      ff.addColorStop(0.55, rgba(SHELL.fogLit, 0.05 * slot.light))
+      ff.addColorStop(1, rgba(SHELL.fogLit, 0))
+      ctx.globalCompositeOperation = 'screen'
+      ctx.fillStyle = ff
+      ctx.fill()
+      ctx.globalCompositeOperation = 'source-over'
+    }
     // Its cut faces: the stone's thickness catching a little of the light inside, down either side.
     const edge = Math.max(0.04, 0.05 * w)
     for (const side of [-1, 1]) {
