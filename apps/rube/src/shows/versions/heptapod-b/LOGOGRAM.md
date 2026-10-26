@@ -501,6 +501,22 @@ changed, in the order of the film, and then what runs through it:
   along the summer shore were busy detail on a three-second vision; the green and its ink line say grass. Nothing
   else moved.
 
+## Polish wave
+
+Three rounds by a fresh director (Claude Opus 5.5, Oct 25): the whole film at 2 s and 0.5 s sheets, full frames of
+the weakest moments, a phone frame, then the strikes against the cue.
+
+- **The reunion's light** (186.3 → 196.8): the sunlight through the opened cloud was the lamps' gold, and pushed in
+  on the two of them its shafts lay across the whole frame: they met in an ochre murk, and the cut into the grey lake
+  house was a jump of colour. The light is only a little warmer than the floods' cream now, and close in the shafts
+  are a soft warmth in the air; the wide still sees them whole.
+- **The starter's rope** (22 → 31): it ran from the flywheel's hub to the middle of the pulley's side, and hung to
+  the bucket from the pulley's bottom, two ropes tied on. It is one rope now: off the drum on a tangent, over the
+  pulley's top in its groove, and straight down off its side to the bail.
+- **The mast's lamps** (31 → 62): each lamp in the fog stood in a yellow bloom four cells across, the mast a column
+  of glow over the camp. The glow is held close round each lamp; their fans of light down over the camp are as they
+  were.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
