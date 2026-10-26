@@ -181,7 +181,9 @@ export function drawCity(pen: Pen, f: View, te: number): void {
     ctx.fillStyle = mixHex(STONE_DARK, RAIN.far, 0.5)
     ctx.fillRect(x0 * k, MID_BASE * k, (x1 - x0) * k, (RAIN_GEO.river - MID_BASE) * k)
     if (k > 8) {
-      ctx.fillStyle = rgba(RAIN.far, 0.5)
+      // Its courses, faint in the mist (at half strength, in the close shots of the river they ran the frame's whole
+      // width as scan lines behind the van).
+      ctx.fillStyle = rgba(RAIN.far, 0.22)
       for (let y = MID_BASE + 0.9; y < RAIN_GEO.river - 0.4; y += 1.1) ctx.fillRect(x0 * k, y * k, (x1 - x0) * k, Math.max(1, 0.05 * k))
     }
     const g = ctx.createLinearGradient(0, MID_BASE * k, 0, RAIN_GEO.river * k)
@@ -565,6 +567,9 @@ export function drawBridge(pen: Pen, f: View): void {
     const u = (x - a) / (b - a)
     return SPRING - (SPRING - DECK - 0.12) * Math.sin(Math.PI * u)
   }
+  // Butt-ended into the stone they spring from (round-capped, each end stood off the abutment's and the piers' faces as
+  // a loose tube in the air).
+  p.strokeCap(p.SQUARE)
   for (const [a, b, frac] of spans) {
     const end = a + (b - a) * frac
     // Posts first, then the rib over them.
@@ -589,6 +594,7 @@ export function drawBridge(pen: Pen, f: View): void {
       p.line(end * k, ey * k, (end + 0.25) * k, (ey + 0.35) * k)
     }
   }
+  p.strokeCap(p.ROUND)
   // The deck: a slab from the street to its broken end (its face is drawn again over the balls, for the going under).
   deckFace(pen)
   // The broken end: bars bent down out of the concrete.

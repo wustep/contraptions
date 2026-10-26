@@ -514,7 +514,7 @@ function leaf(ctx: C2D, k: number, hx: number, W: number, H: number, phi: number
       shape(ctx, k, box(hx, fb - H, hx + 0.05, fb), rgba(HOME.glass, 0.7), INK, w * 0.6)
       return
     }
-    shape(ctx, k, [A, B, C, D], rgba(HOME.glass, 0.3))
+    shape(ctx, k, [A, B, C, D], rgba(HOME.glass, 0.55))
     // Its wooden frame: stiles and rails round the glass, and the two bars across it.
     const fu = Math.min(0.5, 0.07 / Math.max(0.05, s))
     const fv = 0.03
