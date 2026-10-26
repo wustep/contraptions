@@ -447,6 +447,12 @@ the sky. Each card holds 3.4 to 5 s; the last is gone by 266.7 s.
     over its whole lead-in;
   - timing: the turns were read a tenth of a second either side (the band in, the drop under, the band back, the last
     hit, the pulse, the build, the peak, the last chord). All of them land, so nothing was retimed.
+- **Polish wave 2** (the whole show again, wide and in a phone's tall frame, and a scan at 30 a second):
+  - on a phone the street's road ran on to the frame's foot under the credits, the crossing's stripes down it like a
+    ladder, and the man who crosses stopped where his way ended, standing in the middle of it to the end. The road now
+    ends at a near kerb with the camera's own pavement in the shade past it, and he walks on along it;
+  - the snow sifting onto the ledge was a tapering wedge of white that read as a beam of light. It falls as flakes now;
+  - the scan found only the meant pops: the tubes, the enlarger and the cuts on strikes.
 
 ## Judgment calls
 
