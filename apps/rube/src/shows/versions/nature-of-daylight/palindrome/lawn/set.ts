@@ -32,6 +32,10 @@ const YEAR: [number, number][] = [
   [34.5, 0.05],
   [39.5, 1],
   [44, 1.2],
+  // Winter comes on the cut to it (46.353), bare: turning through the cut, the shot opened on autumn's crowns over a
+  // snowy limb, and they broke up into specks a second into the winter.
+  [46.353, 1.35],
+  [46.354, 1.97],
   [48.5, 2],
   [52.5, 2.2],
   [56.5, 3],
