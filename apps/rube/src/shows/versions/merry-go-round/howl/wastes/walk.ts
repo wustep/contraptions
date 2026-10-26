@@ -132,8 +132,10 @@ export const walk = part<null>(
       { t: CLIMB[2], cells: 6.4, off: [0.75, -0.85] },
       { t: CLIMB[6], cells: CLOSE, off: close },
       // Calcifer's roar (128.0): a cut out to the whole castle, his fire leaping out of the chimney at the top of the
-      // frame, the first time we see the engine; on the next footfall back in to her on the porch.
-      { t: ROAR[0], cells: 28.4, off: [2.9, -6.0], cut: true },
+      // frame, the first time we see the engine; on the next footfall back in to her on the porch. Its feet where they
+      // were, with sky enough over the chimney for the two bursts to billow up in the frame (closer, they went out of
+      // the top of it at once, a dark smudge on the edge).
+      { t: ROAR[0], cells: 31.5, off: [2.9, -7.55], cut: true },
       { t: W(72), cells: CLOSE, off: close, cut: true },
       // The great strides are one phrase building to the third (135.94, the loudest): the first two (131.43, 133.72)
       // ridden aboard with no cut, the porch dropping under her on each (the gait's heavier drop) and the camera riding
