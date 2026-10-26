@@ -164,7 +164,19 @@ the deck line a moment after each landing (`onBody` follows it, so riders and th
   coming half-way down the frame so every row of the cards (their gold fine print too) is over it, and a light shade
   sits under them. The sky's gradient and the shade are both placed from the page's
   16:9 box, so a phone held upright sees the same sky under the words. A veil of the sky's own gradient takes the land away below as the
-  castle climbs, so the credits come over sky and clouds.
+  castle climbs, so the credits come over sky and clouds. On a phone held upright the cards lift into the sky over the
+  16:9 box (`LIFT`, the shade with them), since there the castle sits higher and the cards' 9px type floor widens them;
+  and below the box the evening's gold is only a band at the horizon, the haze under it dimming toward the sky's blue.
+
+## Polish wave (October 2026)
+
+A careful watch at 1×, wide and on a phone, fixed what read wrong: the lake's far shore folded into steps (it was
+stepped by world x at a varying depth, so points far off the middle came back past their neighbours; it is stepped on
+the screen now); the war's crater fire lay over the pit as a flat dish of flame (it now burns taller than wide, up out
+of the hole); a soft dark patch behind Sophie on the porch at dusk read as smoke at her head (cut); the porch
+lantern's chain was ink on dark iron, so the lantern hung on nothing (dull brass now, at the walk and the finale); and
+the phone's credits and evening haze (above). The cue's landmarks (101.309, 178.051, 243.635, 272.370, 302.243) were
+read frame by frame: all land, and no timing changed.
 
 ## Chrome, credits, checks
 
