@@ -99,13 +99,21 @@ export function paintFunnelBack(b: Brush, t: number): void {
   ctx.save()
   ellipse(ctx, XH, 0, rx, ry)
   ctx.clip()
-  // The far wall: from the rim down to where the near rim hides the rest, darker the deeper it goes.
-  ctx.fillStyle = b.c(SAND.shade)
-  ctx.fillRect(XH - rx - 1, -ry - 1, 2 * rx + 2, 2 * ry + 2)
-  ctx.beginPath()
-  ctx.ellipse(XH - rx * 0.35, -ry * 0.1, rx * 0.75, ry * 1.05, 0, 0, Math.PI * 2)
-  ctx.fillStyle = b.ca(SAND.lit, 0.55)
-  ctx.fill()
+  // The walls: the flat's own sand at the rim, so the lip has no edge, going into shade down the slope and darkest at
+  // the bottom, which sits a little toward us, as a bowl's does seen from above.
+  ctx.translate(XH, 0)
+  ctx.scale(1, RY)
+  const gr = ctx.createRadialGradient(0, rx * 0.22, 0, 0, 0, rx)
+  gr.addColorStop(0, b.c(mix(SAND.shade, '#3A2216', 0.4 * open)))
+  gr.addColorStop(0.4, b.c(SAND.shade))
+  gr.addColorStop(0.8, b.c(mix(SAND.shade, SAND.lit, 0.55)))
+  gr.addColorStop(1, b.c(SAND.lit))
+  ctx.fillStyle = gr
+  ctx.fillRect(-rx - 1, -rx - 1, 2 * rx + 2, 2 * rx + 2)
+  ctx.restore()
+  ctx.save()
+  ellipse(ctx, XH, 0, rx, ry)
+  ctx.clip()
   // Sand running in: three long tongues from the rim toward the middle, crawling down.
   for (let i = 0; i < 3; i++) {
     const a = Math.PI * (1.15 + 0.35 * i)
