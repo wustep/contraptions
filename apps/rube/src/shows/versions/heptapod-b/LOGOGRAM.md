@@ -564,6 +564,16 @@ A last fresh watch and a final real-speed check; nothing in the picture changed.
 great ring (168 → 185, both pens in it, the tendrils flinging out past the frame's top as it closes), the first
 logogram's soft edge in the fog (ink bleeding, not a bevel), the helicopter over the ridge, the desktop credits.
 
+## Regret fixes
+
+A watch of the whole film after the polish waves, against what they changed.
+- **The reunion's light** (193 → 196.8): the first wave took it too far; a fifth of the way to the lamps' gold, and
+  dimmed to 0.4 close in, the reunion met in the same flat grey-green as everything before it. The light is two-fifths
+  of the way to the gold now and dimmed to 0.6 close in: a warm grey round the two of them, still never the ochre murk.
+- **The shell going** (188 → 190.5): with the puffs cut it left whole, but it only turned see-through, so it went as
+  a dark smear with the fog's bright bands cut across it, a scanline glitch. It pales to the air's own tone in the
+  first half of its going now, and the bands lie over a pale shape, cloud in cloud.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

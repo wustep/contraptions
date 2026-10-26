@@ -577,13 +577,14 @@ function drawCeiling(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, 
  */
 function drawShafts(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, open: number, cells: number): void {
   if (open <= 0.02) return
-  // Sunlight, not the floods' cream: warm, the first warmth the valley has had (the reunion is in it). Only a little
-  // warmer than the cream: as strong as the lamps' gold, pushed in on the reunion it laid an ochre wash over the whole
-  // frame, the two of them in a khaki murk and the cut to the grey lake house a jump of colour.
-  const light = rgbOf(mixHex(VALLEY.floodlight, VALLEY.lamp, 0.22))
+  // Sunlight, not the floods' cream: warm, the first warmth the valley has had (the reunion is in it). Between the
+  // cream and the lamps' gold: as strong as the gold, pushed in on the reunion it laid an ochre wash over the whole
+  // frame, the two of them in a khaki murk; at a fifth of it, and dimmed to 0.4 close in, the reunion met in the same
+  // flat grey as everything before.
+  const light = rgbOf(mixHex(VALLEY.floodlight, VALLEY.lamp, 0.4))
   // Close in, the frame is inside a shaft, and the air in it is seen as a haze over everything: in the wide the shafts
   // stand at full strength, close on the two of them they are a soft warmth in the air, the lit grass under them.
-  const air = 0.4 + 0.6 * sm(cells, 14, 60)
+  const air = 0.6 + 0.4 * sm(cells, 14, 60)
   const top = -132
   const len = MEADOW - top
   const lean = 0.1
@@ -808,7 +809,9 @@ function drawValley(p: p5, k: number, t: number, ink: string, weight: number): v
   // into the cloud.
   // Until the helicopter tops the ridge it stands paler in the mist, and on that pulse (16.283) it resolves.
   const mist = t > 11 && t < REVEAL_AT + 0.4 ? 0.3 * (1 - sm(t, REVEAL_AT - 0.3, REVEAL_AT + 0.05)) * sm(t, 11, 11.3) : 0
-  const haze = 0.04 + 0.12 * sm(Math.log(cells), Math.log(18), Math.log(190)) + 0.3 * vanish + mist
+  // Going, it pales to the air's own tone in its first half: only made see-through, it stayed a dark smear the fog's
+  // bright bands cut across, like a scanline glitch.
+  const haze = 0.04 + 0.12 * sm(Math.log(cells), Math.log(18), Math.log(190)) + 0.85 * sm(vanish, 0, 0.55) + mist
   const rise = riseAt(t)
   if (vanish < 0.999) {
     ctx.save()
