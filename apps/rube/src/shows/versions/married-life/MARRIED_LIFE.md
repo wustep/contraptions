@@ -1125,6 +1125,23 @@ window.
     10.0 → 10.0% / 16.2 → 16.2%; 172–258 s 8.1 → 8.1% / 15.1 → 15.1%; the dance (152 to 162 s) 13.4 → 13.6% /
     17.4 → 17.4%. A round of refinement, so the thirds hold; the final third is still behind the opening in motion,
     for the reason round 2 gives.
+- **The polish wave (October 2026).** Three rounds over the whole show at real speed, in the wide frame, a phone
+  held upright and Zoom; nothing added to the story, nothing retimed.
+  - *Round 1.* The summer sky's high sheet (`highSheet`) was ruled top to bottom in evenly spaced streaks on a phone's
+    tall sky; its rows now gather in a few drifts with clear sky between and thin going up. The ties' patch of door
+    light (`drawLightPatch`) drew its penumbra in three steps, which left rims on the paper and dark rings round the
+    season's shadows; it now falls off over seven layers. The tickets spilled on the hill landed 0.07 cells apart at
+    one turn, a press-sized card on the slope's line, and read as one box; they lie a little askew of each other, a
+    size smaller (`drawTicket`'s `size`), settled into the straw.
+  - *Round 2.* The lit bay's light on the porch floor (`drawBayLight`) set no rect mode, so under the stage's centred
+    rects its strips lay half back across the bay's posts and side light and up off the floor; it sets corner rects
+    and fades toward the steps in six even steps. The crest's light (`drawCrestPatch`) takes the patch's seven-layer
+    falloff. *Looked at and kept:* the night train on the far viaduct (lit windows in the dark, as a train is at
+    night); Zoom at the ward, the known limit below.
+  - *Round 3, timing.* The flash, the kiss, the peal, the book, the limb and the jar, the tickets and the lid, the fall
+    and the toll, each read a tenth of a second either side: all land, so no timing changed.
+  - *Cost* (the same frame painted 40 times and synced, median of three alternating rounds, base → now): the crest 2.8
+    → 3.9 ms, the mornings' patch 4.2–4.4 → 4.6–4.8 ms, the lit room and the credits unchanged (about 10 and 7 ms).
 
 ## Known limits
 
