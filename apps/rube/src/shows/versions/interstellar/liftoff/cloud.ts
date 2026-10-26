@@ -1,4 +1,5 @@
 import type p5 from 'p5'
+import { mixHex } from '../../../../parts'
 import { alpha, frame, hash, scenery, smooth } from './kit'
 
 /**
@@ -188,6 +189,34 @@ export const cloud = scenery<CloudState>({
         }
         ctx.restore()
       }
+      // From below, before the punch, the deck's base is not a ruled line: it hangs in soft scallops of shade, uninked,
+      // over a little haze that thins down into the dust. Its flat inked base had hung over the countdown as a white
+      // bar, plainest in a tall frame, which sees the deck for the whole countdown.
+      const below = 1 - smooth(t, s.punch - 0.3, s.punch)
+      if (below > 0) {
+        const by = s.deck + DEPTH
+        const g = ctx.createLinearGradient(0, X(by), 0, X(by + 0.9))
+        g.addColorStop(0, `rgba(213, 206, 192, ${0.35 * below})`)
+        g.addColorStop(1, 'rgba(213, 206, 192, 0)')
+        ctx.fillStyle = g
+        const gaps: [number, number][] = hw > 0.02 ? [[x0, hxAt(by) - hw], [hxAt(by) + hw, x1]] : [[x0, x1]]
+        for (const [a, b] of gaps) if (b > a) ctx.fillRect(X(a), X(by), X(b - a), X(0.9))
+        p.noStroke()
+        const step = 0.62
+        const drift = LAYERS[2].drift
+        const under = mixHex(SHADE, BODY, 0.45)
+        for (let i = Math.floor((x0 - t * drift) / step) - 1; i <= Math.ceil((x1 - t * drift) / step) + 1; i++) {
+          const r = 0.3 + 0.45 * hash(i, 91) ** 1.5
+          const x = i * step + t * drift + (hash(i, 92) - 0.5) * step * 0.8
+          if (Math.abs(x - hxAt(by)) < hw + r) continue
+          // Each hangs a little under the base, the big ones no further than the small: a gentle lumpiness, not beads.
+          const y = by - r + 0.1 + 0.08 * hash(i, 93)
+          p.fill(alpha(p, under, below))
+          p.circle(X(x), X(y), X(2 * r))
+        }
+        ctx.fillStyle = alpha(p, under, below).toString()
+        for (const [a, b] of gaps) if (b > a) ctx.fillRect(X(a), X(by - 0.15), X(b - a), X(0.23))
+      }
       // From above, past the punch, the deck has no underside to see: it thins down into the air over the Earth. Its
       // flat base had hung in the dark as a white bar with night under it, plainest in a tall frame.
       const above = smooth(t, s.punch, s.punch + 0.3)
@@ -223,11 +252,12 @@ export const cloud = scenery<CloudState>({
           }
         }
       }
-      // Thin wisps, drifting ahead of the deck along its top and its base.
+      // Thin wisps, drifting ahead of the deck along its top. (Along its base they were dashes under the scallops.)
       p.noStroke()
       for (let i = 0; i < 6; i++) {
+        if (hash(i, 83) <= 0.5) continue
         const wx = x0 + ((hash(i, 81) * (x1 - x0) + t * (0.12 + 0.05 * hash(i, 82))) % (x1 - x0))
-        const wy = (hash(i, 83) > 0.5 ? top - 0.15 : s.deck + DEPTH + 0.1) + (hash(i, 84) - 0.5) * 0.2
+        const wy = top - 0.15 + (hash(i, 84) - 0.5) * 0.2
         p.fill(alpha(p, WHITE, 0.45))
         p.ellipse(X(wx), X(wy), X(0.9 + hash(i, 85) * 0.8), X(0.07))
       }
