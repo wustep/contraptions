@@ -84,7 +84,9 @@ export function drawMound(g: Paint, L: Light): void {
     ctx.moveTo(cx + r * w * 0.5, cy)
     ctx.arc(cx, cy, r * w * 0.5, 0, Math.PI * 2)
   }
-  ctx.rect(m.x - w * 0.55, m.base - h * 0.35, w * 1.1, h * 0.35 + 0.02)
+  // His foot, slumped out over the boards: rounded, not a slab's corner.
+  ctx.moveTo(m.x + w * 0.6, m.base - h * 0.2)
+  ctx.ellipse(m.x, m.base - h * 0.2, w * 0.6, h * 0.2 + 0.01, 0, 0, Math.PI * 2)
   fill(ctx, body)
   // His underside darker, and a few slow drips of the darker mud down him.
   ctx.save()
@@ -99,10 +101,16 @@ export function drawMound(g: Paint, L: Light): void {
     ctx.quadraticCurveTo(m.x + dx, m.base - h * 0.85 + len, m.x + dx + 0.04, m.base - h * 0.85)
     fill(ctx, rgba(dark, 0.7))
   }
-  // A lighter wet sheen across his top.
-  ctx.beginPath()
-  ctx.ellipse(m.x - w * 0.08, m.base - h * 0.78, w * 0.3, h * 0.08, -0.15, 0, Math.PI * 2)
-  fill(ctx, rgba(mix(lit(MUD_LIGHT, IN), '#E8F2EE', clear), 0.55))
+  // His eyes, sunk in the mud on the side towards her: two dark slits under heavy lids of the paler mud.
+  const blink = 1 - knock(t, HEAVE + 0.75, 0.05, 0.25)
+  for (const sx of [-1, 1]) {
+    const ex = m.x - w * 0.27 + sx * w * 0.075
+    const ey = m.base - h * 0.56 + 0.02 * Math.sin(t * 1.7)
+    ellipse(ctx, ex, ey - h * 0.02, w * 0.05, h * 0.045)
+    fill(ctx, lit(mix(MUD, MUD_LIGHT, 0.6), IN))
+    ellipse(ctx, ex, ey + h * 0.005, w * 0.032, h * 0.022 * blink + 0.004)
+    fill(ctx, lit('#1E1812', IN))
+  }
   ctx.restore()
   ctx.restore()
 }
@@ -501,7 +509,9 @@ export function drawSpiritOutside(g: Paint, L: Light, from: number, until: numbe
   // Clear water lit by the moon: paler than the smoke, fuller, with the old face at its head.
   const water = mix(mix(WATER, '#FFFFFF', 0.5), L.ambient, 0.18)
   const pts = ribbon((s) => outsideAt(s, from), t, 6.0, 40)
-  band(g, pts, (i) => (0.42 + 0.3 * Math.sin(Math.PI * Math.min(1, i / pts.length + 0.15))) * pts[i].s, water, 0.86, 1)
+  // Fullest behind the face, drawn out to a point at its tail.
+  const n = pts.length - 1
+  band(g, pts, (i) => 0.62 * Math.sin(Math.PI * (0.18 + 0.82 * (i / n))) ** 0.6 * pts[i].s, water, 0.86, 1)
   const f = outsideAt(t, from)
-  drawFace(g, f.p, f.s * 1.05, 0, '#FFFFFF')
+  drawFace(g, f.p, f.s * 1.4, 0, '#FFFFFF')
 }

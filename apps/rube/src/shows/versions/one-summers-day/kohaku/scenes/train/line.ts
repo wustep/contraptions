@@ -444,9 +444,11 @@ export function drawFarHouses(g: Paint, L: Light, hy: number, v: { x0: number; x
     poly(ctx, [[x - w / 2 - s * 0.2, top], [x + w / 2 + s * 0.2, top], [x, top - s * 0.7]])
     fill(ctx, tone)
     if (hash(i, 84) > 0.55) {
-      // A tree beside it.
-      circle(ctx, x + w / 2 + s * 0.6, top - s * 0.1, s * 0.75)
-      fill(ctx, mix(tone, '#3E5240', 0.2))
+      // A tree beside it, its trunk down to the water.
+      const tc = mix(tone, '#3E5240', 0.2)
+      box(ctx, x + w / 2 + s * 0.52, top, s * 0.16, s + 0.002, tc)
+      circle(ctx, x + w / 2 + s * 0.6, top - s * 0.25, s * 0.7)
+      fill(ctx, tc)
     }
     if (hash(i, 85) > 0.5 && lamps > 0.01) box(ctx, x - s * 0.2, top + s * 0.35, s * 0.35, s * 0.3, rgba(LAMP, lamps))
   }
