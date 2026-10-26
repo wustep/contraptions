@@ -1,5 +1,5 @@
 import type { Light } from '../light'
-import { circle, fill, hash, layer, mix, rgba, vgrad, type Paint, type Pt, type View } from '../paint'
+import { circle, fill, hash, layer, lerp, mix, rgba, vgrad, type Paint, type Pt, type View } from '../paint'
 
 /**
  * The sky: a gradient fixed to the frame from the top down to the horizon, the sun or the moon as a flat disc, and the
@@ -52,6 +52,8 @@ interface Lobe {
   x: number
   y: number
   r: number
+  /** One of the tower's, over the dome: not on the body's outline. */
+  tower?: boolean
 }
 
 /** The lobes of one cumulus heap, `w` across and `h` high, its flat base at `y`: cached by seed and size. */
@@ -61,16 +63,31 @@ function lobesOf(x: number, y: number, w: number, h: number, seed: number): Lobe
   const lean = (hash(seed, 2) - 0.5) * 0.3
   // A dome, a little lopsided, its top made of round lobes; then a tower of smaller ones on its highest part.
   const top = (u: number) => h * Math.pow(Math.max(0, Math.sin(Math.PI * Math.min(1, Math.max(0, u + lean * (u - 0.5))))), 0.75)
+  const dome: Lobe[] = []
   for (let i = 0; i <= n; i++) {
     const u = i / n
     const r = (w / n) * (0.7 + 0.55 * hash(seed, i + 3)) * (0.55 + 0.6 * Math.sin(Math.PI * u))
-    out.push({ x: x - w / 2 + u * w, y: y - top(u) + r * 0.75, r })
+    dome.push({ x: x - w / 2 + u * w, y: y - top(u) + r * 0.75, r })
+  }
+  // The dome's steep sides: lobes between any two that do not meet, so a side is round lobes all the way down to the
+  // base and never the straight edge of the body showing between them.
+  for (let i = 0; i < dome.length; i++) {
+    const a = dome[i]
+    out.push(a)
+    const b = dome[i + 1]
+    if (!b) break
+    const d = Math.hypot(b.x - a.x, b.y - a.y)
+    const k = Math.ceil(d / (0.75 * (a.r + b.r)))
+    for (let j = 1; j < k; j++) {
+      const f = j / k
+      out.push({ x: lerp(a.x, b.x, f), y: lerp(a.y, b.y, f), r: lerp(a.r, b.r, f) * (0.95 + 0.15 * hash(seed, i * 7 + j + 60)) })
+    }
   }
   const m = 3 + Math.floor(hash(seed, 4) * 3)
   for (let i = 0; i < m; i++) {
     const u = 0.32 + (0.36 * (i + 0.5)) / m + (hash(seed, i + 30) - 0.5) * 0.08
     const r = (w / n) * (0.8 + 0.5 * hash(seed, i + 40))
-    out.push({ x: x - w / 2 + u * w, y: y - top(u) - r * (0.15 + 0.35 * hash(seed, i + 50)), r })
+    out.push({ x: x - w / 2 + u * w, y: y - top(u) - r * (0.15 + 0.35 * hash(seed, i + 50)), r, tower: true })
   }
   return out
 }
@@ -82,7 +99,7 @@ function heap(ctx: CanvasRenderingContext2D, lobes: Lobe[], y: number, dx = 0, d
     ctx.arc(l.x + dx, l.y + dy, l.r * grow, 0, Math.PI * 2)
   }
   // The body under the lobes, down to the flat base.
-  const sorted = [...lobes].sort((a, b) => a.x - b.x)
+  const sorted = lobes.filter((l) => !l.tower).sort((a, b) => a.x - b.x)
   ctx.moveTo(sorted[0].x + dx, y + dy)
   for (const l of sorted) ctx.lineTo(l.x + dx, l.y + dy)
   ctx.lineTo(sorted[sorted.length - 1].x + dx, y + dy)
