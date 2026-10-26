@@ -1256,6 +1256,25 @@ camera, no hard swap at the three cuts out of the white, and in Zoom, Overview a
 paint in the dissolve windows costs under a millisecond and a half at twice the density (two frames painted and one
 laid over).
 
+A hundred-and-twenty-fifth was a visual polish wave: the whole show as stills, wide and tall, then full frames of anything
+that looked cheap on a careful watch. Five small fixes; no timing changed.
+
+- **The meadow at the end** (322 to 334 s): the helicopter's pad, a strip of matting, was still on the grass the morning
+  after. Lit by the low sun at the edge of the reunion's frame, it read as a pale seam along the grass. It is struck with
+  the decon tent.
+- **The chamber floor** (135 to 140 s): the glass's first light on the stone was six stacked bands, visible as steps, and
+  where its reflection ended the edges of two fills left a pale line across the floor. It is one soft band now, and the
+  line is gone.
+- **The projector beam** (99 to 102 s): it ended on a diagonal across the screen, so a pale wedge lay over the news. It
+  meets the screen's near edge now.
+- **The helicopter's light on the lake** (107 to 110 s): a hard-sided bar that read as a post standing in the water.
+  It is a soft column now, fading to its sides as well as down.
+- **The lecture hall years on** (266 to 270 s): the third student in each row sat level with the other two, so each row
+  was three overlapping balls in a line and read as a grub. The third now sits a seat further back, higher, smaller and
+  hazier.
+- **Timing:** every landmark checked a tenth of a second either side (Hannah goes, the double bass, the palm, the bass
+  drops out, the blast, the white-out, the call, the loudest bar, the shell gone, the cradle). All of them land.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
