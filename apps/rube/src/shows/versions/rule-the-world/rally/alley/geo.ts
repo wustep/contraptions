@@ -322,9 +322,12 @@ export function wallyAt(t: number): { x: number; y: number; walking: boolean; fa
   const e = u < 0.08 ? (u * u) / 0.16 : u > 0.9 ? 0.91 - ((1 - u) * (1 - u)) / 0.2 : u - 0.04
   const s = Math.max(0, Math.min(1, e / 0.91))
   const x = WALLY_X + (driver - WALLY_X) * s
-  // Out of the door to the sidewalk's edge, then off the curb into the road on the cab's far side: the roof at his chest.
+  // Across the carpet to the door, his feet on its sill as he goes through; then off the step into the road on the
+  // cab's far side: the roof at his chest.
+  const sill = WALL[1] - 0.15
+  const to = Math.max(0, Math.min(1, (WALLY_X - x) / (WALLY_X - sill)))
   const off = Math.max(0, Math.min(1, (CURB - x) / 0.6))
-  const y = FB + (-0.22 - FB) * Math.min(1, s * 1.6) + (ROAD + 0.22) * off * off * (3 - 2 * off)
+  const y = FB + (FLOOR - FB) * to * to * (3 - 2 * to) + (ROAD - FLOOR) * off * off * (3 - 2 * off)
   const sink = Math.max(0, (t - (WALK1 - 0.3)) / 0.35)
   return { x, y, walking: u < 1, face: -1, sink: Math.min(1, sink) }
 }
