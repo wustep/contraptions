@@ -255,7 +255,9 @@ second.
 - **The drummer's bare stand at Overbrook** stands low by the hi-hat (`DRUM_STAND`), as a seated drummer's does. At a
   band player's height its desk was where Fletcher's point on the last hit ended: his hand in it for a second and a half.
 - **The burst** (504.0) is the board's own slam to white. A white sheet laid over the whole frame on top of it (the cue's
-  `flash`) overshot by half again and washed every black grey for half a second; it is gone.
+  `flash`) overshot by half again and washed every black grey for half a second; it is gone. (Regret fix: without
+  it the slam read tame, so the `flash` is back, shorter and weaker: about two thirds of the old lift, gone in 0.3 s
+  instead of 0.7, so the kick lands as a bright hit and the blacks are back by 504.3.)
 
 ## Polish wave 3 (Oct 26)
 
