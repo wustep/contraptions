@@ -231,9 +231,12 @@ function pavedPool(pen: Pen, x0: number, x1: number, y0: number, y1: number, col
   ctx.restore()
 }
 
+/** How far under the tracks' bed the ground goes: past the bottom of the tallest frame that looks at it. */
+const UNDER = 30
+
 export function drawGround(pen: Pen, t: number): void {
   // The tracks' bed, sunk below the deck, and the dark under everything.
-  rect(pen, LIP - 0.05, BED, FENCE + 0.05, BED + 6, C.bed)
+  rect(pen, LIP - 0.05, BED, FENCE + 0.05, BED + UNDER, C.bed)
   rect(pen, LIP, BED - 0.07, FENCE, BED + 0.02, C.tie)
   for (const x of [0.85, 1.65]) {
     // A rail, end on: its head catching the lamp, its web and foot.
@@ -242,14 +245,14 @@ export function drawGround(pen: Pen, t: number): void {
   }
   // The platform, open to the night: the deck and its face.
   rect(pen, PLAT_X0, DECK, LIP, DECK + 0.3, C.platform)
-  rect(pen, PLAT_X0, DECK + 0.3, LIP - 0.04, BED + 6, C.platFace)
+  rect(pen, PLAT_X0, DECK + 0.3, LIP - 0.04, BED + UNDER, C.platFace)
   rect(pen, LIP - 0.42, DECK, LIP, DECK + 0.045, C.strip)
   line(pen, [PLAT_X0, DECK], [LIP, DECK], C.platEdge, 0.9)
   // The pavement and the fence.
-  rect(pen, FENCE - 0.05, STREET, BX1 + 8, BED + 6, C.under)
+  rect(pen, FENCE - 0.05, STREET, BX1 + 8, BED + UNDER, C.under)
   rect(pen, FENCE, STREET, BX1 + 8, STREET + 0.12, C.pave)
   line(pen, [FENCE, STREET], [BX, STREET], C.paveTop, 0.9)
-  rect(pen, FENCE - 0.05, STREET, FENCE + 0.02, BED + 6, C.platFace)
+  rect(pen, FENCE - 0.05, STREET, FENCE + 0.02, BED + UNDER, C.platFace)
   // The street lamp she waits under: a short iron lamp by the shop's door, its arm out over where she waits, and its
   // light lying on the pavement.
   const sx = 3.68
