@@ -1,5 +1,5 @@
 import type { Pt } from '../../../../../parts'
-import { layer, type View } from '../depth'
+import { composed, layer, type View } from '../depth'
 import { hash } from '../kit'
 import { mix, rgba } from '../negatives/hand'
 import { FRONTS } from './fronts'
@@ -118,7 +118,7 @@ function tower(ctx: C2, k: number, w: Tower, ground: number, body: string, lit: 
 
 /** A box of the street (cells) in a plane's own cells, at this frame (the inverse of `layer`'s placing). */
 function inPlane(v: View, z: number, x0: number, y0: number, x1: number, y1: number): [number, number, number, number] {
-  const s = Math.pow(v.h / REF, 1 - z)
+  const s = Math.pow(composed(v) / REF, 1 - z)
   const ox = ANCHOR[0] + z * (v.cx - ANCHOR[0])
   const oy = ANCHOR[1] + z * (v.cy - ANCHOR[1])
   return [ox + (x0 - v.cx) / s, oy + (y0 - v.cy) / s, ox + (x1 - v.cx) / s, oy + (y1 - v.cy) / s]

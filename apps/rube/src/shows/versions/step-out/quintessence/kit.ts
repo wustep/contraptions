@@ -282,10 +282,19 @@ export function standing<S>(piece: Piece<S>, col: number, row: number, cells: Pt
 /* ------------------------------------------------------------------ drawing */
 
 /**
+ * On a stage taller than 16:9 (a phone held upright), what share of the extra picture lies above the composed frame
+ * (`Performance.tall`): most of it, since every place has its sky, roof or upper floor over the action and only ground,
+ * floor or water under it.
+ */
+export const TALL = 0.75
+
+/**
  * Where the stage's frame is, in this drawing's own cell units: the camera
  * the stage is using, read back from the canvas transform. What lets a sky
  * fill the frame, or a far hill move slower than the near ones, without the
- * part being told about the camera.
+ * part being told about the camera. `cy` is the composed 16:9 frame's middle,
+ * not the stage's: on a tall stage the frame is set low in it (`TALL`), and
+ * that is not the camera moving, so nothing placed from `cy` moves for it.
  */
 export function frame(p: p5, k: number): { x0: number; y0: number; x1: number; y1: number; cx: number; cy: number } {
   // The canvas's corners taken back through the transform (which may be turned, when the camera rolls): the box
@@ -304,7 +313,8 @@ export function frame(p: p5, k: number): { x0: number; y0: number; x1: number; y
     y0 = Math.min(y0, y)
     y1 = Math.max(y1, y)
   }
-  return { x0, y0, x1, y1, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 }
+  const extra = Math.max(0, y1 - y0 - ((x1 - x0) * 9) / 16)
+  return { x0, y0, x1, y1, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 + (TALL - 0.5) * extra }
 }
 
 /** A colour with an alpha, 0..1. */

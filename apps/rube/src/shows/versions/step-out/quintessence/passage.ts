@@ -292,7 +292,7 @@ export function passages(): { piece: Piece<null>; bind(show: QuintessenceShow): 
         const g = spareFor(p)
         drawingOther = true
         try {
-          paintPlace(g as unknown as p5, universe, t, f.cx + dx, f.cy + dy, k)
+          paintPlace(g as unknown as p5, universe, t, f.cx + dx, (f.y0 + f.y1) / 2 + dy, k)
         } finally {
           drawingOther = false
         }

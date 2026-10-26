@@ -390,9 +390,9 @@ function city(ctx: CanvasRenderingContext2D, v: View, t: number, g: Glass): void
 
 /* ------------------------------------------------------------------ drawing */
 
-export function drawRoom(pen: Pen, f: { x0: number; y0: number; x1: number; y1: number }, t: number): void {
+export function drawRoom(pen: Pen, f: { x0: number; y0: number; x1: number; y1: number; cx: number; cy: number }, t: number): void {
   const { c, k } = pen
-  const v: View = { ...f, cx: (f.x0 + f.x1) / 2, cy: (f.y0 + f.y1) / 2, w: f.x1 - f.x0, h: f.y1 - f.y0, k }
+  const v: View = { ...f, w: f.x1 - f.x0, h: f.y1 - f.y0, k }
   c.save()
   const x0 = f.x0 - 1
   const x1 = f.x1 + 1

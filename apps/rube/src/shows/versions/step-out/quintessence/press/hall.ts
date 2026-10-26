@@ -1,6 +1,6 @@
 import type { Pt } from '../../../../../parts'
 import { hash } from '../kit'
-import { layer, onLayer, rgbaOf, type View } from '../depth'
+import { composed, layer, onLayer, rgbaOf, type View } from '../depth'
 import { cityThrough } from './city'
 import { DOOR_X, FLOOR, T0 } from './press-plan'
 import { lampsOn, runOf } from './pulse'
@@ -58,7 +58,7 @@ function farWindowsIn(x0: number, x1: number): number[] {
 
 /** Where the far windows are at this frame, in world cells: for the shafts the front draws from them. */
 export function farWindows(v: View): { x: number; y0: number; y1: number; w: number }[] {
-  const s = Math.pow(v.h / REF, 1 - FW.z)
+  const s = Math.pow(composed(v) / REF, 1 - FW.z)
   const ox = ANCHOR[0] + FW.z * (v.cx - ANCHOR[0])
   const hw = v.w / 2 / s
   return farWindowsIn(ox - hw, ox + hw).map((wx) => {
@@ -86,7 +86,7 @@ function windowPath(xs: number[]): Path2D {
  * has to outlast the plane's transform. Returns the plane's view.
  */
 export function enter(ctx: C2, v: View, z: number): View {
-  const s = Math.pow(v.h / REF, 1 - z)
+  const s = Math.pow(composed(v) / REF, 1 - z)
   const ox = ANCHOR[0] + z * (v.cx - ANCHOR[0])
   const oy = ANCHOR[1] + z * (v.cy - ANCHOR[1])
   const k = v.k
@@ -94,9 +94,7 @@ export function enter(ctx: C2, v: View, z: number): View {
   ctx.scale(s, s)
   ctx.translate(-ox * k, -oy * k)
   ctx.scale(k, k)
-  const hw = v.w / 2 / s
-  const hh = v.h / 2 / s
-  return { x0: ox - hw, y0: oy - hh, x1: ox + hw, y1: oy + hh, cx: ox, cy: oy, w: 2 * hw, h: 2 * hh, k }
+  return { x0: ox + (v.x0 - v.cx) / s, y0: oy + (v.y0 - v.cy) / s, x1: ox + (v.x1 - v.cx) / s, y1: oy + (v.y1 - v.cy) / s, cx: ox, cy: oy, w: v.w / s, h: v.h / s, k }
 }
 
 /**
@@ -105,7 +103,7 @@ export function enter(ctx: C2, v: View, z: number): View {
  * camera however far it draws back.
  */
 export function floorAt(v: View, z: number): number {
-  const s = z < 1 ? Math.pow(v.h / REF, 1 - z) : 1
+  const s = z < 1 ? Math.pow(composed(v) / REF, 1 - z) : 1
   return v.cy + s * z * (FLOOR - v.cy)
 }
 

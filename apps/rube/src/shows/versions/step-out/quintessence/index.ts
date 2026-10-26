@@ -1,6 +1,7 @@
 import type { Performance } from '../../../registry'
 import { creditsAt } from './credits'
 import { DURATION, YOUTUBE } from './music'
+import { TALL } from './kit'
 import { compose } from './score'
 
 const { show, camera } = compose()
@@ -13,6 +14,8 @@ export const performance: Performance = {
   camera,
   // No portal anywhere: every change of place is a match cut on Walter, one of them under the volcano's ash.
   cuts: () => false,
+  // A phone held upright sees the frame low in the stage: over it the sky, the roofs, the upper floors; under it only ground.
+  tall: TALL,
   // The end credits' words, which the page sets over the street.
   titles: creditsAt,
   soundtrack: {
