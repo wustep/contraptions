@@ -226,8 +226,9 @@ export function drawOlive(g: Paint, x: number, ground: number, h: number, lean: 
 /** The harbour's jetty: a stone pier on the west side, its top just over the water. */
 function drawJetty(g: Paint): void {
   const { ctx, t } = g
-  // Its stones go down to the rock it stands on, so it is never a box hung in the water.
-  poly(ctx, [[JETTY.x0, JETTY.top], [JETTY.x1, JETTY.top], [JETTY.x1 + 0.1, 6.4], [JETTY.x0 - 0.4, 0.9]])
+  // Its stones go down to the rock it stands on, battered out as they go and meeting the rock's own slope, so it is
+  // never a box hung in the water, nor a sheer face down to a step.
+  poly(ctx, [[JETTY.x0, JETTY.top], [JETTY.x1, JETTY.top], [JETTY.x1 + 0.3, 1.0], [842.0, 8], [839.0, 3.5], [JETTY.x0 - 0.4, 0.9]])
   fill(ctx, againstSun(STONE_SHADE, t))
   poly(ctx, [[JETTY.x0, JETTY.top], [JETTY.x1, JETTY.top], [JETTY.x1, JETTY.top + 0.2], [JETTY.x0, JETTY.top + 0.2]])
   fill(ctx, againstSun(STONE, t))
