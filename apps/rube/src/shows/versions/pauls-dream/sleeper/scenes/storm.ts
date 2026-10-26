@@ -238,14 +238,15 @@ const dreams: Dream[] = [
     a: (t) => 0.92 * bell(t, T.vision2[0], T.vision2[0] + 0.75, T.vision2[1] - 0.75, T.vision2[1]),
     iris: opening(WIDE, T.vision2[0], T.vision2[1], [0.48, 0.6], 0.32, 0.85, 0.75),
   },
-  // The worm and its rider: the rider at (0.48, 0.39) of the worm's shot, over the two of them.
+  // The worm and its rider: the rider at (0.48, 0.39) of the worm's shot, at the top of the opening, the worm's ribbed
+  // back under him filling it, over the two of them.
   {
     from: T.vision3[0],
     to: T.vision3[1],
     at: VISIONS.rider.at,
     rate: VISIONS.rider.rate,
     a: (t) => 0.92 * bell(t, T.vision3[0], T.vision3[0] + 1.2, T.vision3[1] - 1.6, T.vision3[1]),
-    iris: opening(TWO, T.vision3[0], T.vision3[1], [0.49, 0.4], 0.32, 1.8, 1.6),
+    iris: opening(TWO, T.vision3[0], T.vision3[1], [0.49, 0.5], 0.3, 1.8, 1.6),
   },
 ]
 
