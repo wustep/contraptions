@@ -66,9 +66,13 @@ const RATE = 240
 export const CATCH_V: Pt = [1.64, 2.3]
 /** How much of her speed along the wire the hanger takes up (she is heavier than it and the basket). */
 const SHARE = 0.72
+/** The hook's rolling drag on the wire, which also holds it where the wire is near level. */
+const ROLL = 0.15
+/** Where the empty hanger comes to rest after the stop: in the gap between lanterns 3 and 4, clear of both. */
+const REST_X = 6.34
 
 interface Ride {
-  /** Samples from CATCH to STOP + 3: the hook's x, and the basket's swing (radians, + forward). */
+  /** Samples from CATCH to well after the stop: the hook's x, and the basket's swing (radians, + forward). */
   x: Float32Array
   swing: Float32Array
   /** The drag that makes the ride end at the stop on STOP. */
@@ -96,12 +100,36 @@ function runDown(mu: number, keep = false): { at: number; x: number[]; v: number
     const m = slope(x)
     const c = 1 / Math.hypot(1, m)
     // Gravity along the wire, less a rolling drag.
-    const a = G * m * c - mu * v * Math.abs(v) - 0.15 * Math.sign(v)
+    const a = G * m * c - mu * v * Math.abs(v) - ROLL * Math.sign(v)
     v += a * dt
     x += v * c * dt
     if (x >= STOP_X) return { at: CATCH + (i + 1) * dt, x: xs, v: vs }
   }
   return { at: Infinity, x: xs, v: vs }
+}
+
+/**
+ * After the stop: the empty hanger, knocked back off it at `v0`, slides back down the wire with a damping `damp` and
+ * the hook's rolling drag, eases through the dip and holds where the drag outweighs the wire's slope. Its x, sampled.
+ */
+function backDown(v0: number, damp: number, n: number): Float32Array {
+  const dt = 1 / RATE
+  const xs = new Float32Array(n)
+  let x = STOP_X
+  let v = v0
+  for (let i = 0; i < n; i++) {
+    xs[i] = x
+    const m = slope(x)
+    const c = 1 / Math.hypot(1, m)
+    const g = G * m * c
+    if (v === 0 && Math.abs(g) <= ROLL) continue
+    if (x >= STOP_X && v > 0) v = -0.3 * v
+    const next = v + (g - damp * v - ROLL * Math.sign(v || g)) * dt
+    // It sticks where it turns, if the slope there cannot pull it past the drag.
+    v = v !== 0 && Math.sign(next) !== Math.sign(v) && Math.abs(g) <= ROLL ? 0 : next
+    x = Math.min(STOP_X, x + v * c * dt)
+  }
+  return xs
 }
 
 const RIDE: Ride = (() => {
@@ -115,15 +143,25 @@ const RIDE: Ride = (() => {
   }
   const drag = (lo + hi) / 2
   const run = runDown(drag, true)
-  const n = Math.ceil((STOP - CATCH + 8) * RATE)
+  const n = Math.ceil((STOP - CATCH + 12) * RATE)
   const x = new Float32Array(n)
   const swing = new Float32Array(n)
   const dt = 1 / RATE
-  // After the stop, the empty hanger is knocked back off it and slides back down to the wire's low point, where it
-  // rocks to rest: out of the dryer's window.
+  // After the stop, the empty hanger is knocked back off it and slides back down, out of the dryer's window, to
+  // rest by the wire's low point. The damping that rests it at REST_X, between two lanterns rather than in one:
+  // within this range more damping holds it further up the wire.
   const vStop = run.v[run.v.length - 1] ?? 0
+  const back = n - Math.floor((STOP - CATCH) * RATE)
+  let dlo = 0.7
+  let dhi = 1.6
+  for (let i = 0; i < 40; i++) {
+    const mid = (dlo + dhi) / 2
+    const xs = backDown(-0.22 * vStop, mid, back)
+    if (xs[back - 1] < REST_X) dlo = mid
+    else dhi = mid
+  }
+  const after = backDown(-0.22 * vStop, (dlo + dhi) / 2, back)
   let hx = STOP_X
-  let hv = -0.22 * vStop
   // The basket swings under the hook as a pendulum, thrown back as it sets off and forward at the stop.
   let th = 0
   let w = 0
@@ -136,12 +174,10 @@ const RIDE: Ride = (() => {
       hx = run.x[j]
       v = run.v[j]
     } else {
-      if (hx >= STOP_X && hv > 0) hv = -0.3 * hv
-      const m = slope(hx)
-      const c = 1 / Math.hypot(1, m)
-      hv += (G * m * c - 1.6 * hv) * dt
-      hx = Math.min(STOP_X, hx + hv * c * dt)
-      v = hv
+      const j = Math.min(i - (n - back), back - 1)
+      const nx = after[Math.max(0, j)]
+      v = (nx - hx) / dt
+      hx = nx
     }
     // The hook's acceleration along x: at the stop it stops dead, within a sixtieth of a second, and is knocked back.
     const acc = t >= STOP && t < STOP + 1 / 60 ? -vStop * 60 * 1.22 : (v - prevV) / dt
@@ -196,7 +232,7 @@ export function seatAt(t: number): Pt {
 
 /**
  * Where each lantern's knot is: the hook's x on the onset it opens on. The last two are set a little on from it,
- * between where the empty hanger comes to rest (about 6.5) and the big dryer's face (7.75), so neither hangs in the
+ * between where the empty hanger comes to rest (REST_X) and the big dryer's face (7.75), so neither hangs in the
  * hanger's basket nor half behind the dryer's glass all through the tumble.
  */
 const SET_ON: (number | null)[] = [null, null, null, 6.9, 7.47]
@@ -258,25 +294,30 @@ export function drawGarland(pen: GarlandPen, t: number, lantern: LanternFn, lit:
   // The hanger on its hook, and the basket.
   const a = basketSwing(t)
   const bar = hy + HOOK
+  // One bent wire: the hook a question mark whose crown sits on the wire, its neck, the shoulders and the bar.
+  const r = 0.04
+  const cy = hy - (0.65 * w) / k + r
+  const neck = cy + r + 0.025
   outline(p, ink, w * 0.8)
   p.noFill()
-  p.arc((hx + 0.035) * k, (hy + 0.01) * k, 0.1 * k, 0.1 * k, Math.PI, Math.PI * 2.3)
-  p.line(hx * k, (hy + 0.06) * k, hx * k, (hy + 0.09) * k)
-  p.line(hx * k, (hy + 0.09) * k, (hx - 0.26) * k, bar * k)
-  p.line(hx * k, (hy + 0.09) * k, (hx + 0.26) * k, bar * k)
+  p.arc(hx * k, cy * k, 2 * r * k, 2 * r * k, Math.PI * 0.9, Math.PI * 2.5)
+  p.line(hx * k, (cy + r) * k, hx * k, neck * k)
+  p.line(hx * k, neck * k, (hx - 0.26) * k, bar * k)
+  p.line(hx * k, neck * k, (hx + 0.26) * k, bar * k)
   p.line((hx - 0.26) * k, bar * k, (hx + 0.26) * k, bar * k)
   basketBack(pen, hx, bar, a)
 }
 
-/** The basket's two cords and its back half, hung from the hanger's bar at (hx, bar), swung by `a`. */
+/** The basket's two cords and its back half, hung from the middle of the hanger's bar at (hx, bar), swung by `a`. */
 function basketBack(pen: GarlandPen, hx: number, bar: number, a: number): void {
   const { p, k, ink, w } = pen
   p.push()
   p.translate(hx * k, bar * k)
   p.rotate(-a)
   outline(p, ink, w * 0.5)
-  p.line(-0.2 * k, 0, -0.17 * k, (HANG - 0.1) * k)
-  p.line(0.2 * k, 0, 0.17 * k, (HANG - 0.1) * k)
+  // Both cords from one point, which the basket swings about.
+  p.line(0, 0, -0.19 * k, (HANG - 0.1) * k)
+  p.line(0, 0, 0.19 * k, (HANG - 0.1) * k)
   solid(p, ink, w * 0.6, HOME.steelDark)
   p.arc(0, (HANG - 0.1) * k, 0.4 * k, 0.26 * k, 0, Math.PI, p.CHORD)
   p.pop()
