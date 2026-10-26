@@ -1,7 +1,7 @@
 import { FRIGATE, drawFrigate, type FrigateLook, type FrigatePose } from '../../craft/frigate'
 import { HARKONNEN, drawThopter, drawThopterOver, seat, thopterLook, type ThopterPose } from '../../craft/thopter'
 import { TICK } from '../../music'
-import { circle, ellipse, fill, kick, line, mix, poly, rect, rgba, ring, smooth, smoother, type Paint, type Pt } from '../../paint'
+import { circle, ellipse, fill, kick, line, mix, poly, rect, rgba, ring, smooth, smoother, stroke, type Paint, type Pt } from '../../paint'
 import { PAD } from '../../plan'
 import { CRATE, FRIGATE_AT, FRIGATE_FOLD, HOOK, LEVER_END, LEVER_PIVOT, PULLEY, RAMP_FOOT, WINCH } from './geo'
 import { ARRIVAL, ATTACK } from './times'
@@ -265,6 +265,8 @@ export function harkHold(t: number, i: 0 | 1): Pt {
   const a = (p.pitch ?? 0) * p.face
   return [p.x + lx * Math.cos(a) - ly * Math.sin(a), p.y + lx * Math.sin(a) + ly * Math.cos(a)]
 }
+/** The hold's doorway, set into the hull behind the cabin (the same opening as the storm's craft). */
+const HARK_DOOR: Pt[] = [[-0.74, -0.22], [0.24, -0.26], [0.26, 0.17], [-0.7, 0.18]]
 /** The hold's door: open while they are taken aboard, then shut over them. */
 const holdShut = (t: number) => smoother(t, ATTACK.lift - 0.75, ATTACK.lift - 0.3)
 
@@ -272,13 +274,13 @@ export function drawHark(g: Paint, t: number): void {
   if (t < HARK_IN[0] || t > ATTACK.hall) return
   const p = harkAt(t)
   drawThopter(g, p, harkLook(t))
-  // The hold's opening, dark, in the rear of the body.
+  // The hold's opening in the rear of the body: the hull's own dark, inside it, not a black hole.
   const ctx = g.ctx
   ctx.save()
   ctx.translate(p.x, p.y)
   ctx.rotate((p.pitch ?? 0) * p.face)
-  rect(ctx, -0.85, -0.24, 1.0, 0.44)
-  fill(ctx, '#07080A')
+  poly(ctx, HARK_DOOR)
+  fill(ctx, mix(harkLook(t).body, '#000000', 0.6))
   ctx.restore()
 }
 
@@ -292,8 +294,10 @@ export function drawHarkOver(g: Paint, t: number): void {
     ctx.save()
     ctx.translate(p.x, p.y)
     ctx.rotate((p.pitch ?? 0) * p.face)
-    rect(ctx, -0.85, -0.24, 1.0 * shut, 0.44)
-    fill(ctx, HARKONNEN.body)
+    const [[x0, y0], [x1, y1], [x2, y2], [x3, y3]] = HARK_DOOR
+    poly(ctx, [[x0, y0], [x0 + (x1 - x0) * shut, y0 + (y1 - y0) * shut], [x3 + (x2 - x3) * shut, y3 + (y2 - y3) * shut], [x3, y3]])
+    fill(ctx, mix(harkLook(t).body, '#000000', 0.12))
+    stroke(g, rgba(harkLook(t).belly, 0.8), 0.02)
     ctx.restore()
   }
   drawThopterOver(g, p, harkLook(t))

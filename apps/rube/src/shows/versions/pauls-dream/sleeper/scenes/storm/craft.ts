@@ -201,7 +201,7 @@ export function drawDoorway(g: Paint): void {
   ctx.translate(p.x, p.y)
   ctx.rotate((p.pitch ?? 0) * p.face)
   poly(ctx, [[-0.74, -0.22], [0.24, -0.26], [0.26, 0.17], [-0.7, 0.18]])
-  fill(ctx, rgba('#0B0C0E', open))
+  fill(ctx, rgba(mix(look(g.t).body, '#000000', 0.6), open))
   ctx.restore()
 }
 
