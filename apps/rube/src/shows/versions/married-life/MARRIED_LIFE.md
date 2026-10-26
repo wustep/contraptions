@@ -1142,6 +1142,17 @@ window.
     and the toll, each read a tenth of a second either side: all land, so no timing changed.
   - *Cost* (the same frame painted 40 times and synced, median of three alternating rounds, base → now): the crest 2.8
     → 3.9 ms, the mornings' patch 4.2–4.4 → 4.6–4.8 ms, the lit room and the credits unchanged (about 10 and 7 ms).
+- **Polish wave 2 (October 2026).** A fresh watch of the whole show, wide every 2 s and a phone held upright every
+  4 s, with full frames of the weakest moments.
+  - *Round 1, soft where it was stepped.* The nursery's mural sky (`mural`) was four flat stripes with ruled seams;
+    the bands now hold their colours through their middles and are feathered into each other over half a band, one
+    canvas gradient, so it reads as a painted sky. The bay's light out on the lawn and the pavement at dusk
+    (`spill`) was two flat trapezoids, the inner one's rim plain on the grass; it falls off over seven layers.
+  - *Round 2, the far haze.* On the summer hill (from 50 s) the town across the valley had a flat base ruled across
+    the far slope below its roofs; its foot now thins into the haze over its last tenth of a cell.
+  - *Looked at and kept:* the stepladder's spreader across the window's sill line (it is the ladder's brace); the
+    balloon passing behind the bay's post as he comes in (210.5 to 212.5 s, as it would); the credits on a phone
+    (390 × 844), which read over the snow and run to the end.
 
 ## Known limits
 
