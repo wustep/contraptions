@@ -441,7 +441,15 @@ export const movie = part<MovieState>(
 /** The film's gate at t, in the part's cells: the screen's picture, opening to the frame, and back. */
 function gateAt(t: number, fr: Rect): { g: Rect; v: Rect; img: Rect } {
   const pad = 1.5
-  const out: Rect = { x0: fr.x0 - pad, y0: fr.y0 - pad, x1: fr.x1 + pad, y1: fr.y1 + pad }
+  // On a tall screen (a phone) the film keeps its own shape, four by three across the frame, in the dark of the room;
+  // it does not stretch to a tall box of empty lawn and sand.
+  const fw = fr.x1 - fr.x0
+  const fh = Math.min(fr.y1 - fr.y0, fw * 0.75)
+  const fy = (fr.y0 + fr.y1) / 2
+  const full: Rect = fh < fr.y1 - fr.y0 ? { x0: fr.x0, y0: fy - fh / 2, x1: fr.x1, y1: fy + fh / 2 } : fr
+  const tall = full !== fr
+  const out: Rect = { x0: full.x0 - pad, y0: tall ? full.y0 : full.y0 - pad, x1: full.x1 + pad, y1: tall ? full.y1 : full.y1 + pad }
+  fr = full
   const mix = (a: Rect, b: Rect, f: number): Rect => ({ x0: lerp(a.x0, b.x0, f), y0: lerp(a.y0, b.y0, f), x1: lerp(a.x1, b.x1, f), y1: lerp(a.y1, b.y1, f) })
   if (t < 370) {
     const f = soft((t - GATE0) / (GATE1 - GATE0))
@@ -658,6 +666,9 @@ function drawRoom(p: p5, t: number, c: Ctx, fr: Rect, g: Rect, img: Rect): void 
   ctx.clip('evenodd')
   ctx.fillStyle = M.room
   ctx.fillRect((fr.x0 - pad) * k, (fr.y0 - pad) * k, (fr.x1 - fr.x0 + 2 * pad) * k, (fr.y1 - fr.y0 + 2 * pad) * k)
+  // While the film fills the frame's width (on a phone, above and below it is the room), the room keeps to the dark:
+  // the camera is in the picture, and the screen, the chair and the projector are not where it is looking.
+  ctx.globalAlpha = 1 - smooth(t, GATE0, GATE1) * (1 - smooth(t, BACK0, BACK1))
   const cy = (img.y0 + img.y1) / 2
   const floor = img.y1 + 1.35
   // The screen round the picture: its matte white, lit a little by the spill; its stand down to the floor.
