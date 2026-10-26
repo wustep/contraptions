@@ -119,12 +119,16 @@ function seats(tier: (typeof TIERS)[number]): { x: number; depth: number; seed: 
 
 /* ------------------------------------------------------------------ the room */
 
+const CYMBALS: KitPiece[] = ['ride', 'hat', 'crash']
+const DRUMS: KitPiece[] = ['kick', 'floor', 'rack', 'snare']
+
 export function drawBandRoom(p: p5, c: Ctx, T: number): void {
   const f = frame(p, c.k)
   const L = roomLight(T)
   p.push()
   if (f.x0 < WALL_L.x1 + 0.5) corridor(p, c, T, f)
   shell(p, c, f, L)
+  underFloor(p, c, f)
   for (const tier of TIERS) if (f.x1 > tier.x0 - 2 && f.x0 < tier.x1 + 2) section(p, c, T, tier, L)
   // The lamps' light in the air and on the pages, under the pit's dark things (Fletcher, the chart's stand, the
   // chair, the drums), so they stay dark against the lit wall.
@@ -143,14 +147,22 @@ export function drawBandRoom(p: p5, c: Ctx, T: number): void {
   }
   drawChartStand(p, c, STAND.x + shove.dx, STAND.ledge, STAND.w, STAND.h, PIT, pg.turned, pg.u, L, turnerAt(T))
   p.pop()
+  // The cymbals' stands stand behind him: at the snare's edge in the tempo test the crash's stand ran up through his
+  // head and the hi-hat's through his arm, as rods drawn over a man.
+  if (!chair.held && chair.behind) drawChair(p, c, [chair.x, chair.y], -1, L * 0.75, chair.turn, chair.scale)
+  const look = { shell: KIT.lacquer, since: (piece: KitPiece) => sinceStroke(piece, T), light: 0.45 + 0.55 * L }
+  p.push()
+  p.translate(KX * c.k, KY * c.k)
+  drawKit(p, c, { ...look, without: DRUMS })
+  p.pop()
   // Fletcher stands behind the chair and the drums (over Andrew's shoulder at the kit), but in front of the chart's
   // stand: he walks past it on the house side to put Andrew on the kit, and his head (a company ball, drawn over every
   // part) sat on its lit pages as a black disc while his body went behind them. It is his path to shove it aside, too.
   if (T >= BAND - 1e-6 && T < QUIET) drawConductor(p, c, fletcherHead(T), fletcherPose(T), { floor: fletcherFloor(T), base: fletcherBase(T), light: 0.5 + 0.5 * L })
-  if (!chair.held) drawChair(p, c, [chair.x, chair.y], -1, chair.behind ? L * 0.75 : L, chair.turn, chair.scale)
+  if (!chair.held && !chair.behind) drawChair(p, c, [chair.x, chair.y], -1, L, chair.turn, chair.scale)
   p.push()
   p.translate(KX * c.k, KY * c.k)
-  drawKit(p, c, { shell: KIT.lacquer, since: (piece: KitPiece) => sinceStroke(piece, T), light: 0.45 + 0.55 * L })
+  drawKit(p, c, { ...look, without: CYMBALS })
   p.pop()
   doors(p, c, T, L)
   p.pop()
@@ -205,6 +217,31 @@ function corridor(p: p5, c: Ctx, T: number, f: ReturnType<typeof frame>): void {
   ctx.fillRect((x1 - 2.4) * k, DOOR_TOP * k, 2.4 * k, (G - DOOR_TOP) * k)
   ctx.restore()
   p.pop()
+}
+
+/**
+ * Under the pit's floor the building's mass falls off into the dark going down. On a phone's tall stage it was the
+ * bottom 40% of every band-room frame, one flat slab of the floor's lit brown.
+ */
+function underFloor(p: p5, c: Ctx, f: ReturnType<typeof frame>): void {
+  const { k } = c
+  const top = PIT + 0.3
+  const deep = 3.2
+  if (f.y1 <= top) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  // Down to the stage's own dark, so it meets whatever lies under the room with no seam.
+  const n = parseInt(c.bg.slice(1), 16)
+  const rgb = `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`
+  const g = ctx.createLinearGradient(0, top * k, 0, (top + deep) * k)
+  g.addColorStop(0, `rgba(${rgb}, 0)`)
+  g.addColorStop(0.5, `rgba(${rgb}, 0.5)`)
+  g.addColorStop(1, `rgba(${rgb}, 0.92)`)
+  ctx.save()
+  ctx.fillStyle = g
+  ctx.fillRect((f.x0 - 1) * k, top * k, (f.x1 - f.x0 + 2) * k, deep * k)
+  ctx.fillStyle = `rgba(${rgb}, 0.92)`
+  ctx.fillRect((f.x0 - 1) * k, (top + deep) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - top - deep + 20) * k)
+  ctx.restore()
 }
 
 /** The room's shell: the back wall and its panels, the ceiling and its lamps, the tiered floor, the pit, the walls. */
