@@ -412,8 +412,10 @@ function figure(pen: Pen, f: Fig): Pt {
   // The near arm, and what it holds.
   const nearS: Pt = [sx + 0.05 * s, shY + 0.1]
   const na = joint(nearS, f.near, 0.62, 0.58, 1)
-  limb(pen, nearS, na.j, 0.16, 0.14, f.coat)
-  limb(pen, na.j, na.h, 0.14, 0.11, f.coat)
+  // A shade under the coat, so an arm across the body reads against it.
+  const sleeve = mix(f.coat, '#000000', 0.14)
+  limb(pen, nearS, na.j, 0.16, 0.14, sleeve)
+  limb(pen, na.j, na.h, 0.14, 0.11, sleeve)
   ellipse(pen, na.h, 0.075, 0.075, f.skin)
   f.holding?.(na.h)
   return head
