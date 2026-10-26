@@ -257,6 +257,15 @@ second.
 - **The burst** (504.0) is the board's own slam to white. A white sheet laid over the whole frame on top of it (the cue's
   `flash`) overshot by half again and washed every black grey for half a second; it is gone.
 
+## Polish wave 3 (Oct 26)
+
+- **The match cut to Overbrook (172.07)** opens on the practice room's own dark. The backstage's cover was the road's
+  slate paper, so the cut stepped up from 20 to 31 in brightness and from brown to blue, and sat there for 0.6 s
+  before the tubes. The case he sits on fades into that dark by itself, in thin bands; a dark gradient laid over it
+  doubled the dark at its foot, a box darker than the room as the tubes came on.
+- **The cut to Carnegie (242.34)**: the road's closing dark (`crash.ts` `nightFall`) is the hall's own dark, not the
+  road's slate, so the cut changes the picture and not the dark (the probe's change across it, 14 to 4.6).
+
 ## How to run it
 
 ```
