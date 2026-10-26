@@ -453,6 +453,14 @@ the sky. Each card holds 3.4 to 5 s; the last is gone by 266.7 s.
     ends at a near kerb with the camera's own pavement in the shade past it, and he walks on along it;
   - the snow sifting onto the ledge was a tapering wedge of white that read as a beam of light. It falls as flakes now;
   - the scan found only the meant pops: the tubes, the enlarger and the cuts on strikes.
+- **Polish wave 3** (every passage a tenth of a second at a time, the machines up close, and the whole show again on
+  a phone's page):
+  - on a phone the eruption, the band's last hit, was not in the picture at all. The far planes were measured by the
+    stage's height, so a tall stage drew the sky, the ranges and the volcano about twice the size, and the volcano
+    went past the right edge. Iceland's planes and the depth kit's `layer` now take the composed 16:9 frame's height,
+    so a phone sees the wide frame's own composition with more world above and below it: the eruption, the daydream's
+    moon, the Himalayan sun, the press hall's arched windows. The wide frame is unchanged to the pixel;
+  - the passages and the machines were looked at closely and left as they are.
 
 ## Judgment calls
 
