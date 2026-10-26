@@ -295,6 +295,14 @@ A careful watch, wide and tall, for what looked wrong or cheap:
 - Read and left: the credits on a phone (every card legible over the dusk, clear of the building), the call and
   answer (they hop in turn), the three stomps on their calls.
 
+## Polish wave 5
+
+- **Into the booth**, Hansel's last hop off the rails went up through the deck's boards. The deck has a trap over the
+  left bay: his head lifts its lid as he comes through, it stands open while he lands, and it falls shut behind him
+  on the next beat (beat 345), well before he rolls back along the deck to the bucket.
+- **The night outside the spa** stopped in hard lines over and under a tall frame, a grey block under the street: it
+  goes on above and below.
+
 ## Zoolander nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the song.
