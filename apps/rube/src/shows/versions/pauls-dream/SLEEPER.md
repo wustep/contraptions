@@ -223,3 +223,10 @@ by copying their folders.
   - Timing: the needle, the lid, the fold, the hook, the breach, the rim, the shield, the tooth, Leto's colour, the
     storm wall, Jamis's fall, the rider's breach and the last blow were each read 0.1 s either side. All land, so no
     timing changed.
+- **Polish wave 2.** A fresh watch of the whole show, desktop and an upright phone.
+  - The rider's worm out on the erg stood cut off at a flat line over the dunes, as if set on them. It now goes down
+    into its own range's sand, along the crest.
+  - In the close shots at Paul's window the moon sat half behind the rim and read as a broken shell. It now stands
+    clear of the rim there.
+  - The dust off the ceiling after the blast was a hard-edged pale strip across the window. It falls as a soft band.
+  - The phone pass and the strikes found nothing more to change.
