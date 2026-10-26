@@ -231,7 +231,13 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 165 (latest)
+## Polish pass 166 (latest)
+
+Polish wave 5 (Oct 26 2026): the transitions, in motion. Every change of scene stepped through a tenth of a second at a time or finer: the whip to Miller (103.8 s), the bridge into the bed and the cut to Act II (124 to 128.3), the lift across the station to the far side (164.5 to 172.3), the spoke into the hub (188.5 to 193.3), the wormhole's far side opening onto Edmunds' plain (233.5 to 236.5), and the show's first and last seconds. None of them pops or flashes; the whip dims for a frame as it goes through the sphere, and the wormhole's window opens over a quarter of a second, both as scored. One fix.
+
+**The wake** (125.6 to 127.5 s, the riders in `space/gargantua.ts`). The room he falls back into is drawn in the farm's ink, but he was still in the dark's: a bone rim and a bone mark, under the room's night. So for the whole wake he read as a ghost, a pale ring on the pillow, though he is a ball again from WAKE, and then on the cut to Act II his rim and mark turned dark all at once. He takes the room's ink now as he comes down into the pillow (a rider's `rim`, eased over a third of a second): a dashed ghost in the room's ink as he settles, a solid ball when he wakes, and nothing about him changes on the cut.
+
+## Polish pass 165
 
 Polish wave 4 (Oct 26 2026): Act I's dark and all of Act II at full size, a frame every 5 s, and then the props that carry the last scenes zoomed to twice the frame's size. One fix and one cut.
 
