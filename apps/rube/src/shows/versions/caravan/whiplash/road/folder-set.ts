@@ -82,12 +82,14 @@ export function drawBackstage(p: p5, c: Ctx, light: number, f: { x0: number; x1:
   p.pop()
 }
 
-/** The tubes' light: a soft cool wash from the ceiling, fading down the wall, and a pool on the floor. Additive. */
+/**
+ * The tubes' light: a soft cool wash from the ceiling, fading down the wall, and a pool on the floor. Additive. No
+ * halo round the tube itself: a bright disc under it read as bloom, a white blob at the top of every backstage frame.
+ */
 export function drawBackstageLight(p: p5, c: Ctx, light: number): void {
   if (light <= 0.01) return
   for (const tx of [-3.9, 1.6]) {
-    glow(p, c, tx, CEIL + 0.4, 1.1, 0.35 * light, ROAD.paint)
-    glow(p, c, tx, CEIL + 1.6, 4.2, 0.07 * light, ROAD.paint)
+    glow(p, c, tx, CEIL + 1.6, 4.2, 0.09 * light, ROAD.paint)
     pool(p, c, tx, FL + 0.05, 3.4, 0.3, 0.09 * light, ROAD.paint)
   }
 }
