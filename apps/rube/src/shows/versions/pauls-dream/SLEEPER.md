@@ -243,3 +243,9 @@ by copying their folders.
     foot now lightens toward the floor, and they meet in a soft change.
   - The dissolves (into the night, into the Fremen's morning, into the walk) and the fold, and the credits on both
     screens, held up, and were left alone. The door's fall and the Duke's colour each land on their strikes.
+- **Polish wave 5.** A fresh watch at full size of the stretches the last waves had not dwelt on.
+  - The storm wall's softening faded its own outermost pixels, so a pale strip ran down the frame's edge and along its
+    top while the wall filled them. It is now painted with a margin past the frame. Its face came down to the sand at
+    a hard corner; dust now boils up round its foot.
+  - The frigate's open hold was one flat beige panel. It is now dark high inside and lighter toward the floor the
+    family stands on, with a shadow under the lintel.
