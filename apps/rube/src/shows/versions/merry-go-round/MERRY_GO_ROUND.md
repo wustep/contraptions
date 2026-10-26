@@ -187,6 +187,10 @@ Wave 3, the phone held upright: the moor in front of the castle's collapse (243 
 standing on the screen; past its end it now falls away ever steeper, out of the frame. The flower fields' near rows of
 flowers stopped in a line over a bare slab of green; they now go on down, nearer and bigger, to the frame's foot.
 
+Wave 4, the iconic beats close up: Calcifer's roar (128.0), the first time we see the engine, was framed so tight on
+the chimney that both bursts of smoke went out of the top at once, a dark smudge on the frame's edge. The wide is a
+little wider now (31.5 cells, its feet where they were), with sky over the chimney for the smoke to billow up in.
+
 ## Chrome, credits, checks
 
 - In the picker the work is **Merry-Go-Round** and its one take **Opus 5.5**: the Version row hides by itself. No
