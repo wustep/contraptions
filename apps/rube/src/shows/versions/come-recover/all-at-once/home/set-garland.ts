@@ -70,6 +70,15 @@ const SHARE = 0.72
 const ROLL = 0.15
 /** Where the empty hanger comes to rest after the stop: in the gap between lanterns 3 and 4, clear of both. */
 const REST_X = 6.34
+/**
+ * Where the last two lanterns' knots are, which the empty hanger has to jump again on its way back (`KNOTS`), and how
+ * much of its speed it keeps over each. It is knocked back off the stop hard enough to brush past their lanterns in
+ * a moment, not hang in each for a second; the knots, the drag and the dip take the speed off.
+ */
+const LATE_KNOTS = [7.47, 6.9]
+const JUMP_KEEPS = 0.9
+/** How hard the stop knocks it back, as a share of the speed it hit it at. */
+const KNOCK = 0.8
 
 interface Ride {
   /** Samples from CATCH to well after the stop: the hook's x, and the basket's swing (radians, + forward). */
@@ -127,7 +136,10 @@ function backDown(v0: number, damp: number, n: number): Float32Array {
     const next = v + (g - damp * v - ROLL * Math.sign(v || g)) * dt
     // It sticks where it turns, if the slope there cannot pull it past the drag.
     v = v !== 0 && Math.sign(next) !== Math.sign(v) && Math.abs(g) <= ROLL ? 0 : next
-    x = Math.min(STOP_X, x + v * c * dt)
+    const nx = Math.min(STOP_X, x + v * c * dt)
+    // Over a knot the hook jumps it, and loses speed to it.
+    for (const kx of LATE_KNOTS) if ((x - kx) * (nx - kx) < 0) v *= JUMP_KEEPS
+    x = nx
   }
   return xs
 }
@@ -152,15 +164,15 @@ const RIDE: Ride = (() => {
   // within this range more damping holds it further up the wire.
   const vStop = run.v[run.v.length - 1] ?? 0
   const back = n - Math.floor((STOP - CATCH) * RATE)
-  let dlo = 0.7
-  let dhi = 1.6
-  for (let i = 0; i < 40; i++) {
+  let dlo = 0
+  let dhi = 6
+  for (let i = 0; i < 50; i++) {
     const mid = (dlo + dhi) / 2
-    const xs = backDown(-0.22 * vStop, mid, back)
+    const xs = backDown(-KNOCK * vStop, mid, back)
     if (xs[back - 1] < REST_X) dlo = mid
     else dhi = mid
   }
-  const after = backDown(-0.22 * vStop, (dlo + dhi) / 2, back)
+  const after = backDown(-KNOCK * vStop, (dlo + dhi) / 2, back)
   let hx = STOP_X
   // The basket swings under the hook as a pendulum, thrown back as it sets off and forward at the stop.
   let th = 0
@@ -238,6 +250,19 @@ export function seatAt(t: number): Pt {
 const SET_ON: (number | null)[] = [null, null, null, 6.9, 7.47]
 export const KNOTS: number[] = POPS.map((t, i) => SET_ON[i] ?? hookX(t))
 
+/** When the empty hanger, going back, passes each lantern's knot (Infinity for those it never comes back to). */
+const BRUSHED: number[] = KNOTS.map((kx) => {
+  for (let t = STOP; t < STOP + 10; t += 1 / RATE) if (hookX(t) <= kx) return t
+  return Infinity
+})
+
+/** A lantern brushed by the basket going back by: pushed the way it goes, and swinging back, damped. */
+function brushSway(t: number, at: number): number {
+  const u = t - at + 0.3
+  if (u < 0) return 0
+  return 0.42 * Math.exp(-u / 0.75) * Math.sin(u * 4.6)
+}
+
 /** Where lantern i hangs from at `t` (its knot on the wire, which moves as the hanger does), and its lantern's middle. */
 export function lanternAt(i: number, t: number): { knot: Pt; middle: Pt } {
   const hx = hookX(t)
@@ -289,7 +314,7 @@ export function drawGarland(pen: GarlandPen, t: number, lantern: LanternFn, lit:
     const ky = wireY(kx, hx)
     const o = lanternOpen(t, POPS[i])
     // Folded, a lantern hangs close under its knot; open, it drops on its cord.
-    lantern(kx, ky, { open: o.open, lit: lit(i, t), sway: o.sway, size: 0.92 })
+    lantern(kx, ky, { open: o.open, lit: lit(i, t), sway: o.sway + brushSway(t, BRUSHED[i]), size: 0.92 })
   })
   // The hanger on its hook, and the basket.
   const a = basketSwing(t)
