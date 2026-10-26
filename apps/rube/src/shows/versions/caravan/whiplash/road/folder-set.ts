@@ -484,8 +484,9 @@ export function drawBand(p: p5, c: Ctx, s: BandLook): void {
       solid(p, mixHex(brass, ROAD.deep, 0.6), weight * 0.5, brass)
       p.push()
       if (horn === 'trumpet') {
+        // Bells up, as a big band's trumpets play: held level, the first bell ran into Fletcher's open hand.
         p.translate((x - 0.24) * k, (floor - 2.36 + 0.55 * (1 - s.up)) * k)
-        p.rotate(-0.12 - 0.9 * (1 - s.up) - 0.22 * a * s.up + Math.PI)
+        p.rotate(0.3 * s.up - 0.9 * (1 - s.up) + 0.12 * a * s.up + Math.PI)
         rect(p, k, 0, -0.035, 0.62, 0.035)
         poly(p, k, [[0.6, -0.04], [0.82, -0.13], [0.82, 0.13], [0.6, 0.04]])
       } else {
