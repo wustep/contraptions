@@ -195,13 +195,28 @@ function devil(s: Screen, t: number, y: number, w: Work): void {
   const body = new Path2D()
   const swirl = new Path2D()
   const n = 12
+  // One column, narrow at the foot and widening up into a round crown: a stack of rings left gaps low down, where they
+  // were small, and read as beads.
+  const ring = (u: number) => ({
+    r: f * (0.004 + 0.03 * u ** 1.6) * (0.7 + 0.3 * life),
+    cx: x + Math.sin(t * 1.7 + u * 3) * f * 0.006 * u + 0.25 * H * u * u,
+    cy: y - H * u,
+  })
   for (let k = 0; k <= n; k++) {
-    const u = k / n
-    const r = f * (0.004 + 0.03 * u ** 1.6) * (0.7 + 0.3 * life)
-    const cxk = x + Math.sin(t * 1.7 + u * 3) * f * 0.006 * u + 0.25 * H * u * u
-    const cyk = y - H * u
-    body.moveTo(cxk + r, cyk)
-    body.ellipse(cxk, cyk, r, r * 0.4, 0, 0, Math.PI * 2)
+    const { r, cx, cy } = ring(k / n)
+    if (k === 0) body.moveTo(cx - r, cy)
+    else body.lineTo(cx - r, cy)
+  }
+  for (let k = n; k >= 0; k--) {
+    const { r, cx, cy } = ring(k / n)
+    body.lineTo(cx + r, cy)
+  }
+  body.closePath()
+  const crown = ring(1)
+  body.moveTo(crown.cx + crown.r, crown.cy)
+  body.ellipse(crown.cx, crown.cy, crown.r, crown.r * 0.4, 0, 0, Math.PI * 2)
+  for (let k = 0; k <= n; k++) {
+    const { r, cx: cxk, cy: cyk } = ring(k / n)
     // The turning: an arc across the front of every other ring, going round.
     if (k % 2 === 0 && k > 0) {
       const a = (t * 5 + k) % (Math.PI * 2)
@@ -212,7 +227,11 @@ function devil(s: Screen, t: number, y: number, w: Work): void {
   // Its skirt: the dust it lifts off the field at its foot.
   body.moveTo(x + f * 0.03, y)
   body.ellipse(x, y - f * 0.004, f * 0.03, f * 0.007, 0, 0, Math.PI * 2)
-  ctx.fillStyle = rgba(dust, 0.42 * life)
+  // Thick with dust at the foot, thinning as it climbs, so the crown is a haze and not a lid.
+  const thin = ctx.createLinearGradient(0, y, 0, crown.cy - crown.r * 0.4)
+  thin.addColorStop(0, rgba(dust, 0.46 * life))
+  thin.addColorStop(1, rgba(dust, 0.14 * life))
+  ctx.fillStyle = thin
   ctx.fill(body)
   ctx.strokeStyle = rgba(mixHex(dust, '#8C6E55', 0.4), 0.35 * life)
   ctx.lineWidth = Math.max(1, f * 0.0018)
