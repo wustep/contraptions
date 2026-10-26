@@ -1183,6 +1183,16 @@ window.
   note); the doctor's sun bars across the door and the chairs; the ward lamp's light on the wall above its shade; the
   credits' cards over the snow, the flakes fading under them.
 
+- **Polish wave 6 (October 2026).** A frame-cost audit of the whole campaign, and a last look at the frames not yet
+  seen at full size (the fix-up's porch, the book's pop-up, the tickets' door). Nothing changed in the show.
+  - *Cost* (the same frame painted 40 times and synced, median of three alternating rounds, the first polish wave's
+    base → now, headless Chromium at 1920 × 1080): the wedding 8.7 → 8.9 ms, the fix-up 8.3 → 8.2, the summer hill
+    8.3 → 8.3, the nursery 4.6 → 5.4 (wave 2's mural gradient), the funeral 7.2 → 7.3, the lit room 7.6 → 7.7. Every
+    frame in a sweep every 8 s is under 16.7 ms but the storm's wide.
+  - *Known, not changed:* the storm's wide (128 to 131 s) measures about 18 ms here, the same before the polish waves
+    as after (18.0 → 18.1). Almost all of it is the GPU finishing the frame, not the show's code (a CPU profile puts
+    the drawing itself near 4 ms), so it wants a deeper look than a polish pass: it is listed under the known limits.
+
 ## Known limits
 
 - In the named reveals (the house made new, about 10 cells; the storm, about 17) the two of them are small. It is
@@ -1198,6 +1208,8 @@ window.
   up (203.9 s), the balloon's crown is cut by a sliver under Zoom (0.07 of the half height). Under the baby cloud
   (60 to 63 s) the baby's head is above the Zoom frame: from their feet to its head is taller than the Zoom frame, so
   Zoom keeps them; the show's own frame has it whole.
+- The storm's wide (128 to 131 s) is the heaviest frame: about 18 ms in headless Chromium at 1920 × 1080 (polish wave
+  6), mostly the GPU's own time; elsewhere every frame is under 16.7 ms.
 - The camera's one blow (the toll) is 1% of the frame; it is felt in motion and invisible in a still.
 - Photosensitive flashing is measured by approximation only (above), not with a certified analyser.
 - A saved video's credits paint every role line gold: `words.ts` ignores `TitleCard.plain` (the page honours it).
