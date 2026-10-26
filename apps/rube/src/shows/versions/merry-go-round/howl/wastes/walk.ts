@@ -179,8 +179,8 @@ const ajarAt = (T: number): number => smooth(T, 139.6, 141.2)
 /**
  * The porch lantern: a small square brass lantern hung on a short chain from the left end of the hood over the door,
  * two cells over where she rides, swinging to the gait. Lit as she climbs, and full as the dusk comes on, its light
- * falls down: a flat warm pool on the porch planks round her feet, while the iron right behind her stays in shade,
- * so at night she reads pale on dark, never lost on lit grey iron. From nightfall a blade of warm light from
+ * falls down: a flat warm pool on the porch planks round her feet, and the iron behind her stays dark, so at night
+ * she reads pale on dark (no shade is drawn behind her: a soft dark patch there read as smoke at her head). From nightfall a blade of warm light from
  * the door standing ajar falls across the porch planks behind her. (Square, and two cells over her head: never a
  * round bright thing near her.)
  */
@@ -199,24 +199,9 @@ function drawLantern(p: p5, k: number, weight: number, ink: string, T: number): 
   const X = (v: number) => v * k
   const ctx = p.drawingContext as CanvasRenderingContext2D
   p.push()
-  // How dark it has got: the pool reads, and the iron behind her goes into shadow, as the dusk comes on.
+  // How dark it has got: the pool reads more as the dusk comes on.
   const dusk = smooth(T, 136.4, 139.6)
   if (lit > 0.01) {
-    // The iron right behind her in the shade of the lantern's cap and the hood (the light falls down, not back): a
-    // soft darkening at her height, wider than tall, so her silver reads pale on dark iron, never on lit iron.
-    const [px, py] = onCastle(T, [CASTLE.ride[0], CASTLE.ride[1] - FLOOR])
-    if (dusk > 0.01) {
-      ctx.save()
-      ctx.translate(X(px), X(py - 0.06))
-      ctx.scale(1, 0.72)
-      const d = ctx.createRadialGradient(0, 0, 0, 0, 0, X(0.75))
-      d.addColorStop(0, `rgba(18, 20, 30, ${0.5 * dusk})`)
-      d.addColorStop(0.45, `rgba(18, 20, 30, ${0.36 * dusk})`)
-      d.addColorStop(1, 'rgba(18, 20, 30, 0)')
-      ctx.fillStyle = d
-      ctx.fillRect(X(-0.75), X(-0.75), X(1.5), X(1.5))
-      ctx.restore()
-    }
     // The lantern's pool on the porch: a flat warm oval on the planks round her feet (and down the planks' face),
     // brightest round her and running out along the porch toward the door (it stops short of the porch's open end), never up the wall behind her.
     const [fx, fy] = onCastle(T, CASTLE.ride)
@@ -266,9 +251,11 @@ function drawLantern(p: p5, k: number, weight: number, ink: string, T: number): 
   }
   // Its chain, and the lantern: a brass cap, four glass panes lit from within, a brass foot, hanging plumb from
   // the chain's end as it swings.
-  p.stroke(ink)
+  // (The chain in dull brass: in ink it vanished into the dark iron, and the lantern hung on nothing.)
+  p.stroke(mixHex(WASTES.brass, ink, 0.35))
   p.strokeWeight(weight * 0.6)
   p.line(X(hook[0]), X(hook[1]), X(lx), X(ly))
+  p.stroke(ink)
   p.translate(X(lx), X(ly))
   p.rotate(angle)
   p.rectMode(p.CENTER)
