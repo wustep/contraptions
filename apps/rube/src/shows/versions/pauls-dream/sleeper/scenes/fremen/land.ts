@@ -346,7 +346,10 @@ export function drawBasin(g: Paint, air: Air): void {
   }
   ctx.lineTo(L.x(xb), foot)
   ctx.closePath()
-  fill(ctx, vgrad(ctx, top, L.y(0), [[0, lit], [1, dark]]))
+  // Darkest low on its face, and at its foot halfway back toward the floor's own light, so where it meets the floor
+  // of the basin is a soft change and not a ruled line.
+  const floor = mix(air.sand, '#FFFFFF', 0.05)
+  fill(ctx, vgrad(ctx, top, L.y(0), [[0, lit], [0.7, dark], [1, mix(dark, floor, 0.5)]]))
 }
 
 /** Everything behind the people, far to near: the sky and sun, the erg and the jebels in depth order, `extra` things
