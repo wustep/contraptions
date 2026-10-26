@@ -276,6 +276,15 @@ second.
   hung on the post under the body, so the body flew in as a T, and once seated its end stuck out past the rack tom like
   a pan's handle.
 
+## Polish wave 5 (Oct 26)
+
+- **Overbrook's trumpets play bells up** (`folder-set.ts` `drawBand`), lifting a little more on the band's hits. Held
+  level (a shade down, in fact), the first bell ran into Fletcher's open hand while he conducted.
+- **Overbrook's saxophones** have the U-bend at the body's foot and a bell flaring back up beside it. A straight tube
+  with a flat foot read as a hockey stick.
+- Watched and left: the nod (Fletcher's chest tipped to Andrew, the frame's answer) and the stick thrown end over end on
+  the solo's biggest hit both read.
+
 ## How to run it
 
 ```
