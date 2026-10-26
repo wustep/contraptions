@@ -1,5 +1,5 @@
 import type { Pt } from '../../../../../parts'
-import { hash } from '../kit'
+import { hash, smooth } from '../kit'
 import { at, BEAT } from '../music'
 import { G, G_LOW } from '../physics'
 import { sway } from '../depth'
@@ -63,7 +63,6 @@ import {
   TREADS,
   DOWN,
   OUT_OF_TUB,
-  buried,
   bedGive,
   bulbLevel,
   BULB_OUT,
@@ -1289,7 +1288,6 @@ function drawBoard(pen: Pen, t: number): void {
 
 /** The plaster heaped over him, and thrown off as he comes up. */
 export function drawHeap(pen: Pen, t: number): void {
-  const b = buried(t)
   const hip: Pt = [4.05, M_MATTRESS + COLLAPSE]
   // The dust he throws up bursting out of it, hanging over him and thinning.
   const s = t - RISE_UP
@@ -1297,28 +1295,41 @@ export function drawHeap(pen: Pen, t: number): void {
     const u = s / 1.4
     dustCloud(pen, [hip[0] + 0.2, hip[1] - 1.4 - 0.4 * u], 0.6 + 1.2 * (1 - (1 - u) * (1 - u)), 0.18 * Math.min(1, s / 0.1) * (1 - u), 3)
   }
-  if (b <= 0) return
-  const up = t > RISE_UP ? (t - RISE_UP) * 4 : 0
-  // A mound of broken plaster and lath over him, angular, a board across it; it flies up as he bursts out.
-  const ctx = ctxOf(pen.p)
-  ctx.save()
-  ctx.globalAlpha = b
-  const mound: Pt[] = [[hip[0] - 0.75, hip[1] + 0.12], [hip[0] - 0.68, hip[1] - 0.55], [hip[0] - 0.42, hip[1] - 0.95], [hip[0] - 0.12, hip[1] - 1.35], [hip[0] + 0.28, hip[1] - 1.62], [hip[0] + 0.62, hip[1] - 1.3], [hip[0] + 0.85, hip[1] - 0.9], [hip[0] + 1.0, hip[1] - 0.35], [hip[0] + 1.1, hip[1] + 0.12]]
-  shape(pen, mound.map(([x, y]) => [x, y - up * 0.3] as Pt), C.plasterDark)
+  if (t < LAND - 0.02) return
+  // As he bursts out it is thrown off him, never faded: the mound slumps flat onto the bed, its pieces fly off to
+  // either side and come down on the blanket, and lie there.
+  const since = Math.max(0, t - RISE_UP)
+  const slump = 1 - smooth(since, 0, 0.3)
+  const bed = hip[1] + 0.1
+  const mid = hip[0] + 0.25
+  const throwOff = (x: number, y: number, k: number, lift: number): Pt => {
+    const dir = x < mid ? -1 : 1
+    const fx = x + dir * (0.6 + 0.9 * k) * Math.min(since, 0.5)
+    const fy = y - lift * since + 9 * since * since
+    return [fx, Math.min(bed, fy)]
+  }
+  if (slump > 0.01) {
+    const mound: Pt[] = [[hip[0] - 0.75, hip[1] + 0.12], [hip[0] - 0.68, hip[1] - 0.55], [hip[0] - 0.42, hip[1] - 0.95], [hip[0] - 0.12, hip[1] - 1.35], [hip[0] + 0.28, hip[1] - 1.62], [hip[0] + 0.62, hip[1] - 1.3], [hip[0] + 0.85, hip[1] - 0.9], [hip[0] + 1.0, hip[1] - 0.35], [hip[0] + 1.1, hip[1] + 0.12]]
+    shape(pen, mound.map(([x, y]) => [mid + (x - mid) * (1 + 0.25 * (1 - slump)), bed + (y - bed) * slump] as Pt), C.plasterDark)
+  }
   for (let i = 0; i < 14; i++) {
     const a0 = hash(i, 1, 70)
-    const cx = hip[0] - 0.6 + a0 * 1.6
-    const top = hip[1] - 1.5 + Math.abs(cx - (hip[0] + 0.25)) * 1.3
-    const cy = top + 0.1 + hash(i, 2, 70) * 0.5 - up * (0.4 + hash(i, 5, 70))
+    const cx0 = hip[0] - 0.6 + a0 * 1.6
+    const top = hip[1] - 1.5 + Math.abs(cx0 - mid) * 1.3
+    const [cx, cy] = throwOff(cx0, top + 0.1 + hash(i, 2, 70) * 0.5, hash(i, 6, 70), 2.2 + 2 * hash(i, 5, 70))
     const r = 0.08 + hash(i, 3, 70) * 0.12
-    const rot = hash(i, 4, 70) * 3
-    const pts: Pt[] = [0, 1, 2, 3].map((j) => [cx + Math.cos(rot + j * 1.7) * r * (j % 2 ? 0.7 : 1.1), cy + Math.sin(rot + j * 1.7) * r * (j % 2 ? 0.7 : 1.1)])
+    const rot = hash(i, 4, 70) * 3 + since * 6 * (hash(i, 7, 70) - 0.5) * (cy < bed ? 1 : 0)
+    const pts: Pt[] = [0, 1, 2, 3].map((j) => [cx + Math.cos(rot + j * 1.7) * r * (j % 2 ? 0.7 : 1.1), Math.min(bed + 0.04, cy + Math.sin(rot + j * 1.7) * r * (j % 2 ? 0.7 : 1.1))])
     shape(pen, pts, i % 3 ? C.plaster : C.plasterHi)
     if (i % 4 === 0) path(pen, [pts[0], pts[1]], C.plasterDark, 0.5)
   }
-  limb(pen, [hip[0] - 0.55, hip[1] - 0.7 - up], [hip[0] + 0.75, hip[1] - 1.2 - up * 1.3], 0.07, C.board)
-  limb(pen, [hip[0] - 0.2, hip[1] - 1.25 - up], [hip[0] + 0.55, hip[1] - 0.85 - up], 0.04, mix(C.board, C.plaster, 0.4))
-  ctx.restore()
+  // The lath and the board across it, flung off to the foot of the bed.
+  const l0 = throwOff(hip[0] - 0.55, hip[1] - 0.7, 0.8, 2.6)
+  const l1 = throwOff(hip[0] + 0.75, hip[1] - 1.2, 0.8, 2.6)
+  limb(pen, l0, [l1[0], Math.min(l1[1], l0[1] + (hip[1] - 1.2 - (hip[1] - 0.7)) * slump)], 0.07, C.board)
+  const b0 = throwOff(hip[0] - 0.2, hip[1] - 1.25, 0.3, 2.0)
+  const b1 = throwOff(hip[0] + 0.55, hip[1] - 0.85, 0.3, 2.0)
+  limb(pen, b0, b1, 0.04, mix(C.board, C.plaster, 0.4))
 }
 
 /**
