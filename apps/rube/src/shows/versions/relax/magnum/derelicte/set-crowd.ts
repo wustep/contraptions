@@ -298,14 +298,10 @@ function drawRow(p: p5, k: number, f: Frame, t: number, tw: number, people: Pers
     if (s.x < a - 0.8 || s.x > b + 0.8) continue
     const hy = shooterHead(s, t, tw)
     figure(c, s.x, hy, 0.11, s.hat, Math.round(s.x * 10))
-    const { cx, cy, rx, ry, up } = camera(s, t, tw)
+    const { cx, cy } = camera(s, t, tw)
     // The camera at the face, its lens toward the runway, and the flash gun standing over it.
     c.rect(cx - 0.14, cx + 0.14, cy - 0.085)
     c.rect(cx + s.side * 0.12 - 0.05, cx + s.side * 0.12 + 0.05, cy - 0.04)
-    if (up > 0.5) {
-      c.rect(rx - 0.025, rx + 0.025, ry + 0.04)
-      c.rect(rx - 0.08, rx + 0.08, ry - 0.045)
-    }
   }
   // At its ends the mass ends with its last shoulders.
   let i0 = 0
@@ -315,6 +311,20 @@ function drawRow(p: p5, k: number, f: Frame, t: number, tw: number, people: Pers
   c.xs = c.xs.slice(i0, i1 + 1)
   c.ys = c.ys.slice(i0, i1 + 1)
   fillContour(p, k, c, f.y1 + 1, fill, rim, rimColor)
+  // The flash guns over the cameras, drawn on their own: a mass filled down from its top edge can't hold a head wider
+  // than its stem, and the gun became a solid column (a bottle with a cap) the width of its head.
+  p.push()
+  p.noStroke()
+  p.fill(fill)
+  p.rectMode(p.CORNERS)
+  for (const s of press) {
+    if (s.x < a - 0.8 || s.x > b + 0.8) continue
+    const { cy, rx, ry, up } = camera(s, t, tw)
+    if (up < 0.5) continue
+    p.rect(k * (rx - 0.018), k * (ry - 0.01), k * (rx + 0.018), k * (cy - 0.07))
+    p.rect(k * (rx - 0.075), k * (ry - 0.075), k * (rx + 0.075), k * (ry - 0.005), k * 0.012)
+  }
+  p.pop()
 }
 
 /** The audience and the press, and their flashes. */
