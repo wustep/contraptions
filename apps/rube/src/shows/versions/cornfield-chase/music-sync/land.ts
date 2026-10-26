@@ -26,7 +26,7 @@ export function dayLand(p: p5, c: PieceCtx, col: number, line: number, begin: nu
   body(s, hy, 0.74, sunHeight(t), 0.042, dusk < 0.5 ? '#F7DC8E' : dusk < 0.85 ? '#F4A35E' : '#E8744A', { color: '#F6D58A', a: 0.26 - 0.06 * dusk, r: 0.15 })
   clouds(s, t, hy, { ...l.cloud, sky: l.low, alpha: 0.9 })
   const ink = mixHex('#46423A', '#3A2A32', smooth(t, ORGAN - 3, 40))
-  drone(s, t, hy, ink)
+  drone(s, t, hy, ink, l.low)
   farm(s, hy, l.farm, undefined, t * 1.3)
   band(s, hy, l.band)
   haze(s, hy, smooth(t, 34, 40.4), '#C7A07C')

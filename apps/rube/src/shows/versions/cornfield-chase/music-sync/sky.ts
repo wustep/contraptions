@@ -261,42 +261,37 @@ export function droneAcross(t: number): number | null {
 
 /**
  * The drone, as in the film: a long slender wing high over the field, out of the west at the end of the piano and
- * coming down across the sunset toward the far rows as the organ gathers, with the pickup on the ground after it.
+ * coming down across the sunset to skim the far rows as the organ gathers, with the pickup on the ground after it. Seen
+ * a little from below, so the wing has its chord and its sweep, and in the haze of the distance, paler than the
+ * machine's ink: drawn edge on in the ink, it read as a stray length of rail beside the machine's floors.
  */
-export function drone(s: Screen, t: number, hy: number, ink: string): void {
+export function drone(s: Screen, t: number, hy: number, ink: string, sky: string): void {
   const across = droneAcross(t)
   if (across === null) return
   const { ctx, cx, f } = s
   const W = (f * 16) / 9
   const u = (t - DRONE[0]) / (DRONE[1] - DRONE[0])
   const x = cx - W / 2 + across * W
-  const y = hy - (0.46 - 0.34 * smooth(u, 0.15, 1)) * f + 0.006 * f * Math.sin(t * 0.9)
+  const y = hy - (0.46 - 0.4 * smooth(u, 0.15, 1)) * f + 0.006 * f * Math.sin(t * 0.9)
   const span = f * 0.07
   const bank = 0.04 * Math.sin(t * 0.55)
   ctx.save()
   ctx.translate(x, y)
   ctx.rotate(bank)
-  ctx.fillStyle = ink
-  ctx.strokeStyle = ink
-  // The wing: long and thin, a little swept, tips raised.
+  ctx.fillStyle = mixHex(ink, sky, 0.3)
+  // The wing: long, its leading edge swept back from the pod to the raised tips, its trailing edge straighter, so the
+  // chord narrows out to the tips.
   ctx.beginPath()
-  ctx.moveTo(-span, -span * 0.035)
-  ctx.lineTo(-span * 0.1, span * 0.012)
-  ctx.lineTo(span * 0.1, span * 0.012)
-  ctx.lineTo(span, -span * 0.035)
-  ctx.lineTo(span, -span * 0.01)
-  ctx.lineTo(span * 0.1, span * 0.04)
-  ctx.lineTo(-span * 0.1, span * 0.04)
-  ctx.lineTo(-span, -span * 0.01)
+  ctx.moveTo(0, -span * 0.04)
+  ctx.lineTo(span, -span * 0.07)
+  ctx.lineTo(span * 0.98, -span * 0.035)
+  ctx.lineTo(0, span * 0.05)
+  ctx.lineTo(-span * 0.98, -span * 0.035)
+  ctx.lineTo(-span, -span * 0.07)
   ctx.closePath()
-  // The pod under it, and the tail.
-  ctx.ellipse(0, span * 0.06, span * 0.13, span * 0.035, 0, 0, Math.PI * 2)
+  // The pod under it.
+  ctx.moveTo(span * 0.15, span * 0.04)
+  ctx.ellipse(0, span * 0.04, span * 0.15, span * 0.045, 0, 0, Math.PI * 2)
   ctx.fill()
-  ctx.lineWidth = Math.max(1, f * 0.0018)
-  ctx.beginPath()
-  ctx.moveTo(-span * 0.1, span * 0.06)
-  ctx.lineTo(-span * 0.34, span * 0.05)
-  ctx.lineTo(-span * 0.38, span * 0.0)
-  ctx.stroke()
   ctx.restore()
 }
