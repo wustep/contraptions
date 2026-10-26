@@ -1,0 +1,21 @@
+One Summer's Day — Joe Hisaishi
+From Spirited Away (2001). This recording: Joe Hisaishi with the London Symphony Orchestra, from Melodyphony
+(Universal Music, 2010), reissued on Dream Songs: The Essential Joe Hisaishi (Decca Gold, 2020).
+Composed by Joe Hisaishi.
+Film: Spirited Away (Sen to Chihiro no Kamikakushi), written and directed by Hayao Miyazaki, Studio Ghibli, 2001.
+
+The recording is played from the official music video on Joe Hisaishi's own YouTube channel ("Joe Hisaishi - One
+Summer's Day", Joe Hisaishi Official, Universal Music / Decca Gold), video TK1Ij_-mank:
+https://www.youtube.com/watch?v=TK1Ij_-mank
+Duration 4:05. Copyrighted; no rights are claimed.
+
+Playback: YouTube only. No recording of the cue is shipped, and none is committed, in this branch or its history.
+
+Files:
+- scripts/shows/kohaku-onsets.py — measures the cue once from a local analysis copy of the video's audio (fetched
+  with yt-dlp into the git-ignored out/spirited/, never committed): its stretches, its landmarks, every onset, the
+  eighths tracked through its rubato, and its loudness.
+- scripts/shows/plans/kohaku-onsets.json — what it measured: the show is timed to it and check:shows holds the show
+  to it. It holds times and numbers only, no audio.
+
+Every picture in the show is drawn for it. Nothing from the film's frames, posters, trailers or titles is used.
