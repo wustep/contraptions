@@ -53,7 +53,9 @@ const script: Omit<Card, 'at'>[] = [
     notes: [
       '“Merry-Go-Round of Life”',
       'from Howl’s Moving Castle (2004)',
-      'in his concert arrangement, from Dream Songs: The Essential Joe Hisaishi (Decca Gold, 2020)',
+      // (Two lines: as one, on a phone held on its side its end ran into the castle's flag.)
+      'in his concert arrangement,',
+      'from Dream Songs: The Essential Joe Hisaishi (Decca Gold, 2020)',
     ],
   },
   {
