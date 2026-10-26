@@ -95,18 +95,19 @@ install(STREET, 'finale-cars', (p: p5, k: number, t: number) => {
   const { x } = car
   const road = FLOOR - 0.62
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  // The beam out ahead of it, low along the road.
+  // The beam out ahead of it, low along the road: a soft pool of light thrown forward from the lamp, brightest at
+  // it, with no hard edges (a drawn wedge read as a torch held up in the dark before the car was seen).
   const nose = x - 0.55 * CAR_SCALE
-  const g = ctx.createLinearGradient(nose * k, 0, (nose - 2.4) * k, 0)
-  g.addColorStop(0, 'rgba(255, 244, 214, 0.55)')
+  ctx.save()
+  ctx.translate(nose * k, (road - 0.22) * k)
+  ctx.scale(1, 0.16)
+  const g = ctx.createRadialGradient(0, 0, 0, -1.1 * k, 0, 1.5 * k)
+  g.addColorStop(0, 'rgba(255, 244, 214, 0.42)')
+  g.addColorStop(0.5, 'rgba(255, 244, 214, 0.16)')
   g.addColorStop(1, 'rgba(255, 244, 214, 0)')
   ctx.fillStyle = g
-  ctx.beginPath()
-  ctx.moveTo(nose * k, (road - 0.27) * k)
-  ctx.lineTo((nose - 2.4) * k, (road - 0.5) * k)
-  ctx.lineTo((nose - 2.4) * k, (road + 0.02) * k)
-  ctx.lineTo(nose * k, (road - 0.17) * k)
-  ctx.fill()
+  ctx.fillRect(-2.7 * k, -1.6 * k, 2.8 * k, 3.2 * k)
+  ctx.restore()
   // The car: a dark shape against the far fronts, its cabin's glass, a wheel at each end, and its lamps. It is drawn
   // at the far fronts' own scale, a car's length to their doorways, not a toy's.
   const S = CAR_SCALE
