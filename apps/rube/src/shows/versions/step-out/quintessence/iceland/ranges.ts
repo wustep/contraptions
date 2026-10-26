@@ -1,6 +1,6 @@
 import { mixHex, type Pt } from '../../../../../parts'
 import { hash } from '../kit'
-import { CX0, CY0, PLANE, bake, cached, layBaked, onPlane, outline, polyline, seen, type Frame } from './far'
+import { CX0, CY0, measure, PLANE, bake, cached, layBaked, onPlane, outline, polyline, seen, type Frame } from './far'
 import { ERUPT } from './geo'
 import { HZ, SUN } from './sky'
 import { ICE } from './theme'
@@ -330,7 +330,7 @@ const SKIN = cached(() =>
 export function drawWater(ctx: CanvasRenderingContext2D, f: Frame, k: number, t: number, dim: number): void {
   const fv = seen(f, PLANE.far)
   const m = ctx.getTransform()
-  const ppu = (f.y1 - f.y0) * k * Math.hypot(m.a, m.b)
+  const ppu = measure(f) * k * Math.hypot(m.a, m.b)
   onPlane(ctx, f, k, PLANE.far, () => {
     // The water's colour from the far shore to the near, painted once; the ash laid over it.
     const water = bake('ice-water', ppu, 3.2, HZ, 0.8, (c) => {

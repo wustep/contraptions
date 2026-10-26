@@ -1,6 +1,6 @@
 import { mixHex, type Pt } from '../../../../../parts'
 import { hash } from '../kit'
-import { cached, ellipses, outline, polyline, type Frame } from './far'
+import { cached, ellipses, measure, outline, polyline, type Frame } from './far'
 import { HUSH, PINS, RIGHT_X, RY, SHORE_Y, ridgeY, roadLine } from './geo'
 import { rgbaHex, shadows } from './ranges'
 import { ICE } from './theme'
@@ -276,7 +276,7 @@ const lodMix = (H: number): number => Math.max(0, Math.min(1, (H - 6.6) / 1.2))
 
 /** The hill, its moss, sheep and weather; the cliff and its fall; the road; the shore. Drawn in cells (`k` applied). */
 export function drawLand(ctx: CanvasRenderingContext2D, f: Frame, k: number, t: number, dim: number): void {
-  const H = f.y1 - f.y0
+  const H = measure(f)
   ctx.save()
   ctx.scale(k, k)
   const hill = hillPath()

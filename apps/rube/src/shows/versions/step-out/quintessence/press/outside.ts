@@ -238,7 +238,7 @@ export function drawOutside(ctx: C2, v: View, t: number): void {
   ctx.restore()
   // A lamppost at the kerb, and its long morning shadow raking across the pavement.
   layer(ctx, v, 0.93, ANCHOR, REF, (s) => {
-    const px = 22.6
+    const px = 26.4
     if (px < s.x0 - 3 || px > s.x1 + 0.5) return
     const fy = floorOf(0.93)
     ctx.save()

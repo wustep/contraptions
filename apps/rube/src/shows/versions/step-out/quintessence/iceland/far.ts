@@ -28,9 +28,16 @@ export const PLANE = {
 } as const satisfies Record<string, readonly [number, number]>
 export type Plane = readonly [number, number]
 
+/**
+ * The far planes' measure: the height of the composed 16:9 frame, in cells. A stage taller than 16:9 sees more world
+ * above and below that frame, not a bigger far world: measured by the stage's own height, a phone's tall stage drew
+ * the sky, the ranges and the volcano twice the size and put the eruption past its right edge.
+ */
+export const measure = (f: Frame): number => Math.min(f.y1 - f.y0, ((f.x1 - f.x0) * 9) / 16)
+
 /** A plane's origin (cells) and its measure (cells a frame height) at this frame. */
 export function origin(f: Frame, p: Plane): { ox: number; oy: number; H: number } {
-  const H = f.y1 - f.y0
+  const H = measure(f)
   return { ox: f.cx - p[0] * (f.cx - CX0) * H, oy: f.cy - p[1] * (f.cy - CY0) * H, H }
 }
 

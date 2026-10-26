@@ -150,13 +150,13 @@ function shutter(ctx: C2, sc: Scene): void {
 /* ------------------------------------------------------------------ the passages, in order */
 
 export const PASSAGES: Passage[] = [
-  { at: SEAM.dream, before: 0.32, after: 0.7, ease: burst, region: (sc) => opening(sc, BLANK, sc.u), fade: 0.15 },
+  { at: SEAM.dream, before: 0.32, after: 0.7, ease: burst, region: (sc) => opening(sc, BLANK, sc.u), fade: 0.32 },
   { at: SEAM.office, before: 0.2, after: 0.45, ease: smooth },
   { at: SEAM.nuuk, before: 0.3, after: 0.6, ease: smooth },
   { at: SEAM.sky, before: 0.25, after: 0.5, ease: smooth },
   { at: SEAM.sea, before: 0.4, after: 0.5, ease: linear, region: waterline, edge: surface },
   { at: SEAM.iceland, before: 0.3, after: 0.6, ease: smooth },
-  { at: SEAM.himalaya, before: 0.3, after: 1.0, ease: burst, region: (sc) => opening(sc, LAST_NEGATIVE, sc.u), fade: 0.12 },
+  { at: SEAM.himalaya, before: 0.3, after: 1.0, ease: burst, region: (sc) => opening(sc, LAST_NEGATIVE, sc.u), fade: 0.3 },
   { at: SEAM.press, before: 0.42, after: 0.55, ease: linear, cover: shutter },
   { at: SEAM.street, before: 0.3, after: 0.6, ease: smooth },
 ]

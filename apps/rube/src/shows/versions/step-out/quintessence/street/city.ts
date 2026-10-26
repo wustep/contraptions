@@ -5,7 +5,7 @@ import { CLANKS, CORNER, STAND, STOP } from './plan'
 import { INK, clamp01, mix, ramp, rgba } from '../negatives/hand'
 import { AVENUE_FAR } from './fronts'
 import { LANE } from './light'
-import { PAVE } from './plan'
+import { NEAR_KERB, PAVE } from './plan'
 
 /**
  * The city running round them (the street's own): the traffic in the road, people on the pavements, the pigeons, the
@@ -296,12 +296,12 @@ export function drawPeople(ctx: C2, v: View, t: number): void {
 
 /**
  * On the walk sign, a man crosses this street at the corner, on the crossing beside the two of them: he has come down
- * the avenue toward the camera as the light changed and waits at the kerb, then goes down off it and out of the
- * frame's foot. Seen from the front, a leg lifting at each step, small far up the avenue and larger the nearer he
+ * the avenue toward the camera as the light changed and waits at the kerb, then goes down off it, over, up onto the
+ * near pavement and along it out of the frame: the frame's foot in the wide, its side in a phone's tall frame. Seen from the front, a leg lifting at each step, small far up the avenue and larger the nearer he
  * comes. His way is [time, x, y] stops, walking between them.
  */
 const CROSSERS: { way: [number, number, number][]; h: number; coat: string }[] = [
-  { way: [[255.2, CORNER.kerb + 0.95, -0.35], [259.6, CORNER.kerb + 0.75, PAVE + 0.3], [WALK + 0.3, CORNER.kerb + 0.75, PAVE + 0.3], [WALK + 5.0, CORNER.kerb + 0.68, 4.2]], h: 1.14, coat: '#4B4F44' },
+  { way: [[255.2, CORNER.kerb + 0.95, -0.35], [259.6, CORNER.kerb + 0.75, PAVE + 0.3], [WALK + 0.3, CORNER.kerb + 0.75, PAVE + 0.3], [WALK + 3.2, CORNER.kerb + 0.7, NEAR_KERB + 0.4], [WALK + 12, CORNER.kerb + 8, NEAR_KERB + 0.4]], h: 1.14, coat: '#4B4F44' },
 ]
 
 export function drawCrossers(ctx: C2, v: View, t: number): void {
@@ -319,7 +319,7 @@ export function drawCrossers(ctx: C2, v: View, t: number): void {
       const u = (t - ta) / (tb - ta)
       x = xa + (xb - xa) * u
       y = ya + (yb - ya) * u
-      if (ya !== yb) step = (t - ta) * 1.9
+      if (xa !== xb || ya !== yb) step = (t - ta) * 1.9
       break
     }
     const s = (c.h / 1.2) * (y < kerb ? (y + 0.7) / (kerb + 0.7) : 1 + (y - kerb) * 0.07)
