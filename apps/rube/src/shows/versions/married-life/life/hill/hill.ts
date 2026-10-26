@@ -820,10 +820,13 @@ function highSheet(p: p5, k: number, f: Frame, t: number, a: number): void {
   const span = 3.4
   p.noStroke()
   for (let r = 0; r < 60; r++) {
-    const y = SHEET_FOOT - 0.12 - r * 0.34 - 0.2 * hash(r, 71)
+    const y = SHEET_FOOT - 0.12 - r * 0.42 - 0.3 * hash(r, 71)
     if (y < f.y0 - 0.2) break
-    // Fading in above its foot, so the sheet has no edge; each row its own strength.
-    const strength = a * 0.3 * smooth(-y, -SHEET_FOOT, -SHEET_FOOT + 0.8) * (0.55 + 0.45 * hash(r, 72))
+    // Fading in above its foot, so the sheet has no edge; each row its own strength. The rows gather in a few drifts
+    // with clear sky between, and thin going up, so a tall sky of it is not ruled like paper.
+    const gather = Math.max(0, Math.sin(r * 0.7 + 0.9))
+    const thin = 1 - 0.65 * smooth(-y, -SHEET_FOOT + 1.5, -SHEET_FOOT + 7)
+    const strength = a * 0.3 * smooth(-y, -SHEET_FOOT, -SHEET_FOOT + 0.8) * (0.55 + 0.45 * hash(r, 72)) * gather * thin
     if (strength < 0.01) continue
     p.fill(alpha(p, mixHex(HILL.cloud, HILL.sky, 0.15), strength))
     const drift = 0.05 * t * (0.8 + 0.4 * hash(r, 73)) + span * hash(r, 74)
