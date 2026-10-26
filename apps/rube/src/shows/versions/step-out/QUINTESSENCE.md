@@ -461,6 +461,10 @@ the sky. Each card holds 3.4 to 5 s; the last is gone by 266.7 s.
     so a phone sees the wide frame's own composition with more world above and below it: the eruption, the daydream's
     moon, the Himalayan sun, the press hall's arched windows. The wide frame is unchanged to the pixel;
   - the passages and the machines were looked at closely and left as they are.
+- **Polish wave 4** (detail at twice the size: the basement, the bar, the press, the net, the bike, and the credits
+  on a desk's page):
+  - the lamp over the pilot hung nearly on his crown; it hangs a hand higher;
+  - nothing else was worth changing: the rest was looked at and left.
 
 ## Judgment calls
 
