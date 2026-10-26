@@ -331,10 +331,16 @@ function mural(p: p5, c: Ctx, T: number, light: number): void {
   ctx.rect(x0 * k, top * k, (x1 - x0) * k, (y0 - top) * k)
   ctx.clip()
   p.noStroke()
+  // The bands laid wet into each other: each holds its colour through its middle, and the seams between them are
+  // feathered over half a band, a painted sky and not four stripes.
+  const sky = ctx.createLinearGradient(0, y0 * k, 0, (y0 - BAND * BANDS) * k)
   for (let b = 0; b < BANDS; b++) {
-    p.fill(alpha(p, SKY[b], light))
-    px(p, k, x0, y0 - (b + 1) * BAND - 0.002, x1, y0 - b * BAND)
+    const col = alpha(p, SKY[b], light).toString()
+    sky.addColorStop(Math.max(0, (b + 0.25) / BANDS), col)
+    sky.addColorStop(Math.min(1, (b + 0.75) / BANDS), col)
   }
+  ctx.fillStyle = sky
+  ctx.fillRect(x0 * k, (y0 - BAND * BANDS) * k, (x1 - x0) * k, BAND * BANDS * k)
   const bandTop = (b: number) => y0 - (b + 1) * BAND
   // Band 1: the green hills (their picnic hill in front).
   p.fill(alpha(p, mixHex(HOME.leaf, HOME.grass, 0.35), light))
