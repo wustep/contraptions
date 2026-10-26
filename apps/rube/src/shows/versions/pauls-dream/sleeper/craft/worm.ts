@@ -260,35 +260,6 @@ function drawMouth(g: Paint, w: Worm, h: Section, look: WormLook, tint: (c: stri
   }
   // Two lips at its sides and a third that, shut, closes the bud between them and, opening, folds away behind the head:
   // side on, an open mouth shows its two sides, and nothing crosses the throat.
-  // Shut, its head is a smooth blunt dome, the three lips closed flush, a faint seam where each meets the next; opening,
-  // the dome flattens into the rim and the lips come away from it.
-  const shut = 1 - e
-  if (shut > 0.01) {
-    const L = r0 * 1.2 * shut
-    const dome: Pt[] = []
-    for (let i = 0; i <= 28; i++) {
-      const a = (i / 28) * Math.PI
-      dome.push(M([C[0] + h.n[0] * r0 * Math.cos(a) + h.d[0] * L * Math.sin(a), C[1] + h.n[1] * r0 * Math.cos(a) + h.d[1] * L * Math.sin(a)]))
-    }
-    // A little behind the head too, so it closes over the body's end with no seam.
-    dome.push(M([C[0] - h.n[0] * r0 - h.d[0] * 0.3, C[1] - h.n[1] * r0 - h.d[1] * 0.3]), M([C[0] + h.n[0] * r0 - h.d[0] * 0.3, C[1] + h.n[1] * r0 - h.d[1] * 0.3]))
-    ctx.beginPath()
-    dome.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
-    ctx.closePath()
-    ctx.fillStyle = across(ctx, M([C[0] + h.n[0] * r0, C[1] + h.n[1] * r0]), M([C[0] - h.n[0] * r0, C[1] - h.n[1] * r0]), h.n)
-    ctx.fill()
-    const tip = M([C[0] + h.d[0] * L, C[1] + h.d[1] * L])
-    ctx.strokeStyle = rgba(tint(look.band), 0.38 * shut)
-    ctx.lineWidth = Math.max(1.25 * g.px, 0.035 * r0 * scale)
-    for (const k of [0.55, -0.55]) {
-      const foot = M([C[0] + h.n[0] * r0 * k - h.d[0] * 0.2, C[1] + h.n[1] * r0 * k - h.d[1] * 0.2])
-      const bend = M([C[0] + h.n[0] * r0 * k * 0.75 + h.d[0] * L * 0.7, C[1] + h.n[1] * r0 * k * 0.75 + h.d[1] * L * 0.7])
-      ctx.beginPath()
-      ctx.moveTo(foot[0], foot[1])
-      ctx.quadraticCurveTo(bend[0], bend[1], tip[0], tip[1])
-      ctx.stroke()
-    }
-  }
   const lips = smoothstep(e, 0.04, 0.3)
   petal(Math.PI / 2, lips * (1 - smoothstep(e, 0.12, 0.42)))
   // The throat comes in as the bud parts, never all at once.
@@ -327,6 +298,36 @@ function drawMouth(g: Paint, w: Worm, h: Section, look: WormLook, tint: (c: stri
     ctx.lineWidth = Math.max(1.25 * g.px, 0.07 * rm * scale)
     ctx.stroke()
     ctx.globalAlpha = was
+  }
+  // Drawn over the throat, so the throat is only seen where the dome has drawn back from it, never through it.
+  // Shut, its head is a smooth blunt dome, the three lips closed flush, a faint seam where each meets the next; opening,
+  // the dome flattens into the rim and the lips come away from it.
+  const shut = 1 - e
+  if (shut > 0.01) {
+    const L = r0 * 1.2 * shut
+    const dome: Pt[] = []
+    for (let i = 0; i <= 28; i++) {
+      const a = (i / 28) * Math.PI
+      dome.push(M([C[0] + h.n[0] * r0 * Math.cos(a) + h.d[0] * L * Math.sin(a), C[1] + h.n[1] * r0 * Math.cos(a) + h.d[1] * L * Math.sin(a)]))
+    }
+    // A little behind the head too, so it closes over the body's end with no seam.
+    dome.push(M([C[0] - h.n[0] * r0 - h.d[0] * 0.3, C[1] - h.n[1] * r0 - h.d[1] * 0.3]), M([C[0] + h.n[0] * r0 - h.d[0] * 0.3, C[1] + h.n[1] * r0 - h.d[1] * 0.3]))
+    ctx.beginPath()
+    dome.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
+    ctx.closePath()
+    ctx.fillStyle = across(ctx, M([C[0] + h.n[0] * r0, C[1] + h.n[1] * r0]), M([C[0] - h.n[0] * r0, C[1] - h.n[1] * r0]), h.n)
+    ctx.fill()
+    const tip = M([C[0] + h.d[0] * L, C[1] + h.d[1] * L])
+    ctx.strokeStyle = rgba(tint(look.band), 0.38 * shut)
+    ctx.lineWidth = Math.max(1.25 * g.px, 0.035 * r0 * scale)
+    for (const k of [0.55, -0.55]) {
+      const foot = M([C[0] + h.n[0] * r0 * k - h.d[0] * 0.2, C[1] + h.n[1] * r0 * k - h.d[1] * 0.2])
+      const bend = M([C[0] + h.n[0] * r0 * k * 0.75 + h.d[0] * L * 0.7, C[1] + h.n[1] * r0 * k * 0.75 + h.d[1] * L * 0.7])
+      ctx.beginPath()
+      ctx.moveTo(foot[0], foot[1])
+      ctx.quadraticCurveTo(bend[0], bend[1], tip[0], tip[1])
+      ctx.stroke()
+    }
   }
   petal(0, lips)
   petal(Math.PI, lips)
