@@ -21,7 +21,7 @@ const FLOOR_NEAR = '#A9A69E'
 const PYLON = '#141413'
 const PYLON_FACE = '#2B2A27'
 const GATE_DARK = '#050505'
-const DOOR = '#3B3A36'
+const DOOR = '#1D1D1B'
 
 /** The sky and the black sun: the sun stands in the composed frame, as the eclipse's did, so the dissolve finds it where it was. */
 export function paintSky(b: Brush, mode: Mode): void {
