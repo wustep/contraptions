@@ -558,12 +558,13 @@ function drawCamp(ctx: Ctx, k: number, f: Frame, t: number): void {
   for (let i = 1; i < TENTS.length; i++) drawTent(ctx, k, t, i, false)
   drawTruck(ctx, k, t, -21.2, 1)
   drawTruck(ctx, k, t, 34.2, -1)
+  // The decon tent and the helicopter's pad: by the morning after, both have been struck. (The pad's matting, lit by
+  // the low sun at the edge of the reunion's frame, read as a pale seam along the grass.)
+  if (t > 200) return
   // The pad the helicopter comes down over: a square of matting.
   ctx.fillStyle = lit(mix(VALLEY.road, VALLEY.oliveDark, 0.35), t)
   ctx.fillRect(7.9 * k, (MEADOW - 0.02) * k, 3.4 * k, 0.09 * k)
-  // The decon tent: its shadow and flaps under them, its canvas over them while they go through it. By the morning
-  // after, it has been struck.
-  if (t > 200) return
+  // The decon tent: its shadow and flaps under them, its canvas over them while they go through it.
   blob(ctx, k, TENTS[0].x, MEADOW + 0.05, TENTS[0].w * 0.75, 0.22, VALLEY.oliveDark, 0.35, 0.5)
   drawFlaps(ctx, k, t)
   if (!deconOver(t)) drawTent(ctx, k, t, 0, true)
