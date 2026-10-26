@@ -1165,6 +1165,17 @@ window.
     limit below); the funeral's dawn on her picture (the window's shape on the plaster, by design); her limp slide
     back down the slope and its squash as she lands (174.4 to 176 s).
 
+- **Polish wave 4 (October 2026).** Deeper: every change of place a few tenths of a second either side, the busiest
+  sets at full size, the cloud-watching on a phone, and the ties every half second.
+  - *Round 1, the transitions.* Each cut (21.58, 49.64, 63.25, 73.46, 84.38, 103.29, 167.71, 180.41, 189.45, 201.94)
+    holds Carl in place across it, and Ellie with him while she is there: nothing changed. *Looked at and kept:* the
+    phone's tall sky over the cloud-watching (the shapes they watch are in it; `tall` is one share for the whole show).
+  - *Round 2, the fix-up's lawn.* The house's sun shadow (`sunShadow`) was two flat layers whose near edge was ruled
+    down the lawn from the wall's corner, plain as a seam in the grass (22 to 49 s). It now comes in over a short way
+    from the corner and runs out over seven layers.
+  - *Round 3, the ties at half a second.* The decades' patch of door light changing tint with the seasons, the wheel
+    and the crest: all continuous. Nothing changed.
+
 ## Known limits
 
 - In the named reveals (the house made new, about 10 cells; the storm, about 17) the two of them are small. It is
