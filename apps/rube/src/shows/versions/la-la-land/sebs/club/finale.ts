@@ -57,11 +57,14 @@ const COUNT = [0, 1, 2, 3].map((i) => BAND - 0.4515 * (4 - i))
 /** Where the two of them go out of shot, and are let go. */
 const GONE = 467.55
 
-/** Her nod: the ball dips, squashed on the floor, and comes back up; deep enough to read in her close shot. */
+/**
+ * Her nod: the ball dips, a little squashed on the floor, and comes back up. Her close shot is near enough that a
+ * small dip reads; a deep one flattened her into a blob, a sigh and not a smile.
+ */
 function nodded([x, y]: Pt, t: number) {
   const u = (t - NOD_MIA) / 0.58
   const n = u <= 0 || u >= 1 ? 0 : Math.sin(Math.PI * Math.pow(u, 0.7))
-  return n ? { x, y: y + R * 0.3 * n, stretch: 1 - 0.3 * n, angle: Math.PI / 2 } : { x, y }
+  return n ? { x, y: y + R * 0.15 * n, stretch: 1 - 0.15 * n, angle: Math.PI / 2 } : { x, y }
 }
 
 /** A close shot held on `at` from `a` to `b`: a cut in (the key a frame after the last one), a slow push, and out at `b`. */
