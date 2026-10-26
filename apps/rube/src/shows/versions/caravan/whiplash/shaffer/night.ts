@@ -175,9 +175,10 @@ function lampLight(T: number): number {
     const brown = 1 - 0.5 * smooth(T, BULB - 0.6, BULB - 0.04)
     return brown * (1 - late * (f > 0.72 ? 0.18 * (f - 0.72) / 0.28 : 0))
   }
+  // It blows: a last swell out of the brown-out on the stroke and a quick fall to dark. (A frame at 1.3 between dim
+  // frames, it strobed.)
   const s = T - BULB
-  if (s < 0.045) return 1.3
-  return 0.32 * Math.exp(-(s - 0.045) / 0.11)
+  return (0.5 + 0.4 * Math.min(1, s / 0.02)) * Math.exp(-s / 0.13)
 }
 
 /** The lamp's swing: knocked by the kick, and pumped wider and wider by the second drill. */
