@@ -506,9 +506,10 @@ export function drawBand(p: p5, c: Ctx, s: BandLook): void {
  * The drummer's stand beside the hi-hat: the band's kind, lit as theirs are, and bare. Tanner's chart went with his
  * folder, so the kit's desk has nothing on it beside a band full of lit pages, and Andrew plays past it from memory.
  * The desk is turned toward the kit and leans back (as Carnegie's stand's), its top edge and its ledge lit; its face
- * dark and empty. `top` is the desk's top edge at its spine.
+ * dark and empty. `top` is the desk's top edge at its spine. It stands low, as a seated drummer's does: at a band
+ * player's height its desk was where Fletcher's point at Andrew on the last hit ends, his hand in it for a second and a half.
  */
-export const DRUM_STAND = { x: KX + 2.0, top: -1.5, w: 0.78, h: 0.56 }
+export const DRUM_STAND = { x: KX + 1.75, top: -1.1, w: 0.78, h: 0.56 }
 
 export function drawDrumStand(p: p5, c: Ctx, light: number): void {
   const { k, weight } = c
