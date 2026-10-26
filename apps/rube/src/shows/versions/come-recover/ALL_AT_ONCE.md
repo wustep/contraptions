@@ -1397,6 +1397,12 @@ Five polish waves after the coat hanger, each a fresh watch of the whole show on
   phone the credits are lifted into the dark over the room, and the long ones widen to the stage's middle, but the
   dark under them stayed where a 16:9 frame would have it, a smudge off to the left; it now goes up with them, and
   wide enough to lie under a short card left of middle and a long one across the stage.
+- **Wave 2.** Knocked back off its stop, the empty hanger crept back along the wire through the last two lanterns,
+  its basket sitting inside each for about a second; it is knocked back harder now, loses a little speed at each knot it
+  jumps, and each lantern swings away as the basket brushes past, so it is clear of them half a second sooner and the
+  pass reads as contact. Under the credits the passing car's headlight was a hard-edged wedge that showed before the
+  car did, like a torch held up in the dark; it is a soft pool thrown ahead of the lamp. And the credits' shade is a
+  lower, flatter band that eases out, where it was an oval that clouded the ceiling as the camera drew back.
 
 ## The looks
 
