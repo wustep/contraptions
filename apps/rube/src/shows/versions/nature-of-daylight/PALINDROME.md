@@ -1300,6 +1300,18 @@ A hundred-and-twenty-seventh, polish wave 3: the whole show again at a second a 
 - Looked at and left alone: the lift coming down in the morning (311 to 315 s); the end credits on a phone-sized page,
   every card whole and clear of the window.
 
+A hundred-and-twenty-eighth, polish wave 4: the chamber and the white beyond the glass at half a second a still.
+
+- **Her eye through the dissolves** (249.6 to 251.6, 256.2 to 258.2, 265.1 to 266.5 s): a ball's roll is drawn from
+  where it is in its own place's cells, so it turns at every cut. At a plain cut no one sees it, but through the three
+  dissolves the two sides are laid over each other for up to two seconds, and in the opening's soft edge Louise had
+  two eyes. Her roll is carried across those seams now (`show.ts` `carryRoll`, set in `score.ts`), to the cut into
+  the gala, so both sides agree.
+- **The hand on the glass** (149 to 153 s): its warm print spilled out of the pane, a bloom on the dark wall our side
+  and round the fingers theirs. It stays in the glass now.
+- Looked at and left alone: Hannah's last moment inside the closing ring (257.5 s), where the small Hannah in Costello's
+  ring sits a little off the lawn's; it is under half a second and reads as her going into the ring.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
