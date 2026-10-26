@@ -270,6 +270,16 @@ A careful watch, wide and tall, for what looked wrong or cheap:
 - The landmarks were read a tenth of a second either side (Blue Steel, the drums, the four cuts, the call, the title,
   the wash, the plug, Magnum, the band back, the last hit): all land, so no timing changed.
 
+## Polish wave 2
+
+- **Derelicte in a tall frame**: the riser crowd and the floor crowd each dropped to the foot of the screen in a sheer
+  black edge, with the bare floor running down between them. A nearer row of the house, under the frame's foot in a
+  wide frame, now carries on toward us in a tall one.
+- **The walk-off in a tall frame**: the near crowd ended in a ragged line halfway down the screen, and the slab over
+  the ceiling was a flat grey lid. The crowd runs to the frame's foot, and the slab, lit only from below, falls away
+  into the dark.
+- **The photographer outside the spa** was a black post with a camera on it: a man in a coat, on two legs.
+
 ## Zoolander nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the song.
