@@ -3,7 +3,7 @@ import { mix, smooth } from '../../draw'
 import { END } from '../../voyage'
 import { Path, fly, flightFor, rest, ride, roll, type Move, type Pt } from '../../path'
 import type { Actor } from '../../show'
-import { BEACH, DAIS, GATE, HALL, CLIFF_W, HOIST, HOME, ON_TOP, R, ROOM, STAIRS, TERRACE, TRIAL } from './geo'
+import { BEACH, DAIS, GATE, HALL, HEARTH, CLIFF_W, HOIST, HOME, ON_TOP, R, ROOM, STAIRS, TERRACE, TRIAL } from './geo'
 import { stepAt } from './palace'
 import { STRUCK, antinousStruck, heroBasketY, plateEnd } from './rig'
 import { weaverX } from './loom'
@@ -76,11 +76,13 @@ export function heroMoves(): Move[] {
   m.push(rest(toSon, TRIAL.touch, TRIAL.touch + 1.0))
   m.push(roll([toSon, [GATE.x, ON_TOP], [threshold[0], HERO_ON]], TRIAL.touch + 1.0, TRIAL.inside))
   m.push(rest(threshold, TRIAL.inside, 483.6))
-  // To the stairs' foot; up them a step a note; at their head, in her room.
-  const foot: Pt = [STAIRS.x0 - 0.25, HERO_ON]
+  // To the hearth, short of its fire (it burns at the stairs' foot); over it onto the first step, and up them a step a
+  // note; at their head, in her room.
+  const foot: Pt = [HEARTH.x - HEARTH.half - R - 0.04, HERO_ON]
   m.push(roll([threshold, foot], 483.6, 485.0))
   const steps = TRIAL.climb.map((_, i) => stepAt(i))
-  m.push(...hops([foot, ...steps], [485.0, ...TRIAL.climb], 0.1))
+  m.push(...hops([foot, steps[0]], [485.0, TRIAL.climb[0]], 0.3))
+  m.push(...hops(steps, TRIAL.climb, 0.1))
   const head = steps[steps.length - 1]
   m.push(rest(head, TRIAL.climb[TRIAL.climb.length - 1], TRIAL.out))
   // Out of her door, along the terrace, to the well's edge; a moment there; over.
