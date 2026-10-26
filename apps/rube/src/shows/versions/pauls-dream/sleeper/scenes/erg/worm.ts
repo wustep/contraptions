@@ -78,6 +78,12 @@ const sinkAt = (t: number): number => smooth(t, SINK_FROM, SINK_TO)
 /** How far open the maw is: its petals peel back as it stands, and it goes down open over what it takes. */
 const openAt = (t: number): number => smooth(t, 171.4, 175.2)
 
+/**
+ * Coming down, its lips swing forward off the head as jaws, wide over the harvester, and close over it as the rim
+ * reaches the sand.
+ */
+const jawsAt = (t: number) => ({ reach: smooth(t, T.down - 0.1, T.down + 1.1), shut: smooth(t, 185.6, 186.8) })
+
 /** Whether any of it is out of the sand at `t`. */
 export const out = (t: number): boolean => head(t) > S_OUT && t < SINK_TO
 
@@ -129,7 +135,7 @@ export function drawErgWorm(g: Paint, t: number, sand: string, shade: string): v
     spine,
     radius: (back: number) => radius(back + (s1 - hi)),
     // Drawn until its lips, folded back along it, are under too.
-    mouth: s1 <= S_IN + MAW ? { open: openAt(t), facing, size: MAW } : undefined,
+    mouth: s1 <= S_IN + MAW ? { open: openAt(t), facing, size: MAW, jaws: jawsAt(t) } : undefined,
     sun: SUN,
     ground: 0.4,
     phase: s1 - hi + Math.max(0, head(t) - UNDER),

@@ -8,7 +8,8 @@ import { clamp01, drift, mix, rgba, type Paint, type Pt } from '../paint'
  *
  * Its head, where it has one in sight, is a mouth of three broad lips. Shut, they meet in a blunt bud; opening, they fold
  * back flush against its flanks, and what is seen is the dark throat inside the rim with a fringe of pale baleen. The mouth is an ellipse, a
- * circle foreshortened by how far it faces us.
+ * circle foreshortened by how far it faces us. Coming down on something, its head flares into a bell and the lips swing
+ * forward off it as jaws, wide apart and then closing over what is under them (`jaws`).
  *
  * Shared by every worm in the show: the first one at the harvester, and the one the Fremen ride.
  */
@@ -40,7 +41,7 @@ export interface Worm {
   /** Its radius `back` cells behind the head along a spine `len` long. */
   radius(back: number, len: number): number
   /** Its head: how far open (0 a shut bud, 1 wide), how far it faces us (0 side on, 1 face on), the rim's radius wide open. */
-  mouth?: { open: number; facing: number; size: number }
+  mouth?: { open: number; facing: number; size: number; jaws?: Jaws }
   /** Toward the sun, a unit vector on the screen (up is negative y). */
   sun: Pt
   /** Nothing of it below this (the sand), in its own cells. */
@@ -52,6 +53,12 @@ export interface Worm {
   /** Every colour through this (a far worm's haze). */
   tint?: (c: string) => string
   look?: WormLook
+}
+
+/** The lips as jaws: how far they have swung forward off the head (0 folded back, 1 out), and how far shut (0 wide). */
+export interface Jaws {
+  reach: number
+  shut: number
 }
 
 interface Section {
@@ -258,12 +265,38 @@ function drawMouth(g: Paint, w: Worm, h: Section, look: WormLook, tint: (c: stri
     ctx.fill()
     ctx.globalAlpha = was
   }
+  const reach = m.jaws ? smoothstep(m.jaws.reach, 0, 1) : 0
+  // Coming down, the head is a bell: the body swells out into the rim, so the rim is the bell's mouth, not a disc on a tube.
+  if (reach > 0.003) {
+    const was = ctx.globalAlpha
+    ctx.globalAlpha = was * reach
+    const at = (u: number, v: number): Pt => M([C[0] + h.n[0] * u + h.d[0] * v, C[1] + h.n[1] * u + h.d[1] * v])
+    const neck = rm * 0.9
+    const bell: Pt[] = [at(-r0, -neck - 0.4)]
+    for (let i = 0; i <= 12; i++) {
+      const k = i / 12
+      bell.push(at(-(r0 + (rm - r0) * k * k), -neck * (1 - k)))
+    }
+    for (let i = 0; i <= 16; i++) bell.push(M(rimAt(Math.PI - (Math.PI * i) / 16)))
+    for (let i = 12; i >= 0; i--) {
+      const k = i / 12
+      bell.push(at(r0 + (rm - r0) * k * k, -neck * (1 - k)))
+    }
+    bell.push(at(r0, -neck - 0.4))
+    ctx.beginPath()
+    bell.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
+    ctx.closePath()
+    ctx.fillStyle = across(ctx, at(rm, 0), at(-rm, 0), h.n)
+    ctx.fill()
+    ctx.globalAlpha = was
+  }
   // Two lips at its sides and a third that, shut, closes the bud between them and, opening, folds away behind the head:
   // side on, an open mouth shows its two sides, and nothing crosses the throat.
   const lips = smoothstep(e, 0.04, 0.3)
   petal(Math.PI / 2, lips * (1 - smoothstep(e, 0.12, 0.42)))
   // The throat comes in as the bud parts, never all at once.
-  const seen = smoothstep(e, 0.02, 0.2)
+  // Coming down as jaws, its dark is between them, not a slot across the rim.
+  const seen = smoothstep(e, 0.02, 0.2) * (1 - reach)
   if (seen > 0.002) {
     const was = ctx.globalAlpha
     ctx.globalAlpha = was * seen
@@ -329,9 +362,109 @@ function drawMouth(g: Paint, w: Worm, h: Section, look: WormLook, tint: (c: stri
       ctx.stroke()
     }
   }
-  petal(0, lips)
-  petal(Math.PI, lips)
+  petal(0, lips * (1 - reach))
+  petal(Math.PI, lips * (1 - reach))
+  if (reach > 0.003) drawJaws(g, h, rm, B, reach, smoothstep(m.jaws!.shut, 0, 1), look, tint, M, across)
 }
+
+/**
+ * The jaws, the head coming down mouth first: two at its sides and one at its near side, hanging forward off the rim.
+ * Wide, they splay out past the rim and the dark of the mouth shows between them, thinning toward their tips so what is
+ * under them shows through; shutting, their tips swing in to meet under the middle, a beak closing over it.
+ */
+function drawJaws(g: Paint, h: Section, rm: number, B: number, reach: number, shut: number, look: WormLook, tint: (c: string) => string, M: (p: Pt) => Pt, across: Across): void {
+  const ctx = g.ctx
+  const C = h.p
+  const at = (u: number, v: number): Pt => M([C[0] + h.n[0] * u + h.d[0] * v, C[1] + h.n[1] * u + h.d[1] * v])
+  const J = rm * 0.8 * reach
+  /** Across from the middle (in rims) of a side jaw's tip: splayed wide, then in under the middle. */
+  const tipOut = mix1(mix1(1.0, 1.3, reach), 0.3, shut)
+  const tipIn = mix1(mix1(0.7, 1.02, reach), 0.04, shut)
+  const swell = mix1(1.16, 1.0, shut)
+  // The dark of the open mouth between the jaws, fading toward their tips.
+  const dark = (1 - shut) * reach
+  if (dark > 0.003) {
+    const pts = [at(-rm * 0.96, 0), at(-rm * tipIn, J * 0.92), at(0, J * 0.98), at(rm * tipIn, J * 0.92), at(rm * 0.96, 0)]
+    ctx.beginPath()
+    pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
+    // Back round the rim's far side.
+    for (let i = 0; i <= 16; i++) {
+      const q = at(rm * 0.96 * Math.cos((Math.PI * i) / 16), -B * Math.sin((Math.PI * i) / 16))
+      ctx.lineTo(q[0], q[1])
+    }
+    ctx.closePath()
+    const a = at(0, 0)
+    const b = at(0, J)
+    const gr = ctx.createLinearGradient(a[0], a[1], b[0], b[1])
+    const th = tint(look.throat)
+    gr.addColorStop(0, rgba(th, 0.95 * dark))
+    gr.addColorStop(0.55, rgba(th, 0.6 * dark))
+    gr.addColorStop(1, rgba(th, 0.15 * dark))
+    ctx.fillStyle = gr
+    ctx.fill()
+  }
+  // The far jaw, its inner face seen in the dark between the others.
+  const fl = J * 0.82
+  const f0 = at(-rm * 0.9, -B * 0.3)
+  const f1 = at(rm * 0.9, -B * 0.3)
+  const fa = at(-rm * 0.45, fl * 0.75)
+  const fb = at(rm * 0.45, fl * 0.75)
+  const ft = at(0, fl * 1.08)
+  const ta = at(-rm * 0.16, fl)
+  const tb = at(rm * 0.16, fl)
+  ctx.beginPath()
+  ctx.moveTo(f0[0], f0[1])
+  ctx.quadraticCurveTo(fa[0], fa[1], ta[0], ta[1])
+  ctx.quadraticCurveTo(ft[0], ft[1], tb[0], tb[1])
+  ctx.quadraticCurveTo(fb[0], fb[1], f1[0], f1[1])
+  ctx.closePath()
+  const wasFar = ctx.globalAlpha
+  ctx.globalAlpha = wasFar * (1 - shut)
+  {
+    const a = at(0, 0)
+    const b = at(0, fl)
+    const gr = ctx.createLinearGradient(a[0], a[1], b[0], b[1])
+    gr.addColorStop(0, tint(mix(look.flesh, look.throat, 0.75)))
+    gr.addColorStop(1, tint(mix(look.flesh, look.throat, 0.35)))
+    ctx.fillStyle = gr
+  }
+  ctx.fill()
+  ctx.globalAlpha = wasFar
+  const hide = across(ctx, at(rm * 1.3, 0), at(-rm * 1.3, 0), h.n)
+  for (const o of [-1, 1]) {
+    // A side jaw: broad at the rim, its outer edge bowed, its end blunt; its inner face, flesh, along its inner edge.
+    // Shutting, its inner edge comes in to the middle too, so shut they are one beak with no gap at the rim.
+    const b0 = at(o * rm * mix1(0.42, 0.02, shut), B * 0.9)
+    const b1 = at(o * rm * 1.02, 0)
+    const c1 = at(o * rm * swell * 1.08, J * 0.45)
+    const t1 = at(o * rm * tipOut, J)
+    const t2 = at(o * rm * tipIn, J * 0.94)
+    const cEnd = at(o * rm * (tipOut + tipIn) * 0.5, J * 1.04)
+    const c2 = at(o * rm * mix1(0.55, 0.06, shut), J * 0.42)
+    ctx.beginPath()
+    ctx.moveTo(b1[0], b1[1])
+    ctx.quadraticCurveTo(c1[0], c1[1], t1[0], t1[1])
+    ctx.quadraticCurveTo(cEnd[0], cEnd[1], t2[0], t2[1])
+    ctx.quadraticCurveTo(c2[0], c2[1], b0[0], b0[1])
+    ctx.closePath()
+    ctx.fillStyle = hide
+    ctx.fill()
+    // The inner face.
+    const f1 = at(o * rm * (tipIn + 0.14 * (1 - shut)), J * 0.9)
+    const fc = at(o * rm * mix1(0.68, 0.2, shut), J * 0.4)
+    ctx.beginPath()
+    ctx.moveTo(b0[0], b0[1])
+    ctx.quadraticCurveTo(c2[0], c2[1], t2[0], t2[1])
+    ctx.lineTo(f1[0], f1[1])
+    const f2 = at(o * rm * mix1(0.58, 0.18, shut), B * 0.6)
+    ctx.quadraticCurveTo(fc[0], fc[1], f2[0], f2[1])
+    ctx.closePath()
+    ctx.fillStyle = tint(mix(look.flesh, look.shade, 0.3))
+    ctx.fill()
+  }
+}
+
+const mix1 = (a: number, b: number, k: number): number => a + (b - a) * k
 
 const fract = (v: number): number => v - Math.floor(v)
 const smoothstep = (v: number, a: number, b: number): number => {
