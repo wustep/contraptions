@@ -216,7 +216,13 @@ function drawRobe(pen: Pen, x: number, t: number, i: number): void {
   const w = bend(0.45)
   line(pen, [w[0] - half(0.45), w[1]], [w[0] + half(0.45), w[1]], SPA.towelShade, 1.0)
   line(pen, [w[0] + 0.05, w[1]], [w[0] + 0.1 + 0.2 * lift, w[1] + 0.2], SPA.towelShade, 0.8)
-  line(pen, [0, -0.06], [0, 0.1], SPA.brass, 0.8)
+  // The hanger's hook: a thin stem up out of the collar, curled over the rail it hangs from.
+  const curl: Pt[] = [[0, 0.1]]
+  for (let j = 0; j <= 10; j++) {
+    const a = (j / 10) * 3.6
+    curl.push([-0.032 + 0.032 * Math.cos(a), -0.075 - 0.032 * Math.sin(a)])
+  }
+  polyline(pen, curl, SPA.brass, 0.8)
   p.pop()
 }
 
