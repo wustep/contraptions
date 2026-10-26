@@ -61,8 +61,8 @@ comb fits. `scripts/shows/nature-of-daylight-onsets.py` measured the recording o
 - **Loudness** every quarter second, and the landmarks the story is cut to.
 
 **The coupling rule.** The chords are this piece's heartbeat, so every change of chord makes something happen: a
-push, a rock, a latch, a light, a card pinned, a screen falling. 95 of the 99 are struck; the four left are cuts
-where she is at rest. Between chords the machines strike beats only where they have a reason to (the clock's
+push, a rock, a latch, a light, a card pinned, a screen falling. 94 of the 99 are struck; the five left are cuts
+(into the lawn, out to the ring of twelve, the white-out, and the two dissolves out of the white). Between chords the machines strike beats only where they have a reason to (the clock's
 pendulum, the keypad, the dominoes), and move between strikes as pendulums, rockers, ink and light: continuous and
 damped, never parked. Every strike is on a beat, a chord or an onset.
 
