@@ -85,7 +85,8 @@ function drawLayer(p: p5, k: number, f: ReturnType<typeof frame>, layer: Layer, 
   p.vertex((f.x1 + 1) * k, (f.y1 + 1) * k)
   p.vertex((f.x0 - 1) * k, (f.y1 + 1) * k)
   p.endShape(p.CLOSE)
-  // Mist at its foot, between it and the next: the air between the ranges.
+  // Mist at its foot, between it and the next: the air between the ranges. It goes on down at its fullest to the
+  // frame's foot (ending where it was thickest, it left a hard line across any range whose foot showed).
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const mist = landTone(WASTES.mist, T, 0.1)
   const c = p.color(mist)
@@ -96,7 +97,7 @@ function drawLayer(p: p5, k: number, f: ReturnType<typeof frame>, layer: Layer, 
   g.addColorStop(0, `rgba(${rgb}, 0)`)
   g.addColorStop(1, `rgba(${rgb}, ${0.5 * (1 - wastesNight(T) * 0.6)})`)
   ctx.fillStyle = g
-  ctx.fillRect((f.x0 - 1) * k, y0 * k, (f.x1 - f.x0 + 2) * k, (y1 - y0) * k)
+  ctx.fillRect((f.x0 - 1) * k, y0 * k, (f.x1 - f.x0 + 2) * k, (Math.max(y1, f.y1 + 1) - y0) * k)
 }
 
 /** A heather clump, a rock, or nothing, for every stretch of ground (by index). */
