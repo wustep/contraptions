@@ -64,7 +64,7 @@ function house(s: Screen, t: number, y: number, w: Work, wind: number): void {
   const shade = mixHex(mixHex('#C8C2AE', '#8E7380', w.dusk), w.far, haze)
   const roof = mixHex(mixHex('#6F655E', '#4C3A40', w.dusk), w.far, haze * 0.8)
   const leaf = mixHex(mixHex('#6E8A4A', '#4E3C40', w.dusk), w.far, haze)
-  const glass = w.dusk > 0.35 ? mixHex(roof, '#F0C06A', smooth(w.dusk, 0.35, 0.8)) : mixHex(roof, w.far, 0.3)
+  const glass = mixHex(mixHex(roof, w.far, 0.3), '#F0C06A', smooth(w.dusk, 0.35, 0.8))
   // The cottonwood, behind the house's left end: a trunk and a heap of leaves that leans and stirs with the wind.
   const sway = Math.sin(t * 1.1) * 0.02 + 0.06 * wind
   const tx = x - H * 0.55

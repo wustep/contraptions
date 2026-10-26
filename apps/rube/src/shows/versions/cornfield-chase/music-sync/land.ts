@@ -23,7 +23,10 @@ export function dayLand(p: p5, c: PieceCtx, col: number, line: number, begin: nu
   const l = dayAt(t)
   const hy = sky(s, l)
   const dusk = smooth(t, 30, 40.6)
-  body(s, hy, 0.74, sunHeight(t), 0.042, dusk < 0.5 ? '#F7DC8E' : dusk < 0.85 ? '#F4A35E' : '#E8744A', { color: '#F6D58A', a: 0.26 - 0.06 * dusk, r: 0.15 })
+  // The sun goes from gold through amber to red as it sets, shading over, not stepping from one to the next (it did, at
+  // 35 and 38 s, a jump in its colour each time).
+  const sun = mixHex(mixHex('#F7DC8E', '#F4A35E', smooth(dusk, 0.3, 0.7)), '#E8744A', smooth(dusk, 0.7, 0.95))
+  body(s, hy, 0.74, sunHeight(t), 0.042, sun, { color: '#F6D58A', a: 0.26 - 0.06 * dusk, r: 0.15 })
   clouds(s, t, hy, { ...l.cloud, sky: l.low, alpha: 0.9 })
   const ink = mixHex('#46423A', '#3A2A32', smooth(t, ORGAN - 3, 40))
   drone(s, t, hy, ink, l.low)

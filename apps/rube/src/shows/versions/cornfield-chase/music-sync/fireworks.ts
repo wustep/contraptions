@@ -102,7 +102,8 @@ export function fireworks(s: Screen, t: number, hy: number): void {
     const sparks = 46
     const out = (u: number) => (1 - Math.exp(-3.2 * u)) / (1 - Math.exp(-3.2 * LIFE))
     const life = 1 - age / LIFE
-    const color = age < 0.7 ? sh.color : sh.fade
+    // Turning over a few frames, not swapped all at once on one.
+    const color = mixHex(sh.color, sh.fade, smooth(age, 0.55, 0.85))
     ctx.strokeStyle = rgba(color, 0.85 * life ** 1.4)
     ctx.lineWidth = Math.max(1, f * 0.0028 * (0.6 + 0.4 * life))
     ctx.beginPath()
