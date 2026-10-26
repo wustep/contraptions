@@ -366,14 +366,16 @@ export const credits = scenery<null>({
     const cx = (f.x0 + w * (AT[0] + 0.1 * s)) * k
     const cy = (f.y0 + spare / 2 + (AT[1] + 0.13) * fh - CREDITS_LIFT * (spare / 2)) * k
     // Deep enough at its heart that what is behind the names (the window's unlit neon) recedes under them, and no
-    // wider than the words, so the lanterns and the family keep their light.
+    // wider or taller than the words, so the lanterns and the family keep their light: a low, flat band of shade
+    // that eases out, not a dark cloud over the ceiling as the camera draws back to the room upstairs.
     const rx = w * (0.3 + 0.2 * s) * k
     ctx.save()
     ctx.translate(cx, cy)
-    ctx.scale(1, 0.5 - 0.2 * s)
+    ctx.scale(1, 0.36 - 0.06 * s)
     const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx)
-    g.addColorStop(0, `rgba(8, 10, 12, ${0.8 * bed})`)
-    g.addColorStop(0.55, `rgba(8, 10, 12, ${0.52 * bed})`)
+    g.addColorStop(0, `rgba(8, 10, 12, ${0.7 * bed})`)
+    g.addColorStop(0.5, `rgba(8, 10, 12, ${0.46 * bed})`)
+    g.addColorStop(0.8, `rgba(8, 10, 12, ${0.14 * bed})`)
     g.addColorStop(1, 'rgba(8, 10, 12, 0)')
     ctx.fillStyle = g
     ctx.fillRect(-rx, -rx, 2 * rx, 2 * rx)
