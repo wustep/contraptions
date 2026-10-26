@@ -41,7 +41,7 @@ export const WIN = { x0: 2.95, x1: 4.55, y0: -2.75, y1: -1.55 }
 /** The lamps over the counter: where each hangs from, how long its cord, how it swings (a radian or so at most). */
 const LAMPS: { x: number; len: number; seed: number }[] = [
   { x: 1.1, len: 1.2, seed: 1 },
-  { x: 2.62, len: 1.15, seed: 2 },
+  { x: 2.62, len: 0.95, seed: 2 },
 ]
 /** Where a lamp is, and its swing. */
 export function lampAt(i: number, t: number): { p: Pt; a: number } {
