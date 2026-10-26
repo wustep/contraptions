@@ -695,6 +695,23 @@ Round 2:
 
 Round 3: the end credits on a phone (every card reads and none runs off), and the changed beats' times; nothing moved.
 
+Polish wave 2 (sheets every two seconds wide and tall, and the whole show under Zoom for the first time):
+
+Round 1:
+- **Mal's shot** (144 to 147): a hairline ring went out across the vault's floor from Fischer, the one ring drawn in the
+  show, against its own rule (light is light, never a ring). It is cut: the flash at the rifle and his going under at
+  once are the hit.
+
+Round 2 (Zoom):
+- **Zoom keeps him in** (the whole show; plainest at the booth and through the house, 238 to 255): Zoom closed in about
+  the shot's middle, and in the close shots composed low he rode its foot, the floor under him gone. The camera now
+  names his place as Zoom's focus, put a quarter cell out past him toward the nearest edge, and lets go of it smoothly
+  as he nears the edge of the show's own frame (so a shot he is not in, the children or the top, keeps its middle).
+  Zoom moves only where it must.
+
+Round 3: the hits not read last time (the café's three blasts on bar 9, the taxi, the train and its impact on bars
+19 to 20, Mal's shot on bar 38, the children's turn on bar 67) are all on the grid; nothing moved.
+
 ## Inception nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
