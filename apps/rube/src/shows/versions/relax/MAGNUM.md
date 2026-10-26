@@ -309,6 +309,15 @@ A careful watch, wide and tall, for what looked wrong or cheap:
   They are eased crown to crown, and the far range has more, smaller crowns, so every framing sees a rolling ridge.
 - Read and left: the four dissolves in 0.15 s steps (no flash), the fling, the steam clearing, and the end to 4:23.
 
+## Regret fixes
+
+- **The spa's robes** (1:13 to 1:21): the wave-one wall hook, a brass tab with a peg, read as a bottle neck sticking up
+  out of each collar. Back to the thin hanger stem, which now curls over at its top into a hook.
+- **A phone held upright** (the walk-off, 1:26 to 1:40, and Derelicte, 2:20 to 3:15): the composed frame sat midway in
+  the tall stage, so half the picture was the black house under it. It sits low now (`tall: 0.7`): the rafters, the
+  brick and the windows over the action, the house a band at the foot. Over Derelicte's wall the roof's dark goes on
+  up, where the world's lighter brown used to show as a flat lid.
+
 ## Zoolander nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the song.

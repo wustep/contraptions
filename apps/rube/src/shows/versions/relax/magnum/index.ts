@@ -16,6 +16,8 @@ export const performance: Performance = {
   camera,
   // No portal anywhere: every change of place is a match cut on Derek, inside a dissolve.
   cuts: () => false,
+  // A phone held upright sees the frame low in the stage: over it the rafters, the brick, the sky; under it only the house.
+  tall: 0.7,
   // The end credits' words, which the page sets over the Center's sky.
   titles: creditsAt,
   soundtrack: {
