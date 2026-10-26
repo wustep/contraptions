@@ -405,22 +405,28 @@ export function paintPour(b: Brush, t: number, sand: { lit: string; air: string 
   const coat = 1 - smooth(t, 130.4, 136.2)
   if (coat > 0.005) {
     const slide = 1 - coat
-    const top: Pt[] = []
-    const low: Pt[] = []
-    for (let s = 0; s <= 40; s += 1) {
-      const r = radiusAt(s)
-      const y = spineY(s, t)
-      top.push([hx - s, y - r * 1.03])
-      const v = 0.45 - 1.6 * slide + 0.16 * Math.sin(s * 0.85 + 1.3) + 0.08 * Math.sin(s * 2.3)
-      low.push([hx - s, y - r * Math.max(-1.05, Math.min(1.0, v))])
+    // The hanging edge, sampled finely so its tongues are curves, not a zigzag; drawn twice, the second a little lower
+    // and thin, so the edge is a falling fringe, not a cut.
+    const sheet = (drop: number, a: number) => {
+      const top: Pt[] = []
+      const low: Pt[] = []
+      for (let s = 0; s <= 40; s += 0.25) {
+        const r = radiusAt(s)
+        const y = spineY(s, t)
+        top.push([hx - s, y - r * 1.03])
+        const v = 0.45 - 1.6 * slide + 0.16 * Math.sin(s * 0.85 + 1.3) + 0.06 * Math.sin(s * 1.9 + 0.4) - drop
+        low.push([hx - s, y - r * Math.max(-1.05, Math.min(1.0, v))])
+      }
+      ctx.beginPath()
+      ctx.moveTo(top[0][0], top[0][1])
+      for (const p of top) ctx.lineTo(p[0], p[1])
+      for (let i = low.length - 1; i >= 0; i--) ctx.lineTo(low[i][0], low[i][1])
+      ctx.closePath()
+      ctx.fillStyle = b.ca(sand.lit, a)
+      ctx.fill()
     }
-    ctx.beginPath()
-    ctx.moveTo(top[0][0], top[0][1])
-    for (const p of top) ctx.lineTo(p[0], p[1])
-    for (let i = low.length - 1; i >= 0; i--) ctx.lineTo(low[i][0], low[i][1])
-    ctx.closePath()
-    ctx.fillStyle = b.ca(sand.lit, Math.min(1, coat * 1.4))
-    ctx.fill()
+    sheet(0.16, 0.35 * Math.min(1, coat * 1.4))
+    sheet(0, Math.min(1, coat * 1.4))
   }
   // On the surge it heaves up out of the sand and throws a fringe of it off its back.
   const thrown = pulse(t, SURGE, 0.3, 1.1)
