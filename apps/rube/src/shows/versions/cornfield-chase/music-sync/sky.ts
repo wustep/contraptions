@@ -85,8 +85,8 @@ export interface CloudLight {
 }
 
 /**
- * The clouds over the horizon at `hy`, `t` seconds in: rounded heaps on flat bases, each base a band of its own
- * colour. Drawn after the sun and the moon, so they pass in front of them.
+ * The clouds over the horizon at `hy`, `t` seconds in: rounded heaps on flat bases, each shaded up from its base in the
+ * base's own colour. Drawn after the sun and the moon, so they pass in front of them.
  */
 export function clouds(s: Screen, t: number, hy: number, light: CloudLight, night = false): void {
   const { ctx, cx, f, w } = s

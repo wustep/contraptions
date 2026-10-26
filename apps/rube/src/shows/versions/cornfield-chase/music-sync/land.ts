@@ -65,9 +65,9 @@ const NIGHT: Light = {
 /**
  * The night has its own arc, as the afternoon had the sun's: the moon climbs the sky through the chase, and the fair's
  * glow on the horizon swells with the full organ and settles for the photograph. The moon starts just over the fair's
- * floor, not on it: at the floor's height the booths at the drop passed over it.
+ * floor, clear of it: lower, the drop's booths and the chase's top floor stood on it, the crescent sitting on their beams.
  */
-const moonHeight = (t: number): number => 0.5 + 0.17 * smooth(t, 41, 117)
+const moonHeight = (t: number): number => 0.6 + 0.07 * smooth(t, 41, 117)
 /**
  * The fair's glow on the sky, from the midway's lights: a little from the drop, more as each ride comes on, all of it
  * once the full organ has the whole midway lit. On beat 132 it flares as well, and settles over a bar.
