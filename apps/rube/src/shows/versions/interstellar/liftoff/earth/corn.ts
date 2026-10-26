@@ -132,9 +132,10 @@ export function cornWall(p: p5, k: number, ink: string, weight: number, o: { x0:
   const edge = (x: number) => (o.taper ? Math.min(1, Math.max(0, (x - o.taper[0]) / up), Math.max(0, (o.taper[1] - x) / down)) : 1)
   const top = (i: number) => {
     const x = i * step
-    const sway = Math.sin(o.t * 0.9 + x * 0.55) * 0.05
     const e = edge(x)
     const k2 = e * e * (3 - 2 * e)
+    // Sways as much as it stands: at full sway where it had no height, the ink's last stub at the foot was a flick.
+    const sway = Math.sin(o.t * 0.9 + x * 0.55) * 0.05 * k2
     return { x: x + sway, y: o.foot - o.h * (0.86 + 0.14 * hash(i, o.seed)) * k2, k: k2 }
   }
   p.push()
@@ -159,7 +160,8 @@ export function cornWall(p: p5, k: number, ink: string, weight: number, o: { x0:
   p.noFill()
   p.stroke(ink)
   p.strokeWeight(weight * 0.8)
-  // Only where the wall stands: from where it first has height to where it last has.
+  // Only where the wall stands: from where it first has some height to where it last has (lower, the ink lay along
+  // the foot as a tail).
   let run: [number, number][] = []
   const flush = () => {
     if (run.length > 1) {
@@ -170,7 +172,7 @@ export function cornWall(p: p5, k: number, ink: string, weight: number, o: { x0:
     run = []
   }
   for (const pt of profile) {
-    if (pt[1] >= X(o.foot) - 0.5) flush()
+    if (pt[1] >= X(o.foot - 0.035)) flush()
     else run.push(pt)
   }
   flush()
