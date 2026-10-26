@@ -5,8 +5,8 @@ import { FUNNEL_R, MAW_R, W, XH, funnelDepth, swellH, swellX } from './plan'
 /**
  * The flat the harvester works: level sand from the rock out to the horizon's ranges, and what the worm does to it.
  * Worm sign is a long swell running under it from the east, its west face in shadow, heaving on the booms. Then the
- * sand round the machine goes down into a funnel, its far wall in shade and lit on its west side by the sun behind us,
- * and the near rim hides what sinks into it.
+ * sand round the machine goes down into a funnel, its walls going into shade toward the bottom, and the near rim hides
+ * what sinks into it.
  */
 
 const SWELL_L = 28
@@ -73,22 +73,12 @@ export function paintFlat(b: Brush, t: number): void {
   gr.addColorStop(1, b.ca(SAND.shade, 0))
   ctx.fillStyle = gr
   ctx.fill()
-  // Sand blown off the crest as it runs: a long thin veil trailing east behind it, lifting on each heave.
-  const top = flatAt(crest, t)
-  const veil = 0.55 * Math.min(1, h / 3)
-  ctx.beginPath()
-  ctx.moveTo(crest - 0.4, top + 0.1)
-  ctx.quadraticCurveTo(crest + SWELL_L * 0.25, top - h * 0.55, crest + SWELL_L * 0.95, top + h * 0.15)
-  ctx.quadraticCurveTo(crest + SWELL_L * 0.4, top + h * 0.1, crest - 0.4, top + 0.1)
-  ctx.closePath()
-  ctx.fillStyle = b.ca(SAND.air, veil)
-  ctx.fill()
 }
 
 /** The funnel's rim, seen a little from above: how wide, how squashed. */
 const RY = 0.24
 
-/** The hole: its far wall, in shade, its west part lit, with sand running down it toward the middle. */
+/** The hole: its walls going into shade down to its bottom, with sand running down them toward the middle. */
 export function paintFunnelBack(b: Brush, t: number): void {
   const d = funnelDepth(t)
   if (d <= 0.01) return
