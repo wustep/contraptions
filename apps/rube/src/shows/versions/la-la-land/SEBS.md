@@ -707,3 +707,11 @@ A fresh watch, wide and tall, every three seconds, then every quarter second thr
 **The home movie on a phone (345.9 to 393.05).** The film's gate opened to the whole frame, so on a phone the eight-millimetre picture was a tall rounded box, two thirds of it empty lawn, sand and floor. It now opens to the frame's width at the film's own four by three, with the dark of the room above and below it; the room's screen, chair and projector stay in the dark while the film fills the width, and come back as it closes to the screen. In the wide frame nothing changes (`movie/movie.ts`).
 
 **The painted sky (143.6 to 172).** In the tall frame the cloth's top edge, and the white studio's flies above it, showed as a pale band over the magic hour as the camera climbed with the number. The cloth is painted higher now, past any frame (`studio/studio.ts`).
+
+## Round 75: polish wave 3, the film's end and the credits on a phone
+
+A fresh watch, wide and tall, the contact sheets offset by a second and a half from the last wave's, the film's run-out at fifths of a second, and the credits as the page sets them on a phone.
+
+**The film runs out (393 to 395.3).** The lamp went out, the camera drew all the way back to the dark room, and then the cream cover faded up over all of it, so the room went a muddy grey, then cream, with the screen standing in it, and then the screen jumped in size under the cover. Now the camera draws back only far enough to see the projector by the screen, and goes in again on the empty gate's light until it is the frame; the cream comes down only for the last half second, over a frame that is already its white, and the camera holds there until the drive (`movie/movie.ts`, `score.ts`).
+
+**The credits on a phone (482 to 505).** The cards stand at the top of the 16:9 frame, which on a phone held upright is where the sign on the far hills is: the cast list and the music card ran across its blocks. They lift into the night the tall stage has over the city (`lift`), and in the wide frame they stay where they were (`credits.ts`).
