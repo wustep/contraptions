@@ -575,10 +575,15 @@ function drawCeiling(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, 
  * The light coming through where the cloud has opened over where the shell was: long soft shafts, leaning a little,
  * falling through the air onto the meadow under it, and pooling there on the grass.
  */
-function drawShafts(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, open: number): void {
+function drawShafts(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, open: number, cells: number): void {
   if (open <= 0.02) return
-  // Sunlight, not the floods' cream: warm, the first warmth the valley has had (the reunion is in it).
-  const light = rgbOf(mixHex(VALLEY.floodlight, VALLEY.lamp, 0.5))
+  // Sunlight, not the floods' cream: warm, the first warmth the valley has had (the reunion is in it). Only a little
+  // warmer than the cream: as strong as the lamps' gold, pushed in on the reunion it laid an ochre wash over the whole
+  // frame, the two of them in a khaki murk and the cut to the grey lake house a jump of colour.
+  const light = rgbOf(mixHex(VALLEY.floodlight, VALLEY.lamp, 0.22))
+  // Close in, the frame is inside a shaft, and the air in it is seen as a haze over everything: in the wide the shafts
+  // stand at full strength, close on the two of them they are a soft warmth in the air, the lit grass under them.
+  const air = 0.4 + 0.6 * sm(cells, 14, 60)
   const top = -132
   const len = MEADOW - top
   const lean = 0.1
@@ -602,7 +607,7 @@ function drawShafts(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, o
     // Its own frame: across it along x, down it along y, leaning with it; level at its top and at the grass.
     ctx.setTransform(view.multiply(new DOMMatrix([1, 0, lean, 1, x * k, top * k])))
     const g = ctx.createLinearGradient((-span / 2) * k, 0, (span / 2) * k, 0)
-    const peak = Math.min(1, a * 2.3)
+    const peak = Math.min(1, a * 2.3) * air
     for (let i = 0; i <= 16; i++) {
       const u = Math.abs(i / 16 - 0.5) * 2
       g.addColorStop(i / 16, `rgba(${light}, ${peak * (1 - u * u) ** 1.5})`)
@@ -879,7 +884,7 @@ function drawValley(p: p5, k: number, t: number, ink: string, weight: number): v
   }
   drawBank(ctx, k, f, t, open)
   drawMist(ctx, k, f, t, 0.36 * lift + 0.12 * open, open)
-  drawShafts(ctx, k, f, t, open)
+  drawShafts(ctx, k, f, t, open, cells)
 
   // The camp's standing hardware: the road, the helideck, the tents, trucks and the comms mast.
   if (f.y1 > MEADOW - 22 && f.y0 < MEADOW + 2) {
