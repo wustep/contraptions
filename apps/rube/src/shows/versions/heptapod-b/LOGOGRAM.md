@@ -558,6 +558,12 @@ A timing audit and close looks; nothing in the picture changed.
 - Looked at and left: Hannah's run and spring onto the bench, the helicopter's skids onto the pad, the lift through
   the fog band, the second vision and the crescent, the shaft mouth's lip.
 
+## Polish wave 6
+
+A last fresh watch and a final real-speed check; nothing in the picture changed. Looked at and left: the push and the
+great ring (168 → 185, both pens in it, the tendrils flinging out past the frame's top as it closes), the first
+logogram's soft edge in the fog (ink bleeding, not a bevel), the helicopter over the ridge, the desktop credits.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
