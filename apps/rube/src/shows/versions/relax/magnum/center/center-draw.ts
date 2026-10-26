@@ -58,6 +58,8 @@ export const INTERIOR = mixHex(mixHex(INK, CENTER.brass, 0.22), CENTER.roof, 0.1
 const WOOD = mixHex(CENTER.brass, CENTER.path, 0.35)
 const LEATHER = mixHex(mixHex(CENTER.brass, INK, 0.52), CENTER.roof, 0.2)
 const HOSE = mixHex(INK, CENTER.roof, 0.35)
+/** Bark: a grey-brown, never the leaves' green (a green trunk read as a painted pole). */
+const BARK = mixHex(mixHex(CENTER.brass, INK, 0.6), CENTER.roof, 0.25)
 /** The press: one dark mass, rimmed where the light falls. */
 const PRESS_DARK = mixHex(INK, CENTER.roof, 0.28)
 const PRESS_RIM = mixHex(CENTER.stone, AWARDS.warm, 0.35)
@@ -124,7 +126,7 @@ export function drawTree(p: p5, k: number, s: TreeSpec): void {
   const leaf = dk(mixHex(CENTER.tree, CENTER.sky, fade), 0.62)
   const shade = dk(mixHex(CENTER.treeDark, CENTER.sky, fade), 0.62)
   const light = dk(mixHex(mixHex(CENTER.tree, CENTER.lawn, 0.55), CENTER.sky, fade), 0.66)
-  const bark = dk(mixHex(mixHex(CENTER.treeDark, INK, 0.35), CENTER.sky, fade), 0.5)
+  const bark = dk(mixHex(BARK, CENTER.sky, fade), 0.5)
   const cx = x + sway * 0.6
   const cy = y - h * 0.63
   // The trunk: tapering up into the crown.
@@ -136,11 +138,14 @@ export function drawTree(p: p5, k: number, s: TreeSpec): void {
     p.fill(bark)
   }
   const tw = w * 0.07
+  // A little flare at the root.
   if (!s.crownOnly) poly(p, k, [
-    [x - tw, y],
+    [x - tw * 1.5, y],
+    [x - tw, y - h * 0.05],
     [x - tw * 0.55 + sway * 0.2, y - h * 0.5],
     [x + tw * 0.55 + sway * 0.2, y - h * 0.5],
-    [x + tw, y],
+    [x + tw, y - h * 0.05],
+    [x + tw * 1.5, y],
   ])
   p.pop()
   // The crown: rounds scattered on an oval.
@@ -544,7 +549,7 @@ function sheetShape(h: number, t: number): Pt[] {
 export function drawRigBack(p: p5, c: Ctx, t: number): void {
   const { k, weight } = c
   const lw = weight * 0.7
-  const bark = mixHex(CENTER.treeDark, INK, 0.35)
+  const bark = BARK
   p.push()
   // The counterweight, on its line down behind the trunk: let go, it drops, and the sheet goes up.
   const h = liftAt(t)
@@ -558,12 +563,14 @@ export function drawRigBack(p: p5, c: Ctx, t: number): void {
   // The trunk, and its limb out over the model.
   inked(p, lw, bark)
   poly(p, k, [
-    [tx - hw, GROUND],
+    [tx - hw * 1.7, GROUND],
+    [tx - hw, GROUND - 0.22],
     [tx - hw * 0.7, TREE.fork],
     [tx - hw * 0.2, BRANCH_Y - 0.5],
     [tx + hw * 0.6, BRANCH_Y - 0.5],
     [tx + hw * 0.75, TREE.fork],
-    [tx + hw, GROUND],
+    [tx + hw, GROUND - 0.22],
+    [tx + hw * 1.7, GROUND],
   ])
   poly(p, k, [
     [tx - hw * 0.6, TREE.fork + 0.05],
