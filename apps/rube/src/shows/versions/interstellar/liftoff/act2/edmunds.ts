@@ -2019,18 +2019,18 @@ function drawLampLight(p: p5, c: Ctx, v: View, T: number): void {
   // As the sun comes up the day takes over from it: the lens stays lit, its light on the ground all but goes.
   const day = 1 - 0.75 * sunlight(siteOf(v, T))
   p.noStroke()
-  // The cone: five wedges, each a little narrower, so its sides soften outward, and each fading down to nothing at the
+  // The cone: three wedges, each a little narrower, so its sides soften outward, and each fading down to nothing at the
   // ground, where the pool takes over. One flat wedge had hard slanting sides, and its foot ruled a line across the
   // ramp and the sand either side of the pool.
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const a = ((0.05 + 0.04 * swell) * on * day) / 5
+  const a = ((0.05 + 0.04 * swell) * on * day) / 3
   const g = ctx.createLinearGradient(0, X(ly), 0, X(G))
   g.addColorStop(0, rgba(DARK.gold, a))
   g.addColorStop(0.55, rgba(DARK.gold, a * 0.75))
   g.addColorStop(1, rgba(DARK.gold, 0))
   ctx.fillStyle = g
-  for (let i = 0; i < 5; i++) {
-    const w = 0.6 + 0.1 * i
+  for (let i = 0; i < 3; i++) {
+    const w = 0.6 + 0.2 * i
     ctx.beginPath()
     ctx.moveTo(X(lx - 0.05), X(ly + 0.07))
     ctx.lineTo(X(lx + 0.05), X(ly + 0.07))
