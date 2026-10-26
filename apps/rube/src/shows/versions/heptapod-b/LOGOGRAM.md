@@ -520,6 +520,16 @@ the weakest moments, a phone frame, then the strikes against the cue.
   into the ring, and as long as the outward ones and ending in a drop, one stood in the ring's open middle beside her
   as a pin stuck through it. One growing inward is a short wisp now, with no drop; the outward sprays are unchanged.
 
+## Polish wave 2
+
+- **The shell going** (187 → 192): as it rose and paled, cloud-coloured puffs sat on its flanks and bit notches out
+  of them, and thin bright wisps of the cloud's underside striped it across, so it went as a torn, sliced shape.
+  The puffs are cut; the wisps are deeper and fainter. It leaves whole now, a soft shape paling into the cloud.
+- **The summer vision's bank** (139.5 → 142.6): the grass's edge was an ink line, and with the two of them running
+  along it, it read as a rail under them. It is a fine line in the grass's own deep green.
+- Looked at and left: the floods' beams at the departure (they follow their heads), the far camp behind the reunion
+  (misting its feet lit them as white saucers, worse), the grand wide's pull back, the deck into the slot.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
