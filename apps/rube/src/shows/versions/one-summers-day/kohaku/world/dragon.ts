@@ -467,13 +467,14 @@ export function drawScales(g: Paint, L: Light, bodyAt: (t: number) => Pt[], from
     ctx.translate(x, y)
     ctx.rotate(spin)
     ctx.scale(1, 0.5 + 0.5 * Math.abs(Math.cos(age * 2.2 + i)))
-    // A scale: whole, as it lay on him, a round back drawing in to a soft point where it was set in the skin (not a
-    // crescent: a thin one turning edge-on reads as a gull).
+    // A scale: a round-backed shell on a near-flat edge, its corners rounded, not a crescent: two thin points turning
+    // edge-on read as a gull's wings.
     ctx.beginPath()
     ctx.moveTo(-r, 0)
     ctx.bezierCurveTo(-r, -r * 1.1, r, -r * 1.1, r, 0)
-    ctx.quadraticCurveTo(r * 0.7, r * 0.5, 0, r * 0.8)
-    ctx.quadraticCurveTo(-r * 0.7, r * 0.5, -r, 0)
+    ctx.quadraticCurveTo(r, r * 0.16, r * 0.78, r * 0.16)
+    ctx.quadraticCurveTo(0, r * 0.08, -r * 0.78, r * 0.16)
+    ctx.quadraticCurveTo(-r, r * 0.16, -r, 0)
     ctx.closePath()
     fill(ctx, rgba(i % 4 ? white : edge, fade))
     ctx.restore()
