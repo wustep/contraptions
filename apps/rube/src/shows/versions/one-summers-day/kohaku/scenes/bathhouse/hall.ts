@@ -31,9 +31,9 @@ export const DOORWAY = { x0: 67.0, x1: 68.5, y0: -3.5, y1: BACK.y1 }
 export const TREAD = { x: 60.15, w: 0.4, top: H.y1 - 0.07 }
 export const PEG: Pt = [60.5, -1.74]
 export const HOLE: Pt = [59.5, H.y1 - 0.04]
-/** The pulley over the tub's west end, and where the thorn is before it is pulled. */
-export const PULLEY: Pt = [61.35, -4.12]
-export const THORN: Pt = [61.35, -2.62]
+/** The pulley over the tub's west end, and where the thorn is before it is pulled: in his west flank. */
+export const PULLEY: Pt = [62.32, -4.12]
+export const THORN: Pt = [62.32, -2.42]
 /** The tub's oval mouth: its middle, and its half width and half depth as seen. */
 export const MOUTH = { x: (T.x0 + T.x1) / 2, y: T.rim, rx: (T.x1 - T.x0) / 2, ry: 0.2 }
 

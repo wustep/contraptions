@@ -114,15 +114,24 @@ export function drawThorn(g: Paint, L: Light): void {
   const IN = inside(L)
   const m = moundAt(t)
   const [tx, ty] = thornAt(t)
-  // The neck: from his flank up to the bar, thinning.
+  // The neck: from deep in his flank up to the bar, sagging back towards him and thinner the further it is drawn.
   const up = THORN[1] - ty
   if (up > 0.01) {
+    const base = THORN[1] + 0.3
+    const thin = 1 / Math.sqrt(1 + up * 2.5)
     ctx.beginPath()
-    ctx.moveTo(tx - 0.05, THORN[1] + 0.3)
-    ctx.quadraticCurveTo(tx + 0.02, (THORN[1] + ty) / 2 + 0.1, tx + 0.04, ty + 0.05)
-    ctx.lineTo(tx + 0.14, ty + 0.05)
-    ctx.quadraticCurveTo(tx + 0.2, (THORN[1] + ty) / 2 + 0.15, tx + 0.5, THORN[1] + 0.35)
+    ctx.moveTo(tx + 0.12 - 0.3 * thin, base)
+    ctx.bezierCurveTo(tx + 0.1 - 0.12 * thin, base - up * 0.45, tx + 0.02, ty + up * 0.3, tx + 0.03, ty + 0.04)
+    ctx.lineTo(tx + 0.13, ty + 0.05)
+    ctx.bezierCurveTo(tx + 0.16, ty + up * 0.35, tx + 0.22 + 0.2 * thin, base - up * 0.3, tx + 0.55 + 0.2 * thin, base + 0.05)
     ctx.closePath()
+    fill(ctx, lit(MUD, IN))
+    // A drip hanging off its underside, lengthening as it is drawn.
+    const dy = ty + up * 0.55
+    const dx = tx + 0.16 + 0.12 * thin
+    ctx.beginPath()
+    ctx.moveTo(dx - 0.035, dy)
+    ctx.quadraticCurveTo(dx, dy + 0.1 + up * 0.12, dx + 0.035, dy)
     fill(ctx, lit(MUD, IN))
   }
   // The handlebar: a curved bar out of the mud, a grip on its end, rusted.
