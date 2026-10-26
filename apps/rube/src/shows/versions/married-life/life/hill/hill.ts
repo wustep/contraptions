@@ -1209,7 +1209,14 @@ export const hillSet = scenery<null>({
     const tx1 = tx0 + 2.8
     if (tx1 > f.x0 - 1 && tx0 < f.x1 + 1) {
       p.noStroke()
-      p.fill(alpha(p, mixHex(town, walls, 0.45), 0.42))
+      // Its foot thins into the valley's haze over the last tenth of a cell: no flat base ruled across the slope.
+      const tone = alpha(p, mixHex(town, walls, 0.45), 0.42)
+      p.fill(tone)
+      const fade = ctx.createLinearGradient(0, X(ty - 0.14), 0, X(ty))
+      fade.addColorStop(0, tone.toString())
+      tone.setAlpha(0)
+      fade.addColorStop(1, tone.toString())
+      ctx.fillStyle = fade
       p.beginShape()
       p.vertex(X(tx0), X(ty))
       for (let i = 0; i < 9; i++) {
