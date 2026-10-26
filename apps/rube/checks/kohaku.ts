@@ -49,7 +49,7 @@ export function checkKohaku(perf: Performance, version: ShowVersion, check: Chec
     CREDITS_OK && perf.titles === creditsAt && creditsAt(CREDITS_AT - 0.05).length === 0 && creditsAt(END).length === 0 &&
     CARDS[0].role === 'Directed by' && CARDS[0].names.join('|') === 'Claude Opus 5.5' &&
     ['Chihiro', 'Haku', 'No-Face', 'Joe Hisaishi', '“One Summer’s Day”', 'Spirited Away', 'Hayao Miyazaki', 'p5.js'].every((w) => said.includes(w)), said)
-  check('kohaku: every credit card keeps the shared floor and lift for phones', creditsAt(CARDS[1].at + 2).every((c) => c.least === 4.5 && c.lift === 0.6))
+  check('kohaku: every credit card keeps the phone floor, and goes all the way up into a tall stage\'s sky', creditsAt(CARDS[1].at + 2).every((c) => c.least === 4.5 && c.lift === 1))
 
   // The strikes the story turns on, each on something the recording has.
   const onMusic = (t: number, tol = 0.03) => ONSETS.some((o) => Math.abs(o - t) <= tol) || EIGHTHS.some((b) => Math.abs(b - t) <= tol)
