@@ -121,7 +121,8 @@ export function side(pen: Pen, d: Dress, q: Side): void {
   ellipse(pen, eye, 0.016 * s, 0.012 * s, '#3E332C')
   if (q.hat) fedora(pen, d, [q.head[0] - f * 0.01 * s, q.head[1] - 0.1 * s], 0, s, false)
   sideLeg(pen, d, q, 1, d.legs)
-  sideArm(pen, d, q, 1, d.coat)
+  // The near arm between the coat and the far arm's shade, so it reads against the coat it hangs over.
+  sideArm(pen, d, q, 1, mix(d.coat, d.shade, 0.6))
 }
 
 /** A person squarely from behind (`back`) or in front: joints in cells, [left, right] as seen. */
