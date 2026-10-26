@@ -134,7 +134,9 @@ export const fremen: Scene = {
       if (g.t < FROM - 1e-6) return
       // The dune behind the basin only while the camera is down in it: not in the dream shot, not after the walk begins.
       const basin = g.t < 338.15 || (g.t >= DUEL.challenge && g.t < WALK_FROM)
-      drawBack(g, basin ? [[D, drawFarWorm], [BASIN_D, drawBasin]] : [[D, drawFarWorm]])
+      // The far worm just behind its own range, so it goes down into that range's sand along the crest, not at a line.
+      const worm: [number, typeof drawFarWorm] = [D + 1, drawFarWorm]
+      drawBack(g, basin ? [worm, [BASIN_D, drawBasin]] : [worm])
       drawNearWorm(g, airAt(g.t))
     }, (g) => {
       if (g.t < FROM - 1e-6) return
