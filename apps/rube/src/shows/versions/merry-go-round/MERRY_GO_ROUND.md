@@ -178,6 +178,11 @@ lantern's chain was ink on dark iron, so the lantern hung on nothing (dull brass
 the phone's credits and evening haze (above). The cue's landmarks (101.309, 178.051, 243.635, 272.370, 302.243) were
 read frame by frame: all land, and no timing changed.
 
+Wave 2: the mist between the hills' ranges ended at its thickest in a straight line, so the fog over the hills
+(108 → 122) was crossed by hard bands; it now goes on down to the frame's foot. On a phone the room (152 → 178 and
+the war's return) sat as a lit box in a flat dark void; the dark past its cut ceiling and floor is now the castle's
+own riveted iron, dim, barely seen in a wide frame.
+
 ## Chrome, credits, checks
 
 - In the picker the work is **Merry-Go-Round** and its one take **Opus 5.5**: the Version row hides by itself. No
