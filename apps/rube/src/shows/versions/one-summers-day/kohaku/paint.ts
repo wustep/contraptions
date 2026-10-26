@@ -249,19 +249,22 @@ export function hgrad(ctx: CanvasRenderingContext2D, x0: number, x1: number, sto
   return gr
 }
 
-/** A soft pool of light round `x, y`: `color` at its heart fading to nothing at `r` (ellipse, `sy` of its width tall). */
+/**
+ * A pool of light round `x, y` as flat shapes, the way the light falls: a wide pale ellipse and a smaller, brighter
+ * one at its heart (`sy` of its width tall). Hard edges, no fade: light here is a shape on what it falls on, not a glow.
+ */
 export function pool(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, color: string, a: number, sy = 1): void {
   if (a <= 0.003 || r <= 0) return
   ctx.save()
   ctx.translate(x, y)
   ctx.scale(1, sy)
-  const gr = ctx.createRadialGradient(0, 0, 0, 0, 0, r)
-  gr.addColorStop(0, rgba(color, a))
-  gr.addColorStop(0.5, rgba(color, a * 0.45))
-  gr.addColorStop(1, rgba(color, 0))
-  ctx.fillStyle = gr
+  ctx.fillStyle = rgba(color, a * 0.32)
   ctx.beginPath()
-  ctx.arc(0, 0, r, 0, Math.PI * 2)
+  ctx.arc(0, 0, r * 0.78, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.fillStyle = rgba(color, a * 0.3)
+  ctx.beginPath()
+  ctx.arc(0, 0, r * 0.42, 0, Math.PI * 2)
   ctx.fill()
   ctx.restore()
 }

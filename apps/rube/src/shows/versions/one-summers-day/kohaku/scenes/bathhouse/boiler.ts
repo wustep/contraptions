@@ -102,8 +102,8 @@ export function drawBoiler(g: Paint, L: Light): void {
   ctx.fillRect(B.x0, B.y0, B.x1 - B.x0, FLOOR - B.y0)
   box(ctx, B.x0, B.y0, B.x1 - B.x0, 0.14, lit('#2A1C14', IN))
   for (let x = B.x0 + 0.9; x < B.x1; x += 1.8) box(ctx, x - 0.08, B.y0, 0.16, 0.26, lit('#2A1C14', IN))
-  // The fire's light on the wall and the floor round the furnace.
-  pool(ctx, (MOUTH.x0 + MOUTH.x1) / 2, MOUTH.y1 + 0.1, 2.4, '#FFB066', 0.5 + 0.08 * Math.sin(t * 5.3), 0.6)
+  // The fire's light on the floor before the furnace.
+  pool(ctx, (MOUTH.x0 + MOUTH.x1) / 2, FLOOR, 1.9, '#FFB066', 0.5 + 0.08 * Math.sin(t * 5.3), 0.14)
   // The drawers: a wall of them in warm wood behind him, one standing out once he has pulled it.
   const dw = (DRAWERS.x1 - DRAWERS.x0) / DRAWERS.cols
   const dh = (DRAWERS.y1 - DRAWERS.y0) / DRAWERS.rows
