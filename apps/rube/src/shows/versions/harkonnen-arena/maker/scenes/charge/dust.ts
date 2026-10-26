@@ -30,13 +30,15 @@ export function paintPuff(b: Brush, p: Puff, color: string): void {
     [0.36, -0.16, 0.4],
     [0.0, -0.08, 0.55],
   ]
+  // One cloud, filled once: the lobes are its outline, not four clouds whose overlaps show as rings.
+  ctx.beginPath()
   for (const [ox, oy, r] of lobes) {
     const rx = p.size * r * (0.35 + 0.65 * grow)
     const cx = p.x + ox * p.size * (0.4 + 0.6 * grow) + (p.drift ?? 0) * s
     const cy = p.y + oy * p.size * grow - 0.25 * p.size * grow * 0.4
-    ctx.beginPath()
+    ctx.moveTo(cx + rx, cy)
     ctx.ellipse(cx, cy, rx, rx * 0.62, 0, 0, Math.PI * 2)
-    ctx.fillStyle = b.ca(color, 0.62 * fade)
-    ctx.fill()
   }
+  ctx.fillStyle = b.ca(color, 0.62 * fade)
+  ctx.fill('nonzero')
 }
