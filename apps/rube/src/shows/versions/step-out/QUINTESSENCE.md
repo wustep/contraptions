@@ -471,6 +471,10 @@ the sky. Each card holds 3.4 to 5 s; the last is gone by 266.7 s.
     frame eases down onto the pavement (`zoomDrop`): a little by the chord, so the cover over him stays whole, and the
     rest as the camera draws back, so they sit well inside it;
   - the paint costs the same as before these waves, within a tenth or two of a millisecond at the median.
+- **Polish wave 6** (the whole show played in real time on a desk and a phone, and the passages on a phone):
+  - nothing was worth changing. Played through at speed it holds 60 frames a second on both, with no late frames on
+    the desk and none that came back on the phone; the openings and the shutter reach the phone's edges; the sheer
+    curtain at home reads as one.
 
 ## Judgment calls
 
