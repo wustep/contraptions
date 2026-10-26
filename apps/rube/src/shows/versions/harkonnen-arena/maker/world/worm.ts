@@ -1,4 +1,4 @@
-import { clamp01, hash, mix, type Brush, type Pt } from '../paint'
+import { clamp01, hash, mix, smooth, type Brush, type Pt } from '../paint'
 
 /**
  * Shai-Hulud, the maker: one animal, drawn the same wherever it is (the harvester's mouth, the ride, the charge).
@@ -75,7 +75,7 @@ export function paintBody(b: Brush, w: Body): void {
   outline()
   ctx.fillStyle = b.c(SKIN.side)
   ctx.fill()
-  const band = (from: number, to: number, color: string, a = 1) => {
+  const band = (from: number, to: number, color: string) => {
     ctx.beginPath()
     for (let i = 0; i < n; i++) {
       const r = w.radius[i]
@@ -89,14 +89,23 @@ export function paintBody(b: Brush, w: Body): void {
       ctx.lineTo(w.spine[i][0] + N[i][0] * r * to, w.spine[i][1] + N[i][1] * r * to)
     }
     ctx.closePath()
-    ctx.fillStyle = a >= 1 ? b.c(color) : b.ca(color, a)
+    ctx.fillStyle = b.c(color)
     ctx.fill()
   }
-  const STEPS = 20
+  // Each ramp is thin opaque strips, each a step of the blend (a level or two of value apart), a hair overlapping the
+  // next so no seam shows between them. As many as the body is big on the screen: a worm far off needs two, a close
+  // fourteen, so the wides pay little for it.
+  const big = Math.max(...w.radius) * b.k
+  const STEPS = Math.max(2, Math.min(14, Math.round(big / 14)))
   for (let k = 0; k < STEPS; k++) {
-    band(0.1 + (0.5 * k) / (STEPS - 1), 1, SKIN.back, 0.14)
-    band(-1, -0.35 - (0.45 * k) / (STEPS - 1), SKIN.belly, 0.14)
+    const f = smooth((k + 0.5) / STEPS, 0, 1)
+    const a = 0.1 + (0.5 * k) / STEPS
+    band(a, a + 0.5 / STEPS + 0.015, mix(SKIN.side, SKIN.back, f))
+    const c = -0.35 - (0.45 * k) / STEPS
+    band(c - 0.45 / STEPS - 0.015, c, mix(SKIN.side, SKIN.belly, f))
   }
+  band(0.6, 1, SKIN.back)
+  band(-1, -0.8, SKIN.belly)
   // The rings: about a radius apart along the body (or every `ring` cells), each a little off the even step, so the body
   // reads as old armour, not a millipede: a bowed band with a dark seam on its trailing edge.
   const L = lengths(w.spine)
