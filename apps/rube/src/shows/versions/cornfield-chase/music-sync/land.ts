@@ -147,12 +147,13 @@ export function nightLand(p: p5, c: PieceCtx, col: number, line: number, begin: 
 
 /**
  * The corn at the foot of the frame by night (`near.ts`), dark against the rows the fair and the moon light, in the
- * chase's wind. `away` sinks it out of the frame.
+ * chase's wind: leaves and stalk one silhouette, so a plant reads as a plant and not as loose arcs (a stalk the colour
+ * of the rows behind it was lost). `away` sinks it out of the frame.
  */
 export function nightNear(p: p5, c: PieceCtx, col: number, line: number, begin: number, away: number): void {
   const t = begin + c.t
   const s = screenOf(p, c, col, line)
-  nearCorn(s, t, '#07060F', '#0B0A17', (x) => nightWind(t, x), away)
+  nearCorn(s, t, '#07060F', '#07060F', (x) => nightWind(t, x), away)
   done(s)
 }
 
