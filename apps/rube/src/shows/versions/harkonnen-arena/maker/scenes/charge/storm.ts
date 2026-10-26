@@ -207,8 +207,9 @@ export function paintSkirt(b: Brush): void {
   const x0 = view.x0 - 2
   const x1 = front + reach
   const n = 56
+  // It lies on the floor (y = 0): below it, it would be a dark band ruled across the near sand.
   ctx.beginPath()
-  ctx.moveTo(x0, 2)
+  ctx.moveTo(x0, 0.02)
   for (let i = 0; i <= n; i++) {
     const x = x0 + ((x1 - x0) * i) / n
     // Highest at the wall, down to nothing at its reach; its top rolls east in long swells.
@@ -216,7 +217,7 @@ export function paintSkirt(b: Brush): void {
     const swell = 0.84 + 0.16 * Math.sin(x / 7 - t * 2.2) * Math.sin(x / 17 - t * 0.9)
     ctx.lineTo(x, -14 * (1 - u * u) * swell)
   }
-  ctx.lineTo(x1 + 2, 2)
+  ctx.lineTo(x1 + 2, 0.02)
   ctx.closePath()
   const gr = ctx.createLinearGradient(front - 30, 0, x1, 0)
   gr.addColorStop(0, b.ca('#45291C', 0.94 * left))
