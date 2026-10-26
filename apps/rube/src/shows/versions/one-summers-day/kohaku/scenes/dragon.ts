@@ -56,6 +56,8 @@ const CUT_BACK = strongest(112.1, 113.3)
 
 /** How far across the day's cloud is for the shot in among them: the great one off to the right. */
 const AMONG = -3.5
+/** From the cut back to her to the dissolve (one shot): the great cloud off his way in, so he comes in white on blue. */
+const IN_FOR_HER = -5.5
 
 /** A moving hold on his head, a little behind and above it. */
 const onHim = (t: number, cells: number, dx = -0.6, dy = 0.25): Key => {
@@ -127,7 +129,7 @@ export const dragonScene: Scene = {
   ],
   mid: [room, dragon],
   front: [wall, birds],
-  // In among them the day's great cloud is off to the side, and he is white against the blue.
-  sky: (t) => (t >= CUT_IN && t < CUT_BACK ? AMONG : 0),
+  // In among them, and from the cut back to her all the way in, the day's great cloud is off his way: white on blue.
+  sky: (t) => (t >= CUT_IN && t < CUT_BACK ? AMONG : t >= CUT_BACK && t < TO ? IN_FOR_HER : 0),
   overview: { x0: 62, y0: -15, x1: 102, y1: 0 },
 }

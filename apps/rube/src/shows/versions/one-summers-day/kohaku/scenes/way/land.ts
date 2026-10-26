@@ -256,8 +256,12 @@ export function drawGate(g: Paint, L: Light): void {
   ])
   ctx.fill()
   // Far down the tunnel, the light at its other end.
-  archPath(ctx, arch, 0.09, 0.08, -0.12)
-  fill(ctx, rgba(mix('#F4E9D0', L.ambient, 0.4), 0.55))
+  // Its floor, running back from the sill to it, catching a little of that light.
+  const far = -0.24
+  poly(ctx, [[arch - archW / 2, 0], [arch - 0.09, far], [arch + 0.09, far], [arch + archW / 2, 0]])
+  fill(ctx, rgba(mix('#F4E9D0', L.ambient, 0.3), 0.07))
+  archPath(ctx, arch, 0.09, 0.1, far)
+  fill(ctx, rgba(mix('#F6EBCF', L.ambient, 0.15), 0.85))
   // The sill.
   box(ctx, arch - archW / 2 - 0.2, -0.05, archW + 0.4, 0.07, lit('#9C8B7A', L.ambient))
 }

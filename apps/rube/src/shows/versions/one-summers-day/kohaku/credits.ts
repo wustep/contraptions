@@ -76,10 +76,11 @@ export const END = Math.max(RECORDING + 4, LAST_GONE + 3)
 /** High and centred, in the sky over the gate. */
 const AT: [number, number] = [0.5, 0.07]
 /**
- * On a phone held upright the stage shows sky over the 16:9 frame: the cards go up into it, clear of the picture. A
+ * On a phone held upright the stage shows sky over the 16:9 frame: the cards go all the way up into it, over the
+ * row of small summer clouds, not across it, and clear of the picture. A
  * floor on their type keeps them read on a phone's small frame without growing them over the whole picture.
  */
-const LIFT = 0.6
+const LIFT = 1
 const LEAST = 4.5
 
 const ease = (u: number) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2)
