@@ -131,8 +131,11 @@ export function harvesterAt(t: number): { x: number; y: number; tilt: number } {
   return { x, y, tilt }
 }
 
-/** The beats of the drum under the lift: the carryall heaves on each. */
-export const LIFT_BEATS = beatsIn('phrases', W.lock + 0.3, W.sink - 0.1).map((b) => b.t)
+/**
+ * The beats of the drum under the lift: the carryall heaves on each. Where the drum's hit lands a little after the beat,
+ * the heave takes the hit, so it never comes before it (62.14 to 62.32).
+ */
+export const LIFT_BEATS = beatsIn('phrases', W.lock + 0.3, W.sink - 0.1).map((b) => onsetNear(b.t, 0.8, 0.25))
 
 /** The carryall's tugs, one a beat: up over a third of a second, settling back over the next. */
 export function tugs(t: number): number {
