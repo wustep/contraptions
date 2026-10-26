@@ -1,4 +1,4 @@
-import { circle, drift, fill, hash, layer, mix, poly, rgba, smooth, vgrad, type Paint, type Pt } from '../../paint'
+import { circle, drift, ellipse, fill, hash, layer, mix, poly, rgba, smooth, vgrad, type Paint, type Pt } from '../../paint'
 import { DAWN, NIGHT, between, dunes, sky, type Air } from '../../world/desert'
 import { T, backAt, ground } from './geo'
 import { REACHES, drawReach } from './wall'
@@ -55,8 +55,8 @@ function stars(g: Paint, f: number): void {
 }
 
 /**
- * Arrakeen burning, far to the west on the horizon: a low dark line (the rim of its bowl) with a thin band of fire along
- * it, and its smoke a long low pall leaning east. Small, and only a line: the night is the desert's. It moves only with
+ * Arrakeen burning, far to the west on the horizon: a low dark line (the rim of its bowl) with fires here and there
+ * along it, and its smoke a long low pall leaning east. Small, and only a line: the night is the desert's. It moves only with
  * the camera and the slow lick of its flames, and goes out with the dawn.
  */
 function city(g: Paint, f: number): void {
@@ -67,30 +67,44 @@ function city(g: Paint, f: number): void {
   const base = L.y(0)
   const cx = (x: number) => L.x(x)
   const s = L.s
-  // The smoke: one long low pall, leaning east over the desert.
+  // The smoke: a long low pall leaning east over the desert, a few soft overlapping masses, thinning as it goes.
   const sway = drift(g.t * 0.04, 61)
-  ctx.beginPath()
-  ctx.moveTo(cx(586), base - 5 * s)
-  ctx.quadraticCurveTo(cx(624), base - (19 + 2 * sway) * s, cx(706), base - (15 + 2 * sway) * s)
-  ctx.quadraticCurveTo(cx(664), base - 8 * s, cx(668), base - 4.5 * s)
-  ctx.closePath()
-  fill(ctx, rgba('#24212A', 0.6 * f))
-  // The rim of its bowl.
-  poly(ctx, [[cx(566), base], [cx(582), base - 4.6 * s], [cx(610), base - 5.8 * s], [cx(648), base - 5.4 * s], [cx(672), base - 4.0 * s], [cx(686), base]])
-  fill(ctx, rgba('#120F12', f))
-  // The fire along it: a thin band, its top licking slowly.
-  const pts: Pt[] = []
-  for (let i = 0; i <= 16; i++) {
-    const x = 586 + i * 5
-    const lick = 0.8 + 0.6 * hash(i, 4) + 0.35 * drift(g.t * 0.5 + i * 1.3, 70)
-    pts.push([cx(x), base - (5.2 + lick) * s])
+  for (let i = 0; i < 5; i++) {
+    const u = i / 4
+    const x = 600 + u * 92 + 3 * sway
+    const y = 7.5 + u * 6.5 + 1.2 * sway * u
+    ellipse(ctx, cx(x), base - y * s, (10 + u * 14) * s, (3.2 + u * 2.4) * s, -0.12)
+    fill(ctx, rgba('#24212A', (0.34 - 0.16 * u) * f))
   }
-  ctx.beginPath()
-  ctx.moveTo(cx(586), base - 5.0 * s)
-  for (const p of pts) ctx.lineTo(p[0], p[1])
-  ctx.lineTo(cx(666), base - 4.6 * s)
-  ctx.closePath()
-  fill(ctx, rgba('#D27A34', 0.9 * f))
+  // The rim of its bowl: a worn crest, low at both ends.
+  // Its foot runs on down under the nearer dunes, so no flat underside of it is ever seen.
+  const rim: Pt[] = [[cx(556), base + 6 * s]]
+  for (let i = 0; i <= 30; i++) {
+    const x = 568 + i * 4
+    const k = Math.sin((Math.PI * i) / 30)
+    rim.push([cx(x), base - (4.6 * Math.pow(k, 0.35) + 0.9 * k + 0.5 * (hash(i, 3) - 0.5)) * s])
+  }
+  rim.push([cx(700), base + 6 * s])
+  poly(ctx, rim)
+  fill(ctx, rgba('#1A1820', f))
+  // The fires along it: separate low patches, not one band, their tops licking slowly.
+  const fires: [number, number][] = [[588, 9], [603, 6], [616, 13], [636, 7], [651, 10]]
+  for (const [j, [x0, w]] of fires.entries()) {
+    const top = (x: number) => {
+      const i = Math.round((x - 568) / 4)
+      const k = Math.sin((Math.PI * Math.max(0, Math.min(30, i))) / 30)
+      return 4.6 * Math.pow(k, 0.35) + 0.9 * k
+    }
+    const pts: Pt[] = [[cx(x0), base - (top(x0) - 0.3) * s]]
+    for (let i = 0; i <= 6; i++) {
+      const x = x0 + (w * i) / 6
+      const lick = (0.35 + 0.45 * hash(i + j * 7, 4)) * Math.sin((Math.PI * i) / 6) + 0.18 * drift(g.t * 0.5 + i * 1.3 + j, 70)
+      pts.push([cx(x), base - (top(x) + Math.max(0, lick)) * s])
+    }
+    pts.push([cx(x0 + w), base - (top(x0 + w) - 0.3) * s])
+    poly(ctx, pts)
+    fill(ctx, rgba(j % 2 ? '#B9612B' : '#D27A34', 0.85 * f))
+  }
 }
 
 /** The ranges of dunes behind the floor. */
