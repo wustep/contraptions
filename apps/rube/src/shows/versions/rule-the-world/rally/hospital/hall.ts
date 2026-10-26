@@ -231,7 +231,7 @@ export function hallPigeon(pen: Pen, t: number): void {
   const s = 0.62
   if (t < land) {
     const u = (t - (land - 1.1)) / 1.1
-    const x = -5.0 - 0.75 * u
+    const x = -5.0 - 0.5 * u
     const yy = y - 0.6 * (1 - u) * (1 - u) - 0.08
     const beat = Math.sin(t * 20) * (1 - 0.5 * u)
     ellipse(pen, [x, yy], 0.14 * s, 0.065 * s, PIGEON)
@@ -239,9 +239,10 @@ export function hallPigeon(pen: Pen, t: number): void {
     shape(pen, [[x + 0.05 * s, yy], [x + 0.24 * s, yy - 0.2 * s * beat], [x - 0.02 * s, yy - 0.02 * s]], PIGEON)
     return
   }
-  // Strutting a little way and back, bobbing; puffing up now and then.
+  // Strutting a little way and back at the ledge's far end, clear of the hat of the father asleep on the bench under
+  // it; bobbing, puffing up now and then.
   const u = t - land
-  const x = -5.75 - 0.22 * Math.sin(u * 0.45)
+  const x = -5.5 - 0.1 * Math.sin(u * 0.45)
   const face: 1 | -1 = Math.cos(u * 0.45) > 0 ? -1 : 1
   pigeon(pen, x, y, face, s, Math.max(0, Math.sin(u * 7)) * Math.abs(Math.cos(u * 0.45)), 0.6 * Math.max(0, Math.sin(u * 0.8 + 2)) ** 10, Math.max(0, Math.sin(u * 0.5)) ** 4)
 }
