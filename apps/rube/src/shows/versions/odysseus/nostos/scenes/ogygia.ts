@@ -141,10 +141,11 @@ const HER: Actor = {
 const LOOM: Pt = [820.2, -11.45]
 
 const SHOTS: Key[] = [
-  // The hush: in on him, slowly, where the sea left him, alone on the sand as the music falls to nothing; and as he
-  // stirs at the first dawn, open enough to hold the lotus opening on the rise above him.
-  { t: 356.4, cells: 4.9, at: [660.75, -0.9] },
-  { t: STIR, cells: 5.7, at: [662.75, -1.15] },
+  // The hush: in on him, slowly, where the sea left him, until he is all there is, one man alone on the sand as the
+  // music falls to nothing, every man he sailed with gone; and as he stirs at the first dawn, out, to the lotus opening
+  // on the rise above him.
+  { t: 356.6, cells: 3.1, at: [660.3, -0.75] },
+  { t: STIR + 0.4, cells: 5.4, at: [662.6, -1.1] },
   // Up over the rise with him; the cave, its stone, and the great dune behind.
   { t: 362.2, cells: 9.5, at: [665.6, -2.0] },
   { t: 365.9, cells: 11, at: [668.6, -2.9] },
