@@ -376,7 +376,11 @@ export const ROPE_ENDS = { a: ROPE_A, b: ROPE_B }
 
 /* ------------------------------------------------------------------ the ships */
 
-/** He is aboard last; then his ship is pushed off the sand, and the others follow. */
+/**
+ * He is aboard last; then his ship is pushed off the sand, and the others follow. They lie at their moorings, farther
+ * out, while he rows past them with his sail still furled, and the nearer of them passes the farther before either sets
+ * its sail: a sail never stands behind another ship's men (the balls are drawn over every ship).
+ */
 const LAUNCH = 129.1
 const blendPose = (a: Pose, b: Pose, u: number): Pose => ({ x: lerp(a.x, b.x, u), y: lerp(a.y, b.y, u), a: lerp(a.a, b.a, u) })
 
@@ -391,13 +395,16 @@ export const SHIP0: ShipPart = {
     const x = glide([[LAUNCH, BEACHED.x, 0], [140, 30, 4]])(t)
     return blendPose(BEACHED, floatAt(x, t), smoother(t, LAUNCH, LAUNCH + 2.4))
   },
-  look: (t) => ({ sail: smoother(t, 131, 134.5), belly: 0.5 * smooth(t, 134, 137.5) }),
+  look: (t) => ({ sail: smoother(t, 134.6, 137.6), belly: 0.5 * smooth(t, 136.5, 139) }),
 }
+
+/** When each of the other two casts off: once his ship is by it. */
+const consortGo = (i: 1 | 2): number => (i === 1 ? 132.6 : 134.6)
 
 function consort(i: 1 | 2): ShipPart {
   const at = i === 1 ? 1.2 : 4.4
   const lift = i === 1 ? -0.5 : -0.95
-  const go = i === 1 ? 130.0 : 130.8
+  const go = consortGo(i)
   const end = i === 1 ? 24 : 18
   const far = i === 1 ? 0.32 : 0.48
   const x = (t: number): number => {
@@ -408,7 +415,7 @@ function consort(i: 1 | 2): ShipPart {
   const depth = (t: number) => 1 - smoother(t, go + 1.5, 139.6)
   return {
     pose: (t) => floatAt(x(t), t, lift * depth(t)),
-    look: (t) => ({ sail: smoother(t, go + 2, go + 5.5), belly: 0.5 * smooth(t, go + 4, 137.6), far: far * depth(t), air: '#8C8F8E' }),
+    look: (t) => ({ sail: smoother(t, go + 3, go + 6), belly: 0.5 * smooth(t, go + 4.5, 140), far: far * depth(t), air: '#8C8F8E' }),
   }
 }
 
@@ -416,9 +423,6 @@ export const SHIP1 = consort(1)
 export const SHIP2 = consort(2)
 
 /** For the men of ships 1 and 2, smaller while their ships are far: their moves ride their ships at their places. */
-export const consortDepth = (i: 1 | 2, t: number): number => {
-  const go = i === 1 ? 130.0 : 130.8
-  return 1 - smoother(t, go + 1.5, 139.6)
-}
+export const consortDepth = (i: 1 | 2, t: number): number => 1 - smoother(t, consortGo(i) + 1.5, 139.6)
 
 export { IN_BUCKET, LAUNCH }

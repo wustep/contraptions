@@ -19,8 +19,9 @@ import { surface } from '../world/sea'
  * one by one on its notes, down into the dark under the cutaway, gone as the low voices come back.
  *
  * He rides the spar through what is left of the storm; when the low voices come back (323.3) the seas stand up again,
- * at their greatest, and the camera stands back to see one man on a stick on all of it; when they go (342) it calms to
- * grey. On the cue's last attack (350.43) the spar runs into the shallows of an island's beach and stops dead, and he is
+ * at their greatest, and the camera stays down in them with him, close and level, so they lift him and drop him and go
+ * on up past him; when they go (342) it calms to grey and the camera comes out to the island ahead. (The wide, the
+ * mark lost on the black sea, is kept for the raft.) On the cue's last attack (350.43) the spar runs into the shallows of an island's beach and stops dead, and he is
  * thrown along it and off onto the sand, and rolls, and stops, in the hush.
  */
 
@@ -165,15 +166,14 @@ export const wreck: Scene = {
     { t: 317.6, cells: 3.75, off: [-2.5, 0.35] },
     { t: 319.4, cells: 3.9, off: [-2.75, 0.45] },
     { t: 320.4, cells: 4.8, off: [-1.9, 1.0] },
-    // As the low voices come back, out to the seas at their highest: wide enough that they dwarf him, never so wide that
-    // he is lost among them.
-    { t: 322.4, cells: 6.4, off: [0.6, -0.8] },
-    { t: 325.6, cells: 10, off: [1.2, -2.2] },
-    { t: 330.4, cells: 12.5, off: [1.7, -2.6] },
-    { t: 335.0, cells: 16, off: [2.8, -3.3] },
-    { t: 339.6, cells: 12.5, off: [2.1, -2.3] },
-    { t: 344.6, cells: 11, off: [1.8, -1.9] },
-    { t: 348.6, cells: 10, off: [1.3, -1.4] },
+    // As the low voices come back the seas stand up again at their greatest, and the camera stays down with him: close
+    // and level, so each sea lifts him up the frame and its back goes on up past him, and drops him into the trough
+    // under the next. Their size is what they do to him, one man on a stick, not how small he is among them.
+    { t: 321.6, cells: 4.6, at: [sparX(321.6) + 0.35, -0.95] },
+    ...[324, 327, 330, 333, 336, 339].map((t) => ({ t, cells: 5.0 + 0.25 * Math.sin(t * 0.9), at: [sparX(t) + 0.45, -1.05] as Pt })),
+    // As they go (342), out: the sea lying down to grey, and the island's white beach coming up ahead.
+    { t: 342.4, cells: 5.6, at: [sparX(342.4) + 0.6, -1.1] },
+    { t: 347.2, cells: 8.2, off: [1.3, -1.3] },
     { t: 351.4, cells: 7.6, at: [659.4, -1.2] },
   ],
   mid: [hull, spar],

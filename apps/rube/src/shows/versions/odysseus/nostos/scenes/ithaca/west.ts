@@ -1,4 +1,4 @@
-import { fill, mix, poly, rect, rgba, stroke, type Paint } from '../../draw'
+import { fill, hash, mix, poly, rect, rgba, stroke, type Paint } from '../../draw'
 import { M } from '../../music'
 import { skyAt } from '../../world/sky'
 import type { Pt } from '../../path'
@@ -9,19 +9,45 @@ import { JETTY, MOORING, TRIAL } from './geo'
 import { CLOTH, MADDER, TIMBER, outdoors } from './look'
 
 /**
- * The west: a skiff at the harbour's jetty, and in it, after everything, the two of them, going out under a small sail
- * towards where the sun is going down; their son on the cliff's edge above them. The camera holds still on it all, and the
- * skiff goes away from us into the sun: smaller and smaller, up the sun's path on the water towards the horizon under
- * it, the way a boat goes when it is going west and we are staying, while the sun goes down into the sea ahead of it.
- * Nolan's last image is the two of them chasing the escaping sun; so is ours.
+ * The west: a skiff at the harbour's jetty, and in it, after everything, the two of them; their son on the jetty beside
+ * them. The dissolve from the hall comes down on the three of them together again, close; the son casts off the line
+ * and they go out under a small sail towards where the sun is going down, and he stays. As they go the camera draws
+ * back and up, slowly, until it holds the whole harbour, the cliff and its olive over him, and the skiff goes away from
+ * us into the sun: smaller and smaller, up the sun's path on the water towards the horizon under it, the way a boat goes
+ * when it is going west and we are staying, while the sun goes down into the sea ahead of it. Nolan's last image is the
+ * two of them chasing the escaping sun; so is ours, with the son left on the shore as king.
  */
 
-/** The last shot, held: the olive on the west cliff at its left, their son on the edge under it, the sun ahead. */
-export const WEST_CAM = { x: 839.0, y: -5.35, cells: 12.2 }
-/** Its horizon (`horizonOf` for that frame), where the skiff goes. */
-const HORIZON_Y = horizonOf({ cy: WEST_CAM.y, h: WEST_CAM.cells })
-/** Where on the horizon it heads: under the sun (the sky's disc is four fifths across that frame). */
-const SUN_X = WEST_CAM.x + ((0.8 - 0.5) * WEST_CAM.cells * 16) / 9
+/** The last shot, held: the olive on the west cliff at its left, the jetty under it with their son on it, the sun ahead. */
+export const WEST_CAM = { x: 839.0, y: -4.95, cells: 11.6 }
+/** Where the west opens: close on the jetty's end, the skiff at it and the three of them, the low sun ahead. */
+const WEST_CLOSE = { x: 841.25, y: -1.25, cells: 3.4 }
+/** The draw back: held close while they cast off, then back and up to the held wide. */
+const BACK: [number, number] = [TRIAL.fade + 3.2, TRIAL.fade + 20]
+
+/** The west's framing at `t`: close, then drawn back to WEST_CAM (the camera's keys are laid on it, `home.ts`). */
+export function westView(t: number): { x: number; y: number; cells: number } {
+  const u = smoother(t, BACK[0], BACK[1])
+  return {
+    x: WEST_CLOSE.x + (WEST_CAM.x - WEST_CLOSE.x) * u,
+    y: WEST_CLOSE.y + (WEST_CAM.y - WEST_CLOSE.y) * u,
+    cells: Math.exp(Math.log(WEST_CLOSE.cells) + (Math.log(WEST_CAM.cells) - Math.log(WEST_CLOSE.cells)) * u),
+  }
+}
+/** The keys for it: dense enough that the camera's cubic lies on `westView`. */
+export const WEST_KEYS = Array.from({ length: Math.ceil((BACK[1] - BACK[0]) / 0.5) + 1 }, (_, i) => Math.min(BACK[1], BACK[0] + i * 0.5)).map((t) => {
+  const v = westView(t)
+  return { t, cells: v.cells, at: [v.x, v.y] as Pt }
+})
+/** The horizon of the frame at `t`, where the skiff goes; and the point on it under the sun (four fifths across). */
+const horizonAt = (t: number): number => {
+  const v = westView(t)
+  return horizonOf({ cy: v.y, h: v.cells })
+}
+const sunXAt = (t: number): number => {
+  const v = westView(t)
+  return v.x + ((0.8 - 0.5) * v.cells * 16) / 9
+}
 
 /** The skiff's length, and where the two sit in it (its own frame, the waterline under its middle at 0). */
 const L = 1.25
@@ -30,8 +56,8 @@ const SEATS: Pt[] = [[-0.22, -0.2], [0.07, -0.2]]
 /** Along the sea, near: moored until the dissolve, then out from the jetty and round into the sun's path. */
 const track = glide([
   [TRIAL.fade, MOORING, 0],
-  [TRIAL.fade + 6, MOORING + 1.4, 0.36],
-  [549, SUN_X + 0.4, 0.04],
+  [TRIAL.fade + 6, MOORING + 0.8, 0.3],
+  [549, WEST_CAM.x + ((0.8 - 0.5) * WEST_CAM.cells * 16) / 9 + 0.4, 0.04],
 ])
 
 /** How far off it has gone, as the share of its size it is seen at: 1 at the jetty, less and less as it goes west. */
@@ -49,9 +75,10 @@ export interface Skiff {
 export function skiffAt(t: number): Skiff {
   const near = track(Math.max(t, TRIAL.fade))
   const s = skiffScale(t)
-  // Going away: towards the point on the horizon under the sun, as far as it has gone (the perspective of the held shot).
-  const x = SUN_X + (near - SUN_X) * s
-  const y = HORIZON_Y * (1 - s) + (surface(near, t) - 0.02) * s
+  // Going away: towards the point on the horizon under the sun, as far as it has gone (the perspective of the frame).
+  const sx = sunXAt(t)
+  const x = sx + (near - sx) * s
+  const y = horizonAt(t) * (1 - s) + (surface(near, t) - 0.02) * s
   return { x, y, a: slope(near, t, L) * 0.8 * s, s }
 }
 
@@ -82,24 +109,29 @@ function drawSunPath(g: Paint): void {
   const r = d.r * view.h
   const low = smoother(t, M.fade, 549)
   const near = Math.min(view.y1, 0.1)
-  // Broken by the swell into flat slivers, as light on water is: each a little longer and thicker nearer us, and fewer
-  // and fainter as they come, so it is the sea lit, not a beam.
+  // Broken by the swell into flat slivers, as light on water is: one, two or three to a row, of uneven lengths and set
+  // off the middle by uneven amounts, the rows unevenly spaced and closing up towards the horizon, so it is the sea lit
+  // and not a ladder; each a little longer and thicker nearer us, drifting slowly as the swell moves under it.
   ctx.fillStyle = rgba(d.color, 0.2 + 0.1 * low)
   ctx.beginPath()
-  const n = 11
+  const n = 17
   for (let i = 0; i < n; i++) {
-    const u = (i + 0.5) / n
+    const u = (i + 0.3 + 0.4 * hash(i, 41)) / n
+    if (u > 0.86) continue
     const v = u * u
     const y = hy + (near - hy) * v
-    const half = r * (0.5 + 2.2 * v) * (0.55 + 0.45 * Math.sin(i * 2.3 + t * 0.5) ** 2)
-    const h = Math.max(2.5 * g.px, (0.03 + 0.08 * v) * (1 - 0.4 * u))
-    if (u > 0.85) continue
-    const cx = x + r * 0.25 * Math.sin(i * 1.7 + t * 0.3)
-    ctx.moveTo(cx - half, y)
-    ctx.lineTo(cx + half, y)
-    ctx.lineTo(cx + half * 0.92, y + h)
-    ctx.lineTo(cx - half * 0.92, y + h)
-    ctx.closePath()
+    const span = r * (0.45 + 2.0 * v)
+    const h = Math.max(1.6 * g.px, (0.025 + 0.07 * v) * (1 - 0.4 * u))
+    const pieces = 1 + (hash(i, 43) > 0.4 ? 1 : 0) + (v > 0.2 && hash(i, 47) > 0.55 ? 1 : 0)
+    for (let j = 0; j < pieces; j++) {
+      const cx = x + (hash(i, 51 + j) - 0.5) * span * 1.3 + r * 0.18 * Math.sin(t * 0.35 + i * 1.3 + j * 2.1)
+      const half = span * (0.16 + 0.3 * hash(i, 61 + j)) * (0.7 + 0.3 * Math.sin(t * 0.55 + i * 2.1 + j * 1.7) ** 2)
+      ctx.moveTo(cx - half, y)
+      ctx.lineTo(cx + half, y)
+      ctx.lineTo(cx + half * 0.9, y + h)
+      ctx.lineTo(cx - half * 0.9, y + h)
+      ctx.closePath()
+    }
   }
   ctx.fill()
 }

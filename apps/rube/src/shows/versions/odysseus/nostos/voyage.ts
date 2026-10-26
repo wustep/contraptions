@@ -121,9 +121,9 @@ export const SEAMS: Seam[] = [
   { t: WINDOWS.sirens[1], ships: [[480, 4.5], null, null], weather: 0.2, cam: { cells: 14, off: [2, -1.8] } },
   // The ship struck (the cut): everything after it is the wreck's.
   // Washed up on Ogygia: no ships; the hero at rest on the sand of its west beach, in the hush.
-  { t: WINDOWS.wreck[1], ships: [null, null, null], weather: 0.08, cam: { cells: 7, at: [661.6, -1.4] }, hero: [660, -0.35] },
+  { t: WINDOWS.wreck[1], ships: [null, null, null], weather: 0.08, cam: { cells: 6.4, at: [660.55, -1.0] }, hero: [660, -0.35] },
   // Washed up on Ithaca: the hero at rest on its beach.
-  { t: WINDOWS.raft[1], ships: [null, null, null], weather: 0.15, cam: { cells: 9, at: [803, -2.2] }, hero: [801.5, -0.35] },
+  { t: WINDOWS.raft[1], ships: [null, null, null], weather: 0.15, cam: { cells: 4.6, at: [801.8, -0.9] }, hero: [801.5, -0.35] },
 ]
 
 /** The sand where he comes ashore: Ogygia's west beach and Ithaca's east beach are flat at y = SAND over these x. */

@@ -17,11 +17,14 @@ import { FIRST_DAWN, LAST_DAWN, daylight, dayOf } from './days'
 /**
  * The sand's surface, (x, y) knots: the island's flank going down into the deep, the west waterline at 652.5, the
  * landing flat, the low rise, the cave's beach a little higher, the east beach running down to the waterline at 676.6.
+ * Under the water each flank goes down by a shelf and a drop, so it is never one ruled slope into the dark.
  */
 const KNOTS: Pt[] = [
   [560, 14],
   [600, 9],
-  [625, 4.5],
+  [611, 7.4],
+  [618, 5.4],
+  [627, 4.3],
   [640, 2.2],
   [647, 1.0],
   [652.5, 0.02],
@@ -37,9 +40,13 @@ const KNOTS: Pt[] = [
   [675.2, -0.2],
   [676.6, 0.02],
   [678.5, 0.5],
-  [684, 1.6],
-  [700, 4.2],
-  [720, 8.5],
+  [683, 1.3],
+  [688, 1.6],
+  [692, 3.0],
+  [698, 3.5],
+  [704, 5.4],
+  [711, 6.2],
+  [722, 9.2],
   [760, 15],
 ]
 
