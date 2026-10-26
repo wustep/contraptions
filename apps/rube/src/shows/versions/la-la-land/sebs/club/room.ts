@@ -8,6 +8,9 @@ import { PIANO } from './geometry'
 import { bandPlayers, DREAM_BAND, drinkRail, fans, gallery, REAL_BAND, sitter, smoke, stander, walker, type Light, type Sitter } from './people'
 import { PIANO_SHADOW } from './piano'
 
+/** Where the piano's shadow is laid, round a small circle (cells), for its soft edge. */
+const PENUMBRA: [number, number][] = [[0, 0], ...[0.07, 0.14].flatMap((r, j) => Array.from({ length: 6 }, (_, i): [number, number] => [r * Math.cos(((i + j / 2) * Math.PI) / 3), r * Math.sin(((i + j / 2) * Math.PI) / 3)]))]
+
 /**
  * Seb's: a small jazz club, drawn in section the way every building in this house is, the front wall cut away.
  *
@@ -774,7 +777,9 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
   glow(p, k, 8.4, 1.2, 3.2, M.candle, 0.16 * L.band + 0.2 * L.blaze, 1.2, 0.9)
   glow(p, k, 4.8, 0.4, 7.5, mixHex(M.candle, COLD, 0.4), 0.28 * L.blaze, 1.35, 0.8)
   // The piano's shadow on the velvet behind it, thrown up and back by the light on it from the house: it stands in
-  // front of the curtain, and the light says so. Darkest where the light on the velvet is.
+  // front of the curtain, and the light says so. Darkest where the light on the velvet is. The house's light is broad,
+  // so the shadow's edge is soft: the outline laid a few times round a small circle, a penumbra a quarter of a cell wide,
+  // and not a hard-edged panel on the cloth in the close shots.
   {
     const ctx = p.drawingContext as CanvasRenderingContext2D
     const g = ctx.createRadialGradient(X(2.9), X(-0.9), 0, X(2.9), X(-0.9), X(5.4))
@@ -784,17 +789,21 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
     g.addColorStop(1, rgba(M.lacquer, 0))
     ctx.save()
     ctx.fillStyle = g
-    ctx.beginPath()
-    for (const shape of PIANO_SHADOW) {
-      for (const [i, [x, y]] of shape.entries()) {
-        const sx = X(x * 1.05 + 0.45)
-        const sy = X(y * 1.05 - 0.55)
-        if (i === 0) ctx.moveTo(sx, sy)
-        else ctx.lineTo(sx, sy)
+    // A share of the shadow each time, so the passes together come to its whole depth inside the edge.
+    ctx.globalAlpha = 1.1 / PENUMBRA.length
+    for (const [ox, oy] of PENUMBRA) {
+      ctx.beginPath()
+      for (const shape of PIANO_SHADOW) {
+        for (const [i, [x, y]] of shape.entries()) {
+          const sx = X(x * 1.05 + 0.45 + ox)
+          const sy = X(y * 1.05 - 0.55 + oy)
+          if (i === 0) ctx.moveTo(sx, sy)
+          else ctx.lineTo(sx, sy)
+        }
+        ctx.closePath()
       }
-      ctx.closePath()
+      ctx.fill()
     }
-    ctx.fill()
     ctx.restore()
   }
   // The pelmet, with its gold fringe.
