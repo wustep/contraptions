@@ -149,6 +149,14 @@ to the builders, who kept their context; each weighed cutting as much as adding.
   camera opened out to reveal the worm and stayed out through the leap and the hooks. It now cuts close on the leap and
   goes with him onto the flank as the hooks bite, and wide again as the head takes the thumper. The show's first frame
   is closer on the two of them on the rock's lip (they were small in a frame mostly of sky).
+- **Polish waves.** Six fresh watches after round 10, each for what looked wrong or cheap up close; mostly cuts and
+  softenings, nothing new in the picture. Hard edges became soft ones: the funnel round the machine is a hollow (it was a
+  brown plate), the worm's body rounds into shade (its back and belly were ruled bands), the storm's foot fades into the
+  floor, and every pour of sand (off the lip on the boom, off the risen mouth, off the rear) wavers and thins as it falls
+  (they were planks and stripes). Cut: pale slabs and lenses laid on worm sign in the desert and the ride, the clamp drawn
+  across the pylons from above, the riders' smear while the worm carries them, a door paler than its pylon. One heave of
+  the carryall moved 0.18 s onto the drum's hit. A tracking camera averages its subject's path finely, so it takes the
+  leap without a judder.
 
 Checked each round: `npm run build` (lint, typecheck, every check suite, the site build); a frame-difference sweep of
 the whole show at 30 fps, whose only flags are the camera's cuts and the worm's strike on the great ship; every frame
