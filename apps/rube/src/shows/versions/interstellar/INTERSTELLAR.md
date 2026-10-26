@@ -231,7 +231,20 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 162 (latest)
+## Polish pass 163 (latest)
+
+Polish wave 2 (Oct 26 2026): the whole show again with fresh eyes, a frame every 2 s in the wide frame, every 3 s on an upright phone, and every 4 s at full size offset from both, for the next-weakest moments. Each fix is to something already there; one thing was cut.
+
+**Round 1, the tall frame.**
+- **The cloud deck from the pad** (76 to 88.7 s, `cloud.ts`). A phone sees the deck for the whole countdown, and its base was a ruled ink line under a flat band: a white bar laid across the sky. From below the base now hangs in soft, uninked scallops of shade over a little haze that thins into the dust. Cut: the wisps along the base, which were dashes under it. (The tops, the hole and the view from above are as they were.)
+
+**Round 2, seams.**
+- **The base's far service road** (62 to 84 s, `earth/far.ts`). It was an ink line ruled across the whole frame, and with nothing on it until the crews' trucks pull out it read as a seam through the fence, the gate and the bunker. It is a pale strip of graded dirt now, soft at both edges, and the trucks ride on it.
+- **The cut chute** (248 to 250 s, `act2/edmunds.ts`). Cut loose, it drifted upwind and rose out of the frame straight through Gargantua, its cut bridle hanging across the dark. It drifts downwind now, the cirrus's way, and passes clear.
+
+**Round 3, timing.** None of the three touches a strike or a cue. `check:shows` holds every strike to its onset.
+
+## Polish pass 162
 
 The polish wave (Oct 25 2026): fresh eyes on the whole show, a frame every 3 s and again offset by 1.5 s, in the wide frame and an upright phone's, for what looks wrong or cheap on a careful watch. Then a timing audit. Every change is a fix to something already there; nothing new was added to the story.
 
