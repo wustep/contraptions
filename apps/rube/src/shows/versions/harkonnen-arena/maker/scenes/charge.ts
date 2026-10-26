@@ -160,6 +160,9 @@ export const charge: Scene = {
   chani: chaniMoves,
   actors: fremen,
   dissolves: [[FROM, 2.2]],
+  // Carried on the worm they move with it: nothing trails them (a smear behind a rider held in a tracking frame reads as
+  // a glow). On foot, in the charge, the runners keep theirs.
+  trailOff: (t) => (t >= FROM && t < B.wave) || (t >= B.run && t < B.off),
   shots: [
     // The basin under the storm: the dark wall in the west, the camp on the pale floor in the east; as the lead worm
     // comes out of the skirt, the camera goes in to it.
