@@ -1176,6 +1176,13 @@ window.
   - *Round 3, the ties at half a second.* The decades' patch of door light changing tint with the seasons, the wheel
     and the crest: all continuous. Nothing changed.
 
+- **Polish wave 5 (October 2026).** A fresh watch every 1.5 s wide (offset from the earlier waves) and every 4 s on a
+  phone, full frames of the doctor's office, the jar's last seconds and the dark ward, and the credits as pages on a
+  desktop (1440 × 900). Nothing was found worth changing, so nothing changed. *Looked at and kept:* the room's lamp
+  coming on over a tenth of a second exactly on its note (222.703; the street lamps take 0.15 s, each on its own
+  note); the doctor's sun bars across the door and the chairs; the ward lamp's light on the wall above its shade; the
+  credits' cards over the snow, the flakes fading under them.
+
 ## Known limits
 
 - In the named reveals (the house made new, about 10 cells; the storm, about 17) the two of them are small. It is
