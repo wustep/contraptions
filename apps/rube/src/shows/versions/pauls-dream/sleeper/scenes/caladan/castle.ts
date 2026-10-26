@@ -171,8 +171,18 @@ function testRoom(g: Paint): void {
   rect(ctx, TEST.x1, TEST.ceil, 0.35, TEST.floor - TEST.ceil)
   fill(ctx, C.cut)
   const dh = TEST.floor - TEST.ceil - 0.25
-  rect(ctx, TEST.x1 + 0.02, TEST.floor - dh, 0.31, dh * (1 - open))
-  fill(ctx, C.screenLit)
+  const shut = dh * (1 - open)
+  rect(ctx, TEST.x1 + 0.02, TEST.floor - dh, 0.31, shut)
+  fill(ctx, mix(C.screenLit, C.timber, 0.18))
+  // Its frame of timber: a stile up the middle and rails across, as the other screens have, sliding up with it.
+  if (shut > 0.05) {
+    const top = TEST.floor - dh
+    line(g, [TEST.x1 + 0.175, top], [TEST.x1 + 0.175, top + shut], rgba(C.timber, 0.55), 0.02)
+    for (const k of [0.22, 0.47, 0.72]) {
+      const y = TEST.floor - dh * (1 - k)
+      if (y < top + shut) line(g, [TEST.x1 + 0.02, y], [TEST.x1 + 0.33, y], rgba(C.timber, 0.55), 0.02)
+    }
+  }
   // Screens along the back wall.
   for (let i = 0; i < 3; i++) {
     const x = TEST.x0 + 0.5 + i * 1.6
