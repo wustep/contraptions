@@ -918,6 +918,8 @@ stageRoot.append(wordsLayer)
 const wordCards = new Map<string, HTMLElement>()
 /** A floored card's width per unit of its type, measured once as it is built. */
 const cardWidths = new Map<string, number>()
+/** Each such card's height per unit of its type, measured once like its width. */
+const cardHeights = new Map<string, number>()
 // The words a screen reader is to hear (`TitleCard.said`: a show's dialogue): the layer above is hidden from it, since
 // its cards fade and blur, so each such card is spoken once, here, as it first comes up while the show plays at 1× or
 // slower. Not on a scrub or a seek, nor faster than its own pace, so a reader is not flooded.
@@ -961,6 +963,7 @@ function renderWords(t: number): void {
     node.remove()
     wordCards.delete(key)
     cardWidths.delete(key)
+    cardHeights.delete(key)
   }
   for (const key of saidKeys) if (!live.has(key)) saidKeys.delete(key)
   for (const c of cards) {
@@ -988,7 +991,8 @@ function renderWords(t: number): void {
     node.style.left = `${placeCard((W - fw) / 2 + c.at[0] * fw, node.offsetWidth, W)}px`
     const lift = c.lift ? c.lift * Math.max(0, (H - fh) / 2) : 0
     const above = (perf?.tall ?? 0.5) * (H - fh)
-    node.style.top = `${above + (c.at[1] + (c.rise ?? 0) / 100) * fh - lift}px`
+    const top = above + (c.at[1] + (c.rise ?? 0) / 100) * fh - lift
+    node.style.top = `${top}px`
     // `least` floors the card's own unit, after its `scale` (with no scale, as a floor on the frame's unit).
     let unit = Math.max((fh / 100) * (c.scale ?? 1), c.least ?? 0)
     if (unit !== fh / 100) node.style.setProperty('--u', `${unit}px`)
@@ -1013,6 +1017,15 @@ function renderWords(t: number): void {
       const half = wide / 2
       const x = (W - fw) / 2 + c.at[0] * fw
       node.style.left = `${Math.max(W * 0.03 + half, Math.min(W * 0.97 - half, x))}px`
+      // And kept above the stage's foot: a card set low (a title in a widescreen's lower bar), grown on a short stage
+      // (a phone held sideways), would run off the bottom. Its height goes as its unit too, measured once.
+      let perUnitH = cardHeights.get(c.key)
+      if (perUnitH === undefined) {
+        perUnitH = node.offsetHeight / unit
+        cardHeights.set(c.key, perUnitH)
+      }
+      const foot = H * 0.98 - perUnitH * unit
+      if (top > foot) node.style.top = `${Math.max(0, foot)}px`
     }
     node.style.opacity = c.light.toFixed(3)
     // Out of focus as it comes and goes: it comes into focus as it comes up.
