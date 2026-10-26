@@ -277,7 +277,8 @@ function drawKamaji(g: Paint, IN: string, line: string): void {
   ARMS.forEach((arm, i) => {
     const hand = handOf(arm, t, i)
     const side = arm.shoulder[0] < x ? 1 : -1
-    const el = elbow(arm.shoulder, hand, 0.68, side * (i % 2 ? -1 : 1))
+    // The token's arm bends out away from his face, not across it, as it brings the token up to his glasses.
+    const el = elbow(arm.shoulder, hand, 0.68, i === 0 ? 1 : side * (i % 2 ? -1 : 1))
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
     ctx.beginPath()

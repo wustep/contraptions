@@ -9,6 +9,7 @@ import { box, ellipse, fill, ink, layer, lit, region, smooth, standing, type Pai
 import { Path, hop, rest, ride, roll, type Move } from '../path'
 import type { Scene } from '../scene'
 import { drawDragon, seat } from '../world/dragon'
+import { CUT_BOILER, CUT_HALL } from './bathhouse/beats'
 import { drawWater, reflect, rings } from '../world/sea'
 import { horizonOf } from '../world/sky'
 import {
@@ -293,7 +294,8 @@ const car = standing('train-car', region(56, 1, 272, 6, 1.5), END, (g) => {
 })
 const decks = standing('train-decks', [...region(68, 2, 78, 5, 1), ...region(234, 2, 241, 5, 1)], END, (g) => {
   const l = L(g.t)
-  drawLanding(g, l)
+  // Not while the boiler room is open: the landing's west end is under the room's east end and would stand in it.
+  if (g.t < CUT_BOILER - 0.5 || g.t > CUT_HALL + 0.5) drawLanding(g, l)
   drawHalt(g, l)
   deck(g, l, SWAMP.x0, SWAMP.x1, SWAMP.y)
 })
