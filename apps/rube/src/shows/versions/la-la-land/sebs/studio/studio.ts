@@ -68,7 +68,7 @@ export function clothDrop(t: number): number {
 /** The cloth's extent, in this frame (landed). */
 const CLOTH_X0 = -9
 const CLOTH_X1 = 44
-const CLOTH_TOP = -19
+const CLOTH_TOP = -40
 
 /** The painted mountain the sign stands on, in the Hollywood part's frame (x from its door), landed. */
 const H = (x: number) => x + EXIT[0]
