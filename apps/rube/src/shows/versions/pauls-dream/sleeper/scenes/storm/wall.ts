@@ -123,23 +123,26 @@ function soft(g: Paint, fn: (ctx: CanvasRenderingContext2D) => void): void {
   const f = Math.max(1.5, main.width / 480)
   const w = Math.max(8, Math.round(main.width / f))
   const h = Math.max(8, Math.round(main.height / f))
+  // A margin all round, painted too, so the softening has something past the frame's edge to take in and the edge of
+  // the frame is not left faded.
+  const pad = 4
   for (const c of pair) {
-    if (c.width !== w || c.height !== h) {
-      c.width = w
-      c.height = h
+    if (c.width !== w + 2 * pad || c.height !== h + 2 * pad) {
+      c.width = w + 2 * pad
+      c.height = h + 2 * pad
     }
   }
   const sx = w / main.width
   const sy = h / main.height
   const b = buf.getContext('2d')!
   b.setTransform(1, 0, 0, 1, 0, 0)
-  b.clearRect(0, 0, w, h)
+  b.clearRect(0, 0, w + 2 * pad, h + 2 * pad)
   const m = g.ctx.getTransform()
-  b.setTransform(m.a * sx, m.b * sy, m.c * sx, m.d * sy, m.e * sx, m.f * sy)
+  b.setTransform(m.a * sx, m.b * sy, m.c * sx, m.d * sy, m.e * sx + pad, m.f * sy + pad)
   fn(b)
   const bl = blur.getContext('2d')!
   bl.setTransform(1, 0, 0, 1, 0, 0)
-  bl.clearRect(0, 0, w, h)
+  bl.clearRect(0, 0, w + 2 * pad, h + 2 * pad)
   bl.filter = 'blur(1px)'
   bl.drawImage(buf, 0, 0)
   bl.filter = 'none'
@@ -148,7 +151,7 @@ function soft(g: Paint, fn: (ctx: CanvasRenderingContext2D) => void): void {
   ctx.setTransform(1, 0, 0, 1, 0, 0)
   ctx.imageSmoothingEnabled = true
   ctx.imageSmoothingQuality = 'high'
-  ctx.drawImage(blur, 0, 0, main.width, main.height)
+  ctx.drawImage(blur, pad, pad, w, h, 0, 0, main.width, main.height)
   ctx.restore()
 }
 
@@ -243,6 +246,21 @@ export function drawWall(g: Paint): void {
       ctx.closePath()
       ctx.fillStyle = rgba(FOOT, 0.5)
       ctx.fill()
+      // Dust boiling up round its foot where the face meets the sand, so the face goes down into it, not to a corner.
+      const fx = edge(face, side, SAND, t, side < 0 ? 3 : 7)
+      ctx.save()
+      ctx.translate(fx, SAND)
+      ctx.scale(1, 0.38)
+      const apron = ctx.createRadialGradient(0, 0, 0, 0, 0, 9)
+      apron.addColorStop(0, rgba(FOOT, 0.85))
+      apron.addColorStop(0.5, rgba(FOOT, 0.45))
+      apron.addColorStop(1, rgba(FOOT, 0))
+      ctx.beginPath()
+      ctx.arc(0, 0, 9, Math.PI, 0)
+      ctx.closePath()
+      ctx.fillStyle = apron
+      ctx.fill()
+      ctx.restore()
     }
   })
 }
