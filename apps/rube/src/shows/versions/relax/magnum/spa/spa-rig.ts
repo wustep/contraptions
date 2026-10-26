@@ -27,6 +27,7 @@ import {
   sinkAt,
   sm,
   targetTip,
+  CATCH,
   windUp,
   XT,
 } from './spa-geo'
@@ -269,6 +270,9 @@ export function drawTarget(pen: Pen, t: number): void {
   // Its post and foot.
   box(pen, HINGE[0] - 0.035, HINGE[1], HINGE[0] + 0.035, FLOOR_Y - 0.03, SPA.brass, 0.6)
   rbox(pen, HINGE[0] - 0.28, FLOOR_Y - 0.06, HINGE[0] + 0.28, FLOOR_Y, 0.03, SPA.brass, 0.6)
+  // The catch the board comes down on: a short arm off the post, and its stop.
+  line(pen, [HINGE[0] + 0.03, HINGE[1] + 0.32], CATCH, SPA.brass, 0.6)
+  disc(pen, CATCH, 0.035, 0.035, SPA.brass, 0.6)
   // The board and the disc on it, turned back about the hinge; as it goes over it turns edge on.
   const { p, k } = pen
   p.push()
