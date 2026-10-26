@@ -154,7 +154,7 @@ function paintPour(b: Brush, t: number, y: number, rx: number, ry: number): void
         const yy = top + (0.4 - top) * s
         // Narrowing as it falls, spreading where it lands; its edges rippling downward; a falling tail drawn to a point.
         const tail = s0 > 0 ? 0.15 + 0.85 * smooth(s, 0, 0.45) : 1
-        const hw = (w / 2) * tail * (1 - 0.45 * s + 0.9 * s * s * s) * (1 + 0.12 * noise1((yy - 9 * t) * 0.35, i * 5 + sgn))
+        const hw = (w / 2) * tail * (1 - 0.45 * s + 0.9 * s * s * s) * (1 + 0.3 * noise1((yy - 9 * t) * 0.22, i * 5 + sgn))
         pts.push([x + sgn * hw, yy])
       }
       return pts
@@ -167,9 +167,12 @@ function paintPour(b: Brush, t: number, y: number, rx: number, ry: number): void
     for (let j = m; j >= 0; j--) ctx.lineTo(r[j][0], r[j][1])
     ctx.lineTo(r[0][0], r[0][1] - 0.2)
     ctx.closePath()
+    // Dense where it spills off the lip, thinning to a veil as it falls and spreads, so it reads as sand pouring over
+    // the wall and not as pale stripes painted down it.
     const gr = ctx.createLinearGradient(0, top, 0, 0.4)
-    gr.addColorStop(0, b.ca(SAND.lit, 0.92))
-    gr.addColorStop(1, b.ca(SAND.air, 0.7))
+    gr.addColorStop(0, b.ca(SAND.lit, 0.9))
+    gr.addColorStop(0.45, b.ca(SAND.lit, 0.55))
+    gr.addColorStop(1, b.ca(SAND.air, 0.22))
     ctx.fillStyle = gr
     ctx.fill()
   }
