@@ -154,8 +154,11 @@ export function drawGround(p: p5, c: Ctx, f: Frame): void {
 }
 
 /** Where the river runs under the bridge. */
-const WATER = ROAD_Y + 2.4
-const DECK = 0.55
+const WATER = NEAR + 1.6
+/** The girder's depth, under the roadway's near curb. */
+const DECK = 0.4
+/** The girder's top: the roadway runs ROAD_Y to NEAR as it does on the land, its near curb under it. */
+const GIRDER = NEAR + 0.28
 
 /** The bridge: a steel deck under the road, a rail along it, piers down into the black river, the banks at its ends. */
 function drawBridge(p: p5, c: Ctx, a: number, b: number): void {
@@ -171,7 +174,7 @@ function drawBridge(p: p5, c: Ctx, a: number, b: number): void {
   solid(p, DARK_EDGE, weight * 0.6, mixHex(c.bg, ROAD.deep, 0.9))
   for (const [x, dir] of [[BRIDGE.x0, 1], [BRIDGE.x1, -1]] as const) {
     if (x < a - 3 || x > b + 3) continue
-    poly(p, k, [[x - dir * 1.2, ROAD_Y], [x + dir * 0.4, ROAD_Y], [x + dir * 0.4, ROAD_Y + DECK + 0.3], [x + dir * 1.6, WATER + 0.05], [x - dir * 1.2, WATER + 0.05]])
+    poly(p, k, [[x - dir * 1.2, GIRDER], [x + dir * 0.4, GIRDER], [x + dir * 0.4, GIRDER + DECK + 0.3], [x + dir * 1.6, WATER + 0.05], [x - dir * 1.2, WATER + 0.05]])
   }
   // The piers, every eleven cells or so, from the deck to the water.
   solid(p, DARK_EDGE, weight * 0.6, mixHex(c.bg, ROAD.asphalt, 0.75))
@@ -180,18 +183,22 @@ function drawBridge(p: p5, c: Ctx, a: number, b: number): void {
   for (let i = 1; i < n; i++) {
     const x = BRIDGE.x0 + (span * i) / n
     if (x < a - 1 || x > b + 1) continue
-    poly(p, k, [[x - 0.32, ROAD_Y + DECK], [x + 0.32, ROAD_Y + DECK], [x + 0.42, WATER + 0.1], [x - 0.42, WATER + 0.1]])
+    poly(p, k, [[x - 0.32, GIRDER + DECK], [x + 0.32, GIRDER + DECK], [x + 0.42, WATER + 0.1], [x - 0.42, WATER + 0.1]])
   }
-  // The deck: the road's asphalt over a steel girder with its stiffeners.
+  // The deck: the road's asphalt as deep as it is on the land, its near curb, and the steel girder under them. (A
+  // thin deck under the wheels left the land's road a step below the bridge's end, and its rail ending in the air.)
   const d0 = Math.max(a, BRIDGE.x0 - 0.4)
   const d1 = Math.min(b, BRIDGE.x1 + 0.4)
-  solid(p, DARK_EDGE, weight * 0.6, ROAD.asphalt)
-  rect(p, k, d0, ROAD_Y, d1, ROAD_Y + 0.18)
+  p.noStroke()
+  p.fill(ROAD.asphalt)
+  rect(p, k, d0, ROAD_Y, d1, NEAR)
+  p.fill(mixHex(ROAD.asphalt, ROAD.paint, 0.08))
+  rect(p, k, d0, NEAR, d1, GIRDER)
   solid(p, DARK_EDGE, weight * 0.6, mixHex(ROAD.asphalt, ROAD.car, 0.25))
-  rect(p, k, d0, ROAD_Y + 0.18, d1, ROAD_Y + DECK)
+  rect(p, k, d0, GIRDER, d1, GIRDER + DECK)
   // The girder's stiffeners: its own shadow, not pale lines (with the rail's posts they made a grid of boxes).
   outline(p, hexA(DARK_EDGE, 0.55), weight * 0.5)
-  for (let x = Math.ceil(d0 / 0.8) * 0.8; x < d1; x += 0.8) p.line(x * k, (ROAD_Y + 0.22) * k, x * k, (ROAD_Y + DECK - 0.04) * k)
+  for (let x = Math.ceil(d0 / 0.8) * 0.8; x < d1; x += 0.8) p.line(x * k, (GIRDER + 0.04) * k, x * k, (GIRDER + DECK - 0.04) * k)
   // The rail along the far edge: dark posts under a steel top bar, the lamps' light along its top.
   outline(p, DARK_EDGE, weight * 0.8)
   for (let x = Math.ceil(d0 / 0.9) * 0.9; x < d1; x += 0.9) p.line(x * k, (ROAD_Y - 0.38) * k, x * k, ROAD_Y * k)
