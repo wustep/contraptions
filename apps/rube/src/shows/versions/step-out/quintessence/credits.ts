@@ -77,8 +77,8 @@ export const LAST_GONE = (() => {
 const AT: [number, number] = [0.5, 0.1]
 /** The least the cards' unit may be on the page, CSS pixels: so a phone held upright still reads the role and the notes. */
 const LEAST = 4.5
-/** On a phone held upright, how far the cards go up into the pale sky the tall stage shows over the frame, clear of the fronts. */
-const LIFT = 0.6
+/** On a phone held upright, how far the cards go up into the pale sky the tall stage shows over the frame (`TALL` sets the frame low), clear of the fronts. */
+const LIFT = 1.1
 
 function lightOf(card: Card, t: number): { light: number; rise: number } {
   const since = t - card.at
