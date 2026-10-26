@@ -218,8 +218,6 @@ by copying their folders.
   - The Harkonnen ornithopter's hold was a black box standing off the hull. It is now a doorway set into the hull, dark
     in the hull's own colour, in the seizure and in the desert. Its door shuts as a panel with a seam.
   - The moon's dark side left a bright sliver at the rim, so the moon looked bitten. It is now a true crescent.
-  - The stilltent's last vision is lowered, so the rider stands at its top over the worm's ribbed back, where it had
-    been mostly pale sky.
   - Timing: the needle, the lid, the fold, the hook, the breach, the rim, the shield, the tooth, Leto's colour, the
     storm wall, Jamis's fall, the rider's breach and the last blow were each read 0.1 s either side. All land, so no
     timing changed.
