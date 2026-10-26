@@ -1193,6 +1193,11 @@ window.
     as after (18.0 → 18.1). Almost all of it is the GPU finishing the frame, not the show's code (a CPU profile puts
     the drawing itself near 4 ms), so it wants a deeper look than a polish pass: it is listed under the known limits.
 
+- **A regret (October 2026).** Wave 2's feathered mural sky is undone: the four bands are the roller's passes (the
+  shelf's roller changes colour band by band as she paints, 64 to 72 s), and blended into one gradient they read as
+  an airbrushed sky, off the show's flat, ruled style and no longer painted by the two of them. `mural` is back to its
+  four flat `px` bands.
+
 ## Known limits
 
 - In the named reveals (the house made new, about 10 cells; the storm, about 17) the two of them are small. It is
