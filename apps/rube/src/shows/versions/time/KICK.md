@@ -670,6 +670,31 @@ Round 3 (the cue's landmarks frame by frame, a tenth of a second either side):
   room and the floors under it, and the top a speck on the table. The camera comes in closer on the table (4.3 cells,
   then 3.6), the room's window and lamp still over it.
 
+Polish wave 1 (Opus 5.5, Stephen's "five more waves"; the whole show in contact sheets every 2.5 seconds wide and tall,
+then every second through Paris, the hotel and the kicks, then full frames):
+
+Round 1:
+- **The river, close** (88 to 92, 200 to 213): the far quay's courses, even at half strength, still ran the whole frame
+  as scan lines across the rain behind the falling balls; they are gone. The far water was a hard pale strip; it is a
+  soft band brightening down to the surface.
+- **The plane's rims** (61 to 69, 213.7 to 244): the plane's world inked the balls cream, for the night; on the jet
+  bridge's and the hall's pale floors that cream rim read as a halo round him. They are rimmed in the night's own dark,
+  the cabin's one ink, as in every other world.
+- **The morning on the back wall** (245 to 274.6): the sun's patch began in a hard vertical edge, a seam standing up the
+  wall behind the top in the last shot. It fades in over a third of its width, and the doors' bars across it with it;
+  the shade left of it lets go over most of a cell.
+- **The rock faces' ledges** (123 to 152): the snow on each ledge was an even band from edge to edge, two white stripes
+  painted across the rock. It lies along part of each ledge, thickest in the middle, running out to nothing.
+
+Round 2:
+- **The far towers over the river** (85 to 107, 200 to 213): through gaps in the nearer rank the pale far towers stopped
+  on the far quay's top in a hard line, so in the close shots of the van's fall they hung from the top of the frame. A
+  soft band of mist lies along the quay's top over their feet.
+- **The charges under the vault** (189.9 to 191.5): their four bursts of dust were strong round puffs, pale on the
+  underside's dark: four lamps lit. They are thin and wide.
+
+Round 3: the end credits on a phone (every card reads and none runs off), and the changed beats' times; nothing moved.
+
 ## Inception nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
