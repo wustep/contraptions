@@ -445,8 +445,9 @@ function shoreShots(slot: Slot): PartShot[] {
     h(11.8, 11.6, [-0.8, 81.2]),
     h(13.9, 14.8, [0.9, 79.6]),
     h(P.arrive, 9.5, [-0.4, 77.9]),
-    h(18.9, 5.6, [0.1, 77.25]),
-    h(21.9, 4.1, [0.1, 77.6]),
+    // In on the table as he touches the top (at 5.6 cells it was a speck as it righted itself and spun).
+    h(18.9, 4.3, [0.1, 77.45]),
+    h(21.9, 3.6, [0.1, 77.62]),
     // Bar 6: a cut down to the garden at the tower's foot, the children by the swing, their backs to us; and on bar 7
     // back to the top, spinning, as Mal comes down in the dark behind him.
     { ...h(P.breath6, 3.45, GARDEN_VIEW), cut: true },

@@ -661,6 +661,15 @@ Round 2 (a tall frame, Zoom and Overview):
   as the ball, so a landing read as a white glow round whoever landed. They stay low along the snow, smaller and
   fainter, thrown from the skis.
 
+Round 3 (the cue's landmarks frame by frame, a tenth of a second either side):
+- **Timing**: every layer's cut and the four kicks land on their downbeats in the picture (the cut to Paris on 30.86,
+  the jolt on 61.34, the hotel's roof on 91.82, the snow's sky on 122.29, limbo on 152.77, the great wide on 183.25,
+  the fortress on 190.87, the cabin in its pit on 198.49, the van in the river on 206.11, the plane on 213.72, the
+  veil full on 244.19, black on 274.62). Nothing moved.
+- **The top in their room** (18.9 to 23.25): as he touched it and it righted itself and spun, the frame was still the
+  room and the floors under it, and the top a speck on the table. The camera comes in closer on the table (4.3 cells,
+  then 3.6), the room's window and lamp still over it.
+
 ## Inception nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
