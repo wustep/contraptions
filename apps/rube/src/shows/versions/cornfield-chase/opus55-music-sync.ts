@@ -4,7 +4,7 @@ import type { StockScore } from '../../stock/types'
 import { expose, exposure, finale, flash, pull, type Exposure } from './music-sync/finale'
 import { dayLand, dayNear, frontField, nightLand, nightNear, type Take } from './music-sync/land'
 import { beatAt } from './music-sync/music'
-import { scenery } from './music-sync/screen'
+import { TALL, scenery } from './music-sync/screen'
 import { fadeUp, nightfall } from './music-sync/nightfall'
 import { DressedShow } from './music-sync/show'
 import { follow, spot, type Spot } from './music-sync/spot'
@@ -110,6 +110,9 @@ function camera(t: number): Framing {
 
 export const performance: Performance = {
   show, duration: score.duration, camera,
+  // A phone held upright: the machine runs along the field's far edge, so the taller frame goes to the sky and its
+  // clouds over it rather than to a slab of plain rows under it.
+  tall: TALL,
   // The last portal would iris the photograph away; the decay keeps it. The door from the field to the fair is the
   // night's, drawn by the show (`music-sync/nightfall.ts`), and so is the fade up at the start.
   cuts: (t) => t >= OPENING && t < door.begin && !(t >= sunset.begin && t <= arrival.end),

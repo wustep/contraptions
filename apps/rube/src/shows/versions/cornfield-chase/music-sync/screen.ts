@@ -18,7 +18,7 @@ export interface Screen {
   /** The canvas, device pixels. */
   w: number
   h: number
-  /** Its middle: the camera's. */
+  /** The composed frame's middle: the camera's. */
   cx: number
   cy: number
   /** The composed 16:9 frame's height, device pixels: the unit everything at a distance is sized in. */
@@ -29,6 +29,12 @@ export interface Screen {
   camX: number
   camY: number
 }
+
+/**
+ * On a canvas taller than 16:9 (a phone held upright), the share of the extra picture above the composed frame
+ * (`Performance.tall`): the stage sets the machine there, and the scenery's frame goes with it.
+ */
+export const TALL = 0.7
 
 /** A drawing with no ball of its own. It is handed the universe's own time as `t`. */
 export const scenery = (name: string, draw: (p: p5, c: PieceCtx) => void, over?: (p: p5, c: PieceCtx) => void): Piece<null> => ({
@@ -50,7 +56,8 @@ export function screenOf(p: p5, c: PieceCtx, col: number, row: number): Screen {
   const w = ctx.canvas.width
   const h = ctx.canvas.height
   const cx = w / 2
-  const cy = h / 2
+  // The composed frame's middle: lower than the canvas's on a tall one, where the stage set the machine (`TALL`).
+  const cy = h / 2 + (TALL - 0.5) * Math.max(0, h - (w * 9) / 16)
   ctx.save()
   ctx.setTransform(1, 0, 0, 1, 0, 0)
   return { ctx, w, h, cx, cy, f: Math.min(h, (w * 9) / 16), cell, camX: col - (m.e - cx) / cell, camY: row - (m.f - cy) / cell }
