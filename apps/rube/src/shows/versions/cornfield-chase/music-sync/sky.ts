@@ -94,8 +94,7 @@ export function clouds(s: Screen, t: number, hy: number, light: CloudLight, nigh
   for (const [li, layer] of (night ? NIGHT : DAY).entries()) {
     const at = (s.camX * layer.q) / 8
     const heap = new Path2D()
-    const under = new Path2D()
-    let any = false
+    const feet: { x: number; y: number; width: number }[] = []
     for (let i = 0; i < layer.n; i++) {
       const key = li * 31 + i + (night ? 500 : 0)
       const width = (layer.w0 + (layer.w1 - layer.w0) * hash(key, 1)) * f
@@ -104,25 +103,33 @@ export function clouds(s: Screen, t: number, hy: number, light: CloudLight, nigh
       const x = cx + u * f
       const y = hy - (layer.lo + (layer.hi - layer.lo) * hash(key, 3)) * f
       if (y < -width * 0.3) continue
-      any = true
       for (const p of puffs(key, night)) {
         const px = x + p.dx * width
         const py = y + p.dy * width
         heap.moveTo(px + p.rx * width, py)
         heap.ellipse(px, py, p.rx * width, p.ry * width, 0, 0, Math.PI * 2)
       }
-      // A flat foot under the heap, and the band of the base's colour along it, cut to the heap's outline.
+      // A flat foot under the heap, and the base's colour coming up into it from there, cut to the heap's outline.
       if (!night) heap.rect(x - width * 0.36, y - width * 0.08, width * 0.72, width * 0.08)
-      under.rect(x - width * 0.6, y - width * (night ? 0.012 : 0.075), width * 1.2, width * 0.2)
+      feet.push({ x, y, width })
     }
-    if (!any) continue
+    if (!feet.length) continue
     const a = light.alpha * (1 - layer.haze * 0.5)
     ctx.fillStyle = rgba(mixHex(light.body, light.sky, layer.haze), a)
     ctx.fill(heap)
     ctx.save()
     ctx.clip(heap)
-    ctx.fillStyle = rgba(mixHex(light.base, light.sky, layer.haze), a)
-    ctx.fill(under)
+    // Shaded up from the base over a fifth of the heap, not a band with an edge across it (it read as a seam).
+    const base = mixHex(light.base, light.sky, layer.haze)
+    for (const { x, y, width } of feet) {
+      const top = y - width * (night ? 0.045 : 0.17)
+      const full = y - width * (night ? 0.004 : 0.035)
+      const shade = ctx.createLinearGradient(0, top, 0, full)
+      shade.addColorStop(0, rgba(base, 0))
+      shade.addColorStop(1, rgba(base, a))
+      ctx.fillStyle = shade
+      ctx.fillRect(x - width * 0.6, top, width * 1.2, y + width * 0.15 - top)
+    }
     ctx.restore()
   }
 }
