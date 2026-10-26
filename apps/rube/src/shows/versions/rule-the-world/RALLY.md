@@ -513,3 +513,18 @@ The phone held upright, and the ward's people.
   had two hands on his chest and no arms. Their arms are in the coat's shade now, as the folded ones already were.
 - *The corridor's pigeon* strutted on the ledge right over the sleeping father, so it stood on his hat's brim. It keeps
   to the ledge's far end.
+
+## Polish wave 4
+
+Staging and transitions: every seam a quarter of a second either side, the four story beats frame by frame, and the
+visual hits against the beat.
+
+- *The tub through the floor* (bar 48): the heap of plaster over Mishkin flew up and faded as he burst out, so for a
+  quarter of a second he showed through it like a ghost. Nothing fades now: the heap slumps flat onto the bed as he
+  comes up out of it, its pieces and the laths are thrown off to either side, and they come down on the blanket and
+  lie there.
+
+**Timing.** The store's lamps, the hotel floor's cracks and the finale's rooms all come from the measured beats (the
+first room starts to light on bar 113's downbeat, 240.95 s, and is up within a fifth of a second); the seams open on
+Marty on their downbeats. Looked at and left alone: the six seams, the winning point's cuts, the lost point, the
+finale's last frames.
