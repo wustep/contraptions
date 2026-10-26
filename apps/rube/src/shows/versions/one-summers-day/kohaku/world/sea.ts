@@ -1,5 +1,5 @@
 import type { Light } from '../light'
-import { ellipse, hash, ink, mix, rgba, smooth, type Paint } from '../paint'
+import { ellipse, hash, hgrad, ink, mix, rgba, smooth, type Paint } from '../paint'
 import { SEA_Y } from '../geo'
 import { HORIZON } from './sky'
 
@@ -29,7 +29,7 @@ export function drawWater(g: Paint, L: Light, x0: number, x1: number): void {
   ctx.beginPath()
   ctx.rect(a, hy, b - a, v.y1 - hy + 1)
   ctx.clip()
-  // The sun's path, or the moon's: glints of the sky's light lying on the water under it, widening towards us.
+  // The sun's path, or the moon's: a soft band of the sky's light lying on the water under it, widening towards us.
   const low = smooth(L.sunY, 0.25, 0.75) * (1 - smooth(L.sunY, 1.0, 1.12)) * (1 - L.night * 0.8)
   if (low > 0.01) path(g, v.x0 + v.w * L.sunX, hy, v.y1, v.h, mix(L.seaLit, L.sun, 0.4), 0.42 * low)
   if (L.moon > 0.05) path(g, v.x0 + v.w * 0.26, hy, v.y1, v.h, '#C9CEC4', 0.16 * L.moon)
@@ -60,29 +60,24 @@ export function drawWater(g: Paint, L: Light, x0: number, x1: number): void {
   ctx.restore()
 }
 
-/**
- * The light's path on the water under a light at screen x `x`, from the horizon to the frame's foot: a column of short
- * flat glints, a row a depth, wider and further apart towards us. Flat strokes, no gradient: light lying on the water,
- * not a beam standing on it.
- */
+/** A soft vertical band of light on the water under a light at screen x `x`, from the horizon to the frame's foot. */
 function path(g: Paint, x: number, hy: number, y1: number, h: number, color: string, a: number): void {
   const { ctx } = g
-  const n = 22
-  for (let r = 0; r < n; r++) {
-    const f = (r + 0.5) / n
-    const y = hy + Math.pow(f, 1.5) * (y1 - hy)
-    const half = h * (0.02 + 0.09 * f)
-    // Two or three glints a row, each a short flat stroke, drifting a little and swelling and thinning slowly as the
-    // water moves: continuous, never a flicker.
-    for (let j = 0; j < 3; j++) {
-      const ph = hash(r, j, 7) * Math.PI * 2
-      const sp = 0.35 + 0.4 * hash(r, j, 8)
-      const cx = x + (hash(r, j * 3 + 1) - 0.5) * 1.4 * half + 0.25 * half * Math.sin(g.t * sp * 0.6 + ph)
-      const w = half * (0.12 + 0.4 * hash(r, j * 3 + 2)) * (0.45 + 0.55 * (0.5 + 0.5 * Math.sin(g.t * sp + ph * 1.7)))
-      const th = h * (0.003 + 0.006 * f)
-      ctx.fillStyle = rgba(color, a * 1.6 * (1 - 0.45 * f))
-      ctx.fillRect(cx - w, y - th / 2, w * 2, th)
-    }
+  const w0 = h * 0.025
+  const w1 = h * 0.12
+  // As a stack of flat bands, each a little wider than the one above, fine enough that no step shows: no gradient
+  // blooms round the light.
+  const n = 14
+  for (let i = 0; i < n; i++) {
+    const ya = hy + ((y1 - hy) * i) / n
+    const yb = hy + ((y1 - hy) * (i + 1)) / n
+    const w = w0 + ((w1 - w0) * (i + 0.5)) / n
+    ctx.fillStyle = hgrad(ctx, x - w, x + w, [
+      [0, rgba(color, 0)],
+      [0.5, rgba(color, a * (1 - (0.55 * i) / n))],
+      [1, rgba(color, 0)],
+    ])
+    ctx.fillRect(x - w, ya, w * 2, yb - ya + 0.001)
   }
 }
 
