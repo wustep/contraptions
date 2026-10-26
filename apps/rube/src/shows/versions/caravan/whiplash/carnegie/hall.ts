@@ -546,7 +546,8 @@ let mask: HTMLCanvasElement | null = null
  * The dark laid over the stage after every part (the frame's arms, the engine, the metronome: machines drawn over the
  * hall, which its light cannot reach) and before the balls: the cue's dark outside its pool (and its `inside` over
  * the pool), with holes where the light falls: the pool, the metronome's top light, Fletcher's own light, and the
- * wings' warm spill for Jim. Then the burst's flash, a white slam over everything, gone in half a second.
+ * wings' warm spill for Jim. (The burst's white is the board's own; a white sheet laid over the frame on top of it
+ * flashed the whole picture for half a second.)
  * On the Carnegie stage's `after` (`score.ts`).
  */
 export const hallDark = scenery<HallState>({
@@ -556,22 +557,6 @@ export const hallDark = scenery<HallState>({
     if (T < CUE_FROM) return
     const q = cueAt(T)
     darkOver(p, c, T, q)
-    if (q.flash > 0.004) {
-      const { k } = c
-      const ctx = p.drawingContext as CanvasRenderingContext2D
-      const f = frame(p, k)
-      const r = 13 * k
-      const cx = (KIT_AT[0] + 1.5) * k
-      const cy = (KIT_AT[1] - 1) * k
-      ctx.save()
-      ctx.globalCompositeOperation = 'lighter'
-      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r)
-      g.addColorStop(0, `rgba(255, 243, 224, ${(0.34 * q.flash).toFixed(3)})`)
-      g.addColorStop(1, `rgba(255, 243, 224, ${(0.14 * q.flash).toFixed(3)})`)
-      ctx.fillStyle = g
-      ctx.fillRect(f.x0 * k, f.y0 * k, (f.x1 - f.x0) * k, (f.y1 - f.y0) * k)
-      ctx.restore()
-    }
   },
 })
 

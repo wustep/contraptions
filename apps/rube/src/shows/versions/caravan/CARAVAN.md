@@ -229,6 +229,70 @@ second.
   panel back and stretches frames. Import order matters in `carnegie/rubato.ts` (its first line re-exports the
   strokes so `strokes.ts` finds them set); the hush and the finale import nothing that imports `hall.ts`.
 
+## The polish wave (Oct 25)
+
+- **No rods through Fletcher.** In the tempo test he stands just where the crash's stand rises, and the band room drew the
+  whole kit over him: the rod ran up through his head and the hi-hat's through his arm. The cymbals and their stands
+  now draw behind him and the drums in front (`bandroom.ts`), so he stands between them.
+- **Under the band room's floor** the building's mass falls off into the stage's dark going down. On a phone it was the
+  bottom 40% of every band-room frame in one flat slab of the floor's lit brown.
+- **The loading door's light** (Overbrook, about 203 s) is a soft cone (`cone(..., soft)`); its hard top edge cut a
+  diagonal across the seated band.
+- **Top light on the drummer's limbs** lies along them as far as they face up. Drawn the full length of a hanging sleeve,
+  it made the last image's two hanging sleeves the arms of an armchair.
+- **No strobes.** A frame-to-frame probe of the whole show at 30 fps found two: the bulb blowing (one frame at 1.3
+  between dim frames; now a swell out of the brown-out and a quick fall) and the drive's lamps, each full on in one frame
+  every half second (now up over three frames from the beat, `crash-clock.ts` `warm`). Everything else it flagged is
+  scored: the two match cuts, the burst, the last chord and the cut-off, each within a frame of its music.
+
+## Polish wave 2 (Oct 26)
+
+- **The bridge** (the drive, 216 to 220 s): its roadway is as deep as the land's (the asphalt to the near curb, the girder
+  under that, `crash-road.ts` `GIRDER`). The deck was a thin strip under the wheels, so at its end the rail and the road
+  stopped in the air and the land's road went on a step below.
+- **Backstage at Overbrook**: the tubes' light is a wash down the wall only; a bright disc round each tube read as bloom,
+  a white blob at the top of every backstage frame.
+- **The drummer's bare stand at Overbrook** stands low by the hi-hat (`DRUM_STAND`), as a seated drummer's does. At a
+  band player's height its desk was where Fletcher's point on the last hit ended: his hand in it for a second and a half.
+- **The burst** (504.0) is the board's own slam to white. A white sheet laid over the whole frame on top of it (the cue's
+  `flash`) overshot by half again and washed every black grey for half a second; it is gone.
+
+## Polish wave 3 (Oct 26)
+
+- **The match cut to Overbrook (172.07)** opens on the practice room's own dark. The backstage's cover was the road's
+  slate paper, so the cut stepped up from 20 to 31 in brightness and from brown to blue, and sat there for 0.6 s
+  before the tubes. The case he sits on fades into that dark by itself, in thin bands; a dark gradient laid over it
+  doubled the dark at its foot, a box darker than the room as the tubes came on.
+- **The cut to Carnegie (242.34)**: the road's closing dark (`crash.ts` `nightFall`) is the hall's own dark, not the
+  road's slate, so the cut changes the picture and not the dark (the probe's change across it, 14 to 4.6).
+
+## Polish wave 4 (Oct 26)
+
+- **The thrown chair lies on its back** (`band-people.ts` `ON_BACK`): the back flat on the floor behind the kit, the
+  legs out over it. It lay on its face, the seat on edge and the back jutting out level in the air, and read as debris.
+  It spins a little faster in flight (4.5 rad, `SPIN`) and turns on at about the same rate through its fall.
+- **The drummer's throne** (`solo-rig.ts` `drawTorso`): the post stands on the stage where he sits and telescopes up to
+  meet him over his last cell and a half down; the cushion is his waist's width. The cushion was twice his waist and
+  hung on the post under the body, so the body flew in as a T, and once seated its end stuck out past the rack tom like
+  a pan's handle.
+
+## Polish wave 5 (Oct 26)
+
+- **Overbrook's trumpets play bells up** (`folder-set.ts` `drawBand`), lifting a little more on the band's hits. Held
+  level (a shade down, in fact), the first bell ran into Fletcher's open hand while he conducted.
+- **Overbrook's saxophones** have the U-bend at the body's foot and a bell flaring back up beside it. A straight tube
+  with a flat foot read as a hockey stick.
+- Watched and left: the nod (Fletcher's chest tipped to Andrew, the frame's answer) and the stick thrown end over end on
+  the solo's biggest hit both read.
+
+## Polish wave 6 (Oct 26)
+
+A regression sweep and a frame-rate check; nothing changed in the show. The 30 fps probe over the whole show, after
+waves 2 to 5: no strobes, the two match cuts no longer jump (Overbrook and Carnegie both open out of the same dark), and
+what it flags is all scored (the hall's wake, the burst, the last chord, the cut-off) beside the solo's whips. Playback
+in Chrome holds 60 fps (no frame over 16.8 ms) in every part, at 1280×720 and at a phone's 390×844 at 3×. On a phone
+the practice room's floor meets the dark under it at a line, as a lit room in the dark does; left as it is.
+
 ## How to run it
 
 ```

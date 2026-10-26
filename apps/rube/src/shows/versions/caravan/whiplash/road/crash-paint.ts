@@ -55,8 +55,16 @@ export function pool(p: p5, c: Ctx, x: number, y: number, rx: number, ry: number
  * A cone of light from `from` toward `to`, `w0` wide at its source and `w1` at its far end, fading along its
  * length: a lamp's throw, a headlight's beam.
  */
-export function cone(p: p5, c: Ctx, from: Pt, to: Pt, w0: number, w1: number, a: number, colour: string): void {
+export function cone(p: p5, c: Ctx, from: Pt, to: Pt, w0: number, w1: number, a: number, colour: string, soft = 1): void {
   if (a <= 0.004) return
+  // Soft: nested cones narrowing to a third, each a share of the light, so its edges fall off instead of cutting.
+  if (soft > 1) {
+    for (let i = 0; i < soft; i++) {
+      const s = 1 - (i / soft) * 0.67
+      cone(p, c, from, to, w0 * s, w1 * s, a / soft, colour)
+    }
+    return
+  }
   const { k } = c
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const dx = to[0] - from[0]
