@@ -468,7 +468,8 @@ the sky. Each card holds 3.4 to 5 s; the last is gone by 266.7 s.
 - **Polish wave 5** (the whole show under Zoom, the frame cost against the build before these waves, and the turns):
   - under Zoom the street's last stretch held the closer frame round the same middle, and the two of them rolled along
     its foot, cut off from about 231 s through the credits, with the man crossing cut too. From the meeting the Zoom
-    frame eases down onto the pavement over five seconds (`zoomDrop`), and they sit well inside it;
+    frame eases down onto the pavement (`zoomDrop`): a little by the chord, so the cover over him stays whole, and the
+    rest as the camera draws back, so they sit well inside it;
   - the paint costs the same as before these waves, within a tenth or two of a millisecond at the median.
 
 ## Judgment calls

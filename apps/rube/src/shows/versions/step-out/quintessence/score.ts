@@ -255,10 +255,10 @@ export function compose(): { show: QuintessenceShow; camera: (t: number) => Fram
 
 /**
  * Under Zoom, on the street from the meeting on: the two of them roll along the foot of the framing, and the closer
- * frame round the same middle cut them off at its edge through the credits. Zoom eases down onto the pavement instead,
- * over the five seconds before the chord.
+ * frame round the same middle cut them off at its edge through the credits. Zoom eases down onto the pavement instead:
+ * a little by the chord, so the cover over him stays whole, and the rest as the camera draws back.
  */
-const zoomDropAt = (t: number): number => 0.6 * smooth(t, SEAM.street + 2.1, SEAM.street + 7.1)
+const zoomDropAt = (t: number): number => 0.2 * smooth(t, SEAM.street + 2.1, SEAM.street + 6.4) + 0.4 * smooth(t, SEAM.street + 8.9, SEAM.street + 13.4)
 
 /** For the check: the one cut under a cover, the ash. */
 export const COVERED = [ASH.at]
