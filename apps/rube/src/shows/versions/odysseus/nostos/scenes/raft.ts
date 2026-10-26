@@ -54,10 +54,10 @@ const SHOTS: Key[] = [
   { t: 406.3, cells: 11.5, at: [raftAt(406.3).x + 2.2, -2.6] },
   // Out and out: the raft a mark on a black sea, the storm passing.
   { t: 410.0, cells: 30, off: [5, -6.5] },
-  // First light, Ithaca ahead, the hoist and the house on its top; and in from the sea, as the camera first came to the island that night at
-  // Troy, until it is close on him come to rest on its sand (the seam, 418), as it was on Ogygia's.
+  // First light, Ithaca ahead.
   { t: 412.6, cells: 27, off: [8, -5.5] },
   { t: 414.6, cells: 16, off: [3, -2.6] },
+  { t: 416.8, cells: 10, at: [802.2, -2.0] },
 ]
 
 export const raft: Scene = {

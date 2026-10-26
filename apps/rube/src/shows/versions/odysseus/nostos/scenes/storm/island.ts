@@ -280,7 +280,7 @@ function limb(g: Paint, pts: Pt[], w: number[], color: string): void {
  * A cow of Apollo's, in profile: a deep straight-backed barrel a little taller at the withers than two balls, the hip
  * bones and pins square at the rump, a dewlap under the neck, legs that bend at knee and hock onto dark hooves, a tail
  * hanging to the hocks with a switch at its end, and a broad head with a dark muzzle, ears out to the side, and horns
- * going up from the poll and out at their tips like a lyre's arms. She grazes: the neck goes down to the grass and the
+ * spread wide from the poll like a lyre's arms. She grazes: the neck goes down to the grass and the
  * head crops at it, lifting every so often to look round while the tail swings and now and then flicks. `down` (0 to 1)
  * is her lying down as cattle do, the front going down onto its knees first, then the hindquarters folding, then all of
  * her settling with the legs under her; her head goes down to the grass and stays. `fear` (0 to 1) brings her head up
@@ -311,8 +311,8 @@ function drawCow(g: Paint, x: number, y: number, dir: 1 | -1, ph: number, down: 
   const alert = fear + 0.12 * Math.sin(Math.PI * fear)
   const lift = (graze + (1 - graze) * alert) * (1 - down)
   const crop = 0.045 * Math.sin(t * 6.6 + ph * 3) * (1 - lift) * (1 - down)
-  const want = ((1.0 + crop) * (1 - lift) - 0.1 * lift - 0.2 * alert * (1 - down)) * (1 - down) + 0.8 * down
-  const nod = (0.1 * (1 - lift) - 0.06 * alert) * (1 - down) - 0.98 * down
+  const want = ((1.0 + crop) * (1 - lift) - 0.1 * lift - 0.2 * alert * (1 - down)) * (1 - down) + 1.0 * down
+  const nod = (0.1 * (1 - lift) - 0.06 * alert) * (1 - down) + 0.15 * down
   const root = B([0.25, -0.37])
   const slope = Math.atan(k)
   const HEAD = 1.3
@@ -357,13 +357,13 @@ function drawCow(g: Paint, x: number, y: number, dir: 1 | -1, ph: number, down: 
       limb(g, [top, ...joints], i === 0 ? [0.085, 0.055, 0.044, 0.044] : [0.1, 0.058, 0.044, 0.044], color)
     }
   }
-  // The tail, hanging from the tail head to the hocks with its switch, swinging slowly and now and then flicking; it lies
-  // out behind her on the grass once she is down.
+  // The tail, hanging from the tail head to the hocks with its switch, swinging slowly and now and then flicking; it comes
+  // down to the grass behind her once she is down.
   const tailRoot = B([-0.335, -0.42])
   const flick = Math.max(0, Math.sin(t * 0.7 + ph * 2.1)) ** 6 * Math.sin(t * 5.5 + ph)
   const calm = (1 - down) * (1 - 0.85 * fear)
-  const a1 = (0.1 * Math.sin(t * 1.1 + ph * 2) + 0.1 * flick) * calm + 0.06 + 0.9 * down
-  const a2 = (0.16 * Math.sin(t * 1.1 + ph * 2 - 0.9) + 0.3 * flick) * calm + 0.04 + 1.1 * down
+  const a1 = (0.1 * Math.sin(t * 1.1 + ph * 2) + 0.1 * flick) * calm + 0.06 + 0.3 * down
+  const a2 = (0.16 * Math.sin(t * 1.1 + ph * 2 - 0.9) + 0.3 * flick) * calm + 0.04 + 0.9 * down
   const mid: Pt = [tailRoot[0] - 0.15 * Math.sin(a1), tailRoot[1] + 0.15 * Math.cos(a1)]
   const tip: Pt = [mid[0] - 0.12 * Math.sin(a2), Math.min(-0.03, mid[1] + 0.12 * Math.cos(a2))]
   ctx.beginPath()
@@ -437,14 +437,16 @@ function drawCow(g: Paint, x: number, y: number, dir: 1 | -1, ph: number, down: 
   ctx.rotate(headTurn)
   ctx.scale(HEAD, HEAD)
   const earUp = 0.035 * fear + 0.012 * Math.max(0, Math.sin(t * 0.9 + ph * 4)) ** 12 * (1 - down)
-  const horn = (dx: number, color: string): void => {
+  // The horns as a lyre's arms, drawn wide as the old painters drew them on a head in profile: out from the poll to
+  // either side, up, in, and out again at the tips.
+  const horn = (side: number, color: string): void => {
     ctx.beginPath()
-    ctx.moveTo(-0.005 + dx, -0.015)
-    ctx.quadraticCurveTo(0.075 + dx, -0.07, 0.03 + dx, -0.15)
-    ctx.quadraticCurveTo(0.015 + dx, -0.18, 0.04 + dx, -0.2)
+    ctx.moveTo(0.01 * side, -0.02)
+    ctx.bezierCurveTo(0.13 * side, -0.01, 0.175 * side, -0.06, 0.15 * side, -0.135)
+    ctx.quadraticCurveTo(0.14 * side, -0.175, 0.185 * side, -0.19)
     ctx.lineCap = 'round'
-    stroke(g, lit(INK), 3.6 / HEAD)
-    stroke(g, color, 1.6 / HEAD)
+    stroke(g, lit(INK), 4.6 / HEAD)
+    stroke(g, color, 2.2 / HEAD)
   }
   const ear = (dx: number, color: string): void => {
     ctx.beginPath()
@@ -455,7 +457,7 @@ function drawCow(g: Paint, x: number, y: number, dir: 1 | -1, ph: number, down: 
     fill(ctx, color)
     stroke(g, lit(INK), 1.4 / HEAD)
   }
-  horn(-0.03, mix(lit('#D8CBAE'), lit(INK), 0.2))
+  horn(-1, mix(lit('#D8CBAE'), lit(INK), 0.2))
   ear(0.015, far)
   const head: Pt[] = [
     [-0.03, -0.03], [0.03, -0.025], [0.075, 0.04], [0.115, 0.13], [0.13, 0.175], [0.115, 0.205], [0.075, 0.2],
@@ -475,7 +477,7 @@ function drawCow(g: Paint, x: number, y: number, dir: 1 | -1, ph: number, down: 
   ctx.arc(0.025, 0.035, 0.011, 0, Math.PI * 2)
   fill(ctx, lit(INK))
   ear(0, hide)
-  horn(0, lit('#E6DCC2'))
+  horn(1, lit('#E6DCC2'))
   ctx.restore()
   ctx.restore()
 }
