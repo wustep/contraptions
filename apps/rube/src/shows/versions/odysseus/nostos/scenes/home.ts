@@ -2,6 +2,7 @@ import { M } from '../music'
 import type { Scene } from '../scene'
 import { END, WINDOWS } from '../voyage'
 import type { Pt } from '../path'
+import { FIGHT } from './ithaca/battle'
 import { HOME, TRIAL } from './ithaca/geo'
 import { heroMoves, ithacaActors } from './ithaca/people'
 import { ARROW, arrowTail } from './ithaca/rig'
@@ -26,9 +27,12 @@ import { WEST_CAM } from './ithaca/west'
  * - 494.74   the swell: he drops onto the plate, it goes down, and the bow sings. Antinous goes for the son.
  * - 500.79   he rolls off the plate: the bow looses, and the camera goes with the arrow through all twelve eyes until
  *            it takes Antinous in the air as he leaps at Telemachus in the doorway (501.6).
- * - 503.15   the rest of them give in, drawn together on the dais; Penelope comes down the stairs a step a note; they
- *            meet (508.96).
- * - 512.68   the west: the skiff, the two of them, the sun going down ahead; their son on the cliff's edge behind.
+ * - 503.15   the rest of them come at him, and the hall is a battle, a blow on each note (`battle.ts`): two thrown
+ *            back over the bow, three on his way down the hall, and on the swell's hardest attack (508.96) the last
+ *            three thrown out of the house; the son holds the stairs below his mother. Those who never fought give in.
+ * - 509.39   Penelope comes down the stairs a step a note, and steps off them beside him on the swell's last attack
+ *            (512.68); it dies away on the three of them.
+ * - 514      the west: the skiff, the two of them, the sun going down ahead; their son on the cliff's edge behind.
  */
 export const home: Scene = {
   key: 'home',
@@ -42,11 +46,13 @@ export const home: Scene = {
     // Up the cliff with him.
     { t: 420.9, cells: 6.5, off: [0.6, -1.4] },
     { t: HOME.top, cells: 5.0, off: [0.8, -0.9] },
-    // Argos, the beggar beside him, and the son stopped under the olive, watching.
+    // Argos, the beggar beside him, and the son stopped under the olive, watching. As the dog lifts his head, wags and
+    // lays it down, the camera goes in on him, slowly, the son still at the frame's edge; it stays there over him dead.
     { t: HOME.sees, cells: 2.6, at: [810.1, -9.62] },
-    { t: HOME.dies + 2.5, cells: 2.45, at: [810.05, -9.58] },
-    // His son comes to the dog's other side, the dead dog between them.
-    { t: TRIAL.touch, cells: 2.6, at: [809.9, -9.6] },
+    { t: HOME.dies, cells: 2.0, at: [810.2, -9.5] },
+    { t: HOME.dies + 2.5, cells: 2.05, at: [810.2, -9.5] },
+    // His son comes to the dog's far side, and his father steps over the dead dog to him: they touch.
+    { t: TRIAL.touch, cells: 2.3, at: [810.15, -9.55] },
     // In through the gate, the courtyard, to the hall's threshold.
     { t: TRIAL.inside, cells: 3.4, at: [819.2, -9.75] },
     // The hall: the axes come up; on the last one's note, in close on the plate, with the first suitor at the well's lip.
@@ -57,9 +63,15 @@ export const home: Scene = {
     // The second: the whole house, cut open, his whole way round, the beggar by the door.
     { t: 462.6, cells: 5.15, at: [822.5, -10.6] },
     { t: 468.6, cells: 5.1, at: [822.5, -10.58] },
-    // The third: in on her room and the terrace as he goes past her.
-    { t: 473.6, cells: 3.65, at: [823.65, -10.45] },
-    { t: 478.4, cells: 3.6, at: [823.7, -10.43] },
+    // The third: not followed. The camera comes to the beggar at his threshold by the hearth, with his son, and the third
+    // goes up the stairs behind him and past his wife; on his note, in close on the plate as he lands, and it does not
+    // give; on the next strong one, back to the stranger, who has seen enough.
+    { t: 471.4, cells: 3.15, at: [819.75, -10.05] },
+    { t: TRIAL.tries[2] - 0.05, cells: 3.05, at: [819.8, -10.1] },
+    { t: TRIAL.tries[2], cells: 2.5, at: [825.3, -10.05], cut: true },
+    { t: 480.25, cells: 2.55, at: [825.2, -10.05] },
+    { t: 480.32, cells: 2.6, at: [819.0, -9.62], cut: true },
+    { t: 483.4, cells: 2.75, at: [819.2, -9.68] },
     // His climb, and her room.
     { t: 485.2, cells: 3.2, at: [820.9, -10.1] },
     { t: 489.4, cells: 2.4, at: [821.5, -11.15] },
@@ -75,12 +87,29 @@ export const home: Scene = {
     ...[0.27, 0.54].map((s) => ({ t: TRIAL.loose + s, cells: 2.3 - 0.4 * s, at: [arrowTail(TRIAL.loose + s) - ARROW - 0.4, -9.58] as Pt })),
     { t: TRIAL.strike + 0.4, cells: 1.75, at: [818.8, -9.38] },
     { t: TRIAL.erupts - 0.05, cells: 1.62, at: [818.75, -9.35] },
-    // On the next, the hall: the rest of them give in, and she comes down to him.
-    { t: TRIAL.erupts, cells: 5.0, at: [822.2, -10.05], cut: true },
-    { t: TRIAL.erupts + 1.5, cells: 4.9, at: [822.0, -10.0] },
-    // The two of them.
-    { t: TRIAL.meet + 0.6, cells: 2.4, at: [820.6, -9.7] },
-    { t: TRIAL.fade - 0.1, cells: 2.2, at: [820.55, -9.66] },
+    // On the next, they come at him: the wall of them that pressed up against the bow, charging him at the west door.
+    { t: TRIAL.erupts, cells: 4.1, at: [824.2, -10.0], cut: true },
+    { t: FIGHT.first[0] - 0.05, cells: 4.0, at: [824.4, -9.98] },
+    // On the first blow, in close at the west end: the first two hurled back into the hall. Then, without a cut, out and
+    // with him, east down the hall through three of them, one on each note, past the ones he has thrown, to the son
+    // holding the stairs below his mother.
+    { t: FIGHT.first[0], cells: 2.7, at: [825.5, -9.82], cut: true },
+    { t: 505.7, cells: 2.75, at: [825.4, -9.86] },
+    { t: FIGHT.rampage[0], cells: 3.2, at: [824.85, -9.95] },
+    { t: FIGHT.rampage[1], cells: 3.25, at: [823.75, -9.97] },
+    { t: FIGHT.rampage[2], cells: 3.35, at: [822.65, -10.0] },
+    { t: FIGHT.last - 0.05, cells: 3.5, at: [820.7, -10.03] },
+    // On the swell's hardest attack, in close at the stairs' foot and the door: he and the son strike together, and the
+    // last three go out of his house.
+    { t: FIGHT.last, cells: 2.5, at: [819.05, -9.62], cut: true },
+    { t: FIGHT.down[1] - 0.05, cells: 2.55, at: [819.1, -9.64] },
+    // On the next, the whole hall: what it cost. The dead on the floor, those who never fought in their corner, the son
+    // come down beside his father, and his mother coming down the stairs to them; and in, steadily, to the three of them
+    // together, the dead man with the arrow in him and the hearth behind; closer still as the swell dies.
+    { t: FIGHT.down[1], cells: 5.3, at: [822.75, -10.8], cut: true },
+    { t: FIGHT.down[2], cells: 5.15, at: [822.55, -10.75] },
+    { t: TRIAL.meet, cells: 2.45, at: [820.1, -9.47] },
+    { t: TRIAL.fade - 0.1, cells: 2.2, at: [820.12, -9.43] },
     // The west, held: their son on the cliff's edge, the skiff casting off and going away from us into the sun.
     { t: TRIAL.fade, cells: WEST_CAM.cells, at: [WEST_CAM.x, WEST_CAM.y], cut: true },
     { t: END, cells: WEST_CAM.cells, at: [WEST_CAM.x, WEST_CAM.y] },

@@ -157,11 +157,11 @@ function drawHouse(g: Paint, h: House, t: number, depth: number, L: { x: (x: num
     fill(ctx, mix(tone('#1D1512', t), '#D99A52', clamp01((n - 0.4) * 1.6) * (1 - b)))
   }
   if (b > 0.01) {
+    // One fire to a roof, the width of it: a house ablaze, not a row of tongues. The near houses' fires are kept low,
+    // so the people in the street below them are seen.
     const s = L ? L.s : 1
-    for (let k = 0; k < 2; k++) {
-      const fx = x0 + (x1 - x0) * (0.3 + 0.4 * k)
-      flame(ctx, fx, y1 - lip * 0.6, (x1 - x0) * 0.5, (0.55 + 0.35 * hash(Math.round(h.x * 10), k)) * s * b, t, h.x * 7 + k)
-    }
+    const tall = (0.65 + 0.35 * hash(Math.round(h.x * 10), 0)) * (depth ? 1 : 0.62)
+    flame(ctx, (x0 + x1) / 2, y1 - lip * 0.6, (x1 - x0) * (depth ? 0.85 : 0.78), tall * s * b, t, h.x * 7)
   }
 }
 
@@ -239,7 +239,9 @@ export function drawTownBehind(g: Paint): void {
         ctx.rect(L.x(h.x + h.w * 0.3), L.y(h.top + 0.3), 0.13 * L.s, 0.11 * L.s)
         fill(ctx, mix(tone('#1D1512', t), '#D99A52', clamp01((n - 0.4) * 1.6) * (1 - b) * (1 - r * 0.25)))
       }
-      if (b > 0.01 && hash(k, r, 4) > 0.3) flame(ctx, L.x(h.x + h.w * 0.5), L.y(h.top), h.w * 0.6 * L.s, (0.6 + 0.4 * hash(k, r, 5)) * L.s * b, t, k * 3 + r)
+      // Fewer and larger: some of the houses behind burn whole, and the rest are dark under the smoke, so the burning
+      // hill reads as fires and not as a scatter of sparks.
+      if (b > 0.01 && hash(k, r, 4) > 0.66) flame(ctx, L.x(h.x + h.w * 0.5), L.y(h.top), h.w * 0.85 * L.s, (0.85 + 0.45 * hash(k, r, 5)) * L.s * b, t, k * 3 + r)
     })
   }
 }

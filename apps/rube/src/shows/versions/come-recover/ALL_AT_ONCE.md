@@ -1366,6 +1366,27 @@ Stephen watched the show and named three things; each was found in frames, fixed
   and laid down whole behind the stones and again, in part, over them; the ground under it is painted by the wall's
   own painter, clipped on whole pixels, so nothing shows where the two passes meet.
 
+### The coat hanger
+
+Stephen asked for the coat hanger at the start to be fixed. It was found in frames, fixed at its cause and scrubbed
+again; the rest of the show was then swept every two seconds for the same kind of fault.
+
+- **Its hook was not a hook.** The opening's hanger (`home/set-garland.ts`) drew its hook as a small loop floating a
+  little off the wire, with a gap between it and the neck. It is now one bent wire: a question mark whose crown sits
+  on the wire and runs on down into the neck and the shoulders. The bar and the basket hang where they did.
+- **Its basket came off the bar.** The basket swings as a pendulum about the middle of the bar, but its two cords
+  were drawn from the bar's ends, so as it swung they slid off them. The cords now meet at the bar's middle, the
+  point it swings about.
+- **It came to rest in a lantern.** Knocked back off the stop, the empty hanger slid down to the wire's low point,
+  6.47, but the hanger reaches a quarter of a cell either side of its hook and an open lantern as much again, so the fourth lantern (6.9) hung through its
+  basket from 37 s on, through the push into the drum. It now slides back with the hook's own rolling drag and
+  eases to rest in the gap between the third and fourth lanterns (`REST_X`), clear of both, by 39 s: the damping
+  that rests it there is worked out once, as the ride's drag is. The ride, the stop, the lanterns and every beat are
+  as they were.
+- **The bagel's hanger had the same hook.** The coat hanger that drifts round the bagel and comes back out of it
+  (`void/bagelThings.ts`) drew its hook as a near-closed ring apart from the neck, so it read as a funnel. It is the
+  same question mark now, one wire into the neck.
+
 ## The looks
 
 The googly eyes swing with their balls, but at the story's turns they look at someone. Each look eases in and out

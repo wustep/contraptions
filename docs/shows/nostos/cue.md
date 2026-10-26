@@ -28,16 +28,16 @@ in twelve-beat phrases of 9 s.
 |---|---|---|---|
 | 0 | theme | The theme alone over the drone, very quiet, no low voices; first statement. | Troy's beach at dusk: the black horse half-sunk in the surf, hauled ashore by the Trojans; their spears into its belly on four notes. |
 | 36.06 | (theme) | The second statement of the theme, a strong attack at its start. | Ithaca that night: the island, the palace cut open, Penelope's shuttle crossing on the theme's notes. |
-| 71.42 | answer | The theme answered, fuller and higher, still no low voices; held breaths at about 99.5 and 119.3. | Troy at night: the men down the horse's rope, Athena's statue, the gate's gears; Agamemnon's host pours in (114.32); the fire; away at dawn. |
+| 71.42 | answer | The theme answered, fuller and higher, still no low voices; held breaths at about 99.5 and 119.3. | Troy at night: the men down the horse's rope, Athena's statue, the gate's gears; Agamemnon's host pours in (114.32); the Trojans cut down in the street and at Athena's feet; the fire; away at dawn. |
 | 151.22 | ground | The low voices come in under it (a thud); a swell at 169.23. | The Cyclops' cave: the boulder shuts on the thud; the stake into the eye on the swell. |
 | 187.23 | pulse | A beat arrives, 80 a minute, and everything climbs on it. | Telepylus: oars on the beat; chrome giants in the fog; two ships sunk on hard beats. |
 | 222.4 | tutti | Everything, on the beat, the loudest stretch of the cue; its own attack at 223.60. | The shore of the dead, cut to on the attack; the Sirens; Apollo's cattle; the storm. |
-| 304.61 | after | The tutti cut off at once; the low voices back at 323.34 and gone at 342; the last attack at 350.43. | Zeus's bolt on the cut; the wreck; the spar on the great seas; Ogygia's sand. |
+| 304.61 | after | The tutti cut off at once; the low voices back at 323.34 and gone at 342; the last attack at 350.43. | Zeus's bolt on the cut; the wreck; his last men go under one by one; the spar on the great seas; Ogygia's sand. |
 | 352.6 | hush | Very nearly silence. | He lies still on the beach. |
 | 353.5 | rise | The theme again from almost nothing, building. | Seven years on Ogygia, with the loom's cross-cuts; thunder on a clear day; the raft built. |
 | 395.51 | return | Everything again, without the beat. | The raft given to the storm; Ithaca at dawn; ashore. |
 | 431.57 | quiet | The low voices gone, the high ones slowly climbing; a breath at 494.45. | Argos dies on the drop; the hall; the axes rise; the suitors fail; he climbs. |
-| 494.74 | last | The last swell, one great attack. | The bow sings on the attack; the arrow at 500.79 takes Antinous (501.60); the suitors give in; the two meet (508.96). |
+| 494.74 | last | The last swell, one great attack. | The bow sings on the attack; the arrow at 500.79 takes Antinous (501.60); the rest charge (503.15) and the hall is a battle, a blow a note, the last three thrown out of the house on 508.96; Penelope comes down to him on the swell's last attack (512.68). |
 | 512.8 | fade | The swell dying away to the end at 521.46. | The west: the skiff, the sun; the credits, and the quiet after them. |
 
 ## The comb
@@ -54,6 +54,8 @@ Outside the comb, every strike is on a measured onset (`onsetsIn` and `strongest
 - the shuttle's eleven passes in the prologue;
 - the men down the horse's rope;
 - Agamemnon's host going in under the gate at 114.32;
+- the Trojans struck down in the lower street at 116.23, 116.61, 116.85 and 117.21, and at Athena's feet at 125.34,
+  125.74, 126.70 and 127.04;
 - the boulder door at 151.22;
 - the stake at 169.23;
 - Argos at 431.57;
@@ -62,5 +64,8 @@ Outside the comb, every strike is on a measured onset (`onsetsIn` and `strongest
 - his six steps up the stairs, from 485.45 to 489.26;
 - the bow at 494.74;
 - the loose at 500.79, and the arrow taking Antinous at 501.60;
-- Penelope's six steps down, from 504.26 to 507.79;
-- the meeting at 508.96.
+- his last three men going under at 314.36, 316.98 and 319.11;
+- the third try's landing at 476.64 and the cut back to the stranger at 480.32;
+- the suitors' charge at 503.15, and the battle's blows at 504.26, 504.66, 505.83, 506.68, 507.30, 507.79 and 508.96;
+- Penelope's five steps down, from 509.39 to 511.95;
+- the meeting at 512.68, the swell's last attack.

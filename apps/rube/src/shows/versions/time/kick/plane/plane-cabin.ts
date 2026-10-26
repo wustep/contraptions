@@ -194,12 +194,15 @@ function drawInside(pen: Pen, t: number, p: Pal): void {
     // The far bulkhead, and the galley's doorway in it at the aisle's end.
     shape(pen, at(OPENING, S_FAR), p.bulk, 0.5)
     shape(pen, at([[0.62, CAB.floor], [0.62, -1.35], [1.38, -1.35], [1.38, CAB.floor]], S_FAR), day ? mixHex(p.bulk, p.far, 0.45) : mixHex(PLANE.cabin, PLANE.dawnHigh, 0.15), 0.5)
-    // The morning aft: the low sun in through the windows on the right, lying across the aisle's floor.
+    // The morning aft: the low sun in through the windows on the right, a patch of it across the aisle's floor under
+    // each, going away with the windows (soft ellipses stacked down the aisle read as a bank of fog in it).
     if (day) {
+      const [xl, xr] = wallAt(CAB.floor)
+      const reach = lerp(xr, xl, 0.6)
       for (let i = 1; i < WINDOWS.length; i++) {
         const [s0, s1] = WINDOWS[i]
-        const sm0 = (s0 + s1) / 2
-        puff(pen, proj([0.4, CAB.floor], sm0 * 0.93), 0.9 * sm0, 0.22 * sm0, PLANE.lamp, 0.35 * aft)
+        const patch: Pt[] = [proj([xr, CAB.floor], s0), proj([xr, CAB.floor], s1), proj([reach, CAB.floor], s1 * 0.95), proj([reach, CAB.floor], s0 * 0.95)]
+        shape(pen, patch, rgba(mixHex(PLANE.lamp, PLANE.dawn, 0.4), 0.26 * aft), 0)
       }
     }
     // The bins' cut ends at the section, and the ceiling's.

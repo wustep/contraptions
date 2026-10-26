@@ -428,8 +428,8 @@ export function drawThing(p: p5, k: number, ink: string, weight: number, thing: 
       // under steel, so it keeps its line.
       const wire = () => {
         ctx.beginPath()
-        ctx.arc(X(0.07), X(-0.36), X(0.08), Math.PI * 0.95, Math.PI * 2.55)
-        ctx.moveTo(X(0.0), X(-0.26))
+        // The hook a question mark, running on down into the neck: one wire.
+        ctx.arc(X(0.0), X(-0.36), X(0.1), Math.PI * 0.9, Math.PI * 2.5)
         ctx.lineTo(X(0.0), X(-0.18))
         ctx.lineTo(X(-0.5), X(0.2))
         ctx.lineTo(X(0.5), X(0.2))

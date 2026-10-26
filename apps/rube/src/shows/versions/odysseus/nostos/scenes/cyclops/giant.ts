@@ -177,6 +177,9 @@ export function poseAt(t: number): Pose {
   return { ...p, hand: handAt(t, p) }
 }
 
+/** Where his near hand is at `t`. */
+export const handOf = (t: number): Pt => poseAt(t).hand
+
 /** Where his near hand is at `t`, given the rest of him. */
 function handAt(t: number, p: Pose): Pt {
   // The door: out through the mouth to the boulder's far side, and dragging it in.

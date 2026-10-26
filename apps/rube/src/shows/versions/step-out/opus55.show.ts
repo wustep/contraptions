@@ -8,6 +8,7 @@ import { defineShow } from '../../registry'
 export default defineShow({
   title: 'Quintessence',
   label: 'Opus 5.5',
+  film: 'The Secret Life of Walter Mitty',
   about: "José González's Step Out, from The Secret Life of Walter Mitty, as a Rube Goldberg machine that stops daydreaming and goes.",
   still: 113,
   async load() { return (await import('./quintessence')).performance },

@@ -287,6 +287,11 @@ export interface ShowVersion {
   title: string
   /** This take's name among the others: "Take A". */
   label: string
+  /**
+   * The film the work is after, for a show made from a film's music: "Interstellar". The picker and Theater set it
+   * in italics beside the title; the frame never says it. The same in every take of the work. Left out, none.
+   */
+  film?: string
   /** One line on what this take is trying. */
   note?: string
   /**
@@ -314,6 +319,8 @@ export interface Version extends ShowVersion {
 export interface Work {
   work: string
   title: string
+  /** The film it is after (`ShowVersion.film`), if any. */
+  film?: string
   versions: Version[]
   /** Where it stands among the favourites (`FAVORITES`), 1 first; left out, it is not one. */
   favorite?: number
@@ -428,17 +435,18 @@ export function readShows(found: Record<string, unknown>): Registry {
       continue
     }
     const v = found[path] as Partial<ShowVersion> | null | undefined
-    if (!v || typeof v !== 'object' || !text(v.title) || !text(v.label) || typeof v.load !== 'function' || (v.note !== undefined && typeof v.note !== 'string')) {
-      problems.push(`${path}: the default export is not a show: it needs a title, a label and load()`)
+    if (!v || typeof v !== 'object' || !text(v.title) || !text(v.label) || typeof v.load !== 'function' || (v.note !== undefined && typeof v.note !== 'string') || (v.film !== undefined && !text(v.film))) {
+      problems.push(`${path}: the default export is not a show: it needs a title, a label and load(), and a film, if given, that names one`)
       continue
     }
-    const version: Version = { ...at, title: v.title, label: v.label, note: v.note, about: v.about, still: v.still, favorite: v.favorite, load: v.load }
+    const version: Version = { ...at, title: v.title, label: v.label, film: v.film, note: v.note, about: v.about, still: v.still, favorite: v.favorite, load: v.load }
     const work = works.find((w) => w.work === at.work)
     if (!work) {
-      works.push({ work: at.work, title: v.title, versions: [version], favorite: FAVORITES[at.work] })
+      works.push({ work: at.work, title: v.title, film: v.film, versions: [version], favorite: FAVORITES[at.work] })
       continue
     }
     if (work.title !== v.title) problems.push(`${path}: titled "${v.title}", where the other takes of ${at.work} say "${work.title}"`)
+    if (work.film !== v.film) problems.push(`${path}: after the film "${v.film ?? 'none'}", where the other takes of ${at.work} say "${work.film ?? 'none'}"`)
     if (work.versions.some((o) => o.label === v.label)) problems.push(`${path}: a second take labelled "${v.label}"`)
     work.versions.push(version)
   }

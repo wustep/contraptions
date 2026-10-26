@@ -637,6 +637,39 @@ A third glitch pass read every section again:
 - **The fortress and the vault**: no slits in the sky over the roof at the snow's kick, and no snow in the vault's
   ceiling slab; the hotel's ceilings keep their plaster as they sink through the floors.
 
+More polish rounds (Opus 5.5, Stephen's "more polish passes on Kick"; contact sheets every three seconds and every
+second round each crossing, then full frames of the weakest):
+
+Round 1:
+- **The shore's wet sand** (0 to 7, 155 to 163): the wet band was two fills butted at the waterline, and where their
+  edges met a hairline seam ran down the beach a few cells from him, in the show's first frame. It is one band now,
+  fading in under the water and out up the beach.
+- **The sun down the aisle** (213.7 to 231): a soft ellipse of sun for each window, stacked going away, read as a bank
+  of fog lying in the aisle. Each window now lays a patch of sun across the floor, going away with the windows.
+- **The bridge's arches** (80 to 92, 199 to 206): each steel rib ended in a round cap, so where it sprang from the
+  abutment it stood off the stone as a loose tube in the air. The ribs are butt-ended into the stone.
+- **The far quay's courses** (206 to 213.7): its stone courses, the frame's whole width in the close shots of the
+  river, read as scan lines behind the van. They are half as strong, faint in the mist.
+- **The glass door onto the garden, open** (251 to 255): its glass was so faint that, swung out, it was a wooden frame
+  with two bars across it, a ladder leaning on the house. Its glass is tinted now, a glazed door.
+
+Round 2 (a tall frame, Zoom and Overview):
+- **The ground under the rain street** (69 to 92, in a tall frame): half the picture, it was flat dark earth ruled with
+  evenly spaced pale strata, a striped slab. It lies in soft bands now, darker going down, as under the house and the
+  runway.
+- **The powder off a landing** (123 to 140, plainest under Zoom): its soft lobes rose round the skier and were as big
+  as the ball, so a landing read as a white glow round whoever landed. They stay low along the snow, smaller and
+  fainter, thrown from the skis.
+
+Round 3 (the cue's landmarks frame by frame, a tenth of a second either side):
+- **Timing**: every layer's cut and the four kicks land on their downbeats in the picture (the cut to Paris on 30.86,
+  the jolt on 61.34, the hotel's roof on 91.82, the snow's sky on 122.29, limbo on 152.77, the great wide on 183.25,
+  the fortress on 190.87, the cabin in its pit on 198.49, the van in the river on 206.11, the plane on 213.72, the
+  veil full on 244.19, black on 274.62). Nothing moved.
+- **The top in their room** (18.9 to 23.25): as he touched it and it righted itself and spun, the frame was still the
+  room and the floors under it, and the top a speck on the table. The camera comes in closer on the table (4.3 cells,
+  then 3.6), the room's window and lamp still over it.
+
 ## Inception nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

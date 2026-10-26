@@ -448,6 +448,11 @@ input.seed:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* The film a show is after, beside its title: the same face, in italics, quieter. Where the list is too narrow for
+   both, the film goes down a line whole, with the star. */
+.lb-aside { font-style: italic; color: var(--dim); }
+.lb-tail { white-space: nowrap; }
+.lb-opt .lb-label:has(.lb-tail) { white-space: normal; }
 .lb-note {
   display: block;
   font-size: 10.5px;
@@ -909,6 +914,8 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 }
 .show-title .lb-value { flex: 0 1 auto; }
 .show-title .lb-label { white-space: normal; }
+/* The film is in the credit line under the title; the picker's list keeps it beside each name. */
+.show-title .lb-value .lb-aside { display: none; }
 .show-title .lb-chevron { width: 14px; height: 14px; transition: color 160ms ease-out; }
 .show-title .lb-trigger:hover .lb-chevron,
 .show-title .lb-trigger[aria-expanded='true'] .lb-chevron { color: var(--text); }
@@ -953,15 +960,28 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 .row.cc .cc-state { margin-left: auto; font-size: 11px; color: var(--faint); }
 .row.cc > .chip[aria-pressed='true'] .cc-state { color: var(--accent); }
 .seg.camera button { padding: 5px 0; }
-/* A show's sizes are words, not multipliers. In the side panel (and on the
-   narrowest phones) they and both saves do not fit one line: "Shorts" ran
-   into its cell's edges. So the dial takes a line of its own, as the
-   camera's does, and the two saves share the next. */
-@media (min-width: 821px), (max-width: 359px) {
-  .export-row.frames { flex-wrap: wrap; }
-  .export-row.frames > .seg { flex: 1 0 100%; }
-  .export-row.frames > button { flex: 1; }
+/* Save video opens the saves under it, the row's own width so it never
+   leaves the panel: what the file will be, the size, then the two saves. */
+.row.save { position: relative; }
+.row.save[hidden] { display: none; }
+.row.save > button .lb-chevron { margin-left: -2px; }
+.row.save > button[aria-expanded='true'] .lb-chevron { rotate: 180deg; }
+.save-pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
 }
+.save-pop[hidden] { display: none; }
 
 /* The door between Shows and Theater, on the player under the camera: one
    quiet line, its name and what it is, its key at the end. */
@@ -1010,6 +1030,8 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 .pool-play:hover { background: transparent; color: var(--text); }
 .pool-play:active { transform: none; }
 .pool-play > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* A name with its film wraps, the film whole on its own line (`.lb-tail`), rather than losing the film to the edge. */
+.pool-play > span:has(.lb-tail) { white-space: normal; }
 .pool-play svg { width: 9px; height: 9px; fill: currentColor; flex: none; opacity: 0; transition: opacity 120ms ease-out; }
 .pool-play:hover svg, .pool-play:focus-visible svg { opacity: 1; }
 .pool-row.on { color: var(--accent); }

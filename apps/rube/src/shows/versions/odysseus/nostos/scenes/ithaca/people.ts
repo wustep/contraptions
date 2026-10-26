@@ -8,6 +8,7 @@ import { stepAt } from './palace'
 import { STRUCK, antinousStruck, heroBasketY, plateEnd } from './rig'
 import { weaverX } from './loom'
 import { skiffScale, skiffSeat } from './west'
+import { FIGHT, HERO_MEET, heroFight, penelopeDown, sonFight, suitorFight } from './battle'
 
 /**
  * Who moves on Ithaca, and how: the hero from the beach to the bow and the skiff; Penelope at her loom, at the head of
@@ -21,7 +22,11 @@ const FLOOR = HALL.floor
 /** A ball's centre on a floor, for its size. */
 const on = (floor: number, size = 1) => floor - R * size
 const HERO_ON = on(FLOOR)
+/** Where the son waits on the dead dog's far side for his father. */
+const SON_AT_DOG = 810.62
 const ROOM_ON = (size: number) => on(ROOM.floor, size)
+/** What a suitor is once the colour has gone out of him: darker than the hall's dado behind him, where the living are lighter. */
+const DEAD = '#1F2226'
 
 /** Step-hops up or down a flight: one flight a step, each landing on its note. */
 function hops(points: Pt[], times: number[], lift = 0.12): Move[] {
@@ -61,10 +66,15 @@ export function heroMoves(): Move[] {
   m.push(out)
   const byDog: Pt = [809.45, ON_TOP]
   m.push(roll([top, byDog], out.t1, HOME.atDog))
-  m.push(rest(byDog, HOME.atDog, TRIAL.touch + 0.3))
-  // In with his son, through the gate and the courtyard, to the hall's threshold.
+  // When the dog is dead and his son has come to its far side, he steps over it to him, and they touch on the note.
+  const toSon: Pt = [SON_AT_DOG - R * TELEMACHUS_SIZE - R, ON_TOP]
+  const over = hopTo(byDog, toSon, TRIAL.touch, 0.3)
+  m.push(rest(byDog, HOME.atDog, over.t0))
+  m.push(over)
+  // In behind his son, through the gate and the courtyard, to the hall's threshold.
   const threshold: Pt = [818.45, HERO_ON]
-  m.push(roll([byDog, [GATE.x, ON_TOP], [threshold[0], HERO_ON]], TRIAL.touch + 0.3, TRIAL.inside))
+  m.push(rest(toSon, TRIAL.touch, TRIAL.touch + 1.0))
+  m.push(roll([toSon, [GATE.x, ON_TOP], [threshold[0], HERO_ON]], TRIAL.touch + 1.0, TRIAL.inside))
   m.push(rest(threshold, TRIAL.inside, 483.6))
   // To the stairs' foot; up them a step a note; at their head, in her room.
   const foot: Pt = [STAIRS.x0 - 0.25, HERO_ON]
@@ -89,9 +99,9 @@ export function heroMoves(): Move[] {
   const off = fly(land(TRIAL.loose), byDoor, TRIAL.loose, TRIAL.loose + flightFor(land(TRIAL.loose), byDoor, 0.12))
   m.push(off)
   m.push(rest(byDoor, off.t1, TRIAL.erupts + 0.4))
-  // East through the hall to her, at the stairs' foot.
-  const meet: Pt = [820.66, HERO_ON]
-  m.push(roll([byDoor, meet], TRIAL.erupts + 0.4, TRIAL.meet))
+  // The battle (`battle.ts`): out at the first two, then down the whole hall through the rest, to her at the stairs.
+  m.push(...heroFight(byDoor))
+  const meet: Pt = [HERO_MEET, HERO_ON]
   m.push(rest(meet, TRIAL.meet, TRIAL.fade))
   // The west: in the skiff with her (the dissolve carries him there), going away with it.
   m.push(ride((t) => skiffSeat(t, 0), TRIAL.fade, END, undefined, { scale: skiffScale }))
@@ -112,24 +122,19 @@ function penelopePath(): Path {
   // He comes up the stairs into her room: she goes a little towards him, and stops.
   const near: Pt = [821.32, y]
   m.push(roll([watch, near], 489.4, 490.43))
-  m.push(rest(near, 490.43, 495.2))
-  // The bow sings: to her door, to look out at the well.
-  const door: Pt = [822.2, y]
-  m.push(roll([near, door], 495.2, 497.0))
-  m.push(rest(door, 497.0, 503.3))
-  // Back to the stairs' head and down them, a step a note, and along the floor to him.
+  m.push(rest(near, 490.43, 495.0))
+  // The bow sings, and she knows him by it: out of her door after him, across the terrace to the light well's lip,
+  // and there she stands over him, looking down, while his weight draws the bow and the arrow goes.
+  const lip: Pt = [826.18, y]
+  m.push(roll([near, lip], 495.0, 497.4, 'inout'))
+  m.push(rest(lip, 497.4, 501.3))
+  // Back to the stairs' head, to watch the fight over the hall; down them when it is over, a step a note, to him.
   const head = stepAt(STAIRS.steps - 1)
   const top: Pt = [head[0], y]
-  m.push(roll([door, top], 503.3, 503.95))
-  const down = [4, 3, 2, 1, 0].map((i) => {
-    const s = stepAt(i)
-    return [s[0], s[1] + R - R * PENELOPE_SIZE] as Pt
-  })
-  const floorFoot: Pt = [STAIRS.x0 - 0.25, on(FLOOR, PENELOPE_SIZE)]
-  m.push(...hops([top, ...down, floorFoot], [503.95, 504.26, 504.66, 505.83, 506.68, 507.3, 507.79], 0.06))
-  const meet: Pt = [820.66 - R - R * PENELOPE_SIZE, on(FLOOR, PENELOPE_SIZE)]
-  m.push(roll([floorFoot, meet], 507.79, TRIAL.meet))
-  m.push(rest(meet, TRIAL.meet, TRIAL.fade))
+  m.push(roll([lip, top], 501.3, 503.95, 'inout'))
+  const down = penelopeDown(top)
+  m.push(...down.moves)
+  m.push(rest(down.end, TRIAL.meet, TRIAL.fade))
   m.push(ride((t) => skiffSeat(t, 1), TRIAL.fade, END, undefined, { scale: skiffScale }))
   return new Path(m, 'penelope')
 }
@@ -158,15 +163,15 @@ function telemachusPath(): Path {
   m.push(...hops([top, ...down, floorFoot], [424.6, 425.0, 425.4, 425.8, 426.2, 426.6, 427.0], 0.05))
   // Out of the gate he stops under the olive at what he sees: the old dog lifting his head to the beggar. He watches the
   // tail go once and the dog die (that is how he knows him, as in the film), and only then comes, slowly, to the dog's
-  // other side: the two of them with the dead dog between them.
+  // other side, the dead dog between them; his father steps over it to him, and they touch (`heroMoves`).
   const watch: Pt = [811.15, ground]
-  const across: Pt = [810.62, ground]
+  const across: Pt = [SON_AT_DOG, ground]
   m.push(roll([floorFoot, [HALL.x0 + 0.1, fy], [GATE.x, ground], watch], 427.0, 429.75))
   m.push(rest(watch, 429.75, 434.2))
-  m.push(roll([watch, across], 434.2, TRIAL.touch, 'inout'))
+  m.push(roll([watch, across], 434.2, 436.09, 'inout'))
   // He leads his father in, into the hall ahead of him, and to the first axe's foot.
   const inHall: Pt = [818.18 + 0.8, fy]
-  m.push(rest(across, TRIAL.touch, TRIAL.touch + 0.6))
+  m.push(rest(across, 436.09, TRIAL.touch + 0.6))
   m.push(roll([across, [GATE.x, ground], inHall], TRIAL.touch + 0.6, TRIAL.inside - 0.2))
   m.push(rest(inHall, TRIAL.inside - 0.2, 448.6))
   const atAxe: Pt = [820.31 - 0.24, fy]
@@ -174,15 +179,11 @@ function telemachusPath(): Path {
   // Back to the doorway, at his father's east side.
   const doorway: Pt = [818.18, fy]
   m.push(roll([atAxe, inHall, doorway], 451.4, 453.6))
-  // Antinous comes at him and the arrow takes him at his feet. When his mother is down the stairs he goes in to them,
-  // over the dead man.
-  const over: Pt = [819.0, fy]
-  const overAt = 507.45
-  m.push(rest(doorway, 453.6, overAt - flightFor(doorway, over, 0.3)))
-  m.push(hopTo(doorway, over, overAt, 0.3))
-  const beside: Pt = [820.66 - R - 2 * R * PENELOPE_SIZE - R * s, fy]
-  m.push(roll([over, beside], overAt, 510.4, 'out'))
-  m.push(rest(beside, 510.4, TRIAL.fade))
+  // Antinous comes at him and the arrow takes him at his feet. Then over the dead man to the stairs, to stand on them
+  // between the suitors and his mother (`battle.ts`); and down to his father when it is over.
+  const fight = sonFight(doorway)
+  m.push(...fight.moves)
+  m.push(rest(fight.end, TRIAL.meet, TRIAL.fade))
   // The west: on the cliff's edge over the harbour, and a little nearer it as they cast off, watching them go.
   const back: Pt = [CLIFF_W.top - 0.55, ground]
   const brink: Pt = [CLIFF_W.top - 0.25, ground]
@@ -197,9 +198,17 @@ function telemachusPath(): Path {
 /** Where each suitor sits on the dais, east to west, in twos and threes; the last, apart by the bow, is Antinous. */
 const SEATS = [0, 0.29, 0.82, 1.1, 1.38, 1.9, 2.5].map((d) => DAIS.x0 + 0.18 + d)
 const SEAT_Y = DAIS.top - R * SUITOR_SIZE
+/** More of them on their feet on the floor in front of the dais, the house overrun, between the axes: by index, 7 to 12. */
+const STANDS: Record<number, number> = { 7: 822.29, 8: 822.73, 9: 823.61, 10: 824.05, 11: 824.49, 12: 825.4 }
+const STAND_Y = on(FLOOR, SUITOR_SIZE)
+/** How many suitors there are, Antinous among them (index 6). */
+const SUITORS = 13
+const ANTINOUS_I = 6
 
 /** A suitor feasting: a small bob now and then, never in step with the others. */
 const feasting = (i: number) => (t: number): Pt => [SEATS[i], SEAT_Y - 0.014 * Math.max(0, Math.sin(t * (0.7 + 0.13 * i) + i * 1.9)) ** 6]
+/** One standing on the floor: the same, on his feet. */
+const standing = (i: number) => (t: number): Pt => [STANDS[i], STAND_Y - 0.012 * Math.max(0, Math.sin(t * (0.6 + 0.11 * i) + i * 2.3)) ** 6]
 
 /** The three who try: the three nearest the stairs, each landing on the plate on its note, then back to the bench. */
 function trier(i: number, land: number): { moves: Move[]; back: number } {
@@ -250,7 +259,8 @@ function trier(i: number, land: number): { moves: Move[]; back: number } {
 
 /**
  * Antinous, who would not try: by the bow, at its note he goes down off the dais and east along the hall towards the
- * door where the son stands; on the loose he leaps at him, and the arrow, through the twelve eyes, takes him in the air.
+ * door where the son stands, and stalks him; on the loose he leaps at him, and the arrow, through the twelve eyes,
+ * takes him in the air.
  */
 function antinous(i: number): Move[] {
   const fy = on(FLOOR, ANTINOUS_SIZE)
@@ -258,35 +268,44 @@ function antinous(i: number): Move[] {
   const down: Pt = [SEATS[i] - 0.32, fy]
   const leapFrom: Pt = [STRUCK[0] + 0.5, fy]
   const leap = flightFor(leapFrom, STRUCK, 0.0001)
+  // Quickly clear of the rest, who are closing in on the bow, then stalking the son, and a rush into the leap.
+  const clear: Pt = [821.4, fy]
+  const near: Pt = [820.2, fy]
   return [
     ride(feasting(i), 0, go),
     fly(feasting(i)(go), down, go, go + 0.32),
-    roll([down, leapFrom], go + 0.32, TRIAL.strike - leap, 'in'),
+    roll([down, clear], go + 0.32, 497.0, 'inout'),
+    roll([clear, near], 497.0, 500.6, 'inout'),
+    roll([near, leapFrom], 500.6, TRIAL.strike - leap, 'in'),
     fly(leapFrom, STRUCK, TRIAL.strike - leap, TRIAL.strike),
     ride(antinousStruck, TRIAL.strike, END),
   ]
 }
 
-/** Where the rest of them draw together on the dais when he falls: shoulder to shoulder, as far from him as it goes. */
-const HUDDLE = Array.from({ length: 6 }, (_, i) => 823.3 + i * 0.245)
-
-/** The rest, when the hall erupts: off their places along the dais into one knot, and still. They do not run. */
-function yields(i: number, from: number): Move[] {
-  const go = TRIAL.erupts + [0, 0.22, 0.4, 0.12, 0.3, 0.5][i]
-  const there: Pt = [HUDDLE[i], SEAT_Y]
-  return [ride(feasting(i), from, go), roll([feasting(i)(go), there], go, go + 1.1, 'inout'), rest(there, go + 1.1, END)]
-}
-
-function suitorPaths(): Path[] {
-  const out: Path[] = []
-  for (let i = 0; i < SEATS.length; i++) {
-    let moves: Move[]
+/** Up to the bow's note each suitor is at the feast (or trying the bow and back); from it, the fight decides. */
+function suitorPaths(): { path: Path; dies?: number }[] {
+  const hand = FIGHT.sing - 0.0001
+  const out: { path: Path; dies?: number }[] = []
+  for (let i = 0; i < SUITORS; i++) {
+    if (i === ANTINOUS_I) {
+      out.push({ path: new Path(antinous(i), 'antinous') })
+      continue
+    }
+    const before: Move[] = []
+    let where: (t: number) => Pt
     if (i < 3) {
       const t = trier(i, TRIAL.tries[i])
-      moves = [...t.moves, ...yields(i, t.back)]
-    } else if (i === SEATS.length - 1) moves = antinous(i)
-    else moves = yields(i, 0)
-    out.push(new Path(moves, i === SEATS.length - 1 ? 'antinous' : `suitor ${i}`))
+      before.push(...t.moves, ride(feasting(i), t.back, hand))
+      where = feasting(i)
+    } else if (i < ANTINOUS_I) {
+      before.push(ride(feasting(i), 0, hand))
+      where = feasting(i)
+    } else {
+      before.push(ride(standing(i), 0, hand))
+      where = standing(i)
+    }
+    const fate = suitorFight(i, where(hand))
+    out.push({ path: new Path([...before, ...fate.moves], `suitor ${i}`), dies: fate.dies })
   }
   return out
 }
@@ -296,12 +315,21 @@ export function ithacaActors(): Actor[] {
   return [
     { id: PENELOPE_ID, color: PENELOPE, rim: PENELOPE_RIM, size: PENELOPE_SIZE, path: penelopePath() },
     { id: TELEMACHUS_ID, color: TELEMACHUS, rim: TELEMACHUS_RIM, size: TELEMACHUS_SIZE, path: telemachusPath(), turn: -0.6 },
-    // Each suitor faces his own way at the feast, a few towards each other, one at his cup. Antinous, the last, is the
-    // biggest and the darkest of them, and after the arrow the colour goes out of him.
-    ...suitors.map((path, i): Actor =>
-      i === suitors.length - 1
-        ? { id: SUITORS_ID + i, color: ANTINOUS, rim: ANTINOUS_RIM, size: ANTINOUS_SIZE, path, turn: -0.9, colorAt: (t) => mix(ANTINOUS, '#2C3036', 0.45 * smooth(t, TRIAL.strike + 0.3, TRIAL.strike + 2.5)) }
-        : { id: SUITORS_ID + i, color: SUITOR, rim: SUITOR_RIM, size: SUITOR_SIZE, path, turn: [0.5, 2.7, -0.4, 3.3, 0.9, 2.2][i] },
+    // Each suitor faces his own way at the feast, a few towards each other, one at his cup. Antinous is the biggest and
+    // the darkest of them, and after the arrow the colour goes out of him; so it goes out of each of them he throws.
+    ...suitors.map(({ path, dies }, i): Actor =>
+      i === ANTINOUS_I
+        ? { id: SUITORS_ID + i, color: ANTINOUS, rim: ANTINOUS_RIM, size: ANTINOUS_SIZE, path, turn: -0.9, colorAt: (t) => mix(ANTINOUS, DEAD, 0.9 * smooth(t, TRIAL.strike + 0.2, TRIAL.strike + 1.4)), under: (t) => t > TRIAL.strike + 0.4 }
+        : {
+            id: SUITORS_ID + i,
+            color: SUITOR,
+            rim: SUITOR_RIM,
+            size: SUITOR_SIZE,
+            path,
+            turn: [0.5, 2.7, -0.4, 3.3, 0.9, 2.2, 0, 1.4, -1.1, 2.9, 0.3, -0.7, 1.9][i],
+            colorAt: dies === undefined ? undefined : (t) => mix(SUITOR, DEAD, 0.9 * smooth(t, dies - 0.12, dies + 0.1)),
+            under: dies === undefined ? undefined : (t) => t >= dies,
+          },
     ),
   ]
 }
