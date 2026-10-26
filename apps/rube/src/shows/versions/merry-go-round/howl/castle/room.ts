@@ -148,6 +148,58 @@ const BAIL = 0.22
 export type Tone = (hex: string) => string
 type C = { k: number; weight: number }
 
+/**
+ * The castle's iron round the room, over its ceiling and under its floor, where a tall frame (a phone held upright)
+ * sees past the cut: dim riveted plates in the dark, so the room is a slot cut in the castle's body, not a box afloat
+ * in nothing. Held well down toward the dark, and its seams only a shade off the plates. A wide frame barely sees it.
+ */
+function drawHull(p: p5, k: number, W: number, f: ReturnType<typeof frame>, tone: Tone): void {
+  const X = (v: number) => v * k
+  const plate = mixHex(tone(WASTES.iron), ROOM.night, 0.62)
+  const seam = mixHex(plate, ROOM.night, 0.55)
+  const rivet = mixHex(plate, ROOM.plaster, 0.08)
+  const PH = 1.5
+  const PW = 2.9
+  const bands: [number, number][] = [
+    [f.y0, R.ceil - 0.5],
+    [R.ground + 0.7, f.y1],
+  ]
+  p.push()
+  for (const [y0, y1] of bands) {
+    if (y1 - y0 < 0.05) continue
+    p.noStroke()
+    p.fill(plate)
+    p.rect(X(f.x0), X(y0), X(f.x1 - f.x0), X(y1 - y0))
+    // Rows of plates hung from the cut, each row's joints half a plate on from the last.
+    const above = y1 <= R.ceil
+    const r0 = above ? Math.floor((y0 - y1) / PH) : 0
+    const r1 = above ? 0 : Math.ceil((y1 - y0) / PH)
+    for (let r = r0; r < r1; r++) {
+      const ya = above ? y1 + r * PH : y0 + r * PH
+      const yb = ya + PH
+      const top = Math.max(ya, y0)
+      const bot = Math.min(yb, y1)
+      if (bot <= top) continue
+      p.stroke(seam)
+      p.strokeWeight(W * 0.8)
+      if (ya > y0 && ya < y1) p.line(X(f.x0), X(ya), X(f.x1), X(ya))
+      const off = (((r % 2) + 2) % 2) * PW * 0.5
+      for (let x = Math.floor((f.x0 - off) / PW) * PW + off; x < f.x1; x += PW) {
+        p.stroke(seam)
+        p.line(X(x), X(top), X(x), X(bot))
+        p.noStroke()
+        p.fill(rivet)
+        for (let y = ya + 0.2; y < yb - 0.1; y += 0.32) {
+          if (y < y0 + 0.08 || y > y1 - 0.08) continue
+          p.circle(X(x - 0.12), X(y), Math.max(1, X(0.055)))
+          p.circle(X(x + 0.12), X(y), Math.max(1, X(0.055)))
+        }
+      }
+    }
+  }
+  p.pop()
+}
+
 /** The room's light at `t`: how to tone a colour, and the ink. */
 export function roomTone(t: number, ink: string): { tone: Tone; ink: string; dark: number } {
   const day = morningLight(t)
@@ -197,6 +249,7 @@ export const room = scenery<null>({
     p.noStroke()
     p.fill(mixHex(ROOM.soot, ROOM.night, 0.5))
     p.rect(X(f.x0), X(f.y0), X(f.x1 - f.x0), X(f.y1 - f.y0))
+    drawHull(p, k, W, f, tone)
 
     // The back wall: plaster above, and a wainscot of dark boards from the floor to a cap rail about 1.1 cells up, so
     // anyone at the table or on the floor (her grey, Markl's sage, Howl's blue) sits against dark wood, not cream; the
