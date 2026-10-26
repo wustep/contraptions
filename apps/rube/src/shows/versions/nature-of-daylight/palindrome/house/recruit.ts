@@ -108,17 +108,23 @@ export function drawRecruit(p: p5, k: number, T: number): void {
     const top = Math.max(HEAD, L.y)
     const w0 = 0.12
     const w1 = 0.95
-    const g = ctx.createLinearGradient(0, px(top), 0, px(FLOOR))
-    g.addColorStop(0, rgba(VALLEY.floodlight, 0.05 * P.a))
-    g.addColorStop(1, rgba(VALLEY.floodlight, (0.2 + 0.16 * fl) * P.a))
-    ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.moveTo(px(L.x - w0), px(top))
-    ctx.lineTo(px(L.x + w0), px(top))
-    ctx.lineTo(px(P.x + w1), px(FLOOR))
-    ctx.lineTo(px(P.x - w1), px(FLOOR))
-    ctx.closePath()
-    ctx.fill()
+    // Feathered: nested wedges, faint at the widest, so the beam has no edge in the air (one wedge was a hard-sided
+    // blade laid across the window and the room).
+    const n = 12
+    for (let j = 0; j < n; j++) {
+      const wide = 1.35 - (0.75 * j) / (n - 1)
+      const g = ctx.createLinearGradient(0, px(top), 0, px(FLOOR))
+      g.addColorStop(0, rgba(VALLEY.floodlight, (0.05 * P.a) / n))
+      g.addColorStop(1, rgba(VALLEY.floodlight, ((0.2 + 0.16 * fl) * P.a) / n))
+      ctx.fillStyle = g
+      ctx.beginPath()
+      ctx.moveTo(px(L.x - w0 * wide), px(top))
+      ctx.lineTo(px(L.x + w0 * wide), px(top))
+      ctx.lineTo(px(P.x + w1 * wide), px(FLOOR))
+      ctx.lineTo(px(P.x - w1 * wide), px(FLOOR))
+      ctx.closePath()
+      ctx.fill()
+    }
     // The pool it makes on the oak, coming toward us.
     ctx.save()
     ctx.translate(px(P.x), px(FLOOR + 0.18))
