@@ -80,11 +80,21 @@ export function drawRecruit(p: p5, k: number, T: number): void {
     halo.addColorStop(1, rgba(VALLEY.floodlight, 0))
     ctx.fillStyle = halo
     ctx.fillRect(px(L.x - 1.6), px(L.y - 1.6), px(3.2), px(3.2))
-    const streak = ctx.createLinearGradient(0, px(-0.42), 0, px(-0.05))
-    streak.addColorStop(0, rgba(VALLEY.floodlight, 0.35 * L.a))
+    // Its light on the water: a soft column from the far shore down, fading to its sides as well as down (a hard-sided
+    // bar of it read as a post standing in the lake).
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(px(L.x - 0.3), px(-0.42), px(0.6), px(0.4))
+    ctx.clip()
+    ctx.translate(px(L.x), px(-0.42))
+    ctx.scale(1, 0.37 / 0.11)
+    const streak = ctx.createRadialGradient(0, 0, 0, 0, 0, px(0.11))
+    streak.addColorStop(0, rgba(VALLEY.floodlight, 0.38 * L.a))
+    streak.addColorStop(0.5, rgba(VALLEY.floodlight, 0.14 * L.a))
     streak.addColorStop(1, rgba(VALLEY.floodlight, 0))
     ctx.fillStyle = streak
-    ctx.fillRect(px(L.x - 0.08), px(-0.42), px(0.16), px(0.37))
+    ctx.fillRect(-px(0.11), 0, px(0.22), px(0.11))
+    ctx.restore()
     // Its red light, winking on the beats.
     const wink = 0.5 + 0.5 * Math.cos(Math.PI * 2 * (T - RC.light) / 0.98)
     ctx.fillStyle = rgba('#D0453A', 0.8 * L.a * wink)
