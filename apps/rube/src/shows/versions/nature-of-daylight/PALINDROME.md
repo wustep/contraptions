@@ -1322,6 +1322,16 @@ A hundred-and-twenty-ninth, polish wave 5: the opening, the ending, and the domi
 - Looked at and left alone: the sun's sweep across the valley floor (322 to 327 s), already a broad soft cloud
   shadow; the dominoes falling and standing again; the ending in the room.
 
+A hundred-and-thirtieth, polish wave 6: the whole show again, wide and tall, then a timing audit and a flash audit.
+
+- **Timing.** Every strike, measured against the recording: all 205 sit exactly on a beat, a change of chord or an
+  onset. The lecture hall's strikes (the phones on the half cadence, her touch, the logogram on the screen years on)
+  were exported but never gathered into `hits.ts`, so `check:shows` did not hold them; they are in it now, and land.
+  94 of the 99 chords are struck; the five left are cuts.
+- **The hall's screen** (99.4 s): it came on with a flicker, half up and back to dark inside a tenth of a second, the
+  only strobe in the show (the brightness of every twentieth of a second, the whole show through, steps only at cuts,
+  the blast and this). It comes up steadily from her touch now.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
