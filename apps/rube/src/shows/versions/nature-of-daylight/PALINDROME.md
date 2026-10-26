@@ -1275,6 +1275,21 @@ that looked cheap on a careful watch. Five small fixes; no timing changed.
 - **Timing:** every landmark checked a tenth of a second either side (Hannah goes, the double bass, the palm, the bass
   drops out, the blast, the white-out, the call, the loudest bar, the shell gone, the cradle). All of them land.
 
+A hundred-and-twenty-sixth, polish wave 2: a fresh watch, wide and tall, and a half-second scrub of the busiest stretches.
+
+- **The ring of twelve** (177 to 310 s): each lit link wore a halo four times its width and each screen a wide disk of
+  light, so the ring read as a neon tube with a dark hole in its middle. The links keep only a soft edge, the screens'
+  light stays close round them, and the flare as the ring closes is narrower and fainter.
+- **The meadow at the end** (326 to 334 s): the light at the treeline's crowns was three stacked bands, and the deepest
+  left a second pale line under the crowns, so the trees read as cut out and outlined. It is laid in many faint steps
+  now, with no edge. The low sun gathering behind the touch was a round pool and a tighter one hugging the two balls, a
+  halo; it is one long low band along the grass behind them.
+- **The slot in the shell's belly** (122 to 129 s): its lit cut stopped on a flat black block, the throat below it, a
+  hard line across the opening, and the throat grew lighter toward the belly, backwards. The slot's light now runs on
+  down the throat, dying toward the belly.
+- Looked at and left alone: the whisper at the gala (Shang's brass rim and her outline meet, they do not overlap); the
+  phone-shaped frames.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
