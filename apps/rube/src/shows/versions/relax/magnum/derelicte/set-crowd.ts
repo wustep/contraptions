@@ -39,6 +39,12 @@ const FRONT: Person[] = []
 /** The front row past the runway's end, low (with the photographers crouched in it), and the row just behind it. */
 const LOW: Person[] = []
 const LOW_FAR: Person[] = []
+/**
+ * The nearest of all, under the frame's foot in a wide frame: in a tall one it is the house going on toward us, so the
+ * rows above never drop to the bottom of the screen in sheer edges with the bare floor down between them.
+ */
+const NEAR: Person[] = []
+const NEAR_PARALLAX = -0.8
 {
   let i = 0
   const gap = (j: number) => 0.3 + 0.32 * hash(j, 1) + (hash(j, 9) > 0.9 ? 0.3 : 0)
@@ -50,6 +56,7 @@ const LOW_FAR: Person[] = []
     if (PRESS_FRONT_X.some((px) => Math.abs(px - x) < 0.3)) continue
     LOW.push(person(x, 2.9, i++))
   }
+  for (let x = -24; x < 60; x += gap(i) * 1.15) NEAR.push(person(x, 3.62, i++))
 }
 
 /* ------------------------------------------------------------------ the press */
@@ -344,6 +351,7 @@ export function drawCrowd(p: p5, k: number, f: Frame, t: number): void {
   drawRow(p, k, f, t, tw, FRONT, [], CROWD, rim, 0.5, 19.72, 1.84, rimColor, FRONT_PARALLAX * (f.cx - 10))
   drawRow(p, k, f, t, tw, LOW_FAR, [], mixHex(CROWD, DERELICTE.roof, 0.4), rim * 0.7, 20.1, 37, 3.05, rimColor)
   drawRow(p, k, f, t, tw, LOW, lowPress, CROWD, rim * 0.5, 20.3, 37, 3.3, rimColor)
+  if (f.y1 > 3.6) drawRow(p, k, f, t, tw, NEAR, [], CROWD, rim * 0.35, -60, 80, 4.1, rimColor, NEAR_PARALLAX * (f.cx - 18))
   // The reflectors catch the light; then the flashes, over everything.
   p.push()
   p.noStroke()
