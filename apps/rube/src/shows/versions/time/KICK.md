@@ -731,6 +731,15 @@ return every second; the phone held sideways; frame times at real speed). Nothin
 - **Frame times**: sixty frames a second through the opening, Paris, the rain, the great wide (played into from 180),
   the van, the plane and home; the one long frame seen was the first after a seek.
 
+Polish wave 5 (the whole show again from the head, wide and tall, for anything the waves before broke; the credits on a
+desktop). Nothing changed:
+- **No regressions**: the river, the plane's rims, the back wall, the ledges, the mist on the far quay, the charges'
+  dust, Zoom and the lawn all read as their waves left them.
+- **Tried and refused: `tall`** (a phone held upright). Held midway, the foot of most tall frames is dark earth or the
+  dark of sleep. Set to 0.65 (more of the extra picture over the composed frame) home and the plane gain sky, but in
+  the dream what is over a level is the dark of sleep, and the hotel's and the snow's tall frames went half navy.
+  One number holds for the whole show, so it stays midway.
+
 ## Inception nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
