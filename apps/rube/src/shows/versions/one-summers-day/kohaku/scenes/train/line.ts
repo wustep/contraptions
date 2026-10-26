@@ -328,19 +328,25 @@ function pantograph(g: Paint, L: Light, x: number): void {
   ink(g, lit('#2A2622', L.ambient), 1.4)
 }
 
-/** The car's reflection in the water: its body and its windows, plain. */
+/**
+ * The car's reflection in the water: its body, the cream of its window band, and its windows as they are seen, the
+ * dim of the car through them with the warm of its lamps at night, never brighter than the car itself.
+ */
 export function drawCarReflection(g: Paint, L: Light, t: number): void {
   const x = carX(t)
+  const h = CAR.len / 2
   const lamps = smooth(L.lamps, 0.1, 0.7)
   reflect(g, () => {
     const { ctx } = g
     bodyPath(ctx, x)
     ctx.fillStyle = lit(BODY, L.ambient, 0.12)
     ctx.fill()
-    for (const [a, b] of WINDOWS) box(ctx, x + a, HEAD, b - a, SILL - HEAD, mix(lit(CREAM, L.ambient, 0.2), '#D9A964', lamps))
-    box(ctx, x + CAR.door - CAR.doorW / 2, HEAD, CAR.doorW, SILL - HEAD, mix(lit(BODY, L.ambient, 0.12), '#D9A964', lamps * 0.6))
-    box(ctx, x - CAR.len / 2, CAR.roof - 0.14, CAR.len, 0.16, lit(ROOF, L.ambient, 0.12))
-  }, 0.26 + 0.06 * lamps)
+    box(ctx, x - h + 0.02, CAR.roof + 0.06, CAR.len - 0.04, SILL - CAR.roof, lit(CREAM, L.ambient, 0.12))
+    const glass = mix(mix(lit(INSIDE, L.ambient, 0.15), L.top, 0.35 + 0.35 * lamps), '#C9A06A', lamps * 0.12)
+    for (const [a, b] of WINDOWS) box(ctx, x + a, HEAD, b - a, SILL - HEAD, glass)
+    box(ctx, x + CAR.door - CAR.doorW / 2, HEAD, CAR.doorW, CAR.floor - HEAD, lit(BODY, L.ambient, 0.12))
+    box(ctx, x - h, CAR.roof - 0.14, CAR.len, 0.16, lit(ROOF, L.ambient, 0.12))
+  }, 0.26)
 }
 
 /* ------------------------------------------------------------------ the platforms */
