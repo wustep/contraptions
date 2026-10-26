@@ -92,13 +92,15 @@ export const H = {
 export const HALL_HITS = [...PINGS, H.touch, b(100.27), b(101.187), H.teach, H.stroke, H.closes].filter((t, i, all) => all.indexOf(t) === i)
 
 const present = (t: number): boolean => t < 200
-/** The screen on: the news coming up, with a flicker, from her touch; years on, white from the start. */
+/**
+ * The screen on: the news coming up from her touch, steadily; years on, white from the start. (It came on with a
+ * flicker, half up and back to dark inside a tenth of a second: a strobe across the hall.)
+ */
 function screenOn(t: number): number {
   if (!present(t)) return 1
   const u = t - H.touch
   if (u < 0) return 0
-  const dip = u < 0.2 ? 0.5 * Math.exp(-((u - 0.06) ** 2) / 0.002) : 0
-  return clamp01(Math.max(smooth(u, 0.05, 0.4), dip))
+  return smooth(u, 0, 0.4)
 }
 /** How lit the hall is: dim for the projector the day they came, full daylight years on. */
 const roomLight = (t: number): number => (present(t) ? 0.22 + 0.12 * screenOn(t) : 1)
