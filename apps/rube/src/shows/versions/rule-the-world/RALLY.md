@@ -542,3 +542,13 @@ Detail at full size, at stills set between the earlier waves', for the same faul
 **Measured.** The phone runs of the earlier waves showed sixteen frames over 20 ms and one of about a fifth of a
 second. Timed against the clock, every one falls on the harness's own screenshot, taken every fifteen seconds of a page
 at three times the pixels; between them the show drops none.
+
+## Polish wave 6
+
+A last watch end to end, wide and tall, that found little left to change; the rest is a record of what held.
+
+- *The ward's side-on people* had their near arm in the coat's own colour (the far one was already in its shade), so
+  the orderly's arm was lost in his white coat. The near arm sits between the two now.
+
+Looked at again and kept: the store and the hotel in a tall frame (the tin ceiling and the storeys over his room are
+the extra picture, and read as such), the seams, the four story beats, and the credits wide and tall.
