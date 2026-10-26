@@ -1,4 +1,4 @@
-import { blob, cover, drift, fill, hash, layer, mix, poly, rect, rgba, vgrad, type Paint, type Pt, type View } from '../../paint'
+import { cover, drift, fill, hash, layer, mix, poly, rect, rgba, vgrad, type Paint, type Pt, type View } from '../../paint'
 import { dunes, hazeAt, sky, sunAt } from '../../world/desert'
 import {
   FIELD, HALL, HALL_DOOR, LAMP, PALACE, PAD_X, ROOM, ROOM_DOOR, SLITS, TERRACE_Y, TOP_ROOMS, WEST_ROCK, EAST_ROCK,
@@ -355,8 +355,11 @@ function moon(g: Paint): void {
   g.ctx.beginPath()
   g.ctx.arc(x, y, r, 0, Math.PI * 2)
   fill(g.ctx, '#C9CDD2')
-  // Its unlit side.
-  blob(g.ctx, [[x + r * 0.25, y - r], [x + r, y - r * 0.2], [x + r * 0.7, y + r * 0.8], [x + r * 0.15, y + r]])
+  // Its unlit side: a crescent from the rim to an elliptical terminator, a little tilted.
+  g.ctx.beginPath()
+  g.ctx.arc(x, y, r, -Math.PI / 2 - 0.25, Math.PI / 2 - 0.25)
+  g.ctx.ellipse(x, y, r * 0.35, r, -0.25, Math.PI / 2, -Math.PI / 2, true)
+  g.ctx.closePath()
   fill(g.ctx, rgba('#8B919B', 0.6))
 }
 
