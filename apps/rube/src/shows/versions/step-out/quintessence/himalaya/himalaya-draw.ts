@@ -700,28 +700,30 @@ export function drawKicks(pen: Pen, t: number): void {
 }
 
 /**
- * Snow sifting from the rock over them: one thin stream, drifting a little downwind and widening as it falls, thickest
- * at its front, which lands on the ledge on the beat, and thinning to nothing up toward its tail, which follows it down.
+ * Snow sifting from the rock over them: one thin stream of flakes, drifting a little downwind and spreading as it
+ * falls, thickest at its front, which lands on the ledge on the beat, and thinning out toward its tail, which follows
+ * it down. Flakes, not a wedge of white: a wedge read as a beam of light.
  */
 const SIFT_FALL = 1.5
 /** How long the stream runs off the lip. */
 const SIFT_RUN = 1.1
+const SIFT_FLAKES = 60
 export function drawSifts(pen: Pen, t: number): void {
   const top = LEDGE_Y - 1.2 + 0.02
   const dur = (LEDGE_Y - top) / SIFT_FALL
   const x = (y: number) => SIFT_X + ((y - top) / SIFT_FALL) * 0.14
-  const w = (y: number) => 0.012 + (0.03 * (y - top)) / (LEDGE_Y - top)
-  for (const s of SIFTS) {
+  const w = (y: number) => 0.015 + (0.07 * (y - top)) / (LEDGE_Y - top)
+  for (const [n, s] of SIFTS.entries()) {
     const g = t - (s - dur)
     if (g < 0 || g > dur + SIFT_RUN) continue
-    const y0 = top + Math.max(0, g - SIFT_RUN) * SIFT_FALL
-    const y1 = Math.min(LEDGE_Y, top + g * SIFT_FALL)
-    if (y1 > y0) {
-      const k = pen.k
-      const fall = pen.c.createLinearGradient(x(y0) * k, y0 * k, x(y1) * k, y1 * k)
-      fall.addColorStop(0, rgba('#FFFFFF', 0))
-      fall.addColorStop(1, rgba('#FFFFFF', 0.75 * Math.min(1, (y1 - y0) / 0.4)))
-      fillPoly(pen, [[x(y0) - w(y0), y0], [x(y0) + w(y0), y0], [x(y1) + w(y1), y1], [x(y1) - w(y1), y1]], fall)
+    for (let i = 0; i < SIFT_FLAKES; i++) {
+      // Each flake leaves the lip in turn and falls at the stream's speed, give or take.
+      const u = i / SIFT_FLAKES
+      const y = top + (g - u * SIFT_RUN) * SIFT_FALL * (1 + 0.06 * (hash(n, i, 71) - 0.5))
+      if (y < top || y > LEDGE_Y) continue
+      const side = (hash(n, i, 73) * 2 - 1) * w(y)
+      const r = 0.009 + 0.008 * hash(n, i, 79)
+      ellipse(pen, x(y) + side, y, r, r, rgba('#FFFFFF', 0.8 * (1 - 0.7 * u)))
     }
     const land = t - s
     if (land >= 0 && land < 0.6) ellipse(pen, SIFT_X + 0.1, LEDGE_Y - 0.01, 0.06 + land * 0.25, 0.022, rgba('#FFFFFF', 0.8 * (1 - land / 0.6)))
