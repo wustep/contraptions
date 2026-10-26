@@ -515,7 +515,9 @@ function taper(p: p5, c: Ctx, a: Pt, b: Pt, w0: number, w1: number, fill: string
     ctx.strokeStyle = css(col[0], col[1])
     ctx.stroke()
   }
-  if (lit) line(lit, up, 1.1)
+  // Top light lies along a limb as far as it faces up: full along a level arm, a trace down a hanging one (lit full
+  // length, a hanging sleeve read as the edge of an armchair's arm).
+  if (lit) line([lit[0], lit[1] * (0.2 + 0.8 * Math.abs(n[1]))], up, 1.1)
   if (shade) line(shade, -up, 1.4)
   ctx.restore()
 }
