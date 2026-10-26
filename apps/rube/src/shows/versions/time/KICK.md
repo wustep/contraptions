@@ -721,6 +721,16 @@ show under Overview; full frames of the beats not yet looked at close):
   they roll on, a hard line ruled across the grass under all three of them. The far lawn's light goes over into the
   near lawn's colour in the last part of a cell before it.
 
+Polish wave 4 (the iconic beats close: the four kicks, the top's last two seconds every eighth of a second, limbo's
+return every second; the phone held sideways; frame times at real speed). Nothing changed; what was weighed:
+- **The top's wobble** (272.6 to 274.6): it leans about a third of a radian and sways three times a second, still up
+  and turning, as designed; read every eighth of a second it wobbles and does not fall. Kept.
+- **The calving towers' spray** (155 to 167): the brightest white in limbo, but spray off the water standing over the
+  sea, not light; kept.
+- **The phone sideways** (844 × 390): every world and the credits read.
+- **Frame times**: sixty frames a second through the opening, Paris, the rain, the great wide (played into from 180),
+  the van, the plane and home; the one long frame seen was the first after a seek.
+
 ## Inception nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
