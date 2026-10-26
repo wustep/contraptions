@@ -457,3 +457,25 @@ pillow's, and no second in the show is nearly still. In Chrome (headed, 2384 × 
 before and after painted back to back) no frame takes 20 ms: 1.6 ms a frame on average, 3.9 ms at the 95th percentile
 and 8.6 ms at worst, against 1.8, 4.1 and 13.2 before, a difference within the run's noise (London, which this pass did
 not touch, moved as much). The cabin's two people and the ward's thicker snow cost nothing that shows.
+
+## The polish wave
+
+A careful watch for what looks wrong or cheap, in the wide frame and the tall (phone) one, then a timing audit.
+
+- *The alley's door* (136 s): Wally walked out of the alley a step back from the door, so his feet hung in its glass
+  over the step. He now comes forward across the carpet to the sill, goes through on it, and steps down behind the
+  cab's nose into the road. The mark who bets stood with his shoes on the house balls' tops over the rack; he stands a
+  step back toward the counter, clear of them.
+- *Murray's shadow* (51–52.5 s): the arm that comes out over the safe was a plank of even width with no hand. It is a
+  coat sleeve now, bent a little at the elbow and narrowing to the wrist, and a hand whose fingers spread as it comes,
+  in the same shape as the rest of him, so it is no darker where it meets the coat.
+- *The store in a tall frame*: the clutter near the lens stood on a fixed line, so in a phone's frame it floated as dark
+  slabs in the middle of the floor. It stands below the foot of the frame however tall the frame is.
+- *The ward's near things*: the palm, the trolley and the chair close to the lens were drawn at seven tenths, so the
+  bench and the wainscot read through the palm's pot. They are solid, as London's and Tokyo's front rows are.
+- *The finale in a tall frame*: the El's columns ran on down to the foot of a phone's frame, ribbing its lower third.
+  They stand on footings in the near street, which goes dark toward the lens; a wide frame never reaches it.
+
+**Timing.** Every cut is on its downbeat within 17 ms of the measured landmark, and the four story hits land on their
+beats: the dead ball on bar 41, the floor giving on bar 48, the cut to the winner on bar 89, the blind going up on bar
+99. Nothing was retimed.
