@@ -797,16 +797,17 @@ function drawLightPatch(p: p5, k: number, l: Light, a: number, T: number): void 
   })()
   const shades = outsideIn(l.season, T)
   ctx.save()
-  // Three layers, each a little larger: a soft edge, a wide penumbra, not a cut. The outer two each lay a quarter of
-  // `a`; the inner one makes up the rest, so the middle, under all three, takes `a` exactly. The outside's shadows are
-  // holes in each (smaller in the outer two), so they too have soft edges, and only take the light away.
-  const edge = 0.25 * a
-  const inner = 1 - (1 - a) / ((1 - edge) * (1 - edge))
-  for (const [grow, f, shrink] of [
-    [0.1, edge, 0.55],
-    [0.05, edge, 0.78],
-    [0, inner, 1],
-  ] as [number, number, number][]) {
+  // Seven layers, each a little larger: a penumbra that falls off evenly, not a cut (three left their rims on the
+  // paper as steps, and the shadows in it as dark-ringed spots). The outer six share three quarters of `a`; the inner one makes
+  // up the rest, so the middle, under all of them, takes `a` exactly. The outside's shadows are holes in each (smaller
+  // in the outer ones), so they too have soft edges, and only take the light away.
+  const RIMS = 6
+  const edge = 1 - Math.pow(1 - 0.75 * a, 1 / RIMS)
+  const inner = 1 - (1 - a) / Math.pow(1 - edge, RIMS)
+  const layers: [number, number, number][] = []
+  for (let i = RIMS; i > 0; i--) layers.push([0.12 * (i / RIMS), edge, 1 - 0.55 * (i / RIMS)])
+  layers.push([0, inner, 1])
+  for (const [grow, f, shrink] of layers) {
     ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${f})`
     const y0 = l.top - grow
     const y1 = l.top + H + grow
@@ -900,7 +901,7 @@ function shadowClips(k: number, T: number, pad: number): Path2D[] {
  * Where the crest's light lands behind them: the door's glass laid low and long on the wainscot, its two panes (the
  * bar's shadow between them), the evening's own patch of the house's clock, at its fullest on the crest and lying over
  * their wedding photograph; the lower pane runs on down the skirting to the floor, round the two of them. Flat and
- * soft-edged (three layers, each a little larger, and each kept a little further off their shadows), leaning back down
+ * soft-edged (seven layers, each a little larger, and each kept a little further off their shadows), leaning back down
  * the hall with the low sun.
  */
 const CREST_PATCH = { x0: 3.88, w: 1.9, top: FLOOR - 0.74, split: FLOOR - 0.43, lean: 0.32 / 0.6 }
@@ -910,10 +911,15 @@ function drawCrestPatch(p: p5, k: number, a: number, T: number): void {
   const P = CREST_PATCH
   // What the middle lays over the paper: a little more than the patch had when shafts and a wedge were laid over it.
   const full = 0.38 * a
-  const edge = 0.25 * full
-  const inner = 1 - (1 - full) / ((1 - edge) * (1 - edge))
+  // Seven layers, as the mornings' patch: three left stepped rims on the wainscot and round their shadows.
+  const RIMS = 6
+  const edge = 1 - Math.pow(1 - 0.75 * full, 1 / RIMS)
+  const inner = 1 - (1 - full) / Math.pow(1 - edge, RIMS)
+  const layers: [number, number, number][] = []
+  for (let i = RIMS; i > 0; i--) layers.push([0.09 * (i / RIMS), edge, 0.018 - 0.036 * (i / RIMS)])
+  layers.push([0, inner, 0.018])
   const sx = (y: number) => -P.lean * (y - P.top)
-  for (const [grow, f, pad] of [[0.09, edge, -0.018], [0.045, edge, 0], [0, inner, 0.018]] as [number, number, number][]) {
+  for (const [grow, f, pad] of layers) {
     ctx.save()
     for (const c of shadowClips(k, T, pad)) ctx.clip(c, 'evenodd')
     ctx.fillStyle = `rgba(255, 214, 150, ${f})`

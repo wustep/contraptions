@@ -563,15 +563,14 @@ export function drawBayLight(p: p5, k: number, L: Look): void {
   const { x1 } = HOUSE.bay
   const { x1: px1 } = HOUSE.porch
   p.push()
+  // Its own corner rects: the stage's centred ones laid it back across the bay's posts and up off the floor.
+  p.rectMode(p.CORNER)
   p.noStroke()
-  // The floor's front edge, lit from the bay's corner and fading toward the steps.
-  for (const [to, f] of [
-    [px1, 0.12],
-    [x1 + 1.0, 0.14],
-    [x1 + 0.45, 0.16],
-  ] as [number, number][]) {
-    p.fill(alpha(p, HOME.lamp, f * a))
-    rect(p, k, x1 + 0.08, P, to, P + 0.12)
+  // The floor's front edge, lit from the bay's corner and fading toward the steps in even steps.
+  const from = x1 + 0.08
+  for (let i = 0; i < 6; i++) {
+    p.fill(alpha(p, HOME.lamp, 0.07 * a))
+    rect(p, k, from, P, from + (px1 - from) * (1 - i / 6), P + 0.12)
   }
   p.pop()
 }

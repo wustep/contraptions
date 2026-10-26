@@ -1246,32 +1246,66 @@ function drawFloorLight(p: p5, k: number, c: Paint, t: number): void {
   p.noStroke()
   for (const s of shafts(c, t)) {
     const [[f0x, fy], [f1x]] = s.foot
-    p.fill(alpha(p, mixHex(s.hex, '#FFFFFF', 0.3), Math.min(0.5, s.a * 3.2)))
-    poly(p, k, [
-      [f0x - 0.03, fy + 0.012],
-      [f1x + 0.03, fy + 0.012],
-      [f1x + 0.12, fy + 0.055],
-      [f0x - 0.1, fy + 0.055],
-    ])
+    // Its ends feathered, four layers each a little shorter, as the pews' light is.
+    p.fill(alpha(p, mixHex(s.hex, '#FFFFFF', 0.3), Math.min(0.5, s.a * 3.2) / 4))
+    for (let i = 0; i < 4; i++) {
+      const d = (i - 1.5) * 0.035
+      poly(p, k, [
+        [f0x - 0.03 + d, fy + 0.012],
+        [f1x + 0.03 - d, fy + 0.012],
+        [f1x + 0.12 - d, fy + 0.055],
+        [f0x - 0.1 + d, fy + 0.055],
+      ])
+    }
   }
 }
 
-/** The pews where the shafts cross them: each lit in its shaft's colour, cut to the shaft's edges. */
+/**
+ * The pews where the shafts cross them: each lit in its shaft's colour, within the shaft. Its edges are feathered (a
+ * gradient across the shaft at the pews' height, clear at a little outside each edge and full a little inside), so
+ * the light on the wood has a penumbra, not a ruled stripe.
+ */
 function drawLitPews(p: p5, k: number, c: Paint, t: number): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
   p.noStroke()
+  const F = 0.07
   for (const s of shafts(c, t)) {
     if (s.foot[1][0] < CH.pews[0] - 0.3) continue
+    // The shaft's two edges where they cross the pews (halfway up their backs).
+    const y = (CH.seat + CH.floor) / 2
+    const u = (y - s.top[0][1]) / (s.foot[0][1] - s.top[0][1])
+    const xl = s.top[0][0] + (s.foot[0][0] - s.top[0][0]) * u
+    const xr = s.top[1][0] + (s.foot[1][0] - s.top[1][0]) * u
+    // Across the shaft, square to its slant, so the soft edges lean as the shaft does.
+    const ex = s.foot[0][0] - s.top[0][0]
+    const ey = s.foot[0][1] - s.top[0][1]
+    const len = Math.hypot(ex, ey)
+    const nx = ey / len
+    const ny = -ex / len
+    const w = (xr - xl) * nx + 2 * F
+    const lit = alpha(p, s.hex, Math.min(0.34, s.a * 2.2))
+    const full = lit.toString()
+    lit.setAlpha(0)
+    const clear = lit.toString()
+    const g = ctx.createLinearGradient((xl - F * nx) * k, (y - F * ny) * k, (xl - F * nx + w * nx) * k, (y - F * ny + w * ny) * k)
+    g.addColorStop(0, clear)
+    g.addColorStop(Math.min(0.5, (2 * F) / w), full)
+    g.addColorStop(Math.max(0.5, 1 - (2 * F) / w), full)
+    g.addColorStop(1, clear)
     ctx.save()
     ctx.beginPath()
-    ctx.moveTo(s.top[0][0] * k, s.top[0][1] * k)
-    ctx.lineTo(s.top[1][0] * k, s.top[1][1] * k)
-    ctx.lineTo(s.foot[1][0] * k, s.foot[1][1] * k)
-    ctx.lineTo(s.foot[0][0] * k, s.foot[0][1] * k)
+    ctx.moveTo((s.top[0][0] - F) * k, s.top[0][1] * k)
+    ctx.lineTo((s.top[1][0] + F) * k, s.top[1][1] * k)
+    ctx.lineTo((s.foot[1][0] + F) * k, s.foot[1][1] * k)
+    ctx.lineTo((s.foot[0][0] - F) * k, s.foot[0][1] * k)
     ctx.closePath()
     ctx.clip()
-    p.fill(alpha(p, s.hex, Math.min(0.34, s.a * 2.2)))
-    for (const x of CH.pews) pewShape(p, k, x)
+    p.fill(full)
+    ctx.fillStyle = g
+    for (const x of CH.pews) {
+      pewShape(p, k, x)
+      ctx.fillStyle = g
+    }
     ctx.restore()
   }
 }
