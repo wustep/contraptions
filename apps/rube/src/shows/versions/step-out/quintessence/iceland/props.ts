@@ -25,6 +25,7 @@ import {
   roadAt,
 } from './geo'
 import { about, clamp01, disc, lerp, rgba, shape, sm, stroke, type Pen } from './pen'
+import { measure } from './far'
 import { FAR_P, HZ, farFn, plumeMid } from './set'
 import { ICE } from './theme'
 
@@ -342,7 +343,7 @@ export function drawBirds(pen: Pen, t: number, f: Frame): void {
   const B = 101.6
   if (t < A || t > B) return
   const far = farFn(f, 0.02, 0.02)
-  const H = f.y1 - f.y0
+  const H = measure(f)
   const u = (t - A) / (B - A)
   // The flock's centre sweeps right to left in a long arc.
   const cx = lerp(0.95, -1.0, u)
@@ -375,7 +376,7 @@ export function drawPlane(pen: Pen, t: number, f: Frame): void {
   const B = HUSH + 6.2
   if (t < A || t > B) return
   const far = farFn(f, FAR_P[0], FAR_P[1])
-  const H = f.y1 - f.y0
+  const H = measure(f)
   const u = (t - A) / (B - A)
   const m = plumeMid(t)
   const from: [number, number] = [-0.9, HZ - 0.3]
