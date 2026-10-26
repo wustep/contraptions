@@ -737,3 +737,11 @@ A fresh look at the stretches the last waves had passed over (the opening, the w
 **The burst on a phone (143.64).** The stage face under the painted street went to the house's dark swept out from the door with the paint, at twenty-two cells a second: in the wide frame a strip, on a phone a hard dark column half the height of the screen, crossing it. The face goes down all at once now, in four tenths of a second, as house lights do; the floor's top still takes the paint from the door (`studio/studio.ts`).
 
 The neon arrow at the end of the drive looked, unlit, as if it hung in the air before the freeway; it hangs from its bar on the club's wall, dark glass until its note, and stays.
+
+## Round 78: polish wave 6, a last watch
+
+The whole show once more from scratch on the branch as it stands, wide and tall, the sheets offset by three quarters of a second from every earlier pass, full frames of the loudest moments, and the camera measured again.
+
+**Looked at, and left.** At 180 he seems to float over his chair: it is the instant between his tap on the metronome and his landing back on the seat. In her audition she rises and settles with her song, and rests on her mark either side of it. The six hits on the crest, the trumpet's skyline and the dream's piano hold up at full size. The run-out's new push (round 75) peaks well under the show's other moves.
+
+**Back across the room (468.2 to 471.5).** After the door shuts on her, the camera went back to him at the keys at 0.78 frame widths a second, the fastest move in the show; round 49 had held every move under about half a frame a second. It leaves the door a tenth sooner, a little wider, and sets its middle a little further back and later, so it peaks at 0.53 and still has him and the bandstand whole as the band's lamps come up (`club/finale.ts`).
