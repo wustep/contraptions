@@ -58,6 +58,12 @@ export function flame(ctx: CanvasRenderingContext2D, x: number, y: number, w: nu
 }
 
 /**
+ * How wide a roof's fire is as it catches (`b` 0 to 1): a tongue in the middle first, standing up before it spreads to
+ * the eaves, so a fire starting is never a flat lid of flame laid on the roof.
+ */
+const catching = (b: number): number => 0.25 + 0.75 * b
+
+/**
  * A column of smoke off a fire at (x, y): soft rounds going up and spreading, leaning off with the wind, filled
  * as one shape, so it is one column thinning upwards and not a string of puffs. Each is born small over the fire and is
  * gone by the top, so the column is the same few shapes rising for ever: a pure function of the time, with nothing
@@ -161,7 +167,7 @@ function drawHouse(g: Paint, h: House, t: number, depth: number, L: { x: (x: num
     // so the people in the street below them are seen.
     const s = L ? L.s : 1
     const tall = (0.65 + 0.35 * hash(Math.round(h.x * 10), 0)) * (depth ? 1 : 0.62)
-    flame(ctx, (x0 + x1) / 2, y1 - lip * 0.6, (x1 - x0) * (depth ? 0.85 : 0.78), tall * s * b, t, h.x * 7)
+    flame(ctx, (x0 + x1) / 2, y1 - lip * 0.6, (x1 - x0) * (depth ? 0.85 : 0.78) * catching(b), tall * s * Math.sqrt(b), t, h.x * 7)
   }
 }
 
@@ -241,7 +247,7 @@ export function drawTownBehind(g: Paint): void {
       }
       // Fewer and larger: some of the houses behind burn whole, and the rest are dark under the smoke, so the burning
       // hill reads as fires and not as a scatter of sparks.
-      if (b > 0.01 && hash(k, r, 4) > 0.66) flame(ctx, L.x(h.x + h.w * 0.5), L.y(h.top), h.w * 0.85 * L.s, (0.85 + 0.45 * hash(k, r, 5)) * L.s * b, t, k * 3 + r)
+      if (b > 0.01 && hash(k, r, 4) > 0.66) flame(ctx, L.x(h.x + h.w * 0.5), L.y(h.top), h.w * 0.85 * L.s * catching(b), (0.85 + 0.45 * hash(k, r, 5)) * L.s * Math.sqrt(b), t, k * 3 + r)
     })
   }
 }
