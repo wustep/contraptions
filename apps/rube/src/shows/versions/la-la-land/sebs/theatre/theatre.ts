@@ -319,6 +319,14 @@ function spotX(t: number): number {
   const her = sum / w
   return lerp(her, (LAND_X + MEET_X) / 2, ease((t - LAND) / 0.5))
 }
+/**
+ * The spot's circle where it lands behind them, as [centre y, rx, ry]: on her, low enough that the floor cuts it under
+ * her; opening to take in both of them once he is up beside her, so it is round the two of them and not over them.
+ */
+function spotShape(t: number): [number, number, number] {
+  const both = ease((t - LAND) / 0.5)
+  return [lerp(-0.2, -0.14, both), lerp(0.4, 0.6, both), lerp(0.36, 0.5, both)]
+}
 /** How much light is on the main curtain: the house's, and the stage's spill. */
 const curtainLitAt = (t: number): number => Math.min(1, 0.25 + 0.6 * Math.min(1, Math.max(0, houseAt(t))) + 0.3 * stageAt(t))
 /** The curtain is in front of her until it has flown out; once it comes in again it is behind the two of them. */
@@ -726,7 +734,8 @@ function drawSet(p: p5, k: number, weight: number, t: number, lit: number, spot:
   // The spot's circle on the wall behind her, tight on her as a follow spot is: the paper and the panelling as they
   // look in its light.
   if (spot > 0.01) {
-    spotCircle(ctx, k, spotX(t), -0.3, 0.4, 0.36, spot, () => {
+    const [cy, rx, ry] = spotShape(t)
+    spotCircle(ctx, k, spotX(t), cy, rx, ry, spot, () => {
       fill(SET_PAPER_LIT, SET_WOOD_LIT)
       ctx.fillStyle = rgba(SET_STRIPE, 0.22)
       ctx.beginPath()
@@ -1475,7 +1484,8 @@ function drawCurtain(p: p5, k: number, ink: string, weight: number, t: number, l
     ctx.beginPath()
     ctx.rect(x0 * k, top * k, (x1 - x0) * k, (hem - top) * k)
     ctx.clip()
-    spotCircle(ctx, k, spotX(t), -0.3, 0.42, 0.38, spot * 0.85, () => velvet(p, k, x0, top, x1, hem, lit, 14, speed, true))
+    const [cy, rx, ry] = spotShape(t)
+    spotCircle(ctx, k, spotX(t), cy, rx * 1.05, ry * 1.05, spot * 0.85, () => velvet(p, k, x0, top, x1, hem, lit, 14, speed, true))
     ctx.restore()
   }
   // The hem's gold fringe, and a band of gold above it.
