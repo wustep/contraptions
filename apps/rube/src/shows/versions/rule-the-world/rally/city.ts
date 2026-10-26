@@ -790,11 +790,17 @@ export function drawNear(ctx: CanvasRenderingContext2D, k: number, f: Frame, t: 
     }
     ctx.lineWidth = Math.max(1, 0.05 * s * k)
     ctx.beginPath()
+    // Wide, they climb away up to the left. In a tall frame that climb runs through the credits' cards in the sky, so
+    // there they go off level with the cross-arms instead, sagging under the cards and on out past the frame's left
+    // edge rather than stopping short in the sky.
+    const low = smooth((1.5 - (f.x1 - f.x0) / (f.y1 - f.y0)) / 0.4)
     for (let j = 0; j < 4; j++) {
       const y = j < 2 ? -15 : -13.4
       const ox = (j % 2 ? 1 : -1) * (j < 2 ? 2.0 : 1.5)
       const [ax, ay] = at(7.5 + ox, y - 0.1)
-      const [bx, by] = at(-40 + j * 3, -26 + j * 0.6)
+      const end = -26 + (y + 26 + 1) * low + j * 0.6
+      const [wx, by] = at(-40 + j * 3, end)
+      const bx = wx + Math.min(0, f.x0 - 1 - j * 0.4 - wx) * low
       const sag = (3.2 + 0.6 * Math.sin(t * 0.9 + j) + 0.2 * Math.sin(t * 2.3 + j * 2)) * s
       ctx.moveTo(ax * k, ay * k)
       ctx.quadraticCurveTo(((ax + bx) / 2) * k, ((ay + by) / 2 + sag) * k, bx * k, by * k)
