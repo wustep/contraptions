@@ -145,8 +145,11 @@ export function doorAt(t: number, end: boolean): number {
   const a = DOOR_SHUT - 0.9
   if (t < a) return 1
   if (t < DOOR_SHUT) {
+    // Seen edge on in the section, the leaf shows the cosine of its swing: so the swing is timed by what shows, the
+    // leaf's width growing faster and faster until it is whole on the note, and not whole a quarter second early with
+    // the last of the swing too thin to see.
     const u = (t - a) / 0.9
-    return 1 - u * u
+    return Math.acos(u * u * u) / (Math.PI / 2)
   }
   // Shut hard, it gives a hair and settles.
   const since = t - DOOR_SHUT
