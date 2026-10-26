@@ -288,6 +288,13 @@ A careful watch, wide and tall, for what looked wrong or cheap:
 - **The steam over the rig** was the brightest mass in the show, so thick the machine was gone under it: each billow is
   a quarter thinner, and the console, the horn and the recliner's foot read through it until it clears.
 
+## Polish wave 4
+
+- **The walk-off crowd's rim** was two offset copies of every head and arm above it, a ghost echo in a close frame:
+  half as deep, a line of light on the edges that face it.
+- Read and left: the credits on a phone (every card legible over the dusk, clear of the building), the call and
+  answer (they hop in turn), the three stomps on their calls.
+
 ## Zoolander nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the song.
