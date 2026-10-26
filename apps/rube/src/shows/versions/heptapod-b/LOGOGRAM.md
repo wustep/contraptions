@@ -530,6 +530,14 @@ the weakest moments, a phone frame, then the strikes against the cue.
 - Looked at and left: the floods' beams at the departure (they follow their heads), the far camp behind the reunion
   (misting its feet lit them as white saucers, worse), the grand wide's pull back, the deck into the slot.
 
+## Polish wave 3
+
+- **A phone held upright** (`tall: 0.72` in `index.ts`): the extra picture a tall stage sees was split evenly above
+  and below the composed frame, so the lake house stood on a slab of floor two-thirds of the screen deep and the valley
+  on as much meadow. More of it is above now: the lake house's wall (the credits still sit on it, under the ceiling's
+  line), the valley's sky and the shell, Costello's head whole over the great ring. The 16:9 frame is unchanged.
+- Looked at and left: Costello's jet beginning the next ring in the fog (145), the rain at the window, the coda.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
