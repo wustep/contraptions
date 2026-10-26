@@ -238,3 +238,8 @@ by copying their folders.
     It is now a worn rim with fires here and there along it, under a soft low pall.
   - As the erg worm's mouth starts to open, a dark ring showed through its shut dome, so the head looked like a silo
     with a band round it. The throat now shows only where the dome has drawn back.
+- **Polish wave 4.** Every dissolve looked at mid-fade, the end credits on desktop and phone, and a timing pass.
+  - The dune behind the duel's basin met the basin floor in a ruled line, so the fight looked staged on a flat. Its
+    foot now lightens toward the floor, and they meet in a soft change.
+  - The dissolves (into the night, into the Fremen's morning, into the walk) and the fold, and the credits on both
+    screens, held up, and were left alone. The door's fall and the Duke's colour each land on their strikes.
