@@ -3,7 +3,7 @@ import { R, mixHex, type Pt } from '../../../../../parts'
 import { box, carried, frame, hash, part, type Ctx, type PartShot, type Slot } from '../kit'
 import { BREAKS } from '../music'
 import { G_EARTH } from '../physics'
-import { BLOOD, ROAD } from '../worlds'
+import { BLOOD, CARNEGIE_THEME, ROAD } from '../worlds'
 import {
   BRAKE, CURB_F, CURB_R, DIES, DROP, END, FLASH, IMPACT, LAMP_T, LAND, LAST_LIGHT, OUT, POST_T, REST_X, ROAD_Y, ROLLS, T0, T_GO, TAIL, TRUCK_HIT_X, WRECK,
   carAt, him, seatX, truckX,
@@ -198,11 +198,12 @@ function drawCrash(p: p5, s: CrashState, c: Ctx): void {
     })
   }
   drawCar(p, c, carAt(T), carLook(T))
-  // After the last lamp dies the road goes dark round him, so the hall opens out of the same dark.
+  // After the last lamp dies the road goes dark round him, so the hall opens out of the same dark: the hall's own,
+  // not the road's slate paper, which left the cut a step down in value and from blue to brown.
   const dark = nightFall(T)
   if (dark > 0.005) {
     p.noStroke()
-    p.fill(c.bg)
+    p.fill(CARNEGIE_THEME.bg)
     ctx.globalAlpha = dark
     p.rect(((f.x0 + f.x1) / 2) * k, ((f.y0 + f.y1) / 2) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
     ctx.globalAlpha = 1
