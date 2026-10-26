@@ -562,12 +562,13 @@ export function drawWall(p: p5, c: Ctx, open: number, light: number, f: { y0: nu
   p.pop()
 }
 
-/** Outside the open door, the lot's sodium light pouring in along the stage floor. Additive. */
+/** Outside the open door, the lot's sodium light pouring in along the stage floor. Additive, and soft: its hard top
+ * edge ran as a diagonal cut across the seated band. */
 export function drawDoorLight(p: p5, c: Ctx, open: number): void {
   if (open <= 0.01) return
   const { x0, door } = WALL
   const h = door * open
-  cone(p, c, [x0 + 0.2, FL - h * 0.55], [x0 - 5.5, FL - 0.2], h * 0.9, 1.6, 0.12 * open, ROAD.sodium)
+  cone(p, c, [x0 + 0.2, FL - h * 0.55], [x0 - 5.5, FL - 0.2], h * 0.9, 1.6, 0.12 * open, ROAD.sodium, 8)
   pool(p, c, x0 - 1.8, FL + 0.06, 2.8, 0.26, 0.2 * open, ROAD.sodium)
 }
 
