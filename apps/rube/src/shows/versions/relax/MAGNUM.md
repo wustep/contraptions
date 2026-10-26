@@ -280,6 +280,14 @@ A careful watch, wide and tall, for what looked wrong or cheap:
   into the dark.
 - **The photographer outside the spa** was a black post with a camera on it: a man in a coat, on two legs.
 
+## Polish wave 3
+
+- **The spa's target**, knocked down on the call, went over sideways and lay level on its post top in the air: a little
+  table. It comes down on a brass catch on a short arm off the post, a little past level, so it lies knocked out on
+  something. Derek still comes down clear past its tip.
+- **The steam over the rig** was the brightest mass in the show, so thick the machine was gone under it: each billow is
+  a quarter thinner, and the console, the horn and the recliner's foot read through it until it clears.
+
 ## Zoolander nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the song.
