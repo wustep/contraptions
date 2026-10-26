@@ -7,7 +7,7 @@ import { HOME, TRIAL } from './ithaca/geo'
 import { heroMoves, ithacaActors } from './ithaca/people'
 import { ARROW, arrowTail } from './ithaca/rig'
 import { ITHACA_SET } from './ithaca/set'
-import { WEST_CAM } from './ithaca/west'
+import { WEST_CAM, WEST_KEYS, westView } from './ithaca/west'
 
 /**
  * Home (418 to the end): up the cliff, the dog, the hall, the trial of the bow, the reckoning, the two of them; and the
@@ -32,7 +32,8 @@ import { WEST_CAM } from './ithaca/west'
  *            three thrown out of the house; the son holds the stairs below his mother. Those who never fought give in.
  * - 509.39   Penelope comes down the stairs a step a note, and steps off them beside him on the swell's last attack
  *            (512.68); it dies away on the three of them.
- * - 514      the west: the skiff, the two of them, the sun going down ahead; their son on the cliff's edge behind.
+ * - 514      the west: the three of them again, at the jetty; the son casts them off, and the camera draws back as the
+ *            two of them go away in the skiff into the sun, and he stays.
  */
 export const home: Scene = {
   key: 'home',
@@ -110,8 +111,10 @@ export const home: Scene = {
     { t: FIGHT.down[2], cells: 5.15, at: [822.55, -10.75] },
     { t: TRIAL.meet, cells: 2.45, at: [820.1, -9.47] },
     { t: TRIAL.fade - 0.1, cells: 2.2, at: [820.12, -9.43] },
-    // The west, held: their son on the cliff's edge, the skiff casting off and going away from us into the sun.
-    { t: TRIAL.fade, cells: WEST_CAM.cells, at: [WEST_CAM.x, WEST_CAM.y], cut: true },
+    // The west: close on the three of them at the jetty, as the dissolve leaves them in the hall; held while the son
+    // casts them off, then drawn back and up to the whole harbour, and held as the skiff goes away into the sun.
+    { t: TRIAL.fade, cells: westView(TRIAL.fade).cells, at: [westView(TRIAL.fade).x, westView(TRIAL.fade).y], cut: true },
+    ...WEST_KEYS,
     { t: END, cells: WEST_CAM.cells, at: [WEST_CAM.x, WEST_CAM.y] },
   ],
 }

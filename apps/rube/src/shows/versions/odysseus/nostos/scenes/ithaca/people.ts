@@ -3,7 +3,7 @@ import { mix, smooth } from '../../draw'
 import { END } from '../../voyage'
 import { Path, fly, flightFor, rest, ride, roll, type Move, type Pt } from '../../path'
 import type { Actor } from '../../show'
-import { BEACH, DAIS, GATE, HALL, HEARTH, CLIFF_W, HOIST, HOME, ON_TOP, R, ROOM, STAIRS, TERRACE, TRIAL } from './geo'
+import { BEACH, DAIS, GATE, HALL, HEARTH, HOIST, JETTY, HOME, ON_TOP, R, ROOM, STAIRS, TERRACE, TRIAL } from './geo'
 import { stepAt } from './palace'
 import { STRUCK, antinousStruck, heroBasketY, plateEnd } from './rig'
 import { weaverX } from './loom'
@@ -186,12 +186,16 @@ function telemachusPath(): Path {
   const fight = sonFight(doorway)
   m.push(...fight.moves)
   m.push(rest(fight.end, TRIAL.meet, TRIAL.fade))
-  // The west: on the cliff's edge over the harbour, and a little nearer it as they cast off, watching them go.
-  const back: Pt = [CLIFF_W.top - 0.55, ground]
-  const brink: Pt = [CLIFF_W.top - 0.25, ground]
-  m.push(rest(back, TRIAL.fade, TRIAL.fade + 4))
-  m.push(roll([back, brink], TRIAL.fade + 4, TRIAL.fade + 6.5))
-  m.push(rest(brink, TRIAL.fade + 6.5, END))
+  // The west: on the jetty's end beside the skiff they are in. He goes back to the bollard and casts off their line;
+  // and as they go out he comes to the end again, and stays there, watching them go.
+  const jetty = on(JETTY.top, s)
+  const end: Pt = [JETTY.x1 - 0.14, jetty]
+  const bollard: Pt = [JETTY.x1 - 0.31, jetty]
+  m.push(rest(end, TRIAL.fade, TRIAL.fade + 0.2))
+  m.push(roll([end, bollard], TRIAL.fade + 0.2, TRIAL.fade + 1.15, 'inout'))
+  m.push(rest(bollard, TRIAL.fade + 1.15, TRIAL.fade + 3.4))
+  m.push(roll([bollard, end], TRIAL.fade + 3.4, TRIAL.fade + 5.4, 'inout'))
+  m.push(rest(end, TRIAL.fade + 5.4, END))
   return new Path(m, 'telemachus')
 }
 
