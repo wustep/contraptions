@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { ball, laneAt, mixHex, R, type Lane, type Pt } from '../../../../../parts'
 import { drawCalcifer, drawWarship } from '../cast'
-import { box, carried, frame, hash, knock, part, smooth, type Company, type PartShot } from '../kit'
+import { box, carried, composed, frame, hash, knock, part, smooth, type Company, type PartShot } from '../kit'
 import { AIR_STEPS, bar, CHORD, DURATION, SEAM } from '../music'
 import { drawDeck, drawGrate, drawPipes, PLANK_AFTER, PLANK_END, starLift } from '../plank/plank'
 import { calciferAt, DECK, LAND, T1 } from '../plank/plank-rig'
@@ -545,8 +545,7 @@ function homeward(p: p5, k: number, W: number, ink: string, t: number, f: { x0: 
   const u0 = (t - HOME[0]) / (HOME[1] - HOME[0])
   if (u0 < -0.05 || u0 > 1.3) return
   const w = f.x1 - f.x0
-  const h = Math.min(f.y1 - f.y0, (w * 9) / 16)
-  const my = (f.y0 + f.y1) / 2
+  const { h, my } = composed(f)
   // Far airships behind the clouds: a cool dusk slate, darker than the sky at their height (never the clouds' tan).
   const { low } = wastesSky(t)
   const far = mixHex(mixHex(WASTES.warship, WASTES.slate, 0.5), low, 0.25)

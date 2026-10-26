@@ -282,6 +282,19 @@ export function standing<S>(piece: Piece<S>, col: number, row: number, cells: Pt
 /* ------------------------------------------------------------------ drawing */
 
 /**
+ * In a phone's tall frame, the share of the extra picture set above the composed 16:9 box (`Performance.tall`). Every
+ * set here stands on a floor, a street or the ground with only more of it underneath, and the flight's gold low sky
+ * held flat below the box: three quarters go over it, to the sky, the roofs and the rooms' walls.
+ */
+export const TALL = 0.75
+
+/** The composed 16:9 box in the frame `f` (in cells): its height and the height of its middle. */
+export function composed(f: { x0: number; x1: number; y0: number; y1: number }): { h: number; my: number } {
+  const h = Math.min(f.y1 - f.y0, ((f.x1 - f.x0) * 9) / 16)
+  return { h, my: f.y0 + TALL * (f.y1 - f.y0 - h) + h / 2 }
+}
+
+/**
  * Where the stage's frame is, in this drawing's own cell units: the camera
  * the stage is using, read back from the canvas transform. What lets a sky
  * fill the frame, or a far hill move slower than the near ones, without the

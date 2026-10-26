@@ -1,5 +1,6 @@
 import type { Performance } from '../../../registry'
 import { creditsAt } from './credits'
+import { TALL } from './kit'
 import { DURATION } from './music'
 import { compose } from './score'
 
@@ -13,6 +14,8 @@ export const performance: Performance = {
   camera,
   // No portal anywhere: every change of place is a match cut on Sophie, nearly always through the castle's door.
   cuts: () => false,
+  // On a phone the picture goes up over the sets, not down into more floor (`kit.ts`).
+  tall: TALL,
   // The end credits' words, which the page sets over the sky.
   titles: creditsAt,
   soundtrack: {

@@ -1,5 +1,5 @@
 import { mixHex } from '../../../../../parts'
-import { frame, scenery } from '../kit'
+import { composed, frame, scenery } from '../kit'
 import { SEAM } from '../music'
 import { WASTES } from '../worlds'
 
@@ -52,28 +52,19 @@ export function wastesNight(t: number): number {
 
 /**
  * The sky's gradient at `t` over the frame `f` (in cells): laid over the 16:9 box the show is composed for (the one
- * the page sets the credits in), extended flat beyond it, so on a tall phone the sky over the words is the same as on
- * a wide screen. The finale's veil paints the same gradient over the land, so the two never differ.
+ * the page sets the credits in, set high in a tall frame: `TALL`), extended flat beyond it, so on a tall phone the sky
+ * over the words is the same as on a wide screen. The finale's veil paints the same gradient over the land, so the two never differ.
  */
 export function skyGradient(ctx: CanvasRenderingContext2D, k: number, t: number, f: { x0: number; x1: number; y0: number; y1: number }): CanvasGradient {
   const { top, low } = wastesSky(t)
-  const h = Math.min(f.y1 - f.y0, ((f.x1 - f.x0) * 9) / 16)
-  const my = (f.y0 + f.y1) / 2
+  const { h, my } = composed(f)
+  const g = ctx.createLinearGradient(0, (my - h / 2) * k, 0, (my + h / 2) * k)
+  g.addColorStop(0, top)
   // Under the credits the evening's deep blue comes half-way down the frame, so every row of the cards (set in the
   // upper half) is over it, and the gold is only the low sky the castle walks away into.
   const deep = Math.max(0, Math.min(1, (t - 300) / 6))
-  // In the evening a tall phone's frame goes on below the box: under the gold horizon the haze far below them dims
-  // and cools, going on down (held flat at the gold, half the screen was one sandy slab). A wide frame ends at the box.
-  const under = deep > 0 ? 0.7 : 0
-  const g = ctx.createLinearGradient(0, (my - h / 2) * k, 0, (my + h / 2 + under * h) * k)
-  const b = 1 / (1 + under)
-  g.addColorStop(0, top)
-  if (deep > 0) g.addColorStop(0.5 * b, mixHex(top, low, 0.5 - 0.32 * deep))
-  g.addColorStop(b, low)
-  if (deep > 0) {
-    g.addColorStop(b + (1 - b) * 0.25, low)
-    g.addColorStop(1, mixHex(low, top, 0.42 * deep))
-  }
+  if (deep > 0) g.addColorStop(0.5, mixHex(top, low, 0.5 - 0.32 * deep))
+  g.addColorStop(1, low)
   return g
 }
 

@@ -155,9 +155,12 @@ the deck line a moment after each landing (`onBody` follows it, so riders and th
   across water the door is seen by its reflection. Smoke over a blue sky is a pale cool grey, never cream.
 - **Fire sits in what burns.** A roof's fire comes up out of a ragged hole in its slates, lit from inside, the slates
   round it warm and the roof's edges catching the light; the town burning beyond the roofs goes down behind their line.
-  The street's crater is a hole, not a dish: a torn edge cut down through the cobbles into the stone, near black, only
-  its mouth catching the fire burning down in it, with the fire's light laid before the pit so the pit stays dark.
-- **On a phone held upright** every set ends soft: the town's stone sinks into the night below the street, the land
+  The street's crater is a hole in the road, not a dish: its mouth a flat, torn ellipse in the cobbles' band (seen a
+  little from above, as they are), near black, its far wall lit by the fire burning down in it, and a broken lip of
+  cobbles at its near rim over the fire's roots, loose stones round it.
+- **On a phone held upright** the composed 16:9 box sits high (`Performance.tall`, `TALL` in `kit.ts`): three
+  quarters of the extra picture go over it, to sky, roofs and walls, since every set stands on ground with only more
+  of it underneath. Every set ends soft: the town's stone sinks into the night below the street, the land
   and the gorge go down into one mist, and the finale's veil is the sky's own gradient placed as the sky places it.
 - **The credits** are words the page sets (`Performance.titles`, `credits.ts`) high and a little left of middle,
   while the castle walks away low on the right; the sky of the flight deepens into the evening, its deep blue
@@ -166,7 +169,7 @@ the deck line a moment after each landing (`onBody` follows it, so riders and th
   16:9 box, so a phone held upright sees the same sky under the words. A veil of the sky's own gradient takes the land away below as the
   castle climbs, so the credits come over sky and clouds. On a phone held upright the cards lift into the sky over the
   16:9 box (`LIFT`, the shade with them), since there the castle sits higher and the cards' 9px type floor widens them;
-  and below the box the evening's gold is only a band at the horizon, the haze under it dimming toward the sky's blue.
+  below the box the evening's gold holds on, clean, to the frame's foot.
 
 ## Polish wave (October 2026)
 
@@ -235,3 +238,9 @@ and camera keys in its own frame; `lay()` checks every seam. The director measur
 wrote a stub for every part so the show ran end to end from the first day, and wrote one brief; seven builders
 built the town, the sky, the castle, the room, the flowers, the war and the plank in parallel on one dev server;
 the director built the finale, wired the seams, and filmed the whole show at 1× to fix the weakest stretches.
+
+Regret fixes: on a phone the gold under the evening (312 → 336) went on down into a muddy khaki-grey (the wave's dim
+and cool below the box); that is reverted, the gold held clean. The crater's fire (216 → 228) stood in a black dish
+on the cobbles; the pit is now a hole in the road (above). On a phone the hills (112), the meadow (185 → 192) and the
+cliff before the collapse (247) were half one flat slab of ground; the composed box now sits high in a tall frame
+(`TALL`), so the sky, the roofs and the rooms' walls take the extra picture, not more ground.
