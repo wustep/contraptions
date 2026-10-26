@@ -101,11 +101,12 @@ export function drawSet(p: p5, c: Ctx, t: number): void {
       const xa = i * step + shift
       const hA = hMin + (hMax - hMin) * hash(i, seed)
       const hB = hMin + (hMax - hMin) * hash(i + 1, seed)
-      const segs = 6
+      const segs = 16
       for (let s = 0; s < segs; s++) {
         const u = s / segs
-        // A row of rounded crowns: each a half-round, higher in its middle.
-        const hh = hA + (hB - hA) * u
+        // A row of rounded crowns: each a half-round, higher in its middle, eased from one crown's height to the next
+        // (seen close, a straight blend is a ramp with a corner at each crown).
+        const hh = hA + (hB - hA) * (0.5 - 0.5 * Math.cos(u * Math.PI))
         const bump = Math.sin(u * Math.PI) * step * round
         p.vertex((xa + u * step) * k, (HORIZON - hh - bump) * k)
       }
@@ -113,7 +114,7 @@ export function drawSet(p: p5, c: Ctx, t: number): void {
     p.vertex(x1 * k, (HORIZON + 0.02) * k)
     p.endShape(p.CLOSE)
   }
-  layer(0.8, dk(mixHex(CENTER.tree, CENTER.sky, 0.86), 0.62), 3.6, 0.06, 0.3, 5, 0.07)
+  layer(0.8, dk(mixHex(CENTER.tree, CENTER.sky, 0.86), 0.62), 1.5, 0.08, 0.26, 5, 0.12)
   layer(0.45, dk(mixHex(CENTER.tree, CENTER.sky, 0.6), 0.66), 0.34, 0.05, 0.16, 6, 0.28)
   // The lawn behind the path.
   p.fill(dk(mixHex(CENTER.lawn, CENTER.sky, 0.28), 0.6))
