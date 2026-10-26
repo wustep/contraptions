@@ -5,6 +5,7 @@ import {
   WEST_ROOM, WINDOW,
 } from './geo'
 import { inside, isNight, type Tone } from './look'
+import { ATTACK } from './times'
 import { PAD } from '../../plan'
 
 /**
@@ -348,10 +349,13 @@ export function drawPalaceWhole(g: Paint, tone: Tone, t: number): void {
 
 /**
  * Arrakis's first moon: a flat pale disc low over the rim, at the frame's own place (it is very far): where the erg's low
- * sun stands in its last frame, and as big, so through the dissolve into the night the sun becomes the moon.
+ * sun stands in its last frame, and as big, so through the dissolve into the night the sun becomes the moon. In the
+ * close shots from Paul's window to the lift-off the rim stands high in the frame, so the moon is set higher there,
+ * clear of it, where low it was half behind the rim and read as a broken shell.
  */
 function moon(g: Paint): void {
-  const [x, y, r] = sunAt(g.view, { x: 0.2, up: 0.12, r: 0.06 })
+  const high = g.t >= ATTACK.watch && g.t < ATTACK.hall
+  const [x, y, r] = sunAt(g.view, { x: 0.2, up: high ? 0.27 : 0.12, r: 0.06 })
   g.ctx.beginPath()
   g.ctx.arc(x, y, r, 0, Math.PI * 2)
   fill(g.ctx, '#C9CDD2')
