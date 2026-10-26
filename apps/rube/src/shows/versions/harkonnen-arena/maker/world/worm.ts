@@ -92,10 +92,10 @@ export function paintBody(b: Brush, w: Body): void {
     ctx.fillStyle = a >= 1 ? b.c(color) : b.ca(color, a)
     ctx.fill()
   }
-  const STEPS = 12
+  const STEPS = 20
   for (let k = 0; k < STEPS; k++) {
-    band(0.1 + (0.5 * k) / (STEPS - 1), 1, SKIN.back, 0.22)
-    band(-1, -0.35 - (0.45 * k) / (STEPS - 1), SKIN.belly, 0.22)
+    band(0.1 + (0.5 * k) / (STEPS - 1), 1, SKIN.back, 0.14)
+    band(-1, -0.35 - (0.45 * k) / (STEPS - 1), SKIN.belly, 0.14)
   }
   // The rings: about a radius apart along the body (or every `ring` cells), each a little off the even step, so the body
   // reads as old armour, not a millipede: a bowed band with a dark seam on its trailing edge.

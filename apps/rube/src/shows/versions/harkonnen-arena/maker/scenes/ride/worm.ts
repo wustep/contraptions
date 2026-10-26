@@ -427,6 +427,18 @@ export function paintPour(b: Brush, t: number, sand: { lit: string; air: string 
     }
     sheet(0.16, 0.35 * Math.min(1, coat * 1.4))
     sheet(0, Math.min(1, coat * 1.4))
+    // The coat goes on over the head's round cap, to the same edge, so it does not stop at a vertical line.
+    const r = radiusAt(0)
+    const y = spineY(0, t)
+    const v = Math.max(-1, Math.min(1, 0.45 - 1.6 * slide + 0.16 * Math.sin(1.3) + 0.06 * Math.sin(0.4)))
+    const th = Math.asin(-v)
+    ctx.beginPath()
+    ctx.moveTo(hx, y - r * 1.03)
+    ctx.ellipse(hx, y, r * 0.62, r * 1.03, 0, -Math.PI / 2, th)
+    ctx.lineTo(hx, y - r * v)
+    ctx.closePath()
+    ctx.fillStyle = b.ca(sand.lit, Math.min(1, coat * 1.4))
+    ctx.fill()
   }
   // On the surge it heaves up out of the sand and throws a fringe of it off its back.
   const thrown = pulse(t, SURGE, 0.3, 1.1)
