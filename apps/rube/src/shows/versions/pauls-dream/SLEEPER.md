@@ -230,3 +230,11 @@ by copying their folders.
     clear of the rim there.
   - The dust off the ceiling after the blast was a hard-edged pale strip across the window. It falls as a soft band.
   - The phone pass and the strikes found nothing more to change.
+- **Polish wave 3.** Another fresh watch, desktop and phone.
+  - The gom jabbar was a lance about two cells long, held from a chair across the room over the box. The Reverend
+    Mother now sits close at the box's other side, and the needle is a short reach across its top to his neck. The
+    close shot on her follows her in.
+  - Arrakeen burning on the night horizon was a black slab with one flat orange bar on it and a sharp wedge of smoke.
+    It is now a worn rim with fires here and there along it, under a soft low pall.
+  - As the erg worm's mouth starts to open, a dark ring showed through its shut dome, so the head looked like a silo
+    with a band round it. The throat now shows only where the dome has drawn back.
