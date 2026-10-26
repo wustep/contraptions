@@ -296,13 +296,14 @@ export function paintLong(b: Brush, x: number, size: number): void {
   const L = r * 9
   const ux = Math.cos(a)
   const uy = Math.sin(a)
+  // A ball's shadow on the floor under a low sun is a long ellipse as wide as the ball, from under it out along the
+  // light, fading toward its far end: not a bar with a hard tip.
+  const gr = ctx.createLinearGradient(x, -r, x + ux * (L + r), -r + uy * (L + r))
+  gr.addColorStop(0, b.ca('#000000', SHADE))
+  gr.addColorStop(1, b.ca('#000000', SHADE * 0.35))
   ctx.beginPath()
-  ctx.moveTo(x - uy * r * 0.85, -r + ux * r * 0.85)
-  ctx.lineTo(x + ux * L - uy * r * 0.55, -r + uy * L + ux * r * 0.55)
-  ctx.quadraticCurveTo(x + ux * (L + r * 0.9), -r + uy * (L + r * 0.9), x + ux * L + uy * r * 0.55, -r + uy * L - ux * r * 0.55)
-  ctx.lineTo(x + uy * r * 0.85, -r - ux * r * 0.85)
-  ctx.closePath()
-  ctx.fillStyle = b.ca('#000000', SHADE)
+  ctx.ellipse(x + (ux * L) / 2, -r + (uy * L) / 2, L / 2 + r * 0.85, r * 0.85, a, 0, Math.PI * 2)
+  ctx.fillStyle = gr
   ctx.fill()
 }
 
