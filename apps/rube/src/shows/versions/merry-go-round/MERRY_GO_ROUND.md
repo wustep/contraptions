@@ -195,6 +195,10 @@ Wave 5, transitions and the last details: every change of place was read a frame
 the hills' ground (108 → 121) was one row of heather drifts over bare green; the drifts now go on down in tiers. On a
 phone held on its side the Music card's long fine print ran into the castle's flag; it is two lines now.
 
+Wave 6, a last fresh watch: the two soldiers marching off into the side passage (43.8 → 44.8) went see-through as
+they went, the stone and the passage's light showing through them; they now deepen, solid, into the passage's dark,
+and only go once they are all but it (`drawSoldier`'s `into`).
+
 ## Chrome, credits, checks
 
 - In the picker the work is **Merry-Go-Round** and its one take **Opus 5.5**: the Version row hides by itself. No
