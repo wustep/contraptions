@@ -188,6 +188,18 @@ export const cloud = scenery<CloudState>({
         }
         ctx.restore()
       }
+      // From above, past the punch, the deck has no underside to see: it thins down into the air over the Earth. Its
+      // flat base had hung in the dark as a white bar with night under it, plainest in a tall frame.
+      const above = smooth(t, s.punch, s.punch + 0.3)
+      if (above > 0) {
+        const by = s.deck + DEPTH
+        const g = ctx.createLinearGradient(0, X(by - 0.3), 0, X(by + 2.4))
+        g.addColorStop(0, `rgba(236, 230, 218, ${0.9 * above})`)
+        g.addColorStop(0.35, `rgba(236, 230, 218, ${0.4 * above})`)
+        g.addColorStop(1, 'rgba(236, 230, 218, 0)')
+        ctx.fillStyle = g
+        ctx.fillRect(X(x0), X(by - 0.3), X(x1 - x0), X(2.7))
+      }
       // The vapour collar: soft billows thrown up and out from the hole's rim as the rocket goes through, swelling
       // and thinning as they settle back over the deck. Vapour, so no ink.
       if (hw > 0.05) {
