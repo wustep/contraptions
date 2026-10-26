@@ -725,3 +725,15 @@ A deeper pass: the camera sampled every twentieth of a second for its pan and zo
 **Her smile (462.85).** In the doorway's close shot her nod was a squash to seven tenths of her height, so near the lens it read as a ball going flat, a sigh. The dip is half as deep; at that size it is still plainly a nod, and his nod answers it (`club/finale.ts`).
 
 **The roses (113 to 133).** Each was a red dot on a stick the colour of the boards, with a leaf the same brown: strewn along the stage lip and flying from the house they read as matches. They are drawn the way the marquee's rose is: a green stem with two leaves, and a cup of petals with a petal's edge curling in at the heart (`theatre/theatre.ts`).
+
+## Round 77: polish wave 5, the covers on a phone
+
+A fresh look at the stretches the last waves had passed over (the opening, the white studio, the globe, the stars, the drive) at full size, and then every change of place on a phone, a twentieth of a second either side: `check:shows` holds that each is covered, but in the 16:9 frame only.
+
+**Every change of place is covered on a phone too.** The spotlight, the curtain, the white, the cloth, the doors, the iris and the dark all reach the tall frame's edges.
+
+**The run-out's flicker (394.5 to 396.1).** The cream cover flickered like a projector's light by letting the world through it, seven per cent at eighteen times a second. In the wide frame the world under it is the screen's own white, so it read as light; on a phone, above and below the screen it is the dark room, so the flicker was bands of grey strobing across the white. The cover is whole now and its light breathes a little darker and back (`transitions.ts`).
+
+**The burst on a phone (143.64).** The stage face under the painted street went to the house's dark swept out from the door with the paint, at twenty-two cells a second: in the wide frame a strip, on a phone a hard dark column half the height of the screen, crossing it. The face goes down all at once now, in four tenths of a second, as house lights do; the floor's top still takes the paint from the door (`studio/studio.ts`).
+
+The neon arrow at the end of the drive looked, unlit, as if it hung in the air before the freeway; it hangs from its bar on the club's wall, dark glass until its note, and stays.
