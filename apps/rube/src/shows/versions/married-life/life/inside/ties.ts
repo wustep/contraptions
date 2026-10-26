@@ -797,16 +797,17 @@ function drawLightPatch(p: p5, k: number, l: Light, a: number, T: number): void 
   })()
   const shades = outsideIn(l.season, T)
   ctx.save()
-  // Three layers, each a little larger: a soft edge, a wide penumbra, not a cut. The outer two each lay a quarter of
-  // `a`; the inner one makes up the rest, so the middle, under all three, takes `a` exactly. The outside's shadows are
-  // holes in each (smaller in the outer two), so they too have soft edges, and only take the light away.
-  const edge = 0.25 * a
-  const inner = 1 - (1 - a) / ((1 - edge) * (1 - edge))
-  for (const [grow, f, shrink] of [
-    [0.1, edge, 0.55],
-    [0.05, edge, 0.78],
-    [0, inner, 1],
-  ] as [number, number, number][]) {
+  // Seven layers, each a little larger: a penumbra that falls off evenly, not a cut (three left their rims on the
+  // paper as steps, and the shadows in it as dark-ringed spots). The outer six share three quarters of `a`; the inner one makes
+  // up the rest, so the middle, under all of them, takes `a` exactly. The outside's shadows are holes in each (smaller
+  // in the outer ones), so they too have soft edges, and only take the light away.
+  const RIMS = 6
+  const edge = 1 - Math.pow(1 - 0.75 * a, 1 / RIMS)
+  const inner = 1 - (1 - a) / Math.pow(1 - edge, RIMS)
+  const layers: [number, number, number][] = []
+  for (let i = RIMS; i > 0; i--) layers.push([0.12 * (i / RIMS), edge, 1 - 0.55 * (i / RIMS)])
+  layers.push([0, inner, 1])
+  for (const [grow, f, shrink] of layers) {
     ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${f})`
     const y0 = l.top - grow
     const y1 = l.top + H + grow
