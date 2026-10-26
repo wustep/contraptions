@@ -497,8 +497,9 @@ export function drawVaultPart(p: p5, c: Ctx, t: number, o: Pt): void {
     const u = t - T.charges
     if (u >= 0 && u < 1.6) {
       const a = Math.min(1, u / 0.05) * Math.exp(-u / 0.5)
-      const r = 0.5 + 0.9 * (1 - Math.exp(-u / 0.25))
-      for (const px of [-5.2, -2.1, 1.0, 4.1]) puff(p, k, [px, FLOOR_Y + 0.95 + fortDrop(t) - 0.2 * u], r, mixHex(SNOW.snowShade, SNOW.concreteDark, 0.45), 0.8 * a)
+      const r = 0.7 + 1.3 * (1 - Math.exp(-u / 0.25))
+      // Thin and wide (strong and round, on the underside's dark it read as four lamps lit).
+      for (const px of [-5.2, -2.1, 1.0, 4.1]) puff(p, k, [px, FLOOR_Y + 0.95 + fortDrop(t) - 0.2 * u], r, mixHex(SNOW.snowShade, SNOW.concreteDark, 0.45), 0.36 * a)
     }
   })
 }
