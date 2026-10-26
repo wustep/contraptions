@@ -1,7 +1,7 @@
 import { FRIGATE, drawFrigate, type FrigateLook, type FrigatePose } from '../../craft/frigate'
 import { HARKONNEN, drawThopter, drawThopterOver, seat, thopterLook, type ThopterPose } from '../../craft/thopter'
 import { TICK } from '../../music'
-import { circle, ellipse, fill, kick, line, mix, poly, rect, rgba, ring, smooth, smoother, stroke, type Paint, type Pt } from '../../paint'
+import { circle, ellipse, fill, kick, line, mix, poly, rect, rgba, ring, smooth, smoother, stroke, vgrad, type Paint, type Pt } from '../../paint'
 import { PAD } from '../../plan'
 import { CRATE, FRIGATE_AT, FRIGATE_FOLD, HOOK, LEVER_END, LEVER_PIVOT, PULLEY, RAMP_FOOT, WINCH } from './geo'
 import { ARRIVAL, ATTACK } from './times'
@@ -104,8 +104,16 @@ export function drawFrigateUnder(g: Paint, t: number, night: boolean): void {
   }
   // The hold, dark, seen through the hatch while it is open.
   if (hatchOpen(t) > 0.001) {
-    rect(ctx, p.x + HATCH_L.x0, p.y + HATCH_L.y0, HATCH_L.x1 - HATCH_L.x0, HATCH_L.y1 - HATCH_L.y0)
-    fill(ctx, night ? '#07090D' : '#6E6254')
+    // By day, dark high up inside and lighter toward its floor, where the light off the field comes in; the hull's
+    // own thickness a shadow under the lintel.
+    const y0 = p.y + HATCH_L.y0
+    const y1 = p.y + HATCH_L.y1
+    rect(ctx, p.x + HATCH_L.x0, y0, HATCH_L.x1 - HATCH_L.x0, y1 - y0)
+    fill(ctx, night ? '#07090D' : vgrad(ctx, y0, y1, [[0, '#3C342C'], [0.5, '#5B4F42'], [1, '#76685A']]))
+    if (!night) {
+      rect(ctx, p.x + HATCH_L.x0, y0, HATCH_L.x1 - HATCH_L.x0, 0.22)
+      fill(ctx, vgrad(ctx, y0, y0 + 0.22, [[0, rgba('#1C1916', 0.7)], [1, rgba('#1C1916', 0)]]))
+    }
     // Its floor, where the family stands.
     rect(ctx, p.x + HATCH_L.x0, p.y + HATCH_L.y1 - 0.06, HATCH_L.x1 - HATCH_L.x0, 0.06)
     fill(ctx, mix(look.belly, '#000000', 0.3))
