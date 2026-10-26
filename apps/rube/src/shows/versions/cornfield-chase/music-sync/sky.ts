@@ -34,6 +34,12 @@ const DAY: Layer[] = [
   { n: 8, loop: 5.8, q: 0.07, drift: 0.011, lo: 0.42, hi: 0.7, w0: 0.26, w1: 0.42, haze: 0 },
 ]
 
+/**
+ * Higher still, for a frame taller than 16:9 (a phone held upright), which sees far more sky over the same field: the
+ * afternoon's clouds go on up it, a little bigger and quicker for being nearer overhead, so its top is not bare.
+ */
+const TALL: Layer = { n: 9, loop: 6.2, q: 0.08, drift: 0.013, lo: 0.78, hi: 1.9, w0: 0.3, w1: 0.46, haze: 0 }
+
 /** Long, thin, slow: a night's few clouds, a low bank over the horizon the fair lights from under, and a few high. */
 const NIGHT: Layer[] = [
   { n: 5, loop: 4.4, q: 0.04, drift: 0.004, lo: 0.1, hi: 0.2, w0: 0.5, w1: 0.8, haze: 0.25 },
@@ -91,7 +97,8 @@ export interface CloudLight {
 export function clouds(s: Screen, t: number, hy: number, light: CloudLight, night = false): void {
   const { ctx, cx, f, w } = s
   const half = w / 2 / f
-  for (const [li, layer] of (night ? NIGHT : DAY).entries()) {
+  const layers = night ? NIGHT : s.h > f * 1.05 ? [...DAY, TALL] : DAY
+  for (const [li, layer] of layers.entries()) {
     const at = (s.camX * layer.q) / 8
     const heap = new Path2D()
     const feet: { x: number; y: number; width: number }[] = []
