@@ -1055,6 +1055,9 @@ function drawSpecks(p: p5, k: number, f: Frame, T: number, near: boolean): void 
   const rows = near
     ? [1.03, 1.07, 1.11, 1.16, 1.21, 1.27, 1.33, 1.4, 1.48, 1.58]
     : Array.from({ length: 22 }, (_, j) => 0.3 * (0.97 / 0.3) ** (j / 21))
+  // A tall frame (a phone held upright) sees on down the meadow toward us: the rows go on, nearer and bigger, to its
+  // foot, so the flowers never stop in a line over a bare slab of green. A wide frame never reaches them.
+  while (near && rows.length < 40 && depthY(GR, rows[rows.length - 1]) < f.y1 + 1) rows.push(rows[rows.length - 1] * 1.07)
   for (let j = 0; j < rows.length; j++) {
     const sc = rows[j]
     const Y = depthY(GR, sc)
