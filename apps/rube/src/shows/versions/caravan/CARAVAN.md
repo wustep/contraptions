@@ -266,6 +266,16 @@ second.
 - **The cut to Carnegie (242.34)**: the road's closing dark (`crash.ts` `nightFall`) is the hall's own dark, not the
   road's slate, so the cut changes the picture and not the dark (the probe's change across it, 14 to 4.6).
 
+## Polish wave 4 (Oct 26)
+
+- **The thrown chair lies on its back** (`band-people.ts` `ON_BACK`): the back flat on the floor behind the kit, the
+  legs out over it. It lay on its face, the seat on edge and the back jutting out level in the air, and read as debris.
+  It spins a little faster in flight (4.5 rad, `SPIN`) and turns on at about the same rate through its fall.
+- **The drummer's throne** (`solo-rig.ts` `drawTorso`): the post stands on the stage where he sits and telescopes up to
+  meet him over his last cell and a half down; the cushion is his waist's width. The cushion was twice his waist and
+  hung on the post under the body, so the body flew in as a T, and once seated its end stuck out past the rack tom like
+  a pan's handle.
+
 ## How to run it
 
 ```
