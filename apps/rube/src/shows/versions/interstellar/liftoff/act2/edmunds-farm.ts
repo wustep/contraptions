@@ -302,17 +302,25 @@ export function shadow(p: p5, c: Ctx, v: Plain, site: Site, x0: number, x1: numb
   const out = (x: number) => site.sunX + (x - site.sunX) * reach
   const a = 0.4 * sun * (0.4 + 0.6 * Math.min(1, s))
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const g = ctx.createLinearGradient(0, X(y), 0, X(bottom))
-  g.addColorStop(0, rgba(VOID.bg, a))
-  g.addColorStop(1, rgba(VOID.bg, a * 0.25))
-  ctx.fillStyle = g
-  ctx.beginPath()
-  ctx.moveTo(X(x0), X(y))
-  ctx.lineTo(X(x1), X(y))
-  ctx.lineTo(X(out(x1)), X(bottom))
-  ctx.lineTo(X(out(x0)), X(bottom))
-  ctx.closePath()
-  ctx.fill()
+  // Sharp at the foot and soft as it runs, as the sun's disc makes a long shadow: the edges blur out wider the further
+  // the shadow goes from what casts it, so each one is a soft band by the frame's foot, not a hard-edged stripe. Drawn
+  // as a few wedges, each a little wider at its far end, that add up to the whole shadow where they all overlap.
+  const span = out(x1) - out(x0)
+  const n = 8
+  for (let i = 0; i < n; i++) {
+    const spread = (i / (n - 1) - 0.5) * 0.9 * span
+    const g = ctx.createLinearGradient(0, X(y), 0, X(bottom))
+    g.addColorStop(0, rgba(VOID.bg, a / n))
+    g.addColorStop(1, rgba(VOID.bg, (a * 0.25) / n))
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.moveTo(X(x0), X(y))
+    ctx.lineTo(X(x1), X(y))
+    ctx.lineTo(X(out(x1) + spread), X(bottom))
+    ctx.lineTo(X(out(x0) - spread), X(bottom))
+    ctx.closePath()
+    ctx.fill()
+  }
 }
 
 /** Everything of hers behind the camp, and the rover in front of it: drawn before the camp. */
