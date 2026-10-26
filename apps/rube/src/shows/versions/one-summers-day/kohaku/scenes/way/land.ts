@@ -90,30 +90,47 @@ export function drawHills(g: Paint, L: Light): void {
 }
 
 /**
- * The wind going over the meadow: two or three long, soft-edged bands of a lighter green running east through the
- * grass, the way the film shows the wind, never a field of marks. Clipped to the meadow's ground by the caller.
+ * The wind going over the meadow: two or three long waves running east through the grass, the way the film shows the
+ * wind, never a field of marks. The blades stay where they grow; as a wave passes over them they lean east and show
+ * their paler side, and stand again behind it. Flat strokes, no soft patch. Clipped to the meadow's ground by the caller.
  */
 function windBands(g: Paint, L: Light, x0: number, x1: number, gust: number): void {
   const { ctx } = g
   const light = lit('#A9CF6E', L.ambient)
   // They run east with the breeze, and the gust into the tunnel sends one west.
   const t = g.t
+  const STEP = 0.085
+  const HALF = 3
+  // The blades a wave has laid over, in three strengths, each drawn as one path.
+  const paths = [new Path2D(), new Path2D(), new Path2D()]
   for (let i = 0; i < 3; i++) {
     const period = 22
     const x = -12 + ((t * 1.6 + i * (period / 3) * 2.4) % (period * 2.4)) - 0 * gust
     if (x < x0 - 6 || x > x1 + 6) continue
-    const y = meadowY(x) + 0.5 + 0.25 * i
-    const gr = ctx.createRadialGradient(x, y, 0, x, y, 3)
-    gr.addColorStop(0, rgba(light, 0.32))
-    gr.addColorStop(1, rgba(light, 0))
-    ctx.save()
-    ctx.translate(x, y)
-    ctx.scale(1, 0.18)
-    ctx.translate(-x, -y)
-    ctx.fillStyle = gr
-    ctx.fillRect(x - 3, y - 3, 6, 6)
-    ctx.restore()
+    const k0 = Math.ceil(Math.max(x - HALF, x0 - 0.2) / STEP)
+    const k1 = Math.floor(Math.min(x + HALF, x1 + 0.2) / STEP)
+    for (let k = k0; k <= k1; k++) {
+      for (let j = 0; j < 3; j++) {
+        const bx = k * STEP + (hash(k, j, 31) - 0.5) * STEP
+        const u = (bx - x) / HALF
+        const wave = Math.max(0, 1 - u * u) ** 2
+        const a = Math.min(1, Math.max(0, (wave - 0.7 * hash(k, j, 32 + i)) * 3))
+        if (a < 0.17) continue
+        const by = meadowY(bx) + 0.5 + 0.25 * i + (j - 1) * 0.15 + (hash(k, j, 33) - 0.5) * 0.08
+        const lean = 0.03 + 0.07 * a
+        const p = paths[a > 0.75 ? 2 : a > 0.45 ? 1 : 0]
+        p.moveTo(bx, by)
+        p.quadraticCurveTo(bx + lean * 0.3, by - 0.08, bx + lean, by - 0.12 - 0.02 * hash(k, j, 34))
+      }
+    }
   }
+  ctx.lineCap = 'round'
+  ctx.lineWidth = 0.022
+  paths.forEach((p, n) => {
+    ctx.strokeStyle = rgba(light, [0.25, 0.42, 0.58][n])
+    ctx.stroke(p)
+  })
+  ctx.lineCap = 'butt'
 }
 
 /** The meadow: its grass from the ground's edge down, the path worn in it, and the tips of the grass along its top. */
