@@ -1290,6 +1290,16 @@ A hundred-and-twenty-sixth, polish wave 2: a fresh watch, wide and tall, and a h
 - Looked at and left alone: the whisper at the gala (Shang's brass rim and her outline meet, they do not overlap); the
   phone-shaped frames.
 
+A hundred-and-twenty-seventh, polish wave 3: the whole show again at a second a still, then full frames.
+
+- **The lecture hall, the day they came** (98 to 102 s): every student's phone wore a halo twice the student's size, so
+  each row was a haze of glows, and the reading lamp sat in a wide bloom over the whole podium. Each phone now lights
+  only the hands and face over it, and the lamp a small pool round its shade.
+- **The gala, the number** (275 to 277 s): the ghost of the sat phone's keys lit each key inside a green halo, the one
+  glow in that room. The key brightens itself now, with its light only just round it.
+- Looked at and left alone: the lift coming down in the morning (311 to 315 s); the end credits on a phone-sized page,
+  every card whole and clear of the window.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
