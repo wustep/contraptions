@@ -191,6 +191,12 @@ function drawWall(p: p5, k: number, f: Frame, t: number): void {
   g.addColorStop(1, rgba(DERELICTE.roof, 0))
   ctx.fillStyle = g
   ctx.fillRect(X(x0), X(Math.max(y0, -13)), X(x1 - x0), X(Math.max(0, Math.min(y1, -5.5) - Math.max(y0, -13))))
+  // Over the wall's top, the roof's dark goes on up, out of a tall frame: no lighter lid of the world behind it.
+  if (f.y0 - 1 < HALL.top) {
+    p.noStroke()
+    p.fill(DERELICTE.roof)
+    p.rect(X(x0), X(f.y0 - 1), X(x1 - x0), X(HALL.top - (f.y0 - 1)))
+  }
   p.pop()
   // The runway's light thrown back on the brick behind it, bank by bank, low along the wall over the deck.
   BANK_X.forEach((bx, i) => {

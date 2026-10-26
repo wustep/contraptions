@@ -4,7 +4,7 @@ import { beam, flashBurst, pool, rgba } from '../cast'
 import { hash } from '../kit'
 import { CLUB, SPA } from '../worlds'
 import { BALCONY, CAB, clamp01, DOOR_X, DOORS, DRYER, FLOOR_Y, PRESS_FLASH, ROBES, sm, STRIPS, STRIPS_X, windAt, X_END, XT } from './spa-geo'
-import { ctxOf, box, disc, hwash, line, polyline, rbox, shape, vwash, type Pen } from './spa-kit'
+import { ctxOf, box, hwash, line, polyline, shape, vwash, type Pen } from './spa-kit'
 
 /**
  * The spa's room (the set, handed show time): black marble to a dark ceiling, a wainscot with a brass rail, candles in
@@ -173,9 +173,6 @@ function drawRobe(pen: Pen, x: number, t: number, i: number): void {
   const { p, k } = pen
   p.push()
   p.translate(hook[0] * k, hook[1] * k)
-  // The hook on the wall: a brass plate and its peg, which the robe's loop hangs over.
-  rbox(pen, -0.045, -0.2, 0.045, 0.02, 0.02, SPA.brass, 0)
-  disc(pen, [0, -0.045], 0.04, 0.04, SPA.brass, 0)
   // The body swings about the hook; the hem swings further (a cloth, not a board).
   const bend = (u: number): Pt => {
     const a = sway + lift * u * u
@@ -219,8 +216,13 @@ function drawRobe(pen: Pen, x: number, t: number, i: number): void {
   const w = bend(0.45)
   line(pen, [w[0] - half(0.45), w[1]], [w[0] + half(0.45), w[1]], SPA.towelShade, 1.0)
   line(pen, [w[0] + 0.05, w[1]], [w[0] + 0.1 + 0.2 * lift, w[1] + 0.2], SPA.towelShade, 0.8)
-  // Its loop, from the collar up over the peg.
-  polyline(pen, [[n[0] - 0.045, n[1] + 0.03], [0, -0.085], [n[0] + 0.045, n[1] + 0.03]], SPA.towelShade, 0.9)
+  // The hanger's hook: a thin stem up out of the collar, curled over the rail it hangs from.
+  const curl: Pt[] = [[0, 0.1]]
+  for (let j = 0; j <= 10; j++) {
+    const a = (j / 10) * 3.6
+    curl.push([-0.032 + 0.032 * Math.cos(a), -0.075 - 0.032 * Math.sin(a)])
+  }
+  polyline(pen, curl, SPA.brass, 0.8)
   p.pop()
 }
 

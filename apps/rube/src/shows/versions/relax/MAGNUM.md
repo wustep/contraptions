@@ -261,7 +261,6 @@ A careful watch, wide and tall, for what looked wrong or cheap:
 - **Derelicte's press** read as a row of bottles with caps: the crowd is one mass filled down from its top edge, so a
   flash gun's head on its thin stem became a solid column the width of the head. The guns are drawn on their own over
   the mass now, a stem and a head, and the photographers read as photographers.
-- **The spa's robes** hung from a brass stub that pointed up into the air: each hangs by its loop on a wall hook.
 - **The candles' shine on the spa's floor** was a dim half-disc with an edge: a soft streak down the gloss.
 - **The Center's trees** had trunks the leaves' green, so the old tree read as a painted pole: bark, grey-brown, with a
   little flare at the root.
@@ -309,6 +308,15 @@ A careful watch, wide and tall, for what looked wrong or cheap:
   the next: in the close on the model alone they stood as a long straight ramp across the sky with a corner in it.
   They are eased crown to crown, and the far range has more, smaller crowns, so every framing sees a rolling ridge.
 - Read and left: the four dissolves in 0.15 s steps (no flash), the fling, the steam clearing, and the end to 4:23.
+
+## Regret fixes
+
+- **The spa's robes** (1:13 to 1:21): the wave-one wall hook, a brass tab with a peg, read as a bottle neck sticking up
+  out of each collar. Back to the thin hanger stem, which now curls over at its top into a hook.
+- **A phone held upright** (the walk-off, 1:26 to 1:40, and Derelicte, 2:20 to 3:15): the composed frame sat midway in
+  the tall stage, so half the picture was the black house under it. It sits low now (`tall: 0.7`): the rafters, the
+  brick and the windows over the action, the house a band at the foot. Over Derelicte's wall the roof's dark goes on
+  up, where the world's lighter brown used to show as a flat lid.
 
 ## Zoolander nods
 
