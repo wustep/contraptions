@@ -728,10 +728,12 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
   drawFlush(p, s, c, t, f)
   // The road's bank, down to the field past the dam: the dam's face is its end. Without it, once the camera came down
   // below the road at the dam, the far land's horizon stood lower than the road and under the road was sky, with the
-  // telegraph wires running through it. In the land's own colours, so along the chase it reads as the land did.
+  // telegraph wires running through it. Filled with the far land's own gradient, in the same place on the screen, so
+  // wherever the land was already it is the same, and over the horizon it is the land's top colour.
   if (s.edge > f.x0 - 1) {
     const ctx = p.drawingContext as CanvasRenderingContext2D
-    const g = ctx.createLinearGradient(0, X(GROUND), 0, X(GROUND + 3))
+    const inv = ctx.getTransform().inverse()
+    const g = ctx.createLinearGradient(0, inv.d * farLand.y0 + inv.f, 0, inv.d * farLand.y1 + inv.f)
     g.addColorStop(0, farLand.land[0])
     g.addColorStop(0.35, farLand.land[1])
     g.addColorStop(1, farLand.land[2])
