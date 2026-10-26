@@ -1,4 +1,4 @@
-import { hash, mix, rgba, smooth, stroke, vgrad, type Paint } from '../../draw'
+import { hash, mix, rgba, smooth, stroke, type Paint } from '../../draw'
 import { M } from '../../music'
 import type { Pt } from '../../path'
 import { layer } from '../../world/depth'
@@ -63,17 +63,13 @@ export function drawSeas(g: Paint): void {
   const step = Math.max(0.1, (b - a) / 160)
   // Each rank a filled shape up to its crests, with the light on its backs as one thin line along them.
   const rank = (top: (x: number) => number, color: string, lit: number) => {
+    // Down to the waterline and no further: under it the sea's own body is the water, so the rank's ends (off
+    // Thrinacia and Ithaca) are never a standing edge seen through the cut.
     ctx.beginPath()
-    ctx.moveTo(a, 0.6)
-    for (let x = a; x <= b + step; x += step) ctx.lineTo(x, top(x))
-    ctx.lineTo(b + step, 0.6)
+    for (let x = a; x <= b + step; x += step) (x === a ? ctx.moveTo(x, top(x)) : ctx.lineTo(x, top(x)))
+    for (let x = b + step; x >= a - 1e-9; x -= step) ctx.lineTo(x, surface(x, t) + 0.03)
     ctx.closePath()
-    // Down into the water it goes off into the sea's own body, so it ends in no line under the surface.
-    ctx.fillStyle = vgrad(ctx, -1, 0.6, [
-      [0, color],
-      [0.55, color],
-      [1, rgba(color, 0)],
-    ])
+    ctx.fillStyle = color
     ctx.fill()
     ctx.beginPath()
     for (let x = a; x <= b + step; x += step) (x === a ? ctx.moveTo(x, top(x)) : ctx.lineTo(x, top(x)))
@@ -96,10 +92,15 @@ export function drawCeiling(g: Paint): void {
   const top = view.y0 - 1
   ctx.beginPath()
   ctx.moveTo(Lr.x(lx0), top)
-  // Its underside: low, in two long, slow swells, coming down as the storm closes and lifting as it goes.
-  for (let x = lx0; x <= lx1; x += 2) {
-    const under = -10.5 + 2.2 * Math.sin(x * 0.09 + 0.7) + 1.1 * Math.sin(x * 0.031 - t * 0.05) - 6 * (1 - s)
-    ctx.lineTo(Lr.x(x), Math.min(Lr.hy - 0.6, Lr.y(under)))
+  // Its underside: low, in long, slow lobes of uneven size, coming down as the storm closes and lifting as it goes. It
+  // never comes below the horizon: a lobe that would is eased up short of it (a soft floor, not a cut), so its
+  // underside is never a run of flat stretches between the lobes.
+  const floor = Lr.hy - 0.6
+  const k = 0.9
+  for (let x = lx0; x <= lx1; x += 1.5) {
+    const under = -10.5 + 1.7 * Math.sin(x * 0.09 + 0.7) + 0.9 * Math.sin(x * 0.205 + 1.9) + 1.1 * Math.sin(x * 0.031 - t * 0.05) - 6 * (1 - s)
+    const y = Lr.y(under)
+    ctx.lineTo(Lr.x(x), floor - k * Math.log1p(Math.exp((floor - y) / k)))
   }
   ctx.lineTo(Lr.x(lx1), top)
   ctx.closePath()

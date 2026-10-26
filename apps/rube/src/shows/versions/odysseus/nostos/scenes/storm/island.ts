@@ -97,15 +97,16 @@ export function drawIsland(g: Paint): void {
   fill(ctx, mix(lit(GRASS_SHADE), air, 0.55))
   drawRidge(g, air)
   // The land: grass over the whole hill, darkening towards the water; under the water it goes on down and out, a
-  // mound that the cut sea darkens.
+  // mound that the cut sea darkens, its skirts going on down out of sight (no floor to it, so a tall frame sees none).
   const pts: Pt[] = []
   for (let x = GROUND[0][0]; x <= GROUND[GROUND.length - 1][0] + 1e-6; x += 0.25) pts.push([x, ground(x)])
-  const land: Pt[] = [...pts, [525.6, 1.5], [527.2, 2.6], [492.2, 2.6], [493.8, 1.5]]
+  const land: Pt[] = [...pts, [525.6, 1.5], [527.6, 3.2], [530.5, 7], [535, 14], [541, 40], [475, 40], [481, 14], [485.5, 7], [491.8, 3.2], [493.8, 1.5]]
   poly(ctx, land)
-  ctx.fillStyle = vgrad(ctx, -2.1, 0.4, [
+  ctx.fillStyle = vgrad(ctx, -2.1, 9, [
     [0, lit(GRASS)],
-    [0.55, mix(lit(GRASS), lit(GRASS_SHADE), 0.35)],
-    [1, lit(GRASS_SHADE)],
+    [0.124, mix(lit(GRASS), lit(GRASS_SHADE), 0.35)],
+    [0.225, lit(GRASS_SHADE)],
+    [1, mix(lit(GRASS_SHADE), '#1E2420', 0.75)],
   ])
   ctx.fill()
   // The beaches: a band of sand along the ground where it meets the water, either side.
