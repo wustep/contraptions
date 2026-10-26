@@ -1,6 +1,6 @@
 import { beatsIn } from '../music'
 import { hold } from '../motion'
-import { drawing, layer, poly, smooth, type Brush } from '../paint'
+import { drawing, layer, noise1, poly, smooth, type Brush, type Pt } from '../paint'
 import type { Scene } from '../scene'
 import { T } from '../timeline'
 import { SAND, depthScale, farDesert, frameH, horizonOf, paintFar, tiltOf } from '../world/land'
@@ -59,22 +59,43 @@ function paintRock(b: Brush): void {
   ctx.fill()
 }
 
-/** On each boom, a little sand runs off the lip under them. */
+/**
+ * On each boom, a little sand runs off the lip under them: a thin stream down the cliff, thinning to nothing at its
+ * falling head, its edges wavering, and its tail let go of the lip after a moment so the last of it falls away.
+ */
 function paintTrickle(b: Brush): void {
   const { ctx, t } = b
   if (t < W.boom - 0.1 || t > W.sign + 4) return
-  for (const at of [W.boom, W.boom + 0.83]) {
+  for (const [i, at] of [W.boom, W.boom + 0.83].entries()) {
     const s = t - at
-    if (s <= 0 || s > 2.2) continue
-    const fall = 3.2 * s * s
-    const a = 0.75 * (1 - smooth(s, 1.2, 2.2))
+    if (s <= 0 || s > 2.6) continue
+    const head = -10.0 + 3.2 * s * s
+    const tail = -10.0 + 3.2 * Math.max(0, s - 0.9) ** 2
+    if (head - tail < 0.05) continue
+    const a = 0.6 * (1 - smooth(s, 1.6, 2.6))
+    const m = 14
+    const edge = (sgn: number): Pt[] => {
+      const pts: Pt[] = []
+      for (let j = 0; j <= m; j++) {
+        const u = j / m
+        const y = tail + (head - tail) * u
+        const hw = 0.04 * (1 - 0.5 * u) * (1 + 0.45 * noise1((y - 6 * t) * 2, i * 7 + sgn))
+        pts.push([6.03 + (y + 10) * 0.04 + sgn * hw, y])
+      }
+      return pts
+    }
+    const l = edge(-1)
+    const r = edge(1)
     ctx.beginPath()
-    ctx.moveTo(5.9, -10.0 + Math.min(fall, 0.2))
-    ctx.lineTo(6.15, -10.0 + Math.min(fall, 0.2))
-    ctx.lineTo(6.55 + fall * 0.04, -10.0 + fall)
-    ctx.lineTo(6.25 + fall * 0.04, -10.0 + fall)
+    ctx.moveTo(l[0][0], l[0][1])
+    for (const p of l) ctx.lineTo(p[0], p[1])
+    for (let j = m; j >= 0; j--) ctx.lineTo(r[j][0], r[j][1])
     ctx.closePath()
-    ctx.fillStyle = b.ca('#D9965A', a)
+    const gr = ctx.createLinearGradient(0, tail, 0, head)
+    gr.addColorStop(0, b.ca(SAND.lit, a))
+    gr.addColorStop(0.6, b.ca(SAND.lit, a * 0.5))
+    gr.addColorStop(1, b.ca(SAND.lit, 0))
+    ctx.fillStyle = gr
     ctx.fill()
   }
 }
