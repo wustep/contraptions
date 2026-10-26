@@ -25,12 +25,11 @@ export const ithaca: Scene = {
     { t: 44.4, cells: 3.3, at: [808.6, -9.75] },
     // Argos framed as he will be when he knows him (`home.ts`), asleep.
     { t: 47.4, cells: 2.6, at: [810.1, -9.62] },
-    { t: 49.0, cells: 2.6, at: [810.35, -9.62] },
-    { t: 52.8, cells: 3.4, at: [818.5, -9.8] },
+    { t: 48.4, cells: 2.6, at: [810.3, -9.62] },
+    { t: 51.8, cells: 3.4, at: [818.9, -9.8] },
     // The hall's west end: the suitors at the bench, the bow on its stand, the axes lying in their trench; and over
     // them, alone on the terrace, the son looking out to sea.
-    { t: 56.6, cells: 3.4, at: [824.7, -10.1] },
-    { t: 59.2, cells: 3.3, at: [825.0, -10.1] },
+    { t: 56.6, cells: 3.35, at: [824.7, -10.1] },
     // Up into her room.
     { t: SHUTTLE[7] + 0.3, cells: 2.5, at: [820.25, -11.45] },
     { t: M.answer - 0.4, cells: 2.2, at: [820.0, -11.42] },
