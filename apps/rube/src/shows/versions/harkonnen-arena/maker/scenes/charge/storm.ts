@@ -114,10 +114,13 @@ function paintWall(b: Brush, wall: Wall, front: number, fall: number, a: number)
   const topX = fx(-H)
   const west = view.x0 - 10
   const m = 72
+  // Its foot goes a little down over the far floor and fades into it, so the dark meets the sand as blown dust, not
+  // along a ruled line.
+  const FOOT = 5
   ctx.beginPath()
-  ctx.moveTo(west, 2)
+  ctx.moveTo(west, FOOT)
   for (let i = 0; i <= n; i++) {
-    const y = 2 + ((-H - 2) * i) / n
+    const y = FOOT + ((-H - FOOT) * i) / n
     ctx.lineTo(Math.max(west, fx(y)), y)
   }
   for (let i = 0; i <= m; i++) {
@@ -126,9 +129,11 @@ function paintWall(b: Brush, wall: Wall, front: number, fall: number, a: number)
   }
   ctx.closePath()
   const top = -H - wall.size * 0.85
-  const gr = ctx.createLinearGradient(0, 2, 0, top)
-  gr.addColorStop(0, b.ca(wall.body, a))
-  gr.addColorStop(0.4, b.ca(wall.body, a))
+  const gr = ctx.createLinearGradient(0, FOOT, 0, top)
+  const floor = FOOT / (FOOT - top)
+  gr.addColorStop(0, b.ca(wall.body, 0))
+  gr.addColorStop(floor, b.ca(wall.body, a))
+  gr.addColorStop(Math.max(floor, 0.4), b.ca(wall.body, a))
   gr.addColorStop(0.7, b.ca(wall.body, a * 0.45))
   gr.addColorStop(0.9, b.ca(wall.body, a * 0.1))
   gr.addColorStop(1, b.ca(wall.body, 0))
