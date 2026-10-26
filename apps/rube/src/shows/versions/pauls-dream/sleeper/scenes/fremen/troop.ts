@@ -46,6 +46,21 @@ export const AT = {
   chani: 1186,
 } as const
 
+/** When each of those who come up out of the sand on the flat is all the way up. */
+const UP = { jamis: 343.2, stilgar: 341.6, f1: 343.95, f2: 343.45, f3: 341.2 } as const
+
+/**
+ * Where on the flat someone comes up out of the sand, how big they are, and when they are up: the near sand stays over
+ * them there until then, though elsewhere on the flat they stand on it.
+ */
+export const RISES: [number, number, number][] = [
+  [AT.jamis, SIZE.jamis, UP.jamis],
+  [AT.stilgar, SIZE.stilgar, UP.stilgar],
+  [AT.fremen[1], SIZE.fremen, UP.f1],
+  [AT.fremen[2], SIZE.fremen, UP.f2],
+  [AT.fremen[3], SIZE.fremen, UP.f3],
+]
+
 /** The duel's moments: the challenge, the clash, the exchanges on the fill, the blow. */
 export const DUEL = {
   challenge: 342.67,
@@ -226,7 +241,7 @@ function jamis(): Seg[] {
   const k = (keys: [number, number, Ease?][]) => keyed(w, s, keys.map(([t, x, e]): [number, number, Ease?] => [t, m(x), e]))
   // Up out of the sand behind Paul as the picture comes back to him, nearest of all.
   const w = new Walk([AT.jamis, ground(AT.jamis) + R * s + 0.05], 339.9)
-  w.wait(342.35).roll([on(AT.jamis, s)], 343.2, 'out')
+  w.wait(342.35).roll([on(AT.jamis, s)], UP.jamis, 'out')
   k([[343.6, 1168.0]])
   keyed(w, s, [[DUEL.clash, P(1166.3 - contact(SIZE.paul, SIZE.jamis)), 'in']])
   w.hop(on(m(1166.95), s), 344.38)
@@ -269,7 +284,7 @@ function jamis(): Seg[] {
 function stilgar(): Seg[] {
   const s = SIZE.stilgar
   // Up out of the sand behind Paul while the picture is on Chani.
-  const w = new Walk([AT.stilgar, ground(AT.stilgar) + R * s + 0.05], 339.9).roll([on(AT.stilgar, s)], 341.6, 'out')
+  const w = new Walk([AT.stilgar, ground(AT.stilgar) + R * s + 0.05], 339.9).roll([on(AT.stilgar, s)], UP.stilgar, 'out')
   w.wait(352.4)
   // A step to his man, and a breath beside him; then over him, on the boom, to the one who killed him.
   w.roll(over(AT.stilgar, 1162.45, s), 353.6).wait(TAKEN - 0.45)
@@ -328,7 +343,7 @@ function fremen(i: number): Actor {
   if (i === 1 || i === 2) {
     // Up out of the sand between Paul and his mother as the picture comes back to him (one half up on the cut, the
     // other after it); and they stay with the dead.
-    const [r0, r1] = i === 2 ? [342.25, 343.45] : [342.95, 343.95]
+    const [r0, r1] = i === 2 ? [342.25, UP.f2] : [342.95, UP.f1]
     w = new Walk([x, ground(x) + R * s + 0.05], 339.9).wait(r0).roll([on(x, s)], r1, 'out').wait(440)
   } else {
     if (i === 4) {
@@ -337,7 +352,7 @@ function fremen(i: number): Actor {
       w = new Walk([x, ground(x) + 0.3], 339.9).roll([top], 341.4, 'out')
     } else {
       // Up out of the sand by the thopter's nose while the picture is on Chani.
-      w = new Walk([x, ground(x) + R * s + 0.05], 339.9).roll([on(x, s)], 341.2, 'out')
+      w = new Walk([x, ground(x) + R * s + 0.05], 339.9).roll([on(x, s)], UP.f3, 'out')
     }
     const plan = WALKS[i]
     w.wait(WALK_FROM).jump(on(plan.line, s)).wait(plan.off)
