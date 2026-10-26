@@ -426,8 +426,16 @@ function drawRockFace(ctx: C2D, k: number, face: { pts: Pt[]; ledges: [Pt, Pt][]
     k,
     SUN_ROCK,
   )
-  // Snow on its ledges, thin and falling a little to the east.
-  for (const [a, b] of face.ledges) fill(ctx, [a, b, [b[0], b[1] + 0.16], [a[0], a[1] + 0.2]], k, LIT)
+  // Snow on its ledges, falling a little to the east: lodged along part of each, thickest where the ledge is deepest
+  // and running out to nothing at both ends (laid edge to edge at an even width they read as stripes painted across
+  // the rock).
+  for (const [i, [a, b]] of face.ledges.entries()) {
+    const on = (u: number, d: number): Pt => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u + d]
+    const u0 = 0.06 + 0.12 * i
+    const u1 = 0.72 + 0.1 * i
+    const um = u0 + (u1 - u0) * 0.42
+    fill(ctx, [on(u0, 0.04), on(um, -0.02), on(u1, 0.03), on((um + u1) / 2, 0.12), on(um, 0.17), on((u0 + um) / 2, 0.12)], k, LIT)
+  }
   ctx.restore()
   // Snow on its top edge.
   fill(ctx, [face.pts[0], face.pts[1], [face.pts[1][0] - 0.2, face.pts[1][1] + 0.3], [face.pts[0][0] + 0.3, face.pts[0][1] + 0.35]], k, LIT)

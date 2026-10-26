@@ -670,6 +670,76 @@ Round 3 (the cue's landmarks frame by frame, a tenth of a second either side):
   room and the floors under it, and the top a speck on the table. The camera comes in closer on the table (4.3 cells,
   then 3.6), the room's window and lamp still over it.
 
+Polish wave 1 (Opus 5.5, Stephen's "five more waves"; the whole show in contact sheets every 2.5 seconds wide and tall,
+then every second through Paris, the hotel and the kicks, then full frames):
+
+Round 1:
+- **The river, close** (88 to 92, 200 to 213): the far quay's courses, even at half strength, still ran the whole frame
+  as scan lines across the rain behind the falling balls; they are gone. The far water was a hard pale strip; it is a
+  soft band brightening down to the surface.
+- **The plane's rims** (61 to 69, 213.7 to 244): the plane's world inked the balls cream, for the night; on the jet
+  bridge's and the hall's pale floors that cream rim read as a halo round him. They are rimmed in the night's own dark,
+  the cabin's one ink, as in every other world.
+- **The morning on the back wall** (245 to 274.6): the sun's patch began in a hard vertical edge, a seam standing up the
+  wall behind the top in the last shot. It fades in over a third of its width, and the doors' bars across it with it;
+  the shade left of it lets go over most of a cell.
+- **The rock faces' ledges** (123 to 152): the snow on each ledge was an even band from edge to edge, two white stripes
+  painted across the rock. It lies along part of each ledge, thickest in the middle, running out to nothing.
+
+Round 2:
+- **The far towers over the river** (85 to 107, 200 to 213): through gaps in the nearer rank the pale far towers stopped
+  on the far quay's top in a hard line, so in the close shots of the van's fall they hung from the top of the frame. A
+  soft band of mist lies along the quay's top over their feet.
+- **The charges under the vault** (189.9 to 191.5): their four bursts of dust were strong round puffs, pale on the
+  underside's dark: four lamps lit. They are thin and wide.
+
+Round 3: the end credits on a phone (every card reads and none runs off), and the changed beats' times; nothing moved.
+
+Polish wave 2 (sheets every two seconds wide and tall, and the whole show under Zoom for the first time):
+
+Round 1:
+- **Mal's shot** (144 to 147): a hairline ring went out across the vault's floor from Fischer, the one ring drawn in the
+  show, against its own rule (light is light, never a ring). It is cut: the flash at the rifle and his going under at
+  once are the hit.
+
+Round 2 (Zoom):
+- **Zoom keeps him in** (the whole show; plainest at the booth and through the house, 238 to 255): Zoom closed in about
+  the shot's middle, and in the close shots composed low he rode its foot, the floor under him gone. The camera now
+  names his place as Zoom's focus, put a quarter cell out past him toward the nearest edge, and lets go of it smoothly
+  as he nears the edge of the show's own frame (so a shot he is not in, the children or the top, keeps its middle).
+  Zoom moves only where it must.
+
+Round 3: the hits not read last time (the café's three blasts on bar 9, the taxi, the train and its impact on bars
+19 to 20, Mal's shot on bar 38, the children's turn on bar 67) are all on the grid; nothing moved.
+
+Polish wave 3 (every world crossing frame by frame, from three quarters of a second before to a second after; the whole
+show under Overview; full frames of the beats not yet looked at close):
+- **The crossings** (30.86, 61.34, the blink on 68.97, 91.82, 122.29, 152.77, 213.72, the veil on 244.19): each is a
+  clean match cut or its blink or veil, with no flash and no frame of the wrong world. Nothing changed.
+- **Overview**: the stack, Paris, the plane and home each read whole. Nothing changed.
+- **The lawn** (251 to 274.6): the far lawn, lit by the low sun, and the near lawn were two fills meeting on the line
+  they roll on, a hard line ruled across the grass under all three of them. The far lawn's light goes over into the
+  near lawn's colour in the last part of a cell before it.
+
+Polish wave 4 (the iconic beats close: the four kicks, the top's last two seconds every eighth of a second, limbo's
+return every second; the phone held sideways; frame times at real speed). Nothing changed; what was weighed:
+- **The top's wobble** (272.6 to 274.6): it leans about a third of a radian and sways three times a second, still up
+  and turning, as designed; read every eighth of a second it wobbles and does not fall. Kept.
+- **The calving towers' spray** (155 to 167): the brightest white in limbo, but spray off the water standing over the
+  sea, not light; kept.
+- **The phone sideways** (844 × 390): every world and the credits read.
+- **Frame times**: sixty frames a second through the opening, Paris, the rain, the great wide (played into from 180),
+  the van, the plane and home; the one long frame seen was the first after a seek.
+
+Polish wave 5 (the whole show again from the head, wide and tall, for anything the waves before broke; the credits on a
+desktop). Nothing changed:
+- **No regressions**: the river, the plane's rims, the back wall, the ledges, the mist on the far quay, the charges'
+  dust, Zoom and the lawn all read as their waves left them.
+- **Tried and refused: `tall`** (a phone held upright). Held midway, the foot of most tall frames is dark earth or the
+  dark of sleep. Set to 0.65 (more of the extra picture over the composed frame) home and the plane gain sky, but in
+  the dream what is over a level is the dark of sleep, and the hotel's and the snow's tall frames went half navy.
+  One number holds for the whole show, so it stays midway.
+
 ## Inception nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.
