@@ -1,8 +1,8 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../src/core/draw'
 import { clamp, easeInOutSine, easeOutCubic } from '../../../../../../../src/core/ease'
-import { FLOOR, laneAt, mixHex, puff, type Lane, type Pt } from '../../../../parts'
-import { alpha, box, carried, frame, hash, part, smooth, type Ctx } from './kit'
+import { FLOOR, laneAt, mixHex, type Lane, type Pt } from '../../../../parts'
+import { alpha, box, carried, frame, hash, part, puff, smooth, type Ctx } from './kit'
 import { beat, IGNITION } from './music'
 import { DUST } from './worlds'
 
