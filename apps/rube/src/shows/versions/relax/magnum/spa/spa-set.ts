@@ -4,7 +4,7 @@ import { beam, flashBurst, pool, rgba } from '../cast'
 import { hash } from '../kit'
 import { CLUB, SPA } from '../worlds'
 import { BALCONY, CAB, clamp01, DOOR_X, DOORS, DRYER, FLOOR_Y, PRESS_FLASH, ROBES, sm, STRIPS, STRIPS_X, windAt, X_END, XT } from './spa-geo'
-import { ctxOf, box, hwash, line, polyline, shape, vwash, type Pen } from './spa-kit'
+import { ctxOf, box, disc, hwash, line, polyline, rbox, shape, vwash, type Pen } from './spa-kit'
 
 /**
  * The spa's room (the set, handed show time): black marble to a dark ceiling, a wainscot with a brass rail, candles in
@@ -92,22 +92,23 @@ function drawCandle(pen: Pen, x: number, i: number, t: number): void {
   )
 }
 
-/** A candle's light down the floor's black gloss: a soft smear. */
+/** A candle's light down the floor's black gloss: a soft streak, narrow and long, with no edge of its own. */
 function floorShine(pen: Pen, x: number, i: number, t: number): void {
   const ctx = ctxOf(pen.p)
   const { k } = pen
   const f = flameAt(i, t)
-  const g = ctx.createLinearGradient(0, FLOOR_Y * k, 0, FLOOR_LIP * k)
-  g.addColorStop(0, rgba(SPA.candle, 0.16 * f))
-  g.addColorStop(1, rgba(SPA.candle, 0))
   ctx.save()
   ctx.beginPath()
   ctx.rect((x - 0.4) * k, FLOOR_Y * k, 0.8 * k, (FLOOR_LIP - FLOOR_Y) * k)
   ctx.clip()
+  ctx.translate(x * k, FLOOR_Y * k)
+  ctx.scale(0.13 * k, (FLOOR_LIP - FLOOR_Y) * k)
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1)
+  g.addColorStop(0, rgba(SPA.candle, 0.14 * f))
+  g.addColorStop(0.5, rgba(SPA.candle, 0.05 * f))
+  g.addColorStop(1, rgba(SPA.candle, 0))
   ctx.fillStyle = g
-  ctx.beginPath()
-  ctx.ellipse(x * k, FLOOR_Y * k, 0.24 * k, 0.26 * k, 0, 0, Math.PI * 2)
-  ctx.fill()
+  ctx.fillRect(-1, 0, 2, 1)
   ctx.restore()
 }
 
@@ -172,6 +173,9 @@ function drawRobe(pen: Pen, x: number, t: number, i: number): void {
   const { p, k } = pen
   p.push()
   p.translate(hook[0] * k, hook[1] * k)
+  // The hook on the wall: a brass plate and its peg, which the robe's loop hangs over.
+  rbox(pen, -0.045, -0.2, 0.045, 0.02, 0.02, SPA.brass, 0)
+  disc(pen, [0, -0.045], 0.04, 0.04, SPA.brass, 0)
   // The body swings about the hook; the hem swings further (a cloth, not a board).
   const bend = (u: number): Pt => {
     const a = sway + lift * u * u
@@ -215,7 +219,8 @@ function drawRobe(pen: Pen, x: number, t: number, i: number): void {
   const w = bend(0.45)
   line(pen, [w[0] - half(0.45), w[1]], [w[0] + half(0.45), w[1]], SPA.towelShade, 1.0)
   line(pen, [w[0] + 0.05, w[1]], [w[0] + 0.1 + 0.2 * lift, w[1] + 0.2], SPA.towelShade, 0.8)
-  line(pen, [0, -0.06], [0, 0.1], SPA.brass, 0.8)
+  // Its loop, from the collar up over the peg.
+  polyline(pen, [[n[0] - 0.045, n[1] + 0.03], [0, -0.085], [n[0] + 0.045, n[1] + 0.03]], SPA.towelShade, 0.9)
   p.pop()
 }
 
@@ -238,7 +243,7 @@ function drawOutside(pen: Pen, out: number, x1: number, open: number): void {
   const X = (v: number) => v * k
   const warm = 0.4 + 0.6 * open
   // The night: blue-black over the street, a little less dark down at the street's level.
-  box(pen, out, CEIL - 1, x1 + 1, FLOOR_Y, NIGHT, 0)
+  box(pen, out, CEIL - 30, x1 + 1, FLOOR_Y, NIGHT, 0)
   vwash(pen, out, x1 + 1, FLOOR_Y - 3, FLOOR_Y, [
     [0, NIGHT_LOW, 0],
     [1, NIGHT_LOW, 0.85],
@@ -247,7 +252,7 @@ function drawOutside(pen: Pen, out: number, x1: number, open: number): void {
   beam(p, k, [out - 0.05, FLOOR_Y - 1.15], [out + 3.4, FLOOR_Y - 0.25], 2.2, 1.2, SPA.candle, 0.16 * warm)
   // The pavement, wet: black gloss, its edge catching the light near the door; the door's light pooled on it and
   // mirrored down into it as a soft streak; a puddle's glint further out.
-  box(pen, out, FLOOR_Y, x1 + 1, FLOOR_LIP + 3, CLUB.dark, 0)
+  box(pen, out, FLOOR_Y, x1 + 1, FLOOR_LIP + 30, CLUB.dark, 0)
   vwash(pen, out, x1 + 1, FLOOR_Y, FLOOR_Y + 1.3, [
     [0, NIGHT_LOW, 0.9],
     [1, CLUB.dark, 0],
@@ -266,9 +271,16 @@ function drawOutside(pen: Pen, out: number, x1: number, open: number): void {
     p.rectMode(p.CENTER)
     for (const s of PRESS) {
       const [hx, hy] = headOf(s)
-      const sy = hy + 0.5
-      p.rect(X(hx + 0.05), X((sy + FLOOR_Y) / 2), X(0.74), X(FLOOR_Y - sy))
-      p.ellipse(X(hx + 0.05), X(sy), X(0.84), X(0.4))
+      const sy = hy + 0.42
+      // A coat from the shoulders to the knee, then two legs and shoes turned to the door: a man, not a post.
+      const cx = hx + 0.05
+      const hem = FLOOR_Y - 0.44
+      p.ellipse(X(cx), X(sy + 0.06), X(0.62), X(0.26))
+      p.quad(X(cx - 0.31), X(sy + 0.06), X(cx + 0.31), X(sy + 0.06), X(cx + 0.26), X(hem), X(cx - 0.29), X(hem))
+      p.quad(X(cx - 0.2), X(hem - 0.02), X(cx - 0.06), X(hem - 0.02), X(cx - 0.11), X(FLOOR_Y - 0.03), X(cx - 0.24), X(FLOOR_Y - 0.03))
+      p.quad(X(cx + 0.04), X(hem - 0.02), X(cx + 0.18), X(hem - 0.02), X(cx + 0.19), X(FLOOR_Y - 0.03), X(cx + 0.06), X(FLOOR_Y - 0.03))
+      p.rect(X(cx - 0.22), X(FLOOR_Y - 0.035), X(0.22), X(0.07), X(0.03))
+      p.rect(X(cx + 0.1), X(FLOOR_Y - 0.035), X(0.2), X(0.07), X(0.03))
       p.rect(X(hx), X(hy + 0.26), X(0.16), X(0.2))
       p.ellipse(X(hx), X(hy), X(0.32), X(0.4))
       // Bare heads: a quiff swept up at the front, or a bob to the jaw.
@@ -276,7 +288,7 @@ function drawOutside(pen: Pen, out: number, x1: number, open: number): void {
       else p.ellipse(X(hx + 0.03), X(hy + 0.02), X(0.42), X(0.44))
       if (!s.cam) continue
       // The arm up to the camera; the camera at the face; the flash gun's stem up to its reflector.
-      p.quad(X(hx - 0.3), X(sy + 0.02), X(hx - 0.42), X(sy - 0.12), X(hx - 0.2), X(hy + 0.12), X(hx - 0.08), X(hy + 0.28))
+      p.quad(X(hx - 0.14), X(sy + 0.14), X(hx - 0.32), X(sy + 0.04), X(hx - 0.22), X(hy + 0.12), X(hx - 0.08), X(hy + 0.26))
       p.rect(X(hx - 0.24), X(hy + 0.05), X(0.36), X(0.24), X(0.03))
       p.rect(X(hx - 0.34), X(hy - 0.2), X(0.04), X(0.28))
       const [rx, ry] = reflectorOf(s)

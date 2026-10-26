@@ -1,8 +1,8 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInOutSine, easeOutBack } from '../../../../../../../../src/core/ease'
-import { FLOOR, mixHex, puff, R, type Pt } from '../../../../../parts'
-import { alpha, carried, knock, lastOf, part, route, smooth, type Ctx, type PartShot } from '../kit'
+import { FLOOR, mixHex, R, type Pt } from '../../../../../parts'
+import { alpha, carried, knock, lastOf, part, puff, route, smooth, type Ctx, type PartShot } from '../kit'
 import { cue } from '../music'
 import { DUST } from '../worlds'
 import { fromRim, RIM_R, SEAM, stationFrame } from './station'
@@ -1251,10 +1251,8 @@ function drawArm(p: p5, c: Ctx, T: number): void {
   }
   limb(bx, by, ex, ey, 0.09, 0.07)
   limb(ex, ey, wx, wy, 0.065, 0.05)
-  // A hydraulic ram along the upper arm.
-  outline(p, ink, weight * 0.6)
-  const ra = j.sh
-  p.line(X(bx + 0.25 * Math.cos(ra) - 0.1 * Math.sin(ra)), X(by + 0.25 * Math.sin(ra) + 0.1 * Math.cos(ra)), X(ex - 0.2 * Math.cos(ra) - 0.1 * Math.sin(ra)), X(ey - 0.2 * Math.sin(ra) + 0.1 * Math.cos(ra)))
+  // (The hydraulic ram along the upper arm went: a hairline a shade outside the arm's edge, it read as a stray second
+  // outline, not a ram.)
   for (const [x, y, d] of [
     [bx, by, 0.2],
     [ex, ey, 0.17],

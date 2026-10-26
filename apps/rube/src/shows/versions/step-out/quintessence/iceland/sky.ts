@@ -1,6 +1,6 @@
 import { rgbaOf } from '../depth'
 import { hash } from '../kit'
-import { PLANE, bake, layBaked, onPlane, seen, type Frame } from './far'
+import { measure, PLANE, bake, layBaked, onPlane, seen, type Frame } from './far'
 import { ICE } from './theme'
 
 /**
@@ -114,7 +114,7 @@ export function drawSky(ctx: CanvasRenderingContext2D, f: Frame, k: number, t: n
   const sv = seen(f, PLANE.sky)
   // The bands are painted at the frame's own pixels a frame height.
   const m = ctx.getTransform()
-  const ppu = (f.y1 - f.y0) * k * Math.hypot(m.a, m.b)
+  const ppu = measure(f) * k * Math.hypot(m.a, m.b)
   onPlane(ctx, f, k, PLANE.sky, () => {
     // Cold blue overhead going pale toward the horizon, and gold low down on the sun's side, fading out across the
     // sky away from it: the gold is laid on first, faded upward, and the blue goes in behind it. Painted once; the
@@ -148,6 +148,11 @@ export function drawSky(ctx: CanvasRenderingContext2D, f: Frame, k: number, t: n
       c.fillRect(-1.2, y0, 2.4, y1 - y0)
       c.globalCompositeOperation = 'source-over'
     })
+    // Over the band, on a stage taller than 16:9: the sky's own colour overhead.
+    if (sv.y0 < -0.62) {
+      ctx.fillStyle = ICE.skyHigh
+      ctx.fillRect(sv.x0, sv.y0, sv.x1 - sv.x0, -0.62 - sv.y0 + 0.002)
+    }
     if (sky) layBaked(ctx, sky, -1.2, sv.x0, sv.x1)
     else {
       ctx.fillStyle = ICE.skyMid

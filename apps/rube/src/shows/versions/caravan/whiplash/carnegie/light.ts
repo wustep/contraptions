@@ -58,8 +58,7 @@ export interface Cue {
   fl: number
   /** The metronome's narrow top light from the flies. */
   metro: number
-  /** The burst's flash over everything, and the last chord's blaze growing on the gilt and the beams. */
-  flash: number
+  /** The last chord's blaze growing on the gilt and the beams. */
   blaze: number
 }
 
@@ -108,7 +107,6 @@ function stage(t: number): Cue {
     kit: w,
     fl: 0,
     metro: 0,
-    flash: 0,
     blaze: 0,
   }
 }
@@ -151,8 +149,7 @@ const GOS: Go[] = [
   { at: 484, fade: BURST - 1.2 - 484, ease: 'in', set: { wall: 1, cx: -0.9, cy: -1.5, rx: 7, ry: 5, dark: 0, band: 0.35, beam: 1, pool: 1, wash: 0.2, house: 0.7 } },
   // The burst: a white slam over the whole stage and the house's front rows, sharp on the kick; settling into near
   // white for the march; warming back to gold over the long roll and the nod.
-  { at: BURST - 0.02, fade: 0.06, ease: 'lin', set: { white: 1, cx: 2.0, cy: -1.5, rx: 11, ry: 7, band: 0.9, beam: 1.3, wash: 0.34, house: 1.4, flash: 1, metro: 0 } },
-  { at: BURST + 0.04, fade: 0.7, ease: 'hit', set: { flash: 0 } },
+  { at: BURST - 0.02, fade: 0.06, ease: 'lin', set: { white: 1, cx: 2.0, cy: -1.5, rx: 11, ry: 7, band: 0.9, beam: 1.3, wash: 0.34, house: 1.4, metro: 0 } },
   { at: BURST + 0.1, fade: 3, ease: 'hit', set: { white: 0.72, beam: 1.1, wash: 0.26, band: 0.55, house: 1 } },
   { at: 518.8, fade: 16.2, set: { white: 0, cx: 0, cy: -1.4, rx: 7.5, ry: 5.4, band: 0.3, beam: 1, wash: 0.14, house: 0.6 } },
   // The silence: a held breath, down to the pool on the two of them.

@@ -122,7 +122,7 @@ export function compose(): { show: SebsShow; camera: (t: number) => Framing; cov
     { kind: 'black', down: [338.9, 340.0], up: [341.2, 342.8], spark: { at: [0.31, 0.495], color: '#FFE9B0' } },
     // The home movie to the drive: the film runs out, the bare light of the empty gate fills the frame, and the white
     // is the jam's headlights.
-    { kind: 'black', down: [393.6, 395.0], up: [395.6, AT.drive], color: '#F4ECD8', flicker: true },
+    { kind: 'black', down: [394.5, 395.0], up: [395.6, AT.drive], color: '#F4ECD8', flicker: true },
     // The street to the club: through its door, as the dream went into the club in Paris.
     { kind: 'door', down: [422.85, 423.35], up: [423.5, 424.3], color: '#86302F', deep: '#4E1A1B', brass: CLUB_MAT.brass },
   ]

@@ -64,7 +64,7 @@ function house(s: Screen, t: number, y: number, w: Work, wind: number): void {
   const shade = mixHex(mixHex('#C8C2AE', '#8E7380', w.dusk), w.far, haze)
   const roof = mixHex(mixHex('#6F655E', '#4C3A40', w.dusk), w.far, haze * 0.8)
   const leaf = mixHex(mixHex('#6E8A4A', '#4E3C40', w.dusk), w.far, haze)
-  const glass = w.dusk > 0.35 ? mixHex(roof, '#F0C06A', smooth(w.dusk, 0.35, 0.8)) : mixHex(roof, w.far, 0.3)
+  const glass = mixHex(mixHex(roof, w.far, 0.3), '#F0C06A', smooth(w.dusk, 0.35, 0.8))
   // The cottonwood, behind the house's left end: a trunk and a heap of leaves that leans and stirs with the wind.
   const sway = Math.sin(t * 1.1) * 0.02 + 0.06 * wind
   const tx = x - H * 0.55
@@ -108,9 +108,9 @@ function house(s: Screen, t: number, y: number, w: Work, wind: number): void {
   ctx.fillRect(x - H * 0.34, y - H * 0.25, H * 1.04, H * 0.05)
   ctx.fillStyle = roof
   for (let k = 0; k < 6; k++) ctx.fillRect(x - H * 0.34 + (k * H * 1.0) / 5, y - H * 0.25, H * 0.02, H * 0.25)
-  // The windows: two up, two down, one in the wing; lit as the sun goes.
+  // The windows: two up, two down, one in the wing under the porch roof; lit as the sun goes.
   ctx.fillStyle = glass
-  for (const [wx, wy] of [[-0.18, -0.52], [0.08, -0.52], [-0.18, -0.2], [0.08, -0.2], [0.44, -0.28]]) ctx.fillRect(x + wx * H, y + wy * H, H * 0.1, H * 0.13)
+  for (const [wx, wy] of [[-0.18, -0.52], [0.08, -0.52], [-0.18, -0.2], [0.08, -0.2], [0.44, -0.2]]) ctx.fillRect(x + wx * H, y + wy * H, H * 0.1, H * 0.13)
 }
 
 /** A combine, its header's reel turning as it goes, chaff blowing out behind. */
@@ -195,13 +195,28 @@ function devil(s: Screen, t: number, y: number, w: Work): void {
   const body = new Path2D()
   const swirl = new Path2D()
   const n = 12
+  // One column, narrow at the foot and widening up into a round crown: a stack of rings left gaps low down, where they
+  // were small, and read as beads.
+  const ring = (u: number) => ({
+    r: f * (0.004 + 0.03 * u ** 1.6) * (0.7 + 0.3 * life),
+    cx: x + Math.sin(t * 1.7 + u * 3) * f * 0.006 * u + 0.25 * H * u * u,
+    cy: y - H * u,
+  })
   for (let k = 0; k <= n; k++) {
-    const u = k / n
-    const r = f * (0.004 + 0.03 * u ** 1.6) * (0.7 + 0.3 * life)
-    const cxk = x + Math.sin(t * 1.7 + u * 3) * f * 0.006 * u + 0.25 * H * u * u
-    const cyk = y - H * u
-    body.moveTo(cxk + r, cyk)
-    body.ellipse(cxk, cyk, r, r * 0.4, 0, 0, Math.PI * 2)
+    const { r, cx, cy } = ring(k / n)
+    if (k === 0) body.moveTo(cx - r, cy)
+    else body.lineTo(cx - r, cy)
+  }
+  for (let k = n; k >= 0; k--) {
+    const { r, cx, cy } = ring(k / n)
+    body.lineTo(cx + r, cy)
+  }
+  body.closePath()
+  const crown = ring(1)
+  body.moveTo(crown.cx + crown.r, crown.cy)
+  body.ellipse(crown.cx, crown.cy, crown.r, crown.r * 0.4, 0, 0, Math.PI * 2)
+  for (let k = 0; k <= n; k++) {
+    const { r, cx: cxk, cy: cyk } = ring(k / n)
     // The turning: an arc across the front of every other ring, going round.
     if (k % 2 === 0 && k > 0) {
       const a = (t * 5 + k) % (Math.PI * 2)
@@ -212,7 +227,11 @@ function devil(s: Screen, t: number, y: number, w: Work): void {
   // Its skirt: the dust it lifts off the field at its foot.
   body.moveTo(x + f * 0.03, y)
   body.ellipse(x, y - f * 0.004, f * 0.03, f * 0.007, 0, 0, Math.PI * 2)
-  ctx.fillStyle = rgba(dust, 0.42 * life)
+  // Thick with dust at the foot, thinning as it climbs, so the crown is a haze and not a lid.
+  const thin = ctx.createLinearGradient(0, y, 0, crown.cy - crown.r * 0.4)
+  thin.addColorStop(0, rgba(dust, 0.46 * life))
+  thin.addColorStop(1, rgba(dust, 0.14 * life))
+  ctx.fillStyle = thin
   ctx.fill(body)
   ctx.strokeStyle = rgba(mixHex(dust, '#8C6E55', 0.4), 0.35 * life)
   ctx.lineWidth = Math.max(1, f * 0.0018)
@@ -241,10 +260,10 @@ function truck(s: Screen, t: number, y: number, w: Work): void {
   const d = truckDepth(t)
   const L = 0.17 * f / d
   const ink = mixHex(mixHex('#5C6672', '#4A3A44', w.dusk), w.far, 0.35 * (d - 1) / 2)
-  // The dust: puffs left where the truck was, rising, spreading, thinning; the newest nearest the truck, thickest.
+  // The dust: puffs left where the truck was, rising, spreading, thinning; the newest nearest the truck, thickest. Each
+  // is soft to its edge, so the old wide ones are a haze, not rings.
   if (outAt(t) > 0) {
     const dust = mixHex('#D9B48C', w.far, 0.2)
-    const levels = [new Path2D(), new Path2D(), new Path2D()]
     for (let k = 1; k <= 30; k++) {
       const age = k * 0.09
       const then = t - age
@@ -253,13 +272,14 @@ function truck(s: Screen, t: number, y: number, w: Work): void {
       const px = left + acrossAt(then) * W - Lt * 0.45 + age * f * 0.014
       const py = y - Lt * 0.14 - age * Lt * 0.3
       const r = Lt * (0.14 + 0.24 * age) * (1 - 0.3 * smooth(age, 1.5, 2.7)) * smooth(outAt(then), 0, 0.3)
-      const path = levels[Math.min(2, Math.floor(age / 0.9))]
-      path.moveTo(px + r, py)
-      path.arc(px, py, r, 0, Math.PI * 2)
-    }
-    for (const [i, path] of levels.entries()) {
-      ctx.fillStyle = rgba(dust, [0.34, 0.2, 0.1][i])
-      ctx.fill(path)
+      const a = 0.2 * (1 - 0.65 * smooth(age, 0.1, 1.5)) * (1 - smooth(age, 1.9, 2.7))
+      if (r < 0.5 || a < 0.005) continue
+      const puff = ctx.createRadialGradient(px, py, 0, px, py, r)
+      puff.addColorStop(0, rgba(dust, a))
+      puff.addColorStop(0.55, rgba(dust, a * 0.8))
+      puff.addColorStop(1, rgba(dust, 0))
+      ctx.fillStyle = puff
+      ctx.fillRect(px - r, py - r, r * 2, r * 2)
     }
   }
   const x = left + acrossAt(t) * W

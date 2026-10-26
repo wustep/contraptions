@@ -94,6 +94,9 @@ export function creditsAt(t: number): TitleCard[] {
       // It settles up into place as it comes into focus, and lifts a little more as it goes.
       rise: (1 - up) * 1.4 - down * 0.8,
       at: [0.5, c.names.length > 2 ? 0.1 : 0.16],
+      // On a phone held upright the frame's sky is short, and the cards stood on the sign on the far hills; they go up
+      // into the night the tall stage has over it.
+      lift: 0.6,
     })
   }
   return out

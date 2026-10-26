@@ -1,8 +1,8 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInQuad, easeOutCubic } from '../../../../../../../../src/core/ease'
-import { laneAt, mixHex, puff, R, type Lane, type Pt, type Seg } from '../../../../../parts'
-import { alpha, box, carried, frame, glassLimb, hash, knock, lastOf, lensedArc, part, route, smooth, type Companion, type Ctx, type PartShot, type Riders, type Way } from '../kit'
+import { laneAt, mixHex, R, type Lane, type Pt, type Seg } from '../../../../../parts'
+import { alpha, box, carried, frame, glassLimb, hash, knock, lastOf, lensedArc, part, puff, route, smooth, type Companion, type Ctx, type PartShot, type Riders, type Way } from '../kit'
 import { cue, DURATION, FINAL, MIX_END, PEAK } from '../music'
 import { G_EARTH, hop } from '../physics'
 import { BRAND, DARK, VOID } from '../worlds'
@@ -1542,12 +1542,13 @@ function chuteAt(T: number): { mouth: Pt; dir: Pt; r: number; attached: boolean;
     const a = attachedAt(T)
     return { mouth: [a.anchor[0] + a.dir[0] * a.out, a.anchor[1] + a.dir[1] * a.out], dir: a.dir, r, attached: true, line: a.out }
   }
-  // Cut: it stops in the air and drifts off, spilling.
+  // Cut: it stops in the air and drifts off downwind (the cirrus's way), spilling. Upwind, it had risen out of the
+  // frame through Gargantua, its cut bridle hanging across the dark.
   const a = attachedAt(CUT)
   const m0: Pt = [a.anchor[0] + a.dir[0] * a.out, a.anchor[1] + a.dir[1] * a.out]
   const d = T - CUT
   const keep = 0.35 * (1 - Math.exp(-d / 0.35))
-  const mouth: Pt = [m0[0] + vxAt(CUT) * keep - 0.3 * d, m0[1] + vyAt(CUT) * keep - 0.12 * d]
+  const mouth: Pt = [m0[0] + vxAt(CUT) * keep + 0.45 * d, m0[1] + vyAt(CUT) * keep - 0.12 * d]
   const tilt = 0.5 * smooth(d, 0, 2)
   const dir: Pt = [a.dir[0] * Math.cos(tilt) - a.dir[1] * Math.sin(tilt), a.dir[0] * Math.sin(tilt) + a.dir[1] * Math.cos(tilt)]
   return { mouth, dir, r: r * (1 - 0.35 * smooth(d, 0, 2.5)), attached: false, line: a.out }
@@ -2018,8 +2019,26 @@ function drawLampLight(p: p5, c: Ctx, v: View, T: number): void {
   // As the sun comes up the day takes over from it: the lens stays lit, its light on the ground all but goes.
   const day = 1 - 0.75 * sunlight(siteOf(v, T))
   p.noStroke()
-  p.fill(alpha(p, DARK.gold, (0.05 + 0.04 * swell) * on * day))
-  p.quad(X(lx - 0.05), X(ly + 0.07), X(lx + 0.05), X(ly + 0.07), X(lx + 0.55 * reach), X(G), X(lx - 0.7 * reach), X(G))
+  // The cone: three wedges, each a little narrower, so its sides soften outward, and each fading down to nothing at the
+  // ground, where the pool takes over. One flat wedge had hard slanting sides, and its foot ruled a line across the
+  // ramp and the sand either side of the pool.
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const a = ((0.05 + 0.04 * swell) * on * day) / 3
+  const g = ctx.createLinearGradient(0, X(ly), 0, X(G))
+  g.addColorStop(0, rgba(DARK.gold, a))
+  g.addColorStop(0.55, rgba(DARK.gold, a * 0.75))
+  g.addColorStop(1, rgba(DARK.gold, 0))
+  ctx.fillStyle = g
+  for (let i = 0; i < 3; i++) {
+    const w = 0.6 + 0.2 * i
+    ctx.beginPath()
+    ctx.moveTo(X(lx - 0.05), X(ly + 0.07))
+    ctx.lineTo(X(lx + 0.05), X(ly + 0.07))
+    ctx.lineTo(X(lx + 0.55 * reach * w), X(G))
+    ctx.lineTo(X(lx - 0.7 * reach * w), X(G))
+    ctx.closePath()
+    ctx.fill()
+  }
   p.fill(alpha(p, DARK.gold, (0.12 + 0.08 * swell) * on * day))
   p.ellipse(X(lx - 0.08), X(G), X(2 * reach), X(2 * reach * flat))
   p.fill(alpha(p, mixHex(DARK.gold, VOID.ink, 0.45), (0.12 + 0.08 * swell) * on * day))

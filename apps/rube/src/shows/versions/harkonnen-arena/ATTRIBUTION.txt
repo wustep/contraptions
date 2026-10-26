@@ -1,0 +1,20 @@
+Harkonnen Arena — Hans Zimmer
+From Dune: Part Two (Original Motion Picture Soundtrack), WaterTower Music, 2024. Composed by Hans Zimmer.
+Film: Dune: Part Two, directed by Denis Villeneuve, written by Denis Villeneuve and Jon Spaihts, after the novel by
+Frank Herbert; Legendary Pictures / Warner Bros. Pictures, 2024.
+
+The recording is the label's own, as uploaded to YouTube by WaterTower Music on its own channel ("Dune: Part Two
+Soundtrack | Harkonnen Arena - Hans Zimmer | WaterTower"), video UdlvgIFdNZU:
+https://www.youtube.com/watch?v=UdlvgIFdNZU
+Duration 5:22. Copyrighted; no rights are claimed. Demo only.
+
+Playback: YouTube only. No recording of the cue is shipped, and none is committed, in this branch or its history.
+
+Files:
+- scripts/shows/harkonnen-arena-onsets.py — measures the cue once from a local analysis copy of the video's audio
+  (fetched with yt-dlp into the git-ignored out/dune/, never committed): its stretches, its landmarks, the beat's five
+  combs with every beat on its own attack, every onset, and its loudness.
+- scripts/shows/plans/harkonnen-arena-onsets.json — what it measured: the show is timed to it and check:shows holds the
+  show to it. It holds times and numbers only, no audio.
+
+Every picture in the show is drawn for it. Nothing from the film's frames, posters, trailers or titles is used.

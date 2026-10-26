@@ -13,6 +13,9 @@ export const performance: Performance = {
   camera,
   // No portal anywhere: every change of place is a match cut on Marty.
   cuts: () => false,
+  // Every place stands on a floor or the ground, with a ceiling, the stands or the sky over it: a phone held upright
+  // sees more of those, and less of the floor under him.
+  tall: 0.7,
   // The end credits' words, which the page sets over the ward.
   titles: creditsAt,
   soundtrack: {

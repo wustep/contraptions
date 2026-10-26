@@ -251,6 +251,8 @@ export function compose(): { show: PalindromeShow; camera: (t: number) => Framin
   })
 
   const show = new PalindromeShow(legs, SETS(), DURATION, riders, company.sort((a, b) => a.from - b.from))
+  // Through the dissolves out of the white and back into it, her roll is carried, so her eye is not seen twice.
+  show.carryRoll = { seams: DISSOLVES().map((d) => d.at), until: SEAM.gala }
   // The camera rolls only in the shaft, after gravity; everywhere else the world is square to the frame.
   const angleAt = (t: number): number => (legs[show.owner(t)].key === 'shaft' ? rollAt(t) : 0)
 

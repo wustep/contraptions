@@ -888,9 +888,10 @@ function porchLantern(p: p5, k: number, W: number, ink: string, pose: CastlePose
   const ly = hook[1] + L * Math.cos(angle)
   const X = (v: number) => v * k
   p.push()
-  p.stroke(ink)
+  p.stroke(mixHex(WASTES.brass, ink, 0.35))
   p.strokeWeight(W * 0.6)
   p.line(X(hook[0]), X(hook[1]), X(lx), X(ly))
+  p.stroke(ink)
   p.translate(X(lx), X(ly))
   p.rotate(angle)
   p.rectMode(p.CENTER)

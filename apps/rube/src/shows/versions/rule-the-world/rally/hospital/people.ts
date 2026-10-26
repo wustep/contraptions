@@ -121,7 +121,8 @@ export function side(pen: Pen, d: Dress, q: Side): void {
   ellipse(pen, eye, 0.016 * s, 0.012 * s, '#3E332C')
   if (q.hat) fedora(pen, d, [q.head[0] - f * 0.01 * s, q.head[1] - 0.1 * s], 0, s, false)
   sideLeg(pen, d, q, 1, d.legs)
-  sideArm(pen, d, q, 1, d.coat)
+  // The near arm between the coat and the far arm's shade, so it reads against the coat it hangs over.
+  sideArm(pen, d, q, 1, mix(d.coat, d.shade, 0.6))
 }
 
 /** A person squarely from behind (`back`) or in front: joints in cells, [left, right] as seen. */
@@ -176,10 +177,11 @@ export function square(pen: Pen, d: Dress, q: Square): void {
     limb(pen, shR, [q.neck[0] + 0.18 * s, q.neck[1] + 0.55 * s], 0.13 * s, d.shade)
     limb(pen, [q.neck[0] - 0.2 * s, q.neck[1] + 0.52 * s], [q.neck[0] + 0.2 * s, q.neck[1] + 0.45 * s], 0.15 * s, d.coat)
   } else {
-    limb(pen, shL, q.elbows[0], 0.13 * s, d.coat)
-    limb(pen, q.elbows[0], q.hands[0], 0.11 * s, d.coat)
-    limb(pen, shR, q.elbows[1], 0.13 * s, d.coat)
-    limb(pen, q.elbows[1], q.hands[1], 0.11 * s, d.coat)
+    // In the coat's shade, so an arm across the coat reads against it.
+    limb(pen, shL, q.elbows[0], 0.13 * s, d.shade)
+    limb(pen, q.elbows[0], q.hands[0], 0.11 * s, d.shade)
+    limb(pen, shR, q.elbows[1], 0.13 * s, d.shade)
+    limb(pen, q.elbows[1], q.hands[1], 0.11 * s, d.shade)
     ellipse(pen, q.hands[0], 0.05 * s, 0.05 * s, d.skin)
     ellipse(pen, q.hands[1], 0.05 * s, 0.05 * s, d.skin)
   }
@@ -426,8 +428,8 @@ function seated(pen: Pen, d: Dress, o: { x: number; seat: number; s: number; slu
   const handR = lerp(lerp(restR, face, up), [x - 0.12 * s, y - 0.4 * s], fold)
   for (const [sh, h, sign] of [[shL, handL, -1], [shR, handR, 1]] as [Pt, Pt, number][]) {
     const el: Pt = [sh[0] + sign * 0.12 * s * (1 - 0.6 * fold), (sh[1] + h[1]) / 2 + 0.12 * s]
-    limb(pen, sh, el, 0.13 * s, d.coat)
-    limb(pen, el, h, 0.11 * s, d.coat)
+    limb(pen, sh, el, 0.13 * s, d.shade)
+    limb(pen, el, h, 0.11 * s, d.shade)
     ellipse(pen, h, 0.05 * s, 0.05 * s, d.skin)
   }
   // The hat: on his knee in his hand, then over his face, lifting a little on each breath.

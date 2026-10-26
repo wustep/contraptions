@@ -132,12 +132,15 @@ export function drawSky(pen: Pen, t: number, f: Frame): void {
 }
 
 /** The stars, scattered once over the sky's layer: where, how big, how bright, how dim round the moon. */
-const STARS = Array.from({ length: 240 }, (_, i) => {
-  const x = -12 + 28 * hash(i, 7, 1)
-  const y = AY - 9.5 + 9.1 * hash(i, 7, 2)
+const star = (x: number, y: number, i: number, seed: number) => {
   const dm = (x - MOON[0]) ** 2 + (y - MOON[1]) ** 2
-  return { x, y, s: hash(i, 7, 3), b: 0.35 + 0.5 * hash(i, 7, 4), dim: 1 - 0.85 * Math.exp(-dm / 1.2) }
-})
+  return { x, y, s: hash(i, seed, 3), b: 0.35 + 0.5 * hash(i, seed, 4), dim: 1 - 0.85 * Math.exp(-dm / 1.2) }
+}
+const STARS = [
+  ...Array.from({ length: 240 }, (_, i) => star(-12 + 28 * hash(i, 7, 1), AY - 9.5 + 9.1 * hash(i, 7, 2), i, 7)),
+  // On up, as thick, for a frame held upright that sees the sky higher than a wide one does.
+  ...Array.from({ length: 300 }, (_, i) => star(-12 + 28 * hash(i, 8, 1), AY - 21 + 11.5 * hash(i, 8, 2), i, 8)),
+]
 const STAR_STEPS = 5
 
 function stars(pen: Pen, g: Frame, hz: number, span: number): void {

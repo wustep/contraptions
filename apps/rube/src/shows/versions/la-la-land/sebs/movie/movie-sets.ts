@@ -1,5 +1,5 @@
 import type p5 from 'p5'
-import type { Pt } from '../../../../../parts'
+import { mixHex, type Pt } from '../../../../../parts'
 import { alpha, hash } from '../kit'
 import { MOVIE_MAT as M } from '../worlds'
 import { box2, seg, shape, vgrad } from './movie-kit'
@@ -97,9 +97,14 @@ export function tree(p: p5, k: number, ink: string, w: number, x: number, foot: 
   p.circle((x - 0.2 * r + sway) * k, (foot - h - 0.45 * r) * k, 0.8 * r * k)
 }
 
+/** The hedge's green. */
+const HEDGE = mixHex(M.teal, mixHex(M.sky, M.cream, 0.5), 0.2)
+
 /** A low hedge along the back of a lawn at `y`, from x0 to x1. */
 export function hedge(p: p5, k: number, ink: string, w: number, x0: number, x1: number, y: number, h: number): void {
-  p.fill(alpha(p, M.teal, 0.8))
+  // Solid, so what is beyond it (a car going by, next door's fence) is hidden by it and not seen through it; in the
+  // teal it had when it was a little thin over the pale sky at the horizon.
+  p.fill(HEDGE)
   p.stroke(ink)
   p.strokeWeight(w * 0.8)
   p.beginShape()

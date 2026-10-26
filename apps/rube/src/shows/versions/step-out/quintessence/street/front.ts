@@ -1,51 +1,15 @@
-import type { Pt } from '../../../../../parts'
-import { layer, view, type View } from '../depth'
+import { view, type View } from '../depth'
 import { scenery } from '../kit'
 import { rgba } from '../negatives/hand'
 import { whiteAt } from './light'
 
 /**
- * What stands between the camera and the machine in this place, and the light over all of it: the near plane and the
- * grade. Drawn after the set and the parts and before Walter (`depth.ts`), so nothing here hides him or changes his
- * colour. It is handed show time as `t`.
- *
- * - The near plane: a mailbox at the kerb, going by below as the camera comes along the pavement, and in the long
- *   view's corner as it draws back. Never over the two of them, and not tall enough to reach the pavement where they
- *   roll.
- * - The grade: the frame's edges falling away warm, thinning as the morning whitens through the credits.
+ * The light over everything in this place: the grade, the frame's edges falling away warm, thinning as the morning
+ * whitens through the credits. Drawn after the set and the parts and before Walter (`depth.ts`), so nothing here hides
+ * him or changes his colour. It is handed show time as `t`.
  */
 
 type C2 = CanvasRenderingContext2D
-
-/** The near plane's depth, and where it is composed: for the walk. */
-const Z = 1.45
-const CLOSE: { anchor: Pt; ref: number } = { anchor: [3.6, -0.75], ref: 3.6 }
-
-/** The mailbox at the kerb: the blue box with its rounded head, on its legs; the sun down its right side. */
-function mailbox(ctx: C2, k: number, x: number, foot: number): void {
-  const w = 0.62
-  const h = 0.95
-  ctx.fillStyle = '#2B4A72'
-  ctx.beginPath()
-  ctx.moveTo((x - w / 2) * k, (foot - 0.18) * k)
-  ctx.lineTo((x - w / 2) * k, (foot - h + 0.2) * k)
-  ctx.quadraticCurveTo((x - w / 2) * k, (foot - h) * k, x * k, (foot - h) * k)
-  ctx.quadraticCurveTo((x + w / 2) * k, (foot - h) * k, (x + w / 2) * k, (foot - h + 0.2) * k)
-  ctx.lineTo((x + w / 2) * k, (foot - 0.18) * k)
-  ctx.closePath()
-  ctx.fill()
-  ctx.fillStyle = '#5F7FA6'
-  ctx.fillRect((x + w / 2 - 0.08) * k, (foot - h + 0.15) * k, 0.08 * k, (h - 0.33) * k)
-  ctx.fillStyle = '#1C2B3E'
-  ctx.fillRect((x - 0.2) * k, (foot - h + 0.3) * k, 0.4 * k, 0.05 * k)
-  ctx.fillRect((x - w / 2 + 0.04) * k, (foot - 0.18) * k, 0.06 * k, 0.18 * k)
-  ctx.fillRect((x + w / 2 - 0.1) * k, (foot - 0.18) * k, 0.06 * k, 0.18 * k)
-}
-
-/** The near plane at `t`: the mailbox at the kerb, close to the lens. */
-function near(ctx: C2, v: View): void {
-  layer(ctx, v, Z, CLOSE.anchor, CLOSE.ref, () => mailbox(ctx, v.k, 0.4, 1.55))
-}
 
 /**
  * The grade: the frame's edges falling away warm, in a band up each side and along the foot (so the street's foot is
@@ -80,7 +44,6 @@ export const streetFront = scenery<null>({
     const t = c.t
     const w = whiteAt(t)
     ctx.save()
-    near(ctx, v)
     // The grade: the edges falling away warm, less so as the morning whitens.
     grade(ctx, v, w)
     ctx.restore()

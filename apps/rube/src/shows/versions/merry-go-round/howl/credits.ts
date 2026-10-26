@@ -53,7 +53,9 @@ const script: Omit<Card, 'at'>[] = [
     notes: [
       '“Merry-Go-Round of Life”',
       'from Howl’s Moving Castle (2004)',
-      'in his concert arrangement, from Dream Songs: The Essential Joe Hisaishi (Decca Gold, 2020)',
+      // (Two lines: as one, on a phone held on its side its end ran into the castle's flag.)
+      'in his concert arrangement,',
+      'from Dream Songs: The Essential Joe Hisaishi (Decca Gold, 2020)',
     ],
   },
   {
@@ -84,6 +86,10 @@ export const LAST_GONE = (() => {
 /** Where a card's top middle sits, as shares of the 16:9 frame: high and a little left, over the sky (the castle walks
  * away low on the right). */
 const AT: [number, number] = [0.4, 0.11]
+/** In a phone's tall frame, how far the cards lift into the sky over the 16:9 box (a share of that extra height): the
+ * castle sits higher in the tall frame, and the cards' type floor widens them, so left in the box their right-hand
+ * lines ran across the castle. */
+const LIFT = 0.6
 
 function lightOf(card: Card, t: number): { light: number; rise: number } {
   const since = t - card.at
@@ -100,7 +106,7 @@ export function creditsAt(t: number): TitleCard[] {
   CARDS.forEach((card, n) => {
     const { light, rise } = lightOf(card, t)
     if (light <= 0.001) return
-    out.push({ key: `merry-go-round-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: card.place ?? AT })
+    out.push({ key: `merry-go-round-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: card.place ?? AT, lift: LIFT })
   })
   return out
 }
@@ -125,7 +131,8 @@ export const credits = scenery<null>({
     const bx = (f.x0 + f.x1) / 2 - w / 2
     const by = (f.y0 + f.y1) / 2 - h / 2
     const cx = (bx + w * AT[0]) * k
-    const cy = (by + h * (AT[1] + 0.13)) * k
+    // (Lifted with the words in a tall frame, as the page lifts them.)
+    const cy = (by + h * (AT[1] + 0.13) - LIFT * Math.max(0, (f.y1 - f.y0 - h) / 2)) * k
     const rx = w * 0.36 * k
     ctx.save()
     ctx.translate(cx, cy)

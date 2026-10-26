@@ -356,17 +356,28 @@ export const credits = scenery<null>({
     const ctx = p.drawingContext as CanvasRenderingContext2D
     const w = f.x1 - f.x0
     const h = f.y1 - f.y0
-    const cx = (f.x0 + w * AT[0]) * k
-    const cy = (f.y0 + h * (AT[1] + 0.13)) * k
+    // Under the words wherever the page sets them. On a stage taller than 16:9 they are lifted into the room's dark,
+    // and their floor on size widens them: a short card stays left of middle, a long one the page slides in to the
+    // stage's middle. So the bed goes up with them, and wide enough, a little right of where it was, to lie under
+    // either, not left behind as a smudge off to one side.
+    // The page sets them in the 16:9 box centred on the stage (on a stage wider than 16:9, between its sides).
+    const fw = Math.min(w, (h * 16) / 9)
+    const fh = (fw * 9) / 16
+    const spare = h - fh
+    const s = clamp(spare / fh / 0.6)
+    const cx = (f.x0 + (w - fw) / 2 + fw * (AT[0] + 0.1 * s)) * k
+    const cy = (f.y0 + spare / 2 + (AT[1] + 0.13) * fh - CREDITS_LIFT * (spare / 2)) * k
     // Deep enough at its heart that what is behind the names (the window's unlit neon) recedes under them, and no
-    // wider than the words, so the lanterns and the family keep their light.
-    const rx = w * 0.3 * k
+    // wider or taller than the words, so the lanterns and the family keep their light: a low, flat band of shade
+    // that eases out, not a dark cloud over the ceiling as the camera draws back to the room upstairs.
+    const rx = fw * (0.3 + 0.2 * s) * k
     ctx.save()
     ctx.translate(cx, cy)
-    ctx.scale(1, 0.5)
+    ctx.scale(1, 0.36 - 0.06 * s)
     const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx)
-    g.addColorStop(0, `rgba(8, 10, 12, ${0.8 * bed})`)
-    g.addColorStop(0.55, `rgba(8, 10, 12, ${0.52 * bed})`)
+    g.addColorStop(0, `rgba(8, 10, 12, ${0.7 * bed})`)
+    g.addColorStop(0.5, `rgba(8, 10, 12, ${0.46 * bed})`)
+    g.addColorStop(0.8, `rgba(8, 10, 12, ${0.14 * bed})`)
     g.addColorStop(1, 'rgba(8, 10, 12, 0)')
     ctx.fillStyle = g
     ctx.fillRect(-rx, -rx, 2 * rx, 2 * rx)

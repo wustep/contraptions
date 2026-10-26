@@ -120,8 +120,10 @@ export const pressFront = scenery<null>({
         ctx.restore()
       }
     }
-    // The edges falling away into ink.
-    ring(ctx, v, INK, 0.62, 0.66)
+    // The edges falling away into ink: deep in the hall, and only a little over the bright pavement outside, where the
+    // street's own grade takes over.
+    const out = Math.max(0, Math.min(1, (v.x1 - DOOR_X) / v.w))
+    ring(ctx, v, INK, 0.62 * (1 - 0.7 * out * out * (3 - 2 * out)), 0.66)
     ctx.restore()
   },
 })

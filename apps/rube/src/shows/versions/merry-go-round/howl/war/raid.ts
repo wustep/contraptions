@@ -1521,8 +1521,10 @@ function drawStreetBurst(p: p5, k: number, W: number, ink: string, t: number): v
   p.pop()
   // The fireball: up at once, rolling up and out, settling to a fire in the crater that burns on, until her water
   // beats it down: it ducks under each stroke's water as it lands, and comes back a little less each time.
-  const tall = step(u, 0.04) * (0.6 + 2.6 * Math.exp(-u / 0.45)) * wet
-  const width = (0.9 + 1.4 * Math.exp(-u / 0.6) + 0.5 * smooth(u, 0, 0.3)) * (0.7 + 0.3 * wet)
+  // Once the ball has rolled away it burns on taller than wide, tongues up out of the hole (a wide low fire lay over
+  // the mouth like a dish of flame).
+  const tall = step(u, 0.04) * (1.15 + 2.1 * Math.exp(-u / 0.45)) * wet
+  const width = (0.62 + 1.6 * Math.exp(-u / 0.6) + 0.3 * smooth(u, 0, 0.3)) * (0.7 + 0.3 * wet)
   // Up out of the pit: its roots down inside the mouth.
   fire(p, k, cx, GROUND + 0.16, width, tall * (1 + 0.2 * smooth(u, 2, 14)), { t, seed: 90, lean: 0.1 })
   sparks(p, k, cx, GROUND - 0.4, u, 22, 7, 94)

@@ -61,8 +61,8 @@ comb fits. `scripts/shows/nature-of-daylight-onsets.py` measured the recording o
 - **Loudness** every quarter second, and the landmarks the story is cut to.
 
 **The coupling rule.** The chords are this piece's heartbeat, so every change of chord makes something happen: a
-push, a rock, a latch, a light, a card pinned, a screen falling. 95 of the 99 are struck; the four left are cuts
-where she is at rest. Between chords the machines strike beats only where they have a reason to (the clock's
+push, a rock, a latch, a light, a card pinned, a screen falling. 94 of the 99 are struck; the five left are cuts
+(into the lawn, out to the ring of twelve, the white-out, and the two dissolves out of the white). Between chords the machines strike beats only where they have a reason to (the clock's
 pendulum, the keypad, the dominoes), and move between strikes as pendulums, rockers, ink and light: continuous and
 damped, never parked. Every strike is on a beat, a chord or an onset.
 
@@ -1255,6 +1255,82 @@ Every span this touched was filmed at ten frames a second: no frame unlike its n
 camera, no hard swap at the three cuts out of the white, and in Zoom, Overview and a tall frame all of it holds. The
 paint in the dissolve windows costs under a millisecond and a half at twice the density (two frames painted and one
 laid over).
+
+A hundred-and-twenty-fifth was a visual polish wave: the whole show as stills, wide and tall, then full frames of anything
+that looked cheap on a careful watch. Five small fixes; no timing changed.
+
+- **The meadow at the end** (322 to 334 s): the helicopter's pad, a strip of matting, was still on the grass the morning
+  after. Lit by the low sun at the edge of the reunion's frame, it read as a pale seam along the grass. It is struck with
+  the decon tent.
+- **The chamber floor** (135 to 140 s): the glass's first light on the stone was six stacked bands, visible as steps, and
+  where its reflection ended the edges of two fills left a pale line across the floor. It is one soft band now, and the
+  line is gone.
+- **The projector beam** (99 to 102 s): it ended on a diagonal across the screen, so a pale wedge lay over the news. It
+  meets the screen's near edge now.
+- **The helicopter's light on the lake** (107 to 110 s): a hard-sided bar that read as a post standing in the water.
+  It is a soft column now, fading to its sides as well as down.
+- **The lecture hall years on** (266 to 270 s): the third student in each row sat level with the other two, so each row
+  was three overlapping balls in a line and read as a grub. The third now sits a seat further back, higher, smaller and
+  hazier.
+- **Timing:** every landmark checked a tenth of a second either side (Hannah goes, the double bass, the palm, the bass
+  drops out, the blast, the white-out, the call, the loudest bar, the shell gone, the cradle). All of them land.
+
+A hundred-and-twenty-sixth, polish wave 2: a fresh watch, wide and tall, and a half-second scrub of the busiest stretches.
+
+- **The ring of twelve** (177 to 310 s): each lit link wore a halo four times its width and each screen a wide disk of
+  light, so the ring read as a neon tube with a dark hole in its middle. The links keep only a soft edge, the screens'
+  light stays close round them, and the flare as the ring closes is narrower and fainter.
+- **The meadow at the end** (326 to 334 s): the light at the treeline's crowns was three stacked bands, and the deepest
+  left a second pale line under the crowns, so the trees read as cut out and outlined. It is laid in many faint steps
+  now, with no edge. The low sun gathering behind the touch was a round pool and a tighter one hugging the two balls, a
+  halo; it is one long low band along the grass behind them.
+- **The slot in the shell's belly** (122 to 129 s): its lit cut stopped on a flat black block, the throat below it, a
+  hard line across the opening, and the throat grew lighter toward the belly, backwards. The slot's light now runs on
+  down the throat, dying toward the belly.
+- Looked at and left alone: the whisper at the gala (Shang's brass rim and her outline meet, they do not overlap); the
+  phone-shaped frames.
+
+A hundred-and-twenty-seventh, polish wave 3: the whole show again at a second a still, then full frames.
+
+- **The lecture hall, the day they came** (98 to 102 s): every student's phone wore a halo twice the student's size, so
+  each row was a haze of glows, and the reading lamp sat in a wide bloom over the whole podium. Each phone now lights
+  only the hands and face over it, and the lamp a small pool round its shade.
+- **The gala, the number** (275 to 277 s): the ghost of the sat phone's keys lit each key inside a green halo, the one
+  glow in that room. The key brightens itself now, with its light only just round it.
+- Looked at and left alone: the lift coming down in the morning (311 to 315 s); the end credits on a phone-sized page,
+  every card whole and clear of the window.
+
+A hundred-and-twenty-eighth, polish wave 4: the chamber and the white beyond the glass at half a second a still.
+
+- **Her eye through the dissolves** (249.6 to 251.6, 256.2 to 258.2, 265.1 to 266.5 s): a ball's roll is drawn from
+  where it is in its own place's cells, so it turns at every cut. At a plain cut no one sees it, but through the three
+  dissolves the two sides are laid over each other for up to two seconds, and in the opening's soft edge Louise had
+  two eyes. Her roll is carried across those seams now (`show.ts` `carryRoll`, set in `score.ts`), to the cut into
+  the gala, so both sides agree.
+- **The hand on the glass** (149 to 153 s): its warm print spilled out of the pane, a bloom on the dark wall our side
+  and round the fingers theirs. It stays in the glass now.
+- Looked at and left alone: Hannah's last moment inside the closing ring (257.5 s), where the small Hannah in Costello's
+  ring sits a little off the lawn's; it is under half a second and reads as her going into the ring.
+
+A hundred-and-twenty-ninth, polish wave 5: the opening, the ending, and the dominoes at half a second a still.
+
+- **Winter** (46.353 s): the year turned smoothly from 44 to 48.5 s, straight across the cut to winter, so the winter
+  shot opened on autumn's full crowns over a snowy limb, and a second in they broke up into specks. The year now steps
+  on the cut: autumn holds to it, and winter opens bare.
+- **The searchlight in the room** (107 to 110 s): one hard-sided wedge, a blade laid across the window and the floor.
+  It is feathered now, twelve nested wedges each too faint to show its edge, the way the slot's light falls down the lift.
+- Looked at and left alone: the sun's sweep across the valley floor (322 to 327 s), already a broad soft cloud
+  shadow; the dominoes falling and standing again; the ending in the room.
+
+A hundred-and-thirtieth, polish wave 6: the whole show again, wide and tall, then a timing audit and a flash audit.
+
+- **Timing.** Every strike, measured against the recording: all 205 sit exactly on a beat, a change of chord or an
+  onset. The lecture hall's strikes (the phones on the half cadence, her touch, the logogram on the screen years on)
+  were exported but never gathered into `hits.ts`, so `check:shows` did not hold them; they are in it now, and land.
+  94 of the 99 chords are struck; the five left are cuts.
+- **The hall's screen** (99.4 s): it came on with a flicker, half up and back to dark inside a tenth of a second, the
+  only strobe in the show (the brightness of every twentieth of a second, the whole show through, steps only at cuts,
+  the blast and this). It comes up steadily from her touch now.
 
 ## Arrival nods
 

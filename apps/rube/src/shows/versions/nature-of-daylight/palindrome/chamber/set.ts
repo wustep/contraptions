@@ -549,10 +549,14 @@ function glass(ctx: Ctx, k: number, t: number, f: Frame, wake: number): void {
       ctx.fillRect(x - 0.12 * k, cy - h, w + 0.12 * k, 2 * h)
     }
     // The hand's print: where its pads meet the glass opposite her, a soft warm light blooms on the pane between them,
-    // and stays while it presses.
+    // and stays while it presses. In the pane only: let out of it, it lay on the dark wall our side and round the
+    // fingers theirs, a bloom, not a mark on the glass.
     const print = smooth(t, T.palm - 0.05, T.palm + 0.7) - smooth(t, T.palm + 2.2, T.palm + 3.6)
     if (print > 0.01) {
       ctx.save()
+      ctx.beginPath()
+      ctx.rect(x, top * k, w, (FLOOR - top) * k)
+      ctx.clip()
       ctx.translate((GX + GT / 2) * k, PALM[1] * k)
       ctx.scale(0.6, 1)
       const pg = ctx.createRadialGradient(0, 0, 0, 0, 0, 0.6 * k)
@@ -614,16 +618,12 @@ function floor(ctx: Ctx, k: number, t: number, f: Frame, wake: number): void {
   refl.addColorStop(1, rgba(SHELL.fogLit, 0))
   const rh = ctx.createLinearGradient(0, fl, 0, fl + 0.9 * k)
   ctx.fillStyle = refl
-  ctx.save()
-  ctx.beginPath()
-  ctx.rect((GX - 4.5) * k, fl, 4.5 * k + (FAR - GX) * k, 0.9 * k)
-  ctx.clip()
   ctx.fillRect((GX - 4.5) * k, fl, 4.5 * k + (FAR - GX) * k, 0.9 * k)
   rh.addColorStop(0, rgba(SHELL.floor, 0))
   rh.addColorStop(1, rgba(SHELL.floor, 1))
   ctx.fillStyle = rh
-  ctx.fillRect((GX - 4.5) * k, fl, 4.5 * k + (FAR - GX) * k, 0.9 * k)
-  ctx.restore()
+  // A pixel past the reflection's foot, the stone itself, so their two soft edges leave no pale line across the floor.
+  ctx.fillRect((GX - 4.5) * k, fl, 4.5 * k + (FAR - GX) * k, 0.9 * k + 2)
   // Under the glass, where the floor ends, the white goes on down.
   // The glass's first light, on the chord they come in on: it runs down the polished floor from the far end and
   // comes to their feet.
@@ -637,11 +637,12 @@ function floor(ctx: Ctx, k: number, t: number, f: Frame, wake: number): void {
     lg.addColorStop(1, rgba(SHELL.fogLit, 0))
     ctx.fillStyle = lg
     ctx.fillRect(front * k, fl, (GX - front) * k, 0.05 * k)
-    // Its sheen on the stone below the lip, fading down.
+    // Its sheen on the stone below the lip, fading down: thin strips, so it is one soft band and not six steps.
     ctx.save()
-    for (let i = 0; i < 6; i++) {
-      ctx.globalAlpha = 0.3 * (1 - i / 6) ** 2
-      ctx.fillRect(front * k, fl + (0.05 + i * 0.1) * k, (GX - front) * k, 0.1 * k)
+    const step = Math.max(1, Math.ceil((0.6 * k) / 96))
+    for (let y = 0; y < 0.6 * k; y += step) {
+      ctx.globalAlpha = 0.3 * (1 - y / (0.6 * k)) ** 2
+      ctx.fillRect(front * k, fl + 0.05 * k + y, (GX - front) * k, step)
     }
     ctx.restore()
   }

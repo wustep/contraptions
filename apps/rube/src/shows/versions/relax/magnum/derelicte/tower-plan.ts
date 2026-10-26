@@ -65,6 +65,8 @@ export const BOX = { x0: 28.2, x1: 28.46, top: -6.52 }
 export const PLUG_LEN = 0.18
 export const PLUG_H = 0.13
 export const RAIL_Y = -6.8
+/** The trap in the deck's boards over the left bay, where he comes up into the booth (his hop crosses the boards here). */
+export const HATCH = { x0: 27.1, x1: 27.88 }
 /** The skirt of bin bags round the booth's deck, down to here. */
 export const SKIRT = -5.52
 
@@ -648,6 +650,31 @@ const hansel = (() => {
   const lane: Lane = { segs: P.segs, fire: 0 }
   return lane
 })()
+
+/**
+ * The trap's lid (radians open, about its hinge at the left end): shut until his head lifts it as he comes up through
+ * it, up past upright while he lands, and falling shut behind him on the next beat, with one small bounce. Shut again
+ * well before he rolls back along the deck to the bucket.
+ */
+export function hatchOpen(t: number): number {
+  const lift = ON_DECK - 0.42
+  const up = ON_DECK - 0.26
+  const shut = beat(345)
+  const fall = shut - 0.34
+  const top = 1.72
+  if (t < lift) return 0
+  if (t < up) {
+    const u = (t - lift) / (up - lift)
+    return top * u * u * (3 - 2 * u)
+  }
+  if (t < fall) return top
+  if (t < shut) {
+    const u = (t - fall) / (shut - fall)
+    return top * (1 - u * u)
+  }
+  const s = t - shut
+  return 0.14 * Math.exp(-s / 0.08) * Math.abs(Math.sin(s * 18))
+}
 
 /** Hansel's clock starts when he comes in. */
 export const HANSEL_FROM = ENTER

@@ -327,7 +327,10 @@ export function farm(s: Screen, hy: number, color: string, windows?: string, tur
   }
 }
 
-/** The far rows: one band along the horizon with a ragged top of tassels. */
+/**
+ * The far rows: one band along the horizon with a ragged top of tassels. Its foot goes into the field over a little
+ * depth: cut off square, it drew a dead straight line the width of the frame under the horizon.
+ */
 export function band(s: Screen, hy: number, color: string): void {
   const { ctx, cx, f, w } = s
   const q = 0.14
@@ -335,14 +338,17 @@ export function band(s: Screen, hy: number, color: string): void {
   const step = 0.006
   const i0 = Math.floor((at - w / 2 / f) / step) - 1
   const i1 = Math.ceil((at + w / 2 / f) / step) + 1
-  ctx.fillStyle = color
+  const foot = ctx.createLinearGradient(0, hy, 0, hy + f * 0.022)
+  foot.addColorStop(0, rgba(color, 1))
+  foot.addColorStop(1, rgba(color, 0))
+  ctx.fillStyle = foot
   ctx.beginPath()
-  ctx.moveTo(cx + (i0 * step - at) * f, hy + f * 0.01)
+  ctx.moveTo(cx + (i0 * step - at) * f, hy + f * 0.022)
   for (let i = i0; i <= i1; i++) {
     const x = cx + (i * step - at) * f
     ctx.lineTo(x, hy - f * (0.012 + 0.008 * hash(i, 3) + 0.004 * Math.sin(i * 0.37)))
   }
-  ctx.lineTo(cx + (i1 * step - at) * f, hy + f * 0.01)
+  ctx.lineTo(cx + (i1 * step - at) * f, hy + f * 0.022)
   ctx.closePath()
   ctx.fill()
 }

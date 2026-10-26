@@ -44,13 +44,21 @@ export function view(p: p5, k: number): View {
 }
 
 /**
+ * The height of the composed 16:9 frame, in cells: the frame's own on a 16:9 stage. A taller stage (a phone) sees more
+ * world above and below it, so a far plane keeps the size it has in the composed frame instead of swelling to the
+ * stage's height and pushing what is off its middle out past the sides.
+ */
+export const composed = (v: View): number => Math.min(v.h, (v.w * 9) / 16)
+
+/**
  * Draw `draw` on a plane at depth `z`, in that plane's own coordinates. At `anchor` (a point of the world) and with
  * the frame `ref` cells tall, the plane and the world coincide; as the camera goes from there the plane moves `z`
- * as far on the screen as the world does, and scales `(h / ref)^(1 - z)` against it. Inside `draw`, `inner` is the
- * frame in the plane's coordinates, so a plane can fill exactly what is seen of it.
+ * as far on the screen as the world does, and scales `(h / ref)^(1 - z)` against it, `h` the composed 16:9 frame's
+ * height (`composed`). Inside `draw`, `inner` is the frame in the plane's coordinates, so a plane can fill exactly what
+ * is seen of it.
  */
 export function layer(ctx: C2, v: View, z: number, anchor: Pt, ref: number, draw: (inner: View) => void): void {
-  const s = Math.pow(v.h / ref, 1 - z)
+  const s = Math.pow(composed(v) / ref, 1 - z)
   const ox = anchor[0] + z * (v.cx - anchor[0])
   const oy = anchor[1] + z * (v.cy - anchor[1])
   const k = v.k
@@ -66,7 +74,7 @@ export function layer(ctx: C2, v: View, z: number, anchor: Pt, ref: number, draw
 
 /** Where a point of a plane at depth `z` is in the world at this frame (for a layer that must meet the set, as a hill's foot meets the road). */
 export function onLayer(v: View, z: number, anchor: Pt, ref: number, at: Pt): Pt {
-  const s = Math.pow(v.h / ref, 1 - z)
+  const s = Math.pow(composed(v) / ref, 1 - z)
   const ox = anchor[0] + z * (v.cx - anchor[0])
   const oy = anchor[1] + z * (v.cy - anchor[1])
   return [v.cx + (at[0] - ox) * s, v.cy + (at[1] - oy) * s]

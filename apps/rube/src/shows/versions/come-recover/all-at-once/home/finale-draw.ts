@@ -335,14 +335,15 @@ export function drawFlash(pen: Pen, t: number, frameBox: { x0: number; y0: numbe
   if (u < 0 || u > 0.8) return
   const { p, k } = pen
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const a = Math.exp(-u / 0.1) * 0.8 + 0.2 * Math.exp(-u / 0.35)
+  const a = Math.exp(-u / 0.1) * 0.55 + 0.2 * Math.exp(-u / 0.35)
   const [fx, fy] = onCamera(CAM_BULB[0] + 0.05, CAM_BULB[1])
   ctx.save()
-  // The room, lit from the camera's side.
+  // The room, lit from the camera's side: a light thrown over them that falls off across the shop, not a white-out
+  // of the frame, so the room and the three of them are still there through it.
   const g = ctx.createRadialGradient(fx * k, fy * k, 0, fx * k, fy * k, 9 * k)
-  g.addColorStop(0, `rgba(255, 254, 248, ${Math.min(1, 1.0 * a)})`)
-  g.addColorStop(0.2, `rgba(255, 252, 242, ${0.8 * a})`)
-  g.addColorStop(1, `rgba(255, 250, 236, ${0.3 * a})`)
+  g.addColorStop(0, `rgba(255, 254, 248, ${0.9 * a})`)
+  g.addColorStop(0.2, `rgba(255, 252, 242, ${0.55 * a})`)
+  g.addColorStop(1, `rgba(255, 250, 236, ${0.16 * a})`)
   ctx.fillStyle = g
   const { x0, y0, x1, y1 } = frameBox
   ctx.fillRect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k)

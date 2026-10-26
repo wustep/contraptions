@@ -1,9 +1,13 @@
-import { ballAt, laneAt, R, type Pt } from '../../../../parts'
+import { ballAt, laneAt, mixHex, R, type Pt } from '../../../../parts'
 import type { Box, Placed } from '../../../../plan'
 import { Show, type ShowBall, type ShowPoint } from '../../../../show'
 import type { Universe } from '../../../../universe'
 import { ease, turnTo, type Company, type Riders as PartRiders, type Who } from './kit'
-import { HANNAH, HANNAH_ID, HANNAH_SCALE, IAN, IAN_ID, LOUISE, WORLDS, type WorldKey } from './worlds'
+import { HANNAH, HANNAH_ID, HANNAH_SCALE, IAN, IAN_ID, LOUISE, SHELL_THEME, WORLDS, type WorldKey } from './worlds'
+import { GLASS_X0, IN as CHAMBER_IN, OUT as CHAMBER_OUT, WAKE } from './shell/chamber-path'
+
+/** The riders' rim against the chamber's lit glass: the fog's own ink. */
+const CHAMBER_RIM = '#24292C'
 
 /**
  * Logogram as a `Show`: one ball (Louise) on one path through four places.
@@ -226,6 +230,16 @@ export class LogogramShow extends Show {
       let balls = ride ? ride.fn(time, hero) : null
       if (eye !== undefined) balls = (balls ?? [hero]).map((b) => (b.id === hero.id ? { ...b, spin: eye } : b))
       here.balls = company.length ? [...(balls ?? [hero]), ...company] : balls ?? undefined
+      // In the chamber, each as it comes in front of the lit glass is against its white: rimmed dark there, as on any
+      // light ground. The shell's bone rim, which draws them out of the dark, stood round them there as a pale halo.
+      if (world === 'shell' && time >= CHAMBER_IN && time < CHAMBER_OUT && here.balls) {
+        const lit = Math.min(1, Math.max(0, (time - WAKE[0]) / 0.5))
+        const edge = placed.col + GLASS_X0
+        here.balls = here.balls.map((b) => {
+          const dark = lit * Math.min(1, Math.max(0, (b.x - edge + 0.4) / 1.2))
+          return dark > 0 ? { ...b, rim: mixHex(SHELL_THEME.ink, CHAMBER_RIM, dark) } : b
+        })
+      }
     }
     return here
   }

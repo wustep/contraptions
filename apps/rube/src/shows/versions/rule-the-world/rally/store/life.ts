@@ -544,7 +544,7 @@ export function drawForeground(pen: Pen, t: number, f: Frame): void {
       // Low: its top no more than a little way into the frame, however low the camera goes.
       const top = Math.max(1.96 + 0.1 * hash(n, 3, 111), g.y1 - 0.34)
       ctx.beginPath()
-      thing(ctx, k, kind, x, top, t, n, side > 0.5 ? rims : [])
+      thing(ctx, k, kind, x, top, Math.max(GROUND, g.y1 + 0.2), t, n, side > 0.5 ? rims : [])
       // Out of focus, so soft: wide faint strokes round it, then the dark itself, not quite black.
       for (const [w, a] of [[0.16, 0.08], [0.09, 0.14], [0.045, 0.2]]) {
         ctx.strokeStyle = rgba(pen, ink, a * side)
@@ -566,14 +566,16 @@ export function drawForeground(pen: Pen, t: number, f: Frame): void {
     ctx.restore()
   })
 }
-/** One thing in the foreground, its top at `top`, added to the path; `rims` gets the top edges the light catches. */
-function thing(ctx: CanvasRenderingContext2D, k: number, kind: Thing, x: number, top: number, t: number, n: number, rims: number[]): void {
+/**
+ * One thing in the foreground, its top at `top` and standing on `G` (below the foot of the frame, however tall the
+ * frame), added to the path; `rims` gets the top edges the light catches.
+ */
+function thing(ctx: CanvasRenderingContext2D, k: number, kind: Thing, x: number, top: number, G: number, t: number, n: number, rims: number[]): void {
   const R = (x0: number, y0: number, x1: number, y1: number) => ctx.rect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k)
   const poly = (pts: Pt[]) => {
     pts.forEach(([px, py], i) => (i ? ctx.lineTo(px * k, py * k) : ctx.moveTo(px * k, py * k)))
     ctx.closePath()
   }
-  const G = GROUND
   switch (kind) {
     case 'boxes': {
       R(x, top + 0.3, x + 0.7, G)

@@ -449,11 +449,20 @@ export const DIES: Map<number, number> = new Map([
 export const LAST_LIGHT = 241.059
 
 /** How lit lamp `i` is at `t`: dark until he passes under it, a flare on its beat, steady; out when it dies. */
+/**
+ * A lamp coming on: up from dark over three frames from its beat. Full in one frame, a lamp every half second
+ * strobed the drive.
+ */
+export const warm = (since: number): number => {
+  const u = Math.max(0, Math.min(1, since / 0.09))
+  return u * u * (3 - 2 * u)
+}
+
 export function lampAt(i: number, t: number): number {
   const on = LAMP_T[i]
   if (t < on) return 0
   const d = DIES.get(i)
-  const base = 0.82 + (0.2 + 0.55 * FLARE[i]) * kick(t - on, 0.3)
+  const base = (0.82 + (0.2 + 0.55 * FLARE[i]) * kick(t - on, 0.3)) * warm(t - on)
   if (d === undefined || t < d) return base
   return base * (0.9 * kick(t - d, 0.05) + 0.1) * Math.max(0, 1 - (t - d) / 0.25)
 }

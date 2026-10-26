@@ -501,6 +501,69 @@ changed, in the order of the film, and then what runs through it:
   along the summer shore were busy detail on a three-second vision; the green and its ink line say grass. Nothing
   else moved.
 
+## Polish wave
+
+Three rounds by a fresh director (Claude Opus 5.5, Oct 25): the whole film at 2 s and 0.5 s sheets, full frames of
+the weakest moments, a phone frame, then the strikes against the cue.
+
+- **The reunion's light** (186.3 → 196.8): the sunlight through the opened cloud was the lamps' gold, and pushed in
+  on the two of them its shafts lay across the whole frame: they met in an ochre murk, and the cut into the grey lake
+  house was a jump of colour. The light is only a little warmer than the floods' cream now, and close in the shafts
+  are a soft warmth in the air; the wide still sees them whole.
+- **The starter's rope** (22 → 31): it ran from the flywheel's hub to the middle of the pulley's side, and hung to
+  the bucket from the pulley's bottom, two ropes tied on. It is one rope now: off the drum on a tangent, over the
+  pulley's top in its groove, and straight down off its side to the bail.
+- **The mast's lamps** (31 → 62): each lamp in the fog stood in a yellow bloom four cells across, the mast a column
+  of glow over the camp. The glow is held close round each lamp; their fans of light down over the camp are as they
+  were.
+- **Tendrils into a ring** (every logogram; worst on the first fog ring, 138 → 139.5): a quarter of the tendrils grow
+  into the ring, and as long as the outward ones and ending in a drop, one stood in the ring's open middle beside her
+  as a pin stuck through it. One growing inward is a short wisp now, with no drop; the outward sprays are unchanged.
+
+## Polish wave 2
+
+- **The shell going** (187 → 192): as it rose and paled, cloud-coloured puffs sat on its flanks and bit notches out
+  of them, and thin bright wisps of the cloud's underside striped it across, so it went as a torn, sliced shape.
+  The puffs are cut; the wisps are deeper and fainter. It leaves whole now, a soft shape paling into the cloud.
+- **The summer vision's bank** (139.5 → 142.6): the grass's edge was an ink line, and with the two of them running
+  along it, it read as a rail under them. It is a fine line in the grass's own deep green.
+- Looked at and left: the floods' beams at the departure (they follow their heads), the far camp behind the reunion
+  (misting its feet lit them as white saucers, worse), the grand wide's pull back, the deck into the slot.
+
+## Polish wave 3
+
+- **A phone held upright** (`tall: 0.72` in `index.ts`): the extra picture a tall stage sees was split evenly above
+  and below the composed frame, so the lake house stood on a slab of floor two-thirds of the screen deep and the valley
+  on as much meadow. More of it is above now: the lake house's wall (the credits still sit on it, under the ceiling's
+  line), the valley's sky and the shell, Costello's head whole over the great ring. The 16:9 frame is unchanged.
+- Looked at and left: Costello's jet beginning the next ring in the fog (145), the rain at the window, the coda.
+
+## Polish wave 4
+
+- **The palm's fingers** (118.7 → 133): each ended in a pad a little wider than the finger's end, so every finger
+  stood on a neck with a knob on it, a toy asterisk more than a hand. The pad is the finger's own round end now.
+- **Rimmed at the glass** (93 → 130): the shell's bone ink rims them so they read on the shaft's dark stone; in front
+  of the lit glass the same rim stood round them as a pale halo. Each turns to a dark rim as it comes into the
+  glass's light (by its own distance from the glass's edge), as every ball on a light ground has.
+- Looked at and left: both white-outs and every cut of the visions (her place holds on every one), the starter's
+  bucket winding back up (a recoil starter's spring), gravity's turn.
+
+## Polish wave 5
+
+A timing audit and close looks; nothing in the picture changed.
+- **Every strike against the recording**: all 216 land exactly on a measured pulse or onset (0.0 ms off). 27 are on
+  soft pulses (under half the round's 90th percentile): the deck's steps, the mast's lamps a pulse at a time, the hops
+  down the shaft, the visions' small moves, all quiet actions. The one story beat among them, the reunion's touch
+  (195.344), is on one of the stronger pulses left as the pulse thins; only 195.820 is harder, and it stays.
+- Looked at and left: Hannah's run and spring onto the bench, the helicopter's skids onto the pad, the lift through
+  the fog band, the second vision and the crescent, the shaft mouth's lip.
+
+## Polish wave 6
+
+A last fresh watch and a final real-speed check; nothing in the picture changed. Looked at and left: the push and the
+great ring (168 → 185, both pens in it, the tendrils flinging out past the frame's top as it closes), the first
+logogram's soft edge in the fog (ink bleeding, not a bevel), the helicopter over the ridge, the desktop credits.
+
 ## Arrival nods
 
 Visual and mechanical only; no stills, no text, no audio beyond the cue.

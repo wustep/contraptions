@@ -4,6 +4,7 @@
  */
 import { HOUSE_HITS } from './house/house'
 import { LAWN_HITS } from './lawn/lawn'
+import { HALL_HITS } from './hall/hall'
 import { VALLEY_HITS } from './valley/valley'
 import { SHAFT_HITS } from './shaft/shaft'
 import { CHAMBER_HITS } from './chamber/chamber'
@@ -14,6 +15,7 @@ import { TWELVE_HITS } from './twelve/twelve'
 export const STRIKES: Record<string, readonly number[]> = {
   house: HOUSE_HITS,
   lawn: LAWN_HITS,
+  hall: HALL_HITS,
   valley: VALLEY_HITS,
   shaft: SHAFT_HITS,
   chamber: CHAMBER_HITS,

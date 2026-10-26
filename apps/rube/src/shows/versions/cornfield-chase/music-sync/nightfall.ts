@@ -32,3 +32,19 @@ export function nightfall(p: p5, c: PieceCtx, col: number, line: number, show: S
   ctx.stroke()
   ctx.restore()
 }
+
+/**
+ * The show's first frames: up out of the night's colour, as the stage would fade them up from the world's ink. The
+ * Forest's ink is a dark green, and green over the pale sky passed through an olive murk; the night's near-black only
+ * darkens it. The stage's own fade is turned off for these frames (`cuts`); this keeps its time, `until`.
+ */
+export function fadeUp(p: p5, t: number, night: string, until: number): void {
+  if (t >= until) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.globalAlpha = 1 - Math.max(0, t) / until
+  ctx.fillStyle = night
+  ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+  ctx.restore()
+}

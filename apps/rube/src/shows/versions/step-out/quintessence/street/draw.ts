@@ -7,7 +7,7 @@ import { contact, INK, knock, mix, ramp, rgba, rule, settle, slab } from '../neg
 import { drawCrossers, drawPeople, drawPigeons, drawSale, drawTraffic, FLASH, peopleShadows, steam, WALK } from './city'
 import { AVENUE_FAR, drawFireEscape, drawFronts, drawGround, drawRoofs, skyShows } from './fronts'
 import { LANE, morning, S, shadeEdge, shadeTint } from './light'
-import { CELLAR, cherylAt, CLANKS, CORNER, COVER, FLIPS, HAULS, IN, KERB, PAVE, SLOT_W, SLOTS, STAND, STOP, WALTER_STOP, walterAt } from './plan'
+import { CELLAR, NEAR_KERB, cherylAt, CLANKS, CORNER, COVER, FLIPS, HAULS, IN, KERB, PAVE, SLOT_W, SLOTS, STAND, STOP, WALTER_STOP, walterAt } from './plan'
 import { drawCity, drawSky } from './sky'
 
 /**
@@ -271,9 +271,23 @@ function drawGroundPlane(ctx: C2, v: View): void {
   ctx.stroke()
   rule(ctx, k, x0, PAVE, end, PAVE, rgba(INK, 0.8), 0.9)
   slab(ctx, k, x0, KERB, end, KERB + 0.1, S.kerb, { color: rgba(INK, 0.6), w: 0.8 })
-  // The road: plain asphalt, the gutter a little darker, the lane line, the manhole the steam comes up out of.
-  slab(ctx, k, x0, KERB + 0.1, x1, v.y1 + 1, S.road)
+  // The road: plain asphalt, the gutter a little darker, the lane line, the manhole the steam comes up out of. Past
+  // the near lane, the near kerb and the camera's own pavement, which only a tall frame sees.
+  slab(ctx, k, x0, KERB + 0.1, x1, NEAR_KERB, S.road)
   slab(ctx, k, x0, KERB + 0.1, x1, KERB + 0.24, rgba(S.roadDark, 0.6))
+  slab(ctx, k, x0, NEAR_KERB - 0.14, x1, NEAR_KERB, rgba(S.roadDark, 0.6))
+  slab(ctx, k, x0, NEAR_KERB, x1, NEAR_KERB + 0.12, S.kerb, { color: rgba(INK, 0.6), w: 0.8 })
+  slab(ctx, k, x0, NEAR_KERB + 0.12, x1, v.y1 + 1, S.pave)
+  // Its joints run along it, wider apart as they come toward the camera.
+  ctx.strokeStyle = S.paveLine
+  ctx.lineWidth = 0.9
+  ctx.beginPath()
+  for (let i = 1, y = NEAR_KERB + 0.12; y < v.y1 + 1; i++) {
+    y += 0.5 * i
+    ctx.moveTo(x0 * k, y * k)
+    ctx.lineTo(x1 * k, y * k)
+  }
+  ctx.stroke()
   // A vault grate in the paving by the café.
   slab(ctx, k, 8.75, PAVE + 0.06, 9.95, PAVE + 0.3, '#8E8E89', { color: rgba(INK, 0.7), w: 0.8 })
   // The line between the lanes, in dashes; the near lane's edge.
@@ -288,9 +302,9 @@ function drawGroundPlane(ctx: C2, v: View): void {
   // The corner: the pavement ends; the avenue's crossing beyond, its stripes; the stop lines; the ladder across this street.
   slab(ctx, k, CORNER.kerb, PAVE + 0.2, x1, KERB + 0.1, S.road)
   for (let i = 0; i < 6; i++) slab(ctx, k, CORNER.kerb + 0.3 + i * 0.5, PAVE + 0.32, CORNER.kerb + 0.55 + i * 0.5, KERB + 0.06, '#E0DDD5')
-  for (let y = KERB + 0.22; y < v.y1 + 0.3; y += 0.3) slab(ctx, k, CORNER.kerb + 0.25, y, CORNER.kerb + 1.25, y + 0.15, '#DCD9D0')
+  for (let y = KERB + 0.22; y < NEAR_KERB - 0.3; y += 0.3) slab(ctx, k, CORNER.kerb + 0.25, y, CORNER.kerb + 1.25, y + 0.15, '#DCD9D0')
   slab(ctx, k, CORNER.kerb - 1.05, KERB + 0.14, CORNER.kerb - 0.95, LANE.far + 0.05, '#E0DDD5')
-  slab(ctx, k, AVENUE_FAR + 0.12, mid + 0.1, AVENUE_FAR + 0.22, v.y1 + 1, '#E0DDD5')
+  slab(ctx, k, AVENUE_FAR + 0.12, mid + 0.1, AVENUE_FAR + 0.22, NEAR_KERB - 0.3, '#E0DDD5')
   // Across the avenue: the far corner's pavement and kerb.
   slab(ctx, k, AVENUE_FAR, PAVE, x1, KERB, mix(S.pave, S.sky, 0.15))
   ctx.strokeStyle = S.paveLine

@@ -916,6 +916,8 @@ function walkers(ctx: CanvasRenderingContext2D, k: number, t: number, end: boole
 const NEAR = 1.35
 const NEAR_KERB = ROOM.floor + 2.62
 const NEAR_AT = -4.5
+/** The picture's width (cells) over which the camera, going in, passes over our side of the street. */
+const NEAR_IN: [number, number] = [12, 30]
 type Kerbside = 'meter' | 'plug' | 'box' | 'bin'
 const KERBSIDE: [number, Kerbside][] = (() => {
   const out: [number, Kerbside][] = []
@@ -930,8 +932,10 @@ const KERBSIDE: [number, Kerbside][] = (() => {
 function nearSide(ctx: CanvasRenderingContext2D, k: number, fr: { x0: number; x1: number; y0: number; y1: number; cx: number; cy: number }): void {
   // Where our side is drawn: where it stands when the camera is as high as in the widest shot of the club (`NEAR_AT`),
   // moved by the camera's travel from there, a `NEAR - 1` more than the club moves. Never more than a little up, so
-  // nothing on it comes over the road's far half.
-  const top = NEAR_KERB + Math.max(-0.35, (NEAR_AT - fr.cy) * (NEAR - 1))
+  // nothing on it comes over the road's far half. And as the camera goes in toward the club it passes over our side,
+  // which goes down out of the picture under it, so the close shots in a tall frame have no kerb along their foot.
+  const passed = 1 - smooth(fr.x1 - fr.x0, NEAR_IN[0], NEAR_IN[1])
+  const top = NEAR_KERB + Math.max(-0.35, (NEAR_AT - fr.cy) * (NEAR - 1)) + 4 * passed
   if (top > fr.y1 + 0.1) return
   const sc = NEAR
   const kx = (x: number) => fr.cx + (x - fr.cx) * NEAR

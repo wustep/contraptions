@@ -51,6 +51,9 @@ export function checkCornfield(perf: Performance, check: Check): void {
   check('cornfield opus55: the stage\'s own iris is off for the door to the fair, and on either side of it',
     perf.cuts!(sunset.begin - 0.01) && !perf.cuts!((sunset.begin + arrival.end) / 2) && perf.cuts!(arrival.end + 0.01))
 
+  check('cornfield opus55: the show fades up out of the night\'s colour: the stage\'s own fade is off for its first frames',
+    !perf.cuts!(0.1) && perf.cuts!(1))
+
   // The follow spot: down where floors stack, gone by the photograph.
   const lit = spot(perf.show, fair, booth.begin, [beatAt(132)])
   let stacked = 0

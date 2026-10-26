@@ -319,6 +319,14 @@ function spotX(t: number): number {
   const her = sum / w
   return lerp(her, (LAND_X + MEET_X) / 2, ease((t - LAND) / 0.5))
 }
+/**
+ * The spot's circle where it lands behind them, as [centre y, rx, ry]: on her, low enough that the floor cuts it under
+ * her; opening to take in both of them once he is up beside her, so it is round the two of them and not over them.
+ */
+function spotShape(t: number): [number, number, number] {
+  const both = ease((t - LAND) / 0.5)
+  return [lerp(-0.2, -0.14, both), lerp(0.4, 0.6, both), lerp(0.36, 0.5, both)]
+}
 /** How much light is on the main curtain: the house's, and the stage's spill. */
 const curtainLitAt = (t: number): number => Math.min(1, 0.25 + 0.6 * Math.min(1, Math.max(0, houseAt(t))) + 0.3 * stageAt(t))
 /** The curtain is in front of her until it has flown out; once it comes in again it is behind the two of them. */
@@ -726,7 +734,8 @@ function drawSet(p: p5, k: number, weight: number, t: number, lit: number, spot:
   // The spot's circle on the wall behind her, tight on her as a follow spot is: the paper and the panelling as they
   // look in its light.
   if (spot > 0.01) {
-    spotCircle(ctx, k, spotX(t), -0.3, 0.4, 0.36, spot, () => {
+    const [cy, rx, ry] = spotShape(t)
+    spotCircle(ctx, k, spotX(t), cy, rx, ry, spot, () => {
       fill(SET_PAPER_LIT, SET_WOOD_LIT)
       ctx.fillStyle = rgba(SET_STRIPE, 0.22)
       ctx.beginPath()
@@ -1475,7 +1484,8 @@ function drawCurtain(p: p5, k: number, ink: string, weight: number, t: number, l
     ctx.beginPath()
     ctx.rect(x0 * k, top * k, (x1 - x0) * k, (hem - top) * k)
     ctx.clip()
-    spotCircle(ctx, k, spotX(t), -0.3, 0.42, 0.38, spot * 0.85, () => velvet(p, k, x0, top, x1, hem, lit, 14, speed, true))
+    const [cy, rx, ry] = spotShape(t)
+    spotCircle(ctx, k, spotX(t), cy, rx * 1.05, ry * 1.05, spot * 0.85, () => velvet(p, k, x0, top, x1, hem, lit, 14, speed, true))
     ctx.restore()
   }
   // The hem's gold fringe, and a band of gold above it.
@@ -1981,17 +1991,24 @@ function roseShape(p: p5, k: number, ink: string, weight: number, r: { x: number
   p.push()
   p.translate(r.x * k, r.y * k)
   p.rotate(r.a)
-  // The stem, a leaf, the bloom.
-  p.stroke(mixHex(M.velvetDeep, M.boards, 0.4))
-  p.strokeWeight(weight * 0.7)
-  p.line(-0.2 * k, 0.01 * k, 0.06 * k, 0)
+  // The stem and two leaves, green as on the marquee's card (a stem the colour of the boards left a red dot on a
+  // stick: a match, not a rose).
+  p.stroke('#3E6B3A')
+  p.strokeWeight(weight * 0.8)
+  p.line(-0.22 * k, 0.015 * k, 0.05 * k, 0)
   p.noStroke()
-  p.fill(mixHex(M.velvetDeep, M.boards, 0.5))
-  p.ellipse(-0.08 * k, -0.03 * k, 0.07 * k, 0.035 * k)
-  solid(p, ink, weight * 0.5, M.rose)
-  p.circle(0.1 * k, 0, 0.1 * k)
+  p.fill('#4F8048')
+  p.ellipse(-0.1 * k, -0.03 * k, 0.09 * k, 0.04 * k)
+  p.ellipse(-0.02 * k, 0.028 * k, 0.08 * k, 0.034 * k)
+  // The bloom: a cup of petals, longer than it is wide, a petal's edge curling in at the heart.
+  solid(p, ink, weight * 0.5, M.velvet)
+  p.ellipse(0.1 * k, 0, 0.13 * k, 0.11 * k)
   p.noStroke()
-  p.fill(M.velvet)
-  p.circle(0.11 * k, -0.005 * k, 0.045 * k)
+  p.fill(M.rose)
+  p.ellipse(0.115 * k, -0.01 * k, 0.09 * k, 0.075 * k)
+  p.noFill()
+  p.stroke(M.velvetDeep)
+  p.strokeWeight(weight * 0.6)
+  p.arc(0.12 * k, -0.008 * k, 0.05 * k, 0.04 * k, -Math.PI * 0.85, Math.PI * 0.25)
   p.pop()
 }

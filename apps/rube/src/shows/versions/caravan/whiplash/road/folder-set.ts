@@ -82,12 +82,14 @@ export function drawBackstage(p: p5, c: Ctx, light: number, f: { x0: number; x1:
   p.pop()
 }
 
-/** The tubes' light: a soft cool wash from the ceiling, fading down the wall, and a pool on the floor. Additive. */
+/**
+ * The tubes' light: a soft cool wash from the ceiling, fading down the wall, and a pool on the floor. Additive. No
+ * halo round the tube itself: a bright disc under it read as bloom, a white blob at the top of every backstage frame.
+ */
 export function drawBackstageLight(p: p5, c: Ctx, light: number): void {
   if (light <= 0.01) return
   for (const tx of [-3.9, 1.6]) {
-    glow(p, c, tx, CEIL + 0.4, 1.1, 0.35 * light, ROAD.paint)
-    glow(p, c, tx, CEIL + 1.6, 4.2, 0.07 * light, ROAD.paint)
+    glow(p, c, tx, CEIL + 1.6, 4.2, 0.09 * light, ROAD.paint)
     pool(p, c, tx, FL + 0.05, 3.4, 0.3, 0.09 * light, ROAD.paint)
   }
 }
@@ -482,15 +484,21 @@ export function drawBand(p: p5, c: Ctx, s: BandLook): void {
       solid(p, mixHex(brass, ROAD.deep, 0.6), weight * 0.5, brass)
       p.push()
       if (horn === 'trumpet') {
+        // Bells up, as a big band's trumpets play: held level, the first bell ran into Fletcher's open hand.
         p.translate((x - 0.24) * k, (floor - 2.36 + 0.55 * (1 - s.up)) * k)
-        p.rotate(-0.12 - 0.9 * (1 - s.up) - 0.22 * a * s.up + Math.PI)
+        p.rotate(0.3 * s.up - 0.9 * (1 - s.up) + 0.12 * a * s.up + Math.PI)
         rect(p, k, 0, -0.035, 0.62, 0.035)
         poly(p, k, [[0.6, -0.04], [0.82, -0.13], [0.82, 0.13], [0.6, 0.04]])
       } else {
         p.translate((x - 0.2) * k, (floor - 2.3 + 0.35 * (1 - s.up)) * k)
         p.rotate(0.35 - 0.25 * a * s.up + 0.3 * (1 - s.up))
-        rect(p, k, -0.05, 0, 0.05, 0.95, 0.03)
-        poly(p, k, [[-0.05, 0.9], [0.05, 0.95], [-0.12, 1.12], [-0.34, 1.02], [-0.3, 0.9], [-0.18, 0.96]])
+        // The body, the U-bend at its foot and the bell flaring back up beside it: a saxophone (a straight tube with a
+        // flat foot read as a hockey stick).
+        rect(p, k, -0.05, 0, 0.05, 0.92, 0.03)
+        poly(p, k, [
+          [-0.05, 0.9], [0.05, 0.9], [0.05, 1.0], [0.0, 1.1], [-0.1, 1.15], [-0.21, 1.12], [-0.28, 1.02],
+          [-0.31, 0.86], [-0.4, 0.74], [-0.17, 0.74], [-0.2, 0.86], [-0.19, 0.98], [-0.14, 1.04], [-0.08, 1.03], [-0.05, 0.98],
+        ])
       }
       p.pop()
     })
@@ -504,9 +512,10 @@ export function drawBand(p: p5, c: Ctx, s: BandLook): void {
  * The drummer's stand beside the hi-hat: the band's kind, lit as theirs are, and bare. Tanner's chart went with his
  * folder, so the kit's desk has nothing on it beside a band full of lit pages, and Andrew plays past it from memory.
  * The desk is turned toward the kit and leans back (as Carnegie's stand's), its top edge and its ledge lit; its face
- * dark and empty. `top` is the desk's top edge at its spine.
+ * dark and empty. `top` is the desk's top edge at its spine. It stands low, as a seated drummer's does: at a band
+ * player's height its desk was where Fletcher's point at Andrew on the last hit ends, his hand in it for a second and a half.
  */
-export const DRUM_STAND = { x: KX + 2.0, top: -1.5, w: 0.78, h: 0.56 }
+export const DRUM_STAND = { x: KX + 1.75, top: -1.1, w: 0.78, h: 0.56 }
 
 export function drawDrumStand(p: p5, c: Ctx, light: number): void {
   const { k, weight } = c
@@ -562,12 +571,13 @@ export function drawWall(p: p5, c: Ctx, open: number, light: number, f: { y0: nu
   p.pop()
 }
 
-/** Outside the open door, the lot's sodium light pouring in along the stage floor. Additive. */
+/** Outside the open door, the lot's sodium light pouring in along the stage floor. Additive, and soft: its hard top
+ * edge ran as a diagonal cut across the seated band. */
 export function drawDoorLight(p: p5, c: Ctx, open: number): void {
   if (open <= 0.01) return
   const { x0, door } = WALL
   const h = door * open
-  cone(p, c, [x0 + 0.2, FL - h * 0.55], [x0 - 5.5, FL - 0.2], h * 0.9, 1.6, 0.12 * open, ROAD.sodium)
+  cone(p, c, [x0 + 0.2, FL - h * 0.55], [x0 - 5.5, FL - 0.2], h * 0.9, 1.6, 0.12 * open, ROAD.sodium, 8)
   pool(p, c, x0 - 1.8, FL + 0.06, 2.8, 0.26, 0.2 * open, ROAD.sodium)
 }
 

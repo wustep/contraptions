@@ -148,7 +148,7 @@ Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall
 
 | Time | Music | World | What happens |
 | ---: | --- | --- | --- |
-| 57.95 | louder | the premiere | The red carpet of her own premiere. Press flash guns fire as she flies in, and she lands and bounces. The marquee's spotlight hunts over the press and finds her (61.06), and a volley of flashes whites out the frame. She clips a brass stanchion and the posts go over like dominoes, one an onset (63.1 to 64.3). The theatre's doors crack and swing wide on 66.21, and a second run of posts goes. |
+| 57.95 | louder | the premiere | The red carpet of her own premiere. Press flash guns fire as she flies in, and she lands and bounces. The marquee's spotlight hunts over the press and finds her (61.06), and the press fire a volley together, one burst of light over the frame. She clips a brass stanchion and the posts go over like dominoes, one an onset (63.1 to 64.3). The theatre's doors crack and swing wide on 66.21, and a second run of posts goes. |
 | 68.7 | sustained | the alley | Behind the theatre, in the rain, the film's "in another life": a neon washer in a laundromat window stutters on (71.95), and Waymond waits under a streetlamp. She floats down the stone steps and reaches him (76.46). The neon dips twice, and the camera pushes in on the two of them. The drain's iron cover knocks under her four times and gives (82.13), and she slides away from him into the lit shaft, and down the race after a flyer for her picture that the rain has washed off the wall. He rolls onto the shut cover where she was, and does not follow. They speak, subtitled in the widescreen's lower bar: *I don't know where I am.* / *Here. With me. Stay a little.* (his, in italic) / *I can't.* |
 | 86.30 | the flurry | the dojo | The kung fu picture she could have lived. Four wing chun wooden men trade her down their arms, tak-tak-tak, each arm swinging into her and ringing. A bo staff on a rope bats her over their heads, and a high kick sends her up to the bronze gong (95.42). A last kick is the jump. |
 | 97.15 | flurry | hot dog fingers | A pink room and a grand piano, played with the feet. Her shin is posed as the dummy's thigh was. She rides and bounces up the keys, each dipping and blushing lilac as it sounds, into a hand of floppy sausage fingers that drapes over her. On 103.56 she lands on the mustard bottle and it squirts. The index finger sags under her and snaps on 106.73. |
@@ -173,7 +173,7 @@ Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall
 | 264.14 | the peak's end | home | Through the window: they are inside the drum of the washer by the door, where the morning started. The cycle ends, the door swings open (268.39), and they drop out. Waymond leaps the foot lever and touches Joy, and the touch runs through to Evelyn. |
 | 275.2 | a hush | home | The camera closes slowly on the three of them together at the washer's foot, the window's light on them, and holds. Outside, a neighbour's cat comes along the pavement and sits at the door's glass, looking in at them, until Evelyn sets off. Joy nestles against her mother on a soft note (279.84). He asks what he asked in the alley, *Stay a little?*, and this time she can: *I'm staying.* |
 | 282.2 | home's pulse | home | The family portrait. A wooden box camera with a bellows stands on a tripod by the door, facing them. Joy and Waymond straighten up on two small hops. Evelyn rolls to a foot switch under the window and presses it on 286.20: a string of lanterns over the family lights one a beat, and the camera draws back to take in the whole portrait. The self-timer's red lamp blinks faster and faster while she hurries back beside Joy (290.38). |
-| 290.99 | the last great hit | home | The flash: the bulb bursts, the room washes white from the camera's side with their shadows thrown on the washer, and a firework fills the door's glass with gold; across the street windows light, the neighbours woken, one of them at a window looking out. The photograph ejects (291.20), flutters down like a leaf and props itself against the washer beside them (292.77). It develops by 293.01: the glowing washer window with the three of them in it, eyes and all. |
+| 290.99 | the last great hit | home | The flash: the bulb bursts, the room is lit white from the camera's side, without whiting out the frame with their shadows thrown on the washer, and a firework fills the door's glass with gold; across the street windows light, the neighbours woken, one of them at a window looking out. The photograph ejects (291.20), flutters down like a leaf and props itself against the washer beside them (292.77). It develops by 293.01: the glowing washer window with the three of them in it, eyes and all. |
 | 295.01 | the last hit | home | The tubes go out in the reverse order of the opening, and the neon with them. The three of them rest in the washer window's warm light. |
 | 297 to 313.6 | the tail | home | The end credits, over the dark (below). The lanterns have gone down to an ember with the tubes, and the camera comes in close on the washer's window, the credits over the door's dark glass to its left. The dryer's window opened the multiverse; the washer's closes it. In its lit glass the lives she went through come back once, in the order back home, about two seconds each: the bagel, the rocks, Raccacoonie's kitchen, the hot dog piano, the dojo, the red carpet. In each the three of them are there together, small, eyes and all (on the rocks, three stones on the ledge where there were two). The three look up at the window all through them, and the empty drum gives a slow half-turn among them (305.40). Then the glass is only its own warm light; it swells once (312.59), and they look at one another. |
 | 313.6 to 332 | the tail | home | After the swell the light goes on down the shop: from `home(95)` (316.19), a beat apart, the washers, the big dryer and the dryer stacks light one by one away from the family, each with one of her lives turning slowly past in its glass and the three of them in it: the red carpet, the alley, the dojo, the canyon (in the big dryer, three stones), the hot dog piano, the kitchen, the piñata, karaoke, the IRS, the sign spinner, the opera, mahjong. Each throws its colour on the dark floor and the machines round it. The camera draws back from the one window as they light, until the row runs out of the frame's right edge: the storefront's glass at the left, the family small under their own window, and over the shop the family's home in section, asleep, the credits over its dark. From the last card's going the end's dark takes the room, the far machines first, the washer's window last. |
@@ -1336,6 +1336,8 @@ Each in its own commit; cards and shows that do not use them are as before.
   `TitleCard.said`, spoken through a visually hidden polite live region; `Performance.captions` and
   `TitleCard.caption`, with the player's "Sound captions" row and the C key.
 - `shows/stage.ts`: a saved video leaves sound captions out. `src/ui/styles.css`: the captions' box and row.
+- `shows/player.ts`: a card grown by `least` is kept above the stage's foot as well as within its sides (polish
+  wave 3).
 
 ### Three fixes
 
@@ -1386,6 +1388,37 @@ again; the rest of the show was then swept every two seconds for the same kind o
 - **The bagel's hanger had the same hook.** The coat hanger that drifts round the bagel and comes back out of it
   (`void/bagelThings.ts`) drew its hook as a near-closed ring apart from the neck, so it read as a funnel. It is the
   same question mark now, one wire into the neck.
+
+### Polish waves
+
+Five polish waves after the coat hanger, each a fresh watch of the whole show on a desktop and a phone.
+
+- **Wave 1.** The premiere's volley drew three flashes' washes and glows on top of one another, a white smear over
+  the press; guns that fire together now share one flash of the frame. The portrait's flash peaked at a full white-out
+  of the frame for a few frames; it now lights the room from the camera's side, the room still there through it. On a
+  phone the credits are lifted into the dark over the room, and the long ones widen to the stage's middle, but the
+  dark under them stayed where a 16:9 frame would have it, a smudge off to the left; it now goes up with them, and
+  wide enough to lie under a short card left of middle and a long one across the stage.
+- **Wave 2.** Knocked back off its stop, the empty hanger crept back along the wire through the last two lanterns,
+  its basket sitting inside each for about a second; it is knocked back harder now, loses a little speed at each knot it
+  jumps, and each lantern swings away as the basket brushes past, so it is clear of them half a second sooner and the
+  pass reads as contact. Under the credits the passing car's headlight was a hard-edged wedge that showed before the
+  car did, like a torch held up in the dark; it is a soft pool thrown ahead of the lamp. And the credits' shade is a
+  lower, flatter band that eases out, where it was an oval that clouded the ceiling as the camera drew back.
+- **Wave 3.** Every jump was watched frame by frame across its second (the flickers, the match cuts, the irises and
+  the dive into home): they held. The copy of her eye that flies to each jumper carried a soft gold halo as well as its
+  trail; the halo is gone, and the trail shows the gift going. On a phone held sideways (a stage wider and shorter than
+  16:9) *Everywhere*'s chapter card, grown by its floor on size, ran off the stage's foot and was cut; the page now keeps
+  such a card above it (`shows/player.ts`). And there the credits' shade had been laid against the whole canvas, not the
+  16:9 box the page sets the words in, so it drifted off them.
+- **Wave 4.** At full size, frame by frame on the props: the bench Joy waits on (226 s) had its sand and its lit top
+  ending square where the ground turns up the slope, a hard seam across open stone; both now thin out at the ledge's
+  back over the same short way, so they meet with no step. The tax counter, the alley, the dojo's dummies, the
+  piano, the kitchen, the drop out of the washer and the portrait were looked at closely and left as they are.
+- **Wave 5.** A last watch for what the others had not: the show played at real speed in eight stretches of eight
+  seconds (a median frame of 16.7 ms and a 95th percentile of 16.8 ms in every one), the tubes catching in the first
+  two seconds, the room going down to the dark at the end, and the dialogue turned on, on a desktop and an upright
+  phone. Nothing was worth changing, so nothing was changed.
 
 ## The looks
 
