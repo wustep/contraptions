@@ -1411,6 +1411,10 @@ Five polish waves after the coat hanger, each a fresh watch of the whole show on
   16:9) *Everywhere*'s chapter card, grown by its floor on size, ran off the stage's foot and was cut; the page now keeps
   such a card above it (`shows/player.ts`). And there the credits' shade had been laid against the whole canvas, not the
   16:9 box the page sets the words in, so it drifted off them.
+- **Wave 4.** At full size, frame by frame on the props: the bench Joy waits on (226 s) had its sand and its lit top
+  ending square where the ground turns up the slope, a hard seam across open stone; both now thin out at the ledge's
+  back over the same short way, so they meet with no step. The tax counter, the alley, the dojo's dummies, the
+  piano, the kitchen, the drop out of the washer and the portrait were looked at closely and left as they are.
 
 ## The looks
 
