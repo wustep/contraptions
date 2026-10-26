@@ -229,6 +229,22 @@ second.
   panel back and stretches frames. Import order matters in `carnegie/rubato.ts` (its first line re-exports the
   strokes so `strokes.ts` finds them set); the hush and the finale import nothing that imports `hall.ts`.
 
+## The polish wave (Oct 25)
+
+- **No rods through Fletcher.** In the tempo test he stands just where the crash's stand rises, and the band room drew the
+  whole kit over him: the rod ran up through his head and the hi-hat's through his arm. The cymbals and their stands
+  now draw behind him and the drums in front (`bandroom.ts`), so he stands between them.
+- **Under the band room's floor** the building's mass falls off into the stage's dark going down. On a phone it was the
+  bottom 40% of every band-room frame in one flat slab of the floor's lit brown.
+- **The loading door's light** (Overbrook, about 203 s) is a soft cone (`cone(..., soft)`); its hard top edge cut a
+  diagonal across the seated band.
+- **Top light on the drummer's limbs** lies along them as far as they face up. Drawn the full length of a hanging sleeve,
+  it made the last image's two hanging sleeves the arms of an armchair.
+- **No strobes.** A frame-to-frame probe of the whole show at 30 fps found two: the bulb blowing (one frame at 1.3
+  between dim frames; now a swell out of the brown-out and a quick fall) and the drive's lamps, each full on in one frame
+  every half second (now up over three frames from the beat, `crash-clock.ts` `warm`). Everything else it flagged is
+  scored: the two match cuts, the burst, the last chord and the cut-off, each within a frame of its music.
+
 ## How to run it
 
 ```
