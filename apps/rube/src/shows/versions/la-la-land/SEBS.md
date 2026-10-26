@@ -715,3 +715,13 @@ A fresh watch, wide and tall, the contact sheets offset by a second and a half f
 **The film runs out (393 to 395.3).** The lamp went out, the camera drew all the way back to the dark room, and then the cream cover faded up over all of it, so the room went a muddy grey, then cream, with the screen standing in it, and then the screen jumped in size under the cover. Now the camera draws back only far enough to see the projector by the screen, and goes in again on the empty gate's light until it is the frame; the cream comes down only for the last half second, over a frame that is already its white, and the camera holds there until the drive (`movie/movie.ts`, `score.ts`).
 
 **The credits on a phone (482 to 505).** The cards stand at the top of the 16:9 frame, which on a phone held upright is where the sign on the far hills is: the cast list and the music card ran across its blocks. They lift into the night the tall stage has over the city (`lift`), and in the wide frame they stay where they were (`credits.ts`).
+
+## Round 76: polish wave 4, measured, and two props at their size
+
+A deeper pass: the camera sampled every twentieth of a second for its pan and zoom and for every ball it lets out of the frame uncovered, every pair of balls for how far they ever sink into each other, then the ending at tenths and the busiest rooms at full size.
+
+**Measured, and left.** The only moves faster than half a frame a second are the cuts of the coda's close shots, as in the film. Every ball out of the picture while it is uncovered is out by the staging (her coming in at Lipton's while he is at the keys, her on the landing in Paris, the piano playing itself). No two balls ever sink into each other by more than a quarter of a radius.
+
+**Her smile (462.85).** In the doorway's close shot her nod was a squash to seven tenths of her height, so near the lens it read as a ball going flat, a sigh. The dip is half as deep; at that size it is still plainly a nod, and his nod answers it (`club/finale.ts`).
+
+**The roses (113 to 133).** Each was a red dot on a stick the colour of the boards, with a leaf the same brown: strewn along the stage lip and flying from the house they read as matches. They are drawn the way the marquee's rose is: a green stem with two leaves, and a cup of petals with a petal's edge curling in at the heart (`theatre/theatre.ts`).
