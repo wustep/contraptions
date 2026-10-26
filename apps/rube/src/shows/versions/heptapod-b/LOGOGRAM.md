@@ -516,6 +516,9 @@ the weakest moments, a phone frame, then the strikes against the cue.
 - **The mast's lamps** (31 → 62): each lamp in the fog stood in a yellow bloom four cells across, the mast a column
   of glow over the camp. The glow is held close round each lamp; their fans of light down over the camp are as they
   were.
+- **Tendrils into a ring** (every logogram; worst on the first fog ring, 138 → 139.5): a quarter of the tendrils grow
+  into the ring, and as long as the outward ones and ending in a drop, one stood in the ring's open middle beside her
+  as a pin stuck through it. One growing inward is a short wisp now, with no drop; the outward sprays are unchanged.
 
 ## Arrival nods
 

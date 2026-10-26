@@ -737,7 +737,9 @@ export function drawLogogram(p: p5, k: number, o: LogogramOpts): void {
       const { mid, half } = logogramAt(o, td.a)
       const dir = td.inward ? -1 : 1
       const r0 = mid + dir * half * 0.6
-      const len = td.len * o.r * grow
+      // One growing into the ring is a short wisp: long and ending in a drop, it stood in the open middle as a pin
+      // stuck through the ring (the first fog ring, 138 → 139.5), where the eye is on her.
+      const len = td.len * o.r * grow * (td.inward ? 0.5 : 1)
       const steps = 14
       const left: Pt[] = []
       const right: Pt[] = []
@@ -754,7 +756,7 @@ export function drawLogogram(p: p5, k: number, o: LogogramOpts): void {
         right.push([x - tx * w, y - ty * w])
       }
       shapes.push([...left, ...right.slice().reverse()])
-      if (td.drop && grow > 0.85) {
+      if (td.drop && !td.inward && grow > 0.85) {
         const u = 1.12
         const rr = r0 + dir * len * u
         const aa = td.a + td.curl * (len / Math.max(0.1, o.r))
