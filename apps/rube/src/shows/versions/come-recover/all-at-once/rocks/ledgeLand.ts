@@ -249,9 +249,6 @@ export function buildLand(plan: Plan): Land {
 
 /* ------------------------------------------------------------------ painting */
 
-/** How far a ledge's lit top and its sand take to come in from its back (cells): together, so they meet with no step. */
-const FADE_IN = 0.45
-
 const path = (ctx: Ctx2D, pts: Pt[], k: number, close = true, map?: (p: Pt) => Pt) => {
   ctx.beginPath()
   for (let i = 0; i < pts.length; i++) {
@@ -533,14 +530,7 @@ export function paintWall(p: p5, k: number, f: Frame, land: Land, weight: number
   // The light along the top of each ledge, and sand lying on the ones that hold it.
   for (const [a, b] of land.tops) {
     if (b[0] < f.x0 - 1 || a[0] > f.x1 + 1) continue
-    // Faded in from its back, where the ground turns up the slope or the wall above: cut square there, it read as a
-    // seam across the stone. Its front runs to the lip, where the cliff's line ends it.
-    const a1 = rgba(light.ledgeTop, 0.75 + 0.1 * light.dusk)
-    const g = ctx.createLinearGradient(a[0] * k, 0, b[0] * k, 0)
-    g.addColorStop(0, rgba(light.ledgeTop, 0))
-    g.addColorStop(Math.min(0.5, FADE_IN / Math.max(0.01, b[0] - a[0])), a1)
-    g.addColorStop(1, a1)
-    ctx.fillStyle = g
+    ctx.fillStyle = rgba(light.ledgeTop, 0.75 + 0.1 * light.dusk)
     ctx.beginPath()
     ctx.moveTo(a[0] * k, a[1] * k)
     ctx.lineTo(b[0] * k, b[1] * k)
@@ -549,15 +539,9 @@ export function paintWall(p: p5, k: number, f: Frame, land: Land, weight: number
     ctx.closePath()
     ctx.fill()
   }
-  const sandHex = light.lit(ROCKS.sand)
+  ctx.fillStyle = light.lit(ROCKS.sand)
   for (const [a, b] of land.sand) {
     if (b[0] < f.x0 - 1 || a[0] > f.x1 + 1) continue
-    // Thinning out to nothing at its back, as drifted sand does, rather than ending square.
-    const g = ctx.createLinearGradient(a[0] * k, 0, b[0] * k, 0)
-    g.addColorStop(0, rgba(sandHex, 0))
-    g.addColorStop(Math.min(0.5, FADE_IN / Math.max(0.01, b[0] - a[0])), rgba(sandHex, 1))
-    g.addColorStop(1, rgba(sandHex, 1))
-    ctx.fillStyle = g
     ctx.beginPath()
     ctx.moveTo(a[0] * k, a[1] * k)
     ctx.lineTo(b[0] * k, b[1] * k)
