@@ -249,3 +249,7 @@ by copying their folders.
     a hard corner; dust now boils up round its foot.
   - The frigate's open hold was one flat beige panel. It is now dark high inside and lighter toward the floor the
     family stands on, with a shadow under the lintel.
+- **Polish wave 6.** A last fresh watch of the whole show, and a frame-rate check.
+  - The sliding door Jessica waits against through the test was a plain bright slab, the brightest thing in the frame,
+    and read as a light. It is now a paper screen in a timber frame like the room's others, its paper a step down.
+  - Playing through the worm, the night, the storm and the rider, frames hold at 16.7 ms.
