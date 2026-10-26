@@ -391,12 +391,16 @@ export function drawTorso(p: p5, c: Ctx, L: Pt, R: Pt, H: Pt, drop: number, slum
   const l = local(L)
   const r = local(R)
   const h = local(H)
-  // The seat: a black cushion under him, on the throne's post (upright, not tilted).
+  // The seat: the throne's post stands on the stage where he sits (it does not fly with him), telescoping up out of
+  // the kit to meet him over his last cell and a half down; a black cushion, as wide as his waist, comes down under
+  // him onto it (upright, not tilted). The cushion was twice his waist and hung on its post: it flew in as a T, and
+  // its end stuck out past the rack tom like a pan's handle.
+  const post = 0.9 * smoother((drop + 1.5) / 1.5)
   p.noStroke()
-  p.fill(HALL_BLACK)
-  p.rect((P[0] - 0.62) * k, (P[1] - 0.03) * k, 1.24 * k, 0.2 * k, 0.09 * k)
   p.fill(mixHex(HALL_BLACK, KIT.chrome, 0.2))
-  p.rect((P[0] - 0.05) * k, (P[1] + 0.15) * k, 0.1 * k, 0.9 * k)
+  if (post > 0.01) p.rect((PIVOT[0] - 0.05) * k, (PIVOT[1] + 1.05 - post) * k, 0.1 * k, post * k)
+  p.fill(HALL_BLACK)
+  p.rect((P[0] - 0.32) * k, (P[1] - 0.03) * k, 0.64 * k, 0.2 * k, 0.09 * k)
   const right = side(r, h, 1)
   const left = side(l, h, -1)
   ctx.save()
@@ -515,7 +519,9 @@ function taper(p: p5, c: Ctx, a: Pt, b: Pt, w0: number, w1: number, fill: string
     ctx.strokeStyle = css(col[0], col[1])
     ctx.stroke()
   }
-  if (lit) line(lit, up, 1.1)
+  // Top light lies along a limb as far as it faces up: full along a level arm, a trace down a hanging one (lit full
+  // length, a hanging sleeve read as the edge of an armchair's arm).
+  if (lit) line([lit[0], lit[1] * (0.2 + 0.8 * Math.abs(n[1]))], up, 1.1)
   if (shade) line(shade, -up, 1.4)
   ctx.restore()
 }

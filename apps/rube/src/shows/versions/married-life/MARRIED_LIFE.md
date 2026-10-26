@@ -1125,6 +1125,73 @@ window.
     10.0 → 10.0% / 16.2 → 16.2%; 172–258 s 8.1 → 8.1% / 15.1 → 15.1%; the dance (152 to 162 s) 13.4 → 13.6% /
     17.4 → 17.4%. A round of refinement, so the thirds hold; the final third is still behind the opening in motion,
     for the reason round 2 gives.
+- **The polish wave (October 2026).** Three rounds over the whole show at real speed, in the wide frame, a phone
+  held upright and Zoom; nothing added to the story, nothing retimed.
+  - *Round 1.* The summer sky's high sheet (`highSheet`) was ruled top to bottom in evenly spaced streaks on a phone's
+    tall sky; its rows now gather in a few drifts with clear sky between and thin going up. The ties' patch of door
+    light (`drawLightPatch`) drew its penumbra in three steps, which left rims on the paper and dark rings round the
+    season's shadows; it now falls off over seven layers. The tickets spilled on the hill landed 0.07 cells apart at
+    one turn, a press-sized card on the slope's line, and read as one box; they lie a little askew of each other, a
+    size smaller (`drawTicket`'s `size`), settled into the straw.
+  - *Round 2.* The lit bay's light on the porch floor (`drawBayLight`) set no rect mode, so under the stage's centred
+    rects its strips lay half back across the bay's posts and side light and up off the floor; it sets corner rects
+    and fades toward the steps in six even steps. The crest's light (`drawCrestPatch`) takes the patch's seven-layer
+    falloff. *Looked at and kept:* the night train on the far viaduct (lit windows in the dark, as a train is at
+    night); Zoom at the ward, the known limit below.
+  - *Round 3, timing.* The flash, the kiss, the peal, the book, the limb and the jar, the tickets and the lid, the fall
+    and the toll, each read a tenth of a second either side: all land, so no timing changed.
+  - *Cost* (the same frame painted 40 times and synced, median of three alternating rounds, base → now): the crest 2.8
+    → 3.9 ms, the mornings' patch 4.2–4.4 → 4.6–4.8 ms, the lit room and the credits unchanged (about 10 and 7 ms).
+- **Polish wave 2 (October 2026).** A fresh watch of the whole show, wide every 2 s and a phone held upright every
+  4 s, with full frames of the weakest moments.
+  - *Round 1, soft where it was stepped.* The nursery's mural sky (`mural`) was four flat stripes with ruled seams;
+    the bands now hold their colours through their middles and are feathered into each other over half a band, one
+    canvas gradient, so it reads as a painted sky. The bay's light out on the lawn and the pavement at dusk
+    (`spill`) was two flat trapezoids, the inner one's rim plain on the grass; it falls off over seven layers.
+  - *Round 2, the far haze.* On the summer hill (from 50 s) the town across the valley had a flat base ruled across
+    the far slope below its roofs; its foot now thins into the haze over its last tenth of a cell.
+  - *Looked at and kept:* the stepladder's spreader across the window's sill line (it is the ladder's brace); the
+    balloon passing behind the bay's post as he comes in (210.5 to 212.5 s, as it would); the credits on a phone
+    (390 × 844), which read over the snow and run to the end.
+
+- **Polish wave 3 (October 2026).** The whole show again on the odd seconds (between wave 2's frames), then Zoom
+  every 4 s.
+  - *Round 1, the church's light.* Where the windows' shafts cross the pews (`drawLitPews`) the light was cut to the
+    shaft's hard edges, plainest at the funeral (a pale stripe up the middle pew, 193 to 201 s). It is now one
+    gradient across each shaft, square to its slant, clear a little outside each edge and full a little inside, so the
+    light on the wood has a penumbra; the patches on the floor (`drawFloorLight`) feather their ends the same way. A
+    first try, five clipped layers, cost the wedding 3.4 ms a frame; the gradient costs about 0.4 (9.6 → 10.0 ms).
+  - *Round 2, Zoom.* Every 4 s under Zoom. *Looked at and kept:* the ward's balloon at Zoom's top edge (the known
+    limit below); the funeral's dawn on her picture (the window's shape on the plaster, by design); her limp slide
+    back down the slope and its squash as she lands (174.4 to 176 s).
+
+- **Polish wave 4 (October 2026).** Deeper: every change of place a few tenths of a second either side, the busiest
+  sets at full size, the cloud-watching on a phone, and the ties every half second.
+  - *Round 1, the transitions.* Each cut (21.58, 49.64, 63.25, 73.46, 84.38, 103.29, 167.71, 180.41, 189.45, 201.94)
+    holds Carl in place across it, and Ellie with him while she is there: nothing changed. *Looked at and kept:* the
+    phone's tall sky over the cloud-watching (the shapes they watch are in it; `tall` is one share for the whole show).
+  - *Round 2, the fix-up's lawn.* The house's sun shadow (`sunShadow`) was two flat layers whose near edge was ruled
+    down the lawn from the wall's corner, plain as a seam in the grass (22 to 49 s). It now comes in over a short way
+    from the corner and runs out over seven layers.
+  - *Round 3, the ties at half a second.* The decades' patch of door light changing tint with the seasons, the wheel
+    and the crest: all continuous. Nothing changed.
+
+- **Polish wave 5 (October 2026).** A fresh watch every 1.5 s wide (offset from the earlier waves) and every 4 s on a
+  phone, full frames of the doctor's office, the jar's last seconds and the dark ward, and the credits as pages on a
+  desktop (1440 × 900). Nothing was found worth changing, so nothing changed. *Looked at and kept:* the room's lamp
+  coming on over a tenth of a second exactly on its note (222.703; the street lamps take 0.15 s, each on its own
+  note); the doctor's sun bars across the door and the chairs; the ward lamp's light on the wall above its shade; the
+  credits' cards over the snow, the flakes fading under them.
+
+- **Polish wave 6 (October 2026).** A frame-cost audit of the whole campaign, and a last look at the frames not yet
+  seen at full size (the fix-up's porch, the book's pop-up, the tickets' door). Nothing changed in the show.
+  - *Cost* (the same frame painted 40 times and synced, median of three alternating rounds, the first polish wave's
+    base → now, headless Chromium at 1920 × 1080): the wedding 8.7 → 8.9 ms, the fix-up 8.3 → 8.2, the summer hill
+    8.3 → 8.3, the nursery 4.6 → 5.4 (wave 2's mural gradient), the funeral 7.2 → 7.3, the lit room 7.6 → 7.7. Every
+    frame in a sweep every 8 s is under 16.7 ms but the storm's wide.
+  - *Known, not changed:* the storm's wide (128 to 131 s) measures about 18 ms here, the same before the polish waves
+    as after (18.0 → 18.1). Almost all of it is the GPU finishing the frame, not the show's code (a CPU profile puts
+    the drawing itself near 4 ms), so it wants a deeper look than a polish pass: it is listed under the known limits.
 
 ## Known limits
 
@@ -1141,6 +1208,8 @@ window.
   up (203.9 s), the balloon's crown is cut by a sliver under Zoom (0.07 of the half height). Under the baby cloud
   (60 to 63 s) the baby's head is above the Zoom frame: from their feet to its head is taller than the Zoom frame, so
   Zoom keeps them; the show's own frame has it whole.
+- The storm's wide (128 to 131 s) is the heaviest frame: about 18 ms in headless Chromium at 1920 × 1080 (polish wave
+  6), mostly the GPU's own time; elsewhere every frame is under 16.7 ms.
 - The camera's one blow (the toll) is 1% of the frame; it is felt in motion and invisible in a still.
 - Photosensitive flashing is measured by approximation only (above), not with a certified analyser.
 - A saved video's credits paint every role line gold: `words.ts` ignores `TitleCard.plain` (the page honours it).

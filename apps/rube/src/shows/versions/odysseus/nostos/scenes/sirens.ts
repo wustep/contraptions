@@ -32,6 +32,11 @@ const SEEN = beatNear(259.6).t
 const LEAP = beatNear(265.6).t
 const LEAP_LAND = LEAP + 0.78
 const LOST = 276
+/** The beat before the leap, when the camera goes in on the bow; and the beat it comes back to him. */
+const CLIMB = beatNear(264.86).t
+const BACK = beatNear(268.61).t
+/** The bow's cap, about, at `t` (the ship's lean is small): for framing the leap. */
+const BOW = (t: number): number => shipX(t) + 1.95
 
 /** The hero: forward to the mast, bound there straining, and back aft. */
 const hero: Move[] = [
@@ -110,9 +115,15 @@ export const sirens: Scene = {
     // On a beat, out to the rocks: the Sirens, and the ship going by them.
     { t: SEEN, cells: 15, off: [2.6, -2.6], cut: true },
     { t: 262.6, cells: 14, off: [2.4, -2.4] },
-    { t: 265.0, cells: 11, off: [1.7, -1.4] },
-    { t: 267.4, cells: 10.5, off: [1.0, -0.5] },
-    // In on him again as they pass nearest, straining after them on every beat; out as the turns come off.
+    { t: CLIMB - 0.05, cells: 12.2, off: [2.0, -1.9] },
+    // On the beat before, in on the bow under the tallest of them: man 3 up on its cap. On the next he leaps for her,
+    // and goes into the sea at her rock's foot and down out of sight, as the ship rows on and leaves him.
+    { t: CLIMB, cells: 7.0, at: [BOW(LEAP) + 0.9, -2.15], cut: true },
+    { t: LEAP, cells: 7.0, at: [BOW(LEAP) + 1.3, -2.1] },
+    { t: LEAP_LAND + 0.2, cells: 7.1, at: [BOW(LEAP) + 1.9, -1.85] },
+    { t: BACK - 0.05, cells: 7.2, at: [BOW(LEAP) + 2.5, -1.5] },
+    // On the next, back to him, straining after them on every beat; out as the turns come off.
+    { t: BACK, cells: 6.4, off: [0.3, -1.85], cut: true },
     { t: 270.6, cells: 6.4, off: [0.3, -1.85] },
     { t: 273.8, cells: 6.2, off: [0.3, -1.7] },
     { t: 277.0, cells: 12, off: [1.5, -1.5] },

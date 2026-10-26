@@ -138,7 +138,9 @@ export const TRIAL = {
   through: 501.6,
   /** The arrow, through the twelve eyes, takes Antinous in the air as he leaps at Telemachus in the doorway. */
   strike: 501.6,
+  /** The rest come at him: the battle (`battle.ts`). */
   erupts: 503.15,
-  meet: 508.96,
-  fade: 512.68,
+  /** Penelope steps off the stairs beside him on the swell's last attack; it dies away on them, and the west comes up. */
+  meet: 512.68,
+  fade: 514.0,
 }

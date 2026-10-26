@@ -509,7 +509,11 @@ function drawEl(p: p5, k: number, f: Box & { cx: number; cy: number }, t: number
   ctx.translate(dx * k, 0)
   ctx.fillStyle = '#17141B'
   ctx.fillRect((f.x0 - 10) * k, y * k, (f.x1 - f.x0 + 20) * k, 0.45 * k)
-  for (let x = Math.floor((f.x0 - 10) / 6) * 6; x < f.x1 + 10; x += 6) ctx.fillRect((x - 0.15) * k, y * k, 0.3 * k, (f.y1 - y + 2) * k)
+  // Its columns stand in the near street, which only a tall frame reaches down to: there each has its footing.
+  for (let x = Math.floor((f.x0 - 10) / 6) * 6; x < f.x1 + 10; x += 6) {
+    ctx.fillRect((x - 0.15) * k, y * k, 0.3 * k, (EL_FOOT - y) * k)
+    ctx.fillRect((x - 0.35) * k, (EL_FOOT - 0.3) * k, 0.7 * k, 0.3 * k)
+  }
   ctx.strokeStyle = css('#17141B', 1)
   ctx.lineWidth = Math.max(1, 0.08 * k)
   ctx.beginPath()
@@ -537,7 +541,21 @@ function drawEl(p: p5, k: number, f: Box & { cx: number; cy: number }, t: number
     ctx.fillRect((v > 0 ? x0 + 4 * 6.6 - 0.45 : x0 + 0.15) * k, (y - 1.3) * k, 0.3 * k, 0.35 * k)
   }
   ctx.restore()
+  if (f.y1 > EL_FOOT) {
+    // The near street under it: a kerb catching the dawn, and the road going dark toward the lens.
+    ctx.save()
+    ctx.fillStyle = '#2E2A33'
+    ctx.fillRect((f.x0 - 1) * k, EL_FOOT * k, (f.x1 - f.x0 + 2) * k, 0.25 * k)
+    const g = ctx.createLinearGradient(0, (EL_FOOT + 0.25) * k, 0, (EL_FOOT + 6) * k)
+    g.addColorStop(0, '#1A171E')
+    g.addColorStop(1, '#0E0C11')
+    ctx.fillStyle = g
+    ctx.fillRect((f.x0 - 1) * k, (EL_FOOT + 0.25) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - EL_FOOT + 1) * k)
+    ctx.restore()
+  }
 }
+/** Where the El's columns stand, below the frame but for a tall one. */
+const EL_FOOT = BASE + 6.2
 
 /* ------------------------------------------------------------------ drawing it */
 

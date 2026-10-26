@@ -1,5 +1,5 @@
 import type p5 from 'p5'
-import { R, type Pt } from '../../../../../parts'
+import { R, mixHex, type Pt } from '../../../../../parts'
 import { KIT_LAND, drawKit, type KitPiece } from '../drums'
 import { POSES, beatPose, blendPose, drawConductor, type ArmPose, type Pose } from '../fletcher'
 import { box, carried, frame, hash, part, type Companion, type Ctx, type PartShot, type Slot } from '../kit'
@@ -409,28 +409,31 @@ function drawFolderPart(p: p5, s: FolderState, c: Ctx): void {
   drawCases(p, c, back)
   const fo = folderAt(T)
   if (fo) drawFolder(p, c, fo.x, 0.13, fo.rock, back)
-  // Out of the dark on the cut: the backstage opens under the practice room's darkness and wakes with the tubes.
+  // Out of the dark on the cut: the backstage opens under the practice room's darkness and wakes with the tubes. The
+  // dark is the room's own, below the road's paper: the paper's slate made the cut a step up into grey.
   if (back < 0.99) {
     const ctx = p.drawingContext as CanvasRenderingContext2D
+    const dark = mixHex(c.bg, '#000000', 0.4)
     p.noStroke()
-    p.fill(c.bg)
+    p.fill(dark)
     ctx.globalAlpha = 1 - back
     p.rect(((f.x0 + Math.min(f.x1, WING_L.x1)) / 2) * k, ((f.y0 + f.y1) / 2) * k, (Math.min(f.x1, WING_L.x1) - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
     // The case he sits on stays faintly there from the first frame (its lid and the top of it, fading down into the
-    // dark), so he is sitting on something while the rest wakes round him.
-    ctx.save()
-    ctx.globalAlpha = 0.5 * (1 - back)
-    ctx.beginPath()
-    ctx.rect((TRAP.x0 - 0.2) * k, (TRAP.top - 0.2) * k, (TRAP.x1 - TRAP.x0 + 0.4) * k, 1.1 * k)
-    ctx.clip()
-    drawCases(p, c, 0.35)
-    const fade = ctx.createLinearGradient(0, (TRAP.top + 0.15) * k, 0, (TRAP.top + 0.9) * k)
-    fade.addColorStop(0, 'rgba(0,0,0,0)')
-    fade.addColorStop(1, c.bg)
-    ctx.globalAlpha = 1
-    ctx.fillStyle = fade
-    ctx.fillRect((TRAP.x0 - 0.3) * k, (TRAP.top + 0.15) * k, (TRAP.x1 - TRAP.x0 + 0.6) * k, 0.8 * k)
-    ctx.restore()
+    // dark), so he is sitting on something while the rest wakes round him. It fades by itself, in thin bands, to
+    // nothing: a dark gradient laid over it doubled the dark at its foot, a box darker than the room as the tubes came on.
+    const top = TRAP.top - 0.2
+    const bands = 12
+    for (let i = 0; i < bands; i++) {
+      const y0 = i === 0 ? top : TRAP.top + 0.15 + (0.75 * (i - 1)) / (bands - 1)
+      const y1 = TRAP.top + 0.15 + (0.75 * i) / (bands - 1)
+      ctx.save()
+      ctx.globalAlpha = 0.5 * (1 - back) * (1 - i / bands)
+      ctx.beginPath()
+      ctx.rect((TRAP.x0 - 0.2) * k, y0 * k, (TRAP.x1 - TRAP.x0 + 0.4) * k, (y1 - y0) * k)
+      ctx.clip()
+      drawCases(p, c, 0.35)
+      ctx.restore()
+    }
     ctx.globalAlpha = 1
   }
   // The stage: the band behind Fletcher's place, the kit, Fletcher's rig.

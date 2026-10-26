@@ -475,14 +475,16 @@ function ticketsAt(t: number): { x: number; y: number; angle: number }[] {
   // Out of the downhill side of its mouth.
   const mx = land.x + Math.sin(land.tilt) * BASKET.h * 0.6 + BASKET.w * 0.35
   // The first slips out on the strike itself; the second on the next onset (174.916).
-  for (const [delay, reach, spin] of [[0.08, 0.0, -0.9], [174.916 - T.fall, 0.07, 0.7]] as [number, number, number][]) {
+  // Each comes to rest a little askew of the other and clear of it, so they lie as two tickets, not one box.
+  for (const [delay, reach, spin, rest] of [[0.08, 0.0, -0.9, -0.1], [174.916 - T.fall, 0.1, 0.7, 0.14]] as [number, number, number, number][]) {
     const s = t - T.fall - delay
     if (s <= 0) continue
     const u = 1 - Math.exp(-s / 0.22)
     const x = mx + reach * u
     const lie = Math.atan(ridgeSlope(x))
-    const y = ridge(x) + R - 0.03 - 0.1 * Math.exp(-s / 0.12)
-    out.push({ x, y, angle: lie + spin * (1 - u) * (1 - u) })
+    // Settled into the straw, the slope's line across them: lying on the line, they stood up off it like two boxes.
+    const y = ridge(x) + R + 0.025 - 0.15 * Math.exp(-s / 0.12)
+    out.push({ x, y, angle: lie + rest + spin * (1 - u) * (1 - u) })
   }
   return out
 }
@@ -577,7 +579,8 @@ export const climb = part<ClimbState>(
       drawBasketShadow(p, c.k, t)
       for (const tk of ticketsAt(t)) {
         const [tx, ty] = L(tk.x, tk.y)
-        drawTicket(p, c.k, c.weight, tx, ty, tk.angle)
+        // A size smaller than at the press, seen from the lane: at its size they lay on the slope like two boxes.
+        drawTicket(p, c.k, c.weight, tx, ty, tk.angle, 1, 0.72)
       }
     },
     over: (p: p5, s, c) => {

@@ -231,7 +231,74 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 161 (latest)
+## Polish pass 167 (latest)
+
+Polish wave 6 (Oct 26 2026): the end credits on the player's page on a phone, upright and on its side; the farm at full size again; and the cost of what these six waves added, measured against pass 162.
+
+**The credits on a phone.** Every card reads over the stars, upright (390 × 844) and on its side (844 × 390): the cards gather, hold and go out of focus in the sky above the camp, clear of the lander, the lamp and the dome. Nothing changed.
+
+**Round 1, the yard's pit** (20 to 25 s, `earth/yard.ts`). The windmill's bucket sits in a shallow pit at the tower's foot, but the yard's ground line ran straight across the pit's mouth and the pit was the yard's own colour, so the bucket stood in front of the ground rather than down in it. The ground line opens over the pit now, and the pit's inside is a shade darker than the yard, behind the bucket.
+
+**Round 2, the cost.** Pass 162's tree and this one served side by side and painted on demand at 1920 × 1080, 30 frames a second, through every range these waves touched, twice each (headless, CPU raster, so the numbers are high and only the difference counts). The same within the noise everywhere but the camp (246 to 262 s), where pass 165's soft lamp cone had added about 2.8 ms at the median. The cone is three wedges now instead of five, which looks the same; the difference is about 1.8 ms there, and nothing elsewhere.
+
+## Polish pass 166
+
+Polish wave 5 (Oct 26 2026): the transitions, in motion. Every change of scene stepped through a tenth of a second at a time or finer: the whip to Miller (103.8 s), the bridge into the bed and the cut to Act II (124 to 128.3), the lift across the station to the far side (164.5 to 172.3), the spoke into the hub (188.5 to 193.3), the wormhole's far side opening onto Edmunds' plain (233.5 to 236.5), and the show's first and last seconds. None of them pops or flashes; the whip dims for a frame as it goes through the sphere, and the wormhole's window opens over a quarter of a second, both as scored. One fix.
+
+**The wake** (125.6 to 127.5 s, the riders in `space/gargantua.ts`). The room he falls back into is drawn in the farm's ink, but he was still in the dark's: a bone rim and a bone mark, under the room's night. So for the whole wake he read as a ghost, a pale ring on the pillow, though he is a ball again from WAKE, and then on the cut to Act II his rim and mark turned dark all at once. He takes the room's ink now as he comes down into the pillow (a rider's `rim`, eased over a third of a second): a dashed ghost in the room's ink as he settles, a solid ball when he wakes, and nothing about him changes on the cut.
+
+## Polish pass 165
+
+Polish wave 4 (Oct 26 2026): Act I's dark and all of Act II at full size, a frame every 5 s, and then the props that carry the last scenes zoomed to twice the frame's size. One fix and one cut.
+
+**Round 1, the lamp** (255 s to the end, `drawLampLight` in `act2/edmunds.ts`). Its cone was one flat wedge. With the camera in close for the meeting, it stood behind the two of them as a big pale wedge with hard slanting sides, and its foot ruled a line across the ramp and the sand either side of the pool. It is five wedges now, each a little narrower, so its sides soften outward, and each fades down to nothing at the ground, where the pool takes over.
+
+**Round 2, the hub's arm** (194 to 206 s, `drawArm` in `act2/hub.ts`). Cut: the hydraulic ram along its upper arm. It was a hairline a shade outside the arm's edge, so it read as a stray second outline, not a ram.
+
+**Round 3, timing.** Frames a tenth of a second either side of the shield's fall (239.0 s), the chute's bloom (244.0), Cooper out of his seat (253.99) and the railcar's stop (146.01). Each lands on its strike. Nothing was retimed.
+
+## Polish pass 164
+
+Polish wave 3 (Oct 26 2026): frames every 4 s at full size and every 3.5 s upright, then the weak spots zoomed to twice the frame's size, where the drawing's own faults show. The player's page was looked at on a phone as well: there the stage is nearly square, and the credits read over the stars.
+
+**Round 1, the puffs** (`puff` in `kit.ts`, used for every puff in the show). `parts`' puff draws four lobes, each inked and then filled. Faded with a global alpha, as the dust and the exhaust behind the truck are (33 to 36 s), every lobe's ink ring showed through the others' fills, a little cluster of ghost circles. The show's own puff fills the four lobes as one shape and inks only the arcs on its outside, so it looks the same while it is opaque and fades whole.
+
+**Round 2, the corn's edges** (`earth/corn.ts`, `earth/field.ts`).
+- Where a wall of corn comes down to nothing at its end, its leaves still swayed at full swing, so the inked top ended in a flick lying along the foot. It sways now only as much as it stands, and the ink stops where the wall has a little height.
+- The field below the channel's bank stopped a cell and a half short of where its taper ends, at full height: a straight side, a pale seam up the background behind the truck. It runs on now to where its taper brings it down to nothing.
+
+**Round 3, timing.** Frames a tenth of a second either side of strikes not read in pass 162: the porch step (18.67 s), the ball out of the combine's stack (57.2), the bat's lever at the ballpark (159.0), and the far-side house's floor (177.5). Each lands on its strike. Nothing was retimed.
+
+## Polish pass 163
+
+Polish wave 2 (Oct 26 2026): the whole show again with fresh eyes, a frame every 2 s in the wide frame, every 3 s on an upright phone, and every 4 s at full size offset from both, for the next-weakest moments. Each fix is to something already there; one thing was cut.
+
+**Round 1, the tall frame.**
+- **The cloud deck from the pad** (76 to 88.7 s, `cloud.ts`). A phone sees the deck for the whole countdown, and its base was a ruled ink line under a flat band: a white bar laid across the sky. From below the base now hangs in soft, uninked scallops of shade over a little haze that thins into the dust. Cut: the wisps along the base, which were dashes under it. (The tops, the hole and the view from above are as they were.)
+
+**Round 2, seams.**
+- **The base's far service road** (62 to 84 s, `earth/far.ts`). It was an ink line ruled across the whole frame, and with nothing on it until the crews' trucks pull out it read as a seam through the fence, the gate and the bunker. It is a pale strip of graded dirt now, soft at both edges, and the trucks ride on it.
+- **The cut chute** (248 to 250 s, `act2/edmunds.ts`). Cut loose, it drifted upwind and rose out of the frame straight through Gargantua, its cut bridle hanging across the dark. It drifts downwind now, the cirrus's way, and passes clear.
+
+**Round 3, timing.** None of the three touches a strike or a cue. `check:shows` holds every strike to its onset.
+
+## Polish pass 162
+
+The polish wave (Oct 25 2026): fresh eyes on the whole show, a frame every 3 s and again offset by 1.5 s, in the wide frame and an upright phone's, for what looks wrong or cheap on a careful watch. Then a timing audit. Every change is a fix to something already there; nothing new was added to the story.
+
+**Round 1, the wide frame.**
+- **The dam** (52 to 56 s, `earth/truck.ts`). Its face was a strip a sixth of a cell wide, ruled every half cell, which read as a ladder stood on end. It is a concrete wall now, leaning out as a dam's downstream face does, with faint pour joints. And the road stands on a bank: once the camera came down past the road, the far land's horizon was below it, and under the road was sky with the telegraph wires running through it. The bank is filled with the far land's own gradient, in the same place on the screen (`farLand` in `earth/sky.ts`), so along the chase it is invisible and only covers the sky.
+- **The sunrise shadows** (the credits, `shadow` in `act2/edmunds-farm.ts`). They were hard-edged wedges to the frame's foot, a fan of dark stripes. Each one is sharp at its caster and blurs wider as it runs, as a shadow from the sun's disc does: five wedges, each a little wider at its far end.
+- **The louvres' light** (152 to 156 s, `act2/rim.ts`). It reached twice the shade's height, so a pale wedge with hard slanting sides stood in the air over each open bay. It falls through the slats onto the tray, between the posts, and no further.
+- **The station's far fields** (`act2/depth.ts`). Under the haze the crops were far enough apart in tone to read as hard blocks of colour with the camera near the ring. Drawn closer together in tone.
+
+**Round 2, the tall frame and the dark.**
+- **The cloud deck from above** (89 to 96 s, `cloud.ts`). Past the punch its flat base hung in the dark as a white bar with night under it, plainest on a phone. From above it now thins down into the air over the Earth.
+- **The Earth's dusk** (89 to 104 s, `space/sky.ts`). The night came across in two flat steps of shade, and the air at the limb dimmed in two steps with it: two hard seams down the planet under the orbit. Both are one soft ramp now (the limb's air is one stroke with a conic gradient).
+
+**Round 3, timing.** Read a tenth of a second either side of the scored hits: the liftoff (85.0 s), the cloud punch (88.76), the station's lamps on the accent (127.5), the iris (207.5), the touchdown (251.5) and the lamp (255.5). All land; nothing was retimed. `check:shows` holds every strike to its onset.
+
+## Polish pass 161
 
 Stephen: Miller's water "is a little too busy. Calm and simplify it: fewer ripples and elements, less motion noise, while keeping the giant wave beat clearly readable." And three more for the same round: when Cooper gets into the ship, the bottom of the ball drew in front of it; the moving lines on the ground in the last scene were excessive; and the front layer along the bottom of the frame had visual issues, in every scene that had one (fix it or remove it).
 

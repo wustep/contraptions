@@ -131,10 +131,11 @@ explainers. Claims resting on one secondhand source are marked *(uncertain)*. So
   - **The bow** is the trial: strung with Penelope's red thread and drawn by a crank only a drop from the terrace will
     move. Its note on the swell is the lyre's pluck, and the arrow goes through the twelve eyes.
 - **Kept from Nolan's choices.** The prologue's horse: dragged ashore by cheering Trojans, spears driven into it among
-  the men, the gate opened from inside and the army pouring in. Three ships, two lost to giants in fog. The Cyclops' vertical eye. Hands rising from
+  the men, the gate opened from inside and the army pouring in, and the Trojans cut down in their own streets. Three ships, two lost to giants in fog. The Cyclops' vertical eye. Hands rising from
   black sand and the dead charging. The unheard Sirens and the man who jumps. Apollo's cattle. The lotus and seven
-  years. The raft given to the storm. Argos's one wag. The bow's pluck as recognition, with no bed test. Antinous killed,
-  the rest of the suitors surrendering. The exile west into the sun with Telemachus left behind to rule. Circe and Scylla are left out for clarity at this length.
+  years. The raft given to the storm. Argos's one wag. The bow's pluck as recognition, with no bed test. Antinous killed
+  first; then the suitors who come at him killed in a battle in the hall, Telemachus at his side; those who never fight
+  give in. The exile west into the sun with Telemachus left behind to rule. Circe and Scylla are left out for clarity at this length.
 
 ## Sources
 

@@ -23,7 +23,6 @@ import { HALL, TENT } from '../worlds'
  */
 
 const b = (t: number): number => nearestBeat(t)
-const clamp01 = (v: number) => Math.max(0, Math.min(1, v))
 
 /* ------------------------------------------------------------------ the room */
 
@@ -66,8 +65,9 @@ const STUDENTS: Student[] = (() => {
       const order = (ROWS.n - 1 - r) * 2 + (near ? 0 : 1)
       out.push({ x, y, s, near, seed: r * 2 + (near ? 1 : 0), phone: PINGS[Math.min(PINGS.length - 1, Math.floor(order * 0.9))], later: false })
     }
-    // Years on, a third in every row, between the two.
-    out.push({ x: ROWS.x0 + r * ROWS.w + 0.42, y: rowTop(r) - R * 0.93 - 0.015, s: 0.93, near: false, seed: 40 + r, phone: Infinity, later: true })
+    // Years on, a third in every row, between the two and a seat further back: up a little, smaller and hazier, so the
+    // row has depth. (Level with them, three overlapping balls in a line read as one long grub.)
+    out.push({ x: ROWS.x0 + r * ROWS.w + 0.42, y: rowTop(r) - R * 0.78 - 0.1, s: 0.78, near: false, seed: 40 + r, phone: Infinity, later: true })
   }
   return out.sort((p, q) => Number(p.near) - Number(q.near))
 })()
@@ -91,13 +91,15 @@ export const H = {
 export const HALL_HITS = [...PINGS, H.touch, b(100.27), b(101.187), H.teach, H.stroke, H.closes].filter((t, i, all) => all.indexOf(t) === i)
 
 const present = (t: number): boolean => t < 200
-/** The screen on: the news coming up, with a flicker, from her touch; years on, white from the start. */
+/**
+ * The screen on: the news coming up from her touch, steadily; years on, white from the start. (It came on with a
+ * flicker, half up and back to dark inside a tenth of a second: a strobe across the hall.)
+ */
 function screenOn(t: number): number {
   if (!present(t)) return 1
   const u = t - H.touch
   if (u < 0) return 0
-  const dip = u < 0.2 ? 0.5 * Math.exp(-((u - 0.06) ** 2) / 0.002) : 0
-  return clamp01(Math.max(smooth(u, 0.05, 0.4), dip))
+  return smooth(u, 0, 0.4)
 }
 /** How lit the hall is: dim for the projector the day they came, full daylight years on. */
 const roomLight = (t: number): number => (present(t) ? 0.22 + 0.12 * screenOn(t) : 1)
@@ -199,11 +201,12 @@ function drawHall(p: p5, k: number, t: number): void {
   ctx.quadraticCurveTo(px(LECTERN.x + LECTERN.w + 0.02), px(lamp[1]), px(lamp[0]), px(lamp[1]))
   ctx.stroke()
   if (lampOn > 0) {
-    const lg = ctx.createRadialGradient(px(lamp[0]), px(lamp[1] + 0.06), 0, px(lamp[0]), px(lamp[1] + 0.06), px(0.7))
-    lg.addColorStop(0, rgba(HALL.lamp, 0.5))
+    // A small pool round the shade and down onto the reading desk, not a halo round the whole podium.
+    const lg = ctx.createRadialGradient(px(lamp[0]), px(lamp[1] + 0.06), 0, px(lamp[0]), px(lamp[1] + 0.06), px(0.4))
+    lg.addColorStop(0, rgba(HALL.lamp, 0.38))
     lg.addColorStop(1, rgba(HALL.lamp, 0))
     ctx.fillStyle = lg
-    ctx.fillRect(px(lamp[0] - 0.7), px(lamp[1] - 0.64), px(1.4), px(1.4))
+    ctx.fillRect(px(lamp[0] - 0.4), px(lamp[1] - 0.34), px(0.8), px(0.8))
   }
   ctx.fillStyle = lampOn > 0 ? mix(HALL.lamp, '#FFFFFF', 0.3) : mix(HALL.wood, HALL.dark, 0.2)
   ctx.beginPath()
@@ -245,8 +248,10 @@ function drawHall(p: p5, k: number, t: number): void {
 const LENS: Pt = [6.4, -3.45]
 function beam(ctx: Ctx, k: number, t: number, on: number): void {
   const px = (v: number) => v * k
-  const a: Pt = [SCREEN.x + SCREEN.w * 0.2, SCREEN.y + 0.08]
-  const c: Pt = [SCREEN.x + SCREEN.w * 0.95, SCREEN.y + SCREEN.h - 0.08]
+  // To the screen's near edge, top to foot: the light meets the screen there and does not lie over the news in a
+  // wedge (it ended on a diagonal across the picture).
+  const a: Pt = [SCREEN.x + SCREEN.w, SCREEN.y + 0.04]
+  const c: Pt = [SCREEN.x + SCREEN.w, SCREEN.y + SCREEN.h - 0.04]
   const g = ctx.createLinearGradient(px(LENS[0]), px(LENS[1]), px(SCREEN.x + SCREEN.w * 0.6), px(SCREEN.y + SCREEN.h / 2))
   g.addColorStop(0, rgba(TENT.screenOn, 0.2 * on))
   g.addColorStop(1, rgba(TENT.screenOn, 0.05 * on))
@@ -274,7 +279,7 @@ function beam(ctx: Ctx, k: number, t: number, on: number): void {
 function student(ctx: Ctx, k: number, t: number, s: Student, L: number): void {
   const px = (v: number) => v * k
   const r = R * s.s
-  const haze = s.near ? 0 : 0.3
+  const haze = s.near ? 0 : s.later ? 0.5 : 0.3
   const body = mix(mix(HALL.student, HALL.dark, 0.35 * (1 - L)), HALL.wall, haze)
   const drift = 0.01 * Math.sin(t * 0.5 + s.seed * 1.3)
   const x = s.x + drift
@@ -303,11 +308,12 @@ function student(ctx: Ctx, k: number, t: number, s: Student, L: number): void {
   // The phone, held in front, lit: the news.
   const fx = x - r * 0.95
   const fy = s.y + r * 0.35
-  const glow = ctx.createRadialGradient(px(fx), px(fy), 0, px(fx), px(fy), px(0.32))
-  glow.addColorStop(0, rgba(TENT.screenOn, 0.45 * lit * (1 - haze)))
+  // Its light only on the hands and face over it: wider, every row wore a haze of halos.
+  const glow = ctx.createRadialGradient(px(fx), px(fy), 0, px(fx), px(fy), px(0.17))
+  glow.addColorStop(0, rgba(TENT.screenOn, 0.3 * lit * (1 - haze)))
   glow.addColorStop(1, rgba(TENT.screenOn, 0))
   ctx.fillStyle = glow
-  ctx.fillRect(px(fx - 0.32), px(fy - 0.32), px(0.64), px(0.64))
+  ctx.fillRect(px(fx - 0.17), px(fy - 0.17), px(0.34), px(0.34))
   ctx.fillStyle = rgba(mix(TENT.screenOn, '#FFFFFF', 0.4), lit * (1 - 0.4 * haze))
   ctx.fillRect(px(fx - 0.025), px(fy - 0.045), px(0.05), px(0.09))
 }

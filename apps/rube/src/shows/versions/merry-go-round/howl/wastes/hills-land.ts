@@ -85,7 +85,8 @@ function drawLayer(p: p5, k: number, f: ReturnType<typeof frame>, layer: Layer, 
   p.vertex((f.x1 + 1) * k, (f.y1 + 1) * k)
   p.vertex((f.x0 - 1) * k, (f.y1 + 1) * k)
   p.endShape(p.CLOSE)
-  // Mist at its foot, between it and the next: the air between the ranges.
+  // Mist at its foot, between it and the next: the air between the ranges. It goes on down at its fullest to the
+  // frame's foot (ending where it was thickest, it left a hard line across any range whose foot showed).
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const mist = landTone(WASTES.mist, T, 0.1)
   const c = p.color(mist)
@@ -96,7 +97,7 @@ function drawLayer(p: p5, k: number, f: ReturnType<typeof frame>, layer: Layer, 
   g.addColorStop(0, `rgba(${rgb}, 0)`)
   g.addColorStop(1, `rgba(${rgb}, ${0.5 * (1 - wastesNight(T) * 0.6)})`)
   ctx.fillStyle = g
-  ctx.fillRect((f.x0 - 1) * k, y0 * k, (f.x1 - f.x0 + 2) * k, (y1 - y0) * k)
+  ctx.fillRect((f.x0 - 1) * k, y0 * k, (f.x1 - f.x0 + 2) * k, (Math.max(y1, f.y1 + 1) - y0) * k)
 }
 
 /** A heather clump, a rock, or nothing, for every stretch of ground (by index). */
@@ -331,17 +332,23 @@ export function drawLand(p: p5, k: number, weight: number, ink: string, T: numbe
   const drift = landTone(mixHex(WASTES.hill, WASTES.heather, 0.3), T, 1)
   const j0 = Math.floor((f.x0 - 6) / 4.3)
   const j1 = Math.ceil((f.x1 + 6) / 4.3)
-  for (let j = j0; j <= j1; j++) {
-    if (hash(j, 1, 61) < 0.35) continue
-    const cx = j * 4.3 + hash(j, 2, 61) * 2.5
-    const w = 1.6 + hash(j, 3, 61) * 2.8
-    const d = 0.35 + hash(j, 4, 61) * 1.1
-    for (let m = 0; m < 7; m++) {
-      const ex = cx + (hash(j, m + 5, 62) - 0.5) * w * 0.8
-      const rx = w * (0.1 + 0.16 * hash(j, m + 13, 62))
-      const ry = rx * (0.22 + 0.12 * hash(j, m + 21, 62))
-      fillA(p, drift, 0.28)
-      p.ellipse(ex * k, (ground(ex) + d + (hash(j, m + 29, 62) - 0.5) * 0.16) * k, 2 * rx * k, 2 * ry * k)
+  // A tall frame (a phone held upright) sees deeper into the ground than a wide one: the drifts go on down in tiers,
+  // nearer and broader, to its foot, so there is no bare slab of green under the first row.
+  const lowest = f.y1 + 1 - FLOOR
+  for (let tier = 0; tier === 0 || 2.2 + (tier - 1) * 1.5 < lowest; tier++) {
+    const grow = 1 + 0.35 * tier
+    for (let j = j0; j <= j1; j++) {
+      if (hash(j, 1 + 40 * tier, 61) < 0.35) continue
+      const cx = j * 4.3 + hash(j, 2 + 40 * tier, 61) * 2.5
+      const w = (1.6 + hash(j, 3 + 40 * tier, 61) * 2.8) * grow
+      const d = tier === 0 ? 0.35 + hash(j, 4, 61) * 1.1 : 2.2 + (tier - 1) * 1.5 + hash(j, 4 + 40 * tier, 61) * 1.1
+      for (let m = 0; m < 7; m++) {
+        const ex = cx + (hash(j, m + 5 + 40 * tier, 62) - 0.5) * w * 0.8
+        const rx = w * (0.1 + 0.16 * hash(j, m + 13 + 40 * tier, 62))
+        const ry = rx * (0.22 + 0.12 * hash(j, m + 21 + 40 * tier, 62))
+        fillA(p, drift, 0.28)
+        p.ellipse(ex * k, (ground(ex) + d + (hash(j, m + 29 + 40 * tier, 62) - 0.5) * 0.16 * grow) * k, 2 * rx * k, 2 * ry * k)
+      }
     }
   }
   // The lip: the edge darkens softly just under the lane (turf over the bank), thicker in a wide so it still reads.

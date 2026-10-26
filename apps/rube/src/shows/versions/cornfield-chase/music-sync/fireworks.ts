@@ -102,7 +102,8 @@ export function fireworks(s: Screen, t: number, hy: number): void {
     const sparks = 46
     const out = (u: number) => (1 - Math.exp(-3.2 * u)) / (1 - Math.exp(-3.2 * LIFE))
     const life = 1 - age / LIFE
-    const color = age < 0.7 ? sh.color : sh.fade
+    // Turning over a few frames, not swapped all at once on one.
+    const color = mixHex(sh.color, sh.fade, smooth(age, 0.55, 0.85))
     ctx.strokeStyle = rgba(color, 0.85 * life ** 1.4)
     ctx.lineWidth = Math.max(1, f * 0.0028 * (0.6 + 0.4 * life))
     ctx.beginPath()
@@ -146,20 +147,27 @@ export function smoke(s: Screen, t: number, hy: number, camAt: (t: number) => nu
     if (Math.abs(u) * f > w / 2 + spread * f * (long + shear)) continue
     const bx = cx + u * f
     const by = hy - (sh.y - 0.003 * age) * f
-    // Puffs over the disc the sparks filled, as one cloud: no edges inside it, only its outline.
-    const cloud = new Path2D()
+    // Puffs over the disc the sparks filled, each soft to its edge, so the cloud has no outline: a filled outline of
+    // round puffs read as a lumpy flat cutout against the stars.
+    const tint = mixHex(color, sh.color, 0.1)
     for (let k = 0; k < 8; k++) {
       const turn = hash(k, n * 7 + 50) * Math.PI * 2
       const from = Math.sqrt(hash(k, n * 7 + 51)) * 0.62 * spread
       const dy = Math.sin(turn) * from * flat
       const x = bx + (Math.cos(turn) * from * long - dy * shear) * f
       const y = by + dy * f
-      const r = spread * (0.3 + 0.16 * hash(k, n * 7 + 52)) * f
-      cloud.moveTo(x + r * long, y)
-      cloud.ellipse(x, y, r * long, r * flat, 0, 0, Math.PI * 2)
+      const r = spread * (0.42 + 0.2 * hash(k, n * 7 + 52)) * f
+      const puff = ctx.createRadialGradient(0, 0, 0, 0, 0, r)
+      puff.addColorStop(0, rgba(tint, a * 0.55))
+      puff.addColorStop(0.45, rgba(tint, a * 0.4))
+      puff.addColorStop(1, rgba(tint, 0))
+      ctx.save()
+      ctx.translate(x, y)
+      ctx.scale(long, flat)
+      ctx.fillStyle = puff
+      ctx.fillRect(-r, -r, r * 2, r * 2)
+      ctx.restore()
     }
-    ctx.fillStyle = rgba(mixHex(color, sh.color, 0.1), a)
-    ctx.fill(cloud)
   }
 }
 

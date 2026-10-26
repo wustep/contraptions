@@ -34,6 +34,12 @@ const DAY: Layer[] = [
   { n: 8, loop: 5.8, q: 0.07, drift: 0.011, lo: 0.42, hi: 0.7, w0: 0.26, w1: 0.42, haze: 0 },
 ]
 
+/**
+ * Higher still, for a frame taller than 16:9 (a phone held upright), which sees far more sky over the same field: the
+ * afternoon's clouds go on up it, a little bigger and quicker for being nearer overhead, so its top is not bare.
+ */
+const TALL: Layer = { n: 9, loop: 6.2, q: 0.08, drift: 0.013, lo: 0.78, hi: 1.9, w0: 0.3, w1: 0.46, haze: 0 }
+
 /** Long, thin, slow: a night's few clouds, a low bank over the horizon the fair lights from under, and a few high. */
 const NIGHT: Layer[] = [
   { n: 5, loop: 4.4, q: 0.04, drift: 0.004, lo: 0.1, hi: 0.2, w0: 0.5, w1: 0.8, haze: 0.25 },
@@ -85,17 +91,17 @@ export interface CloudLight {
 }
 
 /**
- * The clouds over the horizon at `hy`, `t` seconds in: rounded heaps on flat bases, each base a band of its own
- * colour. Drawn after the sun and the moon, so they pass in front of them.
+ * The clouds over the horizon at `hy`, `t` seconds in: rounded heaps on flat bases, each shaded up from its base in the
+ * base's own colour. Drawn after the sun and the moon, so they pass in front of them.
  */
 export function clouds(s: Screen, t: number, hy: number, light: CloudLight, night = false): void {
   const { ctx, cx, f, w } = s
   const half = w / 2 / f
-  for (const [li, layer] of (night ? NIGHT : DAY).entries()) {
+  const layers = night ? NIGHT : s.h > f * 1.05 ? [...DAY, TALL] : DAY
+  for (const [li, layer] of layers.entries()) {
     const at = (s.camX * layer.q) / 8
     const heap = new Path2D()
-    const under = new Path2D()
-    let any = false
+    const feet: { x: number; y: number; width: number }[] = []
     for (let i = 0; i < layer.n; i++) {
       const key = li * 31 + i + (night ? 500 : 0)
       const width = (layer.w0 + (layer.w1 - layer.w0) * hash(key, 1)) * f
@@ -104,25 +110,33 @@ export function clouds(s: Screen, t: number, hy: number, light: CloudLight, nigh
       const x = cx + u * f
       const y = hy - (layer.lo + (layer.hi - layer.lo) * hash(key, 3)) * f
       if (y < -width * 0.3) continue
-      any = true
       for (const p of puffs(key, night)) {
         const px = x + p.dx * width
         const py = y + p.dy * width
         heap.moveTo(px + p.rx * width, py)
         heap.ellipse(px, py, p.rx * width, p.ry * width, 0, 0, Math.PI * 2)
       }
-      // A flat foot under the heap, and the band of the base's colour along it, cut to the heap's outline.
+      // A flat foot under the heap, and the base's colour coming up into it from there, cut to the heap's outline.
       if (!night) heap.rect(x - width * 0.36, y - width * 0.08, width * 0.72, width * 0.08)
-      under.rect(x - width * 0.6, y - width * (night ? 0.012 : 0.075), width * 1.2, width * 0.2)
+      feet.push({ x, y, width })
     }
-    if (!any) continue
+    if (!feet.length) continue
     const a = light.alpha * (1 - layer.haze * 0.5)
     ctx.fillStyle = rgba(mixHex(light.body, light.sky, layer.haze), a)
     ctx.fill(heap)
     ctx.save()
     ctx.clip(heap)
-    ctx.fillStyle = rgba(mixHex(light.base, light.sky, layer.haze), a)
-    ctx.fill(under)
+    // Shaded up from the base over a fifth of the heap, not a band with an edge across it (it read as a seam).
+    const base = mixHex(light.base, light.sky, layer.haze)
+    for (const { x, y, width } of feet) {
+      const top = y - width * (night ? 0.045 : 0.17)
+      const full = y - width * (night ? 0.004 : 0.035)
+      const shade = ctx.createLinearGradient(0, top, 0, full)
+      shade.addColorStop(0, rgba(base, 0))
+      shade.addColorStop(1, rgba(base, a))
+      ctx.fillStyle = shade
+      ctx.fillRect(x - width * 0.6, top, width * 1.2, y + width * 0.15 - top)
+    }
     ctx.restore()
   }
 }
@@ -135,8 +149,6 @@ export function shadows(s: Screen, t: number, hy: number, color: string, strengt
   if (strength <= 0.01) return
   const { ctx, cx, f, w } = s
   const half = w / 2 / f
-  const outer = new Path2D()
-  const inner = new Path2D()
   for (let i = 0; i < 5; i++) {
     const d = 1.15 + 3.6 * hash(i, 41)
     const y = groundY(s, hy, d)
@@ -147,15 +159,18 @@ export function shadows(s: Screen, t: number, hy: number, color: string, strengt
     const u = wrap(i * 1.37 + (0.018 * t) / d - groundAlong(s, d), 6.5 / d)
     if (Math.abs(u) > half + rw / f) continue
     const x = cx + u * f
-    // Feathered: a wide faint oval and a narrower one inside it, so the edge is soft as a cloud's shadow is.
-    outer.moveTo(x + rw, y)
-    outer.ellipse(x, y, rw, rh, 0, 0, Math.PI * 2)
-    inner.moveTo(x + rw * 0.72, y)
-    inner.ellipse(x + rw * 0.04, y, rw * 0.72, rh * 0.62, 0, 0, Math.PI * 2)
+    // Soft to its edge, as a cloud's shadow is: two flat ovals one in the other drew two rings on the rows.
+    const shade = ctx.createRadialGradient(0, 0, 0, 0, 0, rw)
+    shade.addColorStop(0, rgba(color, 0.1 * strength))
+    shade.addColorStop(0.5, rgba(color, 0.08 * strength))
+    shade.addColorStop(1, rgba(color, 0))
+    ctx.save()
+    ctx.translate(x, y)
+    ctx.scale(1, rh / rw)
+    ctx.fillStyle = shade
+    ctx.fillRect(-rw, -rw, rw * 2, rw * 2)
+    ctx.restore()
   }
-  ctx.fillStyle = rgba(color, 0.05 * strength)
-  ctx.fill(outer)
-  ctx.fill(inner)
 }
 
 /**
@@ -254,42 +269,37 @@ export function droneAcross(t: number): number | null {
 
 /**
  * The drone, as in the film: a long slender wing high over the field, out of the west at the end of the piano and
- * coming down across the sunset toward the far rows as the organ gathers, with the pickup on the ground after it.
+ * coming down across the sunset to skim the far rows as the organ gathers, with the pickup on the ground after it. Seen
+ * a little from below, so the wing has its chord and its sweep, and in the haze of the distance, paler than the
+ * machine's ink: drawn edge on in the ink, it read as a stray length of rail beside the machine's floors.
  */
-export function drone(s: Screen, t: number, hy: number, ink: string): void {
+export function drone(s: Screen, t: number, hy: number, ink: string, sky: string): void {
   const across = droneAcross(t)
   if (across === null) return
   const { ctx, cx, f } = s
   const W = (f * 16) / 9
   const u = (t - DRONE[0]) / (DRONE[1] - DRONE[0])
   const x = cx - W / 2 + across * W
-  const y = hy - (0.46 - 0.34 * smooth(u, 0.15, 1)) * f + 0.006 * f * Math.sin(t * 0.9)
+  const y = hy - (0.46 - 0.4 * smooth(u, 0.15, 1)) * f + 0.006 * f * Math.sin(t * 0.9)
   const span = f * 0.07
   const bank = 0.04 * Math.sin(t * 0.55)
   ctx.save()
   ctx.translate(x, y)
   ctx.rotate(bank)
-  ctx.fillStyle = ink
-  ctx.strokeStyle = ink
-  // The wing: long and thin, a little swept, tips raised.
+  ctx.fillStyle = mixHex(ink, sky, 0.3)
+  // The wing: long, its leading edge swept back from the pod to the raised tips, its trailing edge straighter, so the
+  // chord narrows out to the tips.
   ctx.beginPath()
-  ctx.moveTo(-span, -span * 0.035)
-  ctx.lineTo(-span * 0.1, span * 0.012)
-  ctx.lineTo(span * 0.1, span * 0.012)
-  ctx.lineTo(span, -span * 0.035)
-  ctx.lineTo(span, -span * 0.01)
-  ctx.lineTo(span * 0.1, span * 0.04)
-  ctx.lineTo(-span * 0.1, span * 0.04)
-  ctx.lineTo(-span, -span * 0.01)
+  ctx.moveTo(0, -span * 0.04)
+  ctx.lineTo(span, -span * 0.07)
+  ctx.lineTo(span * 0.98, -span * 0.035)
+  ctx.lineTo(0, span * 0.05)
+  ctx.lineTo(-span * 0.98, -span * 0.035)
+  ctx.lineTo(-span, -span * 0.07)
   ctx.closePath()
-  // The pod under it, and the tail.
-  ctx.ellipse(0, span * 0.06, span * 0.13, span * 0.035, 0, 0, Math.PI * 2)
+  // The pod under it.
+  ctx.moveTo(span * 0.15, span * 0.04)
+  ctx.ellipse(0, span * 0.04, span * 0.15, span * 0.045, 0, 0, Math.PI * 2)
   ctx.fill()
-  ctx.lineWidth = Math.max(1, f * 0.0018)
-  ctx.beginPath()
-  ctx.moveTo(-span * 0.1, span * 0.06)
-  ctx.lineTo(-span * 0.34, span * 0.05)
-  ctx.lineTo(-span * 0.38, span * 0.0)
-  ctx.stroke()
   ctx.restore()
 }

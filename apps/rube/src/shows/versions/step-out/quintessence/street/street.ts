@@ -22,7 +22,7 @@ import { cherylAt, COVER_X, DRIFT, FINAL, IN, MEET, ON, STOP, STREET_STRIKES, WA
  * people, the pigeons, the steam, the light climbing, until the walk sign comes on.
  *
  * The city is drawn in `draw.ts` (the set), `sky.ts` (the planes behind), `fronts.ts` (the buildings along the
- * street), `city.ts` (what moves in it), `light.ts` (the morning's clock) and `front.ts` (the near plane and the light).
+ * street), `city.ts` (what moves in it), `light.ts` (the morning's clock) and `front.ts` (the light).
  */
 
 export const STREET_AT: Pt = [0, 0]

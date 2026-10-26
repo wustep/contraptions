@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInOutSine, easeInQuad } from '../../../../../../../../src/core/ease'
-import { FLOOR, R, type Pt } from '../../../../../parts'
+import { FLOOR, mixHex, R, type Pt } from '../../../../../parts'
 import { alpha, box, carried, hash, knock, lastOf, part, route, smooth, type Ctx, type Way } from '../kit'
 import { G_EARTH, hop } from '../physics'
 import { DUST } from '../worlds'
@@ -295,7 +295,10 @@ function drawYard(p: p5, s: YardState, c: Ctx): void {
   // The yard: hard earth, a tuft or two.
   outline(p, ink, weight)
   const ground = EXIT_X + 0.5 - HEAD_BACK
-  p.line(X(-0.5), X(FLOOR), X(ground), X(FLOOR))
+  // Open over the pit the bucket sits in: ruled across its mouth, the ground stood in front of the bucket.
+  const mouth = PAIL_W + 0.06
+  p.line(X(-0.5), X(FLOOR), X(BUCKET_X - mouth), X(FLOOR))
+  p.line(X(BUCKET_X + mouth), X(FLOOR), X(ground), X(FLOOR))
   for (let i = 0; i < 7; i++) {
     const gx = -0.2 + i * 1.1 + hash(i, 5) * 0.4
     if (gx > ground - 0.15) continue
@@ -377,10 +380,13 @@ function drawYard(p: p5, s: YardState, c: Ctx): void {
   outline(p, ink, weight * 0.6)
   p.line(X(SHEAVE[0] - 0.08), X(SHEAVE[1]), X(b.x), X(b.y - 0.28))
   p.line(X(SHEAVE[0] + 0.08), X(SHEAVE[1]), X(TOWER - 0.05), X(TOWER_TOP + 0.08))
-  bucketBack(p, c, b.x, b.y, b.tip)
-  // At the foot, a shallow pit the bucket sits in.
-  outline(p, ink, weight * 0.8)
+  // At the foot, a shallow pit the bucket sits in: its inside a shade darker than the yard, behind the bucket.
   const pit = PAIL_W + 0.06
+  p.noStroke()
+  p.fill(mixHex(DUST.husk, ink, 0.18))
+  p.quad(X(BUCKET_X - pit), X(FLOOR), X(BUCKET_X + pit), X(FLOOR), X(BUCKET_X + pit - 0.04), X(FLOOR + 0.3), X(BUCKET_X - pit + 0.04), X(FLOOR + 0.3))
+  bucketBack(p, c, b.x, b.y, b.tip)
+  outline(p, ink, weight * 0.8)
   p.line(X(BUCKET_X - pit), X(FLOOR), X(BUCKET_X - pit + 0.04), X(FLOOR + 0.3))
   p.line(X(BUCKET_X + pit), X(FLOOR), X(BUCKET_X + pit - 0.04), X(FLOOR + 0.3))
   p.line(X(BUCKET_X - pit + 0.04), X(FLOOR + 0.3), X(BUCKET_X + pit - 0.04), X(FLOOR + 0.3))

@@ -432,6 +432,49 @@ the sky. Each card holds 3.4 to 5 s; the last is gone by 266.7 s.
     (the piano's 157 are 49, the press's 362 are 181); the ones left are strikes, the passages, the rotors turning,
     edges moving across calm fills, and the camera's own moves. A frame paints in 1.1 ms at the median instead of
     1.4 (2560 × 1600, with the GPU), and in under half the time from the basement to the sea.
+- **The polish wave** (three rounds over the whole show in the wide frame, a phone's tall frame and Zoom):
+  - the phone saw past the world: the Himalayan face and the snow at its foot stopped 9 cells down, so a tall frame
+    showed pale rectangles and a hard vertical edge under the climb; the daydream's platform and pavement stopped 6
+    cells under the tracks, with the sky again below them. Both now run past the bottom of any frame;
+  - the Himalayan rock read as boards floating on the face, with a bright white lip. The bands' snow is the slope's
+    own now, their feet are broken and their tops lit, and the outcrop over the ledge is a chunk with an overhanging
+    tip that the snow sifts off;
+  - cut: the street's mailbox, the near plane's one thing, which stood in the near lane with the taxi behind it;
+  - the lamp post outside the press stood with its foot on the conveyor and then right through him at the cut. It is
+    further along the kerb. The hall's dark edges ease off over the bright pavement outside, where they lay as dirty
+    lobes in the corners;
+  - the daydream and the snow came up in their frames in 0.15 s and 0.12 s, a snap from near white. Each now comes up
+    over its whole lead-in;
+  - timing: the turns were read a tenth of a second either side (the band in, the drop under, the band back, the last
+    hit, the pulse, the build, the peak, the last chord). All of them land, so nothing was retimed.
+- **Polish wave 2** (the whole show again, wide and in a phone's tall frame, and a scan at 30 a second):
+  - on a phone the street's road ran on to the frame's foot under the credits, the crossing's stripes down it like a
+    ladder, and the man who crosses stopped where his way ended, standing in the middle of it to the end. The road now
+    ends at a near kerb with the camera's own pavement in the shade past it, and he walks on along it;
+  - the snow sifting onto the ledge was a tapering wedge of white that read as a beam of light. It falls as flakes now;
+  - the scan found only the meant pops: the tubes, the enlarger and the cuts on strikes.
+- **Polish wave 3** (every passage a tenth of a second at a time, the machines up close, and the whole show again on
+  a phone's page):
+  - on a phone the eruption, the band's last hit, was not in the picture at all. The far planes were measured by the
+    stage's height, so a tall stage drew the sky, the ranges and the volcano about twice the size, and the volcano
+    went past the right edge. Iceland's planes and the depth kit's `layer` now take the composed 16:9 frame's height,
+    so a phone sees the wide frame's own composition with more world above and below it: the eruption, the daydream's
+    moon, the Himalayan sun, the press hall's arched windows. The wide frame is unchanged to the pixel;
+  - the passages and the machines were looked at closely and left as they are.
+- **Polish wave 4** (detail at twice the size: the basement, the bar, the press, the net, the bike, and the credits
+  on a desk's page):
+  - the lamp over the pilot hung nearly on his crown; it hangs a hand higher;
+  - nothing else was worth changing: the rest was looked at and left.
+- **Polish wave 5** (the whole show under Zoom, the frame cost against the build before these waves, and the turns):
+  - under Zoom the street's last stretch held the closer frame round the same middle, and the two of them rolled along
+    its foot, cut off from about 231 s through the credits, with the man crossing cut too. From the meeting the Zoom
+    frame eases down onto the pavement (`zoomDrop`): a little by the chord, so the cover over him stays whole, and the
+    rest as the camera draws back, so they sit well inside it;
+  - the paint costs the same as before these waves, within a tenth or two of a millisecond at the median.
+- **Polish wave 6** (the whole show played in real time on a desk and a phone, and the passages on a phone):
+  - nothing was worth changing. Played through at speed it holds 60 frames a second on both, with no late frames on
+    the desk and none that came back on the phone; the openings and the shutter reach the phone's edges; the sheer
+    curtain at home reads as one.
 
 ## Judgment calls
 

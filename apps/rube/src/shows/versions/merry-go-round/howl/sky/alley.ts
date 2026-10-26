@@ -1,5 +1,5 @@
 import type p5 from 'p5'
-import type { Pt } from '../../../../../parts'
+import { mixHex, type Pt } from '../../../../../parts'
 import { alpha, box, carried, frame, hash, part, type Company, type Ctx, type PartShot } from '../kit'
 import { TOWN } from '../worlds'
 import { drawBlob, drawSoldier } from './figures'
@@ -100,6 +100,9 @@ function soldierAt(who: 0 | 1, t: number): Soldier {
   return { x, face, lean, stride, cross, arm, stiff, light, lift, look }
 }
 
+/** The side passage's dark (as the set fills it), for them to go into. */
+const PASSAGE_DARK = (L: ReturnType<typeof lightAt>): string => L.tone(mixHex(TOWN.night, TOWN.timberDark, 0.35))
+
 function drawSoldiers(p: p5, c: Ctx, t: number): void {
   const { k, ink, weight } = c
   const L = lightAt(t)
@@ -118,6 +121,7 @@ function drawSoldiers(p: p5, c: Ctx, t: number): void {
       stiff: s.stiff,
       pipe: who === 0,
       light: s.light,
+      into: PASSAGE_DARK(L),
       dark: L.dark,
       look: s.look,
     })

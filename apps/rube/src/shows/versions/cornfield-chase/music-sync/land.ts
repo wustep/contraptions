@@ -23,10 +23,13 @@ export function dayLand(p: p5, c: PieceCtx, col: number, line: number, begin: nu
   const l = dayAt(t)
   const hy = sky(s, l)
   const dusk = smooth(t, 30, 40.6)
-  body(s, hy, 0.74, sunHeight(t), 0.042, dusk < 0.5 ? '#F7DC8E' : dusk < 0.85 ? '#F4A35E' : '#E8744A', { color: '#F6D58A', a: 0.26 - 0.06 * dusk, r: 0.15 })
+  // The sun goes from gold through amber to red as it sets, shading over, not stepping from one to the next (it did, at
+  // 35 and 38 s, a jump in its colour each time).
+  const sun = mixHex(mixHex('#F7DC8E', '#F4A35E', smooth(dusk, 0.3, 0.7)), '#E8744A', smooth(dusk, 0.7, 0.95))
+  body(s, hy, 0.74, sunHeight(t), 0.042, sun, { color: '#F6D58A', a: 0.26 - 0.06 * dusk, r: 0.15 })
   clouds(s, t, hy, { ...l.cloud, sky: l.low, alpha: 0.9 })
   const ink = mixHex('#46423A', '#3A2A32', smooth(t, ORGAN - 3, 40))
-  drone(s, t, hy, ink)
+  drone(s, t, hy, ink, l.low)
   farm(s, hy, l.farm, undefined, t * 1.3)
   band(s, hy, l.band)
   haze(s, hy, smooth(t, 34, 40.4), '#C7A07C')
@@ -65,9 +68,9 @@ const NIGHT: Light = {
 /**
  * The night has its own arc, as the afternoon had the sun's: the moon climbs the sky through the chase, and the fair's
  * glow on the horizon swells with the full organ and settles for the photograph. The moon starts just over the fair's
- * floor, not on it: at the floor's height the booths at the drop passed over it.
+ * floor, clear of it: lower, the drop's booths and the chase's top floor stood on it, the crescent sitting on their beams.
  */
-const moonHeight = (t: number): number => 0.5 + 0.17 * smooth(t, 41, 117)
+const moonHeight = (t: number): number => 0.6 + 0.07 * smooth(t, 41, 117)
 /**
  * The fair's glow on the sky, from the midway's lights: a little from the drop, more as each ride comes on, all of it
  * once the full organ has the whole midway lit. On beat 132 it flares as well, and settles over a bar.
@@ -147,12 +150,13 @@ export function nightLand(p: p5, c: PieceCtx, col: number, line: number, begin: 
 
 /**
  * The corn at the foot of the frame by night (`near.ts`), dark against the rows the fair and the moon light, in the
- * chase's wind. `away` sinks it out of the frame.
+ * chase's wind: leaves and stalk one silhouette, so a plant reads as a plant and not as loose arcs (a stalk the colour
+ * of the rows behind it was lost). `away` sinks it out of the frame.
  */
 export function nightNear(p: p5, c: PieceCtx, col: number, line: number, begin: number, away: number): void {
   const t = begin + c.t
   const s = screenOf(p, c, col, line)
-  nearCorn(s, t, '#07060F', '#0B0A17', (x) => nightWind(t, x), away)
+  nearCorn(s, t, '#07060F', '#07060F', (x) => nightWind(t, x), away)
   done(s)
 }
 

@@ -36,7 +36,9 @@ const STACK_X = -16.85
 const STACK_TOP = MEADOW - 3.05
 /** The davit on the skid's near end, and its pulley. */
 const DAVIT_X = -18.78
-const PULLEY: Pt = [-19.32, MEADOW - 2.78]
+const PULLEY_R = 0.1
+/** Its far side over the bucket's middle: the rope comes down off it straight to the bail. */
+const PULLEY: Pt = [-19.3 + PULLEY_R, MEADOW - 2.78]
 /** The bucket: its middle, hanging, rim flush with the deck's top; its size. */
 export const BUCKET = { x: -19.3, rim: PAD.top, h: 0.44, w0: 0.4, w1: 0.31 }
 /** How far it falls under her: its bottom from hanging to the meadow. */
@@ -199,7 +201,8 @@ export function drawLight(p: p5, k: number, t: number): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const warm = rgbOf(VALLEY.floodlight)
   const lamp = rgbOf(VALLEY.lamp)
-  // The mast's lamps: a soft glow each, and the fog round the ones in it lit.
+  // The mast's lamps: a soft glow each, and the fog round the ones in it lit. Kept close round each lamp: wider and
+  // stronger, the mast stood in a yellow bloom of its own through the whole camp, the one glow in a grey morning.
   LAMP_H.forEach((h, i) => {
     const on = lampAt(t, LAMPS[i])
     if (on <= 0.01) return
@@ -207,7 +210,7 @@ export function drawLight(p: p5, k: number, t: number): void {
     const [x, y] = [MAST_X + side * 0.42, MEADOW - h]
     const inFog = sm(h, 6, 7.2) * (1 - sm(h, 8.8, 10))
     const flare = Math.exp(-Math.max(0, t - LAMPS[i]) / 0.25)
-    lobe(ctx, k, x, y, 1.6 + 2.6 * inFog + 1.2 * flare, 1.2 + 1.3 * inFog + 0.8 * flare, lamp, (0.42 + 0.3 * flare) * on * (1 + 0.6 * inFog), 0.2)
+    lobe(ctx, k, x, y, 0.9 + 1.4 * inFog + 0.8 * flare, 0.75 + 0.8 * inFog + 0.5 * flare, lamp, (0.3 + 0.25 * flare) * on * (1 + 0.4 * inFog), 0.2)
     lobe(ctx, k, x, y, 0.45, 0.4, warm, 0.8 * Math.min(1, on), 0.3)
     // A soft fan of light down and out over the camp: soft across, gone at its end, never a pane's edge.
     softBeam(ctx, k, [x, y], [x + side * 2.4, y + 3], 0.15, 2.6, lamp, 0.42 * on, 'lampFan', fanAlong)
@@ -217,7 +220,7 @@ export function drawLight(p: p5, k: number, t: number): void {
   if (head > 0.01) {
     const hy = MEADOW - HEAD_H
     const flare = Math.exp(-Math.max(0, t - HEAD) / 0.3)
-    lobe(ctx, k, MAST_X, hy, 3.2 + 1.5 * flare, 2 + flare, lamp, (0.42 + 0.3 * flare) * head, 0.2)
+    lobe(ctx, k, MAST_X, hy, 1.9 + 1.0 * flare, 1.2 + 0.6 * flare, lamp, (0.32 + 0.25 * flare) * head, 0.2)
     lobe(ctx, k, MAST_X, hy - 0.2, 0.8, 0.45, warm, 0.8 * Math.min(1, head), 0.3)
     beam(ctx, k, [MAST_X + 0.2, hy - 0.2], [SHELL_X - 3.5, BELLY - 3.2], 0.5, 4.5, warm, 0.15 * Math.min(1, head))
   }
@@ -327,22 +330,29 @@ export function drawStarter(p: p5, k: number, t: number, { ink, weight }: Ink): 
   const bail = bailAt(b)
   outline(p, mixHex(VALLEY.canvas, ink, 0.35), Math.max(1, weight * 0.8))
   const tight = t < THUD + 0.05 || t > 29.3
-  p.line(X(k, fx), X(k, fy - DRUM_R), X(k, PULLEY[0] + 0.1), X(k, PULLEY[1]))
-  if (tight) p.line(X(k, PULLEY[0]), X(k, PULLEY[1] + 0.1), X(k, bail[0]), X(k, bail[1]))
+  // Over the pulley's top: off the drum's near side (as the rope unwinds the drum turns the way the flywheel spins),
+  // up to the pulley's far shoulder, round it, and down off its near side to the bucket. Drawn to the hub and hung
+  // from the pulley's bottom, it read as two ropes tied on.
+  const [drumAt, overAt] = crossedTangent([fx, fy], DRUM_R, PULLEY, PULLEY_R)
+  p.line(X(k, drumAt[0]), X(k, drumAt[1]), X(k, overAt[0]), X(k, overAt[1]))
+  const down: Pt = [PULLEY[0] - PULLEY_R, PULLEY[1]]
+  p.noFill()
+  p.arc(X(k, PULLEY[0]), X(k, PULLEY[1]), X(k, PULLEY_R * 2), X(k, PULLEY_R * 2), Math.PI, Math.atan2(overAt[1] - PULLEY[1], overAt[0] - PULLEY[0]))
+  if (tight) p.line(X(k, down[0]), X(k, down[1]), X(k, bail[0]), X(k, bail[1]))
   else {
     p.noFill()
     p.beginShape()
     const n = 10
     for (let i = 0; i <= n; i++) {
       const u = i / n
-      const x = PULLEY[0] + (bail[0] - PULLEY[0]) * u
-      const y = PULLEY[1] + 0.1 + (bail[1] - PULLEY[1] - 0.1) * u + 0.35 * Math.sin(Math.PI * u)
+      const x = down[0] + (bail[0] - down[0]) * u
+      const y = down[1] + (bail[1] - down[1]) * u + 0.35 * Math.sin(Math.PI * u)
       p.vertex(X(k, x - 0.25 * Math.sin(Math.PI * u)), X(k, y))
     }
     p.endShape()
   }
   solid(p, ink, weight * 0.7, VALLEY.steel)
-  p.circle(X(k, PULLEY[0]), X(k, PULLEY[1]), X(k, 0.2))
+  p.circle(X(k, PULLEY[0]), X(k, PULLEY[1]), X(k, PULLEY_R * 1.7))
   // (The bucket itself is drawn over the balls, by the part: she rides in it.) Where it thuds down, and where it
   // comes down on its side, a little dust kicked up off the meadow.
   const dust = rgbOf(mixHex(VALLEY.road, VALLEY.fog, 0.35))
@@ -372,6 +382,21 @@ export function drawStarter(p: p5, k: number, t: number, { ink, weight }: Ink): 
       lobe(ctx, k, STACK_X - 0.9 * age - 0.1, STACK_TOP - 0.6 * r - 0.75 * age * Math.sqrt(pf.size), r, r * 0.8, col, Math.min(0.85, 0.42 * pf.dark) * (1 - u) * (1 - u) * tail, 0.45)
     }
   }
+}
+
+/**
+ * Where a rope crossing between two circles touches each: off `a`'s side toward the left of the line from `a` to `b`
+ * (seen on the screen), onto `b`'s other side, through the point between them where the two radii meet.
+ */
+function crossedTangent(a: Pt, ra: number, b: Pt, rb: number): [Pt, Pt] {
+  const h: Pt = [(a[0] * rb + b[0] * ra) / (ra + rb), (a[1] * rb + b[1] * ra) / (ra + rb)]
+  const touch = (c: Pt, r: number, side: number): Pt => {
+    const dx = h[0] - c[0]
+    const dy = h[1] - c[1]
+    const ang = Math.atan2(dy, dx) + side * Math.acos(Math.min(1, r / Math.hypot(dx, dy)))
+    return [c[0] + r * Math.cos(ang), c[1] + r * Math.sin(ang)]
+  }
+  return [touch(a, ra, 1), touch(b, rb, 1)]
 }
 
 /** The bucket's bail (where the rope takes it), for its state. */

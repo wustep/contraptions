@@ -535,6 +535,13 @@ export const RELEASE: ChairState = heldChair(THROW)
 export const IMPACT: Pt = [23.2, -0.85]
 export const LIES: Pt = [23.05, PIT - 0.4]
 
+/**
+ * Its turn in flight, and lying: on its back, the back flat on the floor and the legs out over it, as a thrown chair
+ * lies. (It lay on its face, the seat on edge and the back jutting out level in the air: debris, not a chair.)
+ */
+const SPIN = 4.5
+const ON_BACK = Math.PI * 2.5
+
 export function chairAt(T: number): ChairState {
   if (T < 94.55) return REST
   if (T < THROW) return heldChair(T)
@@ -542,20 +549,20 @@ export function chairAt(T: number): ChairState {
     const u = (T - THROW) / (WALL - THROW)
     const x = RELEASE.x + (IMPACT[0] - RELEASE.x) * u
     const y = RELEASE.y + (IMPACT[1] - RELEASE.y) * u - 0.3 * 4 * u * (1 - u)
-    return { x, y, turn: RELEASE.turn + 3.0 * u, scale: 1 - 0.22 * u, behind: true, held: false }
+    return { x, y, turn: RELEASE.turn + SPIN * u, scale: 1 - 0.22 * u, behind: true, held: false }
   }
   if (T < CRASH) {
-    // Off the wall: knocked back a little, and down under gravity, turning onto its side.
+    // Off the wall: knocked back a little, and down under gravity, turning on at about its flight's rate onto its back.
     const u = (T - WALL) / (CRASH - WALL)
     const x = IMPACT[0] + (LIES[0] - IMPACT[0]) * easeOutQuad(u)
     const y = IMPACT[1] - 0.18 * Math.sin(Math.PI * Math.min(1, u * 1.6)) + (LIES[1] - IMPACT[1]) * u * u
-    const t0 = RELEASE.turn + 3.0
-    return { x, y, turn: t0 + (Math.PI * 1.5 - (t0 % (Math.PI * 2))) * easeInOutSine(u), scale: 0.78, behind: true, held: false }
+    const t0 = RELEASE.turn + SPIN
+    return { x, y, turn: t0 + (ON_BACK - t0) * easeOutQuad(u), scale: 0.78, behind: true, held: false }
   }
-  // Down on its side: a heavy rock, settling.
+  // Down on its back: a heavy rock, settling.
   const a = T - CRASH
   const rock = 0.1 * Math.exp(-a / 0.22) * Math.sin(a * 17)
-  return { x: LIES[0], y: LIES[1], turn: Math.PI * 1.5 + rock, scale: 0.78, behind: true, held: false }
+  return { x: LIES[0], y: LIES[1], turn: ON_BACK + rock, scale: 0.78, behind: true, held: false }
 }
 
 /* ------------------------------------------------------------------ Tanner */

@@ -4,7 +4,7 @@ import { G, fly, flightFor, rest, ride, roll, type Move, type Pt } from '../path
 import type { Scene } from '../scene'
 import { END, HELM, WINDOWS, glide, seat } from '../voyage'
 import { floatAt, onShip, type ShipLook } from '../world/ship'
-import { drawArm, drawBody, drawEye, drawRidge, drawRock, PREY, SPLASH_AT, thrownRock, type GiantLight } from './cyclops/giant'
+import { drawArm, drawBody, drawEye, drawRidge, drawRock, handOf, PREY, SPLASH_AT, thrownRock, type GiantLight } from './cyclops/giant'
 import { drawFire, drawIsland, drawSplash, EMBER, FIRELIT, fireAt, INK, openAt } from './cyclops/island'
 import { FLOOR, LEDGE, MOOR, PILLAR, RIDGE, STEP, T, ground } from './cyclops/plan'
 import { carries, drawSheep, FLOCK, REST_X, setCarrying, under } from './cyclops/sheep'
@@ -124,6 +124,9 @@ class Way {
 
 /* ------------------------------------------------------------------ the hero and his men */
 
+/** Where the two he takes are held in his fist, from its middle: one over it, one under. */
+const CLUTCH: Pt[] = [[0.06, -0.37], [-0.12, 0.3]]
+
 /** Entering the mouth: hop from the deck up into it (the ship lies right under it), then in along the floor. */
 const ENTER = { hero: 148.75, men: [148.9, 149.05, 149.2, 149.35, 149.5, 149.65] }
 const LAND_X = { hero: 98.3, men: [98.1, 97.9, 97.7, 97.5, 97.3, 97.1] }
@@ -190,8 +193,20 @@ function manPath(m: number): Move[] {
   if (m >= 4) {
     // The two who go on to the fire: there when the eye opens, and the hand.
     w.wait(151.75 + 0.3 * (m - 4)).rollTo(CREEP_X.men[m], 155.0, r)
+    // The fist closes on them, and they go up in it into the dark and out of the frame's top: one held between the
+    // thumb and the fingers, one under them, each half out of his fist, so the two are seen taken.
     w.wait(T.grab - 0.05)
-    w.push(rest(w.at, T.grab - 0.05, T.gone, { hidden: true }))
+    const from = w.at
+    const grip = handOf(T.grab - 0.05)
+    const held = CLUTCH[m - 4]
+    w.push(
+      ride((t) => {
+        const h = handOf(t)
+        const u = smoother(t, T.grab - 0.05, T.grab + 0.25)
+        return [h[0] + (from[0] - grip[0]) * (1 - u) + held[0] * u, h[1] + (from[1] - grip[1]) * (1 - u) + held[1] * u]
+      }, T.grab - 0.05, T.gone),
+    )
+    w.push(rest(w.at, T.gone, T.gone + 0.01, { hidden: true }))
     return w.moves
   }
   w.wait(151.75 + 0.12 * m).rollTo(CREEP_X.men[m], 155.0, r)
@@ -317,13 +332,20 @@ export const cyclops: Scene = {
     { t: 154.6, cells: 4.8, at: [104.2, -3.7] },
     { t: 156.3, cells: 4.8, at: [104.3, -3.8] },
     { t: 158.4, cells: 7.8, at: [104.6, -5.3] },
-    { t: 161.0, cells: 6.8, at: [104.8, -5.0] },
-    { t: 163.4, cells: 7.6, at: [104.7, -5.6] },
+    // The hand: in as it reaches for the two by the fire and closes on them, his eye still at the top of the frame;
+    // then up with the fist, past the eye, until they are carried out of the frame's top.
+    { t: T.reach, cells: 7.2, at: [104.75, -5.15] },
+    { t: T.grab, cells: 5.4, at: [105.05, -5.0] },
+    { t: T.lift, cells: 5.4, at: [105.05, -5.0] },
+    { t: 163.6, cells: 5.6, at: [104.85, -6.15] },
+    { t: T.gone, cells: 5.5, at: [106.2, -5.7] },
     { t: 165.0, cells: 5.0, at: [111.4, -4.5] },
     { t: 167.8, cells: 5.2, at: [110.6, -4.7] },
     { t: 168.6, cells: 6.6, at: [107.8, -5.1] },
     { t: 169.8, cells: 6.6, at: [107.8, -5.1] },
-    { t: 171.2, cells: 8.2, at: [106.2, -5.4] },
+    // Out and up with him as he rears, the hand over the eye: the whole of his agony against his own firelight.
+    { t: 171.3, cells: 9.4, at: [104.5, -6.45] },
+    { t: 172.9, cells: 9.1, at: [104.0, -6.3] },
     { t: 174.2, cells: 7.0, at: [101.6, -4.6] },
     { t: 176.0, cells: 4.6, at: [98.6, -3.4] },
     { t: 179.2, cells: 5.0, at: [97.4, -2.9] },

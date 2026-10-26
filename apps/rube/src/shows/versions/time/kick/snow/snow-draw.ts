@@ -121,16 +121,17 @@ function drawSprays(ctx: C2D, k: number, t: number): void {
     if (u < 0 || u > 1.3) continue
     const grow = 1 - Math.exp(-u / 0.25)
     const fade = Math.exp(-u / 0.45) * (1 - clamp01((u - 1.0) / 0.3))
-    // A few soft lobes, thrown the way the skis threw them, settling.
+    // A few soft lobes, thrown the way the skis threw them, low along the snow, settling (risen round the ball and as
+    // big as it, a landing read as a white glow round whoever landed, plainest under Zoom).
     for (let i = 0; i < 4; i++) {
       const spread = s.dir === null ? (i / 4) * TAU : s.dir + (i - 1.5) * 0.35
       const reach = s.size * (0.25 + 0.55 * grow) * (0.6 + 0.4 * hash(i, Math.round(s.t * 10), 5))
       const x = s.at[0] + Math.cos(spread) * reach * (s.dir === null ? 0.8 : 1)
-      const y = s.at[1] - 0.15 * s.size * grow + Math.sin(spread) * reach * 0.35 + u * u * 0.3
-      const r = s.size * (0.22 + 0.4 * grow)
+      const y = s.at[1] - 0.05 * s.size * grow + Math.sin(spread) * reach * 0.2 + u * u * 0.3
+      const r = s.size * (0.14 + 0.26 * grow)
       const g = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, r * k)
-      g.addColorStop(0, rgba(SNOW.snow, 0.75 * fade))
-      g.addColorStop(0.5, rgba(SNOW.snow, 0.35 * fade))
+      g.addColorStop(0, rgba(SNOW.snow, 0.55 * fade))
+      g.addColorStop(0.5, rgba(SNOW.snow, 0.25 * fade))
       g.addColorStop(1, rgba(SNOW.snow, 0))
       ctx.fillStyle = g
       ctx.fillRect((x - r) * k, (y - r) * k, 2 * r * k, 2 * r * k)
@@ -337,25 +338,6 @@ function drawGuards(p: p5, ctx: C2D, c: Ctx, t: number): void {
   })
 }
 
-/**
- * Where Mal's shot strikes Fischer at the vault's door: a ring going out from him across the floor, still fading when
- * the camera cuts back to him, so the hit is seen and not only his going under.
- */
-function drawHit(ctx: C2D, k: number, t: number): void {
-  const u = t - T.shot
-  if (u < 0 || u > 1.6) return
-  const at: Pt = [SHOT_X, FLOOR_Y - R]
-  // The ring, out along the floor (seen a little from above: flattened).
-  const r = 0.2 + 1.1 * (1 - Math.exp(-u / 0.35))
-  ctx.save()
-  ctx.strokeStyle = rgba(SNOW.flash, 0.8 * (1 - u / 1.6))
-  ctx.lineWidth = Math.max(1, 0.035 * k)
-  ctx.beginPath()
-  ctx.ellipse(at[0] * k, FLOOR_Y * k, r * k, r * 0.28 * k, 0, 0, TAU)
-  ctx.stroke()
-  ctx.restore()
-}
-
 /* ------------------------------------------------------------------ Mal */
 
 /** Mal's rifle on Fischer at the vault door, and its flash on the chord. */
@@ -450,8 +432,9 @@ export function drawSnowPart(p: p5, c: Ctx, t: number, o: Pt): void {
     else if (t > T.in + 5) skis(ctx, c, F_SKIS_OFF, 0, 1)
     drawRifle(p, ctx, c, t, false)
     // The floor goes soft under them: Fischer where he is shot; Cobb and Ariadne by the gate as the case opens.
+    // No ring out from the shot across the floor (a hairline ring, the one in the show): the flash at the rifle and
+    // his going under at once are the hit.
     sink(p, k, [SHOT_X, FLOOR_Y], t - T.shot - 0.3, F_THROUGH - T.shot - 0.3, 0.8)
-    drawHit(ctx, k, t)
     sink(p, k, [LIE_C, FLOOR_Y], t - T.sink, C_THROUGH - T.sink, 0.75)
     sink(p, k, [LIE_A, FLOOR_Y], t - T.sink, A_THROUGH - T.sink, 0.7)
     drawCaseLines(ctx, c, t)
@@ -496,8 +479,9 @@ export function drawVaultPart(p: p5, c: Ctx, t: number, o: Pt): void {
     const u = t - T.charges
     if (u >= 0 && u < 1.6) {
       const a = Math.min(1, u / 0.05) * Math.exp(-u / 0.5)
-      const r = 0.5 + 0.9 * (1 - Math.exp(-u / 0.25))
-      for (const px of [-5.2, -2.1, 1.0, 4.1]) puff(p, k, [px, FLOOR_Y + 0.95 + fortDrop(t) - 0.2 * u], r, mixHex(SNOW.snowShade, SNOW.concreteDark, 0.45), 0.8 * a)
+      const r = 0.7 + 1.3 * (1 - Math.exp(-u / 0.25))
+      // Thin and wide (strong and round, on the underside's dark it read as four lamps lit).
+      for (const px of [-5.2, -2.1, 1.0, 4.1]) puff(p, k, [px, FLOOR_Y + 0.95 + fortDrop(t) - 0.2 * u], r, mixHex(SNOW.snowShade, SNOW.concreteDark, 0.45), 0.36 * a)
     }
   })
 }

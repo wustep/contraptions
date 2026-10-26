@@ -7,6 +7,7 @@ import { defineShow } from '../../registry'
 export default defineShow({
   title: 'Kick',
   label: 'Opus 5.5',
+  film: 'Inception',
   about: "Hans Zimmer's Time, after Inception, as a Rube Goldberg machine that goes down four dreams deep and is kicked back up through all of them.",
   still: 49.2,
   async load() { return (await import('./kick')).performance },

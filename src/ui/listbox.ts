@@ -20,6 +20,8 @@ export interface ListboxSwatches {
 export interface ListboxItem {
   value: string
   label: string
+  /** Quiet words set after the label, in italics and parentheses, e.g. the film a show is after. */
+  aside?: string
   /** Secondary line, used by Mode to say what the composer actually does. */
   note?: string
   swatches?: ListboxSwatches
@@ -85,10 +87,19 @@ function renderContent(target: HTMLElement, item: ListboxItem, withNote = false)
   const text = make('span', 'lb-text')
   const label = make('span', 'lb-label')
   label.textContent = item.label
+  // An aside and the mark after it keep together, so a label that wraps never leaves the mark alone on a line.
+  let tail: HTMLElement = label
+  if (item.aside) {
+    tail = make('span', 'lb-tail')
+    const aside = make('span', 'lb-aside')
+    aside.textContent = `(${item.aside})`
+    tail.append(aside)
+    label.append(' ', tail)
+  }
   if (withNote && item.mark) {
     const mark = item.mark.cloneNode(true) as SVGSVGElement
     mark.classList.add('lb-mark')
-    label.append(mark)
+    tail.append(mark)
   }
   text.append(label)
   if (withNote && item.note) {

@@ -36,7 +36,7 @@ const SPRING = 2.2
 const DECK = 0.45
 
 const GROUND = mixHex(mixHex(RAIN.street, RAIN.trainRust, 0.22), SLEEP.deep, 0.25)
-const STRATA = mixHex(GROUND, RAIN.kerb, 0.18)
+const STRATA = mixHex(GROUND, SLEEP.deep, 0.7)
 const STONE = mixHex(RAIN.bridge, RAIN.kerb, 0.25)
 const STONE_DARK = mixHex(RAIN.bridge, RAIN.street, 0.45)
 const LAMP = mixHex(RAIN.lamp, RAIN.window, 0.35)
@@ -66,8 +66,10 @@ const NEAR: Building[] = [
   { x0: 68, x1: 80, top: -12, shade: 0 },
 ]
 /** The far city, in the rain's haze, and a nearer rank of it across the river, standing on the far bank. */
-const FAR_BASE = 1.2
+// The far towers stand behind the far bank, down to the nearer rank's feet (stopped short of it, over the river they
+// hung in the sky with a hard foot where a gap in the nearer rank let the sky through).
 const MID_BASE = 2.1
+const FAR_BASE = MID_BASE
 interface Tower {
   x0: number
   x1: number
@@ -180,18 +182,28 @@ export function drawCity(pen: Pen, f: View, te: number): void {
     const x1 = Math.min(QUAY_R, f.x1 + 1)
     ctx.fillStyle = mixHex(STONE_DARK, RAIN.far, 0.5)
     ctx.fillRect(x0 * k, MID_BASE * k, (x1 - x0) * k, (RAIN_GEO.river - MID_BASE) * k)
-    if (k > 8) {
-      ctx.fillStyle = rgba(RAIN.far, 0.5)
-      for (let y = MID_BASE + 0.9; y < RAIN_GEO.river - 0.4; y += 1.1) ctx.fillRect(x0 * k, y * k, (x1 - x0) * k, Math.max(1, 0.05 * k))
-    }
+    // No courses: even faint, in the close shots of the river they ran the frame's whole width as scan lines behind
+    // the van and the balls in the water.
     const g = ctx.createLinearGradient(0, MID_BASE * k, 0, RAIN_GEO.river * k)
     g.addColorStop(0, rgba(RAIN.skyLow, 0.5))
     g.addColorStop(0.6, rgba(RAIN.skyLow, 0.18))
     g.addColorStop(1, rgba(RAIN.skyLow, 0.32))
     ctx.fillStyle = g
     ctx.fillRect(x0 * k, MID_BASE * k, (x1 - x0) * k, (RAIN_GEO.river - MID_BASE) * k)
-    ctx.fillStyle = rgba(RAIN.riverLight, 0.75)
-    ctx.fillRect(x0 * k, (RAIN_GEO.river - 0.32) * k, (x1 - x0) * k, 0.32 * k)
+    // Mist lying along the wall's top, over the feet of the towers behind it: soft both ways (without it their pale
+    // feet stopped on the wall in a hard line, hung in mid-air in the close shots over the river).
+    const mist = ctx.createLinearGradient(0, (MID_BASE - 1.6) * k, 0, (MID_BASE + 1.6) * k)
+    mist.addColorStop(0, rgba(RAIN.skyLow, 0))
+    mist.addColorStop(0.5, rgba(RAIN.skyLow, 0.6))
+    mist.addColorStop(1, rgba(RAIN.skyLow, 0))
+    ctx.fillStyle = mist
+    ctx.fillRect(x0 * k, (MID_BASE - 1.6) * k, (x1 - x0) * k, 3.2 * k)
+    // The far reach of the water, catching the sky: a soft band brightening down to the surface, not a strip.
+    const reach = ctx.createLinearGradient(0, (RAIN_GEO.river - 0.6) * k, 0, RAIN_GEO.river * k)
+    reach.addColorStop(0, rgba(RAIN.riverLight, 0))
+    reach.addColorStop(1, rgba(RAIN.riverLight, 0.6))
+    ctx.fillStyle = reach
+    ctx.fillRect(x0 * k, (RAIN_GEO.river - 0.6) * k, (x1 - x0) * k, 0.6 * k)
   }
 }
 
@@ -223,13 +235,27 @@ export function drawStreet(pen: Pen, f: View, te: number): void {
     ctx.fillStyle = mixHex(RAIN.river, GROUND, 0.55)
     ctx.fillRect(Math.max(x0, QUAY_L * k), RAIN_GEO.bed * k, Math.max(0, Math.min(x1, QUAY_R * k) - Math.max(x0, QUAY_L * k)), (bottom - RAIN_GEO.bed) * k)
     if (k > 5) {
-      ctx.fillStyle = rgba(STRATA, 0.55)
-      for (let i = 0; i < 6; i++) {
-        const y = 2.2 + i * 1.7 + hash(i, 1, 91) * 0.6
-        if (y > bottom - 0.3) break
-        ctx.fillRect(x0, y * k, Math.max(0, Math.min(x1, QUAY_L * k) - x0), (0.18 + hash(i, 2, 91) * 0.2) * k)
-        ctx.fillRect(Math.max(x0, QUAY_R * k), (y + 0.4) * k, Math.max(0, x1 - Math.max(x0, QUAY_R * k)), 0.2 * k)
+      // Soft bands, each a little darker going down, their tops wandering gently, as under the house and the runway
+      // (ruled pale strata, evenly spaced, read as a striped slab: half the picture in a tall frame).
+      const bands = (xa: number, xb: number) => {
+        if (xb <= xa) return
+        ;[1.5, 3.1, 5.0, 7.3].forEach((d, i) => {
+          const y = 0.55 + d
+          if (y > bottom - 0.2) return
+          ctx.beginPath()
+          ctx.moveTo(xa * k, bottom * k)
+          for (let x = xa; x < xb + 0.25; x += 0.25) {
+            const u = Math.min(x, xb)
+            ctx.lineTo(u * k, (y + 0.1 * Math.sin(u * 0.9 + i * 2.1) + 0.05 * Math.sin(u * 2.3 + i)) * k)
+          }
+          ctx.lineTo(xb * k, bottom * k)
+          ctx.closePath()
+          ctx.fillStyle = rgba(STRATA, 0.16 + 0.04 * i)
+          ctx.fill()
+        })
       }
+      bands(f.x0 - 1, Math.min(f.x1 + 1, QUAY_L))
+      bands(Math.max(f.x0 - 1, QUAY_R), f.x1 + 1)
     }
     // The quay walls: cut stone from the street down to the bed.
     ctx.fillStyle = STONE_DARK
@@ -565,6 +591,9 @@ export function drawBridge(pen: Pen, f: View): void {
     const u = (x - a) / (b - a)
     return SPRING - (SPRING - DECK - 0.12) * Math.sin(Math.PI * u)
   }
+  // Butt-ended into the stone they spring from (round-capped, each end stood off the abutment's and the piers' faces as
+  // a loose tube in the air).
+  p.strokeCap(p.SQUARE)
   for (const [a, b, frac] of spans) {
     const end = a + (b - a) * frac
     // Posts first, then the rib over them.
@@ -589,6 +618,7 @@ export function drawBridge(pen: Pen, f: View): void {
       p.line(end * k, ey * k, (end + 0.25) * k, (ey + 0.35) * k)
     }
   }
+  p.strokeCap(p.ROUND)
   // The deck: a slab from the street to its broken end (its face is drawn again over the balls, for the going under).
   deckFace(pen)
   // The broken end: bars bent down out of the concrete.

@@ -39,6 +39,12 @@ const FRONT: Person[] = []
 /** The front row past the runway's end, low (with the photographers crouched in it), and the row just behind it. */
 const LOW: Person[] = []
 const LOW_FAR: Person[] = []
+/**
+ * The nearest of all, under the frame's foot in a wide frame: in a tall one it is the house going on toward us, so the
+ * rows above never drop to the bottom of the screen in sheer edges with the bare floor down between them.
+ */
+const NEAR: Person[] = []
+const NEAR_PARALLAX = -0.8
 {
   let i = 0
   const gap = (j: number) => 0.3 + 0.32 * hash(j, 1) + (hash(j, 9) > 0.9 ? 0.3 : 0)
@@ -50,6 +56,7 @@ const LOW_FAR: Person[] = []
     if (PRESS_FRONT_X.some((px) => Math.abs(px - x) < 0.3)) continue
     LOW.push(person(x, 2.9, i++))
   }
+  for (let x = -24; x < 60; x += gap(i) * 1.15) NEAR.push(person(x, 3.62, i++))
 }
 
 /* ------------------------------------------------------------------ the press */
@@ -298,14 +305,10 @@ function drawRow(p: p5, k: number, f: Frame, t: number, tw: number, people: Pers
     if (s.x < a - 0.8 || s.x > b + 0.8) continue
     const hy = shooterHead(s, t, tw)
     figure(c, s.x, hy, 0.11, s.hat, Math.round(s.x * 10))
-    const { cx, cy, rx, ry, up } = camera(s, t, tw)
+    const { cx, cy } = camera(s, t, tw)
     // The camera at the face, its lens toward the runway, and the flash gun standing over it.
     c.rect(cx - 0.14, cx + 0.14, cy - 0.085)
     c.rect(cx + s.side * 0.12 - 0.05, cx + s.side * 0.12 + 0.05, cy - 0.04)
-    if (up > 0.5) {
-      c.rect(rx - 0.025, rx + 0.025, ry + 0.04)
-      c.rect(rx - 0.08, rx + 0.08, ry - 0.045)
-    }
   }
   // At its ends the mass ends with its last shoulders.
   let i0 = 0
@@ -315,6 +318,20 @@ function drawRow(p: p5, k: number, f: Frame, t: number, tw: number, people: Pers
   c.xs = c.xs.slice(i0, i1 + 1)
   c.ys = c.ys.slice(i0, i1 + 1)
   fillContour(p, k, c, f.y1 + 1, fill, rim, rimColor)
+  // The flash guns over the cameras, drawn on their own: a mass filled down from its top edge can't hold a head wider
+  // than its stem, and the gun became a solid column (a bottle with a cap) the width of its head.
+  p.push()
+  p.noStroke()
+  p.fill(fill)
+  p.rectMode(p.CORNERS)
+  for (const s of press) {
+    if (s.x < a - 0.8 || s.x > b + 0.8) continue
+    const { cy, rx, ry, up } = camera(s, t, tw)
+    if (up < 0.5) continue
+    p.rect(k * (rx - 0.018), k * (ry - 0.01), k * (rx + 0.018), k * (cy - 0.07))
+    p.rect(k * (rx - 0.075), k * (ry - 0.075), k * (rx + 0.075), k * (ry - 0.005), k * 0.012)
+  }
+  p.pop()
 }
 
 /** The audience and the press, and their flashes. */
@@ -334,6 +351,7 @@ export function drawCrowd(p: p5, k: number, f: Frame, t: number): void {
   drawRow(p, k, f, t, tw, FRONT, [], CROWD, rim, 0.5, 19.72, 1.84, rimColor, FRONT_PARALLAX * (f.cx - 10))
   drawRow(p, k, f, t, tw, LOW_FAR, [], mixHex(CROWD, DERELICTE.roof, 0.4), rim * 0.7, 20.1, 37, 3.05, rimColor)
   drawRow(p, k, f, t, tw, LOW, lowPress, CROWD, rim * 0.5, 20.3, 37, 3.3, rimColor)
+  if (f.y1 > 3.6) drawRow(p, k, f, t, tw, NEAR, [], CROWD, rim * 0.35, -60, 80, 4.1, rimColor, NEAR_PARALLAX * (f.cx - 18))
   // The reflectors catch the light; then the flashes, over everything.
   p.push()
   p.noStroke()

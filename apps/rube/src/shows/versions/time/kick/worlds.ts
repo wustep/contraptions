@@ -178,7 +178,9 @@ export const PLANE_THEME: Theme = {
   name: 'plane',
   label: 'The Plane',
   bg: '#141B2B',
-  ink: '#E6E1D6',
+  // The balls' rims: the night's own dark, the cabin's and the hall's one ink (a pale rim read as a halo round him on
+  // the morning's pale floors).
+  ink: '#141B2B',
   colors: ['#1F2940', '#2B3550', '#D8CFBD', '#F2DDAA', '#9FB3C8', '#3A4560'],
   weight: 0.8,
   note: 'A night flight from Sydney to Los Angeles: first class asleep, and a silver case open between the seats.',

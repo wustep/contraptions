@@ -1,6 +1,6 @@
 import type { Pt } from '../../../../../parts'
 import { drawEruption } from './erupt'
-import { CX0, CY0, PLANE, type Frame } from './far'
+import { CX0, CY0, measure, PLANE, type Frame } from './far'
 import { ERUPT } from './geo'
 import { drawLand } from './land'
 import { drawFar, drawGlacier, drawMid, drawWater } from './ranges'
@@ -24,7 +24,7 @@ export const FAR_P = PLANE.far
  * resting place, moved by a little parallax (`px`, `py`, frame heights a cell) as the camera goes elsewhere.
  */
 export const farFn = (f: Frame, px: number, py: number) => {
-  const H = f.y1 - f.y0
+  const H = measure(f)
   return (sx: number, sy: number): Pt => [f.cx + (sx - px * (f.cx - CX0)) * H, f.cy + (sy - py * (f.cy - CY0)) * H]
 }
 

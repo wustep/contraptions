@@ -80,11 +80,21 @@ export function drawRecruit(p: p5, k: number, T: number): void {
     halo.addColorStop(1, rgba(VALLEY.floodlight, 0))
     ctx.fillStyle = halo
     ctx.fillRect(px(L.x - 1.6), px(L.y - 1.6), px(3.2), px(3.2))
-    const streak = ctx.createLinearGradient(0, px(-0.42), 0, px(-0.05))
-    streak.addColorStop(0, rgba(VALLEY.floodlight, 0.35 * L.a))
+    // Its light on the water: a soft column from the far shore down, fading to its sides as well as down (a hard-sided
+    // bar of it read as a post standing in the lake).
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(px(L.x - 0.3), px(-0.42), px(0.6), px(0.4))
+    ctx.clip()
+    ctx.translate(px(L.x), px(-0.42))
+    ctx.scale(1, 0.37 / 0.11)
+    const streak = ctx.createRadialGradient(0, 0, 0, 0, 0, px(0.11))
+    streak.addColorStop(0, rgba(VALLEY.floodlight, 0.38 * L.a))
+    streak.addColorStop(0.5, rgba(VALLEY.floodlight, 0.14 * L.a))
     streak.addColorStop(1, rgba(VALLEY.floodlight, 0))
     ctx.fillStyle = streak
-    ctx.fillRect(px(L.x - 0.08), px(-0.42), px(0.16), px(0.37))
+    ctx.fillRect(-px(0.11), 0, px(0.22), px(0.11))
+    ctx.restore()
     // Its red light, winking on the beats.
     const wink = 0.5 + 0.5 * Math.cos(Math.PI * 2 * (T - RC.light) / 0.98)
     ctx.fillStyle = rgba('#D0453A', 0.8 * L.a * wink)
@@ -98,17 +108,23 @@ export function drawRecruit(p: p5, k: number, T: number): void {
     const top = Math.max(HEAD, L.y)
     const w0 = 0.12
     const w1 = 0.95
-    const g = ctx.createLinearGradient(0, px(top), 0, px(FLOOR))
-    g.addColorStop(0, rgba(VALLEY.floodlight, 0.05 * P.a))
-    g.addColorStop(1, rgba(VALLEY.floodlight, (0.2 + 0.16 * fl) * P.a))
-    ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.moveTo(px(L.x - w0), px(top))
-    ctx.lineTo(px(L.x + w0), px(top))
-    ctx.lineTo(px(P.x + w1), px(FLOOR))
-    ctx.lineTo(px(P.x - w1), px(FLOOR))
-    ctx.closePath()
-    ctx.fill()
+    // Feathered: nested wedges, faint at the widest, so the beam has no edge in the air (one wedge was a hard-sided
+    // blade laid across the window and the room).
+    const n = 12
+    for (let j = 0; j < n; j++) {
+      const wide = 1.35 - (0.75 * j) / (n - 1)
+      const g = ctx.createLinearGradient(0, px(top), 0, px(FLOOR))
+      g.addColorStop(0, rgba(VALLEY.floodlight, (0.05 * P.a) / n))
+      g.addColorStop(1, rgba(VALLEY.floodlight, ((0.2 + 0.16 * fl) * P.a) / n))
+      ctx.fillStyle = g
+      ctx.beginPath()
+      ctx.moveTo(px(L.x - w0 * wide), px(top))
+      ctx.lineTo(px(L.x + w0 * wide), px(top))
+      ctx.lineTo(px(P.x + w1 * wide), px(FLOOR))
+      ctx.lineTo(px(P.x - w1 * wide), px(FLOOR))
+      ctx.closePath()
+      ctx.fill()
+    }
     // The pool it makes on the oak, coming toward us.
     ctx.save()
     ctx.translate(px(P.x), px(FLOOR + 0.18))

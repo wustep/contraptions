@@ -697,11 +697,11 @@ function lawn(p: p5, c: Ctx, f: Frame, t: number, balls: Body[]): void {
   ctx.restore()
   // The water's edge at the bank's foot.
   soft(ctx, k, ox + SHORE.x + 0.4, oy + SHORE.y - 0.02, 1.3, 0.07, LAKE.lakeLight, 0.6)
-  // The grass's edge: one ink line.
+  // The grass's edge: a fine line in the grass's own deep green, not ink: in ink it ran under them as a rail.
   p.push()
   p.noFill()
-  p.stroke(ink)
-  p.strokeWeight(weight * 0.9)
+  p.stroke(mixHex(LAKE.grassDark, ink, 0.3))
+  p.strokeWeight(weight * 0.6)
   p.beginShape()
   for (let x = x0; x <= x1; x += 0.05) p.vertex(X(x), X(top(x)))
   p.endShape()

@@ -1,4 +1,4 @@
-import { blob, circle, fill, hash, mix, poly, rgba, smooth, stroke, type Paint } from '../../draw'
+import { blob, fill, hash, mix, poly, rgba, smooth, stroke, type Paint } from '../../draw'
 import { layer } from '../../world/depth'
 import { skyAt } from '../../world/sky'
 import type { Pt } from '../../path'
@@ -224,8 +224,10 @@ function drawJetty(g: Paint): void {
   fill(ctx, againstSun(STONE_SHADE, t))
   poly(ctx, [[JETTY.x0, JETTY.top], [JETTY.x1, JETTY.top], [JETTY.x1, JETTY.top + 0.2], [JETTY.x0, JETTY.top + 0.2]])
   fill(ctx, againstSun(STONE, t))
-  // A bollard for the skiff's line.
-  circle(ctx, JETTY.x1 - 0.5, JETTY.top - 0.14, 0.12)
+  // A bollard for the skiff's line: a squat post with a cap, so it is never taken for one of the cast.
+  const bx = JETTY.x1 - 0.5
+  const y = JETTY.top
+  poly(ctx, [[bx - 0.045, y], [bx + 0.045, y], [bx + 0.045, y - 0.17], [bx + 0.075, y - 0.17], [bx + 0.06, y - 0.22], [bx - 0.06, y - 0.22], [bx - 0.075, y - 0.17], [bx - 0.045, y - 0.17]])
   fill(ctx, againstSun(STONE_DEEP, t))
   void mix
 }

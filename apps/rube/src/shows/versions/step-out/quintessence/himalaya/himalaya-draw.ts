@@ -59,6 +59,9 @@ function litSnow(tn: Tone, t: number, y: number, shadow: string): string {
 
 /* ------------------------------------------------------------------ the mountain he climbs */
 
+/** How far down the face and its foot go: past the bottom of the tallest frame that looks at them. */
+const DEEP = 40
+
 /** The snow the climb starts in: its edge drifted in long low waves, level where he waits at the foot. */
 const FOOT: Pt[] = [
   ...Array.from({ length: 58 }, (_, i): Pt => {
@@ -71,8 +74,11 @@ const FOOT: Pt[] = [
   [1.6, R + 0.45],
   [3.2, R + 1.3],
   [5.5, R + 2.4],
-  [5.5, 9],
-  [-22, 9],
+  [8.0, R + 3.9],
+  [10.2, R + 5.6],
+  [12.6, R + 8.2],
+  [15.5, DEEP],
+  [-22, DEEP],
 ]
 
 /** The boulder over the foot, up to his left: the gust takes the snow off its top. */
@@ -80,7 +86,8 @@ export const BOULDER: Pt = [-1.6, -1.75]
 
 /** The face's outline: off to the left and down, its right flank down into the cloud, the ledge's lip, the summit ridge. */
 const FACE: Pt[] = [
-  [-22, 9],
+  [-22, DEEP],
+  [19.6, DEEP],
   [17.1, 9],
   [15.77, 5.5],
   [15.02, 3],
@@ -156,9 +163,15 @@ const BANDS: [number, number, number, number][] = [
 const TILT = -0.09
 
 /** The face's outline, and its bands of rock, each with the snow lying on its top (made once). */
-let faceGeo: { outline: Path2D; bands: { rock: Path2D; top: Path2D; y: number }[] } | null = null
+/** A cap of snow, and how high and low it goes: the slope's snow is filled into each over only its own rows. */
+type Cap = { path: Path2D; y0: number; y1: number }
+const capOf = (pts: readonly Pt[]): Cap => ({ path: shape(pts), y0: Math.min(...pts.map((p) => p[1])), y1: Math.max(...pts.map((p) => p[1])) })
+
+let faceGeo: { outline: Path2D; bands: { rock: Path2D; lit: Path2D }[]; caps: Cap[] } | null = null
 function faceOf() {
-  return (faceGeo ??= {
+  if (faceGeo) return faceGeo
+  const caps: Cap[] = []
+  faceGeo = {
     outline: shape(FACE),
     bands: BANDS.map(([xa, y0, len, th], j) => {
       // Tilted with the strata, ragged along its top where the snow lies.
@@ -171,31 +184,56 @@ function faceOf() {
         const y = y0 + len * u * TILT
         const taper = Math.sin(Math.PI * u) ** 0.6
         top.push([x, y - th * taper * (0.55 + 0.45 * hash(j * 31, i + 100, 41))])
-        low.push([x, y + th * 0.25 * taper])
+        // Its foot broken where it goes into the snow under it, not ruled.
+        low.push([x, y + th * taper * (0.12 + 0.22 * hash(j * 31, i + 200, 43))])
       }
-      const cap = top.map(([x, y], i): Pt => [x, y + th * 0.3 * Math.sin((Math.PI * i) / n) ** 0.6])
-      return { rock: shape([...top, ...[...low].reverse()]), top: shape([...top, ...cap.reverse()]), y: y0 - th }
+      // The snow lying on it, drifted down over its top unevenly: the slope's own snow, so it runs on unbroken from above.
+      const cap = top.map(([x, y], i): Pt => [x, y + th * (0.2 + 0.2 * hash(j * 31, i + 300, 47)) * Math.sin((Math.PI * i) / n) ** 0.6])
+      // Its upper side, toward the sky, takes more light than its face.
+      const lit = top.map(([x, y], i): Pt => [x, y + (low[i][1] - y) * (0.5 + 0.15 * hash(j * 31, i + 400, 53))])
+      caps.push(capOf([...top.map(([x, y]): Pt => [x, y - 0.2]), ...cap.reverse()]))
+      return { rock: shape([...top, ...[...low].reverse()]), lit: shape([...top, ...lit.reverse()]) }
     }),
-  })
+    caps,
+  }
+  caps.push(capOf(SIFT_LIP))
+  return faceGeo
 }
+
+/** The face's own snow at `t`, filled into `clip` (or over its whole outline): the bands' caps are the slope's own. */
+function faceSnow(c: C2, f: Frame, t: number, tn: Tone, y0: number, y1: number, clip?: Path2D): void {
+  const g = faceOf()
+  const ly = litY(t, 'world')
+  if (clip) {
+    c.save()
+    c.clip(clip)
+  }
+  bands(c, f.x0 - 1, f.x1 + 1, y0, y1, (y) => mix(tn.faceSnow, tn.faceLow, Math.max(0, Math.min(1, (y + 13.5) / 22.5))), g.outline)
+  if (ly > -14.5) sunOn(c, FACE, ly, mix(tn.faceSnow, tn.faceLit, 0.95))
+  if (clip) c.restore()
+}
+
+/** The outcrop over the ledge, which the snow sifts down off its overhanging tip: its rock, its lit top, its snow. */
+const SIFT_BY = LEDGE_Y - 1.2
+const SIFT_ROCK: Pt[] = [[SIFT_X - 1.7, SIFT_BY - 0.05], [SIFT_X - 1.3, SIFT_BY - 0.3], [SIFT_X - 0.8, SIFT_BY - 0.5], [SIFT_X - 0.3, SIFT_BY - 0.6], [SIFT_X, SIFT_BY - 0.52], [SIFT_X + 0.14, SIFT_BY - 0.1], [SIFT_X + 0.04, SIFT_BY + 0.02], [SIFT_X - 0.4, SIFT_BY + 0.06], [SIFT_X - 0.9, SIFT_BY + 0.12], [SIFT_X - 1.4, SIFT_BY + 0.06]]
+const SIFT_LIT: Pt[] = [[SIFT_X - 1.7, SIFT_BY - 0.05], [SIFT_X - 1.3, SIFT_BY - 0.3], [SIFT_X - 0.8, SIFT_BY - 0.5], [SIFT_X - 0.3, SIFT_BY - 0.6], [SIFT_X, SIFT_BY - 0.52], [SIFT_X + 0.12, SIFT_BY - 0.2], [SIFT_X - 0.35, SIFT_BY - 0.3], [SIFT_X - 0.9, SIFT_BY - 0.18], [SIFT_X - 1.4, SIFT_BY - 0.06]]
+const SIFT_LIP: Pt[] = [[SIFT_X - 1.8, SIFT_BY - 0.02], [SIFT_X - 1.3, SIFT_BY - 0.4], [SIFT_X - 0.8, SIFT_BY - 0.68], [SIFT_X - 0.3, SIFT_BY - 0.8], [SIFT_X + 0.02, SIFT_BY - 0.7], [SIFT_X + 0.16, SIFT_BY - 0.12], [SIFT_X + 0.04, SIFT_BY - 0.3], [SIFT_X - 0.3, SIFT_BY - 0.48], [SIFT_X - 0.6, SIFT_BY - 0.42], [SIFT_X - 0.9, SIFT_BY - 0.4], [SIFT_X - 1.3, SIFT_BY - 0.22], [SIFT_X - 1.6, SIFT_BY - 0.06]]
 
 export function drawFace(pen: Pen, f: Frame, t: number): void {
   const tn = tone(t)
   const g = faceOf()
-  const ly = litY(t, 'world')
   inCells(pen, (c) => {
     // Snow over all of it, bluer low down, and the sun on it down to where the light has reached.
-    bands(c, f.x0 - 1, f.x1 + 1, -14, 10, (y) => mix(tn.faceSnow, tn.faceLow, Math.max(0, Math.min(1, (y + 13.5) / 22.5))), g.outline)
-    if (ly > -14.5) sunOn(c, FACE, ly, mix(tn.faceSnow, tn.faceLit, 0.95))
-    // The bands of rock (a value lighter than the steps' slabs, so the climb reads against them), and the snow on their
-    // tops, which catches the sun once the light is down to it.
+    faceSnow(c, f, t, tn, -14, DEEP)
+    // The bands of rock (a value lighter than the steps' slabs, so the climb reads against them), the band over the
+    // ledge among them, and on their tops the slope's own snow, lit as the slope round it is.
     c.fillStyle = mix(tn.faceRock, tn.faceShade, 0.42)
     for (const b of g.bands) c.fill(b.rock)
-    const snow = mix(tn.faceSnow, '#FFFFFF', 0.4)
-    for (const b of g.bands) {
-      c.fillStyle = litSnow(tn, t, b.y, snow)
-      c.fill(b.top)
-    }
+    c.fill(shape(SIFT_ROCK))
+    c.fillStyle = mix(tn.faceRock, tn.faceShade, 0.72)
+    for (const b of g.bands) c.fill(b.lit)
+    c.fill(shape(SIFT_LIT))
+    for (const b of g.caps) if (b.y1 > f.y0 && b.y0 < f.y1) faceSnow(c, f, t, tn, b.y0, b.y1, b.path)
     // The snow the climb starts in, along the foot.
     if (f.y1 > R - 0.5) {
       c.fillStyle = mix(tn.faceSnow, '#FFFFFF', 0.25)
@@ -205,11 +243,6 @@ export function drawFace(pen: Pen, f: Frame, t: number): void {
   // The boulder over the foot, whose snow the gust tears off.
   fillPoly(pen, [[BOULDER[0] - 0.8, BOULDER[1] + 0.05], [BOULDER[0], BOULDER[1] - 0.25], [BOULDER[0] + 0.65, BOULDER[1] - 0.05], [BOULDER[0] + 0.8, BOULDER[1] + 0.4], [BOULDER[0] - 0.9, BOULDER[1] + 0.45]], tn.faceRock)
   fillPoly(pen, [[BOULDER[0] - 0.84, BOULDER[1] + 0.06], [BOULDER[0], BOULDER[1] - 0.3], [BOULDER[0] + 0.68, BOULDER[1] - 0.06], [BOULDER[0] + 0.1, BOULDER[1] - 0.12], [BOULDER[0] - 0.5, BOULDER[1] + 0.12]], mix(tn.faceSnow, '#FFFFFF', 0.4))
-  // The band of rock over the ledge, its lip of snow, from which it sifts down by them: the bands' rock, not the
-  // darker rock of the steps, the ledge and the boulder that he and Sean are on.
-  const by = LEDGE_Y - 1.2
-  fillPoly(pen, [[SIFT_X - 2.6, by - 0.2], [SIFT_X - 1.2, by - 0.36], [SIFT_X - 0.1, by - 0.42], [SIFT_X + 0.12, by - 0.08], [SIFT_X + 0.05, by + 0.02], [SIFT_X - 0.8, by + 0.1], [SIFT_X - 2.5, by + 0.15]], mix(tn.faceRock, tn.faceShade, 0.42))
-  fillPoly(pen, [[SIFT_X - 2.65, by - 0.2], [SIFT_X - 1.2, by - 0.4], [SIFT_X - 0.1, by - 0.47], [SIFT_X + 0.16, by - 0.08], [SIFT_X + 0.02, by - 0.15], [SIFT_X - 0.15, by - 0.32], [SIFT_X - 1.2, by - 0.28], [SIFT_X - 2.5, by - 0.12]], litSnow(tn, t, by - 0.4, mix(tn.faceSnow, '#FFFFFF', 0.45)))
 }
 
 /** The steps: a slab of rock under every landing, capped with snow; the ledge at the top. */
@@ -667,28 +700,30 @@ export function drawKicks(pen: Pen, t: number): void {
 }
 
 /**
- * Snow sifting from the rock over them: one thin stream, drifting a little downwind and widening as it falls, thickest
- * at its front, which lands on the ledge on the beat, and thinning to nothing up toward its tail, which follows it down.
+ * Snow sifting from the rock over them: one thin stream of flakes, drifting a little downwind and spreading as it
+ * falls, thickest at its front, which lands on the ledge on the beat, and thinning out toward its tail, which follows
+ * it down. Flakes, not a wedge of white: a wedge read as a beam of light.
  */
 const SIFT_FALL = 1.5
 /** How long the stream runs off the lip. */
 const SIFT_RUN = 1.1
+const SIFT_FLAKES = 60
 export function drawSifts(pen: Pen, t: number): void {
   const top = LEDGE_Y - 1.2 + 0.02
   const dur = (LEDGE_Y - top) / SIFT_FALL
   const x = (y: number) => SIFT_X + ((y - top) / SIFT_FALL) * 0.14
-  const w = (y: number) => 0.012 + (0.03 * (y - top)) / (LEDGE_Y - top)
-  for (const s of SIFTS) {
+  const w = (y: number) => 0.015 + (0.07 * (y - top)) / (LEDGE_Y - top)
+  for (const [n, s] of SIFTS.entries()) {
     const g = t - (s - dur)
     if (g < 0 || g > dur + SIFT_RUN) continue
-    const y0 = top + Math.max(0, g - SIFT_RUN) * SIFT_FALL
-    const y1 = Math.min(LEDGE_Y, top + g * SIFT_FALL)
-    if (y1 > y0) {
-      const k = pen.k
-      const fall = pen.c.createLinearGradient(x(y0) * k, y0 * k, x(y1) * k, y1 * k)
-      fall.addColorStop(0, rgba('#FFFFFF', 0))
-      fall.addColorStop(1, rgba('#FFFFFF', 0.75 * Math.min(1, (y1 - y0) / 0.4)))
-      fillPoly(pen, [[x(y0) - w(y0), y0], [x(y0) + w(y0), y0], [x(y1) + w(y1), y1], [x(y1) - w(y1), y1]], fall)
+    for (let i = 0; i < SIFT_FLAKES; i++) {
+      // Each flake leaves the lip in turn and falls at the stream's speed, give or take.
+      const u = i / SIFT_FLAKES
+      const y = top + (g - u * SIFT_RUN) * SIFT_FALL * (1 + 0.06 * (hash(n, i, 71) - 0.5))
+      if (y < top || y > LEDGE_Y) continue
+      const side = (hash(n, i, 73) * 2 - 1) * w(y)
+      const r = 0.009 + 0.008 * hash(n, i, 79)
+      ellipse(pen, x(y) + side, y, r, r, rgba('#FFFFFF', 0.8 * (1 - 0.7 * u)))
     }
     const land = t - s
     if (land >= 0 && land < 0.6) ellipse(pen, SIFT_X + 0.1, LEDGE_Y - 0.01, 0.06 + land * 0.25, 0.022, rgba('#FFFFFF', 0.8 * (1 - land / 0.6)))

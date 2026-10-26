@@ -184,13 +184,14 @@ const FG = '#26302B'
 
 /**
  * A shape close to the lens: a plain dark silhouette, a little lighter than black, as the front rows are in London and
- * Tokyo. No haze is drawn round its edge to stand for the focus: that ring read as a halo. One fill, so where its parts
+ * Tokyo, and as solid: at seven tenths the bench and the wainscot read through the palm's pot like a ghost's. No haze
+ * is drawn round its edge to stand for the focus: that ring read as a halo. One fill, so where its parts
  * cross (a leg through a shelf) it is one shade, not two; and filled by winding, so a crossing is never a hole.
  */
 function silhouette(pen: Pen, path: Path2D, a: number): void {
   const ctx = ctxOf(pen.p)
   ctx.save()
-  ctx.fillStyle = rgba(pen, FG, 0.7 * a)
+  ctx.fillStyle = rgba(pen, FG, 0.96 * a)
   ctx.fill(path)
   ctx.restore()
 }

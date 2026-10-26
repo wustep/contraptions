@@ -85,6 +85,8 @@ export const LAST_GONE = (() => {
 
 /** Where a card's top middle sits, as shares of the 16:9 frame: high and centred, in the sky over the building's roof. */
 const AT: [number, number] = [0.5, 0.03]
+/** In a tall frame, up into the dawn sky it shows over the roofs (`Performance.tall`), clear of the water tanks. */
+const LIFT = 0.45
 
 function lightOf(card: Card, t: number): { light: number; rise: number } {
   const since = t - card.at
@@ -101,7 +103,7 @@ export function creditsAt(t: number): TitleCard[] {
   CARDS.forEach((card, n) => {
     const { light, rise } = lightOf(card, t)
     if (light <= 0.001) return
-    out.push({ key: `rally-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: card.place ?? AT, scale: card.scale })
+    out.push({ key: `rally-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: card.place ?? AT, lift: LIFT, scale: card.scale })
   })
   return out
 }

@@ -1,4 +1,4 @@
-import { ballAt, laneAt, type Pt } from '../../../../parts'
+import { R, ballAt, laneAt, type Pt } from '../../../../parts'
 import type { Box, Placed } from '../../../../plan'
 import { Show, type ShowBall, type ShowPoint } from '../../../../show'
 import type { Universe } from '../../../../universe'
@@ -194,6 +194,33 @@ export class PalindromeShow extends Show {
     return [placed.col + placed.mirror * at.x, placed.row + at.y]
   }
 
+  /**
+   * The seams her roll is carried across, and when that stops (the next plain cut). A ball's roll is drawn from where
+   * it is in its own place's cells, so it turns at every cut; at a cut no one sees it, but through a dissolve either
+   * side of one the two frames are laid over each other for seconds, and her eye showed twice.
+   */
+  carryRoll: { seams: number[]; until: number } | null = null
+  private carried: number[] | null = null
+
+  /** Her roll as the engine would draw it at `t`: from where she is in her own place's cells. */
+  private rawSpin(t: number): number {
+    return (this.where(t)[0] - this.rooms[this.owner(t)].pieces[0].col) / R
+  }
+
+  /** Her roll at `t`, carried across the dissolves' seams so both sides of each agree; null where it is not carried. */
+  private spinAt(t: number): number | null {
+    const c = this.carryRoll
+    if (!c || t < c.seams[0] || t >= c.until) return null
+    if (!this.carried) {
+      // The turn each seam would have given her, taken back, cumulatively.
+      let off = 0
+      this.carried = c.seams.map((s) => (off += this.rawSpin(s - 1e-3) - this.rawSpin(s + 1e-3)))
+    }
+    let i = 0
+    while (i + 1 < c.seams.length && t >= c.seams[i + 1]) i++
+    return this.rawSpin(t) + this.carried[i]
+  }
+
   override at(t: number): ShowPoint {
     const time = this.clamp(t)
     const owner = this.owner(time)
@@ -215,7 +242,8 @@ export class PalindromeShow extends Show {
     const ride = this.riders.find((r) => r.leg === owner && time >= r.from && time < r.to)
     const world = this.legs[owner].world
     const company = [this.companion(time, 'ian', world), this.companion(time, 'hannah', world), this.companion(time, 'shang', world)].filter((b): b is ShowBall => !!b)
-    if (ride || company.length) {
+    const spin = this.spinAt(time)
+    if (ride || company.length || spin !== null) {
       const hero: ShowBall = {
         id: ball.id,
         x: here.x,
@@ -225,8 +253,9 @@ export class PalindromeShow extends Show {
         scale: point.hidden ? 0 : point.scale,
         stretch: here.stretch,
         angle: here.angle,
+        ...(spin !== null ? { spin } : {}),
       }
-      const balls = ride ? ride.fn(time, hero) : null
+      const balls = ride ? ride.fn(time, hero)?.map((b) => (spin !== null && b.id === ball.id && b.spin === undefined ? { ...b, spin } : b)) ?? null : null
       here.balls = company.length ? [...(balls ?? [hero]), ...company] : balls ?? undefined
     }
     return here

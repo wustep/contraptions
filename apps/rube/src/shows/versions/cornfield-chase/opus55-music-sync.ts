@@ -1,10 +1,11 @@
+import { TRANSIT } from '../../../parts'
 import type { Framing, Performance } from '../../registry'
 import type { StockScore } from '../../stock/types'
 import { expose, exposure, finale, flash, pull, type Exposure } from './music-sync/finale'
 import { dayLand, dayNear, frontField, nightLand, nightNear, type Take } from './music-sync/land'
 import { beatAt } from './music-sync/music'
 import { scenery } from './music-sync/screen'
-import { nightfall } from './music-sync/nightfall'
+import { fadeUp, nightfall } from './music-sync/nightfall'
 import { DressedShow } from './music-sync/show'
 import { follow, spot, type Spot } from './music-sync/spot'
 import { lensAt, tiltAt, zoomAt } from './music-sync/lens'
@@ -21,6 +22,8 @@ export const door = fair.pieces.at(-1)!
 export const sunset = score.maps[0].pieces.at(-1)!
 export const arrival = fair.pieces[0]
 const NIGHT = '#0D0B20'
+/** The stage's fade up at the start of a show (`TRANSIT` twice over), drawn by the show in the night's colour. */
+const OPENING = TRANSIT * 2
 /** The fair's last stretch, from the slingshot that drops the ball to its last floors: what the photograph frames. */
 const STRETCH = 97
 /** The photograph: the booth's flash, then once the ball is through the last portal, the long draw back. */
@@ -49,7 +52,11 @@ export const show: DressedShow = new DressedShow(score, (i, u) => {
   if (map.world === 'garden') {
     return {
       behind: [scenery('field', (p, c) => dayLand(p, c, col, row, map.begin))],
-      over: [scenery('near', () => {}, (p, c) => dayNear(p, c, col, row, map.begin)), dusk],
+      over: [
+        scenery('near', () => {}, (p, c) => dayNear(p, c, col, row, map.begin)),
+        dusk,
+        scenery('opening', () => {}, (p, c) => fadeUp(p, map.begin + c.t, NIGHT, OPENING)),
+      ],
     }
   }
   return {
@@ -104,8 +111,8 @@ function camera(t: number): Framing {
 export const performance: Performance = {
   show, duration: score.duration, camera,
   // The last portal would iris the photograph away; the decay keeps it. The door from the field to the fair is the
-  // night's, drawn by the show (`music-sync/nightfall.ts`).
-  cuts: (t) => t < door.begin && !(t >= sunset.begin && t <= arrival.end),
+  // night's, drawn by the show (`music-sync/nightfall.ts`), and so is the fade up at the start.
+  cuts: (t) => t >= OPENING && t < door.begin && !(t >= sunset.begin && t <= arrival.end),
   soundtrack: {
     offset: score.audioOffset,
     credit: 'Hans Zimmer · Cornfield Chase · Interstellar (2014)',

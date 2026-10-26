@@ -196,6 +196,14 @@ export function drawFront(p: p5, c: Ctx, t: number): void {
     p.fill(A.crowd)
     person(p, k, x, top, S * (0.92 + 0.14 * hash(i, 5)), f.y1 + 1, hairOf(i, 7))
   }
+  // Below the shoulders the row is one mass: where two people stood a little apart, a hairline of the house showed
+  // between their bodies all the way down the frame.
+  if (row.length > 1) {
+    const chest = Math.max(...row.map(([, top]) => top)) + 0.62 * S
+    p.rectMode(p.CORNERS)
+    p.rect(k * row[0][0], k * chest, k * row[row.length - 1][0], k * (f.y1 + 1))
+    p.rectMode(p.CORNER)
+  }
   // Rimmed only where the stage's light reaches over the lip: one dark mass elsewhere.
   for (const [x, top] of row) personRim(p, k, x, top, S, A.crowdRim, 1.3 * Math.max(0, Math.min(1, lightAt(x, t)) - 0.15))
   // The lip's photographers.

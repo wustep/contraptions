@@ -1,5 +1,5 @@
 import '../../../../src/ui/styles.css'
-import { ICON, el, guardWheel, icon, section, playButton, segmented, setOn, speedPicker, type Shell } from '../../../../src/ui/shell'
+import { ICON, el, guardWheel, icon, playButton, segmented, setOn, speedPicker, type Shell } from '../../../../src/ui/shell'
 import { createListbox } from '../../../../src/ui/listbox'
 import { Transport, clockText } from './clock'
 import { discoverShows } from './discover'
@@ -16,7 +16,7 @@ import { FRAME_SIZES, createShowStage, type FrameSize } from './stage'
  * other modes: brand, mode switch, and then the show's own sections. Which
  * show and which version of it, since the same music may have several takes
  * side by side (`registry.ts`); a transport over the whole show, from ¼× to
- * 4×, with the music on unless it is turned off; and Export, which saves the
+ * 4×, with the music on unless it is turned off; and Save video, which saves the
  * frame or the whole show as **picture and music only**. Nothing is ever
  * written on a show's canvas (`stage.ts`), so what is in the panel — the
  * title, the credit, the clock — is in the panel and nowhere else.
@@ -34,7 +34,7 @@ import { FRAME_SIZES, createShowStage, type FrameSize } from './stage'
  *
  * The panel reads as the show's title card and its player: the title (the
  * picker too) in the face of the credits, the take and a line on it, then
- * the bar and one deck of controls, each doing one thing, then Export.
+ * the bar and one deck of controls, each doing one thing, Save video among them.
  *
  * A show opens playing, music and all, where the browser lets it. Where it
  * wants a gesture first, the show waits at the top with a play button on
@@ -429,8 +429,9 @@ panelRoot.append(showCard)
 const workList = createListbox({
   label: 'Show',
   value: current?.work ?? '',
-  // On their shelves (`registry.ts`): Machine, Movies, Ambient, each with its favourites starred and first.
-  items: shelves(works).flatMap((s) => s.works.map((w) => ({ value: w.work, label: w.title, group: s.section, mark: w.favorite === undefined ? undefined : icon(ICON.star) }))),
+  // On their shelves (`registry.ts`): Machine, Movies, Ambient, each with its favourites starred and first, and a
+  // film's work with the film it is after.
+  items: shelves(works).flatMap((s) => s.works.map((w) => ({ value: w.work, label: w.title, aside: w.film, group: s.section, mark: w.favorite === undefined ? undefined : icon(ICON.star) }))),
   onChange: (work) => {
     const next = pickVersion(works, work, null)
     // Under a host a pick goes on as its next one would, and the running order carries on after it.
@@ -605,30 +606,17 @@ function goThrough(): void {
   else shell.go('theater', current ? `/theater/?show=${current.work}&take=${current.take}` : '/theater/')
 }
 doorBtn.addEventListener('click', goThrough)
-const transportNote = el('div', { class: 'status' })
-transportSec.append(
-  scrub,
-  el('div', { class: 'row deck player' }, [playBtn, restartBtn, time, musicBtn, speedBox.node]),
-  cameraSeg.node,
-  // Dialogue and sound captions: a row each, shown only for a show that has them.
-  dlRow,
-  ccRow,
-  el('div', { class: 'row door' }, [doorBtn]),
-  transportNote,
-)
-// A host's own section (Theater: what is next, and the running order) follows the controls for what is on now.
-host?.panel(panelRoot, advance, playNow)
 
-// Export — the frame, and the show. Picture and music; nothing written on either.
-const exportSec = section(panelRoot, 'Export')
-const dims = el('span', { class: 'dims' }, ['—'])
-exportSec.querySelector('.section-title')!.append(dims)
+// Saving — the frame, and the show. Picture and music; nothing written on either. Save video opens them: the size,
+// the frame as a PNG, and the show recorded. While a recording runs, the same button stops it.
+const dims = el('div', { class: 'dims' }, ['—'])
 const sizeSeg = segmented(FRAME_SIZES.map((_, i) => i), (i) => FRAME_SIZES[i].label, (i) => {
   size = FRAME_SIZES[i]
   sync()
 })
+sizeSeg.node.setAttribute('aria-label', 'Size')
 const exportName = (): string => `contraptions-show-${current?.work}-${current?.take}`
-const pngBtn = el('button', { title: 'This frame as a PNG: the picture alone, nothing written on it' }, ['Save PNG'])
+const pngBtn = el('button', { type: 'button', title: 'This frame as a PNG: the picture alone, nothing written on it' }, ['Save PNG'])
 pngBtn.addEventListener('click', () => {
   if (!perf || !transport || recording) return
   const at = transport.now()
@@ -644,20 +632,57 @@ pngBtn.addEventListener('click', () => {
     (err) => say(exportNote, err instanceof Error ? err.message : String(err), 'bad'),
   )
 })
-const videoBtn = el('button', {}, ['Save video'])
+const recordBtn = el('button', { type: 'button', class: 'primary' }, ['Record video'])
+const savePop = el('div', { class: 'save-pop', id: 'save-pop', role: 'dialog', 'aria-label': 'Save' }, [
+  dims,
+  sizeSeg.node,
+  el('div', { class: 'row' }, [pngBtn, recordBtn]),
+])
+savePop.hidden = true
+const videoLabel = el('span', {}, ['Save video'])
+const videoChevron = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+videoChevron.setAttribute('viewBox', '0 0 24 24')
+videoChevron.setAttribute('aria-hidden', 'true')
+videoChevron.classList.add('lb-chevron')
+const videoChev = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+videoChev.setAttribute('d', 'M6 9.5l6 6 6-6')
+videoChevron.append(videoChev)
+const videoBtn = el('button', { type: 'button', 'aria-haspopup': 'dialog', 'aria-controls': 'save-pop', 'aria-expanded': 'false' }, [videoLabel, videoChevron])
+const saveRow = el('div', { class: 'row save' }, [videoBtn, savePop])
 const exportNote = el('div', { class: 'status' })
 function say(node: HTMLElement, text: string, tone: 'ok' | 'bad' | '' = ''): void {
   node.textContent = text
   if (tone) node.dataset.tone = tone
   else delete node.dataset.tone
 }
+function setSaveOpen(open: boolean, refocus = false): void {
+  if (savePop.hidden === !open) return
+  savePop.hidden = !open
+  videoBtn.setAttribute('aria-expanded', String(open))
+  if (open) {
+    ;(savePop.querySelector<HTMLButtonElement>('.seg button.on') ?? pngBtn).focus()
+    savePop.scrollIntoView({ block: 'nearest' })
+  } else if (refocus) videoBtn.focus()
+}
+// Away from it, by a click or by Tab, puts it away; so does Escape (`onKey`).
+const onAwayPress = (e: PointerEvent) => {
+  if (!savePop.hidden && !saveRow.contains(e.target as Node)) setSaveOpen(false)
+}
+document.addEventListener('pointerdown', onAwayPress)
+saveRow.addEventListener('focusout', (e) => {
+  if (!savePop.hidden && e.relatedTarget instanceof Node && !saveRow.contains(e.relatedTarget)) setSaveOpen(false)
+})
 videoBtn.addEventListener('click', () => {
   // A recording under way: its button is the way to stop it.
   if (recording) {
     recording.abort()
     return
   }
-  if (!perf) return
+  setSaveOpen(savePop.hidden)
+})
+recordBtn.addEventListener('click', () => {
+  if (!perf || recording) return
+  setSaveOpen(false, true)
   pause()
   // The press the browser was waiting for has now been made.
   blocked = false
@@ -668,7 +693,7 @@ videoBtn.addEventListener('click', () => {
   sync()
   void stage
     .saveVideo(name, size, speed, !muted, mine.signal, (done) => {
-      videoBtn.textContent = `Stop · ${Math.round(done * 100)}%`
+      videoLabel.textContent = `Stop · ${Math.round(done * 100)}%`
     })
     .then(
       (saved) => say(exportNote, saved ? `Saved: ${perf?.soundtrack?.src ? 'picture and music' : perf?.soundtrack ? 'the picture, silent (the music is YouTube’s)' : 'the picture'}${words}.` : 'Stopped. No file was kept.', saved ? 'ok' : ''),
@@ -682,7 +707,22 @@ videoBtn.addEventListener('click', () => {
       sync()
     })
 })
-exportSec.append(el('div', { class: 'row export-row frames' }, [sizeSeg.node, pngBtn, videoBtn]), exportNote)
+
+const transportNote = el('div', { class: 'status' })
+transportSec.append(
+  scrub,
+  el('div', { class: 'row deck player' }, [playBtn, restartBtn, time, musicBtn, speedBox.node]),
+  cameraSeg.node,
+  // Dialogue and sound captions: a row each, shown only for a show that has them.
+  dlRow,
+  ccRow,
+  saveRow,
+  el('div', { class: 'row door' }, [doorBtn]),
+  transportNote,
+  exportNote,
+)
+// A host's own section (Theater: what is next, and the running order) follows the controls for what is on now.
+host?.panel(panelRoot, advance, playNow)
 
 const soundIcon = icon(ICON.sound)
 const mutedIcon = icon(ICON.muted)
@@ -767,9 +807,9 @@ function sync(): void {
     : (current && shareCard(works, current.work, current.take)?.title) || 'Shows · contraptions'
 
   // The transport.
-  transportSec.hidden = exportSec.hidden = works.length === 0
-  // Theater is for watching: no export.
-  if (host) exportSec.hidden = true
+  transportSec.hidden = works.length === 0
+  // Theater is for watching: nothing to save.
+  saveRow.hidden = !!host
   showPaused(!playing)
   playBtn.disabled = restartBtn.disabled = scrub.disabled = !ready || busy
   cameraSeg.set(overview ? 0 : zoom ? 2 : 1)
@@ -840,20 +880,27 @@ function sync(): void {
   bigPlay.hidden = !ready || busy || (playing ? !soundHeld : !(blocked || t <= 0 || atEnd))
   bigPlayLabel.textContent = soundHeld ? 'Sound' : atEnd ? 'Replay' : 'Play'
 
-  // Export.
+  // Saving.
   sizeSeg.set(FRAME_SIZES.indexOf(size))
   const canRecord = recordingFormat(!!perf?.soundtrack?.src) !== null || recordingFormat(false) !== null
   pngBtn.disabled = !ready || busy
-  videoBtn.disabled = !ready || !canRecord
+  recordBtn.disabled = !ready || busy || !canRecord
+  // The button opens the saves while there is a show to save; a recording makes it the way to stop.
+  videoBtn.disabled = !ready && !busy
+  if (videoBtn.disabled || busy) setSaveOpen(false)
   videoBtn.classList.toggle('stop', busy)
-  if (!busy) videoBtn.textContent = 'Save video'
+  videoChevron.style.display = busy ? 'none' : ''
+  if (busy) videoBtn.removeAttribute('aria-haspopup')
+  else {
+    videoBtn.setAttribute('aria-haspopup', 'dialog')
+    videoLabel.textContent = 'Save video'
+  }
   const length = perf ? clockText(perf.duration / speed) : ''
   dims.textContent = perf ? `${size.w} × ${size.h} · ${length}${speed === 1 ? '' : ` at ${speed}×`}` : '—'
-  videoBtn.title = busy
-    ? 'Stop the recording. No file is kept.'
-    : canRecord
-      ? `The whole show as a video${perf?.soundtrack?.src ? ', picture and music' : ''}${credited() ? ', with its credits' : ', nothing written on it'}. It is played through once to be recorded, so it takes ${length}${speed === 1 ? '' : ` at ${speed}×`}.${perf?.soundtrack && !perf.soundtrack.src ? ' It is silent: the music plays from YouTube, which a recording cannot take.' : ''}`
-      : 'Video export needs a browser that can record the canvas.'
+  videoBtn.title = busy ? 'Stop the recording. No file is kept.' : 'Save this frame, or the whole show as a video'
+  recordBtn.title = canRecord
+    ? `The whole show as a video${perf?.soundtrack?.src ? ', picture and music' : ''}${credited() ? ', with its credits' : ', nothing written on it'}. It is played through once to be recorded, so it takes ${length}${speed === 1 ? '' : ` at ${speed}×`}.${perf?.soundtrack && !perf.soundtrack.src ? ' It is silent: the music plays from YouTube, which a recording cannot take.' : ''}`
+    : 'Video export needs a browser that can record the canvas.'
 }
 
 /* ------------------------------------------------------------------ words over the stage */
@@ -871,6 +918,8 @@ stageRoot.append(wordsLayer)
 const wordCards = new Map<string, HTMLElement>()
 /** A floored card's width per unit of its type, measured once as it is built. */
 const cardWidths = new Map<string, number>()
+/** Each such card's height per unit of its type, measured once like its width. */
+const cardHeights = new Map<string, number>()
 // The words a screen reader is to hear (`TitleCard.said`: a show's dialogue): the layer above is hidden from it, since
 // its cards fade and blur, so each such card is spoken once, here, as it first comes up while the show plays at 1× or
 // slower. Not on a scrub or a seek, nor faster than its own pace, so a reader is not flooded.
@@ -914,6 +963,7 @@ function renderWords(t: number): void {
     node.remove()
     wordCards.delete(key)
     cardWidths.delete(key)
+    cardHeights.delete(key)
   }
   for (const key of saidKeys) if (!live.has(key)) saidKeys.delete(key)
   for (const c of cards) {
@@ -941,7 +991,8 @@ function renderWords(t: number): void {
     node.style.left = `${placeCard((W - fw) / 2 + c.at[0] * fw, node.offsetWidth, W)}px`
     const lift = c.lift ? c.lift * Math.max(0, (H - fh) / 2) : 0
     const above = (perf?.tall ?? 0.5) * (H - fh)
-    node.style.top = `${above + (c.at[1] + (c.rise ?? 0) / 100) * fh - lift}px`
+    const top = above + (c.at[1] + (c.rise ?? 0) / 100) * fh - lift
+    node.style.top = `${top}px`
     // `least` floors the card's own unit, after its `scale` (with no scale, as a floor on the frame's unit).
     let unit = Math.max((fh / 100) * (c.scale ?? 1), c.least ?? 0)
     if (unit !== fh / 100) node.style.setProperty('--u', `${unit}px`)
@@ -966,6 +1017,15 @@ function renderWords(t: number): void {
       const half = wide / 2
       const x = (W - fw) / 2 + c.at[0] * fw
       node.style.left = `${Math.max(W * 0.03 + half, Math.min(W * 0.97 - half, x))}px`
+      // And kept above the stage's foot: a card set low (a title in a widescreen's lower bar), grown on a short stage
+      // (a phone held sideways), would run off the bottom. Its height goes as its unit too, measured once.
+      let perUnitH = cardHeights.get(c.key)
+      if (perUnitH === undefined) {
+        perUnitH = node.offsetHeight / unit
+        cardHeights.set(c.key, perUnitH)
+      }
+      const foot = H * 0.98 - perUnitH * unit
+      if (top > foot) node.style.top = `${Math.max(0, foot)}px`
     }
     node.style.opacity = c.light.toFixed(3)
     // Out of focus as it comes and goes: it comes into focus as it comes up.
@@ -1054,6 +1114,11 @@ const behind = host
 const HELD_ONCE = new Set([' ', 'p', 'm', 'c', 'd', 'o', 'z', 't'])
 const onKey = (e: KeyboardEvent) => {
   if (!alive) return
+  // Escape puts the saves away, wherever focus is: a mouse click leaves none in them (`shell.ts`).
+  if (e.key === 'Escape' && !savePop.hidden) {
+    setSaveOpen(false, true)
+    return
+  }
   // Never shadow browser chrome (cmd+S, ctrl+R, ...).
   if (e.metaKey || e.ctrlKey || e.altKey) return
   const t = e.target
@@ -1189,6 +1254,7 @@ if (import.meta.env.DEV) {
     window.removeEventListener('pointerup', endScrub)
     window.removeEventListener('pointercancel', endScrub)
     window.removeEventListener('keydown', onKey)
+    document.removeEventListener('pointerdown', onAwayPress)
     recording?.abort()
     music.destroy()
     stage.destroy()

@@ -687,3 +687,61 @@ Stephen found the people in silhouette at the start, and the tables along the fo
 **Measured.** A scrub every two seconds over all three places, and full-size frames where the row had been, find no gap, nothing drawn out of order and no shot left composed round what is gone. The meter moves as taking a layer away should: the flat share by third is 20%, 21%, 18% (19%, 20%, 17% before). 12 samples of 255 are more than a third dead (9 before). The three new ones are the dark floor in front of her table at 23, and the floor in the trumpet's dark at 257 and 259, where the house's heads had swayed.
 
 **Frame time.** The whole show played in real time in Chrome as in round 71 (headed, vsync, 1600 by 900 at 2×). It ran 30,583 frames in 510 s, the paint 1.01 ms a frame on average and 2.1 at the 95th percentile (1.22 and 2.3 before). Four frames ran long, at 38.2, 100.9 and 128.6, two of them in the theatre, which this round did not touch; they were hitches from other work on the machine during the run. Played again from 30 to 135 s with nothing else running, the long frames do not come back: the worst paint is 5.2 ms, and the worst intervals are 20.8 and 20.6 ms, in the theatre, the display's jitter of under a millisecond.
+
+## Round 73: a polish wave, cuts and seams
+
+A fresh watch of the whole show in the wide frame and the tall one, contact sheets every three seconds offset by a second and a half the second time, full frames wherever something looked wrong, and a read of the landmarks a tenth of a second either side. Three rounds, each committed by beat. The song, its clock, the lanes and every strike are untouched.
+
+**The last of the near layer (297.33 to 340.5).** Round 72 cut the row nearer than the room everywhere but one place: the planetarium's front row of seat backs along the foot of the stars, sliding faster than the room and standing in the glass. In the tall frame they filled the lower third of the picture. They are cut (`night/planetarium.ts`, `night/stars.ts`). In the tall frame too, our side of the street (round 71's meters, fire plug, newspaper box and bin) hung along the foot of the close shots inside the club; as the camera goes in toward the club it now passes over our side, which goes down out of the picture under it. The wide shots at the start and the end are as they were (`street.ts`).
+
+**Her follow spot (100.75 to 133.35).** Its circle sat above her, and at the curtain call, on the velvet, it floated over the two of them like a pink balloon. It is lower, cut by the floor under her, and opens to take in both of them once he is up beside her (`theatre/theatre.ts`).
+
+**Seams.** The piano's shadow on the velvet was a hard-edged polygon, which in the close shots of the dream's club and the band read as a dark panel stuck on the curtain; the house's light is broad, so its edge is soft now, a penumbra a quarter of a cell wide (`club/room.ts`). The home movie's hedge was drawn at 80%, so at the pool the car going by on the street beyond it sat on a box of its own body seen through it, and next door's fence ran down through it; it is solid, in the same teal (`movie/movie-sets.ts`).
+
+**Timing.** The kiss, the hush, the burst, the sign's six hits, the door past the lens, the slam, the dip, the last chord and the band's hit all land. The iris begins to close on the second knock and is shut 70 ms later, which reads as the knock shutting it, and stays. The club's door at the end did not: seen edge on in the section, the leaf's width is the cosine of its swing, so it looked shut a quarter second before its note (467.866) and the last of the swing was too thin to see. The swing is now timed by the width that shows, growing faster and faster until the leaf is whole on the note (`club/room.ts`).
+
+## Round 74: polish wave 2, the tall frame's edges
+
+A fresh watch, wide and tall, every three seconds, then every quarter second through each change of place and full frames of a dozen beats. The changes of place are all covers as meant, and the beats read; what was left was in the tall frame, where the stage shows a phone more world above and below the 16:9.
+
+**The home movie on a phone (345.9 to 393.05).** The film's gate opened to the whole frame, so on a phone the eight-millimetre picture was a tall rounded box, two thirds of it empty lawn, sand and floor. It now opens to the frame's width at the film's own four by three, with the dark of the room above and below it; the room's screen, chair and projector stay in the dark while the film fills the width, and come back as it closes to the screen. In the wide frame nothing changes (`movie/movie.ts`).
+
+**The painted sky (143.6 to 172).** In the tall frame the cloth's top edge, and the white studio's flies above it, showed as a pale band over the magic hour as the camera climbed with the number. The cloth is painted higher now, past any frame (`studio/studio.ts`).
+
+## Round 75: polish wave 3, the film's end and the credits on a phone
+
+A fresh watch, wide and tall, the contact sheets offset by a second and a half from the last wave's, the film's run-out at fifths of a second, and the credits as the page sets them on a phone.
+
+**The film runs out (393 to 395.3).** The lamp went out, the camera drew all the way back to the dark room, and then the cream cover faded up over all of it, so the room went a muddy grey, then cream, with the screen standing in it, and then the screen jumped in size under the cover. Now the camera draws back only far enough to see the projector by the screen, and goes in again on the empty gate's light until it is the frame; the cream comes down only for the last half second, over a frame that is already its white, and the camera holds there until the drive (`movie/movie.ts`, `score.ts`).
+
+**The credits on a phone (482 to 505).** The cards stand at the top of the 16:9 frame, which on a phone held upright is where the sign on the far hills is: the cast list and the music card ran across its blocks. They lift into the night the tall stage has over the city (`lift`), and in the wide frame they stay where they were (`credits.ts`).
+
+## Round 76: polish wave 4, measured, and two props at their size
+
+A deeper pass: the camera sampled every twentieth of a second for its pan and zoom and for every ball it lets out of the frame uncovered, every pair of balls for how far they ever sink into each other, then the ending at tenths and the busiest rooms at full size.
+
+**Measured, and left.** The only moves faster than half a frame a second are the cuts of the coda's close shots, as in the film. Every ball out of the picture while it is uncovered is out by the staging (her coming in at Lipton's while he is at the keys, her on the landing in Paris, the piano playing itself). No two balls ever sink into each other by more than a quarter of a radius.
+
+**Her smile (462.85).** In the doorway's close shot her nod was a squash to seven tenths of her height, so near the lens it read as a ball going flat, a sigh. The dip is half as deep; at that size it is still plainly a nod, and his nod answers it (`club/finale.ts`).
+
+**The roses (113 to 133).** Each was a red dot on a stick the colour of the boards, with a leaf the same brown: strewn along the stage lip and flying from the house they read as matches. They are drawn the way the marquee's rose is: a green stem with two leaves, and a cup of petals with a petal's edge curling in at the heart (`theatre/theatre.ts`).
+
+## Round 77: polish wave 5, the covers on a phone
+
+A fresh look at the stretches the last waves had passed over (the opening, the white studio, the globe, the stars, the drive) at full size, and then every change of place on a phone, a twentieth of a second either side: `check:shows` holds that each is covered, but in the 16:9 frame only.
+
+**Every change of place is covered on a phone too.** The spotlight, the curtain, the white, the cloth, the doors, the iris and the dark all reach the tall frame's edges.
+
+**The run-out's flicker (394.5 to 396.1).** The cream cover flickered like a projector's light by letting the world through it, seven per cent at eighteen times a second. In the wide frame the world under it is the screen's own white, so it read as light; on a phone, above and below the screen it is the dark room, so the flicker was bands of grey strobing across the white. The cover is whole now and its light breathes a little darker and back (`transitions.ts`).
+
+**The burst on a phone (143.64).** The stage face under the painted street went to the house's dark swept out from the door with the paint, at twenty-two cells a second: in the wide frame a strip, on a phone a hard dark column half the height of the screen, crossing it. The face goes down all at once now, in four tenths of a second, as house lights do; the floor's top still takes the paint from the door (`studio/studio.ts`).
+
+The neon arrow at the end of the drive looked, unlit, as if it hung in the air before the freeway; it hangs from its bar on the club's wall, dark glass until its note, and stays.
+
+## Round 78: polish wave 6, a last watch
+
+The whole show once more from scratch on the branch as it stands, wide and tall, the sheets offset by three quarters of a second from every earlier pass, full frames of the loudest moments, and the camera measured again.
+
+**Looked at, and left.** At 180 he seems to float over his chair: it is the instant between his tap on the metronome and his landing back on the seat. In her audition she rises and settles with her song, and rests on her mark either side of it. The six hits on the crest, the trumpet's skyline and the dream's piano hold up at full size. The run-out's new push (round 75) peaks well under the show's other moves.
+
+**Back across the room (468.2 to 471.5).** After the door shuts on her, the camera went back to him at the keys at 0.78 frame widths a second, the fastest move in the show; round 49 had held every move under about half a frame a second. It leaves the door a tenth sooner, a little wider, and sets its middle a little further back and later, so it peaks at 0.53 and still has him and the bandstand whole as the band's lamps come up (`club/finale.ts`).

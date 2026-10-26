@@ -599,13 +599,14 @@ export function drawDesk(p: p5, k: number, weight: number, s: DeskState, age: nu
 }
 
 /** A ticket: a small cream card with a red stub, at its middle (`x`, `y`), turned `angle`. */
-export function drawTicket(p: p5, k: number, weight: number, x: number, y: number, angle: number, light = 1): void {
+export function drawTicket(p: p5, k: number, weight: number, x: number, y: number, angle: number, light = 1, size = 1): void {
   p.push()
   p.translate(x * k, y * k)
   p.rotate(angle)
+  p.scale(size)
   p.rectMode(p.CENTER)
   p.stroke(alpha(p, INK, light))
-  p.strokeWeight(weight * 0.5)
+  p.strokeWeight((weight * 0.5) / size)
   p.fill(alpha(p, HOME.trim, light))
   p.rect(0, 0, 0.28 * k, 0.14 * k, 0.014 * k)
   p.noStroke()

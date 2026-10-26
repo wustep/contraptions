@@ -190,7 +190,12 @@ function garden(ctx: C2D, k: number, f: Frame, t: number, w: number): void {
   fillBox(ctx, k, GARDEN.terrace, GARDEN.back, x1, FLOOR, lawn)
   fillBox(ctx, k, GARDEN.terrace, GARDEN.back, x1, FLOOR, vgrad(ctx, k, GARDEN.back, FLOOR, [[0, HOME.lawnDark, 0.45], [0.35, HOME.lawnDark, 0], [1, HOME.lawnDark, 0]]))
   // The lawn comes on toward us, richer in the house's shade; the terrace's stone with it.
-  const near = vgrad(ctx, k, FLOOR - 0.02, FLOOR + 2.2, [[0, mixHex(HOME.lawn, HOME.sun, 0.12), 1], [0.35, HOME.lawn, 1], [1, mixHex(HOME.lawnDark, HOME.tree, 0.45), 1]])
+  const NEAR_LAWN = mixHex(HOME.lawn, HOME.sun, 0.12)
+  // The far lawn's sun goes over into it before the line he rolls on (met there, the two fills ruled a hard line across
+  // the grass under them all).
+  const fade = Math.max(GARDEN.back, FLOOR - 0.7)
+  fillBox(ctx, k, GARDEN.terrace, fade, x1, FLOOR, vgrad(ctx, k, fade, FLOOR, [[0, NEAR_LAWN, 0], [1, NEAR_LAWN, 1]]))
+  const near = vgrad(ctx, k, FLOOR - 0.02, FLOOR + 2.2, [[0, NEAR_LAWN, 1], [0.35, HOME.lawn, 1], [1, mixHex(HOME.lawnDark, HOME.tree, 0.45), 1]])
   // It ends a little toward us, cut, and under it the earth as under the house: in a tall frame (a phone held
   // upright) the ground is near half the picture, and the lawn and the terrace's stone ran on down to its foot.
   const cut = Math.min(f.y1 + 1, NEAR_EDGE)
@@ -360,14 +365,16 @@ function house(ctx: C2D, k: number, f: Frame, t: number, w: number): void {
   sunOnWall(ctx, k, t)
   // Left of the sun's patch the wall falls into soft shade, deepest low down behind the table, so the top's shine
   // and its ink read against it.
-  const shade = ctx.createLinearGradient((TOP_AT[0] - 2.2) * k, 0, (TOP_AT[0] + 0.62) * k, 0)
+  // (It lets go over most of a cell on its right: let go in a quarter, it stood up the wall in the last shot as a
+  // hard edge behind the top.)
+  const shade = ctx.createLinearGradient((TOP_AT[0] - 2.2) * k, 0, (TOP_AT[0] + 1.3) * k, 0)
   const dim = mixHex(HOME.wallShade, HOME.floorShade, 0.45)
   shade.addColorStop(0, rgba(dim, 0))
-  shade.addColorStop(0.55, rgba(dim, 0.32))
-  shade.addColorStop(0.9, rgba(dim, 0.34))
+  shade.addColorStop(0.45, rgba(dim, 0.32))
+  shade.addColorStop(0.68, rgba(dim, 0.33))
   shade.addColorStop(1, rgba(dim, 0))
   ctx.fillStyle = shade
-  ctx.fillRect((TOP_AT[0] - 2.2) * k, (HOUSE.back - 2.4) * k, 2.82 * k, 2.4 * k)
+  ctx.fillRect((TOP_AT[0] - 2.2) * k, (HOUSE.back - 2.4) * k, 3.5 * k, 2.4 * k)
   hallWindow(ctx, k, w)
   // The skirting, and the floor running back to it: warm boards, a little darker at the back.
   fillBox(ctx, k, fx1, HOUSE.back - 0.1, ex0, HOUSE.back, mixHex(HOME.wall, HOME.wallShade, 0.7))
@@ -447,18 +454,28 @@ function sunOnWall(ctx: C2D, k: number, t: number): void {
     const x = xl + (xr - xl) * u
     return [x, HOUSE.back - 0.1 + (top(x) - (HOUSE.back - 0.1)) * v]
   }
+  // Its left edge, far from the doors, fades in over a third of it (cut there, it stood up the wall in the last shot as
+  // a hard seam behind the top).
+  const light = ctx.createLinearGradient(xl * k, 0, (xl + (xr - xl) * 0.34) * k, 0)
+  light.addColorStop(0, rgba(HOME.sun, 0))
+  light.addColorStop(1, rgba(HOME.sun, 0.17))
   const layers = 8
   for (let i = 0; i < layers; i++) {
     const m = (i / layers) * 0.1
-    shape(ctx, k, [q(m * 0.6, 0), q(1, 0), q(1, 1 - m), q(m * 0.6, 1 - m)], rgba(HOME.sun, 0.17))
+    shape(ctx, k, [q(0, 0), q(1, 0), q(1, 1 - m), q(0, 1 - m)], light)
   }
   // The bars of the shut doors across it, fading as they open.
   const shut = 1 - Math.min(1, glassDoor(t) / 0.6)
-  if (shut > 0.01)
+  if (shut > 0.01) {
+    // Only where the light is: fading in with it on the left.
+    const bar = ctx.createLinearGradient(xl * k, 0, (xl + (xr - xl) * 0.34) * k, 0)
+    bar.addColorStop(0, rgba(HOME.wallShade, 0))
+    bar.addColorStop(1, rgba(HOME.wallShade, 0.6 * shut))
     for (const v of [0.36, 0.69]) {
       const d = 0.022
-      shape(ctx, k, [q(0.03, v - d), q(1, v - d), q(1, v + d), q(0.03, v + d)], rgba(HOME.wallShade, 0.6 * shut))
+      shape(ctx, k, [q(0, v - d), q(1, v - d), q(1, v + d), q(0, v + d)], bar)
     }
+  }
 }
 
 /** The morning on the floor, in through the glass doors: long and warm, bright by the doors and past the table's shade. */
@@ -514,7 +531,7 @@ function leaf(ctx: C2D, k: number, hx: number, W: number, H: number, phi: number
       shape(ctx, k, box(hx, fb - H, hx + 0.05, fb), rgba(HOME.glass, 0.7), INK, w * 0.6)
       return
     }
-    shape(ctx, k, [A, B, C, D], rgba(HOME.glass, 0.3))
+    shape(ctx, k, [A, B, C, D], rgba(HOME.glass, 0.55))
     // Its wooden frame: stiles and rails round the glass, and the two bars across it.
     const fu = Math.min(0.5, 0.07 / Math.max(0.05, s))
     const fv = 0.03

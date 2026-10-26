@@ -273,9 +273,10 @@ export function drawMeeting(ctx: Ctx, k: number, t: number): void {
   if (a <= 0.003) return
   ctx.save()
   ctx.globalCompositeOperation = 'screen'
-  const [x, y] = [MEET[0] + 0.18, MEET[1] - 0.35]
-  glow(ctx, k, x, y, 2.6, 1.3, VALLEY.lamp, 0.32 * a, 0.15)
-  glow(ctx, k, x, y + 0.1, 1.1, 0.45, VALLEY.floodlight, 0.22 * a, 0.25)
+  // Long and low, lying along the grass behind them: a round pool of it, and a tighter one hugging them, read as a
+  // halo round the two balls.
+  const [x, y] = [MEET[0] + 0.18, MEET[1] - 0.3]
+  glow(ctx, k, x, y, 4.6, 0.8, VALLEY.lamp, 0.26 * a, 0.2)
   ctx.restore()
 }
 

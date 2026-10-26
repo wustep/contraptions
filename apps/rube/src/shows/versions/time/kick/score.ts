@@ -329,7 +329,21 @@ export function compose(): { show: KickShow; camera: (t: number) => Framing } {
   const camera = (t: number): Framing => {
     const owner = show.owner(t)
     const f = cams[owner](t)
-    return { ...f, cells: f.cells * (1 - punch(t)) }
+    const cells = f.cells * (1 - punch(t))
+    // Zoom keeps him in: the shots are composed for this frame, and the closer one about the same middle left him on
+    // its edge, or past it (at the booth and through the house he rode its foot). His place is the focus while he is
+    // well inside this frame, letting go of it smoothly toward its edge, so a shot he is not in (the children, the
+    // top) keeps its middle.
+    const [bx, by] = show.where(t)
+    const [sx, sy] = turn([(bx - f.x) / cells, (by - f.y) / cells], f.angle ?? 0)
+    const u = Math.max(Math.abs(sx) / (8 / 9), Math.abs(sy) / 0.5)
+    const v = Math.max(0, Math.min(1, (u - 0.8) / 0.2))
+    const w = 1 - v * v * (3 - 2 * v)
+    // Zoom's margin is to his middle; in its closest frames that left his foot near the edge. The focus is put out past
+    // him by a quarter cell, toward the edge he is nearest (smoothly through the middle, where it moves nothing).
+    const a = f.angle ?? 0
+    const [ox, oy] = turn([0.25 * Math.tanh(sx / 0.08), 0.25 * Math.tanh(sy / 0.08)], -a)
+    return { ...f, cells, focus: [f.x + (bx + ox - f.x) * w, f.y + (by + oy - f.y) * w] }
   }
   return { show, camera }
 }
