@@ -110,9 +110,18 @@ export function drawCliff(g: Paint): void {
   for (let x = b + 1; x >= a - 1; x -= 0.8) ctx.lineTo(x, cliffTop(x) + 2.2 + 0.9 * Math.sin(x * 0.33 + 1.2) + 0.5 * Math.sin(x * 0.9))
   ctx.closePath()
   fill(ctx, mix(ROCK.lit, fog, 0.3))
-  // The wet foot of it, at the water.
-  ctx.fillStyle = mix(ROCK.wet, fog, 0.12)
-  ctx.fillRect(a, CLIFF.foot - 0.6, b - a, 0.7)
+  // The wet foot of it, at the water: its top wandering, and thinning to nothing where the cliff comes down to the
+  // water at its ends (a ruled band there cuts across the slope).
+  const wet = (x: number) => {
+    const tall = clamp01((CLIFF.foot - cliffTop(x)) / 6)
+    return CLIFF.foot - tall * (0.45 + 0.18 * Math.sin(x * 0.47 + 0.8) + 0.1 * Math.sin(x * 1.3))
+  }
+  ctx.beginPath()
+  ctx.moveTo(a - 1, CLIFF.foot + 0.1)
+  for (let x = a - 1; x <= b + 1; x += 0.4) ctx.lineTo(x, wet(x))
+  ctx.lineTo(b + 1, CLIFF.foot + 0.1)
+  ctx.closePath()
+  fill(ctx, mix(ROCK.wet, fog, 0.12))
   ctx.restore()
   outline()
   stroke(g, mix(INK, fog, 0.4), 2.2)
