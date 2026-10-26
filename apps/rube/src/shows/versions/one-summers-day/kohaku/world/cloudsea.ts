@@ -185,10 +185,48 @@ export function drawCloudFloor(g: Paint, L: Light, a = 1): void {
   ctx.restore()
 }
 
-/** Inside the cloud, falling through it: the frame goes to the cloud's pale and comes out of it, `a` 0 to 1. */
+/**
+ * Inside the cloud, falling through it, `a` 0 to 1: a thin pale over the frame, and banks of cloud in the world's
+ * plane, a bank every so far down through the floor, that stream up past as they fall, some behind them and some
+ * across them, the lowest hanging in lobes from the underside they come out under.
+ */
 export function drawMist(g: Paint, L: Light, a: number): void {
   if (a <= 0.003) return
   const { ctx, view: v } = g
-  ctx.fillStyle = rgba(mix(L.cloud, L.shade, 0.35), Math.min(1, a))
+  const top = mix(L.cloud, L.shade, 0.15)
+  const body = mix(L.cloud, L.shade, 0.5)
+  ctx.save()
+  ctx.fillStyle = rgba(mix(L.cloud, L.shade, 0.35), Math.min(1, a * 0.55))
   ctx.fillRect(v.x0 - 1, v.y0 - 1, v.w + 2, v.h + 2)
+  const gap = 1.25
+  for (let j = Math.ceil((CLOUD_TOP + 0.9) / gap); j * gap <= CLOUD_BOTTOM + 0.2; j++) {
+    const y = j * gap
+    if (y < v.y0 - 1.2 || y > v.y1 + 1.2) continue
+    // Each bank drifts a little across as they fall, the nearer ones more.
+    const drift = g.t * (0.06 + 0.05 * hash(j, 611))
+    const lobes: [number, number, number][] = []
+    const step = 0.8
+    for (let i = Math.floor((v.x0 - 1 - drift) / step); i <= Math.ceil((v.x1 + 1 - drift) / step); i++) {
+      const r = 0.5 + 0.4 * hash(i, 612 + j)
+      lobes.push([i * step + drift + (hash(i, 613 + j) - 0.5) * 0.4, y + (hash(i, 614 + j) - 0.5) * 0.35, r])
+    }
+    const shape = (lift: number, k: number) => {
+      ctx.beginPath()
+      for (const [x, ly, r] of lobes) {
+        ctx.moveTo(x + r * k, ly - lift * r)
+        ctx.arc(x, ly - lift * r, r * k, 0, Math.PI * 2)
+      }
+    }
+    ctx.globalAlpha = Math.min(1, a) * (0.4 + 0.25 * hash(j, 615))
+    // A bank's body, and its lit top, one tone over the other so a bank never shows its own overlaps.
+    shape(0, 1)
+    fill(ctx, body)
+    ctx.save()
+    shape(0, 1)
+    ctx.clip()
+    shape(0.22, 0.9)
+    fill(ctx, top)
+    ctx.restore()
+  }
+  ctx.restore()
 }
