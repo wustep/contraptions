@@ -1419,6 +1419,12 @@ Five polish waves after the coat hanger, each a fresh watch of the whole show on
   seconds (a median frame of 16.7 ms and a 95th percentile of 16.8 ms in every one), the tubes catching in the first
   two seconds, the room going down to the dark at the end, and the dialogue turned on, on a desktop and an upright
   phone. Nothing was worth changing, so nothing was changed.
+- **After the waves.** A regret watch of the whole show. Wave 4's fade at the bench's back read at speed as a smudge,
+  the ledge's dark line running straight over it; the sand and the lit top are flat fills again, ending square. Wave 1
+  had tamed the portrait's flash past the last great hit into a small glow at the camera; it has some of its bite
+  back (a 0.7 peak, the far room at a quarter), still short of a white-out. And *Part one*'s gold line sat on the red
+  neon washer: the card is set lower on the dark glass, clear of the sign, and lifted the further on a tall stage so it
+  is where it was there.
 
 ## The looks
 

@@ -97,7 +97,7 @@ function lightOf(card: Card, t: number): { light: number; rise: number } {
  * before the laundromat's tubes come on round her. Set by the page as the credits are, in its own face.
  */
 export const CHAPTERS: (Card & { pos: [number, number]; scale: number })[] = [
-  { at: 0.6, hold: 3.6, role: 'Part one', names: ['Everything'], pos: [0.122, 0.5], scale: 0.66 },
+  { at: 0.6, hold: 3.6, role: 'Part one', names: ['Everything'], pos: [0.122, 0.6], scale: 0.66 },
   { at: JUMPS.premiere + 0.5, hold: 2.6, role: 'Part two', names: ['Everywhere'], pos: [0.5, 0.878], scale: 0.62 },
   { at: JUMPS.mosaic + 0.35, hold: 1.5, role: 'Part three', names: ['All at Once'], pos: [0.5, 0.6], scale: 0.85 },
 ]
@@ -306,7 +306,7 @@ export function creditsAt(t: number): TitleCard[] {
     const { light, rise } = lightOf(card, t)
     if (light <= 0.001) return
     // On a tall stage the first lifts into the dark over the room, clear of the bright washer it would grow across.
-    out.push({ key: `all-at-once-chapter-${n}`, role: card.role, names: card.names, title: true, light, rise: rise * 0.5, at: card.pos, scale: card.scale, least: WORDS_LEAST, said: true, lift: n === 0 ? 1.55 : undefined })
+    out.push({ key: `all-at-once-chapter-${n}`, role: card.role, names: card.names, title: true, light, rise: rise * 0.5, at: card.pos, scale: card.scale, least: WORDS_LEAST, said: true, lift: n === 0 ? 1.72 : undefined })
   })
   if (dialogue) SUBTITLES.forEach((sub, n) => {
     const up = clamp((t - sub.at) / SUB_FADE)
