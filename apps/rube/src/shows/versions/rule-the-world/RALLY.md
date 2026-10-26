@@ -479,3 +479,20 @@ A careful watch for what looks wrong or cheap, in the wide frame and the tall (p
 **Timing.** Every cut is on its downbeat within 17 ms of the measured landmark, and the four story hits land on their
 beats: the dead ball on bar 41, the floor giving on bar 48, the cut to the winner on bar 89, the blind going up on bar
 99. Nothing was retimed.
+
+## Polish wave 2
+
+Another watch from the top, wide and tall, looking for what still reads cheap.
+
+- *The safe's open door* (42–52 s): swung back on its hinges it showed a plain dark slab beside the safe, its inner
+  plate barely a shade off its face and its hinges not drawn, so it read as a second black box. Its inner face now
+  shows the bolt-work the door hid (the lock's case, its three bars out to the bolts, the upright that throws them) on
+  a plate a shade lighter, and the hinge knuckles join it to the safe.
+- *London's bats*: a player's hand was drawn on the blade's very edge, so the handle never showed and Endo's sponge
+  read as a plate held by its rim. The hand now closes on the handle a little way off the blade, and the handle shows
+  between them.
+- *The stewardess* (174–178 s): her arm was the jacket's navy over the jacket, so only her hand showed, floating at her
+  waist. The sleeve is a shade darker than the jacket, with the blouse's cuff at the wrist.
+
+Looked at and left alone: Mishkin leaning out (he goes out through the open window, not the wall), the farmhouse's
+men, the airfield, the alley's hustle.
