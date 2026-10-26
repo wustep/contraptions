@@ -136,7 +136,7 @@ export function drawTown(g: Paint, L: Light, lampAt: number[]): void {
     if (x < v.x0 - 1 || x > v.x1 + 1) return
     const on = smooth(g.t, lampAt[i], lampAt[i] + 0.5)
     const yy = STREET.y - 0.85 + 0.2
-    pool(ctx, x, STREET.y + 0.02, 0.9, '#F6C27A', 0.4 * on * Math.max(0.4, L.night), 0.25)
+    pool(ctx, x, STREET.y + 0.02, 0.9, '#F6C27A', 0.4 * on * Math.max(0.4, L.night), 0.13)
     const swing = 0.015 * sway(g.t, 0.4, i)
     poly(ctx, [[x, yy - 0.2], [x + swing, yy - 0.14]], false)
     ink(g, line, 1.2)

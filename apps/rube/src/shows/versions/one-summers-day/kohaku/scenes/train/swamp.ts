@@ -180,7 +180,7 @@ export function drawCottage(g: Paint, L: Light): void {
   ctx.beginPath()
   ctx.rect(wx, wy, 0.62, 0.42)
   ink(g, line, 1.2)
-  pool(ctx, wx + 0.31, y + 0.01, 0.8, '#F2C47A', 0.32 * smooth(L.lamps, 0.3, 0.9), 0.2)
+  pool(ctx, wx + 0.31, y + 0.01, 0.8, '#F2C47A', 0.32 * smooth(L.lamps, 0.3, 0.9), 0.1)
   // The fence along the clearing, and its gate.
   for (let fx = gate - 1.6; fx < x0 - 0.1; fx += 0.32) {
     if (Math.abs(fx - gate) < 0.25) continue
@@ -203,7 +203,7 @@ export function drawLamp(g: Paint, L: Light, t: number, on: number): void {
   const { x, lift, bow, squash } = lampAt(t)
   const foot = GROUND_Y - lift
   // Its light on the ground, under it wherever it is (fainter in the air).
-  pool(ctx, x, GROUND_Y + 0.02, 1.15, '#F6D08A', 0.5 * on * (1 - lift * 1.5), 0.24)
+  pool(ctx, x, GROUND_Y + 0.02, 1.15, '#F6D08A', 0.5 * on * (1 - lift * 1.5), 0.12)
   const height = 1.05 * (1 - 0.12 * squash)
   ctx.save()
   ctx.globalAlpha = on

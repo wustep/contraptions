@@ -402,5 +402,5 @@ export function drawBathhouse(g: Paint, L: Light, cut: Cut = WHOLE): void {
 
 /** Warm light from the door laid on the bridge's boards at night. */
 export function drawDoorLight(g: Paint, L: Light): void {
-  pool(g.ctx, BATH.door - 1.2, BATH.floor + 0.02, 2.4, '#F2BE76', 0.45 * lampsOn(L), 0.22)
+  pool(g.ctx, BATH.door - 1.2, BATH.floor + 0.02, 2.4, '#F2BE76', 0.45 * lampsOn(L), 0.07)
 }
