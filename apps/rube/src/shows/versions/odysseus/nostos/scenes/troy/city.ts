@@ -405,17 +405,19 @@ export function drawSteps(g: Paint): void {
   // The steps, a ball high and a ball deep: their treads catch the brazier's light, their risers stay in shadow.
   const stone = mix(tone(MAT.stone, t, { lit: 0.5, fire: fire + brazierLight(t) * 0.9 }), '#FFFFFF', 0.08)
   const riser = tone(mix(MAT.stone, '#3A322B', 0.55), t, { fire: fire * 0.4, deep: 0.3 })
+  // Each step stands from its tread (`step(i).y`, where everyone on it rests) down to the street's slab, so the stair
+  // stands on something, with its lit tread on top. (It was drawn a rise above its tread, with the light along its foot
+  // under a flank that hid all but a corner of it: whoever went down it was sunk a step deep in the stone.)
+  const slab = 0.08
   for (let i = 0; i < STEPS.n; i++) {
     const s = step(i)
-    rect(ctx, s.x0, s.y - STEPS.rise, STEPS.run + 0.01, STEPS.rise)
+    rect(ctx, s.x0, s.y, STEPS.run + 0.01, STREET.y + slab - s.y)
     fill(ctx, riser)
-    rect(ctx, s.x0, s.y - 0.05, STEPS.run + 0.01, 0.05)
+    rect(ctx, s.x0, s.y, STEPS.run + 0.01, 0.05)
     fill(ctx, stone)
   }
-  // The flank of the stair down to the street, so it stands on something: flush with the retaining wall's face and the
-  // street's slab (a fiftieth of a cell off each, it showed as a notched step at the stair's foot).
-  const slab = 0.08
-  poly(ctx, [[STEPS.x0 - 0.02, FORECOURT.y], [STEPS.x0, FORECOURT.y], [STREET.x0, STREET.y], [STREET.x0, STREET.y + slab], [STEPS.x0 - 0.02, STREET.y + slab]])
+  // The forecourt's edge down to the first step: flush with the retaining wall's face.
+  rect(ctx, STEPS.x0 - 0.02, FORECOURT.y, 0.03, STREET.y + slab - FORECOURT.y)
   fill(ctx, riser)
   // The street.
   rect(ctx, STREET.x0, STREET.y, SHAFT.x0 - STREET.x0, slab)
