@@ -1,4 +1,4 @@
-import { hash, mix, rgba, smooth, stroke, type Paint } from '../../draw'
+import { hash, mix, rgba, smooth, stroke, type Paint, type View } from '../../draw'
 import { M } from '../../music'
 import type { Pt } from '../../path'
 import { layer } from '../../world/depth'
@@ -80,10 +80,28 @@ export function drawSeas(g: Paint): void {
   if (front > 0.02) rank((x) => surface(x, t) - frontLift(x, t), mix(L.body, '#050708', 0.4), 0.26 * Math.min(1, front))
 }
 
+/** How much of the storm's ceiling is over the sea at `t`. */
+const ceilingAt = (t: number): number => smooth(t, 291, 299) * (1 - smooth(t, M.lowGone - 1, M.lowGone + 6))
+
+/**
+ * The ceiling's underside over layer x `x` (its own layer, 70 deep), in the frame's world: low, in long, slow lobes of
+ * uneven size, coming down as the storm closes and lifting as it goes. It never comes below the horizon: a lobe that
+ * would is eased up short of it (a soft floor, not a cut), so its underside is never a run of flat stretches between
+ * the lobes.
+ */
+function ceilingUnder(view: View, t: number, x: number): number {
+  const Lr = layer(view, 70)
+  const under = -10.5 + 1.7 * Math.sin(x * 0.09 + 0.7) + 0.9 * Math.sin(x * 0.205 + 1.9) + 1.1 * Math.sin(x * 0.031 - t * 0.05) - 6 * (1 - ceilingAt(t))
+  const y = Lr.y(under)
+  const floor = Lr.hy - 0.6
+  const k = 0.9
+  return floor - k * Math.log1p(Math.exp((floor - y) / k))
+}
+
 /** The storm's ceiling: one low mass of cloud over everything, its underside in long slow lobes. */
 export function drawCeiling(g: Paint): void {
   const { ctx, t, view } = g
-  const s = smooth(t, 291, 299) * (1 - smooth(t, M.lowGone - 1, M.lowGone + 6))
+  const s = ceilingAt(t)
   if (s <= 0.01 || view.x1 < 470 || view.x0 > 720) return
   const sky = skyAt(t)
   const Lr = layer(view, 70)
@@ -92,16 +110,7 @@ export function drawCeiling(g: Paint): void {
   const top = view.y0 - 1
   ctx.beginPath()
   ctx.moveTo(Lr.x(lx0), top)
-  // Its underside: low, in long, slow lobes of uneven size, coming down as the storm closes and lifting as it goes. It
-  // never comes below the horizon: a lobe that would is eased up short of it (a soft floor, not a cut), so its
-  // underside is never a run of flat stretches between the lobes.
-  const floor = Lr.hy - 0.6
-  const k = 0.9
-  for (let x = lx0; x <= lx1; x += 1.5) {
-    const under = -10.5 + 1.7 * Math.sin(x * 0.09 + 0.7) + 0.9 * Math.sin(x * 0.205 + 1.9) + 1.1 * Math.sin(x * 0.031 - t * 0.05) - 6 * (1 - s)
-    const y = Lr.y(under)
-    ctx.lineTo(Lr.x(x), floor - k * Math.log1p(Math.exp((floor - y) / k)))
-  }
+  for (let x = lx0; x <= lx1; x += 1.5) ctx.lineTo(Lr.x(x), ceilingUnder(view, t, x))
   ctx.lineTo(Lr.x(lx1), top)
   ctx.closePath()
   ctx.fillStyle = rgba(mix(sky.top, '#0B0D0E', 0.35), 0.9 * s)
@@ -122,10 +131,16 @@ export function drawFarBolt(g: Paint): void {
   const a = u < 0.08 ? 0.75 : 0.75 * (1 - smooth(u, 0.08, 0.4))
   const L = layer(view, 90)
   const x0 = aheadOf(FAR_BOLT) + 22
+  // From inside the ceiling's underside over it, down to the sea: its top was a fixed height that the ceiling, lifting
+  // as the storm goes, had left behind, so it came out of clear air well under the cloud (323.34-323.7 s).
+  const Lr = layer(view, 70)
+  const under = ceilingAt(t) > 0.01 ? ceilingUnder(view, t, view.cx + (L.x(x0) - view.cx) / Lr.s) - 0.4 * L.s : L.y(-14)
+  const top = Math.min(under, L.y(-3))
+  const foot = L.y(0)
   const pts: Pt[] = []
   for (let i = 0; i <= 7; i++) {
     const v = i / 7
-    pts.push([L.x(x0 + (hash(i, 77) - 0.5) * 1.6 * (1 - v * 0.3) - 1.5 * v), L.y(-14 + 14 * v)])
+    pts.push([L.x(x0 + (hash(i, 77) - 0.5) * 1.6 * (1 - v * 0.3) - 1.5 * v), top + (foot - top) * v])
   }
   ctx.beginPath()
   pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
