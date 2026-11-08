@@ -244,14 +244,16 @@ export function suitorFight(i: number, p: Pt): Fate {
       return hit(at(823.3), FIGHT.first[1], 0.24, 0.45)
     }
     case 10: {
+      // A ball's width behind 11 at each step (a fifth of a cell, they stood inside each other, 497.5-499.2 s).
       step(at(824.25), DRAW[0])
-      step(at(824.5), DRAW[2])
-      step(at(824.7), DRAW[4])
+      step(at(824.45), DRAW[2])
+      step(at(824.65), DRAW[4])
       go(at(825.55), FIGHT.charge + 0.2, 504.55, 'in')
       // He falters when the two go back past him, and gives ground; the hero comes on.
       go(at(825.15), 504.75, 505.6, 'inout')
       go(at(825.4), 506.3, FIGHT.rampage[0], 'inout')
-      return hit(at(824.45), FIGHT.rampage[0], 0.17, 0.22)
+      // He skids on past where 2 backs to (he lay under 2's feet as 2 was struck, 507.0-507.3 s).
+      return hit(at(824.45), FIGHT.rampage[0], 0.17, 0.4)
     }
     case 2: {
       down(at(823.95), DRAW[1])
@@ -264,10 +266,12 @@ export function suitorFight(i: number, p: Pt): Fate {
     }
     case 1: {
       down(at(823.6), DRAW[2])
-      step(at(823.85), DRAW[4])
+      // Behind 2 until he moves on (a tenth of a cell from him, they were one ball, 498.8-499.2 s).
+      step(at(823.7), DRAW[4])
       step(at(824.1), DRAW[5])
       go(at(824.55), FIGHT.charge + 0.35, 504.8, 'in')
-      go(at(822.85), 505.0, 507.2, 'inout')
+      // Back clear of 11 where he lies (he stood in him, 507.0-507.4 s).
+      go(at(822.98), 505.0, 507.2, 'inout')
       // He turns and leaps at him; the hero goes under, and he goes on over him and down behind.
       go(at(823.2), 507.2, FIGHT.rampage[2], 'in')
       return hit(at(824.9), FIGHT.rampage[2], 0.8, 0.33)
