@@ -11,7 +11,7 @@ import { AXES, HOME, SHUTTLE, TRIAL } from '../src/shows/versions/odysseus/nosto
 import { arrowPasses, axeTime } from '../src/shows/versions/odysseus/nostos/scenes/ithaca/rig'
 import { HEAVES, THRUSTS } from '../src/shows/versions/odysseus/nostos/scenes/troy/horse'
 import { SURGE } from '../src/shows/versions/odysseus/nostos/scenes/troy/host'
-import { KILLS } from '../src/shows/versions/odysseus/nostos/scenes/troy/sack'
+import { KILLS, drawSack } from '../src/shows/versions/odysseus/nostos/scenes/troy/sack'
 import { FIGHT } from '../src/shows/versions/odysseus/nostos/scenes/ithaca/battle'
 import { WRECK_STRIKES } from '../src/shows/versions/odysseus/nostos/scenes/wreck'
 import { FIRE, KNEEL } from '../src/shows/versions/odysseus/nostos/scenes/storm/island'
@@ -265,4 +265,47 @@ export function checkNostos(perf: Performance, version: ShowVersion, check: Chec
   const wideHost = discs({ x0: -31.9, x1: -10.1, y0: -12, y1: 0.25, cx: -21, cy: -5.9, h: 12.25 })
   const tallHost = discs({ x0: -31.9, x1: -10.1, y0: -29.5, y1: 17.7, cx: -21, cy: -5.9, h: 47.2 })
   check('nostos: Agamemnon\'s host is drawn on a tall phone as on a 16:9 frame (ranks go by the composed frame)', tallHost >= wideHost * 0.9 && wideHost > 50, `${tallHost} / ${wideHost} discs`)
+
+  // In the sack nobody stands or lies on anyone else for more than a few frames (passing is fine), and nobody at rest on
+  // Troy's steps is inside the riser of the step above.
+  const bodies = (t: number): number[][] => {
+    const arcs: number[][] = []
+    const rec2 = new Proxy({} as Record<string | symbol, unknown>, {
+      get(target, prop) {
+        if (prop in target) return target[prop]
+        if (prop === 'arc') return (x: number, y: number, r: number) => { if (r > 0.1) arcs.push([x, y, r]) }
+        if (prop === 'createLinearGradient' || prop === 'createRadialGradient') return () => ({ addColorStop() {} })
+        return () => undefined
+      },
+      set(target, prop, v) { target[prop] = v; return true },
+    }) as unknown as CanvasRenderingContext2D
+    drawSack({ ctx: rec2, k: 100, t, view: { x0: -40, x1: -25, y0: -8, y1: 0, cx: -32.5, cy: -4, h: 8 }, px: 0.001 })
+    return arcs
+  }
+  const stacked: string[] = []
+  const inRiser: string[] = []
+  let before: number[][] = []
+  const runs = new Map<string, number>()
+  for (let t = 116; t <= 124.5; t += 1 / 60) {
+    const now = bodies(t)
+    const still = (q: number[]) => before.some((o) => Math.abs(o[0] - q[0]) < 0.003 && Math.abs(o[1] - q[1]) < 0.003)
+    const seen = new Set<string>()
+    for (let i = 0; i < now.length; i++) {
+      for (let j = i + 1; j < now.length; j++) {
+        const [a, b] = [now[i], now[j]]
+        if (Math.hypot(a[0] - b[0], a[1] - b[1]) >= a[2] + b[2] - 0.01 || !still(a) || !still(b)) continue
+        const key = `${a[0].toFixed(2)},${b[0].toFixed(2)}`
+        seen.add(key)
+        runs.set(key, (runs.get(key) ?? 0) + 1)
+        if (runs.get(key) === 4) stacked.push(`${t.toFixed(2)} at x ${key}`)
+      }
+      const [x, y, r] = now[i]
+      const k = Math.floor((x - STEPS.x0) / STEPS.run)
+      if (k >= 0 && k < STEPS.n && Math.abs(y + r - troyStep(k).y) < 0.01 && x - troyStep(k).x0 < r - 0.005 && still(now[i])) inRiser.push(`${t.toFixed(2)} step ${k}`)
+    }
+    for (const key of [...runs.keys()]) if (!seen.has(key)) runs.delete(key)
+    before = now
+  }
+  check('nostos: nobody in the sack stands or lies on anyone else (116-124.5 s)', stacked.length === 0, stacked.slice(0, 6).join('; '))
+  check('nostos: nobody at rest on Troy\'s steps is inside a riser', inRiser.length === 0, inRiser.slice(0, 6).join('; '))
 }
