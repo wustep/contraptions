@@ -147,14 +147,19 @@ export function drawIsland(g: Paint, t: number, inside: () => void): void {
     poly(ctx, c)
     ctx.fill()
   }
-  // Its foot, dark where the sea wets it.
+  // Its foot, dark where the sea wets it: out along its skirts (the outline cuts it) and going off downwards. (It ended
+  // square at the waterline's ends and flat a cell down, the old box's own edges, a box left inside the new skirts.)
   ctx.beginPath()
-  ctx.moveTo(WEST, -0.5)
-  for (let x = WEST; x <= EAST + 0.01; x += 1.5) ctx.lineTo(x, -0.55 - 0.12 * Math.sin(x * 0.9))
-  ctx.lineTo(EAST, 1)
-  ctx.lineTo(WEST, 1)
+  ctx.moveTo(WEST - SKIRT, -0.5)
+  for (let x = WEST - SKIRT; x <= EAST + SKIRT + 0.01; x += 1.5) ctx.lineTo(x, -0.55 - 0.12 * Math.sin(x * 0.9))
+  ctx.lineTo(EAST + SKIRT, 3)
+  ctx.lineTo(WEST - SKIRT, 3)
   ctx.closePath()
-  ctx.fillStyle = air(WET, 0.04)
+  const wet = ctx.createLinearGradient(0, 0, 0, 3)
+  wet.addColorStop(0, air(WET, 0.04))
+  wet.addColorStop(0.35, air(WET, 0.04))
+  wet.addColorStop(1, rgba(air(WET, 0.04), 0))
+  ctx.fillStyle = wet
   ctx.fill()
   ctx.restore()
   // The turf over the top: a cap with a lighter crown.
