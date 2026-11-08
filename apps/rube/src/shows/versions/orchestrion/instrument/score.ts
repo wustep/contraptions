@@ -54,7 +54,7 @@ export function notes(perf: Performance): Note[] {
 /** How loud each kind sits in the mix, before the room and the limiter. */
 const LEVEL: Record<NoteKind, number> = {
   bar: 0.075,
-  string: 0.6,
+  string: 0.68,
   pipe: 1.25,
   'pipe-knock': 0.6,
   chime: 0.2,

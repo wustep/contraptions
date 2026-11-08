@@ -126,13 +126,13 @@ export function string(out: Out, hz: number, v: number, u: number): void {
   const g = Math.pow(10, -3 / (T60 * hz))
   const line = new Float32Array(whole + 2)
   // The excitation: a short pulse, brighter the harder the touch, combed by where along the string it landed.
-  const bright = Math.min(0.9, 0.35 + 0.035 * v)
+  const bright = Math.min(0.7, 0.22 + 0.03 * v)
   const rnd = noise(Math.round(hz * 31 + v * 1009 + u * 7))
   const exc = new Float32Array(whole)
   let lp = 0
   for (let i = 0; i < whole; i++) {
     const shape = Math.sin((Math.PI * i) / whole)
-    lp += bright * (rnd() * 0.6 + shape - lp)
+    lp += bright * (rnd() * 0.25 + shape - lp)
     exc[i] = lp
   }
   const pick = Math.max(1, Math.round(Math.min(u, 1 - u) * whole))
@@ -143,6 +143,9 @@ export function string(out: Out, hz: number, v: number, u: number): void {
   let apY = 0
   let dc = 0
   let dcIn = 0
+  // A soundboard's gentleness: the top above 3.5 kHz taken down, as a harp's wood does.
+  const soft = 1 - Math.exp((-2 * Math.PI * 3500) / SR)
+  let body = 0
   for (let i = 0; i < len; i++) {
     const out0 = line[idx]
     // One-zero loss filter, then the all-pass for the fraction.
@@ -160,9 +163,10 @@ export function string(out: Out, hz: number, v: number, u: number): void {
     dc = y - dcIn + 0.995 * dc
     dcIn = y
     // The last half second fades, so a long string never stops on a step.
+    body += soft * (dc - body)
     const tail = len - i < SR * 0.5 ? (len - i) / (SR * 0.5) : 1
-    L[at + i] += dc * gl * tail
-    R[at + i] += dc * gr * tail
+    L[at + i] += body * gl * tail
+    R[at + i] += body * gr * tail
   }
 }
 
@@ -172,7 +176,11 @@ export function pipe(out: Out, hz: number, dur: number, vIn: number, vOut: numbe
   const after = 1.4
   const len = Math.min(L.length - at, Math.ceil((dur + after) * SR))
   if (len <= 0) return
-  const period = SR / hz
+  // The column's period, less the delay its loss filter adds at the fundamental, so the resonance is in tune too.
+  const LOSS = 0.32
+  const wf = (2 * Math.PI * hz) / SR
+  const lossDelay = Math.atan2((1 - LOSS) * Math.sin(wf), 1 - (1 - LOSS) * Math.cos(wf)) / wf
+  const period = SR / hz - lossDelay
   const N = Math.floor(period)
   const frac = period - N
   const size = N + 2
@@ -186,6 +194,8 @@ export function pipe(out: Out, hz: number, dur: number, vIn: number, vOut: numbe
   let breath = 0
   let core = 0
   const dw = (2 * Math.PI * hz) / SR
+  const mouth = 1 - Math.exp((-2 * Math.PI * 2500) / SR)
+  let airLp = 0
   for (let i = 0; i < len; i++) {
     const t = i / SR
     // The breath: up quickly as the ball comes in, following its speed down the bore, and away after it leaves.
@@ -195,20 +205,22 @@ export function pipe(out: Out, hz: number, dur: number, vIn: number, vOut: numbe
     const n = rnd()
     hp = 0.97 * (hp + n - hpIn)
     hpIn = n
-    const x = hp * breath * 0.07
+    const x = hp * breath * 0.05
     // The column: a comb a period long, with a loss filter, read with a fractional delay.
     const r0 = line[(w - N + size) % size]
     const r1 = line[(w - N - 1 + size) % size]
     const back = r0 + (r1 - r0) * frac
-    lp += 0.45 * (back - lp)
+    lp += LOSS * (back - lp)
     const y = x + g * lp
     line[w] = y
     w = (w + 1) % size
     // The steady tone the column settles to, under the hiss: what makes it a note and not a rush of air.
     core += 0.0025 * (breath - core)
-    const tone = Math.sin(dw * i) * core * 0.28 + Math.sin(2 * dw * i) * core * 0.06
+    const tone = Math.sin(dw * i) * core * 0.34 + Math.sin(2 * dw * i) * core * 0.07
     const tail = len - i < SR * 0.3 ? (len - i) / (SR * 0.3) : 1
-    const s = (y * 0.9 + tone) * tail
+    // The pipe's mouth is round and its air soft: nothing above about 2.5 kHz to speak of.
+    airLp += mouth * (y * 0.9 + tone - airLp)
+    const s = airLp * tail
     L[at + i] += s * gl
     R[at + i] += s * gr
   }

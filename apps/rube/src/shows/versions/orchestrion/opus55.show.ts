@@ -8,9 +8,8 @@ import { defineShow } from '../../registry'
 export default defineShow({
   title: 'Orchestrion',
   label: 'Opus 5.5',
-  note: 'Every sound is a collision in the simulation: bars, strings and pipes cut to a chord, played by falling balls.',
   about: 'A machine that plays itself: balls fall through tuned bars, harp strings and brass pipes, and every sound is synthesized from the physics.',
-  still: 70,
+  still: 48,
   async load() {
     return (await import('./instrument')).load()
   },

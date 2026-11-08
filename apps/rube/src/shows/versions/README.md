@@ -39,7 +39,7 @@ The folder and file names are addresses, so they are chosen once:
   puts another first (`PREFERRED_TAKES`: Epilogue's and Cornfield Chase's Opus).
 - **Shelf**: the picker and Theater set the works out as **Machine** (Clair de
   Lune, Première Arabesque, Cornfield Chase, Raindrop), **Movies** and **Ambient**
-  (Gymnopédie, Soft Lamp, Ostinato). A work is Movies unless `SHELVED` in `../registry.ts` names it.
+  (Gymnopédie, Soft Lamp, Ostinato, Orchestrion). A work is Movies unless `SHELVED` in `../registry.ts` names it.
 - **Favourites**: `FAVORITES` in `../registry.ts` ranks them (Voyage, Epilogue,
   Everything, Clair de Lune). The picker stars them and pins them to the top of
   their own shelf, in that order; a take with `favorite: true` is starred on its
@@ -176,6 +176,14 @@ is new; the show lives in `raindrop/charterhouse/`. Its clock is measured by `sc
 `scripts/shows/plans/raindrop-onsets.json` (the score laid on the recording by dynamic time warping, every note moved
 onto its own attack); `check:shows` holds every landing, tip, knock, stroke and cut to it. The report is
 `apps/rube/src/shows/versions/raindrop/RAINDROP.md`.
+
+`orchestrion/opus55` (in the picker, **Orchestrion**, on the Ambient shelf, one take, **Opus 5.5**) is a show whose
+physics is its soundtrack: balls fall through an instrument of tuned bars, harp strings and brass pipes, four bays cut
+to D, B minor, G and A, and every sound is synthesized in the page from the simulation's contacts (modal bars,
+Karplus–Strong strings, waveguide pipes), then put in a room and limited with Web Audio. There is no recording.
+Each bay is built from the ball's flight so its bounces land on sixteenths; `check:shows` holds every ball to its
+bay's design. The write-up, with how each sound maps to the physics, is
+`apps/rube/src/shows/versions/orchestrion/ORCHESTRION.md`.
 
 `metronome/` is not in the picker. It is a worked example of a time map: a
 procedural machine under a steady beat, and a struck bar on every strike,

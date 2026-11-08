@@ -34,7 +34,7 @@ const FALL = 0.24
 export const GATE0 = RELEASE_X + RAIL_SPEED * (3 * SIXTEENTH - FALL)
 export const GAP = 0.62
 
-export const BAR_HALF = 0.05
+export const BAR_HALF = 0.062
 export const STRING_HALF = 0.022
 export const PIPE_BORE = 0.8
 export const PIPE_WALL = 0.07

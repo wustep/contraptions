@@ -68,6 +68,7 @@ import { checkMaker } from './maker'
 import { checkKohaku } from './kohaku'
 import { checkSleeper } from './sleeper'
 import { checkRaindrop } from './raindrop'
+import { checkOrchestrion } from './orchestrion'
 
 let failures = 0
 function check(name: string, ok: boolean, detail = ''): void {
@@ -343,7 +344,7 @@ async function main(): Promise<void> {
     !!cardFace && words.includes(`'${cardFace}'`) && ['#ECE5D3', '#D9A441'].every((c) => css.includes(c) && words.includes(`'${c}'`)), cardFace)
   check('only a video\'s frame paints credits, and both canvases still refuse type',
     (stageSrc.match(/wordPainter\(/g) ?? []).length === 1 && /const words = shown && !full/.test(stageSrc) && (stageSrc.match(/refuseType\((p|s)\)/g) ?? []).length === 2)
-  check('the shows are Boléro, Clair de Lune, Come Recover, Cornfield Chase, Gymnopédie, Harkonnen Arena, Interstellar, La La Land, Married Life, Merry-Go-Round, Mountain King, On the Nature of Daylight, Odysseus, One Summer\'s Day, Paul\'s Dream, Première, the Raindrop Prelude, Relax, Rule the World, Soft Lamp, Step Out and Time', shipped.works.map((w) => w.work).sort().join(',') === 'bolero,clair-de-lune,come-recover,cornfield-chase,gymnopedie,harkonnen-arena,interstellar,la-la-land,married-life,merry-go-round,mountain-king,nature-of-daylight,odysseus,one-summers-day,pauls-dream,premiere-arabesque,raindrop,relax,rule-the-world,soft-lamp,step-out,time')
+  check('the shows are Boléro, Clair de Lune, Come Recover, Cornfield Chase, Gymnopédie, Harkonnen Arena, Interstellar, La La Land, Married Life, Merry-Go-Round, Mountain King, On the Nature of Daylight, Odysseus, One Summer\'s Day, Orchestrion, Paul\'s Dream, Première, the Raindrop Prelude, Relax, Rule the World, Soft Lamp, Step Out and Time', shipped.works.map((w) => w.work).sort().join(',') === 'bolero,clair-de-lune,come-recover,cornfield-chase,gymnopedie,harkonnen-arena,interstellar,la-la-land,married-life,merry-go-round,mountain-king,nature-of-daylight,odysseus,one-summers-day,orchestrion,pauls-dream,premiere-arabesque,raindrop,relax,rule-the-world,soft-lamp,step-out,time')
   const ostinato = shipped.works.find((w) => w.work === 'bolero')?.versions ?? []
   check('bolero is Ostinato, one take, Opus 5.5, with no note',
     ostinato.map((v) => v.take).join(',') === 'opus55' && ostinato[0].title === 'Ostinato' && ostinato[0].label === 'Opus 5.5' && ostinato[0].note === undefined)
@@ -687,6 +688,7 @@ async function main(): Promise<void> {
       if (work.work === 'one-summers-day' && version.take === 'opus55') checkKohaku(perf, version, check)
       if (work.work === 'pauls-dream' && version.take === 'opus55') checkSleeper(perf, version, check)
       if (work.work === 'raindrop' && version.take === 'opus55') checkRaindrop(perf, version, check)
+      if (work.work === 'orchestrion' && version.take === 'opus55') checkOrchestrion(perf, version, check)
 
       if (work.work === 'interstellar' && version.take === 'opus55') {
         check('liftoff: the whole mix from zero (Cornfield Chase, then No Time for Caution), credited to Hans Zimmer and Interstellar, and the credits after it',

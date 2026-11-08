@@ -63,7 +63,8 @@ function mix(a: string, b: string, f: number): string {
   const [r1, g1, b1] = rgb(a)
   const [r2, g2, b2] = rgb(b)
   const k = clamp(f)
-  return `rgb(${Math.round(r1 + (r2 - r1) * k)},${Math.round(g1 + (g2 - g1) * k)},${Math.round(b1 + (b2 - b1) * k)})`
+  const h = (v: number) => Math.round(v).toString(16).padStart(2, '0')
+  return `#${h(r1 + (r2 - r1) * k)}${h(g1 + (g2 - g1) * k)}${h(b1 + (b2 - b1) * k)}`
 }
 function rgba(hex: string, a: number): string {
   const [r, g, b] = rgb(hex)
@@ -551,7 +552,7 @@ export function makeDrawing(perf: Performance, list: Note[]): Drawing {
     // The string itself, caught mid-swing.
     const wob = Math.sin(t * 2 * Math.PI * 9.3 + part.id) * amp * 0.6
     g.strokeStyle = mix(COLORS.string, COLORS.light, glow * 0.8)
-    g.lineWidth = Math.max(px * 1.1, 0.028)
+    g.lineWidth = Math.max(px * 1.4, 0.036)
     g.beginPath()
     g.moveTo(part.ax, part.ay)
     g.quadraticCurveTo(part.ax + dx / 2 + nx * wob * 2, part.ay + dy / 2 + ny * wob * 2, part.bx, part.by)
@@ -560,7 +561,7 @@ export function makeDrawing(perf: Performance, list: Note[]): Drawing {
     g.fillStyle = COLORS.peg
     for (const [x, y] of [[part.ax, part.ay], [part.bx, part.by]]) {
       g.beginPath()
-      g.arc(x, y, 0.055, 0, Math.PI * 2)
+      g.arc(x, y, 0.065, 0, Math.PI * 2)
       g.fill()
     }
   }
@@ -582,10 +583,11 @@ export function makeDrawing(perf: Performance, list: Note[]): Drawing {
     const x0 = part.ax - w / 2
     const grad = g.createLinearGradient(x0, 0, x0 + w, 0)
     const warm = breath * 0.55
-    grad.addColorStop(0, mix(COLORS.brassDark, COLORS.woodDark, 0.2))
-    grad.addColorStop(0.32, mix(COLORS.brassLight, hue(part.bay), warm * 0.6))
-    grad.addColorStop(0.55, mix(COLORS.brass, COLORS.brassLight, warm))
-    grad.addColorStop(1, COLORS.brassDark)
+    // At rest the brass is in the lamp's shadow; a ball in the bore warms it.
+    grad.addColorStop(0, mix(COLORS.brassDark, COLORS.woodDark, 0.4))
+    grad.addColorStop(0.32, mix(mix(COLORS.brass, COLORS.brassLight, 0.3 + warm * 0.7), hue(part.bay), warm * 0.5))
+    grad.addColorStop(0.55, mix(mix(COLORS.brassDark, COLORS.brass, 0.6), COLORS.brassLight, warm))
+    grad.addColorStop(1, mix(COLORS.brassDark, COLORS.woodDark, 0.3))
     g.fillStyle = grad
     g.fillRect(x0, part.ay, w, part.len)
     // The mouth, open, and the foot.
