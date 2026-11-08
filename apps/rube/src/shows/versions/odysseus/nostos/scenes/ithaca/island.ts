@@ -132,7 +132,10 @@ export function drawIsland(g: Paint): void {
   // low sun aslant, a step down from the one it falls full on.
   const disc = skyAt(t).disc
   const strength = disc ? Math.min(1, disc.a * 1.5) : 0
-  const fromWest = disc ? smooth(disc.x, 0.35, 0.65) * strength : 0.5
+  // With no sun or moon (or as it comes and goes) the two faces are alike, each half in shade: the light leans from there
+  // as the disc strengthens. (Leaning from 0, a disc that came into the sky at nothing lit the east face in one frame,
+  // 415.6 s.)
+  const fromWest = disc ? 0.5 + (smooth(disc.x, 0.35, 0.65) - 0.5) * strength : 0.5
   const aslant = disc ? Math.abs(smooth(disc.x, 0.35, 0.65) - 0.5) * 2 * strength : 0
   const deep = rock(STONE_DEEP, t)
   const ink = againstSun('#2B261F', t)
