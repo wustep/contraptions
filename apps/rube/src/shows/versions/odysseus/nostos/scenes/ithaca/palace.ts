@@ -92,7 +92,9 @@ function drawShell(g: Paint): void {
   const { ctx, t } = g
   const stone = outdoors(STONE, t)
   const shade = outdoors(STONE_SHADE, t)
-  rect(ctx, HALL.x0 - WALL, HALL.floor, HALL.x1 - HALL.x0 + 2 * WALL, SLAB)
+  // The hall's floor slab, cut, as deep as its face over the axes' trench all along (only that stretch was deeper: a
+  // box hanging under the floor across the terrace wall's courses).
+  rect(ctx, HALL.x0 - WALL, HALL.floor, HALL.x1 - HALL.x0 + 2 * WALL, SLAB + 0.08)
   fill(ctx, shade)
   rect(ctx, TERRACE.x0, TERRACE.y - 0.26, TERRACE.x1 - TERRACE.x0 + WALL, 0.26)
   fill(ctx, stone)
