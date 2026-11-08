@@ -19,6 +19,9 @@ import { FIRST_DAWN, LAST_DAWN, daylight, dayOf } from './days'
  * landing flat, the low rise, the cave's beach a little higher, the east beach running down to the waterline at 676.6.
  * Under the water each flank goes down by a shelf and a drop, so it is never one ruled slope into the dark.
  */
+/** How far out the sea floor goes for each cell it goes down, past the ends of the island's ground. */
+const SKIRT = 1.2
+
 const KNOTS: Pt[] = [
   [560, 14],
   [600, 9],
@@ -286,23 +289,30 @@ export function drawStone(g: Paint): void {
 
 export function drawSand(g: Paint): void {
   const { ctx, t, view } = g
-  if (view.x1 < 560 || view.x0 > 760) return
+  // Past 560 and 760 the sea floor goes on down and out of sight at a slope (SKIRT cells out for each cell down), so a
+  // tall frame that sees that deep sees it fall away, not stop at a cut.
+  const deep = Math.max(view.y1 + 1, 2)
+  const out = (y: number) => SKIRT * Math.max(0, deep - y)
+  if (view.x1 < 560 - out(KNOTS[0][1]) || view.x0 > 760 + out(ground(760))) return
   const l = lightAt(t)
   const sky = skyAt(t)
   const sea = seaLight(t)
   const sand = mix(lit('#F1EADB', NIGHT_SAND, l), sky.low, 0.04)
   const wet = mix(lit('#D9CDB4', '#3A5268', l), sea.near, 0.18)
   const ink = mix('#5B5448', '#0F1A24', 1 - l)
-  const x0 = Math.max(560, view.x0 - 1)
-  const x1 = Math.min(760, view.x1 + 1)
+  // Held to the ground's own ends, so a frame that sees only a skirt still has its end to slope away from.
+  const x0 = Math.min(760, Math.max(560, view.x0 - 1))
+  const x1 = Math.max(560, Math.min(760, view.x1 + 1))
   const step = Math.max(0.05, (x1 - x0) / 220)
   const top: Pt[] = []
   for (let x = x0; x <= x1 + 1e-9; x += step) top.push([x, ground(x)])
-  const deep = Math.max(view.y1 + 1, 2)
+  const [fx, fy] = top[0]
+  const [lx, ly] = top[top.length - 1]
   ctx.beginPath()
-  ctx.moveTo(top[0][0], deep)
+  // Whether the frame reaches an end is the clamped range's to say: the samples' own last x can stop a hair short.
+  ctx.moveTo(fx - (x0 <= 560 ? out(fy) : 0), deep)
   for (const p of top) ctx.lineTo(p[0], p[1])
-  ctx.lineTo(top[top.length - 1][0], deep)
+  ctx.lineTo(lx + (x1 >= 760 ? out(ly) : 0), deep)
   ctx.closePath()
   fill(ctx, sand)
   // The wet sand the sea has just left: a skin along each shore's surface, from a little above where the swell reaches
