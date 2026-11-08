@@ -84,7 +84,7 @@ from the log sample by sample into two channels. An `OfflineAudioContext` then d
 dry instrument plus a `ConvolverNode` hall (an impulse response of seeded noise, darker as it dies, RT60 about
 2.9 s), a slow `DynamicsCompressor` for glue, and a fast hard-knee one as the **limiter**. The result is brought to a
 peak of **−1.00 dBFS**, so nothing in it can clip (measured on the rendered file: no full-scale samples, about
-−14.7 dBFS RMS). It is written as a WAV and handed to the player as the show's recording.
+−14.1 dBFS RMS). It is written as a WAV and handed to the player as the show's recording.
 
 **Why render rather than voice by voice in real time:** the player keeps the picture locked to the music (the music is
 the clock), plays it at ¼× to 4× time-stretched, mutes and unmutes it, holds it for a gesture where the browser wants
