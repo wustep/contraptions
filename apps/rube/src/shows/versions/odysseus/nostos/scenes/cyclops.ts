@@ -269,11 +269,20 @@ const grazing = standing('cyclops-grazing', region(90, -12, 100, 2, 2), END, (g)
   }
 })
 
+/**
+ * Whether his near arm is over the flock and the men, not behind them: only while its hand is on them, closing on two
+ * men and feeling each back that goes out. The rest of the time it lies with the rest of him, behind them. Over them
+ * always, it was as dark as his body and the cave behind it, so it went unseen except where it cut a slice off a sheep
+ * or a man walking in past it (148-155 s). (Dragging the boulder in, it is still over the boulder, drawn before this.)
+ */
+const armOver = (t: number): boolean => (t >= T.reach && t < T.gone + 1.4) || t >= T.open - 0.6
+
 const flock = standing(
   'cyclops-flock',
   region(90, -12, 116, 2, 2),
   END,
   (g) => {
+    if (openAt(g.t) && !armOver(g.t)) drawArm(g, g.t, light(g.t))
     for (let i = FLOCK.length - 1; i >= 0; i--) if (!carries(i, g.t) && !outside(i, g.t)) drawSheep(g, FLOCK[i], g.t, '#D8D0BD', '#2F2925', INK)
   },
   (g) => {
@@ -285,7 +294,7 @@ const flock = standing(
       drawSheep(g, FLOCK[i], g.t, '#D8D0BD', '#2F2925', INK, true)
     }
     if (open) {
-      drawArm(g, g.t, light(g.t))
+      if (armOver(g.t)) drawArm(g, g.t, light(g.t))
       drawEye(g, g.t, g.t < T.look ? [PREY[0], PREY[1]] : [PREY[0] + 0.4, PREY[1] - 0.2], { white: '#D9D0B4', iris: '#7A6337', pupil: '#120D0A', skin: '#1E1916' })
     }
   },
