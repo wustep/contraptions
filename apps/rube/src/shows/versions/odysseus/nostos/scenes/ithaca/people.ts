@@ -57,7 +57,9 @@ export function heroMoves(): Move[] {
   const m: Move[] = []
   const landed: Pt = [801.5, BEACH.sand - R]
   const edge: Pt = [805.35, -0.54]
-  const inBasket = (t: number): Pt => [HOIST.hero, heroBasketY(t) - R]
+  // Sitting in the basket, his ink inside it: seated with his lowest point on its floor, his rim showed under the
+  // basket as a dark arc all the way up the cliff (420-427 s).
+  const inBasket = (t: number): Pt => [HOIST.hero, heroBasketY(t) - R - 0.02]
   // Off the sand and up the rocks to the basket's side; a breath; in.
   m.push(rest(landed, HOME.landed, 418.3))
   m.push(roll([landed, [804.4, landed[1]], edge], 418.3, 420.0))
