@@ -1,11 +1,11 @@
 import { ANTINOUS, ANTINOUS_RIM, ANTINOUS_SIZE, PENELOPE, PENELOPE_ID, PENELOPE_RIM, PENELOPE_SIZE, SUITOR, SUITORS_ID, SUITOR_RIM, SUITOR_SIZE, TELEMACHUS, TELEMACHUS_ID, TELEMACHUS_RIM, TELEMACHUS_SIZE } from '../../cast'
-import { mix, smooth } from '../../draw'
+import { hash, mix, smooth, smoother } from '../../draw'
 import { END } from '../../voyage'
 import { Path, fly, flightFor, rest, ride, roll, type Move, type Pt } from '../../path'
 import type { Actor } from '../../show'
-import { BEACH, DAIS, GATE, HALL, HEARTH, HOIST, JETTY, HOME, ON_TOP, R, ROOM, STAIRS, TERRACE, TRIAL, WELL } from './geo'
+import { BEACH, DAIS, GATE, HALL, HEARTH, HOIST, JETTY, HOME, ON_TOP, PAN, R, ROOM, STAIRS, TERRACE, TRIAL, WELL } from './geo'
 import { stepAt } from './palace'
-import { STRUCK, antinousStruck, heroBasketY, plateEnd } from './rig'
+import { LEAVES, SAG, STRUCK, antinousStruck, heroBasketY, plateEnd } from './rig'
 import { weaverX } from './loom'
 import { skiffScale, skiffSeat } from './west'
 import { FIGHT, HERO_MEET, heroFight, penelopeDown, sonFight, suitorFight } from './battle'
@@ -13,8 +13,8 @@ import { FIGHT, HERO_MEET, heroFight, penelopeDown, sonFight, suitorFight } from
 /**
  * Who moves on Ithaca, and how: the hero from the beach to the bow and the skiff; Penelope at her loom, at the head of
  * the stairs, and down them to him; Telemachus on the terrace, at the dog, at the axes, in the doorway, and at his
- * father's side; the suitors at their bench, three of them up the stairs and onto the plate in turn; Antinous, who goes
- * for the son and is taken by the arrow; and the rest of them drawn together on the dais, beaten.
+ * father's side; the suitors at their bench, four of them trying the bow's plate in turn, the rest watching; Antinous,
+ * who goes for the son and is taken by the arrow; and the rest of them drawn together on the dais, beaten.
  * Every step lands on a note (`geo.ts`, TRIAL and HOME).
  */
 
@@ -228,55 +228,247 @@ const feasting = (i: number) => (t: number): Pt => [SEATS[i], SEAT_Y - 0.014 * M
 /** One standing on the floor: the same, on his feet. */
 const standing = (i: number) => (t: number): Pt => [STANDS[i], STAND_Y - 0.012 * Math.max(0, Math.sin(t * (0.6 + 0.11 * i) + i * 2.3)) ** 6]
 
-/** The three who try: the three nearest the stairs, each landing on the plate on its note, then back to the bench. */
-function trier(i: number, land: number): { moves: Move[]; back: number } {
-  const s = SUITOR_SIZE
-  const fy = on(FLOOR, s)
-  const m: Move[] = []
-  // Timed back from the landing: the drop, the terrace, the stairs, the floor.
-  const lip: Pt = [826.5, ROOM_ON(s)]
-  const onPlate = (t: number): Pt => {
-    const [px, py] = plateEnd(t)
-    return [px - 0.04, py - R * s]
+/* ------------------------------------------------------------------ the trial of the bow */
+
+/** A suitor's radius, and his centre on the hall's floor. */
+const RS = R * SUITOR_SIZE
+const FY = on(FLOOR, SUITOR_SIZE)
+/**
+ * Who tries, in turn (`TRIAL.tries`): Leodes, nearest the stairs; the next along the bench; the one standing by the
+ * bow, who warms it; and the one after them on the bench.
+ */
+const TRIERS = [0, 1, 12, 2]
+/** The light well's lip on the terrace, where each stands before he goes over; and over the well, clear of the slab. */
+const LIP: Pt = [826.5, ROOM_ON(SUITOR_SIZE)]
+const OVER: Pt = [OVER_WELL(SUITOR_SIZE), LIP[1]]
+/** A suitor on the plate's end at `t`, or `slide` cells further out along it. */
+const onPlate = (t: number, slide = 0): Pt => {
+  const [px, py] = plateEnd(t)
+  return [px - 0.04 + slide, py - RS]
+}
+/** On the floor at the fire pan's east side, clear of its fire: where the tallow is shoved in from, and they get down. */
+const BY_PAN: Pt = [PAN.x - PAN.half - RS - 0.005, FY]
+/**
+ * Where the plate throws the second: up over the bow, and down onto the bench between Antinous and the next man, who
+ * both jump aside (`crowd`). (Down onto the floor beyond the bench, every arc went through a man sitting on it:
+ * Antinous at 468.15 s, or the next at 468.12 s.)
+ */
+const THROWN: Pt = [824.98, SEAT_Y]
+const THROWN_AT = LEAVES[1] + flightFor(onPlate(LEAVES[1]), THROWN, 0.6)
+/** The two he comes down between, and which way each jumps. */
+const DODGE: Record<number, number> = { 5: -0.05, 6: 0.05 }
+/**
+ * Where each who climbs gets down off the bench onto the floor, and where he gets back up onto it: in the gaps between
+ * those standing (Leodes's way down was a cell from one of them, the second's was on top of another, and the fourth
+ * hopped home up through the man beside his seat, 482.4 s).
+ */
+const DOWN_AT: Record<number, number> = { 0: 822.51, 1: 823.17, 2: 823.17 }
+const UP_AT: Record<number, number> = { 0: 823.08, 1: 823.37, 2: 823.3 }
+
+/**
+ * How the hall takes each try, as an offset to where each of them sits or stands: they lean in towards the bow as it
+ * goes down, start back when it springs, and laugh at him after, a bob or two each; each in his own time and measure,
+ * and never at himself. (Neighbours on the bench sit a twentieth of a cell apart, so all lean the same way together.)
+ */
+const LEANS: [number, number, number, number][] = [
+  // From, to, how far, and who is trying.
+  [TRIAL.tries[1] + 0.1, TRIAL.snap, 0.03, 1],
+  [TRIAL.tries[2] + 0.1, SAG, 0.04, 12],
+  [TRIAL.tries[3] + 0.05, TRIAL.slip, 0.055, 2],
+]
+/** They start back: when it throws the second, and when the fourth slips. When, how far, and who tried. */
+const STARTS: [number, number, number][] = [
+  [TRIAL.snap, 0.04, 1],
+  [TRIAL.slip, 0.055, 2],
+]
+/** They laugh at him: from when, for how long, and at whom. */
+const JEERS: [number, number, number][] = [
+  [LEAVES[0] + 0.05, 1.0, 0],
+  [TRIAL.snap + 0.45, 1.0, 1],
+  [LEAVES[2] + 0.2, 1.0, 12],
+  [TRIAL.slip + 0.4, 1.2, 2],
+]
+
+function crowd(i: number, t: number): Pt {
+  if (t < TRIAL.tries[0] || t > TRIAL.slip + 3) return [0, 0]
+  const late = 0.04 * hash(i, 3)
+  const much = 0.85 + 0.3 * hash(i, 5)
+  let dx = 0
+  let dy = 0
+  for (const [a, b, d, who] of LEANS) {
+    if (who !== i) dx += d * much * smooth(t, a + late, a + late + 0.7) * (1 - smooth(t, b, b + 0.15))
   }
-  const over: Pt = [OVER_WELL(s), lip[1]]
-  const fallT = flightFor(over, onPlate(land), 0.02)
-  const tLip = land - fallT - 0.35
+  for (const [at, d, who] of STARTS) {
+    const s = t - at - late * 0.5
+    if (who !== i && s > 0 && !(at === TRIAL.snap && i in DODGE)) dx -= d * (0.9 + 0.2 * hash(i, 9)) * (s / 0.12) * Math.exp(1 - s / 0.12)
+  }
+  if (i in DODGE) dx += DODGE[i] * smooth(t, THROWN_AT - 0.14, THROWN_AT + 0.04) * (1 - smooth(t, THROWN_AT + 0.7, THROWN_AT + 1.2))
+  JEERS.forEach(([at, dur, who], k) => {
+    if (who === i || hash(i, 13, k) < 0.3) return
+    const s = t - at - 0.25 * hash(i, 17, k)
+    if (s > 0 && s < dur) dy -= (0.016 + 0.014 * hash(i, 19, k)) * Math.abs(Math.sin(Math.PI * (2.6 + hash(i, 23, k)) * s)) * (1 - s / dur)
+  })
+  return [dx, dy]
+}
+
+/**
+ * Where he sits or stands from `t0` to `t1`, taking the hall's reactions, and none at either end (so he leaves his own
+ * place and comes back to it); his mark rolls as he leans.
+ */
+function watching(i: number, base: (t: number) => Pt, t0: number, t1: number): Move {
+  const w = (t: number) => smooth(t, t0, t0 + 0.3) * (1 - smooth(t, t1 - 0.3, t1))
+  const at = (t: number): Pt => {
+    const [x, y] = base(t)
+    const [dx, dy] = crowd(i, t)
+    return [x + dx * w(t), y + dy * w(t)]
+  }
+  return ride(at, t0, t1, (t) => (crowd(i, t)[0] * w(t)) / RS)
+}
+
+/**
+ * Up from his seat to the well's lip, there at `tLip`: down off the dais, along to the stairs' foot in front of the
+ * first step, clear of the hearth's fire (they stood in its flames, 452.2, 461.7 and 470.7 s), up them a step at a
+ * time, through her room and along the terrace.
+ */
+function climb(i: number, tLip: number): Move[] {
+  const m: Move[] = []
   const head = stepAt(STAIRS.steps - 1)
-  const top: Pt = [head[0], ROOM_ON(s)]
+  const top: Pt = [head[0], ROOM_ON(SUITOR_SIZE)]
   const tTop = tLip - 2.4
   const stepTimes = [0, 1, 2, 3, 4, 5].map((k) => tTop - (5 - k) * 0.42)
-  // At the stairs' foot in front of the first step, clear of the hearth's fire (they stood in its flames, 452.2, 461.7
-  // and 470.7 s), and up onto it.
-  const foot: Pt = [stepAt(0)[0], fy]
+  const foot: Pt = [stepAt(0)[0], FY]
   const tFoot = stepTimes[0] - 0.42
-  const down: Pt = [SEATS[i] - 0.3, fy]
+  const down: Pt = [DOWN_AT[i], FY]
   const tDown = tFoot - (down[0] - foot[0]) / 1.8
   const tUp = tDown - 0.3
-  m.push(ride(feasting(i), 0, tUp))
+  m.push(watching(i, feasting(i), 0, tUp))
   m.push(fly(feasting(i)(tUp), down, tUp, tDown))
   m.push(roll([down, foot], tDown, tFoot))
   const steps = [0, 1, 2, 3, 4, 5].map((k) => {
     const p = stepAt(k)
-    return [p[0], p[1] + R - R * s] as Pt
+    return [p[0], p[1] + R - RS] as Pt
   })
   m.push(...hops([foot, ...steps], [tFoot, ...stepTimes], 0.08))
-  m.push(roll([top, [TERRACE.x0 + 0.2, top[1]], lip], tTop, tLip))
-  m.push(rest(lip, tLip, land - fallT - 0.12))
-  m.push(roll([lip, over], land - fallT - 0.12, land - fallT, 'in'))
-  m.push(fly(over, onPlate(land), land - fallT, land))
-  // Nothing gives. Off the plate's end to the floor, and back along the hall to his seat.
-  m.push(ride(onPlate, land, land + 0.5))
-  const floor: Pt = [826.98, fy]
-  const off = fly(onPlate(land + 0.5), floor, land + 0.5, land + 0.5 + flightFor(onPlate(land + 0.5), floor, 0.1))
+  m.push(roll([top, [TERRACE.x0 + 0.2, top[1]], LIP], tTop, tLip))
+  return m
+}
+
+/** Off the lip over the well, and down through it onto the plate at `land`; `leaves` is when he leaves the lip. */
+function drop(land: number): { moves: Move[]; leaves: number } {
+  const fall = flightFor(OVER, onPlate(land), 0.02)
+  const leaves = land - fall - 0.12
+  return { moves: [roll([LIP, OVER], leaves, land - fall, 'in'), fly(OVER, onPlate(land), land - fall, land)], leaves }
+}
+
+/** A bounce on the plate, coming down on it at `at`, `lift` high. */
+function bounceOn(at: number, lift: number): Move {
+  const T = flightFor(onPlate(at - 0.15), onPlate(at), lift)
+  return fly(onPlate(at - T), onPlate(at), at - T, at)
+}
+
+/** Down off the plate at `t`, east over the crank, to the floor by the pan. */
+function getDown(t: number, lift: number): Move {
+  return fly(onPlate(t), BY_PAN, t, t + flightFor(onPlate(t), BY_PAN, lift))
+}
+
+/** From the floor at `from`, at `t`, back along the hall to below his seat and up onto it; when he is in it. */
+function home(i: number, from: Pt, t: number, m: Move[]): number {
+  const below: Pt = [UP_AT[i], FY]
+  const tBelow = t + (from[0] - below[0]) / 1.4
+  m.push(roll([from, below], t, tBelow))
+  const back = tBelow + flightFor(below, feasting(i)(tBelow + 0.35), 0.1)
+  m.push(fly(below, feasting(i)(back), tBelow, back))
+  return back
+}
+
+/** Leodes: long at the lip; down onto the plate, and it barely dips. He bounces on it, twice, and it does not give. */
+function leodes(i: number): { moves: Move[]; back: number } {
+  const land = TRIAL.tries[0]
+  const d = drop(land)
+  const tLip = d.leaves - 0.75
+  const m = climb(i, tLip)
+  m.push(rest(LIP, tLip, d.leaves), ...d.moves)
+  const [p0, p1] = TRIAL.pumps
+  const b0 = bounceOn(p0, 0.06)
+  const b1 = bounceOn(p1, 0.045)
+  m.push(ride(onPlate, land, b0.t0), b0, ride(onPlate, p0, b1.t0), b1, ride(onPlate, p1, LEAVES[0]))
+  const off = getDown(LEAVES[0], 0.08)
   m.push(off)
-  const below: Pt = [SEATS[i] + 0.3, fy]
-  const tBelow = off.t1 + (floor[0] - below[0]) / 1.4
-  m.push(roll([floor, below], off.t1, tBelow))
-  const seat = feasting(i)
-  const back = tBelow + flightFor(below, seat(tBelow + 0.35), 0.1)
-  m.push(fly(below, seat(back), tBelow, back))
-  return { moves: m, back }
+  return { moves: m, back: home(i, BY_PAN, off.t1, m) }
+}
+
+/**
+ * The second: no waiting at the lip. It goes three sevenths of the way down under him, and he strains on it,
+ * trembling, until it springs back and throws him over the bow among the rest of them.
+ */
+function second(i: number): { moves: Move[]; back: number } {
+  const land = TRIAL.tries[1]
+  const d = drop(land)
+  const tLip = d.leaves - 0.08
+  const m = climb(i, tLip)
+  m.push(rest(LIP, tLip, d.leaves), ...d.moves)
+  m.push(ride(onPlate, land, LEAVES[1]))
+  m.push(fly(onPlate(LEAVES[1]), THROWN, LEAVES[1], THROWN_AT))
+  // He comes down among them on the bench and lies there a moment; then down off it to the floor, and home.
+  const floor: Pt = [THROWN[0] - 0.03, FY]
+  const t1 = THROWN_AT + 0.55
+  const T = flightFor(THROWN, floor, 0.06)
+  m.push(rest(THROWN, THROWN_AT, t1), fly(THROWN, floor, t1, t1 + T))
+  return { moves: m, back: home(i, floor, t1 + T, m) }
+}
+
+/**
+ * The one standing by the bow: he shoves the tallow off the pan's rim into its coals, and the fat flares up round the
+ * bow's foot. With the bow warm he leaps up onto the plate from the floor, and it goes more than half way; he bounces
+ * on it, and it goes further; and it rises back under him, and he gets down, back to where he stood.
+ */
+function warmer(i: number): Move[] {
+  const m: Move[] = []
+  const place = standing(i)
+  const go = TRIAL.tallow - 0.6
+  m.push(watching(i, place, 0, go))
+  // Up to the pan and into it, at speed: the shove. He comes back off it from the flare, to where he stood, and leaps
+  // from there up over the bow and the fire onto the plate. (From beside the pan he went through its flames, 471.0 s.)
+  m.push(roll([place(go), BY_PAN], go, TRIAL.tallow, 'in'))
+  const back: Pt = [STANDS[i] + 0.03, FY]
+  m.push(roll([BY_PAN, back], TRIAL.tallow, TRIAL.tallow + 0.7, 'out'))
+  const land = TRIAL.tries[2]
+  const T = flightFor(back, onPlate(land), 0.3)
+  m.push(rest(back, TRIAL.tallow + 0.7, land - T), fly(back, onPlate(land), land - T, land))
+  const b = bounceOn(TRIAL.bounce, 0.05)
+  m.push(ride(onPlate, land, b.t0), b, ride(onPlate, TRIAL.bounce, LEAVES[2]))
+  // Down, east over the fire, to his place.
+  const t1 = LEAVES[2] + flightFor(onPlate(LEAVES[2]), [STANDS[i], FY], 0.15)
+  m.push(fly(onPlate(LEAVES[2]), place(t1), LEAVES[2], t1))
+  m.push(watching(i, place, t1, FIGHT.sing - 0.0001))
+  return m
+}
+
+/**
+ * The fourth: two small hops on the lip to brace himself, and down onto the warm bow. It goes nearly all the way at
+ * once and creeps on, trembling, the string all but home; and he slips off the plate's end, and it springs back. When
+ * the camera has gone back to the stranger, he goes back over the plate and the fire, and home.
+ */
+function fourth(i: number): { moves: Move[]; back: number } {
+  const land = TRIAL.tries[3]
+  const d = drop(land)
+  const braces = [475.463, 475.864]
+  const tLip = braces[0] - 0.5
+  const m = climb(i, tLip)
+  const H = flightFor(LIP, LIP, 0.06)
+  m.push(rest(LIP, tLip, braces[0] - H), fly(LIP, LIP, braces[0] - H, braces[0]), rest(LIP, braces[0], braces[1] - H))
+  m.push(fly(LIP, LIP, braces[1] - H, braces[1]), rest(LIP, braces[1], d.leaves), ...d.moves)
+  // Slipping out along the plate as it trembles, and off its end.
+  const slide = (t: number) => 0.1 * smoother(t, TRIAL.slip - 0.4, TRIAL.slip)
+  m.push(ride((t) => onPlate(t, slide(t)), land, TRIAL.slip))
+  const floor: Pt = [826.95, FY]
+  const off = fly(onPlate(TRIAL.slip, 0.1), floor, TRIAL.slip, TRIAL.slip + flightFor(onPlate(TRIAL.slip, 0.1), floor, 0.02))
+  const sprawl: Pt = [827.05, FY]
+  m.push(off, roll([floor, sprawl], off.t1, off.t1 + 0.3, 'out'))
+  const over = 480.6
+  const T = flightFor(sprawl, BY_PAN, 0.5)
+  m.push(rest(sprawl, off.t1 + 0.3, over), fly(sprawl, BY_PAN, over, over + T))
+  return { moves: m, back: home(i, BY_PAN, over + T, m) }
 }
 
 /**
@@ -294,7 +486,7 @@ function antinous(i: number): Move[] {
   const clear: Pt = [821.4, fy]
   const near: Pt = [820.2, fy]
   return [
-    ride(feasting(i), 0, go),
+    watching(i, feasting(i), 0, go),
     fly(feasting(i)(go), down, go, go + 0.32),
     roll([down, clear], go + 0.32, 497.0, 'inout'),
     roll([clear, near], 497.0, 500.6, 'inout'),
@@ -307,6 +499,7 @@ function antinous(i: number): Move[] {
 /** Up to the bow's note each suitor is at the feast (or trying the bow and back); from it, the fight decides. */
 function suitorPaths(): { path: Path; dies?: number }[] {
   const hand = FIGHT.sing - 0.0001
+  const tries = [leodes, second, null, fourth]
   const out: { path: Path; dies?: number }[] = []
   for (let i = 0; i < SUITORS; i++) {
     if (i === ANTINOUS_I) {
@@ -315,15 +508,20 @@ function suitorPaths(): { path: Path; dies?: number }[] {
     }
     const before: Move[] = []
     let where: (t: number) => Pt
-    if (i < 3) {
-      const t = trier(i, TRIAL.tries[i])
-      before.push(...t.moves, ride(feasting(i), t.back, hand))
+    const k = TRIERS.indexOf(i)
+    const go = tries[k]
+    if (i === TRIERS[2]) {
+      before.push(...warmer(i))
+      where = standing(i)
+    } else if (go) {
+      const t = go(i)
+      before.push(...t.moves, watching(i, feasting(i), t.back, hand))
       where = feasting(i)
     } else if (i < ANTINOUS_I) {
-      before.push(ride(feasting(i), 0, hand))
+      before.push(watching(i, feasting(i), 0, hand))
       where = feasting(i)
     } else {
-      before.push(ride(standing(i), 0, hand))
+      before.push(watching(i, standing(i), 0, hand))
       where = standing(i)
     }
     const fate = suitorFight(i, where(hand))

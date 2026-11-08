@@ -12,6 +12,7 @@ import {
   GATE,
   HALL,
   HEARTH,
+  PAN,
   ROOM,
   ROOM_DOOR,
   SLAB,
@@ -49,7 +50,7 @@ import {
   nightness,
   outdoors,
 } from './look'
-import { ARROW, armTip, arrowShown, arrowTail, arrowY, axeShiver, axeUp, drawOf, NOCK0, plateEnd } from './rig'
+import { ARROW, armTip, arrowShown, arrowTail, arrowY, axeShiver, axeUp, bowWarm, drawOf, NOCK0, panFire, plateEnd, tallowAt } from './rig'
 
 /**
  * The palace, cut open like a doll's house: its front wall taken away, so the hall, the stairs, Penelope's room and the
@@ -373,6 +374,7 @@ function drawRig(g: Paint): void {
   const { ctx, t } = g
   const k = ink(t)
   const timber = indoors(TIMBER, t)
+  drawPan(g)
   // The crank: its block, the plate out west, the arm up, and the cord from the arm's tip to the string.
   const [px, py] = plateEnd(t)
   const [ax, ay] = armTip(t)
@@ -406,7 +408,7 @@ function drawRig(g: Paint): void {
   rect(ctx, BOW.x - 0.12, HALL.floor - 0.03, 0.24, 0.03)
   fill(ctx, timber)
   // The bow: horn and wood, recurved, pointing east, its limbs bending as the string comes west; the red string.
-  const flex = (nock - NOCK0) * 0.35
+  const flex = (nock - NOCK0) * 0.55
   const tip = (s: number): Pt => [BOW.x + 0.03 + flex * 0.5, BOW.y + s * (BOW.half - flex * 0.15)]
   const top = tip(-1)
   const bot = tip(1)
@@ -414,7 +416,8 @@ function drawRig(g: Paint): void {
   ctx.moveTo(top[0], top[1])
   ctx.bezierCurveTo(BOW.x - 0.12 - flex * 0.2, BOW.y - BOW.half * 0.75, BOW.x - 0.05, BOW.y - 0.1, BOW.x - 0.03, BOW.y)
   ctx.bezierCurveTo(BOW.x - 0.05, BOW.y + 0.1, BOW.x - 0.12 - flex * 0.2, BOW.y + BOW.half * 0.75, bot[0], bot[1])
-  stroke(g, timber, 4.2)
+  // Warmed at the fire under it, the horn and wood darken towards the fire's colour, and cool again after.
+  stroke(g, indoors(mix(TIMBER, WARM_BOW, 0.6 * bowWarm(t)), t), 4.2)
   ctx.beginPath()
   ctx.moveTo(top[0], top[1])
   ctx.lineTo(nock, BOW.y)
@@ -423,6 +426,62 @@ function drawRig(g: Paint): void {
   rect(ctx, BOW.x - 0.05, BOW.y - 0.04, 0.05, 0.08)
   fill(ctx, indoors(BRONZE, t))
   void k
+}
+
+/** The bow's horn and wood as warm as the fire makes them. */
+const WARM_BOW = '#7A3F22'
+
+/**
+ * The fire pan at the bow's foot: a shallow bronze bowl on stubby legs, its coals glowing low; the round of tallow on
+ * its east rim; and, once the tallow is in, its fire, three flat tongues inside its rim.
+ */
+function drawPan(g: Paint): void {
+  const { ctx, t } = g
+  const { x, half, rim, foot } = PAN
+  const bronze = indoors(BRONZE, t)
+  for (const s of [-1, 1]) {
+    poly(ctx, [[x + s * (half - 0.07), rim + 0.045], [x + s * (half - 0.04), rim + 0.045], [x + s * (half - 0.015), foot], [x + s * (half - 0.045), foot]])
+    fill(ctx, indoors(mix(BRONZE, '#2A1A10', 0.35), t))
+  }
+  ctx.beginPath()
+  ctx.moveTo(x - half, rim)
+  ctx.quadraticCurveTo(x, rim + 0.13, x + half, rim)
+  ctx.closePath()
+  fill(ctx, bronze)
+  const h = panFire(t)
+  // The coals heaped in it: dark, their tops red, redder as it burns.
+  ctx.beginPath()
+  ctx.ellipse(x, rim + 0.002, half - 0.02, 0.028, 0, Math.PI, 0)
+  fill(ctx, indoors(mix('#3A2418', EMBER, 0.45 + 0.4 * Math.min(1, h / 0.1)), t))
+  rect(ctx, x - half - 0.012, rim - 0.008, 2 * half + 0.024, 0.016)
+  fill(ctx, indoors(BRONZE_LIGHT, t))
+  // The tallow: a pale round on the rim, then down on the coals, slumping and going into the flame.
+  const fat = tallowAt(t)
+  if (fat.left > 0.02) {
+    const hw = 0.05 * (1 + 0.35 * (1 - fat.left))
+    const hh = 0.03 * fat.left
+    ctx.beginPath()
+    ctx.ellipse(fat.x, fat.y - hh, hw, hh, 0, 0, Math.PI * 2)
+    fill(ctx, indoors('#E6DBC0', t))
+  }
+  if (h < 0.004) return
+  const tongues: [number, number, number, string][] = [
+    [-0.42, 0.68, 1.9, FIRE],
+    [0.4, 0.78, 2.4, FIRE],
+    [0, 1, 1.4, FIRE_CORE],
+  ]
+  const w = half * 0.42
+  for (const [dx, hh, f, c] of tongues) {
+    const lean = 0.12 * Math.sin(t * f + dx * 9)
+    const tall = h * hh * (0.88 + 0.12 * Math.sin(t * f * 1.7 + dx * 5))
+    const bx = x + dx * half
+    ctx.beginPath()
+    ctx.moveTo(bx - w, rim)
+    ctx.quadraticCurveTo(bx - w * 0.9, rim - tall * 0.55, bx + lean * tall, rim - tall)
+    ctx.quadraticCurveTo(bx + w * 0.9, rim - tall * 0.5, bx + w, rim)
+    ctx.closePath()
+    fill(ctx, c)
+  }
 }
 
 /* ------------------------------------------------------------------ in front of the balls */

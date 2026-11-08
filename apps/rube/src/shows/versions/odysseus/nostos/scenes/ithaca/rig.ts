@@ -1,6 +1,6 @@
 import { ring, smooth, smoother } from '../../draw'
 import type { Pt } from '../../path'
-import { AXES, BOW, CRANK, HALL, HOIST, HOME, TRIAL } from './geo'
+import { AXES, BOW, CRANK, HALL, HOIST, HOME, PAN, TRIAL } from './geo'
 
 const HALL_FLOOR = HALL.floor
 
@@ -37,13 +37,73 @@ export const axeShiver = (i: number, t: number): number => ring(t, arrowPasses(A
 
 /* ------------------------------------------------------------------ the crank and the bow */
 
+const clamp01 = (u: number): number => Math.max(0, Math.min(1, u))
+/** Fast at first and slowing onto where it is going; and the other way, from rest to fastest. */
+const easeOut = (u: number): number => 1 - (1 - clamp01(u)) ** 2
+const easeIn = (u: number): number => clamp01(u) ** 2
+
+/** A knock on the plate: down at once, and ringing back up onto its stop (`depth` radians at most). */
+const knock = (t: number, at: number, depth: number): number => depth * Math.max(0, ring(t, at, 2.6, 0.3))
+
+/** A strain's tremble from `a`: a quarter of `amp` at first, all of it by `b`, `f` times a second. */
+function tremble(t: number, a: number, b: number, amp: number, f: number): number {
+  if (t <= a) return 0
+  return amp * (0.25 + 0.75 * smooth(t, a, b)) * smooth(t, a, a + 0.15) * Math.sin(2 * Math.PI * f * (t - a))
+}
+
+/**
+ * Given back from `g0` when he leaves it: the bow takes the cord back, the plate springing up onto its stop in `back`
+ * seconds (fastest as it gets there), and rocking there (`rock`, radians past it at most).
+ */
+function given(t: number, at: number, g0: number, back: number, rock: number): number {
+  if (t <= at + back) return g0 * (1 - easeIn((t - at) / back))
+  return -rock * ring(t, at + back, 2.4, 0.4)
+}
+
+/** When each who tries leaves the plate: Leodes gets down; the second is thrown; the third leaps down; the fourth slips. */
+export const LEAVES = [459.95, TRIAL.snap + 0.06, 473.96, TRIAL.slip]
+/** When the plate begins to rise back under the third, the bow stronger than he is. */
+export const SAG = 472.95
+
+/**
+ * How far below cocked each suitor has the plate, radians (cocked is 0.7, all the way is all of it), each further than
+ * the last (`TRIAL.tries`):
+ * - Leodes: a knock as he lands and one on each bounce, about a twelfth of the way, and his little weight while he
+ *   sits.
+ * - the second: driven three sevenths down at once, creeping on to half as he strains, trembling more and more, until
+ *   it springs back and throws him.
+ * - the third, on the bow warmed at the fire: more than half way, and his bounce takes it to seven tenths; then it
+ *   rises back under him, slowly, and he gets down.
+ * - the fourth: nearly all the way at once, creeping to within a twentieth of it, trembling hardest; and he slips.
+ */
+function tried(t: number): number {
+  const [l0, l1, l2, l3] = TRIAL.tries
+  if (t <= l0) return 0
+  let g = knock(t, l0, 0.075) + knock(t, TRIAL.pumps[0], 0.06) + knock(t, TRIAL.pumps[1], 0.045)
+  g += 0.012 * smooth(t, l0, l0 + 0.15) * (1 - smooth(t, LEAVES[0] - 0.1, LEAVES[0] + 0.05))
+  if (t > l1) {
+    const held = (u: number) => 0.3 * easeOut((u - l1) / 0.22) + 0.035 * Math.max(0, ring(u, l1 + 0.22, 3.2, 0.18)) + 0.055 * smooth(u, l1 + 0.35, TRIAL.snap - 0.1) + tremble(u, l1 + 0.3, TRIAL.snap, 0.014, 8.5)
+    g += t <= TRIAL.snap ? held(t) : given(t, TRIAL.snap, held(TRIAL.snap), 0.14, 0.06)
+  }
+  if (t > l2) {
+    const held = (u: number) => 0.4 * easeOut((u - l2) / 0.3) + 0.03 * Math.max(0, ring(u, l2 + 0.3, 3, 0.2)) + 0.09 * easeOut((u - TRIAL.bounce) / 0.2) * (u > TRIAL.bounce ? 1 : 0) + tremble(u, TRIAL.bounce + 0.25, SAG, 0.008, 7.5)
+    const sits = 0.04
+    if (t <= SAG) g += held(t)
+    else if (t <= LEAVES[2]) g += sits + (held(SAG) - sits) * (1 - smoother(t, SAG, LEAVES[2] - 0.06))
+    else g += given(t, LEAVES[2], sits, 0.08, 0.03)
+  }
+  if (t > l3) {
+    const held = (u: number) => 0.6 * easeOut((u - l3) / 0.35) + 0.03 * Math.max(0, ring(u, l3 + 0.35, 3, 0.2)) + 0.06 * smooth(u, l3 + 0.5, TRIAL.slip - 0.25) + tremble(u, l3 + 0.45, TRIAL.slip, 0.012, 9)
+    g += t <= TRIAL.slip ? held(t) : given(t, TRIAL.slip, held(TRIAL.slip), 0.2, 0.08)
+  }
+  return g
+}
+
 /** The crank's angle: cocked until his weight brings the plate down; held while he sits on it; back up as he leaves. */
 export function crankAngle(t: number): number {
   const c = CRANK.cocked
-  // Each suitor lands on the plate and it gives a little, and no more.
-  let give = 0
-  for (const at of TRIAL.tries) give += 0.06 * Math.max(0, ring(t, at, 2.6, 0.3))
-  if (t < TRIAL.sing) return c - give
+  // Each suitor lands on the plate and it gives, each further than the last, and never all the way.
+  if (t < TRIAL.sing) return c - tried(t)
   // His weight brings it down, fast at first and slowing onto the stop.
   const u = Math.min(1, (t - TRIAL.sing) / (TRIAL.drawn - TRIAL.sing))
   const down = c * (1 - (1 - u) * (1 - u))
@@ -76,8 +136,44 @@ export function drawOf(t: number): number {
   const d = CRANK.arm * (Math.sin(CRANK.cocked) - Math.sin(crankAngle(t)))
   const sing = t > TRIAL.sing ? 0.012 * ring(t, TRIAL.sing, 9, 0.3) : 0
   const twang = t > TRIAL.loose ? 0.02 * ring(t, TRIAL.loose + 0.12, 8, 0.35) : 0
-  return Math.max(0, d) + sing + twang
+  // When it springs back out of a suitor's hands, the string hums on.
+  const hum = 0.012 * ring(t, TRIAL.snap + 0.14, 8, 0.28) + 0.016 * ring(t, TRIAL.slip + 0.2, 8, 0.32)
+  return Math.max(0, d) + sing + twang + hum
 }
+
+/* ------------------------------------------------------------------ the fire pan */
+
+/** When the tallow reaches the coals, after his shove tips it off the rim. */
+const FAT = TRIAL.tallow + 0.12
+
+/**
+ * How tall the fire in the pan stands, cells: no flame on its coals until the tallow goes in; then the fat flares up
+ * round the bow's foot, settles to a steady fire through the last tries, and once the last has slipped, the tallow
+ * spent, it burns down to its coals again.
+ */
+export function panFire(t: number): number {
+  const flare = 0.17 * smooth(t, FAT, FAT + 0.18) * Math.exp(-Math.max(0, t - FAT - 0.18) / 0.9)
+  const burn = 0.1 * smooth(t, FAT, FAT + 0.4) * (1 - smooth(t, TRIAL.slip + 0.3, TRIAL.slip + 1.5))
+  return flare + burn
+}
+
+/**
+ * The round of tallow: on the pan's east rim, warming, until his shove tips it in; then on the coals, melting into the
+ * flare. Where its middle is, and how much of it is left (1 whole, 0 gone).
+ */
+export function tallowAt(t: number): { x: number; y: number; left: number } {
+  const rimX = PAN.x - PAN.half + 0.03
+  const inX = PAN.x - 0.02
+  if (t <= TRIAL.tallow) return { x: rimX, y: PAN.rim, left: 1 }
+  const u = clamp01((t - TRIAL.tallow) / (FAT - TRIAL.tallow))
+  // Off the rim and down onto the coals, a little arc.
+  const x = rimX + (inX - rimX) * u
+  const y = PAN.rim + 0.035 * u * u - 0.02 * Math.sin(Math.PI * u)
+  return { x, y, left: 1 - smooth(t, FAT, FAT + 1.1) }
+}
+
+/** How warm the bow is from the fire under it: from the flare, through the last tries, cooling after. */
+export const bowWarm = (t: number): number => smooth(t, FAT, FAT + 1.6) * (1 - smooth(t, 481, 490))
 
 /** How far the string is drawn as it looses. */
 const DRAWN = CRANK.arm * Math.sin(CRANK.cocked)
