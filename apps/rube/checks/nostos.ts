@@ -3,12 +3,13 @@
  * home to Ithaca, the bow and Penelope, on Ludwig Göransson's "Odysseus". Called by `checks/shows.ts` for that take.
  */
 import type { Performance, ShowVersion } from '../src/shows/registry'
+import type { ShowBall } from '../src/show'
 import measured from '../../../scripts/shows/plans/odysseus-onsets.json'
 import { M, RECORDING, YOUTUBE } from '../src/shows/versions/odysseus/nostos/music'
 import { CARDS, CREDITS_AT, CREDITS_OK, creditsAt } from '../src/shows/versions/odysseus/nostos/credits'
 import { END, SEAMS } from '../src/shows/versions/odysseus/nostos/voyage'
 import { AXES, HOME, SHUTTLE, TRIAL } from '../src/shows/versions/odysseus/nostos/scenes/ithaca/geo'
-import { arrowPasses, axeTime } from '../src/shows/versions/odysseus/nostos/scenes/ithaca/rig'
+import { arrowPasses, axeTime, crankAngle, panFire } from '../src/shows/versions/odysseus/nostos/scenes/ithaca/rig'
 import { HEAVES, THRUSTS } from '../src/shows/versions/odysseus/nostos/scenes/troy/horse'
 import { SURGE } from '../src/shows/versions/odysseus/nostos/scenes/troy/host'
 import { KILLS, drawSack } from '../src/shows/versions/odysseus/nostos/scenes/troy/sack'
@@ -22,7 +23,7 @@ import { frameH } from '../src/shows/versions/odysseus/nostos/draw'
 import { atLoom, shedAt } from '../src/shows/versions/odysseus/nostos/scenes/ithaca/loom'
 import { follower } from '../src/shows/versions/odysseus/nostos/camera'
 import { HULL } from '../src/shows/versions/odysseus/nostos/world/ship'
-import { ROOM, SLAB, WELL } from '../src/shows/versions/odysseus/nostos/scenes/ithaca/geo'
+import { CRANK, PAN, ROOM, SLAB, WELL } from '../src/shows/versions/odysseus/nostos/scenes/ithaca/geo'
 import { SUITORS_ID } from '../src/shows/versions/odysseus/nostos/cast'
 import { drawSteps } from '../src/shows/versions/odysseus/nostos/scenes/troy/city'
 import { drawHost } from '../src/shows/versions/odysseus/nostos/scenes/troy/host'
@@ -87,6 +88,11 @@ export function checkNostos(perf: Performance, version: ShowVersion, check: Chec
     ...AXES.map((_, i): [string, number] => [`axe ${i}`, axeTime(i)]),
     ...TRIAL.climb.map((t, i): [string, number] => [`step ${i}`, t]),
     ...TRIAL.tries.map((t, i): [string, number] => [`try ${i}`, t]),
+    ...TRIAL.pumps.map((t, i): [string, number] => [`Leodes bounces ${i}`, t]),
+    ['the bow throws the second', TRIAL.snap],
+    ['the tallow goes in', TRIAL.tallow],
+    ['the third bounces', TRIAL.bounce],
+    ['the fourth slips', TRIAL.slip],
   ]
   const off = strikes.filter(([, t]) => !onOnset(t))
   check('nostos: every strike the story turns on lands on a measured onset or beat', off.length === 0, off.map(([n, t]) => `${n} ${t.toFixed(3)}`).join(', '))
@@ -221,6 +227,51 @@ export function checkNostos(perf: Performance, version: ShowVersion, check: Chec
     }
   }
   check('nostos: whoever drops through the light well clears the slab\'s edges', well.length === 0, well.slice(0, 6).join(', '))
+
+  // The trial of the bow: each suitor brings the plate further down than the one before (by a tenth of the way at
+  // least), none of them all the way; and he brings it all the way.
+  const triesTo = [...TRIAL.tries, TRIAL.sing, TRIAL.loose]
+  const deepest = triesTo.slice(0, -1).map((a, i) => {
+    let d = 0
+    for (let t = a; t < triesTo[i + 1]; t += 1 / 240) d = Math.max(d, CRANK.cocked - crankAngle(t))
+    return d / CRANK.cocked
+  })
+  const suitors = deepest.slice(0, -1)
+  check('nostos: each suitor who tries the bow gets it further than the last, none of them all the way, and he draws it all the way',
+    suitors.every((d, i) => i === 0 || d > suitors[i - 1] + 0.1) && suitors.every((d) => d < 0.98) && deepest[deepest.length - 1] > 0.999,
+    deepest.map((d) => `${(d * 100).toFixed(0)}%`).join(', '))
+
+  // Through the trial nobody in the hall sits, stands or lies on anyone else for more than a few frames (passing is
+  // fine), and nobody is in the fire pan's flames.
+  const hallOn: string[] = []
+  const inFire: string[] = []
+  const held = new Map<string, number>()
+  let was = new Map<number, ShowBall>()
+  for (let t = 456; t <= TRIAL.sing; t += 1 / 120) {
+    const hall = (show.at(t).balls ?? []).filter((b) => b.x > 817 && b.x < 828 && b.y < -8.9 && b.y > -11.5)
+    const still = (b: ShowBall) => { const p = was.get(b.id); return !!p && Math.hypot(p.x - b.x, p.y - b.y) < 0.003 }
+    const now = new Set<string>()
+    for (let i = 0; i < hall.length; i++) {
+      for (let j = i + 1; j < hall.length; j++) {
+        const [a, b] = [hall[i], hall[j]]
+        if (Math.hypot(a.x - b.x, a.y - b.y) >= 0.13 * ((a.scale ?? 1) + (b.scale ?? 1)) - 0.02 || !still(a) || !still(b)) continue
+        const key = `${a.id}/${b.id}`
+        now.add(key)
+        held.set(key, (held.get(key) ?? 0) + 1)
+        if (held.get(key) === 6) hallOn.push(`${key} at ${t.toFixed(2)}`)
+      }
+      const h = panFire(t)
+      const b = hall[i]
+      const r = 0.13 * (b.scale ?? 1)
+      const dx = Math.max(PAN.x - PAN.half - b.x, 0, b.x - PAN.x - PAN.half)
+      const dy = Math.max(PAN.rim - h - b.y, 0, b.y - PAN.rim)
+      if (h > 0.01 && Math.hypot(dx, dy) < r) inFire.push(`${b.id} at ${t.toFixed(2)}`)
+    }
+    for (const k of [...held.keys()]) if (!now.has(k)) held.delete(k)
+    was = new Map(hall.map((b) => [b.id, b]))
+  }
+  check('nostos: through the trial of the bow nobody in the hall sits, stands or lies on anyone else', hallOn.length === 0, hallOn.slice(0, 6).join('; '))
+  check('nostos: nobody goes through the fire pan\'s flames at the bow\'s foot', inFire.length === 0, inFire.slice(0, 6).join('; '))
 
   // Troy's steps are drawn under the treads everyone rests on (`troyStep(i).y`): each lit tread at its step's height.
   const treads: number[] = []
