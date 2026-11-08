@@ -35,8 +35,17 @@ export const FIRELIT = '#C8723A'
 /** Whether the cave is cut open at `t`: from the cut that takes the camera in to the one that takes it out. */
 export const openAt = (t: number): boolean => t >= T.cutIn && t < T.cutOut
 
+/**
+ * How far the island's skirts reach out past its waterline at each end as they go down under the water, out of sight
+ * (no floor to it, so a tall frame sees none): they went straight down, a box with square ends seen through the cut sea.
+ */
+export const SKIRT = 9
 /** The island's outline, west at the waterline up over the crag and the ridge to the east, and down under the water. */
 const OUTLINE: Pt[] = [
+  [WEST - SKIRT, 40],
+  [WEST - 6, 12],
+  [WEST - 3, 4],
+  [WEST - 1.2, 1.4],
   [WEST - 0.4, 0.5],
   [WEST, 0.1],
   [93.6, -0.62],
@@ -67,8 +76,11 @@ const OUTLINE: Pt[] = [
   [137.6, -4.45],
   [139.8, -1.35],
   [EAST, 0.25],
-  [EAST + 0.4, 3],
-  [WEST - 0.4, 3],
+  [EAST + 0.6, 0.9],
+  [EAST + 1.6, 2.0],
+  [EAST + 3.2, 4.4],
+  [EAST + 6, 12],
+  [EAST + SKIRT, 40],
 ]
 
 /** The turf: a cap along the top from behind the crag round to the east slope. */
@@ -117,7 +129,7 @@ function inCave(ctx: CanvasRenderingContext2D): void {
 
 export function drawIsland(g: Paint, t: number, inside: () => void): void {
   const { ctx, view } = g
-  if (view.x1 < WEST - 3 || view.x0 > EAST + 3) return
+  if (view.x1 < WEST - SKIRT - 1 || view.x0 > EAST + SKIRT + 1) return
   const sky = skyAt(t)
   const air = (c: string, f: number) => mix(c, sky.low, f)
   // The rock, and its planes as the light falls on them: a few big shapes, not a pattern of lines.
@@ -158,9 +170,9 @@ export function drawIsland(g: Paint, t: number, inside: () => void): void {
   ctx.beginPath()
   top.forEach(([x, y], i) => (i ? ctx.lineTo(x, y + 0.12) : ctx.moveTo(x, y + 0.12)))
   stroke(g, air(TURF_HI, 0.05), 3.2)
-  // The outline.
+  // The outline: all of it but the floor it closes along out of sight.
   ctx.beginPath()
-  OUTLINE.slice(0, OUTLINE.length - 2).forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
+  OUTLINE.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
   stroke(g, INK, 2.6)
   if (!openAt(t)) drawFace(g)
   else {

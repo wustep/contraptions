@@ -241,7 +241,8 @@ function clearsMouth(i: number): number {
 
 const light = (t: number): GiantLight => ({ skin: '#1E1916', lit: FIRELIT, fire: fireAt(t) })
 
-const island = standing('cyclops-island', region(84, -30, 145, 4, 3), END, (g) => {
+// Its skirts go out and down under the water to 9 cells past each end (`SKIRT`): claimed as far.
+const island = standing('cyclops-island', region(82, -30, 152, 40, 3), END, (g) => {
   drawRidge(g, g.t, RIDGE, '#1D1B1B', '#3A3836', INK)
   drawIsland(g, g.t, () => {
     drawBody(g, g.t, light(g.t))
