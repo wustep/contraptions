@@ -4,12 +4,14 @@
  * What it holds: every ball let go plays the bay it drops into exactly as the bay was designed for it (the same parts,
  * in the same order, each within a millisecond and a half of its sixteenth); every part is cut to a note of D major,
  * and its length is the one that note's physics gives it; the form ends with every ball at rest in the bowl; and the
- * score is the simulation's log and nothing else. The soundtrack itself is rendered in a page (an offline audio
- * context), so here the dry mix stands in for it: finite, and nothing in it without a contact behind it.
+ * score is the simulation's log and nothing else. The soundtrack itself is played in a page (an audio worklet, or an
+ * offline audio context for a file), so here the dry mix stands in for it: finite, and nothing in it without a contact
+ * behind it; and the engine that plays it live is held to the same mix, block by block, at any speed.
  */
 import type { Performance, ShowVersion } from '../src/shows/registry'
 import { run, score } from '../src/shows/versions/orchestrion/instrument'
-import { mixdown } from '../src/shows/versions/orchestrion/instrument/score'
+import { mixdown, strikes } from '../src/shows/versions/orchestrion/instrument/score'
+import { defineEngine } from '../src/shows/versions/orchestrion/instrument/engine'
 import { BAYS, SIXTEENTH, TICKS_PER_BAY, barLength, midiHz, pipeLength, stringLength } from '../src/shows/versions/orchestrion/instrument/tuning'
 import { CODA, bayAt } from '../src/shows/versions/orchestrion/instrument/run'
 import { METAL_E } from '../src/shows/versions/orchestrion/instrument/design'
@@ -82,4 +84,53 @@ export function checkOrchestrion(perf: Performance, version: ShowVersion, check:
     loud = Math.max(loud, Math.abs(L[i]), Math.abs(R[i]))
   }
   check('orchestrion: the dry mix of its first twenty seconds is finite and sounds', finite && loud > 0.05 && loud < 4, loud.toFixed(3))
+
+  // The live engine is the offline mix's own arithmetic, run as an audio thread runs it.
+  const sr = 44100
+  const first = score.filter((n) => n.t < 12)
+  const ref = mixdown(run, first, 12)
+  const notes12 = strikes(run, first)
+  // Its text alone, as the worklet gets it: it must need nothing from outside itself.
+  let alone: ReturnType<typeof defineEngine> | null = null
+  try {
+    alone = new Function(`return (${defineEngine.toString()})()`)() as ReturnType<typeof defineEngine>
+  } catch {
+    alone = null
+  }
+  check('orchestrion: the live engine is self-contained, so its own text can be the audio worklet', !!alone && typeof alone.makeEngine === 'function')
+  const live = (alone ?? defineEngine()).makeEngine(sr)
+  live.load(notes12)
+  live.go(0, 0, 1, true)
+  const LL = new Float32Array(12 * sr)
+  const LR = new Float32Array(12 * sr)
+  for (let k = 0; k < LL.length; k += 128) live.process(LL, LR, k, Math.min(128, LL.length - k), k)
+  let same = 0
+  for (let i = 0; i < LL.length; i++) same = Math.max(same, Math.abs(LL[i] - ref.L[i]), Math.abs(LR[i] - ref.R[i]))
+  check('orchestrion: played live, 128 samples at a time, it is the offline mix to the sample', same < 1e-6, same.toExponential(2))
+  // At 2× the same notes come twice as often, each at its own pitch: the first loud sample at half the time.
+  const fast = defineEngine().makeEngine(sr)
+  fast.load(notes12)
+  fast.go(0, 0, 2, true)
+  const F = new Float32Array(6 * sr)
+  const FR = new Float32Array(6 * sr)
+  for (let k = 0; k < F.length; k += 128) fast.process(F, FR, k, 128, k)
+  const onset = (a: Float32Array) => a.findIndex((v) => Math.abs(v) > 0.01)
+  // (Within half a millisecond: a note's own attack takes as long at any speed.)
+  check('orchestrion: at 2× the machine plays twice as fast, not a recording sped up', Math.abs(onset(F) - onset(ref.L) / 2) <= sr * 0.0005, `${onset(F)} vs ${onset(ref.L)}`)
+  // A stop lets everything go in a few hundredths of a second; a seek picks up what is still ringing there.
+  const stopped = defineEngine().makeEngine(sr)
+  stopped.load(notes12)
+  stopped.go(0, 0, 1, true)
+  const S = new Float32Array(10 * sr)
+  const SR2 = new Float32Array(10 * sr)
+  for (let k = 0; k < S.length; k += 128) {
+    if (k === 128 * 300) stopped.stop(k)
+    stopped.process(S, SR2, k, 128, k)
+  }
+  let after = 0
+  for (let i = 128 * 300 + Math.round(0.02 * sr); i < S.length; i++) after = Math.max(after, Math.abs(S[i]))
+  const sought = defineEngine().makeEngine(sr)
+  sought.load(notes12)
+  sought.go(9, 0, 1, true)
+  check('orchestrion: a stop is silent within 20 ms, and a seek picks up the notes still ringing', after === 0 && stopped.voices() === 0 && sought.voices() > 3, `after ${after}, ringing at 9 s ${sought.voices()}`)
 }

@@ -77,26 +77,39 @@ play the same arpeggio a little later: a canon that is just the same physics, a 
   held back in the jar and let out exactly as the coda's D chime is struck. It plays D alone, and comes to rest with
   the others. 2:19.
 
-## The soundtrack in the page
+## The soundtrack, live
 
-`render.ts` makes the soundtrack in the page, before the first frame, with **Web Audio**. The voices are worked out
-from the log sample by sample into two channels. An `OfflineAudioContext` then does what a room and a desk would: the
-dry instrument plus a `ConvolverNode` hall (an impulse response of seeded noise, darker as it dies, RT60 about
-2.9 s), a slow `DynamicsCompressor` for glue, and a fast hard-knee one as the **limiter**. The result is brought to a
-peak of **−1.00 dBFS**, so nothing in it can clip (measured on the rendered file: no full-scale samples, about
-−14.1 dBFS RMS). It is written as a WAV and handed to the player as the show's recording.
+Nothing is rendered ahead. When the show plays, an **AudioWorklet** runs the voices (`engine.ts`) in the browser's
+audio thread, and each note is struck on the sample the playhead reaches its contact: the page tells the thread the
+show's notes once, and then only where the show is (from which moment, at which of the thread's own sample times, at
+what speed). The thread runs whatever is ringing 128 samples at a time, through a room and a desk (`render.ts`): the
+dry instrument plus a `ConvolverNode` hall (an impulse response of seeded noise, darker as it dies, RT60 about 2.9 s),
+a slow `DynamicsCompressor` for glue, and a fast hard-knee one as the **limiter**, then the level the offline render
+is normalized to, so live and file are as loud as each other (peaks about −1 dBFS).
 
-**Why render rather than voice by voice in real time:** the player keeps the picture locked to the music (the music is
-the clock), plays it at ¼× to 4× time-stretched, mutes and unmutes it, holds it for a gesture where the browser wants
-one, and records it into a saved video. Rendering the same synthesis just ahead of playback gives all of that for
-free, sample-accurate, the same on every machine. It is still computed in your browser from the simulation, not shipped
-as a file.
+The player keeps the picture locked to the music, as it does for any soundtrack: the show's time **is** the audio
+context's clock (where the synthesis started from, and how long it has run since at its speed, less the device's
+latency). So:
 
-The render takes a few seconds when the show is first opened (the simulation is about 0.4 s of it). Where there is
-no audio context (the headless checks), the show is the same, silent.
+- **Speed** changes the machine, not a recording. At ½× or 2× the balls strike the parts half or twice as often, and
+  every bar and string still rings at its own pitch for its own time: no time-stretching.
+- **Seeking** lets what was sounding go over a few milliseconds (with the room's tail), and picks up what was struck
+  in the seconds before the new moment, ringing where it would be.
+- **Pause** is silent at once: the voices and the hall's tail are let go together.
 
-**Audio and gestures:** nothing plays until the player plays the soundtrack. Where the browser wants a gesture, the
-show waits with its play button, as every show does. The offline context makes no sound and needs none.
+The engine refers to nothing outside itself, so its own source text is the worklet's (`live.ts`): the voices heard
+live and the voices in a file are the same arithmetic, and `checks/orchestrion.ts` holds the live engine, run 128
+samples at a time, to the offline mix to the sample.
+
+**The file, where one is wanted.** A saved video (and a browser with no AudioWorklet, and `?music=file`) gets the
+same voices rendered to a WAV first: the engine over the whole show, the same room in an `OfflineAudioContext`,
+brought to a peak of −1.00 dBFS (no full-scale samples, about −13.6 dBFS RMS), about four seconds' work. A video
+saved at another speed is that file time-stretched.
+
+**Audio and gestures:** the audio context is made on the first play, in the press that asked for it. Before that the
+page holds none: nothing sounds and nothing is asked of the browser. A link opened straight to the show runs its
+picture with the sound held, and the first press anywhere brings the sound in where the picture is. Where there is no
+audio context at all (the headless checks), the show is the same, silent.
 
 ## The picture
 
@@ -113,6 +126,9 @@ close, except to follow the first ball out of the jar.
 - `sim.ts`: the physics: balls, capsule parts, contacts at their moment, pipe sensors.
 - `design.ts`: the instrument built from the ball's flight.
 - `run.ts`: the whole performance as one simulation: escapement, gates, jar, lift, bowl.
-- `score.ts`, `voices.ts`: the log read out as voices.
-- `render.ts`: the Web Audio room, limiter and WAV.
+- `score.ts`: the log read out as notes, panned and levelled.
+- `engine.ts`: the voices, as an engine that plays notes as they come, live or offline; `voices.ts`, its copy for the
+  page's own thread.
+- `live.ts`: the engine as an AudioWorklet, and the live music the player plays.
+- `render.ts`: the Web Audio room and limiter, and the WAV for what needs a file.
 - `draw.ts`, `camera.ts`, `show.ts`, `index.ts`: the picture, and the take put together.

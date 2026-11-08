@@ -1,6 +1,7 @@
 import { METAL_E } from './design'
 import type { Performance } from './run'
-import { SR, bar, chime, knock, pipe, pipeKnock, string, type Out } from './voices'
+import type { Strike } from './engine'
+import { SR, makeEngine } from './voices'
 
 /**
  * The score is the simulation's log, read out. Every contact on a bar or a string, every passage of a ball down a
@@ -62,9 +63,35 @@ const LEVEL: Record<NoteKind, number> = {
 }
 
 /**
- * The dry mix: every note into two channels, `seconds` long. Equal-power panning across the machine, kept inside
- * three quarters of the way to either side, so the instrument sits in front of you and not round you.
+ * The notes as the engine takes them: each with its place in the stereo picture and its kind's level. Equal-power
+ * panning across the machine, kept inside three quarters of the way to either side, so the instrument sits in front of
+ * you and not round you.
  */
+export function strikes(perf: Performance, list: Note[] = notes(perf)): Strike[] {
+  const { box } = perf.machine
+  const mid = (box.x0 + box.x1) / 2
+  const half = (box.x1 - box.x0) / 2
+  return list.map((note) => {
+    const pan = Math.max(-1, Math.min(1, (note.x - mid) / half)) * 0.75
+    const angle = ((pan + 1) * Math.PI) / 4
+    const level = LEVEL[note.kind]
+    return {
+      t: note.t,
+      kind: note.kind,
+      hz: note.hz,
+      v: note.v,
+      u: note.u,
+      gl: Math.cos(angle) * level,
+      gr: Math.sin(angle) * level,
+      dur: note.dur ?? 0.2,
+      vOut: note.vOut ?? note.v,
+      metal: !!note.metal,
+      knock: note.knock ?? 'tick',
+    }
+  })
+}
+
+/** The dry mix: every note into two channels, `seconds` long, by the same engine that plays the show live. */
 export function mixdown(
   perf: Performance,
   list: Note[] = notes(perf),
@@ -74,36 +101,10 @@ export function mixdown(
   const n = into ? into.L.length : Math.ceil(seconds * SR)
   const L = into?.L ?? new Float32Array(n)
   const R = into?.R ?? new Float32Array(n)
-  const { box } = perf.machine
-  const mid = (box.x0 + box.x1) / 2
-  const half = (box.x1 - box.x0) / 2
-  for (const note of list) {
-    const at = Math.round(note.t * SR)
-    if (at < 0 || at >= n) continue
-    const pan = Math.max(-1, Math.min(1, (note.x - mid) / half)) * 0.75
-    const angle = ((pan + 1) * Math.PI) / 4
-    const level = LEVEL[note.kind]
-    const out: Out = { L, R, at, gl: Math.cos(angle) * level, gr: Math.sin(angle) * level }
-    switch (note.kind) {
-      case 'bar':
-        bar(out, note.hz, note.v, note.u, !!note.metal)
-        break
-      case 'string':
-        string(out, note.hz, note.v, note.u)
-        break
-      case 'pipe':
-        pipe(out, note.hz, note.dur ?? 0.2, note.v, note.vOut ?? note.v, Math.round(note.t * 1000))
-        break
-      case 'pipe-knock':
-        pipeKnock(out, note.hz, note.v)
-        break
-      case 'chime':
-        chime(out, note.hz, note.v)
-        break
-      case 'knock':
-        knock(out, note.knock ?? 'tick', note.v)
-        break
-    }
-  }
+  const engine = makeEngine(SR)
+  engine.load(strikes(perf, list))
+  engine.go(0, 0, 1, true)
+  const BLOCK = 4096
+  for (let k = 0; k < n; k += BLOCK) engine.process(L, R, k, Math.min(BLOCK, n - k), k)
   return { L, R }
 }

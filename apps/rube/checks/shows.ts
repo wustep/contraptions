@@ -207,7 +207,9 @@ async function main(): Promise<void> {
   check('a failed soundtrack is called failed, and a YouTube-only show\'s saved video is called silent before and after',
     player.includes('The soundtrack would not load, so the show runs silent') &&
     player.includes('It is silent: the music plays from YouTube, which a recording cannot take.') &&
-    /perf\?\.soundtrack\?\.src \? 'picture and music' : perf\?\.soundtrack \? 'the picture, silent/.test(player))
+    /hasFile\(perf\) \? 'picture and music' : perf\?\.soundtrack \? 'the picture, silent/.test(player) &&
+    // A file a recording can take: one the site serves, or one music made in the page renders for it.
+    player.includes('const hasFile = (p: Performance | null): boolean => !!(p?.soundtrack?.src || p?.soundtrack?.live)'))
   // Music that stops coming mid-show holds the picture with it; the stage says it is waiting rather than freezing silent.
   // (But not over the stage's Sound button while the browser holds the sound: it sat on it once, pass 102.)
   check('a show whose music stalls says so on the stage, and gives way to the Sound button',

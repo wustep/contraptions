@@ -178,6 +178,9 @@ function writeUrl(): void {
 /** A phone: the panel stacks under the stage. */
 const phone = window.matchMedia('(max-width: 820px)')
 
+/** Music a recording can take: a file the site serves, or music made in the page, which renders one for it. */
+const hasFile = (p: Performance | null): boolean => !!(p?.soundtrack?.src || p?.soundtrack?.live)
+
 async function play(): Promise<void> {
   if (!transport || recording) return
   if (transport.ended) seek(0)
@@ -696,7 +699,7 @@ recordBtn.addEventListener('click', () => {
       videoLabel.textContent = `Stop · ${Math.round(done * 100)}%`
     })
     .then(
-      (saved) => say(exportNote, saved ? `Saved: ${perf?.soundtrack?.src ? 'picture and music' : perf?.soundtrack ? 'the picture, silent (the music is YouTube’s)' : 'the picture'}${words}.` : 'Stopped. No file was kept.', saved ? 'ok' : ''),
+      (saved) => say(exportNote, saved ? `Saved: ${hasFile(perf) ? 'picture and music' : perf?.soundtrack ? 'the picture, silent (the music is YouTube’s)' : 'the picture'}${words}.` : 'Stopped. No file was kept.', saved ? 'ok' : ''),
       (err) => {
         console.error(err)
         say(exportNote, err instanceof Error ? err.message : String(err), 'bad')
@@ -882,7 +885,7 @@ function sync(): void {
 
   // Saving.
   sizeSeg.set(FRAME_SIZES.indexOf(size))
-  const canRecord = recordingFormat(!!perf?.soundtrack?.src) !== null || recordingFormat(false) !== null
+  const canRecord = recordingFormat(hasFile(perf)) !== null || recordingFormat(false) !== null
   pngBtn.disabled = !ready || busy
   recordBtn.disabled = !ready || busy || !canRecord
   // The button opens the saves while there is a show to save; a recording makes it the way to stop.
@@ -899,7 +902,7 @@ function sync(): void {
   dims.textContent = perf ? `${size.w} × ${size.h} · ${length}${speed === 1 ? '' : ` at ${speed}×`}` : '—'
   videoBtn.title = busy ? 'Stop the recording. No file is kept.' : 'Save this frame, or the whole show as a video'
   recordBtn.title = canRecord
-    ? `The whole show as a video${perf?.soundtrack?.src ? ', picture and music' : ''}${credited() ? ', with its credits' : ', nothing written on it'}. It is played through once to be recorded, so it takes ${length}${speed === 1 ? '' : ` at ${speed}×`}.${perf?.soundtrack && !perf.soundtrack.src ? ' It is silent: the music plays from YouTube, which a recording cannot take.' : ''}`
+    ? `The whole show as a video${hasFile(perf) ? ', picture and music' : ''}${credited() ? ', with its credits' : ', nothing written on it'}. It is played through once to be recorded, so it takes ${length}${speed === 1 ? '' : ` at ${speed}×`}.${perf?.soundtrack && !hasFile(perf) ? ' It is silent: the music plays from YouTube, which a recording cannot take.' : ''}`
     : 'Video export needs a browser that can record the canvas.'
 }
 

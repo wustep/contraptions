@@ -179,8 +179,10 @@ onto its own attack); `check:shows` holds every landing, tip, knock, stroke and 
 
 `orchestrion/opus55` (in the picker, **Orchestrion**, on the Ambient shelf, one take, **Opus 5.5**) is a show whose
 physics is its soundtrack: balls fall through an instrument of tuned bars, harp strings and brass pipes, four bays cut
-to D, B minor, G and A, and every sound is synthesized in the page from the simulation's contacts (modal bars,
-Karplus–Strong strings, waveguide pipes), then put in a room and limited with Web Audio. There is no recording.
+to D, B minor, G and A, and every sound is synthesized live in the page from the simulation's contacts (modal bars,
+Karplus–Strong strings, waveguide pipes) in an AudioWorklet as the playhead reaches each one, then put in a room and
+limited with Web Audio. There is no recording; a saved video gets the same voices rendered to a file
+(`SoundtrackSpec.live`).
 Each bay is built from the ball's flight so its bounces land on sixteenths; `check:shows` holds every ball to its
 bay's design. The write-up, with how each sound maps to the physics, is
 `apps/rube/src/shows/versions/orchestrion/ORCHESTRION.md`.

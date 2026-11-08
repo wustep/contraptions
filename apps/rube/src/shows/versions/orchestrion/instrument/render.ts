@@ -3,30 +3,38 @@ import { mixdown, notes } from './score'
 import { SR, noise } from './voices'
 
 /**
- * The soundtrack, made in the page with Web Audio from the simulation's log, before the first frame is shown.
+ * The room and the desk, and the soundtrack as a file.
  *
- * The voices (`score.ts`, `voices.ts`) are worked out sample by sample into two channels. Then an offline audio
- * context does what a room and a desk would: the dry instrument and a convolution with a room's answer (a hall of
- * about three seconds, made here from seeded noise, darker as it dies) are summed, a slow compressor holds them
- * together, and a fast one with a hard knee is the limiter. What comes out is brought to a peak of −1 dBFS, so
- * nothing in it can clip, and written as a WAV the player plays as it would any recording: locked to the picture,
- * at any speed, into a saved video with it.
+ * Live (`live.ts`) and offline alike, the instrument goes through what a room and a desk would do to it: the dry
+ * instrument and a convolution with a room's answer (a hall of about three seconds, made here from seeded noise,
+ * darker as it dies) are summed, a slow compressor holds them together, and a fast one with a hard knee is the
+ * limiter (`room`).
  *
- * It is made once a visit, the first time the show is put up. Nothing plays it until the player does, and the player
- * waits for a press where the browser asks for one.
+ * For what needs a file (a saved video, a browser with no AudioWorklet, `?music=file`) the same voices are worked
+ * out sample by sample into two channels by the same engine (`score.ts`, `engine.ts`), through the same room in an
+ * offline audio context, brought to a peak of −1 dBFS so nothing in it can clip, and written as a WAV the player plays
+ * as it would any recording (`renderSoundtrack`). It is made only when it is asked for.
  */
+
+/**
+ * The live sound's level after the limiter: the gain the offline render brings its own peak to −1 dBFS with, so live
+ * and file are as loud as each other (the same voices through the same room; measured on the render in Chrome: its
+ * peak out of the limiter 0.82, so 0.891 / 0.82).
+ */
+export const LIVE_GAIN = 1.09
 
 /** A hall's answer: stereo, decorrelated, its high end dying faster than its low. */
 function hall(ctx: BaseAudioContext, seconds: number, rt60: number): AudioBuffer {
-  const n = Math.round(seconds * SR)
-  const buf = ctx.createBuffer(2, n, SR)
-  const pre = Math.round(0.016 * SR)
+  const sr = ctx.sampleRate
+  const n = Math.round(seconds * sr)
+  const buf = ctx.createBuffer(2, n, sr)
+  const pre = Math.round(0.016 * sr)
   for (let ch = 0; ch < 2; ch++) {
     const data = buf.getChannelData(ch)
     const rnd = noise(ch ? 0x5eed : 0xbeef)
     let lp = 0
     for (let i = pre; i < n; i++) {
-      const t = (i - pre) / SR
+      const t = (i - pre) / sr
       // The lowpass closes as the tail goes on: the air takes the top first.
       const k = 0.55 * Math.exp(-t / (rt60 * 0.35)) + 0.06
       lp += k * (rnd() - lp)
@@ -35,7 +43,7 @@ function hall(ctx: BaseAudioContext, seconds: number, rt60: number): AudioBuffer
     // A few early reflections, so there are walls.
     const taps = ch ? [0.019, 0.031, 0.047, 0.066] : [0.023, 0.029, 0.052, 0.071]
     taps.forEach((d, j) => {
-      const at = pre + Math.round(d * SR)
+      const at = pre + Math.round(d * sr)
       if (at < n) data[at] += (0.5 - j * 0.09) * (ch ? 1 : -1)
     })
   }
@@ -87,24 +95,19 @@ export const canRender = (): boolean =>
   (typeof (globalThis as { OfflineAudioContext?: unknown }).OfflineAudioContext === 'function' ||
     typeof (globalThis as { webkitOfflineAudioContext?: unknown }).webkitOfflineAudioContext === 'function')
 
-export async function renderSoundtrack(perf: Performance): Promise<Rendered> {
-  const g = globalThis as unknown as { OfflineAudioContext?: typeof OfflineAudioContext; webkitOfflineAudioContext?: typeof OfflineAudioContext }
-  const Offline = g.OfflineAudioContext ?? g.webkitOfflineAudioContext!
-  const seconds = perf.duration
-  const length = Math.ceil(seconds * SR)
-  const ctx = new Offline(2, length, SR)
+/** The hall's answer, made once a context. */
+const halls = new WeakMap<BaseAudioContext, AudioBuffer>()
 
-  // The instrument, dry, written straight into the buffer the context will play.
-  const dry = ctx.createBuffer(2, length, SR)
-  mixdown(perf, notes(perf), seconds, { L: dry.getChannelData(0), R: dry.getChannelData(1) })
-
-  const source = ctx.createBufferSource()
-  source.buffer = dry
+/** The room and the desk, from its `input` to its `output`: the same live and offline. */
+export function room(ctx: BaseAudioContext, makeup = 1): { input: AudioNode; output: GainNode; dispose(): void } {
+  const input = ctx.createGain()
   const direct = ctx.createGain()
   direct.gain.value = 0.92
-  const room = ctx.createConvolver()
-  room.normalize = true
-  room.buffer = hall(ctx, 3.6, 2.9)
+  const hallNode = ctx.createConvolver()
+  hallNode.normalize = true
+  let answer = halls.get(ctx)
+  if (!answer) halls.set(ctx, (answer = hall(ctx, 3.6, 2.9)))
+  hallNode.buffer = answer
   const wet = ctx.createGain()
   wet.gain.value = 0.36
   // The glue: slow, gentle, only on the loudest passages.
@@ -121,9 +124,36 @@ export async function renderSoundtrack(perf: Performance): Promise<Rendered> {
   limiter.ratio.value = 20
   limiter.attack.value = 0.001
   limiter.release.value = 0.12
-  source.connect(direct).connect(glue)
-  source.connect(room).connect(wet).connect(glue)
-  glue.connect(limiter).connect(ctx.destination)
+  const out = ctx.createGain()
+  out.gain.value = makeup
+  input.connect(direct).connect(glue)
+  input.connect(hallNode).connect(wet).connect(glue)
+  glue.connect(limiter).connect(out)
+  return {
+    input,
+    output: out,
+    dispose() {
+      for (const node of [input, direct, hallNode, wet, glue, limiter, out]) node.disconnect()
+    },
+  }
+}
+
+export async function renderSoundtrack(perf: Performance): Promise<Rendered> {
+  const g = globalThis as unknown as { OfflineAudioContext?: typeof OfflineAudioContext; webkitOfflineAudioContext?: typeof OfflineAudioContext }
+  const Offline = g.OfflineAudioContext ?? g.webkitOfflineAudioContext!
+  const seconds = perf.duration
+  const length = Math.ceil(seconds * SR)
+  const ctx = new Offline(2, length, SR)
+
+  // The instrument, dry, written straight into the buffer the context will play.
+  const dry = ctx.createBuffer(2, length, SR)
+  mixdown(perf, notes(perf), seconds, { L: dry.getChannelData(0), R: dry.getChannelData(1) })
+
+  const source = ctx.createBufferSource()
+  source.buffer = dry
+  const desk = room(ctx)
+  source.connect(desk.input)
+  desk.output.connect(ctx.destination)
   source.start(0)
 
   const out = await ctx.startRendering()
