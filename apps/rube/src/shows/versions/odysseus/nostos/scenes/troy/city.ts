@@ -412,11 +412,13 @@ export function drawSteps(g: Paint): void {
     rect(ctx, s.x0, s.y - 0.05, STEPS.run + 0.01, 0.05)
     fill(ctx, stone)
   }
-  // The flank of the stair down to the street, so it stands on something.
-  poly(ctx, [[STEPS.x0, FORECOURT.y], [STREET.x0, STREET.y], [STREET.x0, STREET.y + 0.1], [STEPS.x0, STREET.y + 0.1]])
+  // The flank of the stair down to the street, so it stands on something: flush with the retaining wall's face and the
+  // street's slab (a fiftieth of a cell off each, it showed as a notched step at the stair's foot).
+  const slab = 0.08
+  poly(ctx, [[STEPS.x0 - 0.02, FORECOURT.y], [STEPS.x0, FORECOURT.y], [STREET.x0, STREET.y], [STREET.x0, STREET.y + slab], [STEPS.x0 - 0.02, STREET.y + slab]])
   fill(ctx, riser)
   // The street.
-  rect(ctx, STREET.x0, STREET.y, SHAFT.x0 - STREET.x0, 0.08)
+  rect(ctx, STREET.x0, STREET.y, SHAFT.x0 - STREET.x0, slab)
   fill(ctx, tone(MAT.stone, t, { lit: 0.3, fire: fire * 0.5 }))
 }
 
