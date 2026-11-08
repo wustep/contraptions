@@ -57,15 +57,20 @@ export function drawInland(g: Paint): void {
     [160, 0, 3.2, 0.6],
   ] as [number, number, number, number][]) {
     const L = layer(view, d)
+    // The range stands on its own foot (the nearer one a little under the horizon, with the plain behind it up to the
+    // horizon) and comes down to it at either end. It was closed along the horizon and ended where it stood, so the
+    // nearer range ended in a square block under the horizon, and both in a cliff (0-36 s, out of the horse's shots).
+    const foot = hy - (hy - L.y(0)) * base
     const pts: Pt[] = []
     for (let x = -170; x <= SHORE - 6; x += 4) {
+      const ends = smooth(x, -170, -150) * (1 - smooth(x, SHORE - 22, SHORE - 6))
       const h = amp * (0.55 * Math.exp(-(((x + 80) / 34) ** 2)) + 0.3 * Math.exp(-(((x + 34) / 16) ** 2)) + 0.18 + 0.07 * Math.sin(x * 0.17))
-      pts.push([L.x(x), hy - (hy - L.y(0)) * base - h * L.s])
+      pts.push([L.x(x), foot - ends * Math.max(h * L.s, foot - hy)])
     }
     ctx.beginPath()
-    ctx.moveTo(pts[0][0], hy + 0.01)
+    ctx.moveTo(pts[0][0], foot + 0.01)
     for (const p of pts) ctx.lineTo(p[0], p[1])
-    ctx.lineTo(pts[pts.length - 1][0], hy + 0.01)
+    ctx.lineTo(pts[pts.length - 1][0], foot + 0.01)
     ctx.closePath()
     fill(ctx, mix(mix('#8E8A78', sky.low, tint), sky.top, 0.15 + 0.5 * n))
   }
