@@ -75,8 +75,8 @@ export const home: Scene = {
     // comes along the terrace, the lip, the plate, the bow and the bench all in the frame. Held there, closing in a
     // little, through his strain, the tallow and the third's leap, as the fourth comes along the terrace above.
     { t: 462.6, cells: 5.15, at: [822.5, -10.6] },
-    { t: 463.4, cells: 5.1, at: [822.6, -10.58] },
-    { t: 464.9, cells: 2.9, at: [825.1, -10.02] },
+    { t: 463.1, cells: 5.1, at: [822.6, -10.58] },
+    { t: 465.1, cells: 2.9, at: [825.1, -10.02] },
     { t: 474.2, cells: 2.75, at: [825.15, -10.0] },
     // The fourth: in as he comes to the lip and drops, close on the plate through the slip; on the next strong note,
     // back to the stranger, who has seen enough.
