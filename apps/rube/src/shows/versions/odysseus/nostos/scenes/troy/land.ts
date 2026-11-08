@@ -237,7 +237,14 @@ export function drawGround(g: Paint, below = false): void {
       pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
       for (let i = pts.length - 1; i >= 0; i--) ctx.lineTo(pts[i][0], pts[i][1] + 0.1)
       ctx.closePath()
-      fill(ctx, tone(mix(MAT.scrub, MAT.clay, 0.45), t, { lit: 1, fire: firelight(pts[0][0], t) }))
+      // It goes over the sand's band by 0.6 cells and fades out across it there: it ended square, a notched seam in
+      // the beach's surface where the hill's colour met the sand's (0-36 s, 129-143 s).
+      const hill = tone(mix(MAT.scrub, MAT.clay, 0.45), t, { lit: 1, fire: firelight(pts[0][0], t) })
+      const grd = ctx.createLinearGradient(SAND_FROM, 0, SAND_FROM + 0.6, 0)
+      grd.addColorStop(0, rgba(hill, 1))
+      grd.addColorStop(1, rgba(hill, 0))
+      ctx.fillStyle = grd
+      ctx.fill()
     }
   }
   // The line of the ground, going with the seabed.
