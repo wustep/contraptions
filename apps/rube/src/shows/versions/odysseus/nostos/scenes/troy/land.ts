@@ -115,11 +115,16 @@ function fadeAway(ctx: CanvasRenderingContext2D, c0: string, c1: string, x: numb
 }
 
 /** The ground, cut open: from its surface down past the bottom of the frame. `below` keeps only what is under y = -0.25 (the cover over the sea's cutaway). */
+/** How far past the shore the beach's ground goes on under the seabed before it has faded into the water's dark. */
+const BEYOND = 5
+
 export function drawGround(g: Paint, below = false): void {
   const { ctx, t, view } = g
   const x0 = Math.max(-140, view.x0 - 0.5)
   const x1 = Math.min(below ? SHORE : 14, view.x1 + 0.5)
-  if (x1 <= x0) return
+  // Below, the beach's ground goes on past the shore under the seabed, to 5 cells out (`BEYOND`): in view while that is,
+  // not only while the shore is (a tall frame sailing away saw it go in one frame as the shore left it, 133.72 s).
+  if (Math.min(below ? SHORE + BEYOND : x1, view.x1 + 0.5) <= x0) return
   const bottom = Math.max(view.y1 + 1, 3)
   if (below) {
     ctx.save()
@@ -173,7 +178,7 @@ export function drawGround(g: Paint, below = false): void {
   // there, so the two never meet on an edge.
   if (below && view.x1 > SHORE) {
     const from = SHORE - 0.3
-    const run = 5.3
+    const run = BEYOND + 0.3
     const b = Math.min(from + run, view.x1 + 0.5)
     const pts = edge(from, b)
     ctx.save()
