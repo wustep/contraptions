@@ -87,7 +87,38 @@ export const HULL: Pt[] = [
   [1.75, 0.3],
 ]
 
+/**
+ * A ship. One seen far off (`far`) rides a sea further back than the cut-open one, so its hull under its own waterline is
+ * under that sea and not seen; it comes into sight through the cut as the ship comes up to the near sea. (Drawn whole, a
+ * far ship lifted up the frame showed its whole bowl and its steering oar's blade hanging in the air, 132-139.6 s.)
+ */
 export function drawShip(g: Paint, pose: Pose, look: ShipLook): void {
+  const far = look.far ?? 0
+  if (far <= 0.001) {
+    drawWholeShip(g, pose, look)
+    return
+  }
+  const { ctx } = g
+  const line = pose.y + 0.03
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(pose.x - 8, line - 30, 16, 30)
+  ctx.clip()
+  drawWholeShip(g, pose, look)
+  ctx.restore()
+  const under = 1 - smooth(far, 0, 0.12)
+  if (under > 0.004) {
+    ctx.save()
+    ctx.globalAlpha *= under
+    ctx.beginPath()
+    ctx.rect(pose.x - 8, line, 16, 30)
+    ctx.clip()
+    drawWholeShip(g, pose, look)
+    ctx.restore()
+  }
+}
+
+function drawWholeShip(g: Paint, pose: Pose, look: ShipLook): void {
   const { ctx } = g
   const dir = look.dir ?? 1
   const far = look.far ?? 0
