@@ -1,4 +1,4 @@
-import type { View } from '../draw'
+import { frameH, type View } from '../draw'
 import { horizonOf } from './sea'
 
 /**
@@ -20,7 +20,9 @@ export interface Layer {
 }
 
 export function layer(view: View, d: number): Layer {
-  const h = Math.max(1, view.h)
+  // The lens is set back by the composed frame's height, not the stage's: a stage taller than 16:9 sees more above and
+  // below the same frame through the same lens, so its far things stay the size they are against the near ones.
+  const h = Math.max(1, frameH(view))
   const s = h / (h + Math.max(0, d))
   const hy = horizonOf(view)
   // The waterline of a layer at depth d sits between the action's waterline (y = 0) and the horizon, as the sea's
