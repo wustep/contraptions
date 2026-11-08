@@ -457,7 +457,9 @@ function gear(g: Paint, c: Pt, r: number, teeth: number, turn: number, color: st
 /** The tower cut open: its back wall, the gate in the passage, the chamber with the train, the shaft under it, the drain. */
 export function drawTower(g: Paint): void {
   const { ctx, t, view } = g
-  if (view.x0 > TOWER.x1 + 2 || view.x1 < TOWER.x0 - 8) return
+  // Culled by the drain's far end, not the tower's: the drain runs on under the hill to where it comes out, and was cut
+  // off with the tower, so it came into the frame whole as the camera drew back along the beach (32.97 s).
+  if (view.x0 > Math.max(TOWER.x1, drainExit()[0]) + 1 || view.x1 < TOWER.x0 - 8) return
   // A lamp burns in the chamber all night, on the train's landward side: what the wheels are seen by.
   const lamp = t > M.answer - 1 ? 0.75 : 0
   const fire = Math.max(firelight(TOWER.x0, t), lamp * 0.5)
