@@ -11,7 +11,7 @@ import { drawHost } from './host'
 import { drawSack as drawKilling } from './sack'
 import { drawHorse, horseAt } from './horse'
 import { drawGround, drawInland, drawLogs, drawRopes, drawTroyFar } from './land'
-import { HATCH_OPENS, LAUNCH, PLANK_FOOT, PLANK_TOP, ROPE_ENDS, ROPE_SET, ROPE_THROWN, SLIPS, headAt, onRope, ropeLoad, statueTilt } from './plan'
+import { HATCH_OPENS, HEAD_FALLS, LAUNCH, PLANK_FOOT, PLANK_TOP, ROPE_ENDS, ROPE_SET, ROPE_THROWN, SLIPS, headAt, onRope, ropeLoad, statueTilt } from './plan'
 import { MAT, burning, firelight, night, sun, tone } from './tone'
 
 /**
@@ -92,7 +92,18 @@ function drawRope(g: Paint): void {
 
 function drawAthena(g: Paint): void {
   const h = headAt(g.t)
-  drawStatue(g, { at: h.at, turn: h.turn, on: true, tilt: statueTilt(g.t) })
+  const tilt = statueTilt(g.t)
+  // On her shoulders her head leans with her, about the plinth's top as she does: it stood still while she leaned, a
+  // head's width off her neck with the rope's loop under it (77-96 s). By the time it falls she stands straight again.
+  if (g.t <= HEAD_FALLS) {
+    const dx = h.at[0] - PLINTH.x
+    const dy = h.at[1] - PLINTH.top
+    const c = Math.cos(tilt)
+    const s = Math.sin(tilt)
+    drawStatue(g, { at: [PLINTH.x + dx * c - dy * s, PLINTH.top + dx * s + dy * c], turn: h.turn + tilt, on: true, tilt })
+    return
+  }
+  drawStatue(g, { at: h.at, turn: h.turn, on: true, tilt })
 }
 
 /** The plank from the sand to his ship's stern; when she is pushed off it drops and is left lying on the beach. */
