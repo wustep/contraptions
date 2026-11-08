@@ -387,6 +387,10 @@ export function drawGiant(g: Paint, gi: number): void {
   ctx.beginPath()
   ctx.rect(view.x0 - 1, view.y0 - 1, view.x1 - view.x0 + 2, TOP - view.y0 + 1)
   ctx.clip()
+  // Except at its very first: the fog's colour is not quite the sky's behind it, so a giant that is all fog would still
+  // stand out of the sky in one frame. It comes up from nothing over its first moments, while it is still nearly all
+  // fog (where a part over another shows least).
+  ctx.globalAlpha = smoother(veil, 0.995, 0.82)
   const lw = 3.2
   const ink = c(INK)
   // The throwing arm, from its shoulder to its hand, the elbow out.
