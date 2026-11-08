@@ -51,7 +51,8 @@ const sunXAt = (t: number): number => {
 
 /** The skiff's length, and where the two sit in it (its own frame, the waterline under its middle at 0). */
 const L = 1.25
-const SEATS: Pt[] = [[-0.22, -0.2], [0.07, -0.2]]
+// On the gunwale (its top edge runs at -0.15 to -0.16): at -0.2 they sat a little over the hull, with light under them.
+const SEATS: Pt[] = [[-0.22, -0.15], [0.07, -0.15]]
 
 /** Along the sea, near: moored until the dissolve, then out from the jetty and round into the sun's path. */
 const track = glide([
@@ -149,7 +150,8 @@ export function drawSkiff(g: Paint): void {
   ctx.scale(s.s, s.s)
   // The mast and the sail, set once they are under way.
   const set = Math.min(1, Math.max(0, (t - TRIAL.fade - 1.5) / 3))
-  rect(ctx, 0.3, -1.05, 0.03, 0.85)
+  // Stepped in the hull (drawn over its foot): it stopped short of the gunwale, standing on the air.
+  rect(ctx, 0.3, -1.05, 0.03, 1.05)
   fill(ctx, outdoors(TIMBER, t))
   if (set > 0) {
     const foot = -1.0 + 0.62 * set
