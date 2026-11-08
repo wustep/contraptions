@@ -177,6 +177,9 @@ export function drawPines(g: Paint, row: 'back' | 'front'): void {
       if (hash(i, 24) < 0.35 || hash(i, 28) < 0.4) continue
       const x = i * 11 + 4 * hash(i, 25) + 0.6
       const y = TOP + 3.5 + 3.5 * hash(i, 26)
+      // Only on the face, under its top: past the cliff's end (or over a gully) a ledge would be air, and its pines
+      // hung there in front of the far wall until the cliff left the frame and took them with it (223.45 s).
+      if (x < CLIFF.x0 || x + 0.9 > CLIFF.x1 || y < Math.max(cliffTop(x), cliffTop(x + 0.9)) + 0.3) continue
       const h = 1.1 + 0.7 * hash(i, 14)
       pine(ctx, x, y + 0.05, h, h * 0.42)
       pine(ctx, x + 0.9, y, h * 0.8, h * 0.36)
