@@ -1,4 +1,4 @@
-import { blob, curve, fill, mix, poly, rgba, stroke, type Paint } from '../draw'
+import { blob, curve, fill, mix, poly, rgba, smooth, stroke, type Paint } from '../draw'
 import type { Pt } from '../path'
 import { slope, surface } from './sea'
 
@@ -152,7 +152,27 @@ export function drawShip(g: Paint, pose: Pose, look: ShipLook): void {
     stroke(g, ink, lw * 1.1)
     const s = Math.max(0, Math.min(1, look.sail))
     const belly = (look.belly ?? 0.5) * 0.28 * s
-    if (s > 0.02) {
+    // Between the two, over the sail's first eighth, the roll fades into the canvas let down from it: the one never
+    // replaces the other in a frame (a pale band turning to a dark roll at once, at the end of every furl).
+    const up = smooth(s, 0, 0.12)
+    if (up < 1) {
+      // Furled: the sail bundled up along the yard, a slim roll in the canvas's own shadow, not a white disc.
+      ctx.save()
+      ctx.globalAlpha *= 1 - up
+      const roll = mix(canvas, ink, 0.3)
+      ctx.beginPath()
+      ctx.moveTo(-0.98, yard + 0.02)
+      ctx.quadraticCurveTo(0, yard + 0.14, 0.98, yard + 0.02)
+      ctx.lineTo(0.98, yard + 0.07)
+      ctx.quadraticCurveTo(0, yard + 0.19, -0.98, yard + 0.07)
+      ctx.closePath()
+      fill(ctx, roll)
+      stroke(g, ink, lw * 0.7)
+      ctx.restore()
+    }
+    if (up > 0) {
+      ctx.save()
+      ctx.globalAlpha *= up
       const foot = yard + 0.12 + 1.6 * s
       ctx.beginPath()
       ctx.moveTo(-1.0, yard)
@@ -169,17 +189,7 @@ export function drawShip(g: Paint, pose: Pose, look: ShipLook): void {
       ctx.fillStyle = rgba(trim, 0.85)
       ctx.fillRect(-1.3, yard + (foot - yard) * 0.42, 2.6, (foot - yard) * 0.16)
       ctx.restore()
-    } else {
-      // Furled: the sail bundled up along the yard, a slim roll in the canvas's own shadow, not a white disc.
-      const roll = mix(canvas, ink, 0.3)
-      ctx.beginPath()
-      ctx.moveTo(-0.98, yard + 0.02)
-      ctx.quadraticCurveTo(0, yard + 0.14, 0.98, yard + 0.02)
-      ctx.lineTo(0.98, yard + 0.07)
-      ctx.quadraticCurveTo(0, yard + 0.19, -0.98, yard + 0.07)
-      ctx.closePath()
-      fill(ctx, roll)
-      stroke(g, ink, lw * 0.7)
+      ctx.restore()
     }
     // Stays from the masthead to the bow and the stern.
     ctx.beginPath()
