@@ -59,7 +59,7 @@ export interface ShipLook {
 }
 
 /** The hull's outline in its own frame, bow to the right: the ram, the eye, the deck line, the stern's curl. */
-const HULL: Pt[] = [
+export const HULL: Pt[] = [
   [2.35, 0.12], // the ram's point, at the waterline
   [2.05, 0.06],
   [2.0, -0.2], // the stem

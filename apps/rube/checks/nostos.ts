@@ -20,6 +20,14 @@ import { skyAt } from '../src/shows/versions/odysseus/nostos/world/sky'
 import { layer } from '../src/shows/versions/odysseus/nostos/world/depth'
 import { frameH } from '../src/shows/versions/odysseus/nostos/draw'
 import { atLoom, shedAt } from '../src/shows/versions/odysseus/nostos/scenes/ithaca/loom'
+import { follower } from '../src/shows/versions/odysseus/nostos/camera'
+import { HULL } from '../src/shows/versions/odysseus/nostos/world/ship'
+import { ROOM, SLAB, WELL } from '../src/shows/versions/odysseus/nostos/scenes/ithaca/geo'
+import { SUITORS_ID } from '../src/shows/versions/odysseus/nostos/cast'
+import { drawSteps } from '../src/shows/versions/odysseus/nostos/scenes/troy/city'
+import { STEPS, step as troyStep } from '../src/shows/versions/odysseus/nostos/scenes/troy/geo'
+import type { Pt } from '../src/shows/versions/odysseus/nostos/path'
+import type { Paint } from '../src/shows/versions/odysseus/nostos/draw'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 
@@ -172,4 +180,63 @@ export function checkNostos(perf: Performance, version: ShowVersion, check: Chec
     `frameH ${frameH(wide).toFixed(2)} / ${frameH(tall).toFixed(2)}, s(30) ${layer(wide, 30).s.toFixed(3)} / ${layer(tall, 30).s.toFixed(3)}`)
   check('nostos: the camera never jumps (no more than 1% of the frame in 2 ms) but at a cut or across a dissolve', camJump <= 0.01, `${camJump.toFixed(4)} at ${camAt.toFixed(3)} s`)
   check('nostos: no one comes, goes or jumps in shot', pops.length === 0, pops.slice(0, 10).join(', '))
+
+  // A follow's window is sampled about once a frame, so a kink in the ball's way reaches the camera as one smooth
+  // change of speed, not as steps every fourth frame (a 15 Hz judder of the whole frame).
+  const kinked = (t: number): Pt => [Math.max(0, t - 1) * 3, 0]
+  const fx: number[] = []
+  const follow = follower(kinked)
+  for (let i = 0; i <= 180; i++) fx.push(follow(i / 60)[0])
+  let judder = 0
+  for (let i = 2; i < fx.length - 2; i++) {
+    const a = fx[i + 1] - 2 * fx[i] + fx[i - 1]
+    judder = Math.max(judder, Math.abs(a - (fx[i] - 2 * fx[i - 1] + fx[i - 2] + fx[i + 2] - 2 * fx[i + 1] + fx[i]) / 2))
+  }
+  check('nostos: a follow shot\'s camera takes a kink in the ball\'s way smoothly, with no judder', judder < 5e-4, judder.toExponential(2))
+
+  // Every ship's outline is a simple shape: no edge of it crosses another (its stern post pinched to a point where two did).
+  const cross = (a: Pt, b: Pt, c: Pt, d: Pt) => {
+    const o = (p: Pt, q: Pt, r: Pt) => Math.sign((q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]))
+    return o(a, b, c) * o(a, b, d) < 0 && o(c, d, a) * o(c, d, b) < 0
+  }
+  const crossings: string[] = []
+  for (let i = 0; i < HULL.length; i++) for (let j = i + 2; j < HULL.length; j++) {
+    if (i === 0 && j === HULL.length - 1) continue
+    if (cross(HULL[i], HULL[(i + 1) % HULL.length], HULL[j], HULL[(j + 1) % HULL.length])) crossings.push(`${i}-${j}`)
+  }
+  check('nostos: the ships\' hull is one simple outline, its stern post a post', crossings.length === 0, crossings.join(', '))
+
+  // The suitors are in the house: once it is shut against the sunset at the end, none of them is drawn on it.
+  const late = [TRIAL.fade + 0.05, 530, 548].filter((t) => (show.at(t).balls ?? []).some((b) => b.id >= SUITORS_ID && b.id < SUITORS_ID + 13))
+  check('nostos: no suitor is on the stage once the house is shut, in the west', late.length === 0, late.join(', '))
+
+  // Whoever drops through the light well goes through the opening whole: never behind the slab's cut face.
+  const well: string[] = []
+  for (let t = 455; t < 500; t += 1 / 240) {
+    for (const b of show.at(t).balls ?? []) {
+      const r = 0.13 * (b.scale ?? 1)
+      if (b.y < ROOM.floor - r * 0.5 || b.y > ROOM.floor + SLAB + r || Math.abs(b.x - WELL.x) > WELL.half + 0.4) continue
+      if (b.x - r < WELL.x - WELL.half - 0.004 || b.x + r > WELL.x + WELL.half + 0.004) well.push(`${b.id} at ${t.toFixed(3)}`)
+    }
+  }
+  check('nostos: whoever drops through the light well clears the slab\'s edges', well.length === 0, well.slice(0, 6).join(', '))
+
+  // Troy's steps are drawn under the treads everyone rests on (`troyStep(i).y`): each lit tread at its step's height.
+  const treads: number[] = []
+  const rec: Record<string | symbol, unknown> = { getTransform: () => ({ a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 }) }
+  let last: number[] = []
+  const ctx = new Proxy(rec, {
+    get(target, prop) {
+      if (prop in target) return target[prop]
+      if (prop === 'rect') return (x: number, y: number, w: number, h: number) => { last = [x, y, w, h] }
+      if (prop === 'fill') return () => { if (Math.abs(last[3] - 0.05) < 1e-9 && Math.abs(last[2] - STEPS.run - 0.01) < 1e-9) treads.push(last[1]) }
+      if (prop === 'createLinearGradient' || prop === 'createRadialGradient') return () => ({ addColorStop() {} })
+      return () => undefined
+    },
+    set(target, prop, v) { target[prop] = v; return true },
+  }) as unknown as CanvasRenderingContext2D
+  const paint: Paint = { ctx, k: 100, t: 117, view: { x0: -36, x1: -28, y0: -7, y1: -1, cx: -32, cy: -4, h: 6 }, px: 0.01 }
+  drawSteps(paint)
+  const wrong = Array.from({ length: STEPS.n }, (_, i) => i).filter((i) => !treads.some((y) => Math.abs(y - troyStep(i).y) < 1e-9))
+  check('nostos: Troy\'s steps stand under their treads, each lit tread where the balls on it rest', treads.length === STEPS.n && wrong.length === 0, `${treads.length} treads; off: ${wrong.join(', ')}`)
 }
