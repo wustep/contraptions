@@ -256,7 +256,8 @@ export function drawTownBehind(g: Paint): void {
 
 export function drawTemple(g: Paint): void {
   const { ctx, t, view } = g
-  if (view.x0 > TEMPLE.x1 + 1 || view.x1 < TEMPLE.x0 - 16) return
+  // Culled by the forecourt's far end, not the temple's: the pavement drawn last runs on past the temple to the steps.
+  if (view.x0 > FORECOURT.x1 + 1 || view.x1 < TEMPLE.x0 - 16) return
   const fire = firelight(TEMPLE.x1, t) * 0.7
   const brazier = brazierLight(t)
   const stone = tone(MAT.stone, t, { lit: 0.7, fire: fire + brazier * 0.5 })
