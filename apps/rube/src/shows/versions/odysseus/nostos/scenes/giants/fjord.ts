@@ -444,6 +444,11 @@ export function drawGiant(g: Paint, gi: number): void {
   fill(ctx, c(STEEL.deep))
   stroke(g, ink, lw)
   if (!raised) drawArm([tsh, tel, thd])
+  // Under the belt, his hips and legs going down into the wood (cut off at the cliff's top with the rest): where the
+  // pines stand thin, the sky showed through them under his belt, a body that ended at the waist (212-216.5 s).
+  poly(ctx, [P([-1.3, -3.1]), P([1.3, -3.1]), P([1.55, 1.0]), P([-1.55, 1.0])])
+  fill(ctx, c(STEEL.deep))
+  stroke(g, ink, lw)
   // The body: a cuirass in two planes, its chest drawn on it in one line, and a belt.
   poly(ctx, [P([-2.2, -7.4]), P([2.2, -7.4]), P([1.35, -3.1]), P([-1.35, -3.1])])
   fill(ctx, c(STEEL.lit))
