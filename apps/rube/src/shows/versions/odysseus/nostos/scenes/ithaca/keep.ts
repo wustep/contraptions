@@ -1,5 +1,6 @@
 import { fill, mix, rect, stroke, type Paint } from '../../draw'
 import { GATE, HALL, ROOM, SLAB, TERRACE, TOP, WALL } from './geo'
+import { drawScrub } from './island'
 import { SCRUB, SCRUB_DARK, STONE, STONE_DEEP, STONE_SHADE, againstSun, outdoors } from './look'
 
 /**
@@ -102,11 +103,7 @@ export function drawKeep(g: Paint): void {
   rect(ctx, upper.x0, upper.y0, upper.x1 - upper.x0, 0.05)
   fill(ctx, outdoors(STONE_SHADE, t))
   for (const [x, r] of [[lower.x0 + 0.35, 0.2], [upper.x0 - 0.42, 0.16], [upper.x1 + 0.3, 0.17], [lower.x1 - 0.3, 0.21]] as const) {
-    ctx.beginPath()
-    ctx.ellipse(x, lower.y0 - r * 0.3, r, r * 0.55, 0, Math.PI, 0)
-    ctx.ellipse(x + r * 0.5, lower.y0 - r * 0.15, r * 0.6, r * 0.4, 0, Math.PI, 0)
-    ctx.closePath()
-    fill(ctx, againstSun(x < upper.x0 ? SCRUB_DARK : SCRUB, t))
+    drawScrub(g, x, lower.y0, r, x < upper.x0 ? SCRUB_DARK : SCRUB)
   }
   // The tower on the east corner, two small windows up its face.
   mass(g, TOWER.x0, TOWER.x1, TOWER.top, TOP, back)
@@ -122,7 +119,11 @@ export function drawKeep(g: Paint): void {
   window(g, (BASTION.x0 + BASTION.x1) / 2, -9.62, 0.15)
 }
 
-/** The fortress's outline added to the current path, for the house seen dark against the sunset at the end. */
+/**
+ * The fortress's outline added to the current path, for the house seen dark against the sunset at the end. Not the
+ * terraces: against the sun they are the hill's, dark with its rock (in the house's own dark they stood out of the cliff's
+ * top as a square block).
+ */
 export function keepOutline(ctx: CanvasRenderingContext2D): void {
   for (const m of [TOWER, BASTION, CURTAIN]) {
     ctx.rect(m.x0 - 0.03, m.top, m.x1 - m.x0 + 0.06, TOP - m.top + 0.01)
@@ -130,7 +131,6 @@ export function keepOutline(ctx: CanvasRenderingContext2D): void {
   }
   ctx.rect(HEAD.x0, HEAD.top, HEAD.x1 - HEAD.x0, TERRACE.y - HEAD.top)
   merlons(ctx, HEAD.x0 - 0.03, HEAD.x1 + 0.03, HEAD.top)
-  for (const tr of TERRACES) ctx.rect(tr.x0, tr.y0 - 0.005, tr.x1 - tr.x0, tr.y1 - tr.y0 + 0.01)
   merlons(ctx, ROOM.x0 - WALL - 0.06, ROOM.x1 + WALL + 0.06, ROOM.ceil - SLAB - 0.06)
   merlons(ctx, TERRACE.x0, TERRACE.x1 + WALL, TERRACE.y - 0.31)
   merlons(ctx, GATE.wall[0], HALL.x0 - WALL, TOP - GATE.wallH - 0.06)
