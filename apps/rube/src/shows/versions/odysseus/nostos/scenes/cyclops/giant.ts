@@ -393,8 +393,12 @@ export function thrownRock(t: number, ridge: Pt): Pt | null {
 
 export const SPLASH_AT = SPLASH_X
 
-/** How far he stands up out of the ridge, in cells, when he is all the way up, and how big he is drawn. */
-const RISE = 13
+/**
+ * How far below the ridge he starts and ends (cells), and how big he is drawn. Deeper than he is tall above the waist
+ * (his head is 15.3 cells over it): from 13 down, his head was already over the ridge when he was first drawn, and
+ * still over it when he was last drawn as he sank, so it came and went in a frame (181.45 s and 184.92 s).
+ */
+const RISE = 20
 const BIG = 1.35
 
 /** Where he is on the ridge at `t`: his waist on the ridge line, risen as far as he has come. */
