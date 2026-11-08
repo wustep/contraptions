@@ -1,4 +1,5 @@
 import { circle, fill, poly, rect, smoother, stroke, type Paint } from '../../draw'
+import { G } from '../../path'
 import { ARGOS, HOIST, HOME, TOP } from './geo'
 import { TIMBER, outdoors } from './look'
 import { heroBasketY, pinOut, stonesBasketY } from './rig'
@@ -41,10 +42,15 @@ export function drawHoist(g: Paint): void {
   stroke(g, ink, 1.4)
   circle(ctx, px, py, 0.04)
   fill(ctx, ink)
-  // The pin that held the stones, pulled as he lands below.
+  // The pin that held the stones, pulled as he lands below; once out, it drops away down the cliff, there being
+  // nothing to hold it (it hung in the air beside the rope for the rest of the scene, 421-441 s).
   const pin = pinOut(t)
-  rect(ctx, HOIST.stones - 0.02 + pin * 0.3, py + 0.22, 0.2, 0.04)
-  fill(ctx, timber)
+  const out = Math.max(0, t - (HOME.lift + 0.12))
+  const drop = 0.5 * G * out * out
+  if (drop < 12) {
+    rect(ctx, HOIST.stones - 0.02 + pin * 0.3 + 0.12 * out, py + 0.22 + drop, 0.2, 0.04)
+    fill(ctx, timber)
+  }
   // The baskets' backs and their bails.
   for (const [x, y] of [[HOIST.hero, hy], [HOIST.stones, sy]] as const) {
     ctx.beginPath()
