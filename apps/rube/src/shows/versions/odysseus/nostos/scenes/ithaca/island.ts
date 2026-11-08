@@ -71,7 +71,8 @@ const SCRUBS: [number, number, number][] = [
   [808.0, -9.02, 0.3],
   [812.6, -9.02, 0.26],
   [829.6, -9.02, 0.32],
-  [805.0, -0.4, 0.22],
+  // On the beach at the cliff's foot, on the sand's rounded edge there (it stood 0.08 over it).
+  [805.0, -0.31, 0.22],
   // On the beds' ledges where they come out of the faces, and over the west cliff's edge.
   [807.45, -7.1, 0.2],
   [807.2, -4.6, 0.17],
@@ -211,13 +212,22 @@ export function drawIsland(g: Paint): void {
   drawJetty(g)
 }
 
-function drawScrub(g: Paint, x: number, y: number, r: number): void {
+/**
+ * A clump of scrub standing on the ground at (x, y): two domes, a bigger and a smaller beside it, their flat feet on the
+ * ground (a hair into it, so no light shows under them). They were half-ellipses centred over the ground, so every clump
+ * hung a tenth of a cell over the plateau or the sand with a notch in its foot where the two were joined.
+ */
+export function drawScrub(g: Paint, x: number, y: number, r: number, color?: string): void {
   const { ctx, t } = g
+  const foot = y + 0.012
   ctx.beginPath()
-  ctx.ellipse(x, y - r * 0.35, r, r * 0.55, 0, Math.PI, 0)
-  ctx.ellipse(x + r * 0.5, y - r * 0.2, r * 0.6, r * 0.4, 0, Math.PI, 0)
+  ctx.moveTo(x - r, foot)
+  ctx.ellipse(x, foot, r, r * 0.62, 0, Math.PI, Math.PI * 2)
   ctx.closePath()
-  fill(ctx, againstSun(hash(Math.round(x * 10)) > 0.5 ? SCRUB : SCRUB_DARK, t))
+  ctx.moveTo(x - r * 0.1, foot)
+  ctx.ellipse(x + r * 0.5, foot, r * 0.6, r * 0.42, 0, Math.PI, Math.PI * 2)
+  ctx.closePath()
+  fill(ctx, againstSun(color ?? (hash(Math.round(x * 10)) > 0.5 ? SCRUB : SCRUB_DARK), t))
 }
 
 /** An olive tree: a twisted trunk and a few silvery-green masses of leaf that sway a little in the wind. */
