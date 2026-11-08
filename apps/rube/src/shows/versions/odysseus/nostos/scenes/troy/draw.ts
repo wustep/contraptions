@@ -1,7 +1,7 @@
 import { curve, region, ring, smooth, standing, stroke, type Paint } from '../../draw'
 import { M } from '../../music'
 import type { Placed } from '../../../../../../plan'
-import type { Pt } from '../../path'
+import { G, fallTime, type Pt } from '../../path'
 import { END } from '../../voyage'
 import { brazierLight, drawBrazier, drawBucketBack, drawBucketFront, drawFires, drawStatue, drawSteps, drawTemple, drawTower, drawTownBehind } from './city'
 import { FORECOURT, PLINTH, ground } from './geo'
@@ -11,7 +11,7 @@ import { drawHost } from './host'
 import { drawSack as drawKilling } from './sack'
 import { drawHorse, horseAt } from './horse'
 import { drawGround, drawInland, drawLogs, drawRopes, drawTroyFar } from './land'
-import { HATCH_OPENS, HEAD_FALLS, LAUNCH, PLANK_FOOT, PLANK_TOP, ROPE_ENDS, ROPE_SET, ROPE_THROWN, SLIPS, headAt, onRope, ropeLoad, statueTilt } from './plan'
+import { HATCH_OPENS, HEAD_FALLS, HE_AT, HE_SAG, LAUNCH, PLANK_FOOT, PLANK_TOP, ROPE_ENDS, ROPE_SET, ROPE_THROWN, SLIPS, headAt, onRope, ropeLoad, statueTilt } from './plan'
 import { MAT, burning, firelight, night, sun, tone } from './tone'
 
 /**
@@ -94,12 +94,24 @@ function drawRope(g: Paint): void {
     stroke(g, color, 1.5)
     return
   }
-  // Slipped off: it falls and hangs from the hatch to the pavement, swinging a little and settling.
+  // Slipped off: it falls with him riding it, under him all the way down; once he is on the pavement it hangs free
+  // from the hatch to the pavement, swinging a little and settling. (It swung away from under him as he fell, and its
+  // end came back to him, 96.35-96.7 s.)
   const u = smooth(t, SLIPS, SLIPS + 0.6)
   const swing = 0.12 * Math.exp(-(t - SLIPS) / 1.2) * Math.sin((t - SLIPS) * 4.2)
   const foot: Pt = [a[0] + 0.15 + swing, FORECOURT.y]
   const end: Pt = [b[0] + (foot[0] - b[0]) * u, b[1] + (foot[1] - b[1]) * u]
-  curve(ctx, [a, [(a[0] + end[0]) / 2 + 0.05, (a[1] + end[1]) / 2 + 0.08 * (1 - u)], end])
+  const free: Pt = [(a[0] + end[0]) / 2 + 0.05, (a[1] + end[1]) / 2 + 0.08 * (1 - u)]
+  // Under him as he falls it bends at him, as it did while he hung (`[a, under, under, end]` is that bend); once he is
+  // down it eases into the free curve (`[a, free, end, end]` is the curve `[a, free, end]` draws).
+  const hang = onRope(HE_AT, 0, HE_SAG + 0.1)
+  const floor = FORECOURT.y
+  const s = Math.max(0, t - SLIPS)
+  const under: Pt = [hang[0], Math.min(floor, hang[1] + 0.5 * G * s * s)]
+  const down = SLIPS + fallTime(floor - hang[1])
+  const k = smooth(t, down, down + 0.35)
+  const mix2 = (p: Pt, q: Pt): Pt => [p[0] + (q[0] - p[0]) * k, p[1] + (q[1] - p[1]) * k]
+  curve(ctx, [a, mix2(under, free), mix2(under, end), end])
   stroke(g, color, 1.7)
 }
 

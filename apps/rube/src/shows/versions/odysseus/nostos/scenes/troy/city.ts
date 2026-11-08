@@ -556,6 +556,12 @@ export function drawTower(g: Paint): void {
   ctx.arc(PULLEY[0], PULLEY[1], R_PULLEY, 0, Math.PI * 2)
   fill(ctx, timber)
   stroke(g, ink, 1.2)
+  // The shaft cut into the ground under the tower, and the drain out of its foot under the hill; under the rope (laid
+  // over it, the shaft hid the rope down in it, and the bucket hung from nothing, 112-131 s).
+  rect(ctx, SHAFT.x0, STREET.y, SHAFT.x1 - SHAFT.x0, SHAFT.floor - STREET.y)
+  fill(ctx, tone('#2A1C16', t))
+  stroke(g, ink, 1.2)
+  drawDrain(g)
   // The rope: off the drum's foot, over the pulley, down through the floor to the bucket's bail.
   const [rx, ry] = rimAt(t)
   // Made fast to the bail's top (a quadratic to y - 0.55, so its apex is at y - 0.265): it stopped short of it.
@@ -566,11 +572,6 @@ export function drawTower(g: Paint): void {
   ctx.arc(PULLEY[0], PULLEY[1], R_PULLEY, -Math.PI / 2, Math.PI, true)
   ctx.lineTo(rx, bail)
   stroke(g, tone('#7A6448', t, { fire: fire * 0.4 }), 1.7)
-  // The shaft cut into the ground under the tower, and the drain out of its foot under the hill.
-  rect(ctx, SHAFT.x0, STREET.y, SHAFT.x1 - SHAFT.x0, SHAFT.floor - STREET.y)
-  fill(ctx, tone('#2A1C16', t))
-  stroke(g, ink, 1.2)
-  drawDrain(g)
   // At dusk the tower is seen whole from the beach, its machine shut inside it: the cut opens with the night.
   if (shut(t)) {
     rect(ctx, TOWER.x0, TOWER.roof, TOWER.x1 - TOWER.x0, STREET.y - TOWER.roof)
