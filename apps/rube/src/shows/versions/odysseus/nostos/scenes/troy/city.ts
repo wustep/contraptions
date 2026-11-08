@@ -572,7 +572,7 @@ export function drawTower(g: Paint): void {
   stroke(g, ink, 1.2)
   drawDrain(g)
   // At dusk the tower is seen whole from the beach, its machine shut inside it: the cut opens with the night.
-  if (t < M.answer - 1) {
+  if (shut(t)) {
     rect(ctx, TOWER.x0, TOWER.roof, TOWER.x1 - TOWER.x0, STREET.y - TOWER.roof)
     fill(ctx, clay)
     rect(ctx, TOWER.x0, TOWER.roof, (TOWER.x1 - TOWER.x0) * 0.22, STREET.y - TOWER.roof)
@@ -584,6 +584,12 @@ export function drawTower(g: Paint): void {
     fill(ctx, tone('#1A1210', t))
   }
 }
+
+/**
+ * Whether the gate tower is shut, seen whole from the beach at dusk: its machine inside it, the bucket too. (The bucket
+ * was drawn anyway, its bail over the tower's clay face with no rope to hang from, 32-37 s.)
+ */
+const shut = (t: number): boolean => t < M.answer - 1
 
 /** The drain under the hill, cut open: a dark bore from the shaft's foot to the hillside. */
 export function drawDrain(g: Paint): void {
@@ -624,6 +630,7 @@ export function drainExit(): Pt {
 /** The bucket's back: the far wall inside, so the men in it are seen in it. */
 export function drawBucketBack(g: Paint): void {
   const { ctx, t } = g
+  if (shut(t)) return
   const [x, y] = rimAt(t)
   const w = BUCKET.w / 2
   poly(ctx, [[x - w, y], [x + w, y], [x + w * 0.92, y + BUCKET.depth], [x - w * 0.92, y + BUCKET.depth]])
@@ -633,6 +640,7 @@ export function drawBucketBack(g: Paint): void {
 /** The bucket's front: its two staves, its foot, the hoops, the bail, and the flap on its seaward side. */
 export function drawBucketFront(g: Paint): void {
   const { ctx, t, view } = g
+  if (shut(t)) return
   const [x, y] = rimAt(t)
   if (x < view.x0 - 2 || x > view.x1 + 2) return
   const w = BUCKET.w / 2
