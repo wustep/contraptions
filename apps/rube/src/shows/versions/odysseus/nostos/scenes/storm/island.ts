@@ -82,11 +82,13 @@ const lit = (c: string): string => (gloom > 0.001 ? mix(c, STORM, gloom) : c)
 
 export function drawIsland(g: Paint): void {
   const { ctx, t, view } = g
-  if (view.x1 < 488 || view.x0 > 532) return
+  // In view while any of it is: the land and its skirts under the water (475 to 541), or its far hills, which stand
+  // 30 deep and so come over the horizon well before the shore does (culled by the shore alone, they appeared whole).
+  const L = layer(view, 30)
+  if (view.x1 < Math.min(475, L.x(499)) - 1 || view.x0 > Math.max(541, L.x(523)) + 1) return
   gloom = 0.55 * smooth(t, 292.5, 301.5)
   const air = skyAt(t).low
   // Far hills of the same island, behind, paler.
-  const L = layer(view, 30)
   const far: Pt[] = []
   for (let k = 0; k <= 12; k++) {
     const x = 499 + (24 * k) / 12

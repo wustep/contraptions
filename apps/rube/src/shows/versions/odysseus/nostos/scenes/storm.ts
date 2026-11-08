@@ -77,7 +77,9 @@ function ashore(man: number, go: number, there: number, back: number): Move[] {
   return out
 }
 
-const island = standing('thrinacia', region(486, -8, 530, 4, 3), 600, (g) => drawIsland(g))
+// Claimed from 470: its far hills, 30 deep, come over the horizon when the frame's right edge is there, well short of
+// the island itself (claimed from its shore, they were held back until it came, then appeared whole).
+const island = standing('thrinacia', region(470, -8, 530, 4, 3), 600, (g) => drawIsland(g))
 const seas = standing('storm-seas', region(470, -12, 800, 4, 4), 600, (g) => drawSeas(g))
 const ceiling = standing('storm-ceiling', region(470, -40, 720, 4, 4), 600, (g) => drawCeiling(g))
 const farBolt = standing('storm-far-bolt', region(470, -30, 720, 4, 4), 600, (g) => drawFarBolt(g))
