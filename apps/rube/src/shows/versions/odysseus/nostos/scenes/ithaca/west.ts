@@ -186,11 +186,20 @@ export function drawSkiff(g: Paint): void {
   fill(ctx, mix(outdoors('#3A3029', t), '#1C1814', 0.3))
   stroke(g, ink, 1.4)
   ctx.restore()
-  // The mooring line to the jetty's bollard, until they cast off.
-  if (t < TRIAL.fade + 1.2 && s.s > 0.99) {
+  // The mooring line to the jetty's bollard, until they cast off: then let go there and hauled in to the bow, its
+  // end coming in low over the water (it went in one frame, 515.2 s).
+  const cast = TRIAL.fade + 1.2
+  const haul = smoother(t, cast, cast + 0.6)
+  if (haul < 1 && s.s > 0.99) {
+    const bx = s.x - L / 2 + 0.05
+    const by = s.y - 0.15
+    const ex = JETTY.x1 - 0.5 + (bx - JETTY.x1 + 0.5) * haul
+    const ey = JETTY.top - 0.1 + (by - JETTY.top + 0.1) * haul + 0.25 * Math.sin(Math.PI * haul)
     ctx.beginPath()
-    ctx.moveTo(s.x - L / 2 + 0.05, s.y - 0.15)
-    ctx.quadraticCurveTo((s.x + JETTY.x1 - 0.5) / 2, s.y + 0.05, JETTY.x1 - 0.5, JETTY.top - 0.1)
+    ctx.moveTo(bx, by)
+    const cx = ((s.x + JETTY.x1 - 0.5) / 2) * (1 - haul) + ((bx + ex) / 2) * haul
+    const cy = (s.y + 0.05) * (1 - haul) + (Math.max(by, ey) + 0.05) * haul
+    ctx.quadraticCurveTo(cx, cy, ex, ey)
     stroke(g, outdoors('#6A5A44', t), 1.0)
   }
 }
