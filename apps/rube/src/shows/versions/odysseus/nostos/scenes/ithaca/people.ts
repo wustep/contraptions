@@ -130,15 +130,17 @@ function penelopePath(): Path {
   // To the head of the stairs, to watch the hall through the opening.
   const watch: Pt = [820.95, y]
   m.push(roll([[weaverX(TRIAL.penelope), y], watch], TRIAL.penelope, TRIAL.penelope + 2.4))
-  m.push(rest(watch, TRIAL.penelope + 2.4, 489.4))
-  // He comes up the stairs into her room: she goes a little towards him, and stops.
-  const near: Pt = [821.32, y]
-  m.push(roll([watch, near], 489.4, 490.43))
-  m.push(rest(near, 490.43, 495.0))
-  // The bow sings, and she knows him by it: out of her door after him, across the terrace to the light well's lip,
-  // and there she stands over him, looking down, while his weight draws the bow and the arrow goes.
+  // He comes up the stairs into her room and goes on out past her; she stays at the stairs' head (going a little
+  // towards him took her out over the stairwell's opening, standing on the air, 489.65-495.4 s).
+  m.push(rest(watch, TRIAL.penelope + 2.4, 495.0))
+  // The bow sings, and she knows him by it: over the stairs' opening onto its top step, out of her door after him,
+  // across the terrace to the light well's lip, and there she stands over him, looking down, while his weight draws
+  // the bow and the arrow goes. (She rolled straight across the opening.)
+  const over: Pt = [stepAt(STAIRS.steps - 1)[0] - 0.05, y]
+  const across = hopTo(watch, over, 495.0 + flightFor(watch, over, 0.12), 0.12)
+  m.push(across)
   const lip: Pt = [826.18, y]
-  m.push(roll([near, lip], 495.0, 497.4, 'inout'))
+  m.push(roll([over, lip], across.t1, 497.4, 'out'))
   m.push(rest(lip, 497.4, 501.3))
   // Back to the stairs' head, to watch the fight over the hall; down them when it is over, a step a note, to him.
   const head = stepAt(STAIRS.steps - 1)
