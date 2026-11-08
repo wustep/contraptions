@@ -1,6 +1,6 @@
 import { PENELOPE_SIZE, SUITOR_SIZE, TELEMACHUS_SIZE } from '../../cast'
 import { fly, flightFor, ramp, rest, ride, roll, type Move, type Pt } from '../../path'
-import { DAIS, HALL, R, STAIRS, TRIAL } from './geo'
+import { DAIS, HALL, R, TRIAL } from './geo'
 import { stepAt } from './palace'
 
 /**
@@ -125,12 +125,14 @@ export const HERO_MEET = 820.155
 export function sonFight(doorway: Pt): { moves: Move[]; end: Pt } {
   const m: Move[] = []
   const over: Pt = [818.95, TY]
-  const foot: Pt = [STAIRS.x0 - 0.2, TY]
+  // He waits for his moment short of the hearth's fire and goes over it onto the first step, as his father does (he
+  // rolled on into the fire and stood in its flames, 503.75-504.08 s).
+  const foot: Pt = over
   m.push(rest(doorway, 453.6, 503.3))
   // Over the dead man, to the stairs, and up two steps: between them and his mother.
   m.push(fly(doorway, over, 503.3, 503.3 + flightFor(doorway, over, 0.3)))
   const t1 = 503.3 + flightFor(doorway, over, 0.3)
-  m.push(roll([over, foot], t1, 503.95, 'inout'))
+  m.push(rest(over, t1, 503.95))
   const s0 = stepFor(0, RT)
   const s1 = stepFor(1, RT)
   const s2 = stepFor(2, RT)

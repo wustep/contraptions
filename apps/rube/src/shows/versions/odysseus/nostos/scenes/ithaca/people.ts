@@ -173,7 +173,7 @@ function telemachusPath(): Path {
     const p = stepAt(i)
     return [p[0], p[1] + R - R * s] as Pt
   })
-  const floorFoot: Pt = [STAIRS.x0 - 0.25, fy]
+  const floorFoot: Pt = [HEARTH.x - HEARTH.half - R * s - 0.04, fy]
   m.push(...hops([top, ...down, floorFoot], [424.6, 425.0, 425.4, 425.8, 426.2, 426.6, 427.0], 0.05))
   // Out of the gate he stops under the olive at what he sees: the old dog lifting his head to the beggar. He watches the
   // tail go once and the dog die (that is how he knows him, as in the film), and only then comes, slowly, to the dog's
@@ -246,7 +246,9 @@ function trier(i: number, land: number): { moves: Move[]; back: number } {
   const top: Pt = [head[0], ROOM_ON(s)]
   const tTop = tLip - 2.4
   const stepTimes = [0, 1, 2, 3, 4, 5].map((k) => tTop - (5 - k) * 0.42)
-  const foot: Pt = [STAIRS.x0 - 0.25, fy]
+  // At the stairs' foot in front of the first step, clear of the hearth's fire (they stood in its flames, 452.2, 461.7
+  // and 470.7 s), and up onto it.
+  const foot: Pt = [stepAt(0)[0], fy]
   const tFoot = stepTimes[0] - 0.42
   const down: Pt = [SEATS[i] - 0.3, fy]
   const tDown = tFoot - (down[0] - foot[0]) / 1.8
