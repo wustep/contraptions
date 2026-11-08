@@ -1,5 +1,6 @@
 import { METAL_E } from './design'
 import type { Performance } from './run'
+import { BALLS } from './sim'
 import type { Strike } from './engine'
 import { SR, makeEngine } from './voices'
 
@@ -28,27 +29,38 @@ export interface Note {
   vOut?: number
   metal?: boolean
   knock?: 'tick' | 'seat' | 'felt' | 'bowl' | 'flap'
+  /** The ball that struck it (-1: none, a mallet or the works), and what that ball gives the blow (`sim.ts`, `BALLS`). */
+  ball: number
+  mass: number
+  contact: number
 }
 
 export function notes(perf: Performance): Note[] {
   const { parts } = perf.machine
   const out: Note[] = []
+  /** What ball `id` gives a blow: its mass and its contact, against ivory's. */
+  const by = (id: number | undefined) => {
+    const b = id !== undefined && id >= 0 ? BALLS[perf.balls[id]] : null
+    return { ball: id ?? -1, mass: b?.mass ?? 1, contact: b?.contact ?? 1 }
+  }
   for (const c of perf.contacts) {
     if (c.part < 0) continue
     const p = parts[c.part]
-    if (c.material === 'bar') out.push({ t: c.t, kind: 'bar', part: c.part, hz: p.hz, v: c.v, u: c.u, x: c.x, y: c.y, metal: p.e >= METAL_E })
-    else if (c.material === 'string') out.push({ t: c.t, kind: 'string', part: c.part, hz: p.hz, v: c.v, u: c.u, x: c.x, y: c.y })
-    else if (c.material === 'brass' && p.kind === 'pipe') out.push({ t: c.t, kind: 'pipe-knock', part: c.part, hz: p.hz, v: c.v, u: 0.5, x: c.x, y: c.y })
+    const b = by(c.ball)
+    if (c.material === 'bar') out.push({ t: c.t, kind: 'bar', part: c.part, hz: p.hz, v: c.v, u: c.u, x: c.x, y: c.y, metal: p.e >= METAL_E, ...b })
+    else if (c.material === 'string') out.push({ t: c.t, kind: 'string', part: c.part, hz: p.hz, v: c.v, u: c.u, x: c.x, y: c.y, ...b })
+    else if (c.material === 'brass' && p.kind === 'pipe') out.push({ t: c.t, kind: 'pipe-knock', part: c.part, hz: p.hz, v: c.v, u: 0.5, x: c.x, y: c.y, ...b })
   }
   for (const g of perf.passages) {
     const p = parts[g.part]
-    out.push({ t: g.tIn, kind: 'pipe', part: g.part, hz: p.hz, v: g.vIn, u: 0.5, x: p.ax, y: p.ay, dur: g.tOut - g.tIn, vOut: g.vOut })
+    // The column is breathed into by the air the ball pushes: its size and speed, not its weight.
+    out.push({ t: g.tIn, kind: 'pipe', part: g.part, hz: p.hz, v: g.vIn, u: 0.5, x: p.ax, y: p.ay, dur: g.tOut - g.tIn, vOut: g.vOut, ball: g.ball, mass: 1, contact: 1 })
   }
   for (const s of perf.strikes) {
     const p = parts[s.part]
-    out.push({ t: s.t, kind: 'chime', part: s.part, hz: p.hz, v: s.v, u: 0.5, x: p.ax, y: (p.ay + p.by) / 2 })
+    out.push({ t: s.t, kind: 'chime', part: s.part, hz: p.hz, v: s.v, u: 0.5, x: p.ax, y: (p.ay + p.by) / 2, ...by(-1) })
   }
-  for (const k of perf.knocks) out.push({ t: k.t, kind: 'knock', part: -1, hz: 0, v: k.v, u: 0.5, x: k.x, y: k.y, knock: k.kind })
+  for (const k of perf.knocks) out.push({ t: k.t, kind: 'knock', part: -1, hz: 0, v: k.v, u: 0.5, x: k.x, y: k.y, knock: k.kind, ...by(k.ball) })
   return out.sort((a, b) => a.t - b.t)
 }
 
@@ -74,7 +86,8 @@ export function strikes(perf: Performance, list: Note[] = notes(perf)): Strike[]
   return list.map((note) => {
     const pan = Math.max(-1, Math.min(1, (note.x - mid) / half)) * 0.75
     const angle = ((pan + 1) * Math.PI) / 4
-    const level = LEVEL[note.kind]
+    // A blow is the ball's momentum: twice the weight, twice the sound.
+    const level = LEVEL[note.kind] * note.mass
     return {
       t: note.t,
       kind: note.kind,
@@ -87,6 +100,7 @@ export function strikes(perf: Performance, list: Note[] = notes(perf)): Strike[]
       vOut: note.vOut ?? note.v,
       metal: !!note.metal,
       knock: note.knock ?? 'tick',
+      contact: note.contact,
     }
   })
 }

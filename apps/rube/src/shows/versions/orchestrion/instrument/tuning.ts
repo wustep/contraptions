@@ -7,14 +7,17 @@
  * - a **bar** rings as a free–free beam: same stock, same thickness, its pitch goes as 1 / length², so a bar is
  *   `BAR_REF · √(f_ref / f)` long; the long bars are the low ones, as on a vibraphone;
  * - a **string** is a harp string at one tension: pitch goes as 1 / length;
- * - a **pipe** is a column of air open at both ends: pitch goes as 1 / length too, `c / 2L`;
+ * - a **pipe** is a column of air open at both ends: pitch goes as 1 / length too, `c / 2L` (the F♯ pipe, lowest, is
+ *   the longest);
  * - a **chime** is a hanging tube, a beam again: 1 / length².
  *
  * The lengths are in proportion, not to scale (a pipe true to its G2 would be ten times the frame), so the
  * instrument's air is slower than ours, and its metal softer. The ratios are the physics.
  *
- * Four bays, one chord each: D, B minor, G, A — Dmaj9, Bm9, Gmaj7♯11 and A with its 6th and 9th, all inside D major
- * so that any ball overlapping any other still agrees with it.
+ * Five bays, one chord each: D, B minor, G, A and F♯ minor — Dmaj9, Bm9, Gmaj7♯11, A with its 6th and 9th, and
+ * F♯m7 with its 11th, all inside D major so that any ball overlapping any other still agrees with it. The first four
+ * are the song (I–vi–IV–V); F♯ minor is heard only in its middle, where the gates take the bays in another order
+ * (`run.ts`).
  */
 
 export const midiHz = (m: number): number => 440 * Math.pow(2, (m - 69) / 12)
@@ -106,6 +109,18 @@ export const BAYS: Bay[] = [
     row3: [62, 59, 57], // D4 B3 A3
     pipe: 45, // A2
     chime: 57, // A3
+  },
+  {
+    name: 'F♯m',
+    hue: '#B4A7D6',
+    s1: 49, // C♯3
+    row1: [85, 81, 78, 76], // C♯6 A5 F♯5 E5
+    s2: 54, // F♯3
+    row2: [73, 71, 69, 64], // C♯5 B4 A4 E4
+    s3: 49, // C♯3
+    row3: [61, 57, 54], // C♯4 A3 F♯3
+    pipe: 42, // F♯2
+    chime: 54, // F♯3
   },
 ]
 

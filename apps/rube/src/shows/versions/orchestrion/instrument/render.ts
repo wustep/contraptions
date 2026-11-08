@@ -19,9 +19,9 @@ import { SR, noise } from './voices'
 /**
  * The live sound's level after the limiter: the gain the offline render brings its own peak to −1 dBFS with, so live
  * and file are as loud as each other (the same voices through the same room; measured on the render in Chrome: its
- * peak out of the limiter 0.82, so 0.891 / 0.82).
+ * peak out of the limiter 0.966, so 0.891 / 0.966).
  */
-export const LIVE_GAIN = 1.09
+export const LIVE_GAIN = 0.92
 
 /** A hall's answer: stereo, decorrelated, its high end dying faster than its low. */
 function hall(ctx: BaseAudioContext, seconds: number, rt60: number): AudioBuffer {
@@ -110,16 +110,16 @@ export function room(ctx: BaseAudioContext, makeup = 1): { input: AudioNode; out
   hallNode.buffer = answer
   const wet = ctx.createGain()
   wet.gain.value = 0.36
-  // The glue: slow, gentle, only on the loudest passages.
+  // The glue: slow, gentle, only on the loudest passages, and light enough that the jar's dynamics come through.
   const glue = ctx.createDynamicsCompressor()
-  glue.threshold.value = -20
+  glue.threshold.value = -16
   glue.knee.value = 12
-  glue.ratio.value = 2.2
+  glue.ratio.value = 1.5
   glue.attack.value = 0.02
   glue.release.value = 0.35
   // The limiter: fast and hard, just under full scale.
   const limiter = ctx.createDynamicsCompressor()
-  limiter.threshold.value = -6
+  limiter.threshold.value = -3
   limiter.knee.value = 0
   limiter.ratio.value = 20
   limiter.attack.value = 0.001

@@ -12,6 +12,23 @@
  * along the part. Those contacts are the score. Nothing else makes a sound.
  */
 
+/**
+ * What a ball is made of. All are the same size and all are hard, so all take the same path through a bay (the
+ * restitution is the part's); what differs is how they strike. By Hertz, a ball meeting a part stays on it for a time
+ * that goes as m^(2/5) / E*^(2/5) (E*, the pair's combined stiffness), and the blow it gives is its momentum. So:
+ *
+ * - **ivory** is the reference: 1.85 g/cm³, and soft beside the parts (E 17 GPa; 15 GPa against aluminium);
+ * - **glass** is a little heavier (2.5 g/cm³, so ×1.35 the blow, +2.6 dB) and much stiffer (E* 38 GPa): its contact is
+ *   0.78 of ivory's, so it reaches higher partials: brighter, a little louder;
+ * - **brass**, a hollow shell twice an ivory ball's weight (+6 dB), and stiff (E* 46 GPa): contact 0.84 of ivory's.
+ */
+export type BallKind = 'ivory' | 'glass' | 'brass'
+export const BALLS: Record<BallKind, { mass: number; contact: number }> = {
+  ivory: { mass: 1, contact: 1 },
+  glass: { mass: 1.35, contact: 0.78 },
+  brass: { mass: 2, contact: 0.84 },
+}
+
 /** Cells per second², down. A slower world than ours: the arcs are there to be watched. */
 export const G = 60
 /** The balls' radius, in cells. */

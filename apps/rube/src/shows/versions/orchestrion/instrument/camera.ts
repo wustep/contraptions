@@ -29,7 +29,8 @@ export function makeCamera(perf: Performance, list: Note[]): (t: number) => Fram
   const last = sounding.length ? sounding[sounding.length - 1].t : 0
   const first = perf.releases[0]?.t ?? 0
   const coda = perf.releases[perf.releases.length - 1]?.t ?? Infinity
-  const opening: Framing = { x: 1.2, y: 0.2, cells: 8 }
+  // The jar, the escapement and the first bay's top: the first ball's whole way in.
+  const opening: Framing = { x: 1.1, y: -0.9, cells: 9.4 }
   /** How close it may come, over the show: close on the first ball, then held back, then a little in for the coda. */
   const closest = (t: number): number => {
     if (t > coda - 1) return 15.5

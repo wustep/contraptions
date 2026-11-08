@@ -12,8 +12,8 @@ import type { Performance, ShowVersion } from '../src/shows/registry'
 import { run, score } from '../src/shows/versions/orchestrion/instrument'
 import { mixdown, strikes } from '../src/shows/versions/orchestrion/instrument/score'
 import { defineEngine } from '../src/shows/versions/orchestrion/instrument/engine'
-import { BAYS, SIXTEENTH, TICKS_PER_BAY, barLength, midiHz, pipeLength, stringLength } from '../src/shows/versions/orchestrion/instrument/tuning'
-import { CODA, bayAt } from '../src/shows/versions/orchestrion/instrument/run'
+import { BAYS, SIXTEENTH, TICK, TICKS_PER_BAY, barLength, midiHz, pipeLength, stringLength } from '../src/shows/versions/orchestrion/instrument/tuning'
+import { CODA, FIRST_TICK, FORM, bayAt, blockAt, tickTime } from '../src/shows/versions/orchestrion/instrument/run'
 import { METAL_E } from '../src/shows/versions/orchestrion/instrument/design'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -59,7 +59,7 @@ export function checkOrchestrion(perf: Performance, version: ShowVersion, check:
     p.kind === 'pipe' ? Math.abs(p.len - pipeLength(p.hz)) < 1e-9 : true)
   check('orchestrion: each bar is as long as 1/√pitch makes it, each string and pipe as 1/pitch', cut)
   const pipeOrder = parts.filter((p) => p.kind === 'pipe').map((p) => p.len)
-  check('orchestrion: the lowest pipe (G) is the longest', Math.max(...pipeOrder) === parts.find((p) => p.kind === 'pipe' && p.midi === BAYS[2].pipe)!.len)
+  check('orchestrion: the lowest pipe (F♯) is the longest', Math.max(...pipeOrder) === parts.find((p) => p.kind === 'pipe' && p.midi === Math.min(...BAYS.map((b) => b.pipe)))!.len)
   const metal = parts.filter((p) => p.kind === 'bar' && p.e >= METAL_E).length
   const wood = parts.filter((p) => p.kind === 'bar' && p.e < METAL_E).length
   check('orchestrion: the bars are aluminium along a row and rosewood where a row takes up a drop', metal > 2 * wood && wood >= 2 * BAYS.length)
@@ -68,7 +68,35 @@ export function checkOrchestrion(perf: Performance, version: ShowVersion, check:
   // The form.
   const last = run.bowl[run.bowl.length - 1]
   check('orchestrion: every ball comes out of the jar and ends at rest in the bowl', run.jar[run.jar.length - 1][1] === 0 && last[1] === run.tracks.length && last[0] < run.duration)
-  check('orchestrion: the four chords each have their turn, and the coda is D', new Set(run.ticks.filter((k) => k.released !== null).map((k) => k.bay)).size === 4 && run.ticks.filter((k) => k.released !== null).slice(-1)[0].bay === 0)
+  check('orchestrion: the five chords each have their turn, and the coda is D', new Set(run.ticks.filter((k) => k.released !== null).map((k) => k.bay)).size === BAYS.length && run.ticks.filter((k) => k.released !== null).slice(-1)[0].bay === 0)
+  const middle = FORM.filter((b) => b.section === 'B').map((b) => BAYS[b.bay].name)
+  check('orchestrion: the song is D, Bm, G, A; the middle takes the gates in another order, G, A, F♯m, Bm, and is the only place F♯m is heard',
+    FORM.filter((b) => b.section === 'A').slice(0, 4).map((b) => BAYS[b.bay].name).join(' ') === 'D Bm G A' && middle.join(' ') === 'G A F♯m Bm' &&
+    run.releases.every((r) => (bayAt(Math.round((r.t - FIRST_TICK) / TICK)) === 4) === (blockAt(Math.round((r.t - FIRST_TICK) / TICK)).section === 'B' && bayAt(Math.round((r.t - FIRST_TICK) / TICK)) === 4)))
+  // The governor: in the song a ball every third tick at most, nine sixteenths, so balls interlock; in the middle every
+  // second, six, so they fall in step and strike together.
+  const touches = run.contacts.filter((c) => c.material === 'bar' || c.material === 'string').sort((a, b) => a.t - b.t)
+  const together: Record<string, [number, number]> = { A: [0, 0], B: [0, 0], coda: [0, 0] }
+  touches.forEach((c, i) => {
+    const near = (j: number) => j >= 0 && j < touches.length && touches[j].ball !== c.ball && Math.abs(touches[j].t - c.t) < 0.001
+    const sec = together[blockAt(Math.floor((c.t - FIRST_TICK) / TICK)).section]
+    sec[0]++
+    if (near(i - 1) || near(i + 1)) sec[1]++
+  })
+  const share = (k: string) => together[k][1] / Math.max(1, together[k][0])
+  const gaps = run.releases.slice(1).map((r, i) => ({ n: Math.round((r.t - FIRST_TICK) / TICK), gap: Math.round((r.t - run.releases[i].t) / TICK) }))
+  check('orchestrion: the governor lets a ball go every third tick at most in the song, every second in the middle',
+    gaps.every((g) => g.gap >= blockAt(g.n).every) && gaps.some((g) => blockAt(g.n).section === 'B' && g.gap === 2))
+  check('orchestrion: so in the middle the balls fall in step, nearly every touch struck together with another ball\'s; in the song, half',
+    share('B') > 0.9 && share('A') < 0.7, `middle ${(share('B') * 100).toFixed(0)}%, song ${(share('A') * 100).toFixed(0)}%`)
+  check('orchestrion: the jar lets go ivory, then glass, then brass, and keeps a glass ball for the coda',
+    run.balls.join(' ') === [...Array(8).fill('ivory'), ...Array(5).fill('glass'), ...Array(10).fill('brass'), 'glass'].join(' '))
+  const codaReleases = run.releases.filter((r) => r.t >= tickTime(CODA) - 1e-9)
+  const brassOut = run.bowled.filter((b) => run.balls[b.ball] === 'brass')
+  check('orchestrion: the trap takes the brass out first, and the coda is one glass ball, let go as its chime is struck',
+    brassOut.length === 10 && brassOut.every((b) => b.t < tickTime(CODA)) && codaReleases.length === 1 && run.balls[codaReleases[0].ball] === 'glass' &&
+    Math.abs(codaReleases[0].t - tickTime(CODA)) < 1e-9)
+  check('orchestrion: the hopper\'s track always has room for every ball waiting on it', run.queue.most <= run.queue.room, `${run.queue.most} of ${run.queue.room}`)
   check('orchestrion: a chime is struck at every change of chord, the new chord\'s',
     run.strikes.length === CODA / TICKS_PER_BAY + 1 && run.strikes.every((s, i) => m.parts[s.part].bay === bayAt(i * TICKS_PER_BAY)))
 
@@ -84,6 +112,18 @@ export function checkOrchestrion(perf: Performance, version: ShowVersion, check:
     loud = Math.max(loud, Math.abs(L[i]), Math.abs(R[i]))
   }
   check('orchestrion: the dry mix of its first twenty seconds is finite and sounds', finite && loud > 0.05 && loud < 4, loud.toFixed(3))
+  // The dynamics are the jar's: a chord of the middle, brass and all, against the song's first.
+  const level = (from: number) => {
+    const to = from + TICKS_PER_BAY * TICK
+    const mix = mixdown(run, score.filter((n) => n.t < to), to)
+    let sum = 0
+    const a = Math.round(from * 44100)
+    for (let i = a; i < mix.L.length; i++) sum += mix.L[i] * mix.L[i] + mix.R[i] * mix.R[i]
+    return 10 * Math.log10(sum / (2 * (mix.L.length - a)))
+  }
+  const firstChord = level(tickTime(0))
+  const loudest = level(tickTime(FORM.findIndex((b) => b.bay === 4) * TICKS_PER_BAY))
+  check('orchestrion: the middle, every ball in and the brass among them, is far louder than the song\'s first chord', loudest - firstChord > 6, `${(loudest - firstChord).toFixed(1)} dB`)
 
   // The live engine is the offline mix's own arithmetic, run as an audio thread runs it.
   const sr = 44100

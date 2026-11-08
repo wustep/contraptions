@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { BAR_HALF, GAP, PIPE_BORE, PIPE_WALL, RAIL_HALF, RAIL_Y, RELEASE_X, ROLL_Y, METAL_E, type Part } from './design'
 import { CUP, LIFT_SPEED, tickTime, type Performance } from './run'
 import type { Note } from './score'
-import { BALL_R } from './sim'
+import { BALL_R, type BallKind } from './sim'
 import { BAYS, TICK } from './tuning'
 import { barRing, chimeRing, stringRing } from './voices'
 
@@ -14,9 +14,6 @@ import { barRing, chimeRing, stringRing } from './voices'
  *
  * In cells, on the canvas with the stage's transform scaled by a cell. Nothing is written.
  */
-
-/** Where the bowl stands, beside the lift's foot. */
-export const BOWL_X = (liftX: number): number => liftX - 1.65
 
 export const COLORS = {
   bg: '#14161B',
@@ -45,6 +42,11 @@ export const COLORS = {
   chain: '#5C534A',
   ball: '#EFE9DD',
   ballShade: '#9E988C',
+  glassBall: '#BFD9DE',
+  glassBallShade: '#5E7F88',
+  brassBall: '#C9A35A',
+  brassBallLight: '#FFF0C8',
+  brassBallShade: '#6B4F25',
   light: '#FFF6E4',
 }
 
@@ -155,11 +157,6 @@ export function makeDrawing(perf: Performance, list: Note[]): Drawing {
   const cx = (m.box.x0 + m.box.x1) / 2
   const cy = (m.box.y0 + m.box.y1) / 2
 
-  const trackLen = Math.hypot(m.track.x1 - m.track.x0, m.track.y1 - m.track.y0)
-  const jarAt = (() => {
-    const s = trackLen * 0.55
-    return { x: m.track.x1 + ((m.track.x0 - m.track.x1) / trackLen) * s, y: m.track.y1 + ((m.track.y0 - m.track.y1) / trackLen) * s }
-  })()
 
   /** A step function's value at `t`. */
   const stepAt = (steps: [number, number][], t: number): number => {
@@ -424,26 +421,27 @@ export function makeDrawing(perf: Performance, list: Note[]): Drawing {
     void px
   }
 
-  /** The balls held in a vessel, packed from the bottom: `n` of them, rows of `per` and `per - 1` in turn. */
-  function pile(g: G, x: number, bottom: number, width: number, n: number): void {
+  /** The balls held in a vessel, packed from the bottom, the first of `kinds` lowest: rows of `per` and `per - 1` in turn. */
+  function pile(g: G, x: number, bottom: number, width: number, kinds: BallKind[]): void {
     const per = Math.max(1, Math.floor(width / (2 * BALL_R) + 1e-6))
     let row = 0
-    let left = n
-    while (left > 0) {
-      const inRow = Math.min(left, row % 2 === 0 ? per : Math.max(1, per - 1))
+    let at = 0
+    while (at < kinds.length) {
       const full = row % 2 === 0 ? per : Math.max(1, per - 1)
+      const inRow = Math.min(kinds.length - at, full)
       const by = bottom - BALL_R - row * BALL_R * 1.74
-      for (let c = 0; c < inRow; c++) ball(g, x + (c - (full - 1) / 2) * 2 * BALL_R, by, 1)
-      left -= inRow
+      for (let c = 0; c < inRow; c++) ball(g, x + (c - (full - 1) / 2) * 2 * BALL_R, by, 1, kinds[at + c])
+      at += inRow
       row++
     }
   }
 
   function jar(g: G, t: number, px: number): void {
+    // The balls not yet let go, the next to go lowest: the brass on top, under it the glass, the ivory at the bottom.
     const n = stepAt(perf.jar, t)
-    const w = 1.3
-    const bottom = jarAt.y - BALL_R - 0.16
-    const top = bottom - 2.3
+    const left = perf.balls.slice(perf.balls.length - n)
+    const { w, bottom, top } = m.jar
+    const jarAt = m.jar
     g.save()
     g.fillStyle = rgba(COLORS.glass, 0.05)
     g.strokeStyle = rgba(COLORS.glass, 0.4)
@@ -458,7 +456,7 @@ export function makeDrawing(perf: Performance, list: Note[]): Drawing {
     g.fill()
     g.stroke()
     g.restore()
-    pile(g, jarAt.x, bottom - 0.02, w - 0.1, n)
+    pile(g, jarAt.x, bottom - 0.02, w - 0.1, left)
     // Its glass in front of them: a pale band.
     g.fillStyle = rgba(COLORS.glass, 0.07)
     g.fillRect(jarAt.x - w / 2 + 0.12, top + 0.15, 0.1, bottom - top - 0.4)
@@ -466,10 +464,11 @@ export function makeDrawing(perf: Performance, list: Note[]): Drawing {
 
   function bowl(g: G, t: number, px: number): void {
     const n = stepAt(perf.bowl, t)
-    const x = BOWL_X(m.liftX)
+    const into = perf.bowled.slice(0, n).map((b) => perf.balls[b.ball])
+    const x = m.bowlX
     const y = m.liftFoot + 0.12
-    const w = 0.98
-    pile(g, x, y - 0.03, 1.62, n)
+    const w = 1.45
+    pile(g, x, y - 0.03, 2.45, into)
     g.fillStyle = COLORS.wood
     g.beginPath()
     g.moveTo(x - w, y - 0.36)
@@ -604,16 +603,38 @@ export function makeDrawing(perf: Performance, list: Note[]): Drawing {
     g.fillRect(x0 - 0.02, part.by - 0.07, w + 0.04, 0.07)
   }
 
-  function ball(g: G, x: number, y: number, scale: number): void {
+  /** A ball in its own material, lit from the lamp above and to the left. */
+  function ball(g: G, x: number, y: number, scale: number, kind: BallKind = 'ivory'): void {
     const r = BALL_R * scale
     const grad = g.createRadialGradient(x - r * 0.38, y - r * 0.42, r * 0.08, x, y, r)
-    grad.addColorStop(0, '#FFFFFF')
-    grad.addColorStop(0.35, COLORS.ball)
-    grad.addColorStop(1, COLORS.ballShade)
+    if (kind === 'glass') {
+      // Clear: the room seen through it, darker at the rim, and the lamp's light gathered low on the far side.
+      grad.addColorStop(0, 'rgba(255,255,255,0.95)')
+      grad.addColorStop(0.3, rgba(COLORS.glassBall, 0.42))
+      grad.addColorStop(0.82, rgba(COLORS.glassBall, 0.3))
+      grad.addColorStop(1, rgba(COLORS.glassBallShade, 0.85))
+    } else if (kind === 'brass') {
+      grad.addColorStop(0, COLORS.brassBallLight)
+      grad.addColorStop(0.32, COLORS.brassBall)
+      grad.addColorStop(1, COLORS.brassBallShade)
+    } else {
+      grad.addColorStop(0, '#FFFFFF')
+      grad.addColorStop(0.35, COLORS.ball)
+      grad.addColorStop(1, COLORS.ballShade)
+    }
     g.fillStyle = grad
     g.beginPath()
     g.arc(x, y, r, 0, Math.PI * 2)
     g.fill()
+    if (kind === 'glass') {
+      const caustic = g.createRadialGradient(x + r * 0.3, y + r * 0.42, 0, x + r * 0.3, y + r * 0.42, r * 0.42)
+      caustic.addColorStop(0, 'rgba(255,250,235,0.7)')
+      caustic.addColorStop(1, 'rgba(255,250,235,0)')
+      g.fillStyle = caustic
+      g.beginPath()
+      g.arc(x, y, r, 0, Math.PI * 2)
+      g.fill()
+    }
   }
 
   function balls(g: G, t: number): void {
@@ -628,7 +649,7 @@ export function makeDrawing(perf: Performance, list: Note[]): Drawing {
         x += (tr.x[i + 1] - x) * f
         y += (tr.y[i + 1] - y) * f
       }
-      ball(g, x, y, 1)
+      ball(g, x, y, 1, perf.balls[tr.id])
     }
   }
 

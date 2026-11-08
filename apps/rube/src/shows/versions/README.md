@@ -178,8 +178,8 @@ onto its own attack); `check:shows` holds every landing, tip, knock, stroke and 
 `apps/rube/src/shows/versions/raindrop/RAINDROP.md`.
 
 `orchestrion/opus55` (in the picker, **Orchestrion**, on the Ambient shelf, one take, **Opus 5.5**) is a show whose
-physics is its soundtrack: balls fall through an instrument of tuned bars, harp strings and brass pipes, four bays cut
-to D, B minor, G and A, and every sound is synthesized live in the page from the simulation's contacts (modal bars,
+physics is its soundtrack: balls of ivory, glass and brass fall through an instrument of tuned bars, harp strings and
+brass pipes, five bays cut to D, B minor, G, A and F♯ minor, and every sound is synthesized live in the page from the simulation's contacts (modal bars,
 Karplus–Strong strings, waveguide pipes) in an AudioWorklet as the playhead reaches each one, then put in a room and
 limited with Web Audio. There is no recording; a saved video gets the same voices rendered to a file
 (`SoundtrackSpec.live`).

@@ -51,6 +51,8 @@ export interface Strike {
   /** A bar of aluminium (or rosewood). */
   metal: boolean
   knock: KnockKind
+  /** How long the ball stays on the part, against an ivory ball's: a stiffer ball's is shorter, and brighter. */
+  contact: number
 }
 
 export interface Engine {
@@ -212,8 +214,8 @@ export function defineEngine() {
       }
     }
 
-    function bar(hz: number, v: number, u: number, metal: boolean, gl: number, gr: number): Voice[] {
-      const tc = contactTime(v, metal ? 0.00055 : 0.0009)
+    function bar(hz: number, v: number, u: number, metal: boolean, hard: number, gl: number, gr: number): Voice[] {
+      const tc = contactTime(v, (metal ? 0.00055 : 0.0009) * hard)
       const t1 = barRing(hz, metal)
       const ratios = metal ? [1, 3.99, 9.83] : [1, 3.93, 9.24]
       const f = ratios.map((q) => q * hz)
@@ -228,7 +230,7 @@ export function defineEngine() {
       return [modal(f, a, tau, tc, gl, gr), burst(Math.round(hz * 1000 + v * 77), 0.35, 0.0012, 0.06 * level, gl, gr)]
     }
 
-    function string(hz: number, v: number, u: number, gl: number, gr: number): Voice {
+    function string(hz: number, v: number, u: number, hard: number, gl: number, gr: number): Voice {
       const T60 = stringRing(hz)
       const len = Math.ceil(T60 * sr)
       // The loop: N whole samples, the loss filter's half a sample, and an all-pass for the rest.
@@ -240,7 +242,7 @@ export function defineEngine() {
       const g = Math.pow(10, -3 / (T60 * hz))
       const line = new Float32Array(whole + 2)
       // The excitation: a short pulse, brighter the harder the touch, combed by where along the string it landed.
-      const bright = per(Math.min(0.7, 0.22 + 0.03 * v))
+      const bright = per(Math.min(0.8, Math.min(0.7, 0.22 + 0.03 * v) / hard))
       const rnd = noise(Math.round(hz * 31 + v * 1009 + u * 7))
       const exc = new Float32Array(whole)
       let lp = 0
@@ -394,9 +396,9 @@ export function defineEngine() {
     function voicesOf(s: Strike): Voice[] {
       switch (s.kind) {
         case 'bar':
-          return bar(s.hz, s.v, s.u, s.metal, s.gl, s.gr)
+          return bar(s.hz, s.v, s.u, s.metal, s.contact, s.gl, s.gr)
         case 'string':
-          return [string(s.hz, s.v, s.u, s.gl, s.gr)]
+          return [string(s.hz, s.v, s.u, s.contact, s.gl, s.gr)]
         case 'pipe':
           return [pipe(s.hz, s.dur, s.v, s.vOut, Math.round(s.t * 1000), s.gl, s.gr)]
         case 'pipe-knock':

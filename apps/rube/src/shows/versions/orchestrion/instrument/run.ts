@@ -1,6 +1,6 @@
 import { RAIL_SPEED, RELEASE_X, ROLL_Y, buildMachine, type Machine } from './design'
-import { BALL_R, DT, World, type Ball, type Contact, type Passage, type Seg } from './sim'
-import { BAYS, TICK, TICKS_PER_BAY } from './tuning'
+import { BALL_R, DT, World, type Ball, type BallKind, type Contact, type Passage, type Seg } from './sim'
+import { TICK, TICKS_PER_BAY } from './tuning'
 
 /**
  * The performance, run once: the whole show is one simulation, from the first ball out of the jar to the last one
@@ -13,34 +13,79 @@ import { BAYS, TICK, TICKS_PER_BAY } from './tuning'
  *
  * The form is the machine's too. The escapement ticks every dotted eighth and lets a ball go if one is seated in it.
  * Every sixteen ticks its count turns the gates over, the next bay's opens and its chime is struck: the chord changes.
- * How many balls are going round is the density of the music, and that is the only hand on it: the jar lets them
- * into the machine one at a time, slowly, over the first two minutes, and from then the lift's switch takes them out
- * again into the bowl, until one is left, and then none.
+ * How many balls are going round, and what they are made of, is the density and the loudness of the music: the jar
+ * lets them into the machine one at a time — ivory, then glass, then brass — and at the trough's end a trap takes them
+ * out again into the bowl, the heavy brass first, until one is left, and then none. The governor on the escapement is
+ * the other hand: in the song (A) it lets a ball go at most every third tick, nine sixteenths, so balls interlock; in
+ * the middle (B) every second, six sixteenths, an even number, so they fall in step and sound together.
  */
 
 /** When the escapement's first tick falls. */
 export const FIRST_TICK = 2.4
-/** The cycles of four chords, and then the coda: D once more. */
-const CYCLES = 3
+
+export type Section = 'A' | 'B' | 'coda'
+
+/** One chord of the form: the bay whose gate is open, and the governor's setting (at most a ball every so many ticks). */
+export interface Block {
+  bay: number
+  every: number
+  section: Section
+}
+
+/**
+ * The escapement's governor, in the song: a ball is let go at most every third tick. Nine sixteenths is an odd
+ * number of them, so a ball lands between its neighbour's bounces, never on them, and two balls interlock in
+ * sixteenths; and balls that came back up the lift together go out spaced, instead of in a run that stays a run all
+ * the way round. In the middle it is let out to every second tick: six sixteenths, even, so a ball falls in step with
+ * the one ahead of it, three eighths behind, and they strike together: chords in eighths, not sixteenths between.
+ */
+const SONG = [0, 1, 2, 3]
+const MIDDLE = [2, 3, 4, 1]
+export const FORM: Block[] = [
+  // A: D, Bm, G, A, twice, the jar filling the machine the first time round.
+  ...SONG.map((bay): Block => ({ bay, every: 3, section: 'A' })),
+  ...SONG.map((bay): Block => ({ bay, every: 3, section: 'A' })),
+  // B: G, A, F♯m, Bm, the governor let out.
+  ...MIDDLE.map((bay): Block => ({ bay, every: 2, section: 'B' })),
+  // A again, emptying.
+  ...SONG.map((bay): Block => ({ bay, every: 3, section: 'A' })),
+  // The coda: D, one ball.
+  { bay: 0, every: 3, section: 'coda' },
+]
 /** The coda's first tick: from the first ball let go into it, every ball that comes up the lift goes to rest. */
-export const CODA = CYCLES * 4 * TICKS_PER_BAY
+export const CODA = (FORM.length - 1) * TICKS_PER_BAY
 /** Seconds after the last sound that the show holds the machine, still, before it ends. */
 const RING_OUT = 7
 
-/**
- * The escapement's governor: a ball is let go at most every third tick. Nine sixteenths is an odd number of them, so
- * a ball still lands between its neighbour's bounces, never on them; and balls that came back up the lift together
- * go out spaced, instead of in a run that stays a run all the way round.
- */
-const GOVERNOR = 3
+/** The chord at tick `n`. */
+export const blockAt = (n: number): Block => FORM[Math.max(0, Math.min(FORM.length - 1, Math.floor(Math.max(0, n) / TICKS_PER_BAY)))]
 
 /**
- * The jar's balls, and when (in ticks) it lets each one go. The last is kept back for the coda: it comes out as the
- * other balls are going to rest, and is the one that plays D at the end.
+ * The ticks before the coda in which the escapement lets nothing go: the machine draws breath, and the jar's last ball,
+ * let out onto the track as it does, is seated in time to be let go exactly as the coda's chime is struck.
  */
-const FEEDS = [-3, 5, 13, 21, 29, 37, 45, 53, 64, 72, 80, 88, 96, 104, 191]
-/** When (in ticks) the lift's switch takes the next ball to come up out of the machine and into the bowl. */
-const RETIRES = [148, 154, 157, 165, 167, 174, 178, 186, 187, 194]
+const HOLD = 4
+
+/**
+ * The jar's balls, in the order it lets them go, and when (in ticks): ivory over the first time round the song, glass
+ * over the second, brass as the middle comes in. The last, glass, is kept back for the coda: it comes out as the other
+ * balls are going to rest, and is the one that plays D at the end.
+ */
+const FEEDS: { tick: number; kind: BallKind }[] = [
+  ...[-3, 5, 13, 21, 29, 37, 45, 53].map((tick) => ({ tick, kind: 'ivory' as const })),
+  ...[64, 72, 80, 88, 96].map((tick) => ({ tick, kind: 'glass' as const })),
+  ...[127, 130, 133, 136, 139, 142, 145, 148, 151, 154].map((tick) => ({ tick, kind: 'brass' as const })),
+  { tick: CODA - HOLD + 1, kind: 'glass' },
+]
+/**
+ * From this tick, in the middle's last chord, the trap at the trough's end is set for weight: every brass ball that
+ * comes to it drops into the bowl, so the brass leaves the machine first, as the song comes back.
+ */
+const TRAP = 11 * TICKS_PER_BAY + 4
+/** When (in ticks) the trap takes the next ball of any weight to come to it out of the machine and into the bowl. */
+const RETIRES = [190, 196, 202, 210, 218]
+/** From this tick, in the last chord before the coda, the trap takes every ball that comes to it. */
+const EMPTY = CODA - 14
 
 /** The track's balls roll this fast, cells a second. */
 const TRACK_SPEED = 2.2
@@ -70,6 +115,8 @@ export interface Knock {
   v: number
   x: number
   y: number
+  /** The ball that made it, if one did. */
+  ball?: number
 }
 
 /** A chime struck as its bay's gate opens. */
@@ -96,13 +143,16 @@ export interface Performance {
   /** How many balls are in the jar and in the bowl over time: [time, count] steps. */
   jar: [number, number][]
   bowl: [number, number][]
+  /** What each ball is made of, by its id: the order the jar lets them go. */
+  balls: BallKind[]
+  /** The balls into the bowl, in order. */
+  bowled: { t: number; ball: number }[]
+  /** The most balls ever waiting on the hopper's track at once, and how many it has room for. */
+  queue: { most: number; at: number; room: number }
 }
 
 /** The bay whose gate is open at tick `n`. */
-export function bayAt(n: number): number {
-  if (n >= CYCLES * 4 * TICKS_PER_BAY) return 0
-  return Math.floor(Math.max(0, n) / TICKS_PER_BAY) % BAYS.length
-}
+export const bayAt = (n: number): number => blockAt(n).bay
 
 export const tickTime = (n: number): number => FIRST_TICK + n * TICK
 
@@ -129,7 +179,7 @@ export function perform(lenient = false, retires: number[] = RETIRES): Performan
   const along = { x: (track.x0 - track.x1) / trackLen, y: (track.y0 - track.y1) / trackLen }
   const trackAt = (s: number): [number, number] => [track.x1 + along.x * s, track.y1 + along.y * s]
   /** Where on the track the jar drops a ball. */
-  const jarS = trackLen * 0.55
+  const jarS = machine.jar.s
   const SLOT = 2 * BALL_R + 0.01
 
   // The gate flaps: solid while closed. Each flap's segment asks its gate.
@@ -149,6 +199,9 @@ export function perform(lenient = false, retires: number[] = RETIRES): Performan
   }))
   const world = new World([...machine.segs, ...flapSegs], machine.sensors)
 
+  const kinds = FEEDS.map((f) => f.kind)
+  const feedTicks = FEEDS.map((f) => f.tick)
+  const bowled: Performance['bowled'] = []
   const states: State[] = FEEDS.map((_, id) => ({ id, mode: 'jar', s: 0, x: 0, y: 0, vx: 0, vy: 0, until: Infinity, x0: 0, t0: 0 }))
   const tracks: Track[] = states.map((s) => ({ id: s.id, t: [], x: [], y: [], shown: [] }))
   const contacts: Contact[] = []
@@ -163,7 +216,11 @@ export function perform(lenient = false, retires: number[] = RETIRES): Performan
 
   let fed = 0
   let retiring = 0
-  let nextTick = Math.min(0, ...FEEDS)
+  let nextTick = Math.min(0, ...feedTicks)
+  let most = 0
+  let mostAt = 0
+  let trap = false
+  let emptying = false
   let coda = false
   let lastRelease = -Infinity
   let lastSound = 0
@@ -210,7 +267,8 @@ export function perform(lenient = false, retires: number[] = RETIRES): Performan
       const onTrack = states.filter((s) => s.mode === 'track').sort((a, b) => a.s - b.s)
       const seated = onTrack[0] && onTrack[0].s < 0.02 ? onTrack[0] : null
       let released: number | null = null
-      if (seated && n >= 0 && n - lastRelease >= GOVERNOR) {
+      const held = n >= CODA - HOLD && n < CODA
+      if (seated && n >= 0 && !held && n - lastRelease >= blockAt(n).every) {
         lastRelease = n
         seated.mode = 'free'
         seated.x = RELEASE_X
@@ -219,22 +277,24 @@ export function perform(lenient = false, retires: number[] = RETIRES): Performan
         seated.vy = 0
         released = seated.id
         releases.push({ t: tt, ball: seated.id })
-        knocks.push({ t: tt, kind: 'tick', v: 3, x: RELEASE_X, y: ROLL_Y })
+        knocks.push({ t: tt, kind: 'tick', v: 3, x: RELEASE_X, y: ROLL_Y, ball: seated.id })
         record(seated, tt)
       }
       ticks.push({ t: tt, bay: bayAt(n), released })
       if (released !== null && n >= CODA) coda = true
-      if (FEEDS.includes(n) && fed < states.length) {
+      if (fed < states.length && feedTicks[fed] === n) {
         // The jar lets one go, onto the track.
         const st = states[fed++]
         st.mode = 'track'
         st.s = jarS
         ;[st.x, st.y] = trackAt(jarS)
-        knocks.push({ t: tt, kind: 'seat', v: 1.5, x: st.x, y: st.y })
+        knocks.push({ t: tt, kind: 'seat', v: 1.5, x: st.x, y: st.y, ball: st.id })
         record(st, tt)
         jar.push([tt, count('jar')])
       }
       if (retires.includes(n)) retiring++
+      if (n >= TRAP) trap = true
+      if (n >= EMPTY) emptying = true
       if (coda) retiring = Infinity
     }
 
@@ -275,7 +335,7 @@ export function perform(lenient = false, retires: number[] = RETIRES): Performan
         // Down into the trough.
         if (st.y >= machine.troughY(st.x) - BALL_R && st.x > machine.troughX0) {
           st.y = machine.troughY(st.x) - BALL_R
-          knocks.push({ t: t + DT, kind: 'felt', v: Math.abs(st.vy), x: st.x, y: st.y })
+          knocks.push({ t: t + DT, kind: 'felt', v: Math.abs(st.vy), x: st.x, y: st.y, ball: st.id })
           world.forget(st.id)
           lastSound = Math.max(lastSound, t)
           st.mode = 'trough'
@@ -299,13 +359,15 @@ export function perform(lenient = false, retires: number[] = RETIRES): Performan
         const f = Math.min(1, (t - st.t0) / (st.until - st.t0))
         st.x = st.x0 + (machine.troughX0 - st.x0) * f
         st.y = machine.troughY(st.x) - BALL_R
-        if (t >= st.until && retiring > 0) {
-          // The switch at the trough's end: into the bowl, to rest.
-          retiring--
+        const heavy = (trap && kinds[st.id] === 'brass') || emptying
+        if (t >= st.until && (retiring > 0 || heavy)) {
+          // The trap at the trough's end: into the bowl, to rest. Set for weight, a brass ball's falls open under it.
+          if (!heavy) retiring--
           st.mode = 'bowl'
-          knocks.push({ t, kind: 'bowl', v: TROUGH_SPEED, x: machine.liftX - 1.65, y: machine.liftFoot })
+          knocks.push({ t, kind: 'bowl', v: TROUGH_SPEED, x: machine.bowlX, y: machine.liftFoot, ball: st.id })
           record(st, t, false)
           bowl.push([t, count('bowl')])
+          bowled.push({ t, ball: st.id })
         } else if (t >= st.until) {
           // Waits for the next cup to come round the foot.
           const phase = (t * LIFT_SPEED) / CUP
@@ -335,6 +397,7 @@ export function perform(lenient = false, retires: number[] = RETIRES): Performan
 
     // The track: every ball on it rolls down until it seats against the one ahead, or the escapement.
     const onTrack = states.filter((s) => s.mode === 'track').sort((a, b) => a.s - b.s)
+    if (onTrack.length > most) [most, mostAt] = [onTrack.length, t]
     onTrack.forEach((st, i) => {
       const home = i * SLOT
       if (st.s > home) {
@@ -342,7 +405,7 @@ export function perform(lenient = false, retires: number[] = RETIRES): Performan
         st.s = Math.max(home, st.s - TRACK_SPEED * DT)
         ;[st.x, st.y] = trackAt(st.s)
         if (st.s === home && was > home) {
-          knocks.push({ t, kind: i === 0 ? 'tick' : 'seat', v: TRACK_SPEED, x: st.x, y: st.y })
+          knocks.push({ t, kind: i === 0 ? 'tick' : 'seat', v: TRACK_SPEED, x: st.x, y: st.y, ball: st.id })
           record(st, t)
         } else if (sampleKinematic) record(st, t)
       }
@@ -367,5 +430,5 @@ export function perform(lenient = false, retires: number[] = RETIRES): Performan
       tr.shown.unshift(false)
     }
   }
-  return { machine, duration: end, tracks, contacts, passages, knocks, strikes, flaps, ticks, releases, jar, bowl }
+  return { machine, duration: end, tracks, contacts, passages, knocks, strikes, flaps, ticks, releases, jar, bowl, balls: kinds, bowled, queue: { most, at: mostAt, room: Math.floor(trackLen / SLOT) } }
 }
