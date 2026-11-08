@@ -1,0 +1,370 @@
+import { RAIL_SPEED, RELEASE_X, ROLL_Y, buildMachine, type Machine } from './design'
+import { BALL_R, DT, World, type Ball, type Contact, type Passage, type Seg } from './sim'
+import { BAYS, TICK, TICKS_PER_BAY } from './tuning'
+
+/**
+ * The performance, run once: the whole show is one simulation, from the first ball out of the jar to the last one
+ * back in the bowl, and everything heard and seen is read off it.
+ *
+ * Between the bays the balls are carried (the trough, the lift, the hopper's track): those legs are drawn on a path,
+ * not simulated, and the few sounds they make (a ball seating against the one ahead of it, the escapement's tick, a
+ * ball landing in the trough's felt) are written down where they happen. In the bays, and on the rail above them,
+ * the balls are free, and the physics (`sim.ts`) says where they go.
+ *
+ * The form is the machine's too. The escapement ticks every dotted eighth and lets a ball go if one is seated in it.
+ * Every sixteen ticks its count turns the gates over, the next bay's opens and its chime is struck: the chord changes.
+ * How many balls are going round is the density of the music, and that is the only hand on it: the jar lets them
+ * into the machine one at a time, slowly, over the first two minutes, and from then the lift's switch takes them out
+ * again into the bowl, until one is left, and then none.
+ */
+
+/** When the escapement's first tick falls. */
+export const FIRST_TICK = 2.4
+/** The cycles of four chords, and then the coda: D once more. */
+const CYCLES = 3
+/** The coda's first tick: from the first ball let go into it, every ball that comes up the lift goes to rest. */
+export const CODA = CYCLES * 4 * TICKS_PER_BAY
+/** Seconds after the last sound that the show holds the machine, still, before it ends. */
+const RING_OUT = 7
+
+/**
+ * The escapement's governor: a ball is let go at most every third tick. Nine sixteenths is an odd number of them, so
+ * a ball still lands between its neighbour's bounces, never on them; and balls that came back up the lift together
+ * go out spaced, instead of in a run that stays a run all the way round.
+ */
+const GOVERNOR = 3
+
+/**
+ * The jar's balls, and when (in ticks) it lets each one go. The last is kept back for the coda: it comes out as the
+ * other balls are going to rest, and is the one that plays D at the end.
+ */
+const FEEDS = [-3, 5, 13, 21, 29, 37, 45, 53, 64, 72, 80, 88, 96, 104, 189]
+/** When (in ticks) the lift's switch takes the next ball to come up out of the machine and into the bowl. */
+const RETIRES = [148, 154, 160, 165, 170, 174, 178, 186, 187, 194]
+
+/** The track's balls roll this fast, cells a second. */
+const TRACK_SPEED = 2.2
+/** The trough's. */
+const TROUGH_SPEED = 4.2
+/** The lift's chain, and the space between its cups. */
+export const LIFT_SPEED = 3
+export const CUP = 1.25
+
+export type Mode = 'jar' | 'track' | 'free' | 'trough' | 'wait' | 'lift' | 'bowl'
+
+/** Where a ball is, sampled: times and positions, and a flag for where it is not drawn by itself (the jar, the bowl). */
+export interface Track {
+  id: number
+  t: number[]
+  x: number[]
+  y: number[]
+  /** For each sample: drawn (true) or held in the jar or bowl, drawn with them (false). */
+  shown: boolean[]
+}
+
+/** A sound made by a part of the machine that is not a sounding part: a tick, a seat, a landing. */
+export interface Knock {
+  t: number
+  kind: 'tick' | 'seat' | 'felt' | 'bowl' | 'flap'
+  /** How hard, cells a second. */
+  v: number
+  x: number
+  y: number
+}
+
+/** A chime struck as its bay's gate opens. */
+export interface Strike {
+  t: number
+  part: number
+  v: number
+}
+
+export interface Performance {
+  machine: Machine
+  duration: number
+  tracks: Track[]
+  contacts: Contact[]
+  passages: Passage[]
+  knocks: Knock[]
+  strikes: Strike[]
+  /** When each gate flap opened and closed: per gate, alternating times, starting closed. */
+  flaps: number[][]
+  /** The bay whose gate is open at each tick, and when each tick fell. */
+  ticks: { t: number; bay: number; released: number | null }[]
+  /** Every release: which ball, and when. */
+  releases: { t: number; ball: number }[]
+  /** How many balls are in the jar and in the bowl over time: [time, count] steps. */
+  jar: [number, number][]
+  bowl: [number, number][]
+}
+
+/** The bay whose gate is open at tick `n`. */
+export function bayAt(n: number): number {
+  if (n >= CYCLES * 4 * TICKS_PER_BAY) return 0
+  return Math.floor(Math.max(0, n) / TICKS_PER_BAY) % BAYS.length
+}
+
+export const tickTime = (n: number): number => FIRST_TICK + n * TICK
+
+interface State {
+  id: number
+  mode: Mode
+  /** On the track: how far up it from the escapement, cells. */
+  s: number
+  x: number
+  y: number
+  vx: number
+  vy: number
+  /** When the current carried leg ends. */
+  until: number
+  /** Where the trough leg starts. */
+  x0: number
+  t0: number
+}
+
+export function perform(lenient = false, retires: number[] = RETIRES): Performance {
+  const machine = buildMachine()
+  const { track } = machine
+  const trackLen = Math.hypot(track.x1 - track.x0, track.y1 - track.y0)
+  const along = { x: (track.x0 - track.x1) / trackLen, y: (track.y0 - track.y1) / trackLen }
+  const trackAt = (s: number): [number, number] => [track.x1 + along.x * s, track.y1 + along.y * s]
+  /** Where on the track the jar drops a ball. */
+  const jarS = trackLen * 0.55
+  const SLOT = 2 * BALL_R + 0.01
+
+  // The gate flaps: solid while closed. Each flap's segment asks its gate.
+  const gateOpen = machine.gates.map(() => false)
+  const flaps: number[][] = machine.gates.map(() => [])
+  const flapSegs: Seg[] = machine.gates.map((g, i) => ({
+    ax: g.x0,
+    ay: 0,
+    bx: g.x1,
+    by: 0,
+    half: 0.045,
+    e: 0,
+    material: 'gate' as const,
+    caps: false,
+    part: -1,
+    solid: () => !gateOpen[i],
+  }))
+  const world = new World([...machine.segs, ...flapSegs], machine.sensors)
+
+  const states: State[] = FEEDS.map((_, id) => ({ id, mode: 'jar', s: 0, x: 0, y: 0, vx: 0, vy: 0, until: Infinity, x0: 0, t0: 0 }))
+  const tracks: Track[] = states.map((s) => ({ id: s.id, t: [], x: [], y: [], shown: [] }))
+  const contacts: Contact[] = []
+  const passages: Passage[] = []
+  const knocks: Knock[] = []
+  const strikes: Strike[] = []
+  const ticks: Performance['ticks'] = []
+  const releases: Performance['releases'] = []
+  const jar: [number, number][] = [[0, FEEDS.length]]
+  const bowl: [number, number][] = [[0, 0]]
+  const count = (mode: Mode) => states.filter((s) => s.mode === mode).length
+
+  let fed = 0
+  let retiring = 0
+  let nextTick = Math.min(0, ...FEEDS)
+  let coda = false
+  let lastRelease = -Infinity
+  let lastSound = 0
+  let lastSample = -1
+  let lastKinematic = -1
+  let end = Infinity
+  /** Gates waiting to close, until no ball is in their gap. */
+  const closing = new Set<number>()
+
+  const record = (st: State, t: number, shown = true) => {
+    const tr = tracks[st.id]
+    tr.t.push(t)
+    tr.x.push(st.x)
+    tr.y.push(st.y)
+    tr.shown.push(shown)
+  }
+
+  /** The bay chime over gate `bay`'s bay is struck as its gate opens. */
+  const chimeOf = (bay: number) => machine.parts.find((p) => p.kind === 'chime' && p.bay === bay)!.id
+
+  const openBay = (bay: number, t: number) => {
+    machine.gates.forEach((g, i) => {
+      const open = g.bay === bay
+      if (open && !gateOpen[i]) {
+        gateOpen[i] = true
+        closing.delete(i)
+        flaps[i].push(t)
+        knocks.push({ t, kind: 'flap', v: 2, x: (g.x0 + g.x1) / 2, y: 0 })
+      } else if (!open && gateOpen[i]) closing.add(i)
+    })
+    strikes.push({ t: t + 0.06, part: chimeOf(bay), v: 1 })
+  }
+
+  for (let t = 0; t < end; t += DT) {
+    // The escapement.
+    if (t >= tickTime(nextTick)) {
+      const n = nextTick++
+      const tt = tickTime(n)
+      if (n >= 0 && n % TICKS_PER_BAY === 0 && n <= CODA) {
+        // The count turns the gates over: the next chord.
+        openBay(bayAt(n), tt)
+      }
+      // Who is seated: the ball on the track nearest the escapement, if it is home.
+      const onTrack = states.filter((s) => s.mode === 'track').sort((a, b) => a.s - b.s)
+      const seated = onTrack[0] && onTrack[0].s < 0.02 ? onTrack[0] : null
+      let released: number | null = null
+      if (seated && n >= 0 && n - lastRelease >= GOVERNOR) {
+        lastRelease = n
+        seated.mode = 'free'
+        seated.x = RELEASE_X
+        seated.y = ROLL_Y
+        seated.vx = RAIL_SPEED
+        seated.vy = 0
+        released = seated.id
+        releases.push({ t: tt, ball: seated.id })
+        knocks.push({ t: tt, kind: 'tick', v: 3, x: RELEASE_X, y: ROLL_Y })
+        record(seated, tt)
+      }
+      ticks.push({ t: tt, bay: bayAt(n), released })
+      if (released !== null && n >= CODA) coda = true
+      if (FEEDS.includes(n) && fed < states.length) {
+        // The jar lets one go, onto the track.
+        const st = states[fed++]
+        st.mode = 'track'
+        st.s = jarS
+        ;[st.x, st.y] = trackAt(jarS)
+        knocks.push({ t: tt, kind: 'seat', v: 1.5, x: st.x, y: st.y })
+        record(st, tt)
+        jar.push([tt, count('jar')])
+      }
+      if (retires.includes(n)) retiring++
+      if (coda) retiring = Infinity
+    }
+
+    // The flaps that are waiting to close, once their gap is clear.
+    for (const i of [...closing]) {
+      const g = machine.gates[i]
+      const busy = states.some((s) => s.mode === 'free' && s.x > g.x0 - BALL_R - 0.05 && s.x < g.x1 + BALL_R + 0.05 && s.y > -0.6 && s.y < 0.5)
+      if (!busy) {
+        gateOpen[i] = false
+        closing.delete(i)
+        flaps[i].push(t)
+        knocks.push({ t, kind: 'flap', v: 1.2, x: (g.x0 + g.x1) / 2, y: 0 })
+      }
+    }
+
+    // The physics.
+    const free = states.filter((s) => s.mode === 'free')
+    if (free.length) {
+      const balls: Ball[] = free.map((s) => ({ id: s.id, x: s.x, y: s.y, vx: s.vx, vy: s.vy }))
+      const before = contacts.length
+      world.step(t, DT, balls, contacts, passages)
+      balls.forEach((b, i) => Object.assign(free[i], { x: b.x, y: b.y, vx: b.vx, vy: b.vy }))
+      // A contact is a sample of its own: the drawing touches the part exactly where it was touched.
+      for (let c = before; c < contacts.length; c++) {
+        const k = contacts[c]
+        const st = states[k.ball]
+        if (st.mode !== 'free') continue
+        const tr = tracks[st.id]
+        // The ball's centre at the touch, wound back along its velocity from the end of the step.
+        const back = t + DT - k.t
+        tr.t.push(k.t)
+        tr.x.push(st.x - st.vx * back)
+        tr.y.push(st.y - st.vy * back)
+        tr.shown.push(true)
+        lastSound = Math.max(lastSound, k.t)
+      }
+      for (const st of free) {
+        // Down into the trough.
+        if (st.y >= machine.troughY(st.x) - BALL_R && st.x > machine.troughX0) {
+          st.y = machine.troughY(st.x) - BALL_R
+          knocks.push({ t: t + DT, kind: 'felt', v: Math.abs(st.vy), x: st.x, y: st.y })
+          world.forget(st.id)
+          lastSound = Math.max(lastSound, t)
+          st.mode = 'trough'
+          st.x0 = st.x
+          st.t0 = t + DT
+          st.until = t + DT + (st.x - machine.troughX0) / TROUGH_SPEED
+          record(st, t + DT)
+        }
+      }
+    }
+    if (t - lastSample >= 1 / 240) {
+      lastSample = t
+      for (const st of free) if (st.mode === 'free') record(st, t + DT)
+    }
+
+    // The carried legs.
+    const sampleKinematic = t - lastKinematic >= 1 / 60
+    if (sampleKinematic) lastKinematic = t
+    for (const st of states) {
+      if (st.mode === 'trough') {
+        const f = Math.min(1, (t - st.t0) / (st.until - st.t0))
+        st.x = st.x0 + (machine.troughX0 - st.x0) * f
+        st.y = machine.troughY(st.x) - BALL_R
+        if (t >= st.until && retiring > 0) {
+          // The switch at the trough's end: into the bowl, to rest.
+          retiring--
+          st.mode = 'bowl'
+          knocks.push({ t, kind: 'bowl', v: TROUGH_SPEED, x: machine.liftX - 0.9, y: machine.liftFoot })
+          record(st, t, false)
+          bowl.push([t, count('bowl')])
+        } else if (t >= st.until) {
+          // Waits for the next cup to come round the foot.
+          const phase = (t * LIFT_SPEED) / CUP
+          st.mode = 'wait'
+          st.until = (Math.ceil(phase) * CUP) / LIFT_SPEED
+          st.x = machine.liftX
+          record(st, t)
+        } else if (sampleKinematic) record(st, t)
+      } else if (st.mode === 'wait' && t >= st.until) {
+        st.mode = 'lift'
+        st.t0 = st.until
+        st.until = st.t0 + (machine.liftFoot - machine.liftHead) / LIFT_SPEED
+        record(st, t)
+      } else if (st.mode === 'lift') {
+        st.x = machine.liftX
+        st.y = machine.liftFoot - (t - st.t0) * LIFT_SPEED
+        if (t >= st.until) {
+          st.y = machine.liftHead
+          st.mode = 'track'
+          st.s = trackLen
+          ;[st.x, st.y] = trackAt(trackLen)
+          record(st, t)
+        } else if (sampleKinematic) record(st, t)
+      }
+    }
+
+    // The track: every ball on it rolls down until it seats against the one ahead, or the escapement.
+    const onTrack = states.filter((s) => s.mode === 'track').sort((a, b) => a.s - b.s)
+    onTrack.forEach((st, i) => {
+      const home = i * SLOT
+      if (st.s > home) {
+        const was = st.s
+        st.s = Math.max(home, st.s - TRACK_SPEED * DT)
+        ;[st.x, st.y] = trackAt(st.s)
+        if (st.s === home && was > home) {
+          knocks.push({ t, kind: i === 0 ? 'tick' : 'seat', v: TRACK_SPEED, x: st.x, y: st.y })
+          record(st, t)
+        } else if (sampleKinematic) record(st, t)
+      }
+    })
+
+    if (end === Infinity && coda && count('bowl') === states.length) {
+      // The last ball at rest; the show holds the still machine while the last notes ring.
+      end = Math.max(t + 2, lastSound + RING_OUT)
+    }
+    if (t > 400 && lenient) end = t
+    else if (t > 400) throw new Error(`orchestrion: the performance never came to rest: ${states.map((s) => `${s.id}:${s.mode}@${s.x.toFixed(2)},${s.y.toFixed(2)}`).join(' ')}; releases ${releases.length}, coda ${coda}`)
+  }
+
+  // Every ball's last sample at the very end, so a drawing between its last move and the end holds it there.
+  for (const st of states) record(st, end, st.mode !== 'bowl' && st.mode !== 'jar')
+  // A ball still in the jar at the start is held there from zero.
+  for (const tr of tracks) {
+    if (tr.t[0] > 0) {
+      tr.t.unshift(0)
+      tr.x.unshift(tr.x[0])
+      tr.y.unshift(tr.y[0])
+      tr.shown.unshift(false)
+    }
+  }
+  return { machine, duration: end, tracks, contacts, passages, knocks, strikes, flaps, ticks, releases, jar, bowl }
+}
