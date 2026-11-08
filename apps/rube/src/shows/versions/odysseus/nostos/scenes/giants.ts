@@ -95,11 +95,15 @@ export const giants: Scene = {
   men,
   deaths,
   shots,
-  // Gone on the cut to the shore of the dead.
-  back: [
+  // The fjord's far walls, behind everything nearer whatever scene it is in: drawn among this scene's own drawings,
+  // they stood over the Cyclops' island as the camera came out to it (181.15-181.85 s).
+  far: [
     standing('giants-far', ALL, END, (g) => {
       if (g.t < TUTTI_ATTACK) drawFar(g)
     }),
+  ],
+  // Gone on the cut to the shore of the dead.
+  back: [
     standing('giants-cliff', ALL, END, (g) => {
       if (g.t >= TUTTI_ATTACK) return
       drawCliff(g)

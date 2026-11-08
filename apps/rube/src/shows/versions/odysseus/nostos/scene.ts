@@ -41,7 +41,11 @@ export interface Scene {
    * `dur` seconds (`Performance.blend`). For a change of place the camera cannot travel.
    */
   dissolves?: [number, number][]
-  /** Drawings, in order: behind the ships, in front of the ships (under the balls), and over everything. */
+  /**
+   * Drawings, in order: far off (behind every scene's own drawings, whichever scene they belong to), behind the ships,
+   * in front of the ships (under the balls), and over everything.
+   */
+  far?: Placed[]
   back?: Placed[]
   mid?: Placed[]
   front?: Placed[]
