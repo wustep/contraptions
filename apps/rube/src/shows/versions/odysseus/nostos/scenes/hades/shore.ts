@@ -168,8 +168,9 @@ export function drawTrench(g: Paint): void {
  */
 export function drawHands(g: Paint): void {
   const { ctx, t, view } = g
-  ctx.beginPath()
-  let any = false
+  // Each hand filled and inked on its own, in order, so one in front of another hides it. (All of them went into one
+  // shape, filled once and inked once, so where two crossed both outlines showed through: one scribbled, doubled hand,
+  // 238.6-240.5 s.)
   for (const sh of SHADES) {
     // The first rank's hands only: the second's would be a second row of them behind, and are hidden by the first.
     const s = t - sh.hands
@@ -184,13 +185,12 @@ export function drawHands(g: Paint): void {
     for (const side of [-1, 1] as const) {
       const hx = x + side * (0.13 + 0.06 * open) * size
       const lean = side * (0.12 + 0.22 * open)
+      ctx.beginPath()
       hand(ctx, hx, row.ground, h, 0.22 * size, lean, open)
+      fill(ctx, ASH)
+      stroke(g, ASH_RIM, 2.2)
     }
-    any = true
   }
-  if (!any) return
-  fill(ctx, ASH)
-  stroke(g, ASH_RIM, 2.2)
 }
 
 /** One hand, reaching up from `x, ground`, `h` tall: a wrist, a palm, four fingers spread by `open`, and a thumb. */
