@@ -176,7 +176,10 @@ const SHOTS: Key[] = [
 
 /* ------------------------------------------------------------------ the drawings */
 
-const ISLAND = region(630, -24, 700, 4, 2)
+// The sand is drawn from 560 to 760 and its skirts go on down and out past both ends: claimed over all of that, and as
+// deep as a tall frame sees, so the sea floor comes and goes with the frame's edge (claimed over the beach alone, it
+// appeared and vanished whole under a phone's frame, 340.2 s and 402.3 s).
+const ISLAND = region(530, -24, 790, 40, 3)
 
 // The dunes stand far back, so they are seen from much further along the sea than the island's own cells: claimed wide.
 const back = standing('ogygia-sky', region(560, -40, 860, 6, 4), END, (g) => {

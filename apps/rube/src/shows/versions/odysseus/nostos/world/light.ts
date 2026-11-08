@@ -44,7 +44,8 @@ export const BASE_SKY: SkyKey[] = [
   // Fog at Telepylus.
   key(M.pulse + 3, '#8E9592', '#B7B9B1', '#9EA39F', 0.2, SEA_FOG),
   key(M.tutti - 3, '#7D8582', '#A5A8A0', '#8A8F8B', 0.3, SEA_FOG),
-  key(TUTTI_ATTACK - 0.02, '#7D8582', '#A5A8A0', '#8A8F8B', 0.3, SEA_FOG),
+  // The fog holds to the cut itself, so no frame shows the fjord in the dead's light before the camera is there.
+  key(TUTTI_ATTACK - 1e-6, '#7D8582', '#A5A8A0', '#8A8F8B', 0.3, SEA_FOG),
   // The dead's shore, cut to on the tutti's attack: a low sun in haze that never sets.
   key(TUTTI_ATTACK, '#383C41', '#8A8376', '#4C4D4E', 0.25, SEA_DEAD, { x: 0.5, y: 0.7, r: 0.035, color: '#D8D0BD', a: 0.55 }),
   key(249, '#3E4247', '#958C7D', '#55565A', 0.25, SEA_DEAD, { x: 0.52, y: 0.69, r: 0.035, color: '#D8D0BD', a: 0.55 }),

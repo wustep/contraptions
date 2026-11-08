@@ -1,4 +1,4 @@
-import { blob, curve, fill, mix, poly, rgba, stroke, type Paint } from '../draw'
+import { blob, curve, fill, mix, poly, rgba, smooth, stroke, type Paint } from '../draw'
 import type { Pt } from '../path'
 import { slope, surface } from './sea'
 
@@ -59,7 +59,7 @@ export interface ShipLook {
 }
 
 /** The hull's outline in its own frame, bow to the right: the ram, the eye, the deck line, the stern's curl. */
-const HULL: Pt[] = [
+export const HULL: Pt[] = [
   [2.35, 0.12], // the ram's point, at the waterline
   [2.05, 0.06],
   [2.0, -0.2], // the stem
@@ -67,13 +67,18 @@ const HULL: Pt[] = [
   [1.9, -0.3],
   [1.3, DECK],
   [-1.2, DECK],
+  // The stern's post: up its forward face, the hook curling forward over the deck at its top, and down its after face.
+  // (Its after face ran forward of its forward face, so the outline crossed itself and the post pinched to a point:
+  // a teardrop on a stalk.)
   [-1.75, -0.32],
-  [-2.05, -0.6],
-  [-2.1, -0.95], // the stern's tail, rising
-  [-1.95, -1.18],
-  [-1.8, -1.1], // and curling back over
-  [-1.95, -0.88],
-  [-1.98, -0.6],
+  [-2.0, -0.62],
+  [-2.03, -0.9],
+  [-1.89, -0.99],
+  [-1.78, -1.08], // the hook's tip
+  [-1.95, -1.21],
+  [-2.15, -1.08],
+  [-2.18, -0.86],
+  [-2.2, -0.58],
   [-2.2, -0.2],
   [-2.05, 0.18],
   [-1.6, 0.38],
@@ -82,7 +87,38 @@ const HULL: Pt[] = [
   [1.75, 0.3],
 ]
 
+/**
+ * A ship. One seen far off (`far`) rides a sea further back than the cut-open one, so its hull under its own waterline is
+ * under that sea and not seen; it comes into sight through the cut as the ship comes up to the near sea. (Drawn whole, a
+ * far ship lifted up the frame showed its whole bowl and its steering oar's blade hanging in the air, 132-139.6 s.)
+ */
 export function drawShip(g: Paint, pose: Pose, look: ShipLook): void {
+  const far = look.far ?? 0
+  if (far <= 0.001) {
+    drawWholeShip(g, pose, look)
+    return
+  }
+  const { ctx } = g
+  const line = pose.y + 0.03
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(pose.x - 8, line - 30, 16, 30)
+  ctx.clip()
+  drawWholeShip(g, pose, look)
+  ctx.restore()
+  const under = 1 - smooth(far, 0, 0.12)
+  if (under > 0.004) {
+    ctx.save()
+    ctx.globalAlpha *= under
+    ctx.beginPath()
+    ctx.rect(pose.x - 8, line, 16, 30)
+    ctx.clip()
+    drawWholeShip(g, pose, look)
+    ctx.restore()
+  }
+}
+
+function drawWholeShip(g: Paint, pose: Pose, look: ShipLook): void {
   const { ctx } = g
   const dir = look.dir ?? 1
   const far = look.far ?? 0
@@ -117,11 +153,13 @@ export function drawShip(g: Paint, pose: Pose, look: ShipLook): void {
     // The trim along the gunwale, and the eye on the bow.
     poly(ctx, [[1.88, -0.27], [1.3, DECK + 0.06], [-1.2, DECK + 0.06], [-1.7, -0.27], [-1.68, -0.2], [-1.2, DECK + 0.13], [1.3, DECK + 0.13], [1.86, -0.2]])
     fill(ctx, trim)
+    // The eye under the trim, clear of the waterline (at -0.06 it sat on it, and any pitch of the bow put half of it
+    // under the sea's tint: a broken white mark at the bow).
     ctx.beginPath()
-    ctx.ellipse(1.82, -0.06, 0.1, 0.06, 0, 0, Math.PI * 2)
+    ctx.ellipse(1.82, -0.13, 0.1, 0.06, 0, 0, Math.PI * 2)
     fill(ctx, mix('#E8DFC8', air, far * 0.7))
     ctx.beginPath()
-    ctx.arc(1.84, -0.06, 0.035, 0, Math.PI * 2)
+    ctx.arc(1.84, -0.13, 0.035, 0, Math.PI * 2)
     fill(ctx, hull)
     // The steering oar at the stern.
     ctx.beginPath()
@@ -133,17 +171,27 @@ export function drawShip(g: Paint, pose: Pose, look: ShipLook): void {
     stroke(g, ink, lw * 0.8)
     ctx.restore()
   }
-  // The mast and the sail stand on the deck at the middle, unless struck.
+  // The mast and the sail stand on the deck at the middle, unless struck. Lowered, the mast lies aft at its last angle:
+  // it is never taken off the deck in a frame (it vanished there, still 13 degrees off the deck, as the ships moored
+  // under the Cyclops' cave and as the giants' boulders brought it down, and stood up again from nothing).
   const down = look.mastDown ?? 0
-  if (down < 1 && broken < 0.5) {
+  if (broken < 0.5) {
+    const H = 2.4
+    const tilt = -1.35 * down
+    // The stays, from the masthead to the stem and the stern, in the hull's frame: cast off as the mast starts down.
+    // (They were drawn in the mast's frame, so their feet swung up off the bow and down through the hull with it.)
+    const stays = 1 - smooth(down, 0, 0.3)
     ctx.save()
     ctx.translate(0.15, DECK)
-    ctx.rotate(-1.35 * down)
-    const H = 2.4
+    ctx.rotate(tilt)
     ctx.beginPath()
     ctx.moveTo(0, 0)
     ctx.lineTo(0, -H)
     stroke(g, ink, lw * 1.3)
+    // The yard and its sail are taken down to the deck while the mast comes down past halfway, before the yard, square
+    // to the mast, could reach the hull; and put back up as it is raised.
+    ctx.save()
+    ctx.globalAlpha *= 1 - smooth(down, 0.5, 0.8)
     // The yard, and the sail hung from it: furled up to the yard, or let down and filled.
     const yard = -H + 0.25
     ctx.beginPath()
@@ -152,7 +200,27 @@ export function drawShip(g: Paint, pose: Pose, look: ShipLook): void {
     stroke(g, ink, lw * 1.1)
     const s = Math.max(0, Math.min(1, look.sail))
     const belly = (look.belly ?? 0.5) * 0.28 * s
-    if (s > 0.02) {
+    // Between the two, over the sail's first eighth, the roll fades into the canvas let down from it: the one never
+    // replaces the other in a frame (a pale band turning to a dark roll at once, at the end of every furl).
+    const up = smooth(s, 0, 0.12)
+    if (up < 1) {
+      // Furled: the sail bundled up along the yard, a slim roll in the canvas's own shadow, not a white disc.
+      ctx.save()
+      ctx.globalAlpha *= 1 - up
+      const roll = mix(canvas, ink, 0.3)
+      ctx.beginPath()
+      ctx.moveTo(-0.98, yard + 0.02)
+      ctx.quadraticCurveTo(0, yard + 0.14, 0.98, yard + 0.02)
+      ctx.lineTo(0.98, yard + 0.07)
+      ctx.quadraticCurveTo(0, yard + 0.19, -0.98, yard + 0.07)
+      ctx.closePath()
+      fill(ctx, roll)
+      stroke(g, ink, lw * 0.7)
+      ctx.restore()
+    }
+    if (up > 0) {
+      ctx.save()
+      ctx.globalAlpha *= up
       const foot = yard + 0.12 + 1.6 * s
       ctx.beginPath()
       ctx.moveTo(-1.0, yard)
@@ -169,26 +237,19 @@ export function drawShip(g: Paint, pose: Pose, look: ShipLook): void {
       ctx.fillStyle = rgba(trim, 0.85)
       ctx.fillRect(-1.3, yard + (foot - yard) * 0.42, 2.6, (foot - yard) * 0.16)
       ctx.restore()
-    } else {
-      // Furled: the sail bundled up along the yard, a slim roll in the canvas's own shadow, not a white disc.
-      const roll = mix(canvas, ink, 0.3)
-      ctx.beginPath()
-      ctx.moveTo(-0.98, yard + 0.02)
-      ctx.quadraticCurveTo(0, yard + 0.14, 0.98, yard + 0.02)
-      ctx.lineTo(0.98, yard + 0.07)
-      ctx.quadraticCurveTo(0, yard + 0.19, -0.98, yard + 0.07)
-      ctx.closePath()
-      fill(ctx, roll)
-      stroke(g, ink, lw * 0.7)
+      ctx.restore()
     }
-    // Stays from the masthead to the bow and the stern.
-    ctx.beginPath()
-    ctx.moveTo(0, -H)
-    ctx.lineTo(1.7, 0.02)
-    ctx.moveTo(0, -H)
-    ctx.lineTo(-1.65, -0.05)
-    stroke(g, rgba(ink, 0.6), Math.max(1.25, lw * 0.5))
     ctx.restore()
+    ctx.restore()
+    if (stays > 0.004) {
+      const head: Pt = [0.15 + H * Math.sin(tilt), DECK - H * Math.cos(tilt)]
+      ctx.beginPath()
+      ctx.moveTo(head[0], head[1])
+      ctx.lineTo(1.85, DECK + 0.02)
+      ctx.moveTo(head[0], head[1])
+      ctx.lineTo(-1.5, DECK - 0.05)
+      stroke(g, rgba(ink, 0.6 * stays), Math.max(1.25, lw * 0.5))
+    }
   }
   ctx.restore()
 }

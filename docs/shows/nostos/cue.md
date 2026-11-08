@@ -60,12 +60,14 @@ Outside the comb, every strike is on a measured onset (`onsetsIn` and `strongest
 - the stake at 169.23;
 - Argos at 431.57;
 - the twelve axes, one from the next, from 450.96 to 457.36;
-- the three suitors' landings at 458.07, 467.64 and 476.64;
+- the four suitors' landings at 458.07, 465.44, 471.31 and 476.64; Leodes's bounces at 458.70 and 459.36, the bow
+  throwing the second at 467.64, the tallow going into the fire at 469.48, the third's bounce at 472.07, and the
+  fourth's slip at 479.21;
 - his six steps up the stairs, from 485.45 to 489.26;
 - the bow at 494.74;
 - the loose at 500.79, and the arrow taking Antinous at 501.60;
 - his last three men going under at 314.36, 316.98 and 319.11;
-- the third try's landing at 476.64 and the cut back to the stranger at 480.32;
+- the cut back to the stranger at 480.32, after the fourth try;
 - the suitors' charge at 503.15, and the battle's blows at 504.26, 504.66, 505.83, 506.68, 507.30, 507.79 and 508.96;
 - Penelope's five steps down, from 509.39 to 511.95;
 - the meeting at 512.68, the swell's last attack.

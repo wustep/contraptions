@@ -7,6 +7,7 @@ import { frontLift } from '../storm/weather'
 import { DECK } from '../../world/ship'
 import { lazy, STRIKE } from '../sirens/course'
 import { bowHalf, halfAngle, onHalf, sternHalf } from './hull'
+import { ground as sandAt } from '../ogygia/island'
 
 /**
  * The mast, struck: it stands for an instant as the ship drew it, then goes over towards the bow as the hull cracks,
@@ -56,17 +57,56 @@ export interface SparPose {
   thick: number
 }
 
+/**
+ * The spar lying on Ogygia's sand at x: along the sand under its ends, and lifted clear of the surface between them.
+ * (Aground it was set a little under the sea's surface, where the beach already stands over it: it went under the sand
+ * as it ran aground, and lay buried, only its ink showing along the top of the beach, 350.4-353 s.)
+ */
+function onTheSand(x: number, thick: number, under: (u: number) => number = sandAt): { a: number; cy: number } {
+  const xl = x - POLE / 2
+  const xr = x + POLE / 2
+  const a = Math.atan2(under(xr) - under(xl), POLE)
+  const mid = (under(xl) + under(xr)) / 2
+  let lift = 0
+  for (let k = 0; k <= 12; k++) {
+    const u = xl + ((xr - xl) * k) / 12
+    lift = Math.max(lift, mid + (u - x) * Math.tan(a) - under(u))
+  }
+  return { a, cy: mid - lift - thick / 2 - 0.012 }
+}
+
 export function sparPose(t: number): SparPose {
   const k = fall(t)
   const x = sparX(Math.max(t, FLOAT))
   const settle = t < AGROUND ? 0.09 * ring(t, FLOAT, 1.3, 0.5) : 0
   const ground = smooth(t, AGROUND - 0.2, AGROUND + 0.3)
-  // On the sea, and on the front rank of the great seas where they stand (`frontLift`).
-  const Y = (u: number) => surface(u, t) - frontLift(u, t)
-  const a = Math.atan2(Y(x + POLE / 2) - Y(x - POLE / 2), POLE) * 0.9 * (1 - ground) - 0.05 * ground
-  const cy = Y(x) - 0.01 + settle - 0.08 * ground
-  const lie: Pt = [x - (POLE / 2) * Math.cos(a), cy - (POLE / 2) * Math.sin(a)]
   const thick = 2.86 / 108 + (THICK - 2.86 / 108) * smooth(t, STRIKE + 0.2, FLOAT)
+  // On the sea, and on the front rank of the great seas where they stand (`frontLift`); aground, on the sand.
+  const Y = (u: number) => surface(u, t) - frontLift(u, t)
+  let a = Math.atan2(Y(x + POLE / 2) - Y(x - POLE / 2), POLE) * 0.9
+  let cy = Y(x) - 0.01 + settle
+  // Coming in over the beach's foot, it rides up onto the sand under its front while its back still floats: it rests on
+  // whichever is higher, the water (half sunk in it) or the sand. (Along the sea's surface, its front half went in
+  // under the sand for the second before it grounded, 349.5-350.4 s.)
+  if (ground < 1) {
+    let pen = -Infinity
+    for (let k = 0; k <= 12; k++) {
+      const u = x - POLE / 2 + (POLE * k) / 12
+      pen = Math.max(pen, Y(u) + thick / 2 - sandAt(u))
+    }
+    const shore = smooth(pen, -0.06, 0)
+    if (shore > 0) {
+      const rest = onTheSand(x, thick, (u) => Math.min(Y(u) + thick / 2 + 0.002, sandAt(u)))
+      a += (rest.a - a) * shore
+      cy += (rest.cy - cy) * shore
+    }
+  }
+  if (ground > 0) {
+    const rest = onTheSand(x, thick)
+    a += (rest.a - a) * ground
+    cy += (rest.cy - cy) * ground
+  }
+  const lie: Pt = [x - (POLE / 2) * Math.cos(a), cy - (POLE / 2) * Math.sin(a)]
   if (k >= 1) return { foot: lie, a, thick }
   const f = standingFoot(t)
   const a0 = standingAngle(t)

@@ -6,7 +6,7 @@ import type { Scene } from '../scene'
 import { seat, WINDOWS } from '../voyage'
 import { onShip } from '../world/ship'
 import { BEACHED, later, onDeck, shipPose, shipX, STRIKE, strokeAt, walk } from './sirens/course'
-import { DOWN_COW, drawIsland, FIRE, ground, KNEEL } from './storm/island'
+import { DOWN_COW, drawIsland, drawIslandFar, FIRE, ground, KNEEL } from './storm/island'
 import { drawBolt, drawCeiling, drawFarBolt, drawRain, drawSeas, STRIKE_SKY } from './storm/weather'
 
 /**
@@ -77,7 +77,11 @@ function ashore(man: number, go: number, there: number, back: number): Move[] {
   return out
 }
 
-const island = standing('thrinacia', region(486, -8, 530, 4, 3), 600, (g) => drawIsland(g))
+// Claimed from 470 to 555: its far hills, 30 deep, come over the horizon when the frame's right edge is at 470, well
+// short of the island itself, and are still on it when the frame's left edge is past 550 (claimed by the island alone,
+// they appeared whole on the way in, 277.42 s, and went whole behind the wreck on the way out, 309.38 s).
+const island = standing('thrinacia', region(470, -8, 555, 4, 3), 600, (g) => drawIsland(g))
+const islandFar = standing('thrinacia-far', region(470, -8, 555, 4, 3), 600, (g) => drawIslandFar(g))
 const seas = standing('storm-seas', region(470, -12, 800, 4, 4), 600, (g) => drawSeas(g))
 const ceiling = standing('storm-ceiling', region(470, -40, 720, 4, 4), 600, (g) => drawCeiling(g))
 const farBolt = standing('storm-far-bolt', region(470, -30, 720, 4, 4), 600, (g) => drawFarBolt(g))
@@ -122,6 +126,6 @@ export const storm: Scene = {
     { t: 299.8, cells: 17, off: [3.2, -3.0] },
     { t: 303.0, cells: 11, off: [0.6, -1.7] },
   ],
-  back: [ceiling, farBolt, seas, island],
+  back: [ceiling, farBolt, islandFar, seas, island],
   front: [rain, bolt],
 }

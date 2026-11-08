@@ -62,15 +62,21 @@ function monotone(ts: number[], vs: number[], cutAfter: boolean[]): (t: number) 
   }
 }
 
-/** The ball smoothed over a short window that leans a little ahead: what a follow has the camera on. */
+/**
+ * The ball smoothed over a short window that leans a little ahead: what a follow has the camera on. The window is
+ * sampled about once a frame: at 21 samples, 0.07 s apart, every kink in the ball's way (a hop, a landing, a stroke)
+ * reached the camera 21 times over as a little step in its speed every fourth frame, a 15 Hz judder of the whole frame
+ * (233.85, 245.9, 247.0, 420.7, 426.9 s). The weights are the same triangle.
+ */
+const FOLLOW_N = 40
 export function follower(where: (t: number) => Pt, lead = 0.12, span = 0.7): (t: number) => Pt {
   return (t: number): Pt => {
     let x = 0
     let y = 0
     let sum = 0
-    for (let j = -10; j <= 10; j++) {
-      const s = t + lead + (j / 10) * span
-      const w = 1 - Math.abs(j) / 11
+    for (let j = -FOLLOW_N; j <= FOLLOW_N; j++) {
+      const s = t + lead + (j / FOLLOW_N) * span
+      const w = 1 - (Math.abs(j) / FOLLOW_N) * (10 / 11)
       const [px, py] = where(s)
       x += px * w
       y += py * w

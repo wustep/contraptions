@@ -221,8 +221,16 @@ function drawStake(g: Paint, t: number, l: number): void {
   const foot: Pt = [STAKE_X + 0.04, ground(STAKE_X + 0.04) + 0.06]
   // It leans a little; it shivers when the bundle comes against it; the swell lifts it and lays it down seaward.
   const fall = Math.pow(smooth(t, STAKE_FALL, STAKE_FALL + 0.55), 1.6)
-  const a = 0.08 + 0.03 * ring(t, STOP, 3.2, 0.2) + fall * 1.32
   const len = 0.62
+  // Laid down, its top rests on the sand or the water, whichever is higher where it reaches. (Stopped at a tenth of a
+  // right angle above level on a beach that falls away seaward, its end stood in the air, 395.8-398 s.)
+  let down = 1.4
+  for (let i = 0; i < 3; i++) {
+    const tx = foot[0] + Math.sin(down) * len
+    const rest = Math.min(ground(tx), surface(tx, t)) - 0.025
+    down = Math.acos(Math.max(-1, Math.min(1, -(rest - foot[1]) / len)))
+  }
+  const a = 0.08 + 0.03 * ring(t, STOP, 3.2, 0.2) + fall * (down - 0.08)
   const top: Pt = [foot[0] + Math.sin(a) * len, foot[1] - Math.cos(a) * len]
   ctx.beginPath()
   ctx.moveTo(foot[0], foot[1])

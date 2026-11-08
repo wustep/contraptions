@@ -1,4 +1,4 @@
-import { fill, hash, mix, poly, rect, rgba, stroke, type Paint } from '../../draw'
+import { fill, frameH, hash, mix, poly, rect, rgba, stroke, type Paint } from '../../draw'
 import { M } from '../../music'
 import { skyAt } from '../../world/sky'
 import type { Pt } from '../../path'
@@ -51,7 +51,8 @@ const sunXAt = (t: number): number => {
 
 /** The skiff's length, and where the two sit in it (its own frame, the waterline under its middle at 0). */
 const L = 1.25
-const SEATS: Pt[] = [[-0.22, -0.2], [0.07, -0.2]]
+// On the gunwale (its top edge runs at -0.15 to -0.16): at -0.2 they sat a little over the hull, with light under them.
+const SEATS: Pt[] = [[-0.22, -0.15], [0.07, -0.15]]
 
 /** Along the sea, near: moored until the dissolve, then out from the jetty and round into the sun's path. */
 const track = glide([
@@ -106,7 +107,7 @@ function drawSunPath(g: Paint): void {
   if (!d || d.a < 0.01) return
   const hy = horizonOf(view)
   const x = view.x0 + (view.x1 - view.x0) * d.x
-  const r = d.r * view.h
+  const r = d.r * frameH(view)
   const low = smoother(t, M.fade, 549)
   const near = Math.min(view.y1, 0.1)
   // Broken by the swell into flat slivers, as light on water is: one, two or three to a row, of uneven lengths and set
@@ -149,7 +150,8 @@ export function drawSkiff(g: Paint): void {
   ctx.scale(s.s, s.s)
   // The mast and the sail, set once they are under way.
   const set = Math.min(1, Math.max(0, (t - TRIAL.fade - 1.5) / 3))
-  rect(ctx, 0.3, -1.05, 0.03, 0.85)
+  // Stepped in the hull (drawn over its foot): it stopped short of the gunwale, standing on the air.
+  rect(ctx, 0.3, -1.05, 0.03, 1.05)
   fill(ctx, outdoors(TIMBER, t))
   if (set > 0) {
     const foot = -1.0 + 0.62 * set
@@ -163,20 +165,41 @@ export function drawSkiff(g: Paint): void {
     ctx.closePath()
     // Seen against the light on the water: the sail goes down to the dusk's dark as they go out into the sun's path.
     fill(ctx, mix(outdoors(CLOTH, t), '#3A3034', 0.35 + 0.5 * (1 - s.s)))
-    stroke(g, ink, 1.4)
-    rect(ctx, 0.03, -1.0 + 0.62 * set * 0.45, 0.56, 0.62 * set * 0.12)
+    // The madder band across it, inside its edges as they belly (a straight band stood out of the luff and fell short of
+    // the leech), and under the edges' ink.
+    ctx.save()
+    ctx.clip()
+    rect(ctx, 0, -1.0 + 0.62 * set * 0.45, 0.7, 0.62 * set * 0.12)
     fill(ctx, mix(outdoors(MADDER, t), '#2A2024', 0.5 * (1 - s.s)))
+    ctx.restore()
+    ctx.beginPath()
+    ctx.moveTo(0.02, -1.0)
+    ctx.lineTo(0.6, -1.0)
+    ctx.quadraticCurveTo(0.6 + belly, (foot - 1.0) / 2, 0.58, foot)
+    ctx.lineTo(0.04, foot)
+    ctx.quadraticCurveTo(0.02 + belly, (foot - 1.0) / 2, 0.02, -1.0)
+    ctx.closePath()
+    stroke(g, ink, 1.4)
   }
   // The hull: low, a little rise at either end.
   poly(ctx, [[-L / 2, -0.2], [-L / 2 + 0.08, 0.06], [L / 2 - 0.12, 0.06], [L / 2, -0.24], [L / 2 - 0.06, -0.16], [-L / 2 + 0.05, -0.15]])
   fill(ctx, mix(outdoors('#3A3029', t), '#1C1814', 0.3))
   stroke(g, ink, 1.4)
   ctx.restore()
-  // The mooring line to the jetty's bollard, until they cast off.
-  if (t < TRIAL.fade + 1.2 && s.s > 0.99) {
+  // The mooring line to the jetty's bollard, until they cast off: then let go there and hauled in to the bow, its
+  // end coming in low over the water (it went in one frame, 515.2 s).
+  const cast = TRIAL.fade + 1.2
+  const haul = smoother(t, cast, cast + 0.6)
+  if (haul < 1 && s.s > 0.99) {
+    const bx = s.x - L / 2 + 0.05
+    const by = s.y - 0.15
+    const ex = JETTY.x1 - 0.5 + (bx - JETTY.x1 + 0.5) * haul
+    const ey = JETTY.top - 0.1 + (by - JETTY.top + 0.1) * haul + 0.25 * Math.sin(Math.PI * haul)
     ctx.beginPath()
-    ctx.moveTo(s.x - L / 2 + 0.05, s.y - 0.15)
-    ctx.quadraticCurveTo((s.x + JETTY.x1 - 0.5) / 2, s.y + 0.05, JETTY.x1 - 0.5, JETTY.top - 0.1)
+    ctx.moveTo(bx, by)
+    const cx = ((s.x + JETTY.x1 - 0.5) / 2) * (1 - haul) + ((bx + ex) / 2) * haul
+    const cy = (s.y + 0.05) * (1 - haul) + (Math.max(by, ey) + 0.05) * haul
+    ctx.quadraticCurveTo(cx, cy, ex, ey)
     stroke(g, outdoors('#6A5A44', t), 1.0)
   }
 }

@@ -12,6 +12,7 @@ import {
   GATE,
   HALL,
   HEARTH,
+  PAN,
   ROOM,
   ROOM_DOOR,
   SLAB,
@@ -25,6 +26,7 @@ import {
   WELL,
   WINDOW,
 } from './geo'
+import { KEEP_SPAN, drawKeep, keepOutline, merlons } from './keep'
 import { drawLoom } from './loom'
 import {
   BRONZE,
@@ -48,7 +50,7 @@ import {
   nightness,
   outdoors,
 } from './look'
-import { ARROW, armTip, arrowShown, arrowTail, arrowY, axeShiver, axeUp, drawOf, NOCK0, plateEnd } from './rig'
+import { ARROW, armTip, arrowShown, arrowTail, arrowY, axeShiver, axeUp, bowWarm, drawOf, NOCK0, panFire, plateEnd, tallowAt } from './rig'
 
 /**
  * The palace, cut open like a doll's house: its front wall taken away, so the hall, the stairs, Penelope's room and the
@@ -61,8 +63,9 @@ import { ARROW, armTip, arrowShown, arrowTail, arrowY, axeShiver, axeUp, drawOf,
  */
 
 const ink = (t: number) => mix('#2A231C', '#120E0B', nightness(t))
-/** Whether any of the house is in the frame: nothing of it stands west of the courtyard's wall (GATE.wall). */
-const IN_VIEW = (g: Paint) => !(g.view.x1 < GATE.wall[0] - 0.1 || g.view.x0 > 831 || g.view.y0 > -8.4 || g.view.y1 < -13)
+/** Whether any of the house is in the frame: its terraces, from under the courtyard to past the bastion, to its tower. */
+const IN_VIEW = (g: Paint) =>
+  !(g.view.x1 < KEEP_SPAN.x0 - 0.1 || g.view.x0 > Math.max(831, KEEP_SPAN.x1 + 0.1) || g.view.y0 > KEEP_SPAN.foot + 0.05 || g.view.y1 < KEEP_SPAN.top - 0.1)
 
 export function drawPalace(g: Paint): void {
   if (!IN_VIEW(g)) return
@@ -71,6 +74,7 @@ export function drawPalace(g: Paint): void {
     drawSilhouette(g)
     return
   }
+  drawKeep(g)
   drawCourtyard(g)
   drawShell(g)
   drawHallInside(g)
@@ -89,7 +93,9 @@ function drawShell(g: Paint): void {
   const { ctx, t } = g
   const stone = outdoors(STONE, t)
   const shade = outdoors(STONE_SHADE, t)
-  rect(ctx, HALL.x0 - WALL, HALL.floor, HALL.x1 - HALL.x0 + 2 * WALL, SLAB)
+  // The hall's floor slab, cut, as deep as its face over the axes' trench all along (only that stretch was deeper: a
+  // box hanging under the floor across the terrace wall's courses).
+  rect(ctx, HALL.x0 - WALL, HALL.floor, HALL.x1 - HALL.x0 + 2 * WALL, SLAB + 0.08)
   fill(ctx, shade)
   rect(ctx, TERRACE.x0, TERRACE.y - 0.26, TERRACE.x1 - TERRACE.x0 + WALL, 0.26)
   fill(ctx, stone)
@@ -99,6 +105,11 @@ function drawShell(g: Paint): void {
   fill(ctx, stone)
   rect(ctx, ROOM.x0 - WALL - 0.06, ROOM.ceil - SLAB - 0.06, ROOM.x1 - ROOM.x0 + 2 * WALL + 0.12, 0.07)
   fill(ctx, shade)
+  // The flat roofs' crenellated edges: the terrace's parapet and the room's roof.
+  ctx.beginPath()
+  merlons(ctx, TERRACE.x0, TERRACE.x1 + WALL, TERRACE.y - 0.31)
+  merlons(ctx, ROOM.x0 - WALL - 0.06, ROOM.x1 + WALL + 0.06, ROOM.ceil - SLAB - 0.06)
+  fill(ctx, stone)
 }
 
 /** The courtyard: its back wall face-on, from the gate to the hall, the house's great jar by it, and the gate. */
@@ -109,6 +120,9 @@ function drawCourtyard(g: Paint): void {
   fill(ctx, mix(outdoors(STONE, t), outdoors(STONE_SHADE, t), 0.35))
   rect(ctx, x0, TOP - GATE.wallH - 0.06, HALL.x0 - x0, 0.06)
   fill(ctx, outdoors(STONE_SHADE, t))
+  ctx.beginPath()
+  merlons(ctx, x0, HALL.x0 - WALL, TOP - GATE.wallH - 0.06)
+  fill(ctx, mix(outdoors(STONE, t), outdoors(STONE_SHADE, t), 0.35))
   drawJar(g, 816.7, TOP)
   const timber = outdoors(TIMBER, t)
   for (const side of [-1, 1]) {
@@ -284,9 +298,11 @@ function drawRoomInside(g: Paint): void {
   fill(ctx, outdoors('#8D98A3', t))
   drawWindow(g)
   drawLamp(g, ROOM.x0 + 1.75, ROOM.floor - 0.62)
-  rect(ctx, ROOM.x0 + 2.7, ROOM.floor - 0.2, 0.5, 0.2)
+  // Her chest, on the floor short of the stairwell's opening (where it stood, its east end hung over the opening).
+  const chest = STAIRWELL.x0 - 0.05 - 0.5
+  rect(ctx, chest, ROOM.floor - 0.2, 0.5, 0.2)
   fill(ctx, indoors(TIMBER_LIGHT, t))
-  rect(ctx, ROOM.x0 + 2.7, ROOM.floor - 0.2, 0.5, 0.035)
+  rect(ctx, chest, ROOM.floor - 0.2, 0.5, 0.035)
   fill(ctx, indoors(TIMBER, t))
   drawLoom(g)
 }
@@ -358,6 +374,7 @@ function drawRig(g: Paint): void {
   const { ctx, t } = g
   const k = ink(t)
   const timber = indoors(TIMBER, t)
+  drawPan(g)
   // The crank: its block, the plate out west, the arm up, and the cord from the arm's tip to the string.
   const [px, py] = plateEnd(t)
   const [ax, ay] = armTip(t)
@@ -391,7 +408,7 @@ function drawRig(g: Paint): void {
   rect(ctx, BOW.x - 0.12, HALL.floor - 0.03, 0.24, 0.03)
   fill(ctx, timber)
   // The bow: horn and wood, recurved, pointing east, its limbs bending as the string comes west; the red string.
-  const flex = (nock - NOCK0) * 0.35
+  const flex = (nock - NOCK0) * 0.55
   const tip = (s: number): Pt => [BOW.x + 0.03 + flex * 0.5, BOW.y + s * (BOW.half - flex * 0.15)]
   const top = tip(-1)
   const bot = tip(1)
@@ -399,7 +416,8 @@ function drawRig(g: Paint): void {
   ctx.moveTo(top[0], top[1])
   ctx.bezierCurveTo(BOW.x - 0.12 - flex * 0.2, BOW.y - BOW.half * 0.75, BOW.x - 0.05, BOW.y - 0.1, BOW.x - 0.03, BOW.y)
   ctx.bezierCurveTo(BOW.x - 0.05, BOW.y + 0.1, BOW.x - 0.12 - flex * 0.2, BOW.y + BOW.half * 0.75, bot[0], bot[1])
-  stroke(g, timber, 4.2)
+  // Warmed at the fire under it, the horn and wood darken towards the fire's colour, and cool again after.
+  stroke(g, indoors(mix(TIMBER, WARM_BOW, 0.6 * bowWarm(t)), t), 4.2)
   ctx.beginPath()
   ctx.moveTo(top[0], top[1])
   ctx.lineTo(nock, BOW.y)
@@ -407,7 +425,67 @@ function drawRig(g: Paint): void {
   stroke(g, indoors(MADDER, t), 1.5)
   rect(ctx, BOW.x - 0.05, BOW.y - 0.04, 0.05, 0.08)
   fill(ctx, indoors(BRONZE, t))
+  if (t <= TRIAL.loose) drawArrow(g)
   void k
+}
+
+/** How far a wall drawn over the balls runs on below the ground they stand on: a ball's ink overhangs its foot. */
+const FOOT = 0.025
+
+/** The bow's horn and wood as warm as the fire makes them. */
+const WARM_BOW = '#7A3F22'
+
+/**
+ * The fire pan at the bow's foot: a shallow bronze bowl on stubby legs, its coals glowing low; the round of tallow on
+ * its east rim; and, once the tallow is in, its fire, three flat tongues inside its rim.
+ */
+function drawPan(g: Paint): void {
+  const { ctx, t } = g
+  const { x, half, rim, foot } = PAN
+  const bronze = indoors(BRONZE, t)
+  for (const s of [-1, 1]) {
+    poly(ctx, [[x + s * (half - 0.07), rim + 0.045], [x + s * (half - 0.04), rim + 0.045], [x + s * (half - 0.015), foot], [x + s * (half - 0.045), foot]])
+    fill(ctx, indoors(mix(BRONZE, '#2A1A10', 0.35), t))
+  }
+  ctx.beginPath()
+  ctx.moveTo(x - half, rim)
+  ctx.quadraticCurveTo(x, rim + 0.13, x + half, rim)
+  ctx.closePath()
+  fill(ctx, bronze)
+  const h = panFire(t)
+  // The coals heaped in it: dark, their tops red, redder as it burns.
+  ctx.beginPath()
+  ctx.ellipse(x, rim + 0.002, half - 0.02, 0.028, 0, Math.PI, 0)
+  fill(ctx, indoors(mix('#3A2418', EMBER, 0.45 + 0.4 * Math.min(1, h / 0.1)), t))
+  rect(ctx, x - half - 0.012, rim - 0.008, 2 * half + 0.024, 0.016)
+  fill(ctx, indoors(BRONZE_LIGHT, t))
+  // The tallow: a pale round on the rim, then down on the coals, slumping and going into the flame.
+  const fat = tallowAt(t)
+  if (fat.left > 0.02) {
+    const hw = 0.05 * (1 + 0.35 * (1 - fat.left))
+    const hh = 0.03 * fat.left
+    ctx.beginPath()
+    ctx.ellipse(fat.x, fat.y - hh, hw, hh, 0, 0, Math.PI * 2)
+    fill(ctx, indoors('#E6DBC0', t))
+  }
+  if (h < 0.004) return
+  const tongues: [number, number, number, string][] = [
+    [-0.42, 0.68, 1.9, FIRE],
+    [0.4, 0.78, 2.4, FIRE],
+    [0, 1, 1.4, FIRE_CORE],
+  ]
+  const w = half * 0.42
+  for (const [dx, hh, f, c] of tongues) {
+    const lean = 0.12 * Math.sin(t * f + dx * 9)
+    const tall = h * hh * (0.88 + 0.12 * Math.sin(t * f * 1.7 + dx * 5))
+    const bx = x + dx * half
+    ctx.beginPath()
+    ctx.moveTo(bx - w, rim)
+    ctx.quadraticCurveTo(bx - w * 0.9, rim - tall * 0.55, bx + lean * tall, rim - tall)
+    ctx.quadraticCurveTo(bx + w * 0.9, rim - tall * 0.5, bx + w, rim)
+    ctx.closePath()
+    fill(ctx, c)
+  }
 }
 
 /* ------------------------------------------------------------------ in front of the balls */
@@ -421,6 +499,7 @@ function drawSilhouette(g: Paint): void {
   ctx.rect(HALL.x0 - WALL, HALL.ceil - SLAB, HALL.x1 - HALL.x0 + 2 * WALL, HALL.floor - HALL.ceil + SLAB + 0.01)
   ctx.rect(ROOM.x0 - WALL, ROOM.ceil - SLAB, ROOM.x1 - ROOM.x0 + 2 * WALL, ROOM.floor - ROOM.ceil + SLAB + 0.01)
   ctx.rect(TERRACE.x0, TERRACE.y - 0.31, TERRACE.x1 - TERRACE.x0 + WALL, 0.32)
+  keepOutline(ctx)
   fill(ctx, againstSun(STONE_SHADE, t))
 }
 
@@ -431,11 +510,14 @@ export function overPalace(g: Paint): void {
   const shade = outdoors(STONE_SHADE, t)
   // In front of the balls while the arrow goes through them; behind after (`drawPalace`).
   if (t < TRIAL.erupts) drawAxes(g)
-  // The floor's cut face over the trench, deep enough there that a lying axe is down in it, out of sight, until it
-  // swings up.
-  rect(ctx, AXES[AXES.length - 1] - 0.5, HALL.floor, AXES[0] - AXES[AXES.length - 1] + 1.0, SLAB + 0.08)
+  // The floor's cut face, deep enough over the trench that a lying axe is down in it, out of sight, until it swings
+  // up; and from wall to wall, so whatever stands on the floor stands on it alike. (Over the trench only, a ball standing
+  // across its west end, by the bow, had a stepped foot, and west of it every rim hung below the floor, 460-503 s.)
+  rect(ctx, HALL.x0 - WALL, HALL.floor, HALL.x1 - HALL.x0 + 2 * WALL, SLAB + 0.08)
   fill(ctx, shade)
-  drawArrow(g)
+  // Lying on the string, the arrow is the bow's, behind whoever passes in front of it (over them, it lay across a man
+  // leaping past the bow, 471.0 and 474.2 s); loosed, it flies in front of them through the eyes.
+  if (t > TRIAL.loose) drawArrow(g)
   // The hall's walls' cut ends: over each door, the wall to the slab.
   rect(ctx, HALL.x0 - WALL, HALL.ceil, WALL, HALL.floor - HALL.ceil - DOOR_E.h)
   fill(ctx, stone)
@@ -458,11 +540,21 @@ export function overPalace(g: Paint): void {
   fill(ctx, stone)
   // The courtyard's front wall, cut, east of the gate, and the gate's near post against it, so the gate has both.
   const [x0] = GATE.wall
-  rect(ctx, x0, TOP - GATE.wallH, GATE.x - GATE.half - x0, GATE.wallH)
+  // Down past the ground's edge by a ball's ink, so nobody passing behind it shows his rim under it (439.5 s).
+  rect(ctx, x0, TOP - GATE.wallH, GATE.x - GATE.half - x0, GATE.wallH + FOOT)
   fill(ctx, stone)
-  rect(ctx, x0, TOP - GATE.wallH - 0.05, GATE.x - GATE.half - x0, 0.05)
+  // Its coping and merlons are the back wall's own row over this stretch (laid out afresh here, a second row stood out
+  // of step over the first: one wide two-tone merlon with a dark sliver over it).
+  rect(ctx, x0, TOP - GATE.wallH - 0.06, GATE.x - GATE.half - x0, 0.06)
   fill(ctx, shade)
-  rect(ctx, GATE.x - GATE.half - 0.09, TOP - GATE.h - 0.09, 0.09, GATE.h + 0.09)
+  ctx.beginPath()
+  merlons(ctx, x0, HALL.x0 - WALL, TOP - GATE.wallH - 0.06, [x0, GATE.x - GATE.half])
+  fill(ctx, stone)
+  // The near post, and the lintel's near end over the wall as at its far end (the wall, laid over it, cut the lintel
+  // off flush with this post, 437-441 s).
+  rect(ctx, GATE.x - GATE.half - 0.09, TOP - GATE.h, 0.09, GATE.h + FOOT)
+  fill(ctx, outdoors(TIMBER, t))
+  rect(ctx, GATE.x - GATE.half - 0.14, TOP - GATE.h - 0.09, 0.28, 0.09)
   fill(ctx, outdoors(TIMBER, t))
   void CLOTH
 }
@@ -521,6 +613,8 @@ function drawArrow(g: Paint): void {
   stroke(g, indoors('#6C5236', t), 1.5)
   poly(ctx, [[head, y], [head + 0.06, y - 0.022], [head + 0.06, y + 0.022]])
   fill(ctx, indoors(BRONZE_LIGHT, t))
-  poly(ctx, [[tail, y], [tail - 0.07, y - 0.03], [tail - 0.09, y], [tail - 0.07, y + 0.03]])
+  // The fletching: two vanes rising off the shaft from their front to their full depth at the nock, so they go with the
+  // head. (A kite sharp at the nock, it read as a second head pointing back: the arrow flying east out of Antinous.)
+  poly(ctx, [[tail - 0.1, y], [tail - 0.045, y - 0.032], [tail - 0.006, y - 0.032], [tail - 0.006, y + 0.032], [tail - 0.045, y + 0.032]])
   fill(ctx, indoors(CLOTH, t))
 }

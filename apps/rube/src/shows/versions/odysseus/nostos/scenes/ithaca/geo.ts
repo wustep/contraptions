@@ -67,8 +67,12 @@ export const TERRACE = { x0: ROOM.x1, x1: HALL.x1, y: ROOM.floor }
  * to the room, and through it to the terrace. Their top comes up through an opening in the room's floor.
  */
 export const STAIRS = { x0: 819.7, x1: 822.1, steps: 6 }
-/** The opening in the room's floor over the stairs' top. */
-export const STAIRWELL = { x0: 821.25, x1: 822.1 }
+/**
+ * The opening in the room's floor over the stairs' top: wide enough that whoever hops up the top flight clears the
+ * floor's cut edge (at 821.25 it was half a ball from the fifth step's riser, and every ball going up or down the top
+ * flight went behind the slab). Penelope at the stairs' head stands with her middle over the floor.
+ */
+export const STAIRWELL = { x0: 821.0, x1: 822.1 }
 /** The hearth by the east door, where the beggar sits; one painted column under the room's wall, Knossos's way. */
 export const HEARTH = { x: 819.4, half: 0.25 }
 export const COLUMNS = [822.45]
@@ -85,10 +89,15 @@ export const LOOM = { x: ITHACA.loom.x, half: 0.42, top: ROOM.floor - 1.12, foot
  * thread; and its rig, a bell crank west of it: a plate out to the west under the light well, cocked up, and an arm
  * standing up from the pivot, tied by a cord to the string's middle. A ball dropped on the plate from the terrace
  * that the plate gives way under brings it down, the arm swings west and draws the bow; when he rolls off the plate,
- * the bow takes the cord back and looses. The suitors drop on it too, and it does not give.
+ * the bow takes the cord back and looses. The suitors drop on it too, and it never goes all the way.
  */
 export const BOW = { x: 825.75, y: HALL.floor - 0.32, half: 0.3 }
 export const CRANK = { x: 826.36, y: HALL.floor - 0.06, plate: 0.38, arm: 0.36, cocked: 0.7 }
+/**
+ * A bronze fire pan on stubby legs at the bow's foot, between its stand and the crank, its coals low; a round of
+ * tallow warming on its east rim. The suitors' third shoves the tallow in, and the fire comes up round the bow.
+ */
+export const PAN = { x: 826.08, half: 0.12, rim: HALL.floor - 0.12, foot: HALL.floor }
 /** The twelve axes along the floor's trench, east of the bow, their eyes at the arrow's height. */
 export const AXES = Array.from({ length: 12 }, (_, i) => 825.15 - i * 0.44)
 /** An axe: its haft, its head, and how deep its foot sits in the trench (lying, it is hidden there). */
@@ -125,8 +134,20 @@ export const TRIAL = {
   penelope: 441.12,
   /** Telemachus trips the first axe (the east one); each one up trips the next, westwards, on these notes. */
   axes: [450.96, 451.48, 452.52, 453.0, 453.42, 453.87, 454.14, 454.66, 455.4, 455.91, 456.63, 457.36],
-  /** The suitors who try: each lands on the plate on one of these, and it does not give. */
-  tries: [458.07, 467.64, 476.64],
+  /**
+   * The suitors who try, each landing on the plate on one of these, each further than the last, and none all the way:
+   * - Leodes: it barely dips. He bounces on it, twice (`pumps`), and it does not give.
+   * - the second drives it a third of the way down and strains on it, trembling, until it throws him off (`snap`).
+   * - the third shoves the tallow into the fire pan under the bow (`tallow`), and with the bow warm leaps onto the
+   *   plate from the floor: more than half way, a bounce (`bounce`) takes it further, and it rises back under him.
+   * - the fourth drops onto the warm bow and it goes nearly all the way, trembling at the end, until he slips (`slip`).
+   */
+  tries: [458.072, 465.438, 471.313, 476.636],
+  pumps: [458.699, 459.355],
+  snap: 467.644,
+  tallow: 469.484,
+  bounce: 472.073,
+  slip: 479.213,
   /** He goes up the stairs a step a note, and stands at their head in her room. */
   climb: [485.45, 486.06, 486.72, 487.48, 488.21, 489.26],
   /** Out of her door onto the terrace, to the well's edge, and over. */

@@ -5,7 +5,7 @@ import { fly, roll, type Move, type Pt } from '../path'
 import type { Scene } from '../scene'
 import { seat, WINDOWS } from '../voyage'
 import { onShip } from '../world/ship'
-import { drawBinding, HAUL, MAST_AT, man0At, strainAt, COILS, RELEASE } from './sirens/binding'
+import { drawBinding, HAUL, MAST_AT, man0At, man1At, strainAt, COILS, RELEASE } from './sirens/binding'
 import { later, lazy, onDeck, shipPose, shipX, strokeAt, walk } from './sirens/course'
 import { drawRocks } from './sirens/rocks'
 
@@ -54,6 +54,7 @@ const fwd3: Pt = seat(5)
 const r = 0.13 * MAN_SIZE
 
 const man0: Move[] = [onDeck(man0At, HAUL[0], TO_HELM[1] + 0.4, r)]
+const man1: Move[] = [onDeck(man1At, 254.3, RELEASE + 1.6, r)]
 const man2: Move[] = [
   onDeck(walk(seat(2), fwd2, 251.8, 253.3), 251.8, 253.3, r),
   onDeck(walk(fwd2, fwd2, 253.3, TO_HELM[0]), 253.3, TO_HELM[0], r),
@@ -105,7 +106,7 @@ export const sirens: Scene = {
     },
   },
   hero,
-  men: { 0: man0, 2: man2, 3: man3 },
+  men: { 0: man0, 1: man1, 2: man2, 3: man3 },
   deaths: { 3: LOST },
   shots: [
     { t: 253.6, cells: 10.5, off: [0.7, -1.3] },

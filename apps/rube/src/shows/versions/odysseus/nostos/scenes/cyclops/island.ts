@@ -35,8 +35,17 @@ export const FIRELIT = '#C8723A'
 /** Whether the cave is cut open at `t`: from the cut that takes the camera in to the one that takes it out. */
 export const openAt = (t: number): boolean => t >= T.cutIn && t < T.cutOut
 
+/**
+ * How far the island's skirts reach out past its waterline at each end as they go down under the water, out of sight
+ * (no floor to it, so a tall frame sees none): they went straight down, a box with square ends seen through the cut sea.
+ */
+export const SKIRT = 9
 /** The island's outline, west at the waterline up over the crag and the ridge to the east, and down under the water. */
 const OUTLINE: Pt[] = [
+  [WEST - SKIRT, 40],
+  [WEST - 6, 12],
+  [WEST - 3, 4],
+  [WEST - 1.2, 1.4],
   [WEST - 0.4, 0.5],
   [WEST, 0.1],
   [93.6, -0.62],
@@ -67,8 +76,11 @@ const OUTLINE: Pt[] = [
   [137.6, -4.45],
   [139.8, -1.35],
   [EAST, 0.25],
-  [EAST + 0.4, 3],
-  [WEST - 0.4, 3],
+  [EAST + 0.6, 0.9],
+  [EAST + 1.6, 2.0],
+  [EAST + 3.2, 4.4],
+  [EAST + 6, 12],
+  [EAST + SKIRT, 40],
 ]
 
 /** The turf: a cap along the top from behind the crag round to the east slope. */
@@ -117,7 +129,7 @@ function inCave(ctx: CanvasRenderingContext2D): void {
 
 export function drawIsland(g: Paint, t: number, inside: () => void): void {
   const { ctx, view } = g
-  if (view.x1 < WEST - 3 || view.x0 > EAST + 3) return
+  if (view.x1 < WEST - SKIRT - 1 || view.x0 > EAST + SKIRT + 1) return
   const sky = skyAt(t)
   const air = (c: string, f: number) => mix(c, sky.low, f)
   // The rock, and its planes as the light falls on them: a few big shapes, not a pattern of lines.
@@ -135,14 +147,19 @@ export function drawIsland(g: Paint, t: number, inside: () => void): void {
     poly(ctx, c)
     ctx.fill()
   }
-  // Its foot, dark where the sea wets it.
+  // Its foot, dark where the sea wets it: out along its skirts (the outline cuts it) and going off downwards. (It ended
+  // square at the waterline's ends and flat a cell down, the old box's own edges, a box left inside the new skirts.)
   ctx.beginPath()
-  ctx.moveTo(WEST, -0.5)
-  for (let x = WEST; x <= EAST + 0.01; x += 1.5) ctx.lineTo(x, -0.55 - 0.12 * Math.sin(x * 0.9))
-  ctx.lineTo(EAST, 1)
-  ctx.lineTo(WEST, 1)
+  ctx.moveTo(WEST - SKIRT, -0.5)
+  for (let x = WEST - SKIRT; x <= EAST + SKIRT + 0.01; x += 1.5) ctx.lineTo(x, -0.55 - 0.12 * Math.sin(x * 0.9))
+  ctx.lineTo(EAST + SKIRT, 3)
+  ctx.lineTo(WEST - SKIRT, 3)
   ctx.closePath()
-  ctx.fillStyle = air(WET, 0.04)
+  const wet = ctx.createLinearGradient(0, 0, 0, 3)
+  wet.addColorStop(0, air(WET, 0.04))
+  wet.addColorStop(0.35, air(WET, 0.04))
+  wet.addColorStop(1, rgba(air(WET, 0.04), 0))
+  ctx.fillStyle = wet
   ctx.fill()
   ctx.restore()
   // The turf over the top: a cap with a lighter crown.
@@ -151,16 +168,31 @@ export function drawIsland(g: Paint, t: number, inside: () => void): void {
     const f = Math.min(i, a.length - 1 - i) / (a.length / 2)
     return [x + (i < a.length / 2 ? -0.2 : 0.2), y + 0.55 + 0.6 * f]
   })
-  blob(ctx, [...top, ...under])
+  // Its top edge is the outline's own line, corner for corner; only its underside is rounded. (Rounded all round, it cut
+  // inside the crag's corners, a sliver of bare rock under the ink, and its west tip rounded off under the crown's line,
+  // 143-187 s, plainest on phones.)
+  const ends: Pt[] = [top[top.length - 1], ...under, top[0]]
+  ctx.beginPath()
+  top.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
+  for (let i = 1; i < ends.length - 1; i++) {
+    const m: Pt = [(ends[i][0] + ends[i + 1][0]) / 2, (ends[i][1] + ends[i + 1][1]) / 2]
+    ctx.quadraticCurveTo(ends[i][0], ends[i][1], m[0], m[1])
+  }
+  ctx.closePath()
   ctx.fillStyle = air(TURF, 0.08)
   ctx.fill()
   stroke(g, air(INK, 0.15), 2.2)
+  // The crown's line, its ends drawn in off the cap's tips (from the tips themselves it poked out past the rounded ends).
+  const crown = top.map(([x, y]): Pt => [x, y + 0.12])
+  const inset = (a: Pt, b: Pt): Pt => [a[0] + (b[0] - a[0]) * 0.35, a[1] + (b[1] - a[1]) * 0.35]
+  crown[0] = inset(crown[0], crown[1])
+  crown[crown.length - 1] = inset(crown[crown.length - 1], crown[crown.length - 2])
   ctx.beginPath()
-  top.forEach(([x, y], i) => (i ? ctx.lineTo(x, y + 0.12) : ctx.moveTo(x, y + 0.12)))
+  crown.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
   stroke(g, air(TURF_HI, 0.05), 3.2)
-  // The outline.
+  // The outline: all of it but the floor it closes along out of sight.
   ctx.beginPath()
-  OUTLINE.slice(0, OUTLINE.length - 2).forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
+  OUTLINE.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
   stroke(g, INK, 2.6)
   if (!openAt(t)) drawFace(g)
   else {
@@ -257,9 +289,16 @@ function drawInside(g: Paint, t: number): void {
     ctx.fill()
   }
   ctx.restore()
-  // The rock under the floor, cut through with it: a plain dark band down to the water, so the floor is a floor.
+  // The rock under the floor, cut through with it: a plain dark band down to the water, so the floor is a floor. Its
+  // back end runs down the near edge of the cleft behind the back wall, into whose dark it goes (run on square past
+  // the wall's foot, it ended in a box corner on the rock face, 165-170 s).
+  const [[ax, ay], [bx, by]] = [CLEFTS[1][4], CLEFTS[1][5]]
+  const edge = (y: number): number => ax + ((bx - ax) * (y - ay)) / (by - ay)
+  // Its front edge on the shelf's, a hair under it (a fiftieth of a cell under it, it stood out as a step where the
+  // shelf's edge turns away below, 148-153 and 172-181 s).
+  poly(ctx, [[MOUTH.x1 - 0.002, FLOOR + 0.12], [edge(FLOOR + 0.12) + 0.02, FLOOR + 0.12], [edge(0) + 0.02, 0], [MOUTH.x1 - 0.002, 0]])
   ctx.fillStyle = SECTION
-  ctx.fillRect(MOUTH.x1 - 0.02, FLOOR + 0.12, BACK - MOUTH.x1 + 0.4, -FLOOR - 0.12)
+  ctx.fill()
   // The rock's cut edge round the inside.
   ctx.beginPath()
   CAVE.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))

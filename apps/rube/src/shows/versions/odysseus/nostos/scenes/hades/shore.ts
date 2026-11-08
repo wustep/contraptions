@@ -1,4 +1,4 @@
-import { clamp01, fill, hash, mix, poly, smooth, stroke, type Paint } from '../../draw'
+import { clamp01, fill, frameH, hash, mix, poly, smooth, stroke, type Paint } from '../../draw'
 import type { Pt } from '../../path'
 import { layer } from '../../world/depth'
 import { horizonOf } from '../../world/sea'
@@ -48,20 +48,31 @@ export function drawShore(g: Paint): void {
 }
 
 /** The beach: its ground from the water's edge back to the horizon, and the wet sand along the water. */
-function drawBeach(g: Paint, haze: string): void {
-  const { ctx, view } = g
+/** The beach's ground, from the water's edge back to the horizon, added to the current path: false if out of view. */
+function beachOutline(ctx: CanvasRenderingContext2D, view: Paint['view']): boolean {
   const a = Math.max(BEACH.x0 - 2, view.x0 - 1)
   const b = Math.min(BEACH.x1 + 2, view.x1 + 1)
-  if (b <= a) return
+  if (b <= a) return false
   const hy = horizonOf(view)
   // The front edge: the water's edge along the beach, going back to the horizon at both ends.
   const front = (x: number) => hy + (EDGE - hy) * along(x)
   const step = Math.max(0.25, (b - a) / 120)
-  ctx.beginPath()
   ctx.moveTo(a, hy)
   for (let x = a; x <= b + step; x += step) ctx.lineTo(Math.min(b, x), front(Math.min(b, x)))
   ctx.lineTo(b, hy)
   ctx.closePath()
+  return true
+}
+
+function drawBeach(g: Paint, haze: string): void {
+  const { ctx, view } = g
+  const a = Math.max(BEACH.x0 - 2, view.x0 - 1)
+  const b = Math.min(BEACH.x1 + 2, view.x1 + 1)
+  ctx.beginPath()
+  if (!beachOutline(ctx, view)) return
+  const hy = horizonOf(view)
+  const front = (x: number) => hy + (EDGE - hy) * along(x)
+  const step = Math.max(0.25, (b - a) / 120)
   const gr = ctx.createLinearGradient(0, EDGE, 0, hy)
   gr.addColorStop(0, SAND)
   gr.addColorStop(0.7, mix(SAND, haze, 0.18))
@@ -128,6 +139,13 @@ const STACKS: [number, number, number, number][] = [
 /** Black stacks standing in the sea, each a pillar with a few flat faces, paler the further back. */
 function drawStacks(g: Paint, haze: string): void {
   const { ctx, view } = g
+  // Never over the beach's ground, which is nearer: a stack going past the beach's end with the slower parallax of its
+  // distance came over the sand and stood on it (229.3-231.5 s); it goes behind it.
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(view.x0 - 2, view.y0 - 2, view.x1 - view.x0 + 4, view.y1 - view.y0 + 4)
+  beachOutline(ctx, view)
+  ctx.clip('evenodd')
   for (const [x, d, h, w] of STACKS) {
     const L = layer(view, d)
     const sx = L.x(x)
@@ -136,6 +154,7 @@ function drawStacks(g: Paint, haze: string): void {
     poly(ctx, [P(-0.5, 0.02), P(-0.44, -0.55), P(-0.3, -0.9), P(-0.1, -1), P(0.18, -0.96), P(0.34, -0.74), P(0.42, -0.4), P(0.5, 0.02)])
     fill(ctx, mix(ROCK, haze, 0.08 + d / 70))
   }
+  ctx.restore()
 }
 
 /** The trench: cut behind him as he rolls, a dark red furrow along the water's edge. */
@@ -168,8 +187,9 @@ export function drawTrench(g: Paint): void {
  */
 export function drawHands(g: Paint): void {
   const { ctx, t, view } = g
-  ctx.beginPath()
-  let any = false
+  // Each hand filled and inked on its own, in order, so one in front of another hides it. (All of them went into one
+  // shape, filled once and inked once, so where two crossed both outlines showed through: one scribbled, doubled hand,
+  // 238.6-240.5 s.)
   for (const sh of SHADES) {
     // The first rank's hands only: the second's would be a second row of them behind, and are hidden by the first.
     const s = t - sh.hands
@@ -178,19 +198,28 @@ export function drawHands(g: Paint): void {
     const x = sh.x + CHARGE_BY_ROW[sh.row] * charged(t, sh.lag)
     if (x < view.x0 - 1 || x > view.x1 + 1) continue
     const size = row.scale
-    const h = (0.5 + 0.12 * Math.sin(sh.x * 3.1)) * size * smooth(s, 0, 0.22) * (1 - upOf(t - sh.rise))
-    if (h < 0.006) continue
+    // Each hand comes up out of the sand and goes back down into it, whole, cut by the sand's surface: squashed to
+    // nothing in its own height instead, it went flat into a splay of crossed fingers and then a slanted bar under the
+    // head coming up between them (239.2-241 s).
+    const full = (0.5 + 0.12 * Math.sin(sh.x * 3.1)) * size
+    const out = smooth(s, 0, 0.22) * (1 - upOf(t - sh.rise))
+    if (out < 0.012) continue
+    const sunk = full * (1 - out)
     const open = smooth(s, 0.08, 0.5)
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(view.x0 - 1, view.y0 - 1, view.x1 - view.x0 + 2, row.ground - view.y0 + 1)
+    ctx.clip()
     for (const side of [-1, 1] as const) {
       const hx = x + side * (0.13 + 0.06 * open) * size
       const lean = side * (0.12 + 0.22 * open)
-      hand(ctx, hx, row.ground, h, 0.22 * size, lean, open)
+      ctx.beginPath()
+      hand(ctx, hx, row.ground + sunk, full, 0.22 * size, lean, open)
+      fill(ctx, ASH)
+      stroke(g, ASH_RIM, 2.2)
     }
-    any = true
+    ctx.restore()
   }
-  if (!any) return
-  fill(ctx, ASH)
-  stroke(g, ASH_RIM, 2.2)
 }
 
 /** One hand, reaching up from `x, ground`, `h` tall: a wrist, a palm, four fingers spread by `open`, and a thumb. */
@@ -267,7 +296,8 @@ export function drawRanks(g: Paint): void {
     // The lane's middle depth sets its colour and whether it is drawn at all.
     const dMid = NEAR * Math.exp(((lane + 0.5) / LANES) * ln)
     const Lm = layer(view, dMid)
-    const lit = smooth((R * 0.86 * Lm.s) / view.h, 1 / 420, 1 / 160)
+    // By the composed frame's size, not the stage's (a tall phone thinned the crowd going back into the dark).
+    const lit = smooth((R * 0.86 * Lm.s) / frameH(view), 1 / 420, 1 / 160)
     if (lit < 0.03) continue
     const f = (lane + 0.5) / LANES
     const groundC = mix(SAND, haze, 0.06 + 0.2 * f)

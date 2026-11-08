@@ -154,8 +154,8 @@ export function compose(): { show: NostosShow; camera: (t: number) => Framing; b
   }
   const actors = SCENES.flatMap((s) => s.actors ?? [])
 
-  // What is drawn, in order: the sky, the sea going away, each scene's back, the ships, each scene's middle, (the
-  // balls), the water cut open over them, and each scene's front.
+  // What is drawn, in order: the sky, the sea going away, each scene's far drawings, each scene's back, the ships, each
+  // scene's middle, (the balls), the water cut open over them, and each scene's front.
   const everywhere = region(-200, -120, 1100, 80, 4)
   const sky = standing('sky', everywhere, END, (g) => drawSky(g))
   const seaPlane = standing('sea-plane', everywhere, END, (g) => drawSeaPlane(g, -400, 1400))
@@ -171,6 +171,7 @@ export function compose(): { show: NostosShow; camera: (t: number) => Framing; b
   const pieces: Placed[] = [
     sky,
     seaPlane,
+    ...SCENES.flatMap((s) => s.far ?? []),
     ...SCENES.flatMap((s) => s.back ?? []),
     fleet,
     ...SCENES.flatMap((s) => s.mid ?? []),

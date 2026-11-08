@@ -1,6 +1,7 @@
-import { blob, fill, mix, poly, rgba, smooth, smoother, stroke, vgrad, type Paint } from '../../draw'
+import { blob, fill, frameH, mix, poly, rgba, smooth, smoother, stroke, vgrad, type Paint } from '../../draw'
 import type { Pt } from '../../path'
 import { layer } from '../../world/depth'
+import { horizonOf } from '../../world/sea'
 import { skyAt } from '../../world/sky'
 import { flame } from '../troy/city'
 
@@ -80,22 +81,39 @@ let gloom = 0
 const STORM = '#262A2B'
 const lit = (c: string): string => (gloom > 0.001 ? mix(c, STORM, gloom) : c)
 
-export function drawIsland(g: Paint): void {
+/** Whether any of the island is in view: the land and its skirts (475 to 541), or its far hills, 30 deep, which come
+ * over the horizon well before the shore does (culled by the shore alone, they appeared whole). */
+const inView = (g: Paint): boolean => {
+  const L = layer(g.view, 30)
+  return !(g.view.x1 < Math.min(475, L.x(499)) - 1 || g.view.x0 > Math.max(541, L.x(523)) + 1)
+}
+
+/**
+ * The island's far hills and its back ridge: behind the seas, which stand up in front of them in the storm (drawn with
+ * the island, after the seas, the swells went behind the distant hills, 307.5-314.5 s).
+ */
+export function drawIslandFar(g: Paint): void {
   const { ctx, t, view } = g
-  if (view.x1 < 488 || view.x0 > 532) return
+  if (!inView(g)) return
+  const L = layer(view, 30)
   gloom = 0.55 * smooth(t, 292.5, 301.5)
   const air = skyAt(t).low
-  // Far hills of the same island, behind, paler.
-  const L = layer(view, 30)
+  // Far hills of the same island, behind, paler: coming down at each end to their waterline (their outline ended a
+  // little over it, and a square step went down from there to their foot, 277-282 and 304.6-320 s).
   const far: Pt[] = []
   for (let k = 0; k <= 12; k++) {
     const x = 499 + (24 * k) / 12
-    far.push([L.x(x), L.y(-2.6 * Math.sin((Math.PI * k) / 12) ** 0.8 - 0.5 * Math.sin(k * 1.3))])
+    far.push([L.x(x), L.y(k === 0 || k === 12 ? 0.3 : -2.6 * Math.sin((Math.PI * k) / 12) ** 0.8 - 0.5 * Math.sin(k * 1.3))])
   }
-  far.push([L.x(523), L.y(0.3)], [L.x(499), L.y(0.3)])
   poly(ctx, far)
   fill(ctx, mix(lit(GRASS_SHADE), air, 0.55))
   drawRidge(g, air)
+}
+
+export function drawIsland(g: Paint): void {
+  const { ctx, t } = g
+  if (!inView(g)) return
+  gloom = 0.55 * smooth(t, 292.5, 301.5)
   // The land: grass over the whole hill, darkening towards the water; under the water it goes on down and out, a
   // mound that the cut sea darkens, its skirts going on down out of sight (no floor to it, so a tall frame sees none).
   const pts: Pt[] = []
@@ -109,18 +127,25 @@ export function drawIsland(g: Paint): void {
     [1, mix(lit(GRASS_SHADE), '#1E2420', 0.75)],
   ])
   ctx.fill()
-  // The beaches: a band of sand along the ground where it meets the water, either side.
+  // The beaches: a band of sand along the ground where it meets the water, either side, thinning out to nothing at both
+  // ends, up the hill and down under the water. (It was as thick at its ends as in its middle and stopped square: a
+  // notch against the grass, and a block of sand seen through the sea, 279-304 s.)
   for (const [a, b] of [[495.6, 499.6], [520.2, 523.8]] as const) {
     const top = pts.filter(([x]) => x >= a && x <= b)
-    poly(ctx, [...top, ...[...top].reverse().map(([x, y]): Pt => [x, y + 0.22])])
+    const deep = ([x, y]: Pt): Pt => [x, y + 0.22 * smooth(x, a, a + 0.9) * (1 - smooth(x, b - 0.9, b))]
+    poly(ctx, [...top, ...[...top].reverse().map(deep)])
     fill(ctx, lit(SAND))
   }
   // Dry scrub on the near slope, below the pasture's edge: a few low dark clumps, bigger as they come down towards us.
   for (const [x, dy, w] of [[501.2, 0.55, 0.42], [505.0, 0.95, 0.55], [510.6, 0.7, 0.5], [515.2, 1.1, 0.6], [520.4, 0.6, 0.4]] as const) {
+    // Two domes on one foot, each its own shape (joined in one, the join and the close crossed: a notched foot).
     const y = ground(x) + dy
     ctx.beginPath()
-    ctx.ellipse(x, y, w, w * 0.42, 0, Math.PI, 0)
-    ctx.ellipse(x + w * 0.55, y + 0.02, w * 0.55, w * 0.3, 0, Math.PI, 0)
+    ctx.moveTo(x - w, y)
+    ctx.ellipse(x, y, w, w * 0.42, 0, Math.PI, Math.PI * 2)
+    ctx.closePath()
+    ctx.moveTo(x, y)
+    ctx.ellipse(x + w * 0.55, y, w * 0.55, w * 0.3, 0, Math.PI, Math.PI * 2)
     ctx.closePath()
     fill(ctx, mix(lit(OLIVE), lit(GRASS_SHADE), 0.35))
   }
@@ -164,7 +189,11 @@ function drawRidge(g: Paint, air: string): void {
     [495.8, 0.05], [497.6, -0.7], [499.8, -1.7], [502.5, -2.6], [505.5, -3.3], [507.8, -4.1], [509.6, -4.5],
     [511.2, -4.2], [513.4, -3.7], [515.8, -3.9], [518.4, -3.2], [521.0, -2.0], [523.6, 0.05],
   ]
-  poly(ctx, ridge.map(([x, y]) => P(x, y)))
+  // It stands on its waterline as a 16:9 frame has it, the horizon taken from the composed frame: a tall stage sets its
+  // horizon higher, which lifted the ridge's foot off the island onto a strip of open sea behind the cattle, two
+  // islands with a channel between them (287-293 s, phones). At 16:9 and wider this is its own waterline.
+  const water = horizonOf({ ...view, h: frameH(view) }) * (1 - L.s) + 0.05 * L.s
+  poly(ctx, [[L.x(495.8), water], ...ridge.slice(1, -1).map(([x, y]) => P(x, y)), [L.x(523.6), water]])
   fill(ctx, rgba(mix(lit(GRASS_SHADE), air, 0.35), a))
   // Bare limestone breaking through at its highest shoulder: an outcrop standing a little out of the skyline, its side
   // away from the sun in shade, so it is rock and not a patch laid on the grass.
@@ -172,11 +201,26 @@ function drawRidge(g: Paint, air: string): void {
   fill(ctx, rgba(lit(mix('#8F8672', air, 0.35)), a))
   poly(ctx, [P(507.5, -3.7), P(508.4, -4.3), P(509.2, -4.75), P(509.35, -4.2), P(509.0, -3.65)])
   fill(ctx, rgba(lit(mix('#6F685A', air, 0.35)), a))
-  // Scrub in its folds: a few broad dark masses, not a scatter.
-  for (const [x, y, w, h] of [[503.6, -2.85, 1.3, 0.38], [513.9, -3.6, 1.6, 0.34], [518.9, -2.95, 1.1, 0.3]] as const) {
-    ctx.beginPath()
-    ctx.ellipse(L.x(x), L.y(y), w * L.s, h * L.s, 0, Math.PI, 0)
-    ctx.closePath()
+  // Scrub in its folds: a few broad dark masses, not a scatter, each lying along the skyline under it (half-domes on a
+  // level base, they stood off the slope with sky under one end of their flat feet, 282-304 s).
+  const sky = (x: number): number => {
+    for (let i = 1; i < ridge.length; i++) {
+      const [x0, y0] = ridge[i - 1]
+      const [x1, y1] = ridge[i]
+      if (x <= x1) return y0 + ((y1 - y0) * (x - x0)) / (x1 - x0)
+    }
+    return ridge[ridge.length - 1][1]
+  }
+  for (const [x, w, h] of [[503.6, 1.3, 0.38], [513.9, 1.6, 0.34], [518.9, 1.1, 0.3]] as const) {
+    const top: Pt[] = []
+    const foot: Pt[] = []
+    for (let k = 0; k <= 16; k++) {
+      const u = (k / 16) * 2 - 1
+      const xi = x + u * w
+      top.push(P(xi, sky(xi) - h * Math.sqrt(1 - u * u)))
+      foot.unshift(P(xi, sky(xi) + 0.05))
+    }
+    poly(ctx, [...top, ...foot])
     fill(ctx, rgba(mix(lit(OLIVE), air, 0.4), a))
   }
 }

@@ -1,6 +1,6 @@
 import { blob, mix, ring, smooth, smoother, type Paint } from '../../draw'
 import type { Pt } from '../../path'
-import { BOULDER_IN, BOULDER_OUT, BOULDER_R, EYE, SPLASH_X, T } from './plan'
+import { BOULDER_IN, BOULDER_OUT, BOULDER_R, EYE, FLOOR, SPLASH_X, T } from './plan'
 import { FLOCK, HAND_X } from './sheep'
 
 /**
@@ -120,7 +120,8 @@ const REAR: Pose = {
   eye: [103.85, -9.2],
   shoulder: [102.4, -8.7],
   elbow: [104.6, -8.0],
-  hand: [103.95, -9.25],
+  // Over the eye, its fingers under the roof: a little higher, they came up through the roof's cut edge (171-174 s).
+  hand: [103.95, -9.13],
 }
 
 /** Sitting in the doorway, blind, the head hung, the hand across the door. */
@@ -174,7 +175,37 @@ export function poseAt(t: number): Pose {
   const breath = 0.035 * Math.sin(t * 1.4)
   const jolt = 0.12 * ring(t, T.strike, 2.6, 0.3)
   p = moved(p, [jolt, -jolt * 0.4], [0, breath])
-  return { ...p, hand: handAt(t, p) }
+  return { ...p, hand: offTheFloor(handAt(t, p), p.elbow, openAt(t)) }
+}
+
+/**
+ * The hand at `h`, lifted just clear of the cave's floor wherever its fingers would go into it (the shape `hand()`
+ * draws: palm, three fingers and thumb, turned along the forearm). Resting by him, sitting, and laid across the door,
+ * his open fingers reached a quarter of a cell down into the rock (148-150, 157-170 and 176-181 s).
+ */
+function offTheFloor(h: Pt, elbow: Pt, open: number): Pt {
+  const toward = Math.atan2(h[1] - elbow[1], h[0] - elbow[0])
+  const c = Math.cos(toward)
+  const n = Math.sin(toward)
+  // The lowest point, in the hand's own frame turned to the world: y only.
+  const y = (p: Pt) => p[0] * n + p[1] * c
+  let low = 0
+  for (let k = 0; k < 16; k++) {
+    const a = (k / 16) * Math.PI * 2
+    low = Math.max(low, y([Math.cos(a) * 0.36, Math.sin(a) * 0.27]))
+  }
+  for (let f = 0; f < 3; f++) {
+    const spread = (f - 1) * (0.22 + 0.2 * open)
+    const len = 0.12 + 0.3 * open
+    const base: Pt = [Math.cos(spread) * 0.26, Math.sin(spread) * 0.26]
+    const curl = spread + (1 - open) * 1.7
+    const tip: Pt = [base[0] + Math.cos(curl) * len, base[1] + Math.sin(curl) * len]
+    low = Math.max(low, y(base) + 0.085, y(tip) + 0.07)
+  }
+  const thumb = -1.1 + 0.5 * (1 - open)
+  low = Math.max(low, y([0.05 + Math.cos(thumb) * 0.3, -0.18 + Math.sin(thumb) * 0.3]) + 0.06)
+  const over = h[1] + low - (FLOOR - 0.006)
+  return over > 0 ? [h[0], h[1] - over] : h
 }
 
 /** Where his near hand is at `t`. */
@@ -393,8 +424,12 @@ export function thrownRock(t: number, ridge: Pt): Pt | null {
 
 export const SPLASH_AT = SPLASH_X
 
-/** How far he stands up out of the ridge, in cells, when he is all the way up, and how big he is drawn. */
-const RISE = 13
+/**
+ * How far below the ridge he starts and ends (cells), and how big he is drawn. Deeper than he is tall above the waist
+ * (his head is 15.3 cells over it): from 13 down, his head was already over the ridge when he was first drawn, and
+ * still over it when he was last drawn as he sank, so it came and went in a frame (181.45 s and 184.92 s).
+ */
+const RISE = 20
 const BIG = 1.35
 
 /** Where he is on the ridge at `t`: his waist on the ridge line, risen as far as he has come. */
@@ -437,10 +472,12 @@ export function drawRidge(g: Paint, t: number, ridge: Pt, skin: string, rock: st
   // The head, low and forward: a heavy brow, a jaw.
   blob(ctx, [P(1.9, -9.6), P(2.2, -10.9), P(3.3, -11.3), P(4.3, -10.8), P(4.6, -9.9), P(4.2, -9.2), P(3.9, -8.4), P(2.8, -8.2)])
   ctx.fill()
-  // The neck, and the arms: from both shoulders, bent out at the elbows, up to the rock.
+  // The neck, and the arms: from both shoulders, bent out at the elbows, up to the rock. The far shoulder is set inside
+  // the trunk's outline: at its top, its round end stood up over his back as a knob once his hands came down after the
+  // throw (183.3-184.9 s).
   ctx.beginPath()
   limb(ctx, P(0.8, -8.4), P(2.7, -9.5), 1.7 * k, 1.3 * k)
-  for (const [sx, sy, side] of [[-2.4, -8.2, -1], [1.0, -8.6, 1]] as const) {
+  for (const [sx, sy, side] of [[-2.2, -7.7, -1], [1.0, -8.6, 1]] as const) {
     const sh = P(sx, sy)
     const mid: Pt = [(sh[0] + hands[0]) / 2, (sh[1] + hands[1]) / 2]
     const el: Pt = [mid[0] + side * 1.6 * k, mid[1] + 0.4 * k]

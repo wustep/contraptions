@@ -21,8 +21,18 @@ import { WEST_CAM, WEST_KEYS, westView } from './ithaca/west'
  *            then he comes to the dog's other side (437.26), and leads his father in.
  * - 441.12   Penelope leaves her loom and watches from the head of the stairs.
  * - 450.58   Telemachus trips the first axe; the twelve come upright one from the next, east to west.
- * - 458, 467.6, 476.6   three suitors climb into her room, out onto the terrace, drop through the light well onto the
- *            bow's plate, and it does not give: seen close, then whole, then past her.
+ * - 458.07   the trial: four suitors try the bow's plate in turn, each further than the last, none all the way. Leodes
+ *            drops through the light well and it barely dips; he bounces on it twice (458.70, 459.36), and the bench
+ *            laughs. Seen close.
+ * - 465.44   the second, seen whole all the way round the house, drops without stopping at the lip: it goes three
+ *            sevenths of the way, and he strains on it, trembling, the hall leaning in, until it springs back (467.64)
+ *            and throws him over the bow among them, and they start back.
+ * - 469.48   the one standing by the bow shoves the tallow into the fire pan at its foot, and the fat flares up round
+ *            it; with the bow warm he leaps onto the plate from the floor (471.31): more than half way, his bounce
+ *            (472.07) takes it to seven tenths, and it rises back under him. The camera is in on the west end for
+ *            these two.
+ * - 476.64   the fourth drops onto the warm bow (in close): nearly all the way at once, trembling with the string all
+ *            but home, until he slips off the plate's end (479.21) and it springs back; they start back, and laugh.
  * - 485.45   he climbs the stairs a step a note, comes up into her room beside her (489.26), and goes out past her.
  * - 494.74   the swell: he drops onto the plate, it goes down, and the bow sings. Antinous goes for the son.
  * - 500.79   he rolls off the plate: the bow looses, and the camera goes with the arrow through all twelve eyes until
@@ -61,16 +71,18 @@ export const home: Scene = {
     { t: 457.3, cells: 3.4, at: [823.3, -9.7] },
     { t: TRIAL.axes[11], cells: 2.5, at: [825.3, -10.05], cut: true },
     { t: 460.4, cells: 2.55, at: [825.2, -10.05] },
-    // The second: the whole house, cut open, his whole way round, the beggar by the door.
+    // The second: the whole house, cut open, his whole way round, the beggar by the door; and in on the west end as he
+    // comes along the terrace, the lip, the plate, the bow and the bench all in the frame. Held there, closing in a
+    // little, through his strain, the tallow and the third's leap, as the fourth comes along the terrace above.
     { t: 462.6, cells: 5.15, at: [822.5, -10.6] },
-    { t: 468.6, cells: 5.1, at: [822.5, -10.58] },
-    // The third: not followed. The camera comes to the beggar at his threshold by the hearth, with his son, and the third
-    // goes up the stairs behind him and past his wife; on his note, in close on the plate as he lands, and it does not
-    // give; on the next strong one, back to the stranger, who has seen enough.
-    { t: 471.4, cells: 3.15, at: [819.75, -10.05] },
-    { t: TRIAL.tries[2] - 0.05, cells: 3.05, at: [819.8, -10.1] },
-    { t: TRIAL.tries[2], cells: 2.5, at: [825.3, -10.05], cut: true },
-    { t: 480.25, cells: 2.55, at: [825.2, -10.05] },
+    { t: 463.1, cells: 5.1, at: [822.6, -10.58] },
+    { t: 465.1, cells: 2.9, at: [825.1, -10.02] },
+    { t: 474.2, cells: 2.75, at: [825.15, -10.0] },
+    // The fourth: in as he comes to the lip and drops, close on the plate through the slip; on the next strong note,
+    // back to the stranger, who has seen enough.
+    { t: 475.9, cells: 2.7, at: [825.2, -10.02] },
+    { t: TRIAL.tries[3] + 0.25, cells: 2.45, at: [825.3, -10.0] },
+    { t: 480.25, cells: 2.5, at: [825.25, -10.02] },
     { t: 480.32, cells: 2.6, at: [819.0, -9.62], cut: true },
     { t: 483.4, cells: 2.75, at: [819.2, -9.68] },
     // His climb, and her room.

@@ -1,4 +1,4 @@
-import { circle, clamp01, hash, mix, rgba, vgrad, type Paint } from '../draw'
+import { circle, clamp01, frameH, hash, mix, rgba, vgrad, type Paint } from '../draw'
 import { layer } from './depth'
 import { horizonOf } from './sea'
 
@@ -93,7 +93,7 @@ export function drawSky(g: Paint): void {
     ctx.beginPath()
     ctx.rect(view.x0 - 1, view.y0 - 1, view.x1 - view.x0 + 2, hy - view.y0 + 1)
     ctx.clip()
-    circle(ctx, x, y, d.r * view.h)
+    circle(ctx, x, y, d.r * frameH(view))
     ctx.fillStyle = rgba(d.color, d.a)
     ctx.fill()
     ctx.restore()

@@ -39,6 +39,28 @@ function floorAt(x: number): number {
   return step(i).y
 }
 const on = (x: number, r = R_T): Pt => [x, floorAt(x) - r]
+/** The riser at the west end of the level ground at x (the forecourt has none): a ball's middle stays R_T off it. */
+function riser(x: number): number {
+  if (x <= STEPS.x0) return -Infinity
+  return step(Math.min(STEPS.n - 1, Math.floor((x - STEPS.x0) / STEPS.run))).x0
+}
+/** Where a body thrown or sliding west to x comes to rest: against the riser, if it reaches it, not in the stone. */
+const stop = (x: number): number => Math.max(x, riser(x) + R_T + 0.01)
+
+/** How much higher than the step it lands on a hop over someone's step goes: his head clears its rise. */
+const LIFT_OVER = 0.3
+/** Everyone placed so far, for those placed after them to keep clear of: none lands or waits on another. */
+const placed: { path: Path; from: number }[] = []
+/** Whether a man at `p` from t0 to t1 is clear of everyone placed so far (and on by then). */
+function clear(p: Pt, t0: number, t1: number): boolean {
+  for (const o of placed) {
+    for (let t = Math.max(t0, o.from); t <= t1 + 1e-9; t += 0.02) {
+      const [x, y] = o.path.where(t)
+      if (Math.hypot(x - p[0], y - p[1]) < 2 * R_T + 0.005) return false
+    }
+  }
+  return true
+}
 /** Where one stands on step `i` (0 the top; the last is level with the street). */
 const onStep = (i: number): Pt => [step(i).x0 + STEPS.run * 0.5, step(i).y - R_T]
 const TOP: Pt = [STEPS.x0 - 0.18, FORECOURT.y - R_T]
@@ -72,17 +94,36 @@ class Way {
     this.m.push(fly(this.p, to, t - T, t))
     return this
   }
-  /** Up the steps from step `from` to step `to` (or the top, -1), a hop each `dt`. */
+  /**
+   * Up the steps from step `from` to step `to` (or the top, -1), a hop each `dt`. In a slow climb, over any step someone
+   * is lying or waiting on, in one hop to the next, and onto none until whoever was on it has left it (the Greeks
+   * landed on the dead and on each other, 117-120.5 s). A quick one is a file going up a step apart, all at once.
+   */
   up(from: number, to: number, dt: number): this {
-    for (let i = from; i >= to; i--) this.hop(i >= 0 ? onStep(i) : TOP, this.t + dt)
+    const slow = dt > 0.3
+    let over = false
+    for (let i = from; i >= to; i--) {
+      const at = i >= 0 ? onStep(i) : TOP
+      if (slow && i > to && !over && !clear(at, this.t + dt, this.t + 1.8 * dt)) {
+        over = true
+        continue
+      }
+      let t = this.t + dt
+      for (let k = 0; slow && k < 10 && !clear(at, t - 0.12, t + 0.05); k++) t += 0.05
+      // A hop over someone goes high enough to clear him.
+      this.hop(at, t, over ? LIFT_OVER : 0.08)
+      over = false
+    }
     return this
   }
   /** Struck at `at`: thrown on `by` the way he was going (west), down, a short roll of `slide`, and still. */
   struck(at: number, by: number, lift = 0.16, slide = 0.1): number {
     this.wait(at)
-    const land = on(this.p[0] - by)
+    // Each where his fall stops: against the riser of the step above, if he reaches it (two lay a third of a ball
+    // into the stone, 117.5-141 s).
+    const land = on(stop(this.p[0] - by))
     const T = flightFor(this.p, land, lift)
-    const lie = on(land[0] - slide)
+    const lie = on(stop(land[0] - slide))
     this.m.push(fly(this.p, land, at, at + T), roll([land, lie], at + T, at + T + 0.35, 'out'), rest(lie, at + T + 0.35, 141))
     return at
   }
@@ -115,30 +156,38 @@ const FALL = { a: -36.72, f: -36.1, g: -35.25, h: HUDDLE.h }
 
 function trojans(): Body[] {
   const b: Body[] = []
-  const add = (w: Way, name: string, from: number, dies?: number) => b.push({ path: w.path(name), from, dies })
-  // The house by the gate, whose roof burns first. One is struck at his own door as he comes out of it.
+  const add = (w: Way, name: string, from: number, dies?: number) => {
+    b.push({ path: w.path(name), from, dies })
+    placed.push(b[b.length - 1])
+  }
+  // The house by the gate, whose roof burns first. One is struck at his own door as he comes out of it. Each in the
+  // street falls short of where the next is struck from: thrown further, he lay under the Greek who struck the next,
+  // and that Greek stood on him (116.6-117.3 and 116.85-117.6 s).
   {
     const w = out(DOOR_3, 115.98).run(DOOR_3 - 0.1, 116.2, 'in')
-    add(w, 'trojan b', 115.98, w.struck(KILLS.street[0], 0.45))
+    add(w, 'trojan b', 115.98, w.struck(KILLS.street[0], 0.09, 0.16, 0.06))
   }
   // One runs for the steps and is caught in the street.
   {
     const w = out(DOOR_3, 116.12).run(-31.0, KILLS.street[1], 'in')
-    add(w, 'trojan c', 116.12, w.struck(KILLS.street[1], 0.45))
+    add(w, 'trojan c', 116.12, w.struck(KILLS.street[1], 0.36, 0.16, 0.08))
   }
-  // One gets as far as the steps' foot, and is thrown down on them.
+  // One gets as far as the steps' foot, and is thrown down against them. (Not up onto them: the steps are a ball wide,
+  // and whoever climbed them after had to land on him.)
   {
     const w = out(DOOR_3, 116.28).run(-31.95, KILLS.street[2], 'in')
-    add(w, 'trojan d', 116.28, w.struck(KILLS.street[2], 0.42, 0.22))
+    add(w, 'trojan d', 116.28, w.struck(KILLS.street[2], 0.2, 0.22))
   }
-  // The house at the steps' foot: one is cut down on the steps themselves, and falls on them.
+  // The house at the steps' foot: one is cut down on the steps themselves, and falls where he stands.
   {
     const w = out(DOOR_1, 116.82).hop(onStep(6), 117.0).hop(onStep(5), 117.15)
-    add(w, 'trojan e', 116.82, w.struck(KILLS.street[3], 0.26, 0.14))
+    add(w, 'trojan e', 116.82, w.struck(KILLS.street[3], 0.0, 0.1, 0.02))
   }
-  // Those who get up to the height, and are killed there on the hardest notes as they back away towards her.
+  // Those who get up to the height, and are killed there on the hardest notes as they back away towards her: up the
+  // steps in a file, each most of a step behind the last. (Two went up them in step, on the same treads at the same
+  // moments, one ball inside the other, 116.75-117.65 s.)
   {
-    const w = out(DOOR_3, 115.85).run(STREET.x0 + 0.08, 116.6, 'in').up(STEPS.n - 2, -1, 0.15)
+    const w = out(DOOR_3, 115.85).run(STREET.x0 + 0.08, 116.48, 'in').up(STEPS.n - 2, -1, 0.15)
     w.run(HUDDLE.a, w.t + 1.6, 'out').wait(125.07).run(FALL.a, KILLS.statue[3] - 0.2, 'inout')
     add(w, 'trojan a', 115.85, w.struck(KILLS.statue[3], 0.0, 0.08, 0.02))
   }
@@ -148,7 +197,7 @@ function trojans(): Body[] {
     add(w, 'trojan f', 116.38, w.struck(KILLS.statue[2], 0.06, 0.1, 0.04))
   }
   {
-    const w = out(DOOR_1, 116.62).up(STEPS.n - 2, -1, 0.14)
+    const w = out(DOOR_1, 116.62).up(STEPS.n - 2, -1, 0.15)
     w.run(HUDDLE.g, w.t + 1.7, 'out').wait(125.07).run(FALL.g, KILLS.statue[1] - 0.1, 'inout')
     add(w, 'trojan g', 116.62, w.struck(KILLS.statue[1], 0.04, 0.1, 0.02))
   }
@@ -162,6 +211,8 @@ function trojans(): Body[] {
 
 /** Round the gate tower's foot into the street, where the Greeks come in. */
 const IN_AT = TOWER.x0 + 0.2
+/** Where the Greeks go up the steps from: clear of the man lying at their foot. */
+const FOOT = STREET.x0 + 0.1
 
 /**
  * A Greek: in round the tower, to the one he kills in the street (standing just behind him, east, as the blow lands),
@@ -170,13 +221,19 @@ const IN_AT = TOWER.x0 + 0.2
 function greek(t0: number, street: { x: Pt; at: number }, wait: number, statue: { x: number; at: number }, name: string): Body {
   const w = new Way([IN_AT, STREET.y - R_T], t0)
   if (street.x[0] >= STREET.x0) w.run(street.x[0] + R_T * 2 + 0.03, street.at, 'none')
-  else w.run(STREET.x0 + 0.06, street.at - 0.21, 'none').hop(onStep(6), street.at, 0.06)
+  else w.run(FOOT, street.at - 0.21, 'none').hop(onStep(6), street.at, 0.06)
   // On a little after him as he falls (in the street); then on up the steps after the rest, slowly, through the held
   // breath, to wait near the top.
   let from = STEPS.n - 3
   if (w.p[0] >= STREET.x0) {
-    w.run(w.p[0] - 0.12, w.t + 0.45, 'out').wait(w.t + 0.3)
-    w.run(STREET.x0 + 0.06, w.t + 0.8, 'inout')
+    // Short of anyone lying there (one stood on the man his fellow had killed, 117-117.4 s).
+    let x = w.p[0] - 0.12
+    while (x < w.p[0] && !clear(on(x), w.t + 0.3, w.t + 0.75)) x += 0.02
+    w.run(x, w.t + 0.45, 'out').wait(w.t + 0.3)
+    // To the steps' foot, or behind whoever is waiting there.
+    let foot = FOOT
+    while (!clear(on(foot), w.t + 0.7, w.t + 0.8 + 0.45)) foot += 0.04
+    w.run(foot, w.t + 0.8, 'inout')
     from = STEPS.n - 2
   } else w.wait(w.t + 0.5)
   w.up(from, wait, 0.45)
@@ -185,15 +242,19 @@ function greek(t0: number, street: { x: Pt; at: number }, wait: number, statue: 
   w.wait(125.07).up(wait - 1, -1, 0.11)
   w.run(statue.x + R_T * 2 + 0.03, statue.at, 'in')
   w.run(statue.x + R_T * 2 + 0.06, statue.at + 0.3, 'out').wait(141)
-  return { path: w.path(name), from: t0, greek: true }
+  const body = { path: w.path(name), from: t0, greek: true }
+  placed.push(body)
+  return body
 }
 
 function greeks(): Body[] {
+  // The one already on the steps first, so the rest, climbing past where he waits, keep clear of him.
+  const d = greek(116.4, { x: onStep(5), at: KILLS.street[3] }, 3, { x: FALL.a, at: KILLS.statue[3] }, 'greek d')
   return [
     greek(115.95, { x: on(DOOR_3 - 0.1), at: KILLS.street[0] }, 0, { x: FALL.h, at: KILLS.statue[0] }, 'greek a'),
     greek(116.1, { x: on(-31.0), at: KILLS.street[1] }, 1, { x: FALL.g, at: KILLS.statue[1] }, 'greek b'),
     greek(116.2, { x: on(-31.95), at: KILLS.street[2] }, 2, { x: FALL.f, at: KILLS.statue[2] }, 'greek c'),
-    greek(116.4, { x: onStep(5), at: KILLS.street[3] }, 3, { x: FALL.a, at: KILLS.statue[3] }, 'greek d'),
+    d,
   ]
 }
 

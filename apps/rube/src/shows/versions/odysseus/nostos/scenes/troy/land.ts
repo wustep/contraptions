@@ -1,10 +1,10 @@
-import { blob, clamp01, curve, fill, mix, poly, rgba, smooth, stroke, type Paint } from '../../draw'
+import { blob, clamp01, curve, fill, frameH, mix, poly, rgba, smooth, stroke, type Paint } from '../../draw'
 import { M } from '../../music'
 import type { Pt } from '../../path'
 import { layer } from '../../world/depth'
 import { horizonOf } from '../../world/sea'
 import { skyAt } from '../../world/sky'
-import { SHORE, WALL, ground } from './geo'
+import { SHORE, TOWER, WALL, ground } from './geo'
 import { BU, HORSE_START, LOGS, LOG_R, SLEDGE, TAUT, hauled, horseAt, toWorld } from './horse'
 import { FLAME, MAT, burning, firelight, night, tone } from './tone'
 import { smoke } from './city'
@@ -57,15 +57,20 @@ export function drawInland(g: Paint): void {
     [160, 0, 3.2, 0.6],
   ] as [number, number, number, number][]) {
     const L = layer(view, d)
+    // The range stands on its own foot (the nearer one a little under the horizon, with the plain behind it up to the
+    // horizon) and comes down to it at either end. It was closed along the horizon and ended where it stood, so the
+    // nearer range ended in a square block under the horizon, and both in a cliff (0-36 s, out of the horse's shots).
+    const foot = hy - (hy - L.y(0)) * base
     const pts: Pt[] = []
     for (let x = -170; x <= SHORE - 6; x += 4) {
+      const ends = smooth(x, -170, -150) * (1 - smooth(x, SHORE - 22, SHORE - 6))
       const h = amp * (0.55 * Math.exp(-(((x + 80) / 34) ** 2)) + 0.3 * Math.exp(-(((x + 34) / 16) ** 2)) + 0.18 + 0.07 * Math.sin(x * 0.17))
-      pts.push([L.x(x), hy - (hy - L.y(0)) * base - h * L.s])
+      pts.push([L.x(x), foot - ends * Math.max(h * L.s, foot - hy)])
     }
     ctx.beginPath()
-    ctx.moveTo(pts[0][0], hy + 0.01)
+    ctx.moveTo(pts[0][0], foot + 0.01)
     for (const p of pts) ctx.lineTo(p[0], p[1])
-    ctx.lineTo(pts[pts.length - 1][0], hy + 0.01)
+    ctx.lineTo(pts[pts.length - 1][0], foot + 0.01)
     ctx.closePath()
     fill(ctx, mix(mix('#8E8A78', sky.low, tint), sky.top, 0.15 + 0.5 * n))
   }
@@ -115,11 +120,16 @@ function fadeAway(ctx: CanvasRenderingContext2D, c0: string, c1: string, x: numb
 }
 
 /** The ground, cut open: from its surface down past the bottom of the frame. `below` keeps only what is under y = -0.25 (the cover over the sea's cutaway). */
+/** How far past the shore the beach's ground goes on under the seabed before it has faded into the water's dark. */
+const BEYOND = 5
+
 export function drawGround(g: Paint, below = false): void {
   const { ctx, t, view } = g
   const x0 = Math.max(-140, view.x0 - 0.5)
   const x1 = Math.min(below ? SHORE : 14, view.x1 + 0.5)
-  if (x1 <= x0) return
+  // Below, the beach's ground goes on past the shore under the seabed, to 5 cells out (`BEYOND`): in view while that is,
+  // not only while the shore is (a tall frame sailing away saw it go in one frame as the shore left it, 133.72 s).
+  if (Math.min(below ? SHORE + BEYOND : x1, view.x1 + 0.5) <= x0) return
   const bottom = Math.max(view.y1 + 1, 3)
   if (below) {
     ctx.save()
@@ -129,7 +139,7 @@ export function drawGround(g: Paint, below = false): void {
   }
   const edge = (a: number, b: number): Pt[] => {
     const pts: Pt[] = []
-    const step = Math.max(0.08, view.h / 220)
+    const step = Math.max(0.08, frameH(view) / 220)
     for (let x = a; x < b; x += step) pts.push([x, ground(x)])
     pts.push([b, ground(b)])
     return pts
@@ -173,7 +183,7 @@ export function drawGround(g: Paint, below = false): void {
   // there, so the two never meet on an edge.
   if (below && view.x1 > SHORE) {
     const from = SHORE - 0.3
-    const run = 5.3
+    const run = BEYOND + 0.3
     const b = Math.min(from + run, view.x1 + 0.5)
     const pts = edge(from, b)
     ctx.save()
@@ -221,13 +231,36 @@ export function drawGround(g: Paint, below = false): void {
   }
   // The hill's surface band, the same way.
   if (x0 < SAND_FROM) {
-    const pts = edge(x0, Math.min(x1, SAND_FROM + 0.6)).filter(([x]) => x > WALL.x1 - 0.01 || x < -45.4)
-    if (pts.length > 1) {
+    // Not where the city is built over it (between the temple's foot and the wall): the open ground either side, each
+    // run its own band. (Drawn as one, it bridged the city with a straight lit band across the ground's cut face, from
+    // under the temple to the steps' wall, in a frame wide enough to take in both, 128.6-130.2 s on 1920x800.)
+    const pts = edge(x0, Math.min(x1, SAND_FROM + 0.6))
+    // (Outside the gate, from the tower's outer face: from the wall's, it began under the tower's foot with a square
+    // end, 88-94 s and 108-114 s.)
+    const open = (x: number) => x > Math.max(WALL.x1, TOWER.x1) - 0.01 || x < -45.4
+    const runs: Pt[][] = []
+    for (const p of pts) {
+      if (!open(p[0])) continue
+      const last = runs[runs.length - 1]
+      if (last && open((last[last.length - 1][0] + p[0]) / 2) && p[0] - last[last.length - 1][0] < 1) last.push(p)
+      else runs.push([p])
+    }
+    if (runs.some((r) => r.length > 1)) {
       ctx.beginPath()
-      pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
-      for (let i = pts.length - 1; i >= 0; i--) ctx.lineTo(pts[i][0], pts[i][1] + 0.1)
-      ctx.closePath()
-      fill(ctx, tone(mix(MAT.scrub, MAT.clay, 0.45), t, { lit: 1, fire: firelight(pts[0][0], t) }))
+      for (const run of runs) {
+        if (run.length < 2) continue
+        run.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
+        for (let i = run.length - 1; i >= 0; i--) ctx.lineTo(run[i][0], run[i][1] + 0.1)
+        ctx.closePath()
+      }
+      // It goes over the sand's band by 0.6 cells and fades out across it there: it ended square, a notched seam in
+      // the beach's surface where the hill's colour met the sand's (0-36 s, 129-143 s).
+      const hill = tone(mix(MAT.scrub, MAT.clay, 0.45), t, { lit: 1, fire: firelight(runs[0][0][0], t) })
+      const grd = ctx.createLinearGradient(SAND_FROM, 0, SAND_FROM + 0.6, 0)
+      grd.addColorStop(0, rgba(hill, 1))
+      grd.addColorStop(1, rgba(hill, 0))
+      ctx.fillStyle = grd
+      ctx.fill()
     }
   }
   // The line of the ground, going with the seabed.
@@ -310,7 +343,9 @@ export function drawTroyFar(g: Paint): void {
   if (a <= 0.01) return
   const L = layer(view, 70)
   const hill: Pt[] = []
-  for (let x = -60; x <= SHORE + 2; x += 1.5) hill.push([L.x(x), L.y(Math.min(0, ground(x)))])
+  // Inland the hill comes down to the plain over its last cells: it began on the height's top, a square cliff at the
+  // left of the shots putting out at dawn (129-143 s).
+  for (let x = -84; x <= SHORE + 2; x += 1.5) hill.push([L.x(x), L.y(Math.min(0, ground(x)) * smooth(x, -84, -62))])
   ctx.save()
   ctx.globalAlpha = a
   ctx.beginPath()

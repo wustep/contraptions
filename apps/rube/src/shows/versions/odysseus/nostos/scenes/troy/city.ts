@@ -256,7 +256,8 @@ export function drawTownBehind(g: Paint): void {
 
 export function drawTemple(g: Paint): void {
   const { ctx, t, view } = g
-  if (view.x0 > TEMPLE.x1 + 1 || view.x1 < TEMPLE.x0 - 16) return
+  // Culled by the forecourt's far end, not the temple's: the pavement drawn last runs on past the temple to the steps.
+  if (view.x0 > FORECOURT.x1 + 1 || view.x1 < TEMPLE.x0 - 16) return
   const fire = firelight(TEMPLE.x1, t) * 0.7
   const brazier = brazierLight(t)
   const stone = tone(MAT.stone, t, { lit: 0.7, fire: fire + brazier * 0.5 })
@@ -404,18 +405,22 @@ export function drawSteps(g: Paint): void {
   // The steps, a ball high and a ball deep: their treads catch the brazier's light, their risers stay in shadow.
   const stone = mix(tone(MAT.stone, t, { lit: 0.5, fire: fire + brazierLight(t) * 0.9 }), '#FFFFFF', 0.08)
   const riser = tone(mix(MAT.stone, '#3A322B', 0.55), t, { fire: fire * 0.4, deep: 0.3 })
+  // Each step stands from its tread (`step(i).y`, where everyone on it rests) down to the street's slab, so the stair
+  // stands on something, with its lit tread on top. (It was drawn a rise above its tread, with the light along its foot
+  // under a flank that hid all but a corner of it: whoever went down it was sunk a step deep in the stone.)
+  const slab = 0.08
   for (let i = 0; i < STEPS.n; i++) {
     const s = step(i)
-    rect(ctx, s.x0, s.y - STEPS.rise, STEPS.run + 0.01, STEPS.rise)
+    rect(ctx, s.x0, s.y, STEPS.run + 0.01, STREET.y + slab - s.y)
     fill(ctx, riser)
-    rect(ctx, s.x0, s.y - 0.05, STEPS.run + 0.01, 0.05)
+    rect(ctx, s.x0, s.y, STEPS.run + 0.01, 0.05)
     fill(ctx, stone)
   }
-  // The flank of the stair down to the street, so it stands on something.
-  poly(ctx, [[STEPS.x0, FORECOURT.y], [STREET.x0, STREET.y], [STREET.x0, STREET.y + 0.1], [STEPS.x0, STREET.y + 0.1]])
+  // The forecourt's edge down to the first step: flush with the retaining wall's face.
+  rect(ctx, STEPS.x0 - 0.02, FORECOURT.y, 0.03, STREET.y + slab - FORECOURT.y)
   fill(ctx, riser)
   // The street.
-  rect(ctx, STREET.x0, STREET.y, SHAFT.x0 - STREET.x0, 0.08)
+  rect(ctx, STREET.x0, STREET.y, SHAFT.x0 - STREET.x0, slab)
   fill(ctx, tone(MAT.stone, t, { lit: 0.3, fire: fire * 0.5 }))
 }
 
@@ -456,7 +461,9 @@ function gear(g: Paint, c: Pt, r: number, teeth: number, turn: number, color: st
 /** The tower cut open: its back wall, the gate in the passage, the chamber with the train, the shaft under it, the drain. */
 export function drawTower(g: Paint): void {
   const { ctx, t, view } = g
-  if (view.x0 > TOWER.x1 + 2 || view.x1 < TOWER.x0 - 8) return
+  // Culled by the drain's far end, not the tower's: the drain runs on under the hill to where it comes out, and was cut
+  // off with the tower, so it came into the frame whole as the camera drew back along the beach (32.97 s).
+  if (view.x0 > Math.max(TOWER.x1, drainExit()[0]) + 1 || view.x1 < TOWER.x0 - 8) return
   // A lamp burns in the chamber all night, on the train's landward side: what the wheels are seen by.
   const lamp = t > M.answer - 1 ? 0.75 : 0
   const fire = Math.max(firelight(TOWER.x0, t), lamp * 0.5)
@@ -549,22 +556,24 @@ export function drawTower(g: Paint): void {
   ctx.arc(PULLEY[0], PULLEY[1], R_PULLEY, 0, Math.PI * 2)
   fill(ctx, timber)
   stroke(g, ink, 1.2)
+  // The shaft cut into the ground under the tower, and the drain out of its foot under the hill; under the rope (laid
+  // over it, the shaft hid the rope down in it, and the bucket hung from nothing, 112-131 s).
+  rect(ctx, SHAFT.x0, STREET.y, SHAFT.x1 - SHAFT.x0, SHAFT.floor - STREET.y)
+  fill(ctx, tone('#2A1C16', t))
+  stroke(g, ink, 1.2)
+  drawDrain(g)
   // The rope: off the drum's foot, over the pulley, down through the floor to the bucket's bail.
   const [rx, ry] = rimAt(t)
-  const bail = ry - 0.3
+  // Made fast to the bail's top (a quadratic to y - 0.55, so its apex is at y - 0.265): it stopped short of it.
+  const bail = ry - 0.262
   ctx.beginPath()
   ctx.moveTo(AXLE_A[0], AXLE_A[1] + R_DRUM)
   ctx.lineTo(PULLEY[0], PULLEY[1] - R_PULLEY)
   ctx.arc(PULLEY[0], PULLEY[1], R_PULLEY, -Math.PI / 2, Math.PI, true)
   ctx.lineTo(rx, bail)
   stroke(g, tone('#7A6448', t, { fire: fire * 0.4 }), 1.7)
-  // The shaft cut into the ground under the tower, and the drain out of its foot under the hill.
-  rect(ctx, SHAFT.x0, STREET.y, SHAFT.x1 - SHAFT.x0, SHAFT.floor - STREET.y)
-  fill(ctx, tone('#2A1C16', t))
-  stroke(g, ink, 1.2)
-  drawDrain(g)
   // At dusk the tower is seen whole from the beach, its machine shut inside it: the cut opens with the night.
-  if (t < M.answer - 1) {
+  if (shut(t)) {
     rect(ctx, TOWER.x0, TOWER.roof, TOWER.x1 - TOWER.x0, STREET.y - TOWER.roof)
     fill(ctx, clay)
     rect(ctx, TOWER.x0, TOWER.roof, (TOWER.x1 - TOWER.x0) * 0.22, STREET.y - TOWER.roof)
@@ -577,12 +586,26 @@ export function drawTower(g: Paint): void {
   }
 }
 
+/**
+ * Whether the gate tower is shut, seen whole from the beach at dusk: its machine inside it, the bucket too. (The bucket
+ * was drawn anyway, its bail over the tower's clay face with no rope to hang from, 32-37 s.)
+ */
+const shut = (t: number): boolean => t < M.answer - 1
+
 /** The drain under the hill, cut open: a dark bore from the shaft's foot to the hillside. */
 export function drawDrain(g: Paint): void {
   const { ctx, t } = g
   const [ax, ay] = DRAIN.from
   const [bx, by] = drainExit()
   const r = DRAIN.r
+  // Under the hill only: its mouth opens along the slope where the bore meets the surface. (It ran its full height to
+  // where the slope comes down to its floor, so its top stood out of the hillside as a square block in the air.)
+  ctx.save()
+  const skin: Pt[] = []
+  for (let x = ax - 0.5; x < bx + 0.5; x += 0.04) skin.push([x, ground(x)])
+  skin.push([bx + 0.5, ground(bx + 0.5)])
+  poly(ctx, [...skin, [bx + 0.5, ay + 1], [ax - 0.5, ay + 1]])
+  ctx.clip()
   poly(ctx, [[ax, ay], [ax, ay - 2 * r], [bx, by - 2 * r], [bx, by]])
   fill(ctx, tone('#24170F', t))
   ctx.beginPath()
@@ -591,6 +614,7 @@ export function drawDrain(g: Paint): void {
   ctx.moveTo(ax, ay - 2 * r)
   ctx.lineTo(bx, by - 2 * r)
   stroke(g, tone('#140D09', t), 1.3)
+  ctx.restore()
 }
 
 /** Where the drain comes out on the hillside: the x where the hill comes down to the drain's floor. */
@@ -607,6 +631,7 @@ export function drainExit(): Pt {
 /** The bucket's back: the far wall inside, so the men in it are seen in it. */
 export function drawBucketBack(g: Paint): void {
   const { ctx, t } = g
+  if (shut(t)) return
   const [x, y] = rimAt(t)
   const w = BUCKET.w / 2
   poly(ctx, [[x - w, y], [x + w, y], [x + w * 0.92, y + BUCKET.depth], [x - w * 0.92, y + BUCKET.depth]])
@@ -616,6 +641,7 @@ export function drawBucketBack(g: Paint): void {
 /** The bucket's front: its two staves, its foot, the hoops, the bail, and the flap on its seaward side. */
 export function drawBucketFront(g: Paint): void {
   const { ctx, t, view } = g
+  if (shut(t)) return
   const [x, y] = rimAt(t)
   if (x < view.x0 - 2 || x > view.x1 + 2) return
   const w = BUCKET.w / 2

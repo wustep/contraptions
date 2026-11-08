@@ -258,14 +258,17 @@ function build(): TroyPlan {
       moves.push(roll([bottom, edge], lands[STEPS.n - 1], inAt - fall, 'none'))
       const spot = inBucket(who, rimAt(inAt))
       const upper = who === 1 || who === 0
-      const firstLand: Pt = upper ? spot : [SHAFT.x0 + 0.38, spot[1]]
+      // The floor's men land short of the far side and roll on along it to their places; the last of them, whose place
+      // is short of that, lands in it (he landed inside the man before him and slid back, 86.28-86.44 s).
+      const landX = Math.min(SHAFT.x0 + 0.38, spot[0])
+      const firstLand: Pt = upper ? spot : [landX, spot[1]]
       moves.push(fly(edge, firstLand, inAt - fall, inAt))
       if (!upper) {
         // Along the bucket's floor to his place, then riding it.
         moves.push({ t0: inAt, t1: inAt + 0.45, kind: 'roll', at: (t) => {
           const u = smoother(t, inAt, inAt + 0.45)
           const p = inBucket(who, rimAt(t))
-          return [lerp(SHAFT.x0 + 0.38, p[0], u), p[1]]
+          return [lerp(landX, p[0], u), p[1]]
         } })
       }
       const settled = upper ? inAt : inAt + 0.45

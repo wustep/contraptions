@@ -1,4 +1,4 @@
-import { hash, mix, smooth, type Paint } from '../../draw'
+import { frameH, hash, mix, smooth, type Paint } from '../../draw'
 import { MAN, MAN_RIM } from '../../cast'
 import { layer } from '../../world/depth'
 import { flame } from './city'
@@ -64,8 +64,11 @@ export function drawHost(g: Paint): void {
   for (let r = RANKS.length - 1; r >= 0; r--) {
     const L = layer(view, RANKS[r])
     const radius = R_MAN * L.s
-    if (radius < view.h / 320) continue
-    const small = 1 - smooth(radius / view.h, 1 / 320, 1 / 170)
+    // By its size in the composed frame, not the stage: on a tall phone every rank, the king's too, was culled as too
+    // small, and the hill was empty under the gate (91.6-94.9, 114.3-116.2, 120.7-125 s).
+    const fh = frameH(view)
+    if (radius < fh / 320) continue
+    const small = 1 - smooth(radius / fh, 1 / 320, 1 / 170)
     // Each rank deeper into the dark, and lit by its own torches, warm on the side of them.
     const fill = mix(mix(tone(MAN, t, { fire: 0.55 }), air, 0.1 + 0.11 * r), air, 0.8 * small)
     const rim = mix(tone(MAN_RIM, t), fill, Math.min(1, 0.2 * r + small))

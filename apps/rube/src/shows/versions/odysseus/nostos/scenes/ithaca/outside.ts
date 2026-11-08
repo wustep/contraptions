@@ -1,4 +1,5 @@
 import { circle, fill, poly, rect, smoother, stroke, type Paint } from '../../draw'
+import { G } from '../../path'
 import { ARGOS, HOIST, HOME, TOP } from './geo'
 import { TIMBER, outdoors } from './look'
 import { heroBasketY, pinOut, stonesBasketY } from './rig'
@@ -29,11 +30,13 @@ export function drawHoist(g: Paint): void {
   // The rope: down to each basket from either side of the wheel.
   const hy = heroBasketY(t)
   const sy = stonesBasketY(t)
+  // Made fast to each bail's top (a quadratic to 0.34 over the rim, so its top is 0.175 over it: the ropes stopped
+  // a little short of the bails, 418-427 s).
   ctx.beginPath()
   ctx.moveTo(HOIST.hero, py)
-  ctx.lineTo(HOIST.hero, hy - BASKET.h - 0.2)
+  ctx.lineTo(HOIST.hero, hy - BASKET.h - 0.172)
   ctx.moveTo(HOIST.stones, py)
-  ctx.lineTo(HOIST.stones, sy - BASKET.h - 0.2)
+  ctx.lineTo(HOIST.stones, sy - BASKET.h - 0.172)
   stroke(g, outdoors('#5C4A36', t), 1.1)
   // The wheel.
   circle(ctx, px, py, 0.22)
@@ -41,10 +44,15 @@ export function drawHoist(g: Paint): void {
   stroke(g, ink, 1.4)
   circle(ctx, px, py, 0.04)
   fill(ctx, ink)
-  // The pin that held the stones, pulled as he lands below.
+  // The pin that held the stones, pulled as he lands below; once out, it drops away down the cliff, there being
+  // nothing to hold it (it hung in the air beside the rope for the rest of the scene, 421-441 s).
   const pin = pinOut(t)
-  rect(ctx, HOIST.stones - 0.02 + pin * 0.3, py + 0.22, 0.2, 0.04)
-  fill(ctx, timber)
+  const out = Math.max(0, t - (HOME.lift + 0.12))
+  const drop = 0.5 * G * out * out
+  if (drop < 12) {
+    rect(ctx, HOIST.stones - 0.02 + pin * 0.3 + 0.12 * out, py + 0.22 + drop, 0.2, 0.04)
+    fill(ctx, timber)
+  }
   // The baskets' backs and their bails.
   for (const [x, y] of [[HOIST.hero, hy], [HOIST.stones, sy]] as const) {
     ctx.beginPath()

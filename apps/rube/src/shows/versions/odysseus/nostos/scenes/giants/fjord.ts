@@ -59,18 +59,22 @@ export function drawFar(g: Paint): void {
     const b = Math.min(CLIFF.x1 + 10, lx1 + 2)
     if (b <= a) continue
     const step = 1.4
-    const top = (x: number) => {
+    // The crest at the k-th point of a saw of pine tops laid along the wall from a fixed line in it: the teeth go with
+    // the wall as the camera pans. (Laid from the frame's edge, every point slid with the camera and the teeth swapped
+    // peak for notch every time the edge crossed one, 210-222 s.) At the ends the wall, its teeth and all, comes down
+    // to its foot (it ended in a notch and a square stub at the water).
+    const crest = (k: number) => {
+      const x = k * step
       const ends = smooth(x, CLIFF.x0 - 6, CLIFF.x0 + 10) * (1 - smooth(x, CLIFF.x1 - 4, CLIFF.x1 + 10))
-      return -(h + 2.2 * Math.sin(x * 0.11 + d) + 1.4 * Math.sin(x * 0.27 + d * 0.3)) * ends
+      const tooth = ((k % 2) + 2) % 2 ? 0 : 0.9
+      return -(h + 2.2 * Math.sin(x * 0.11 + d) + 1.4 * Math.sin(x * 0.27 + d * 0.3) + tooth) * ends + 0.2 * (1 - ends)
     }
+    const k0 = Math.floor(a / step)
+    const k1 = Math.ceil(b / step) + 1
     ctx.beginPath()
-    ctx.moveTo(L.x(a), L.y(0.2))
-    for (let x = a; x <= b + step; x += step) {
-      // A saw of pine tops along the crest.
-      const y = top(x) - (Math.floor(x / step) % 2 ? 0 : 0.9)
-      ctx.lineTo(L.x(x), L.y(y))
-    }
-    ctx.lineTo(L.x(b + step), L.y(0.2))
+    ctx.moveTo(L.x(k0 * step), L.y(0.2))
+    for (let k = k0; k <= k1; k++) ctx.lineTo(L.x(k * step), L.y(crest(k)))
+    ctx.lineTo(L.x(k1 * step), L.y(0.2))
     ctx.closePath()
     fill(ctx, mix(ROCK.face, fog, pale))
   }
@@ -177,6 +181,9 @@ export function drawPines(g: Paint, row: 'back' | 'front'): void {
       if (hash(i, 24) < 0.35 || hash(i, 28) < 0.4) continue
       const x = i * 11 + 4 * hash(i, 25) + 0.6
       const y = TOP + 3.5 + 3.5 * hash(i, 26)
+      // Only on the face, under its top: past the cliff's end (or over a gully) a ledge would be air, and its pines
+      // hung there in front of the far wall until the cliff left the frame and took them with it (223.45 s).
+      if (x < CLIFF.x0 || x + 0.9 > CLIFF.x1 || y < Math.max(cliffTop(x), cliffTop(x + 0.9)) + 0.3) continue
       const h = 1.1 + 0.7 * hash(i, 14)
       pine(ctx, x, y + 0.05, h, h * 0.42)
       pine(ctx, x + 0.9, y, h * 0.8, h * 0.36)
@@ -288,6 +295,16 @@ const veilOf = (gi: Giant, t: number): number => 1 - 0.7 * smoother(t, gi.emerge
 /** How far below its full height it still is: it rises out of the wood as it comes out of the fog. */
 const sunkOf = (gi: Giant, t: number): number => 1.6 * (1 - smoother(t, gi.emerge - 0.4, gi.emerge + 2.2))
 
+/**
+ * The side a giant keeps its throwing arm on between throws: the side it throws from (each giant's throws are all to
+ * one side). At rest on the right always, the one that throws to its left changed hands, sword and all, in the frame
+ * its throw began and again in the frame it ended (199.92 s, 204.42 s).
+ */
+function restSide(gi: number): 1 | -1 {
+  const th = THROWS.find((x) => x.giant === gi)
+  return th ? sideOf(th) : 1
+}
+
 /** The throw a giant is making at `t`, if any, and its release time. */
 function throwOf(gi: number, t: number): { th: Throw; tr: number } | null {
   for (const th of THROWS) {
@@ -354,7 +371,7 @@ export function heldAt(gi: number, t: number): { hand: Pt; boulder: Throw | null
   const s = G.size
   const base = TOP + sunkOf(G, t)
   const cur = throwOf(gi, t)
-  const side = cur ? sideOf(cur.th) : 1
+  const side = cur ? sideOf(cur.th) : restSide(gi)
   const rel = cur ? handOf(t, cur.tr) : ([0.45, 4.3] as Pt)
   return {
     hand: [G.x + (SHOULDER[0] + rel[0]) * side * s, base + (SHOULDER[1] + rel[1]) * s],
@@ -378,15 +395,25 @@ export function drawGiant(g: Paint, gi: number): void {
   const Y = (v: number): number => base + (v + (v < -3.5 ? breath : 0)) * s
   const P = (v: Pt): Pt => [X(v[0]), Y(v[1])]
   const cur = throwOf(gi, t)
-  const side = cur ? sideOf(cur.th) : 1
+  const side = cur ? sideOf(cur.th) : restSide(gi)
   // The head turns a little to where it is throwing.
   const look = cur ? side * 0.16 * smoother(t, cur.tr - 2.0, cur.tr - 1.2) * (1 - smoother(t, cur.tr + 0.6, cur.tr + 2.0)) : 0
   // The fog takes it by colour alone, all of it at once, so no part of it is ever seen through another; and nothing of
-  // it is ever below the cliff's top, where the wood stands.
+  // it is ever below the cliff's top, where the wood stands. The cliff's own top, not a level line: cut off flat at TOP,
+  // his hips stood down over the lit face where the top is high (205-222 s), and stopped in the air over a gully.
   ctx.save()
   ctx.beginPath()
-  ctx.rect(view.x0 - 1, view.y0 - 1, view.x1 - view.x0 + 2, TOP - view.y0 + 1)
+  const ca = G.x - 6 * s
+  const cb = G.x + 6 * s
+  ctx.moveTo(ca, view.y0 - 1)
+  ctx.lineTo(cb, view.y0 - 1)
+  for (let x = cb; x >= ca - 0.2; x -= 0.2) ctx.lineTo(Math.max(ca, x), cliffTop(Math.max(ca, x)))
+  ctx.closePath()
   ctx.clip()
+  // Except at its very first: the fog's colour is not quite the sky's behind it, so a giant that is all fog would still
+  // stand out of the sky in one frame. It comes up from nothing over its first moments, while it is still nearly all
+  // fog (where a part over another shows least).
+  ctx.globalAlpha = smoother(veil, 0.995, 0.82)
   const lw = 3.2
   const ink = c(INK)
   // The throwing arm, from its shoulder to its hand, the elbow out.
@@ -423,6 +450,12 @@ export function drawGiant(g: Paint, gi: number): void {
   fill(ctx, c(STEEL.deep))
   stroke(g, ink, lw)
   if (!raised) drawArm([tsh, tel, thd])
+  // Under the belt, his hips and legs going down into the wood (cut off at the cliff's top with the rest): where the
+  // pines stand thin, the sky showed through them under his belt, a body that ended at the waist (212-216.5 s). Long
+  // enough to reach the cliff's top behind the gully by the last giant, two cells under TOP.
+  poly(ctx, [P([-1.3, -3.1]), P([1.3, -3.1]), P([1.72, 2.6]), P([-1.72, 2.6])])
+  fill(ctx, c(STEEL.deep))
+  stroke(g, ink, lw)
   // The body: a cuirass in two planes, its chest drawn on it in one line, and a belt.
   poly(ctx, [P([-2.2, -7.4]), P([2.2, -7.4]), P([1.35, -3.1]), P([-1.35, -3.1])])
   fill(ctx, c(STEEL.lit))
@@ -439,16 +472,20 @@ export function drawGiant(g: Paint, gi: number): void {
   poly(ctx, [P([-1.45, -3.7]), P([1.45, -3.7]), P([1.35, -3.05]), P([-1.35, -3.05])])
   fill(ctx, c(STEEL.deep))
   stroke(g, ink, lw)
-  // A plate over each shoulder.
-  for (const w of [-1, 1] as const) {
+  // A plate over each shoulder; the sword arm's after the arm, so that arm comes out from under its plate as the
+  // other does (it was laid over its plate, its round end on top of the steel).
+  const plate = (w: -1 | 1) => {
     ctx.beginPath()
     const c0 = P([w * 1.95, -7.1])
     ctx.ellipse(c0[0], c0[1], 1.1 * s, 0.7 * s, w * 0.28, 0, Math.PI * 2)
     fill(ctx, c(w < 0 ? STEEL.lit : STEEL.side))
     stroke(g, ink, lw)
   }
+  const swordSide: -1 | 1 = osh[0] < 0 ? -1 : 1
+  plate(-swordSide as -1 | 1)
   // The arm on the sword, over the body.
   drawArm([P(osh), P(oel), P(pommel)])
+  plate(swordSide)
   // The helmet: a dome coming down into cheek guards, a crest standing up off it, and a T cut through the front for
   // the eyes and the mouth, dark all the way in.
   const hx = look
@@ -481,8 +518,25 @@ export function drawGiant(g: Paint, gi: number): void {
   // The T.
   poly(ctx, [hp([-0.62, -9.1]), hp([0.62, -9.1]), hp([0.6, -8.82]), hp([0.13, -8.82]), hp([0.11, -7.55]), hp([-0.11, -7.55]), hp([-0.13, -8.82]), hp([-0.6, -8.82])])
   fill(ctx, c(STEEL.slit))
-  // The raised arm in front of the helmet, and the boulder in its hand until it is let go.
-  if (raised) drawArm([tsh, tel, thd])
+  // The raised arm in front of the helmet, and the boulder in its hand until it is let go; and its plate over its
+  // shoulder again, but not over the helmet, so this arm too comes out from under its plate (it lay over it, its round
+  // end on the steel, at every throw, 199-222 s).
+  if (raised) {
+    drawArm([tsh, tel, thd])
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(-1e4, -1e4, 2e4, 2e4)
+    const h1 = hp([-0.85, -7.35])
+    ctx.moveTo(h1[0], h1[1])
+    for (const v of [[-0.95, -9.0], [-0.75, -10.05], [0, -10.35], [0.75, -10.05], [0.95, -9.0], [0.85, -7.35], [0.3, -7.55], [-0.3, -7.55]] as Pt[]) {
+      const q = hp(v)
+      ctx.lineTo(q[0], q[1])
+    }
+    ctx.closePath()
+    ctx.clip('evenodd')
+    plate(-swordSide as -1 | 1)
+    ctx.restore()
+  }
   const held = heldAt(gi, t)
   if (held.boulder) drawBoulder(g, held.hand[0], held.hand[1] - 0.3 * s, held.boulder.r, held.boulder.spin * 0.2 * t, c)
   ctx.restore()

@@ -1,4 +1,4 @@
-import { clamp01, hash, lerp, mix, ring, smooth, smoother, type Paint } from '../../draw'
+import { clamp01, frameH, hash, lerp, mix, ring, smooth, smoother, type Paint } from '../../draw'
 import { M } from '../../music'
 import type { Pt } from '../../path'
 import { layer } from '../../world/depth'
@@ -196,8 +196,11 @@ export function drawCrowd(g: Paint): void {
     const d = [1.1, 2.0, 3.2, 4.8, 7.0][r]
     const L = layer(view, d)
     const radius = R_T * L.s
-    if (radius < view.h / 300) continue
-    const small = 1 - smooth(radius / view.h, 1 / 300, 1 / 170)
+    // Too small to draw, or going into the air, by its size in the composed frame (by the stage, a tall phone's
+    // stage nearly four frames high, every rank was too small and the beach was empty, 7-36 s).
+    const fh = frameH(view)
+    if (radius < fh / 300) continue
+    const small = 1 - smooth(radius / fh, 1 / 300, 1 / 170)
     const fill = mix(mix(tone(TROJAN, t, { lit: 0.6 * sun(t) }), air, 0.08 + 0.09 * r), air, 0.85 * small)
     const rim = mix(tone(TROJAN_RIM, t), fill, Math.min(1, 0.2 * r + small))
     const gap = 0.27
