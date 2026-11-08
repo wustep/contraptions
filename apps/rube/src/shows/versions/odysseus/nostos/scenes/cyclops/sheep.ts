@@ -120,12 +120,14 @@ export function drawSheep(g: Paint, s: Sheep, t: number, wool: string, face: str
   ctx.translate(x, 0)
   ctx.scale(f, 1)
   const lw = Math.max(1.25 * g.px, 1.5 / 108)
-  // The legs: far pair first (behind the wool), near pair over a tucked ball.
+  // The legs: far pair first (behind the wool), near pair over a tucked ball. Each stands on the ground under its own
+  // foot: on the shelf's slope, ending at the ground under the sheep's middle, the uphill legs went into the rock and
+  // the downhill ones stood on the air (146-148 s going in, 178-181 s coming out).
   const leg = (lx: number, phase: number) => {
     const swing = walking * 0.05 * Math.sin((step + phase) * Math.PI * 2)
     ctx.beginPath()
     ctx.moveTo(lx * L, cy + L * 0.12)
-    ctx.lineTo(lx * L + swing, y)
+    ctx.lineTo(lx * L + swing, ground(x + f * (lx * L + swing)))
     ctx.strokeStyle = face
     ctx.lineWidth = Math.max(1.25 * g.px, L * 0.07)
     ctx.stroke()
