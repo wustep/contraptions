@@ -1,4 +1,4 @@
-import { circle, clamp01, fill, hash, mix, poly, rgba, ring, smooth, stroke, type Paint } from '../../draw'
+import { circle, clamp01, fill, frameH, hash, mix, poly, rgba, ring, smooth, stroke, type Paint } from '../../draw'
 import type { Pt } from '../../path'
 import { layer } from '../../world/depth'
 import { seaLight, surface, weather } from '../../world/sea'
@@ -132,12 +132,12 @@ export function drawDiscs(g: Paint, hy: number): void {
   const at = (p: number, rise: number): Pt => [view.x0 + (view.x1 - view.x0) * (0.1 + 0.8 * p), view.y0 + (hy - view.y0) * (1.1 - rise * Math.sin(Math.PI * p))]
   if (sun !== null) {
     const [x, y] = at(sun, 0.96)
-    circle(ctx, x, y, 0.03 * view.h)
+    circle(ctx, x, y, 0.03 * frameH(view))
     fill(ctx, rgba('#FFF7E6', sunFade))
   }
   if (moon !== null) {
     const [x, y] = at(moon, 0.85)
-    circle(ctx, x, y, 0.022 * view.h)
+    circle(ctx, x, y, 0.022 * frameH(view))
     fill(ctx, rgba('#E4EAEC', 0.95))
   }
   ctx.restore()

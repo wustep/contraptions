@@ -55,6 +55,13 @@ function viewOf(ctx: CanvasRenderingContext2D, p: p5, k: number): View {
   return { x0, y0, x1, y1, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, h: y1 - y0 }
 }
 
+/**
+ * The composed frame's height in cells: the view's own, or less on a stage taller than 16:9, which sees more sky and
+ * sea above and below the same frame. What is sized by the frame rather than by the world (the sky's discs) is sized by
+ * this, so a tall phone does not blow them up to four times the size they have against the world everywhere else.
+ */
+export const frameH = (view: View): number => Math.min(view.h, ((view.x1 - view.x0) * 9) / 16)
+
 type Drawer = (g: Paint) => void
 
 /** A drawing that stands for the whole show, at the world's origin, drawn under the balls (`draw`) and over them (`over`). */

@@ -1,4 +1,4 @@
-import { fill, hash, mix, poly, rect, rgba, stroke, type Paint } from '../../draw'
+import { fill, frameH, hash, mix, poly, rect, rgba, stroke, type Paint } from '../../draw'
 import { M } from '../../music'
 import { skyAt } from '../../world/sky'
 import type { Pt } from '../../path'
@@ -106,7 +106,7 @@ function drawSunPath(g: Paint): void {
   if (!d || d.a < 0.01) return
   const hy = horizonOf(view)
   const x = view.x0 + (view.x1 - view.x0) * d.x
-  const r = d.r * view.h
+  const r = d.r * frameH(view)
   const low = smoother(t, M.fade, 549)
   const near = Math.min(view.y1, 0.1)
   // Broken by the swell into flat slivers, as light on water is: one, two or three to a row, of uneven lengths and set
