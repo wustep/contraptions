@@ -32,11 +32,24 @@ export const MERLON = { w: 0.14, h: 0.12, gap: 0.12 }
 /** The highest and lowest the house goes, and its west and east ends, for the palace's own in-view test. */
 export const KEEP_SPAN = { x0: TERRACES[1].x0, x1: TERRACES[1].x1, top: TOWER.top - MERLON.h, foot: TERRACES[1].y1 }
 
-/** A crenellated edge from x0 to x1 standing on y, added to the current path: a merlon at each end and even between. */
-export function merlons(ctx: CanvasRenderingContext2D, x0: number, x1: number, y: number): void {
+/**
+ * A crenellated edge from x0 to x1 standing on y, added to the current path: a merlon at each end and even between.
+ * `within` keeps only what of that row falls between its two x (a nearer wall laid over the same row: its merlons are
+ * the row's own, so the two never stand doubled out of step).
+ */
+export function merlons(ctx: CanvasRenderingContext2D, x0: number, x1: number, y: number, within?: [number, number]): void {
   const n = Math.max(2, Math.round((x1 - x0 + MERLON.gap) / (MERLON.w + MERLON.gap)))
   const step = (x1 - x0 - MERLON.w) / (n - 1)
-  for (let i = 0; i < n; i++) ctx.rect(x0 + i * step, y - MERLON.h, MERLON.w, MERLON.h + 0.005)
+  for (let i = 0; i < n; i++) {
+    let a = x0 + i * step
+    let b = a + MERLON.w
+    if (within) {
+      a = Math.max(a, within[0])
+      b = Math.min(b, within[1])
+      if (b - a < 0.005) continue
+    }
+    ctx.rect(a, y - MERLON.h, b - a, MERLON.h + 0.005)
+  }
 }
 
 /**

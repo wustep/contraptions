@@ -472,10 +472,12 @@ export function overPalace(g: Paint): void {
   const [x0] = GATE.wall
   rect(ctx, x0, TOP - GATE.wallH, GATE.x - GATE.half - x0, GATE.wallH)
   fill(ctx, stone)
-  rect(ctx, x0, TOP - GATE.wallH - 0.05, GATE.x - GATE.half - x0, 0.05)
+  // Its coping and merlons are the back wall's own row over this stretch (laid out afresh here, a second row stood out
+  // of step over the first: one wide two-tone merlon with a dark sliver over it).
+  rect(ctx, x0, TOP - GATE.wallH - 0.06, GATE.x - GATE.half - x0, 0.06)
   fill(ctx, shade)
   ctx.beginPath()
-  merlons(ctx, x0, GATE.x - GATE.half - 0.09, TOP - GATE.wallH - 0.05)
+  merlons(ctx, x0, HALL.x0 - WALL, TOP - GATE.wallH - 0.06, [x0, GATE.x - GATE.half - 0.09])
   fill(ctx, stone)
   // The near post, and the lintel's near end over the wall as at its far end (the wall, laid over it, cut the lintel
   // off flush with this post, 437-441 s).
