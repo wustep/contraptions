@@ -4,7 +4,7 @@ import type { Pt } from '../../path'
 import { layer } from '../../world/depth'
 import { horizonOf } from '../../world/sea'
 import { skyAt } from '../../world/sky'
-import { SHORE, WALL, ground } from './geo'
+import { SHORE, TOWER, WALL, ground } from './geo'
 import { BU, HORSE_START, LOGS, LOG_R, SLEDGE, TAUT, hauled, horseAt, toWorld } from './horse'
 import { FLAME, MAT, burning, firelight, night, tone } from './tone'
 import { smoke } from './city'
@@ -235,7 +235,9 @@ export function drawGround(g: Paint, below = false): void {
     // run its own band. (Drawn as one, it bridged the city with a straight lit band across the ground's cut face, from
     // under the temple to the steps' wall, in a frame wide enough to take in both, 128.6-130.2 s on 1920x800.)
     const pts = edge(x0, Math.min(x1, SAND_FROM + 0.6))
-    const open = (x: number) => x > WALL.x1 - 0.01 || x < -45.4
+    // (Outside the gate, from the tower's outer face: from the wall's, it began under the tower's foot with a square
+    // end, 88-94 s and 108-114 s.)
+    const open = (x: number) => x > Math.max(WALL.x1, TOWER.x1) - 0.01 || x < -45.4
     const runs: Pt[][] = []
     for (const p of pts) {
       if (!open(p[0])) continue
