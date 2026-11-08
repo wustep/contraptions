@@ -425,8 +425,12 @@ function drawRig(g: Paint): void {
   stroke(g, indoors(MADDER, t), 1.5)
   rect(ctx, BOW.x - 0.05, BOW.y - 0.04, 0.05, 0.08)
   fill(ctx, indoors(BRONZE, t))
+  if (t <= TRIAL.loose) drawArrow(g)
   void k
 }
+
+/** How far a wall drawn over the balls runs on below the ground they stand on: a ball's ink overhangs its foot. */
+const FOOT = 0.025
 
 /** The bow's horn and wood as warm as the fire makes them. */
 const WARM_BOW = '#7A3F22'
@@ -506,12 +510,14 @@ export function overPalace(g: Paint): void {
   const shade = outdoors(STONE_SHADE, t)
   // In front of the balls while the arrow goes through them; behind after (`drawPalace`).
   if (t < TRIAL.erupts) drawAxes(g)
-  // The floor's cut face over the trench, deep enough there that a lying axe is down in it, out of sight, until it
-  // swings up.
-  // (To past the first axe's head as it lies: ended at its head, a sliver of the bronze stood out under the floor.)
-  rect(ctx, AXES[AXES.length - 1] - 0.5, HALL.floor, AXES[0] - AXES[AXES.length - 1] + 1.12, SLAB + 0.08)
+  // The floor's cut face, deep enough over the trench that a lying axe is down in it, out of sight, until it swings
+  // up; and from wall to wall, so whatever stands on the floor stands on it alike. (Over the trench only, a ball standing
+  // across its west end, by the bow, had a stepped foot, and west of it every rim hung below the floor, 460-503 s.)
+  rect(ctx, HALL.x0 - WALL, HALL.floor, HALL.x1 - HALL.x0 + 2 * WALL, SLAB + 0.08)
   fill(ctx, shade)
-  drawArrow(g)
+  // Lying on the string, the arrow is the bow's, behind whoever passes in front of it (over them, it lay across a man
+  // leaping past the bow, 471.0 and 474.2 s); loosed, it flies in front of them through the eyes.
+  if (t > TRIAL.loose) drawArrow(g)
   // The hall's walls' cut ends: over each door, the wall to the slab.
   rect(ctx, HALL.x0 - WALL, HALL.ceil, WALL, HALL.floor - HALL.ceil - DOOR_E.h)
   fill(ctx, stone)
@@ -534,7 +540,8 @@ export function overPalace(g: Paint): void {
   fill(ctx, stone)
   // The courtyard's front wall, cut, east of the gate, and the gate's near post against it, so the gate has both.
   const [x0] = GATE.wall
-  rect(ctx, x0, TOP - GATE.wallH, GATE.x - GATE.half - x0, GATE.wallH)
+  // Down past the ground's edge by a ball's ink, so nobody passing behind it shows his rim under it (439.5 s).
+  rect(ctx, x0, TOP - GATE.wallH, GATE.x - GATE.half - x0, GATE.wallH + FOOT)
   fill(ctx, stone)
   // Its coping and merlons are the back wall's own row over this stretch (laid out afresh here, a second row stood out
   // of step over the first: one wide two-tone merlon with a dark sliver over it).
@@ -545,7 +552,7 @@ export function overPalace(g: Paint): void {
   fill(ctx, stone)
   // The near post, and the lintel's near end over the wall as at its far end (the wall, laid over it, cut the lintel
   // off flush with this post, 437-441 s).
-  rect(ctx, GATE.x - GATE.half - 0.09, TOP - GATE.h, 0.09, GATE.h)
+  rect(ctx, GATE.x - GATE.half - 0.09, TOP - GATE.h, 0.09, GATE.h + FOOT)
   fill(ctx, outdoors(TIMBER, t))
   rect(ctx, GATE.x - GATE.half - 0.14, TOP - GATE.h - 0.09, 0.28, 0.09)
   fill(ctx, outdoors(TIMBER, t))

@@ -166,9 +166,10 @@ export function tallowAt(t: number): { x: number; y: number; left: number } {
   const inX = PAN.x - 0.02
   if (t <= TRIAL.tallow) return { x: rimX, y: PAN.rim, left: 1 }
   const u = clamp01((t - TRIAL.tallow) / (FAT - TRIAL.tallow))
-  // Off the rim and down onto the coals, a little arc.
+  // Off the rim and over onto the coals heaped above it, a little arc. (It went down below the rim, and was drawn on the
+  // bowl's face, 469.6-470.7 s.)
   const x = rimX + (inX - rimX) * u
-  const y = PAN.rim + 0.035 * u * u - 0.02 * Math.sin(Math.PI * u)
+  const y = PAN.rim - 0.018 * u - 0.03 * Math.sin(Math.PI * u)
   return { x, y, left: 1 - smooth(t, FAT, FAT + 1.1) }
 }
 
