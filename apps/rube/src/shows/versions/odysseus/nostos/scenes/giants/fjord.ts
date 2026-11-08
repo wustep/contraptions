@@ -518,8 +518,25 @@ export function drawGiant(g: Paint, gi: number): void {
   // The T.
   poly(ctx, [hp([-0.62, -9.1]), hp([0.62, -9.1]), hp([0.6, -8.82]), hp([0.13, -8.82]), hp([0.11, -7.55]), hp([-0.11, -7.55]), hp([-0.13, -8.82]), hp([-0.6, -8.82])])
   fill(ctx, c(STEEL.slit))
-  // The raised arm in front of the helmet, and the boulder in its hand until it is let go.
-  if (raised) drawArm([tsh, tel, thd])
+  // The raised arm in front of the helmet, and the boulder in its hand until it is let go; and its plate over its
+  // shoulder again, but not over the helmet, so this arm too comes out from under its plate (it lay over it, its round
+  // end on the steel, at every throw, 199-222 s).
+  if (raised) {
+    drawArm([tsh, tel, thd])
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(-1e4, -1e4, 2e4, 2e4)
+    const h1 = hp([-0.85, -7.35])
+    ctx.moveTo(h1[0], h1[1])
+    for (const v of [[-0.95, -9.0], [-0.75, -10.05], [0, -10.35], [0.75, -10.05], [0.95, -9.0], [0.85, -7.35], [0.3, -7.55], [-0.3, -7.55]] as Pt[]) {
+      const q = hp(v)
+      ctx.lineTo(q[0], q[1])
+    }
+    ctx.closePath()
+    ctx.clip('evenodd')
+    plate(-swordSide as -1 | 1)
+    ctx.restore()
+  }
   const held = heldAt(gi, t)
   if (held.boulder) drawBoulder(g, held.hand[0], held.hand[1] - 0.3 * s, held.boulder.r, held.boulder.spin * 0.2 * t, c)
   ctx.restore()

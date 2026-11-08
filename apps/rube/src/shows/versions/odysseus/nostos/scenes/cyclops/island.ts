@@ -168,12 +168,27 @@ export function drawIsland(g: Paint, t: number, inside: () => void): void {
     const f = Math.min(i, a.length - 1 - i) / (a.length / 2)
     return [x + (i < a.length / 2 ? -0.2 : 0.2), y + 0.55 + 0.6 * f]
   })
-  blob(ctx, [...top, ...under])
+  // Its top edge is the outline's own line, corner for corner; only its underside is rounded. (Rounded all round, it cut
+  // inside the crag's corners, a sliver of bare rock under the ink, and its west tip rounded off under the crown's line,
+  // 143-187 s, plainest on phones.)
+  const ends: Pt[] = [top[top.length - 1], ...under, top[0]]
+  ctx.beginPath()
+  top.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
+  for (let i = 1; i < ends.length - 1; i++) {
+    const m: Pt = [(ends[i][0] + ends[i + 1][0]) / 2, (ends[i][1] + ends[i + 1][1]) / 2]
+    ctx.quadraticCurveTo(ends[i][0], ends[i][1], m[0], m[1])
+  }
+  ctx.closePath()
   ctx.fillStyle = air(TURF, 0.08)
   ctx.fill()
   stroke(g, air(INK, 0.15), 2.2)
+  // The crown's line, its ends drawn in off the cap's tips (from the tips themselves it poked out past the rounded ends).
+  const crown = top.map(([x, y]): Pt => [x, y + 0.12])
+  const inset = (a: Pt, b: Pt): Pt => [a[0] + (b[0] - a[0]) * 0.35, a[1] + (b[1] - a[1]) * 0.35]
+  crown[0] = inset(crown[0], crown[1])
+  crown[crown.length - 1] = inset(crown[crown.length - 1], crown[crown.length - 2])
   ctx.beginPath()
-  top.forEach(([x, y], i) => (i ? ctx.lineTo(x, y + 0.12) : ctx.moveTo(x, y + 0.12)))
+  crown.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
   stroke(g, air(TURF_HI, 0.05), 3.2)
   // The outline: all of it but the floor it closes along out of sight.
   ctx.beginPath()
@@ -279,7 +294,9 @@ function drawInside(g: Paint, t: number): void {
   // the wall's foot, it ended in a box corner on the rock face, 165-170 s).
   const [[ax, ay], [bx, by]] = [CLEFTS[1][4], CLEFTS[1][5]]
   const edge = (y: number): number => ax + ((bx - ax) * (y - ay)) / (by - ay)
-  poly(ctx, [[MOUTH.x1 - 0.02, FLOOR + 0.12], [edge(FLOOR + 0.12) + 0.02, FLOOR + 0.12], [edge(0) + 0.02, 0], [MOUTH.x1 - 0.02, 0]])
+  // Its front edge on the shelf's, a hair under it (a fiftieth of a cell under it, it stood out as a step where the
+  // shelf's edge turns away below, 148-153 and 172-181 s).
+  poly(ctx, [[MOUTH.x1 - 0.002, FLOOR + 0.12], [edge(FLOOR + 0.12) + 0.02, FLOOR + 0.12], [edge(0) + 0.02, 0], [MOUTH.x1 - 0.002, 0]])
   ctx.fillStyle = SECTION
   ctx.fill()
   // The rock's cut edge round the inside.
