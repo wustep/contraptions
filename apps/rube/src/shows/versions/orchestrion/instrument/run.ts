@@ -38,9 +38,9 @@ const GOVERNOR = 3
  * The jar's balls, and when (in ticks) it lets each one go. The last is kept back for the coda: it comes out as the
  * other balls are going to rest, and is the one that plays D at the end.
  */
-const FEEDS = [-3, 5, 13, 21, 29, 37, 45, 53, 64, 72, 80, 88, 96, 104, 189]
+const FEEDS = [-3, 5, 13, 21, 29, 37, 45, 53, 64, 72, 80, 88, 96, 104, 191]
 /** When (in ticks) the lift's switch takes the next ball to come up out of the machine and into the bowl. */
-const RETIRES = [148, 154, 160, 165, 170, 174, 178, 186, 187, 194]
+const RETIRES = [148, 154, 157, 165, 167, 174, 178, 186, 187, 194]
 
 /** The track's balls roll this fast, cells a second. */
 const TRACK_SPEED = 2.2
@@ -303,7 +303,7 @@ export function perform(lenient = false, retires: number[] = RETIRES): Performan
           // The switch at the trough's end: into the bowl, to rest.
           retiring--
           st.mode = 'bowl'
-          knocks.push({ t, kind: 'bowl', v: TROUGH_SPEED, x: machine.liftX - 0.9, y: machine.liftFoot })
+          knocks.push({ t, kind: 'bowl', v: TROUGH_SPEED, x: machine.liftX - 1.65, y: machine.liftFoot })
           record(st, t, false)
           bowl.push([t, count('bowl')])
         } else if (t >= st.until) {
@@ -312,16 +312,17 @@ export function perform(lenient = false, retires: number[] = RETIRES): Performan
           st.mode = 'wait'
           st.until = (Math.ceil(phase) * CUP) / LIFT_SPEED
           st.x = machine.liftX
+          st.y = machine.liftFoot - BALL_R
           record(st, t)
         } else if (sampleKinematic) record(st, t)
       } else if (st.mode === 'wait' && t >= st.until) {
         st.mode = 'lift'
         st.t0 = st.until
-        st.until = st.t0 + (machine.liftFoot - machine.liftHead) / LIFT_SPEED
+        st.until = st.t0 + (machine.liftFoot - BALL_R - machine.liftHead) / LIFT_SPEED
         record(st, t)
       } else if (st.mode === 'lift') {
         st.x = machine.liftX
-        st.y = machine.liftFoot - (t - st.t0) * LIFT_SPEED
+        st.y = machine.liftFoot - BALL_R - (t - st.t0) * LIFT_SPEED
         if (t >= st.until) {
           st.y = machine.liftHead
           st.mode = 'track'

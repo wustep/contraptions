@@ -21,6 +21,7 @@ export interface Note {
   /** Where along the part. */
   u: number
   x: number
+  y: number
   /** A pipe's breath: how long the ball was in it, and its speed coming out. */
   dur?: number
   vOut?: number
@@ -34,19 +35,19 @@ export function notes(perf: Performance): Note[] {
   for (const c of perf.contacts) {
     if (c.part < 0) continue
     const p = parts[c.part]
-    if (c.material === 'bar') out.push({ t: c.t, kind: 'bar', part: c.part, hz: p.hz, v: c.v, u: c.u, x: c.x, metal: p.e >= METAL_E })
-    else if (c.material === 'string') out.push({ t: c.t, kind: 'string', part: c.part, hz: p.hz, v: c.v, u: c.u, x: c.x })
-    else if (c.material === 'brass' && p.kind === 'pipe') out.push({ t: c.t, kind: 'pipe-knock', part: c.part, hz: p.hz, v: c.v, u: 0.5, x: c.x })
+    if (c.material === 'bar') out.push({ t: c.t, kind: 'bar', part: c.part, hz: p.hz, v: c.v, u: c.u, x: c.x, y: c.y, metal: p.e >= METAL_E })
+    else if (c.material === 'string') out.push({ t: c.t, kind: 'string', part: c.part, hz: p.hz, v: c.v, u: c.u, x: c.x, y: c.y })
+    else if (c.material === 'brass' && p.kind === 'pipe') out.push({ t: c.t, kind: 'pipe-knock', part: c.part, hz: p.hz, v: c.v, u: 0.5, x: c.x, y: c.y })
   }
   for (const g of perf.passages) {
     const p = parts[g.part]
-    out.push({ t: g.tIn, kind: 'pipe', part: g.part, hz: p.hz, v: g.vIn, u: 0.5, x: p.ax, dur: g.tOut - g.tIn, vOut: g.vOut })
+    out.push({ t: g.tIn, kind: 'pipe', part: g.part, hz: p.hz, v: g.vIn, u: 0.5, x: p.ax, y: p.ay, dur: g.tOut - g.tIn, vOut: g.vOut })
   }
   for (const s of perf.strikes) {
     const p = parts[s.part]
-    out.push({ t: s.t, kind: 'chime', part: s.part, hz: p.hz, v: s.v, u: 0.5, x: p.ax })
+    out.push({ t: s.t, kind: 'chime', part: s.part, hz: p.hz, v: s.v, u: 0.5, x: p.ax, y: (p.ay + p.by) / 2 })
   }
-  for (const k of perf.knocks) out.push({ t: k.t, kind: 'knock', part: -1, hz: 0, v: k.v, u: 0.5, x: k.x, knock: k.kind })
+  for (const k of perf.knocks) out.push({ t: k.t, kind: 'knock', part: -1, hz: 0, v: k.v, u: 0.5, x: k.x, y: k.y, knock: k.kind })
   return out.sort((a, b) => a.t - b.t)
 }
 

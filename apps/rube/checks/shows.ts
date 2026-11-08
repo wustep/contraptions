@@ -327,8 +327,8 @@ async function main(): Promise<void> {
   check('Première is take-b only', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-b')
   check('Clair de Lune is take-b only', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-b')
   check('Clair de Lune\'s and Première\'s one takes are called Take A', ['clair-de-lune', 'premiere-arabesque'].every((w) => shipped.works.find((x) => x.work === w)?.versions[0]?.label === 'Take A'))
-  check('in the picker the works are Clair de Lune, Cornfield Chase, Epilogue, Everything, Gymnopédie, Kick, Kohaku, Magnum, Maker, Married Life, Merry-Go-Round, Mountain King, Nostos, Ostinato, Palindrome, Première Arabesque, Quintessence, Raindrop, Rally, Sleeper, Soft Lamp and Voyage',
-    shipped.works.map((w) => w.title).sort().join('|') === 'Clair de Lune|Cornfield Chase|Epilogue|Everything|Gymnopédie|Kick|Kohaku|Magnum|Maker|Married Life|Merry-Go-Round|Mountain King|Nostos|Ostinato|Palindrome|Première Arabesque|Quintessence|Raindrop|Rally|Sleeper|Soft Lamp|Voyage', shipped.works.map((w) => w.title).join('|'))
+  check('in the picker the works are Clair de Lune, Cornfield Chase, Epilogue, Everything, Gymnopédie, Kick, Kohaku, Magnum, Maker, Married Life, Merry-Go-Round, Mountain King, Nostos, Orchestrion, Ostinato, Palindrome, Première Arabesque, Quintessence, Raindrop, Rally, Sleeper, Soft Lamp and Voyage',
+    shipped.works.map((w) => w.title).sort().join('|') === 'Clair de Lune|Cornfield Chase|Epilogue|Everything|Gymnopédie|Kick|Kohaku|Magnum|Maker|Married Life|Merry-Go-Round|Mountain King|Nostos|Orchestrion|Ostinato|Palindrome|Première Arabesque|Quintessence|Raindrop|Rally|Sleeper|Soft Lamp|Voyage', shipped.works.map((w) => w.title).join('|'))
   check('no take carries a byline', shipped.works.every((w) => w.versions.every((v) => !('director' in v))))
 
   // Credits live are the page's DOM; a video has them painted into its frame (`words.ts`). The two are one look.
@@ -442,7 +442,7 @@ async function main(): Promise<void> {
   check('the build writes a renamed take\'s old address as a page', /RENAMED_TAKES\[w\.work\]/.test(readFileSync(join(process.cwd(), 'vite.config.ts'), 'utf8')))
   const shelved = shelves(shipped.works).map((s) => `${s.section}: ${s.works.map((w) => w.title).join(', ')}`)
   check('the picker shelves the works as Machine, Movies and Ambient, each with its favourites pinned first',
-    shelved.join(' / ') === 'Machine: Clair de Lune, Cornfield Chase, Première Arabesque, Raindrop / Movies: Voyage, Epilogue, Everything, Kick, Kohaku, Magnum, Maker, Married Life, Merry-Go-Round, Mountain King, Nostos, Palindrome, Quintessence, Rally, Sleeper / Ambient: Gymnopédie, Ostinato, Soft Lamp', shelved.join(' / '))
+    shelved.join(' / ') === 'Machine: Clair de Lune, Cornfield Chase, Première Arabesque, Raindrop / Movies: Voyage, Epilogue, Everything, Kick, Kohaku, Magnum, Maker, Married Life, Merry-Go-Round, Mountain King, Nostos, Palindrome, Quintessence, Rally, Sleeper / Ambient: Gymnopédie, Orchestrion, Ostinato, Soft Lamp', shelved.join(' / '))
   for (const work of shipped.works) {
     for (const version of work.versions) {
       const perf = await version.load()

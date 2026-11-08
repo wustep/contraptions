@@ -201,14 +201,15 @@ export function buildMachine(): Machine {
   const slope = 0.03
   const troughY = (x: number): number => troughBase + (troughX1 - x) * slope
 
-  const liftHead = -2.6
+  const liftHead = -1.9
   const track = { x0: liftX + 0.4, y0: liftHead + 0.3, x1: RELEASE_X - 0.02, y1: ROLL_Y }
 
+  // What there is to see: the bowl at the left, the beam and the jar at the top, the trough's foot at the bottom.
   const box = {
-    x0: liftX - 1.6,
-    y0: beamY - 0.6,
-    x1: Math.max(troughX1, ...bays.map((b) => b.box.x1)) + 0.4,
-    y1: troughY(troughX0) + 0.6,
+    x0: liftX - 2.8,
+    y0: beamY - 0.3,
+    x1: Math.max(troughX1, ...bays.map((b) => b.box.x1)) + 0.45,
+    y1: troughY(troughX0) + 0.3,
   }
 
   return { parts, segs, sensors, bays, troughY, troughX0, troughX1, liftX, liftFoot: troughY(troughX0), liftHead, track, beamY, gates, rail: { x0: railX0, x1: lastGate }, box }
