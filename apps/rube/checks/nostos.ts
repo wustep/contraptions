@@ -126,6 +126,8 @@ export function checkNostos(perf: Performance, version: ShowVersion, check: Chec
   let camJump = 0
   let camAt = 0
   const pops: string[] = []
+  const resting = new Map<string, number>()
+  const inEach: string[] = []
   const cast = [show.hero, ...show.cast]
   let prev = show.at(0)
   let prevCam = cam(0)
@@ -147,6 +149,24 @@ export function checkNostos(perf: Performance, version: ShowVersion, check: Chec
         if (b0 && !b1 && (b0.scale ?? 1) > 0.3 && inShot(t - step, b0.x, b0.y) && !coveredAt(t, a.id)) pops.push(`${a.id} out at ${t.toFixed(3)}`)
         if (b0 && b1 && Math.hypot(b1.x - b0.x, b1.y - b0.y) > 0.06 && (inShot(t, b1.x, b1.y) || inShot(t - step, b0.x, b0.y))) pops.push(`${a.id} jumps at ${t.toFixed(3)}`)
       }
+      // Nobody at rest inside anybody at rest: two still balls drawn into each other by more than 0.03 cells for more
+      // than 80 ms (passing through is a crowd's way in one plane; standing, sitting or lying in another is not).
+      const still = (here.balls ?? []).filter((b) => {
+        const p = was.get(b.id)
+        return (b.scale ?? 1) > 0.3 && !!p && Math.hypot(p.x - b.x, p.y - b.y) < 1e-4
+      })
+      const seen = new Set<string>()
+      for (let i = 0; i < still.length; i++) {
+        for (let j = i + 1; j < still.length; j++) {
+          const [a, b] = [still[i], still[j]]
+          if (0.13 * ((a.scale ?? 1) + (b.scale ?? 1)) - Math.hypot(a.x - b.x, a.y - b.y) <= 0.03) continue
+          const key = `${a.id}/${b.id}`
+          seen.add(key)
+          resting.set(key, (resting.get(key) ?? 0) + 1)
+          if (resting.get(key) === 40) inEach.push(`${key} at ${t.toFixed(2)}`)
+        }
+      }
+      for (const k of [...resting.keys()]) if (!seen.has(k)) resting.delete(k)
     }
     prev = here
     prevCam = f
@@ -187,6 +207,7 @@ export function checkNostos(perf: Performance, version: ShowVersion, check: Chec
     `frameH ${frameH(wide).toFixed(2)} / ${frameH(tall).toFixed(2)}, s(30) ${layer(wide, 30).s.toFixed(3)} / ${layer(tall, 30).s.toFixed(3)}`)
   check('nostos: the camera never jumps (no more than 1% of the frame in 2 ms) but at a cut or across a dissolve', camJump <= 0.01, `${camJump.toFixed(4)} at ${camAt.toFixed(3)} s`)
   check('nostos: no one comes, goes or jumps in shot', pops.length === 0, pops.slice(0, 10).join(', '))
+  check('nostos: nobody at rest is inside anybody at rest, anywhere in the show', inEach.length === 0, inEach.slice(0, 8).join('; '))
 
   // A follow's window is sampled about once a frame, so a kink in the ball's way reaches the camera as one smooth
   // change of speed, not as steps every fourth frame (a 15 Hz judder of the whole frame).
