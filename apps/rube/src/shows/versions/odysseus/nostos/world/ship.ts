@@ -138,17 +138,27 @@ export function drawShip(g: Paint, pose: Pose, look: ShipLook): void {
     stroke(g, ink, lw * 0.8)
     ctx.restore()
   }
-  // The mast and the sail stand on the deck at the middle, unless struck.
+  // The mast and the sail stand on the deck at the middle, unless struck. Lowered, the mast lies aft at its last angle:
+  // it is never taken off the deck in a frame (it vanished there, still 13 degrees off the deck, as the ships moored
+  // under the Cyclops' cave and as the giants' boulders brought it down, and stood up again from nothing).
   const down = look.mastDown ?? 0
-  if (down < 1 && broken < 0.5) {
+  if (broken < 0.5) {
+    const H = 2.4
+    const tilt = -1.35 * down
+    // The stays, from the masthead to the stem and the stern, in the hull's frame: cast off as the mast starts down.
+    // (They were drawn in the mast's frame, so their feet swung up off the bow and down through the hull with it.)
+    const stays = 1 - smooth(down, 0, 0.3)
     ctx.save()
     ctx.translate(0.15, DECK)
-    ctx.rotate(-1.35 * down)
-    const H = 2.4
+    ctx.rotate(tilt)
     ctx.beginPath()
     ctx.moveTo(0, 0)
     ctx.lineTo(0, -H)
     stroke(g, ink, lw * 1.3)
+    // The yard and its sail are taken down to the deck while the mast comes down past halfway, before the yard, square
+    // to the mast, could reach the hull; and put back up as it is raised.
+    ctx.save()
+    ctx.globalAlpha *= 1 - smooth(down, 0.5, 0.8)
     // The yard, and the sail hung from it: furled up to the yard, or let down and filled.
     const yard = -H + 0.25
     ctx.beginPath()
@@ -196,14 +206,17 @@ export function drawShip(g: Paint, pose: Pose, look: ShipLook): void {
       ctx.restore()
       ctx.restore()
     }
-    // Stays from the masthead to the bow and the stern.
-    ctx.beginPath()
-    ctx.moveTo(0, -H)
-    ctx.lineTo(1.7, 0.02)
-    ctx.moveTo(0, -H)
-    ctx.lineTo(-1.65, -0.05)
-    stroke(g, rgba(ink, 0.6), Math.max(1.25, lw * 0.5))
     ctx.restore()
+    ctx.restore()
+    if (stays > 0.004) {
+      const head: Pt = [0.15 + H * Math.sin(tilt), DECK - H * Math.cos(tilt)]
+      ctx.beginPath()
+      ctx.moveTo(head[0], head[1])
+      ctx.lineTo(1.85, DECK + 0.02)
+      ctx.moveTo(head[0], head[1])
+      ctx.lineTo(-1.5, DECK - 0.05)
+      stroke(g, rgba(ink, 0.6 * stays), Math.max(1.25, lw * 0.5))
+    }
   }
   ctx.restore()
 }
