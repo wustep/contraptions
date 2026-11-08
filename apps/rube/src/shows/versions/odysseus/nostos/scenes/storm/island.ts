@@ -81,12 +81,21 @@ let gloom = 0
 const STORM = '#262A2B'
 const lit = (c: string): string => (gloom > 0.001 ? mix(c, STORM, gloom) : c)
 
-export function drawIsland(g: Paint): void {
+/** Whether any of the island is in view: the land and its skirts (475 to 541), or its far hills, 30 deep, which come
+ * over the horizon well before the shore does (culled by the shore alone, they appeared whole). */
+const inView = (g: Paint): boolean => {
+  const L = layer(g.view, 30)
+  return !(g.view.x1 < Math.min(475, L.x(499)) - 1 || g.view.x0 > Math.max(541, L.x(523)) + 1)
+}
+
+/**
+ * The island's far hills and its back ridge: behind the seas, which stand up in front of them in the storm (drawn with
+ * the island, after the seas, the swells went behind the distant hills, 307.5-314.5 s).
+ */
+export function drawIslandFar(g: Paint): void {
   const { ctx, t, view } = g
-  // In view while any of it is: the land and its skirts under the water (475 to 541), or its far hills, which stand
-  // 30 deep and so come over the horizon well before the shore does (culled by the shore alone, they appeared whole).
+  if (!inView(g)) return
   const L = layer(view, 30)
-  if (view.x1 < Math.min(475, L.x(499)) - 1 || view.x0 > Math.max(541, L.x(523)) + 1) return
   gloom = 0.55 * smooth(t, 292.5, 301.5)
   const air = skyAt(t).low
   // Far hills of the same island, behind, paler: coming down at each end to their waterline (their outline ended a
@@ -99,6 +108,12 @@ export function drawIsland(g: Paint): void {
   poly(ctx, far)
   fill(ctx, mix(lit(GRASS_SHADE), air, 0.55))
   drawRidge(g, air)
+}
+
+export function drawIsland(g: Paint): void {
+  const { ctx, t } = g
+  if (!inView(g)) return
+  gloom = 0.55 * smooth(t, 292.5, 301.5)
   // The land: grass over the whole hill, darkening towards the water; under the water it goes on down and out, a
   // mound that the cut sea darkens, its skirts going on down out of sight (no floor to it, so a tall frame sees none).
   const pts: Pt[] = []
