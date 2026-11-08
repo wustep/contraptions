@@ -297,9 +297,11 @@ function drawRoomInside(g: Paint): void {
   fill(ctx, outdoors('#8D98A3', t))
   drawWindow(g)
   drawLamp(g, ROOM.x0 + 1.75, ROOM.floor - 0.62)
-  rect(ctx, ROOM.x0 + 2.7, ROOM.floor - 0.2, 0.5, 0.2)
+  // Her chest, on the floor short of the stairwell's opening (where it stood, its east end hung over the opening).
+  const chest = STAIRWELL.x0 - 0.05 - 0.5
+  rect(ctx, chest, ROOM.floor - 0.2, 0.5, 0.2)
   fill(ctx, indoors(TIMBER_LIGHT, t))
-  rect(ctx, ROOM.x0 + 2.7, ROOM.floor - 0.2, 0.5, 0.035)
+  rect(ctx, chest, ROOM.floor - 0.2, 0.5, 0.035)
   fill(ctx, indoors(TIMBER, t))
   drawLoom(g)
 }
