@@ -1,4 +1,4 @@
-import { blob, clamp01, fill, hash, mix, poly, rgba, stroke, type Paint } from '../../draw'
+import { blob, clamp01, fill, hash, mix, poly, rgba, smooth, stroke, type Paint } from '../../draw'
 import type { Pt } from '../../path'
 import { layer } from '../../world/depth'
 import { skyAt } from '../../world/sky'
@@ -229,8 +229,10 @@ function drawSiren(g: Paint, foot: Pt, i: number, shipX: number): void {
   fill(ctx, rgba(SIREN_SHADE, 0.7))
   blob(ctx, body)
   stroke(g, INK, 1.8)
-  // The arm towards the ship: down in her lap while it is far, lifted and reaching after it as it passes nearest.
-  const reach = near * near * (0.5 + 0.5 * Math.max(0, look + 0.3))
+  // The arm towards the ship: down in her lap while it is far, lifted and reaching after it as it passes nearest. She
+  // faces the way it goes, so she reaches as it comes level and past, not while it is still coming up behind her (half
+  // lifted then, her arm went out away from the ship, 262-270 s).
+  const reach = near * near * smooth(look, -0.3, 0.25)
   const shoulder: Pt = [0.1, -H * 0.72]
   const ang = 1.2 - 1.45 * reach
   const len = H * 0.4
