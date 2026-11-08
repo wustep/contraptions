@@ -179,17 +179,27 @@ export function drawHands(g: Paint): void {
     const x = sh.x + CHARGE_BY_ROW[sh.row] * charged(t, sh.lag)
     if (x < view.x0 - 1 || x > view.x1 + 1) continue
     const size = row.scale
-    const h = (0.5 + 0.12 * Math.sin(sh.x * 3.1)) * size * smooth(s, 0, 0.22) * (1 - upOf(t - sh.rise))
-    if (h < 0.006) continue
+    // Each hand comes up out of the sand and goes back down into it, whole, cut by the sand's surface: squashed to
+    // nothing in its own height instead, it went flat into a splay of crossed fingers and then a slanted bar under the
+    // head coming up between them (239.2-241 s).
+    const full = (0.5 + 0.12 * Math.sin(sh.x * 3.1)) * size
+    const out = smooth(s, 0, 0.22) * (1 - upOf(t - sh.rise))
+    if (out < 0.012) continue
+    const sunk = full * (1 - out)
     const open = smooth(s, 0.08, 0.5)
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(view.x0 - 1, view.y0 - 1, view.x1 - view.x0 + 2, row.ground - view.y0 + 1)
+    ctx.clip()
     for (const side of [-1, 1] as const) {
       const hx = x + side * (0.13 + 0.06 * open) * size
       const lean = side * (0.12 + 0.22 * open)
       ctx.beginPath()
-      hand(ctx, hx, row.ground, h, 0.22 * size, lean, open)
+      hand(ctx, hx, row.ground + sunk, full, 0.22 * size, lean, open)
       fill(ctx, ASH)
       stroke(g, ASH_RIM, 2.2)
     }
+    ctx.restore()
   }
 }
 
