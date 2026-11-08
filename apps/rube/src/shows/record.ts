@@ -98,7 +98,7 @@ function once(target: EventTarget, ok: string, bad: string, what: string, ms = 2
 
 /** Resolves true when a file was saved, false when the recording was stopped. */
 export async function recordShow(o: RecordOptions): Promise<boolean> {
-  const format = recordingFormat(!!o.soundtrack?.src)
+  const format = recordingFormat(!!(o.soundtrack?.src || o.soundtrack?.live))
   if (!format) throw new Error('This browser cannot record the canvas.')
 
   // The recording's own player and its own graph, so nothing it does to them outlives it.
@@ -106,7 +106,8 @@ export async function recordShow(o: RecordOptions): Promise<boolean> {
   let context: AudioContext | null = null
   const tracks: MediaStreamTrack[] = []
   const offset = o.soundtrack?.offset ?? 0
-  const localSrc = o.soundtrack?.src
+  // Music made live is rendered to a file for the recording: the same voices, the same room, sample-accurate.
+  const localSrc = o.soundtrack?.src ?? (o.soundtrack?.live ? await o.soundtrack.live.render() : undefined)
   if (localSrc) {
     context = new AudioContext()
     audio = new Audio()

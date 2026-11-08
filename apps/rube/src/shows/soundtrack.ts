@@ -1,4 +1,4 @@
-import type { SoundtrackSpec } from './registry'
+import type { LiveEngine, SoundtrackSpec } from './registry'
 import { createYouTubeSoundtrack, type YouTubeSoundtrack } from './youtube'
 
 /**
@@ -97,7 +97,7 @@ export interface ShowSoundtrack extends Soundtrack {
  * only: without a local `src`, a failed embed leaves the show silent.
  */
 export function createSoundtrack(host: HTMLElement, prefer: MusicSource = 'youtube'): ShowSoundtrack & { destroy(): void } {
-  const file = createFileSoundtrack()
+  const file = withLive(createFileSoundtrack(), prefer)
   const music = combineSoundtracks(file, createYouTubeSoundtrack(host), prefer)
   // Put down for good, at the end of a visit: the file's element is in the document, and each visit makes its own.
   return Object.assign(music, {
@@ -589,6 +589,237 @@ function createFileSoundtrack(): Soundtrack & { destroy(): void } {
       audio.removeAttribute('src')
       audio.load()
       audio.remove()
+    },
+  }
+}
+
+/** How far ahead of the context's clock a live start is put: time for the message to reach the audio thread. */
+const LIVE_LEAD = 0.03
+
+/**
+ * Music synthesized as the show plays (`SoundtrackSpec.live`), in front of the file. A version with live music plays
+ * it in the page's audio context, and the show's time is the context's clock: where the synthesis was started from,
+ * and how long it has run since at its speed, less what the device takes to sound it. Any other version plays its
+ * file; so does a live one that cannot run here (no AudioWorklet) or that is asked for as a file (`?music=file`), its
+ * music rendered to one first.
+ *
+ * The context is made on the first play, in the press that asked for it, so a page that has not been touched never
+ * holds one: nothing sounds, and nothing is asked of the browser, until the viewer plays. Where the browser says no
+ * press is behind a play, it is refused before anything is made, and the player holds the sound for the next press.
+ */
+function withLive(file: Soundtrack & { destroy(): void }, prefer: MusicSource): Soundtrack & { destroy(): void } {
+  let spec: SoundtrackSpec | null = null
+  /** Live (this version's music is made here), file (it plays from the element), or pending (rendering its file). */
+  let mode: 'live' | 'file' | 'pending' = 'file'
+  let status: SoundtrackState = 'none'
+  let engine: LiveEngine | null = null
+  let starting: Promise<LiveEngine | null> | null = null
+  let out: GainNode | null = null
+  /** Playing live: from where (seconds of show), from when (the context's clock). */
+  let started: { at: number; from: number } | null = null
+  /** A play waiting on the engine: the picture is held where it asked to start. */
+  let holding: number | null = null
+  let speed = 1
+  let muted = false
+  let generation = 0
+  let asked = 0
+  let waiting: (() => void)[] = []
+  let changed = () => {}
+  file.onChange(() => {
+    if (mode === 'file') changed()
+  })
+  const flush = () => {
+    const now = waiting
+    waiting = []
+    for (const fn of now) fn()
+  }
+
+  const drop = () => {
+    started = null
+    holding = null
+    engine?.dispose()
+    engine = null
+    starting = null
+    out?.disconnect()
+    out = null
+  }
+
+  /** The live music as a file instead: rendered, then played as a recording. */
+  const viaFile = (next: SoundtrackSpec, mine: number) => {
+    drop()
+    mode = 'pending'
+    status = 'loading'
+    changed()
+    next.live!.render().then(
+      (src) => {
+        if (mine !== generation) return
+        mode = 'file'
+        file.load({ ...next, src, live: undefined })
+        flush()
+        changed()
+      },
+      (err) => {
+        if (mine !== generation) return
+        console.error(err)
+        mode = 'live'
+        status = 'failed'
+        flush()
+        changed()
+      },
+    )
+  }
+
+  /** The engine, in the context, through its own gain for muting; started once a version. */
+  const engineIn = (ctx: AudioContext, mine: number): Promise<LiveEngine | null> => {
+    starting ??= spec!.live!.start(ctx).then(
+      (e) => {
+        if (mine !== generation) {
+          e.dispose()
+          return null
+        }
+        engine = e
+        out = ctx.createGain()
+        out.gain.value = muted ? 0 : 1
+        e.output.connect(out).connect(ctx.destination)
+        return e
+      },
+      (err) => {
+        if (mine === generation) {
+          console.warn('Live music could not start here; playing it from a file.', err)
+          viaFile(spec!, mine)
+        }
+        return null
+      },
+    )
+    return starting
+  }
+
+  const begin = (ctx: AudioContext, from: number, fresh: boolean) => {
+    const when = ctx.currentTime + LIVE_LEAD
+    engine!.play(from, when, speed, fresh)
+    started = { at: when, from }
+    holding = null
+  }
+
+  /** The browser says no press is behind this play (where it says at all). */
+  const unpressed = () => {
+    const ua = (navigator as Navigator & { userActivation?: { isActive: boolean; hasBeenActive: boolean } }).userActivation
+    return !!ua && !ua.isActive && !ua.hasBeenActive
+  }
+
+  return {
+    load(next) {
+      generation++
+      asked++
+      drop()
+      flush()
+      spec = next
+      if (!next?.live) {
+        mode = 'file'
+        file.load(next)
+        changed()
+        return
+      }
+      file.load(null)
+      if (prefer === 'file') {
+        viaFile(next, generation)
+        return
+      }
+      mode = 'live'
+      status = 'ready'
+      changed()
+    },
+    state: () => (mode === 'file' ? file.state() : status),
+    position() {
+      if (mode === 'file') return file.position()
+      if (holding !== null) return holding
+      const ctx = context
+      if (!started || !ctx || ctx.state !== 'running') return null
+      const lag = (ctx as AudioContext & { outputLatency?: number }).outputLatency ?? 0
+      return started.from + Math.max(0, ctx.currentTime - started.at - lag - ctx.baseLatency) * speed
+    },
+    follow(t) {
+      if (mode === 'file') file.follow(t)
+    },
+    async play(at) {
+      const ask = ++asked
+      const mine = generation
+      if (mode === 'pending') {
+        await new Promise<void>((resolve) => waiting.push(resolve))
+        if (mine !== generation || ask !== asked) return 'silent'
+      }
+      if (mode === 'file') return file.play(at)
+      if (status === 'failed' || !spec?.live) return 'silent'
+      if (!context && unpressed()) return 'blocked'
+      const ctx = audioContext()
+      if (!ctx) {
+        viaFile(spec, mine)
+        return this.play(at)
+      }
+      // Asked in the press itself, before anything is waited on: a browser that wants a gesture counts this one.
+      const resumed = ctx.state === 'running' ? Promise.resolve() : ctx.resume().catch(() => {})
+      holding = at
+      const e = engine ?? (await engineIn(ctx, mine))
+      if (mine !== generation || ask !== asked) return 'silent'
+      if (!e) {
+        holding = null
+        // It fell back to the file, which plays it once rendered.
+        return (mode as string) === 'file' || (mode as string) === 'pending' ? this.play(at) : 'silent'
+      }
+      if (ctx.state !== 'running') {
+        await Promise.race([resumed, new Promise((r) => setTimeout(r, 250))])
+        if ((ctx.state as AudioContextState) !== 'running') {
+          holding = null
+          return 'blocked'
+        }
+      }
+      if (mine !== generation || ask !== asked) return 'silent'
+      begin(ctx, at, true)
+      return 'playing'
+    },
+    pause() {
+      asked++
+      holding = null
+      if (mode === 'file') {
+        file.pause()
+        return
+      }
+      if (started) engine?.stop()
+      started = null
+    },
+    seek(at) {
+      if (mode === 'file') {
+        file.seek(at)
+        return
+      }
+      if (holding !== null) holding = at
+      if (started && context && engine) begin(context, at, true)
+    },
+    setSpeed(next) {
+      file.setSpeed(next)
+      if (mode === 'live' && started && context && engine) {
+        // The show's time at the moment the new speed takes over, by the old one: the clock goes on without a step.
+        const when = context.currentTime + LIVE_LEAD
+        const from = started.from + Math.max(0, when - started.at) * speed
+        speed = next
+        engine.play(from, when, next, false)
+        started = { at: when, from }
+        return
+      }
+      speed = next
+    },
+    setMuted(next) {
+      muted = next
+      file.setMuted(next)
+      if (out && context) out.gain.setTargetAtTime(next ? 0 : 1, context.currentTime, 0.015)
+    },
+    onChange(fn) {
+      changed = fn
+    },
+    destroy() {
+      generation++
+      drop()
+      file.destroy()
     },
   }
 }

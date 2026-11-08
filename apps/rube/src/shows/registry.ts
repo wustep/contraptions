@@ -147,6 +147,38 @@ export interface SoundtrackSpec {
    * export, `?music=file`, and places YouTube will not play. One cue, or several laid end to end where `src` is a mix.
    */
   youtube?: YouTubeCue[]
+  /**
+   * Music made in the page as the show plays, rather than a recording: a show whose sounds are its own events
+   * (Orchestrion), synthesized in an audio thread as the picture reaches each one. It keeps the show's time as a
+   * recording would, and at ½× or 2× it plays the same events slower or faster, each at its own pitch. Where it cannot
+   * run (no AudioWorklet), with `?music=file`, and for a saved video, the same music is rendered to a file first
+   * (`render`), and that plays as a recording does.
+   */
+  live?: LiveMusic
+}
+
+/** Music synthesized as the show plays (`SoundtrackSpec.live`). */
+export interface LiveMusic {
+  /** Sets the synthesis up in `ctx` (it may still be suspended). Rejects where it cannot run there. */
+  start(ctx: AudioContext): Promise<LiveEngine>
+  /** The same music as a file, made once and kept: an object URL. */
+  render(): Promise<string>
+}
+
+/** One live synthesis, in one audio context. */
+export interface LiveEngine {
+  /** What it sounds out of. Left unconnected: the player connects it, through its own gain for muting. */
+  output: AudioNode
+  /**
+   * Plays from show time `from`, which falls at context time `when`, at `speed`. Fresh (a play, a seek): what was
+   * sounding is let go, and what was struck just before `from` is picked up ringing. Not fresh (a change of speed): only
+   * the clock changes, and what is sounding rings on.
+   */
+  play(from: number, when: number, speed: number, fresh: boolean): void
+  /** Stops: nothing new sounds, and what was sounding is let go over a few milliseconds. */
+  stop(): void
+  /** Takes itself down, for good. */
+  dispose(): void
 }
 
 /** A stretch of one YouTube video, laid on the show's timeline. */
@@ -357,6 +389,7 @@ const SHELVED: Record<string, Section> = {
   raindrop: 'Machine',
   bolero: 'Ambient',
   gymnopedie: 'Ambient',
+  orchestrion: 'Ambient',
   'soft-lamp': 'Ambient',
 }
 export const sectionOf = (work: string): Section => SHELVED[work] ?? 'Movies'
@@ -366,7 +399,7 @@ export const sectionOf = (work: string): Section => SHELVED[work] ?? 'Movies'
  * music through YouTube's player, so the Show card keeps the player's box open while its show loads, rather than
  * opening it once the music is known (`player.ts`). `check:shows` holds this to what each take actually loads.
  */
-const OWN_RECORDINGS = new Set(['clair-de-lune', 'premiere-arabesque', 'bolero', 'gymnopedie', 'raindrop'])
+const OWN_RECORDINGS = new Set(['clair-de-lune', 'premiere-arabesque', 'bolero', 'gymnopedie', 'raindrop', 'orchestrion'])
 /** Whether a work's music comes from YouTube's player, known before its show loads. */
 export const musicOnYouTube = (work: string): boolean => !OWN_RECORDINGS.has(work)
 
@@ -496,7 +529,8 @@ export function performanceProblems(p: Performance): string[] {
   if (p.soundtrack) {
     const hasSrc = text(p.soundtrack.src)
     const hasYouTube = (p.soundtrack.youtube?.length ?? 0) > 0
-    if (!hasSrc && !hasYouTube) out.push('the soundtrack has no src or YouTube cue')
+    const hasLive = typeof p.soundtrack.live?.start === 'function' && typeof p.soundtrack.live.render === 'function'
+    if (!hasSrc && !hasYouTube && !hasLive) out.push('the soundtrack has no src, YouTube cue or live synthesis')
     const offset = p.soundtrack.offset ?? 0
     if (!Number.isFinite(offset) || offset < 0) out.push(`the soundtrack's offset is ${offset}`)
     p.soundtrack.youtube?.forEach((c, i) => {
