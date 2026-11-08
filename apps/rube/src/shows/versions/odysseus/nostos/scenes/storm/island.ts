@@ -89,13 +89,13 @@ export function drawIsland(g: Paint): void {
   if (view.x1 < Math.min(475, L.x(499)) - 1 || view.x0 > Math.max(541, L.x(523)) + 1) return
   gloom = 0.55 * smooth(t, 292.5, 301.5)
   const air = skyAt(t).low
-  // Far hills of the same island, behind, paler.
+  // Far hills of the same island, behind, paler: coming down at each end to their waterline (their outline ended a
+  // little over it, and a square step went down from there to their foot, 277-282 and 304.6-320 s).
   const far: Pt[] = []
   for (let k = 0; k <= 12; k++) {
     const x = 499 + (24 * k) / 12
-    far.push([L.x(x), L.y(-2.6 * Math.sin((Math.PI * k) / 12) ** 0.8 - 0.5 * Math.sin(k * 1.3))])
+    far.push([L.x(x), L.y(k === 0 || k === 12 ? 0.3 : -2.6 * Math.sin((Math.PI * k) / 12) ** 0.8 - 0.5 * Math.sin(k * 1.3))])
   }
-  far.push([L.x(523), L.y(0.3)], [L.x(499), L.y(0.3)])
   poly(ctx, far)
   fill(ctx, mix(lit(GRASS_SHADE), air, 0.55))
   drawRidge(g, air)
