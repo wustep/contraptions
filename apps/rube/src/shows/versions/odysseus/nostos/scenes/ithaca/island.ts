@@ -16,7 +16,10 @@ const OUTLINE: Pt[] = [
   [793.5, 7],
   [795.6, 2.2],
   [797.0, 0.4],
+  // A second knot at the beach's seaward end, so the outline runs level along the sand he lands on (rounded through
+  // the corner, it dipped under the sand there and left an uninked wedge of sand standing over it).
   [BEACH.x0, BEACH.sand],
+  [BEACH.x0 + 0.3, BEACH.sand],
   [BEACH.x1, BEACH.sand],
   [805.5, -0.42],
   [CLIFF_E.foot, -0.9],
@@ -185,6 +188,9 @@ export function drawIsland(g: Paint): void {
   fill(ctx, rock(ROCK_DEEP, t))
   // The beach: the sand where he comes ashore, flat, running into the water, lying on the rock as a bank that thins
   // away to both ends under the water.
+  ctx.save()
+  blob(ctx, OUTLINE)
+  ctx.clip()
   ctx.beginPath()
   ctx.moveTo(797.0, 0.4)
   ctx.lineTo(BEACH.x0, BEACH.sand)
@@ -194,6 +200,7 @@ export function drawIsland(g: Paint): void {
   ctx.quadraticCurveTo(799.6, 0.8, 797.0, 0.4)
   ctx.closePath()
   fill(ctx, againstSun(SAND_C, t))
+  ctx.restore()
   blob(ctx, OUTLINE)
   stroke(g, ink, 1.6)
   // The top's skin: a band of earth and dry grass along the plateau, so the ground he stands on is ground; inside the
