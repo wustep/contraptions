@@ -558,7 +558,8 @@ export function drawTower(g: Paint): void {
   stroke(g, ink, 1.2)
   // The rope: off the drum's foot, over the pulley, down through the floor to the bucket's bail.
   const [rx, ry] = rimAt(t)
-  const bail = ry - 0.3
+  // Made fast to the bail's top (a quadratic to y - 0.55, so its apex is at y - 0.265): it stopped short of it.
+  const bail = ry - 0.262
   ctx.beginPath()
   ctx.moveTo(AXLE_A[0], AXLE_A[1] + R_DRUM)
   ctx.lineTo(PULLEY[0], PULLEY[1] - R_PULLEY)
