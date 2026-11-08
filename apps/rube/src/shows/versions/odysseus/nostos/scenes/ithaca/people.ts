@@ -3,7 +3,7 @@ import { mix, smooth } from '../../draw'
 import { END } from '../../voyage'
 import { Path, fly, flightFor, rest, ride, roll, type Move, type Pt } from '../../path'
 import type { Actor } from '../../show'
-import { BEACH, DAIS, GATE, HALL, HEARTH, HOIST, JETTY, HOME, ON_TOP, R, ROOM, STAIRS, TERRACE, TRIAL } from './geo'
+import { BEACH, DAIS, GATE, HALL, HEARTH, HOIST, JETTY, HOME, ON_TOP, R, ROOM, STAIRS, TERRACE, TRIAL, WELL } from './geo'
 import { stepAt } from './palace'
 import { STRUCK, antinousStruck, heroBasketY, plateEnd } from './rig'
 import { weaverX } from './loom'
@@ -25,6 +25,12 @@ const HERO_ON = on(FLOOR)
 /** Where the son waits on the dead dog's far side for his father. */
 const SON_AT_DOG = 810.62
 const ROOM_ON = (size: number) => on(ROOM.floor, size)
+/**
+ * Where a ball of `size` is over the light well clear of the slab's cut edge: whoever goes down it rolls off the lip to
+ * here first and falls from here. (They fell from the lip itself, so a third of each was behind the slab's cut face as
+ * it went through the floor: the three suitors at 457.9, 467.5 and 476.5 s, and the hero at 494.5 s.)
+ */
+const OVER_WELL = (size: number): number => WELL.x - WELL.half + R * size + 0.045
 /** What a suitor is once the colour has gone out of him: darker than the hall's dado behind him, where the living are lighter. */
 const DEAD = '#1F2226'
 
@@ -92,8 +98,10 @@ export function heroMoves(): Move[] {
     const [px, py] = plateEnd(t)
     return [px - 0.04, py - R]
   }
-  const drop = fly(lip, land(TRIAL.sing), TRIAL.sing - flightFor(lip, land(TRIAL.sing), 0.02), TRIAL.sing)
-  m.push(rest(lip, TRIAL.edge, drop.t0))
+  const overWell: Pt = [OVER_WELL(1), lip[1]]
+  const drop = fly(overWell, land(TRIAL.sing), TRIAL.sing - flightFor(overWell, land(TRIAL.sing), 0.02), TRIAL.sing)
+  m.push(rest(lip, TRIAL.edge, drop.t0 - 0.12))
+  m.push(roll([lip, overWell], drop.t0 - 0.12, drop.t0, 'in'))
   m.push(drop)
   // On the plate while it draws the bow; off it, west, to the floor by the door: and the bow looses.
   m.push(ride(land, TRIAL.sing, TRIAL.loose))
@@ -227,7 +235,8 @@ function trier(i: number, land: number): { moves: Move[]; back: number } {
     const [px, py] = plateEnd(t)
     return [px - 0.04, py - R * s]
   }
-  const fallT = flightFor(lip, onPlate(land), 0.02)
+  const over: Pt = [OVER_WELL(s), lip[1]]
+  const fallT = flightFor(over, onPlate(land), 0.02)
   const tLip = land - fallT - 0.35
   const head = stepAt(STAIRS.steps - 1)
   const top: Pt = [head[0], ROOM_ON(s)]
@@ -247,8 +256,9 @@ function trier(i: number, land: number): { moves: Move[]; back: number } {
   })
   m.push(...hops([foot, ...steps], [tFoot, ...stepTimes], 0.08))
   m.push(roll([top, [TERRACE.x0 + 0.2, top[1]], lip], tTop, tLip))
-  m.push(rest(lip, tLip, land - fallT))
-  m.push(fly(lip, onPlate(land), land - fallT, land))
+  m.push(rest(lip, tLip, land - fallT - 0.12))
+  m.push(roll([lip, over], land - fallT - 0.12, land - fallT, 'in'))
+  m.push(fly(over, onPlate(land), land - fallT, land))
   // Nothing gives. Off the plate's end to the floor, and back along the hall to his seat.
   m.push(ride(onPlate, land, land + 0.5))
   const floor: Pt = [826.98, fy]
