@@ -224,9 +224,13 @@ function drawSiren(g: Paint, foot: Pt, i: number, shipX: number): void {
   ]
   blob(ctx, body)
   fill(ctx, SIREN)
-  // The side away from the sun in shade: the drape's long fall down her back.
+  // The side away from the sun in shade: the drape's long fall down her back, inside her outline (its straight corner
+  // at the hem stood out of the body's rounded one, a pale wedge past her ink at the back of the hem).
+  ctx.save()
+  ctx.clip()
   poly(ctx, [[-0.38, 0], [-0.3, -H * 0.18], [-0.16, -H * 0.36], [-0.13, -H * 0.56], [-0.12, -H * 0.72], [-0.04, -H * 0.5], [-0.06, -H * 0.2], [0.02, 0]])
   fill(ctx, rgba(SIREN_SHADE, 0.7))
+  ctx.restore()
   blob(ctx, body)
   stroke(g, INK, 1.8)
   // The arm towards the ship: down in her lap while it is far, lifted and reaching after it as it passes nearest. She
