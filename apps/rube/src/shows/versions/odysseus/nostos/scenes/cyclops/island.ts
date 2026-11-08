@@ -274,9 +274,14 @@ function drawInside(g: Paint, t: number): void {
     ctx.fill()
   }
   ctx.restore()
-  // The rock under the floor, cut through with it: a plain dark band down to the water, so the floor is a floor.
+  // The rock under the floor, cut through with it: a plain dark band down to the water, so the floor is a floor. Its
+  // back end runs down the near edge of the cleft behind the back wall, into whose dark it goes (run on square past
+  // the wall's foot, it ended in a box corner on the rock face, 165-170 s).
+  const [[ax, ay], [bx, by]] = [CLEFTS[1][4], CLEFTS[1][5]]
+  const edge = (y: number): number => ax + ((bx - ax) * (y - ay)) / (by - ay)
+  poly(ctx, [[MOUTH.x1 - 0.02, FLOOR + 0.12], [edge(FLOOR + 0.12) + 0.02, FLOOR + 0.12], [edge(0) + 0.02, 0], [MOUTH.x1 - 0.02, 0]])
   ctx.fillStyle = SECTION
-  ctx.fillRect(MOUTH.x1 - 0.02, FLOOR + 0.12, BACK - MOUTH.x1 + 0.4, -FLOOR - 0.12)
+  ctx.fill()
   // The rock's cut edge round the inside.
   ctx.beginPath()
   CAVE.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
