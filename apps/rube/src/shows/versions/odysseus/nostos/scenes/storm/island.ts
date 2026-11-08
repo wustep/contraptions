@@ -122,10 +122,14 @@ export function drawIsland(g: Paint): void {
   }
   // Dry scrub on the near slope, below the pasture's edge: a few low dark clumps, bigger as they come down towards us.
   for (const [x, dy, w] of [[501.2, 0.55, 0.42], [505.0, 0.95, 0.55], [510.6, 0.7, 0.5], [515.2, 1.1, 0.6], [520.4, 0.6, 0.4]] as const) {
+    // Two domes on one foot, each its own shape (joined in one, the join and the close crossed: a notched foot).
     const y = ground(x) + dy
     ctx.beginPath()
-    ctx.ellipse(x, y, w, w * 0.42, 0, Math.PI, 0)
-    ctx.ellipse(x + w * 0.55, y + 0.02, w * 0.55, w * 0.3, 0, Math.PI, 0)
+    ctx.moveTo(x - w, y)
+    ctx.ellipse(x, y, w, w * 0.42, 0, Math.PI, Math.PI * 2)
+    ctx.closePath()
+    ctx.moveTo(x, y)
+    ctx.ellipse(x + w * 0.55, y, w * 0.55, w * 0.3, 0, Math.PI, Math.PI * 2)
     ctx.closePath()
     fill(ctx, mix(lit(OLIVE), lit(GRASS_SHADE), 0.35))
   }
