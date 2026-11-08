@@ -120,7 +120,8 @@ const REAR: Pose = {
   eye: [103.85, -9.2],
   shoulder: [102.4, -8.7],
   elbow: [104.6, -8.0],
-  hand: [103.95, -9.25],
+  // Over the eye, its fingers under the roof: a little higher, they came up through the roof's cut edge (171-174 s).
+  hand: [103.95, -9.13],
 }
 
 /** Sitting in the doorway, blind, the head hung, the hand across the door. */
