@@ -16,6 +16,10 @@ import { FIGHT } from '../src/shows/versions/odysseus/nostos/scenes/ithaca/battl
 import { WRECK_STRIKES } from '../src/shows/versions/odysseus/nostos/scenes/wreck'
 import { FIRE, KNEEL } from '../src/shows/versions/odysseus/nostos/scenes/storm/island'
 import type { NostosShow } from '../src/shows/versions/odysseus/nostos/show'
+import { skyAt } from '../src/shows/versions/odysseus/nostos/world/sky'
+import { layer } from '../src/shows/versions/odysseus/nostos/world/depth'
+import { frameH } from '../src/shows/versions/odysseus/nostos/draw'
+import { atLoom, shedAt } from '../src/shows/versions/odysseus/nostos/scenes/ithaca/loom'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 
@@ -133,6 +137,39 @@ export function checkNostos(perf: Performance, version: ShowVersion, check: Chec
     prevCam = f
   }
   check('nostos: the hero never jumps in shot (no more than 0.05 cells in 2 ms) but across a dissolve', heroJump <= 0.05, `${heroJump.toFixed(3)} at ${heroAt.toFixed(3)} s`)
+
+  // The light changes with the camera at a bare cut, never a frame before it or after it: no frame shows one shot in
+  // the other's light (the dead's light came on 20 ms before the cut to their shore). The bolt's flash is the one light
+  // that comes up after its cut, over its first frames, by design; but not before it.
+  const hex = (c: string) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16))
+  const lightStep = (a: number, b: number) => {
+    const A = skyAt(a)
+    const B = skyAt(b)
+    return Math.max(...(['top', 'low', 'far', 'near', 'body', 'lit'] as const).flatMap((k) => hex(A[k]).map((v, i) => Math.abs(v - hex(B[k])[i]))))
+  }
+  const lightOff = show.cameraCuts.filter((c) => !perf.blend?.(c + 0.01)).flatMap((c) => {
+    const before = lightStep(c - 1 / 60, c - 1e-4)
+    const after = Math.abs(c - M.cut) < 1e-3 ? 0 : lightStep(c + 1e-4, c + 1 / 60)
+    return before > 3 || after > 3 ? [`${c.toFixed(3)} (${before} before, ${after} after)`] : []
+  })
+  check('nostos: the light never changes in the frame before or after a bare cut', lightOff.length === 0, lightOff.join(', '))
+
+  // The loom's heddle turns over between passes; it never jumps across the warp from one frame to the next.
+  let shedJump = 0
+  let shedAt0 = 0
+  for (let t = 0; t + 1 / 60 < perf.duration && atLoom(t + 1 / 60); t += 1 / 240) {
+    const d = Math.abs(shedAt(t + 1 / 60) - shedAt(t))
+    if (d > shedJump) { shedJump = d; shedAt0 = t }
+  }
+  check('nostos: the loom\'s heddle never moves more than a third of its swing in a frame', shedJump <= 0.008, `${shedJump.toFixed(4)} at ${shedAt0.toFixed(3)} s`)
+
+  // A stage taller than 16:9 sees more round the same frame through the same lens: the discs and far layers keep the
+  // size they have against the world (on a portrait phone they were drawn three and four times too big).
+  const wide = { x0: -8.9, x1: 8.9, y0: -5, y1: 5, cx: 0, cy: 0, h: 10 }
+  const tall = { x0: -8.9, x1: 8.9, y0: -21, y1: 21, cx: 0, cy: 0, h: 42 }
+  check('nostos: the lens and the sky\'s discs go by the composed frame, not the stage, so a tall phone draws far things their size',
+    Math.abs(frameH(tall) - frameH(wide)) < 0.02 && Math.abs(layer(tall, 30).s - layer(wide, 30).s) < 1e-3 && Math.abs(layer(tall, 120).s - layer(wide, 120).s) < 1e-3,
+    `frameH ${frameH(wide).toFixed(2)} / ${frameH(tall).toFixed(2)}, s(30) ${layer(wide, 30).s.toFixed(3)} / ${layer(tall, 30).s.toFixed(3)}`)
   check('nostos: the camera never jumps (no more than 1% of the frame in 2 ms) but at a cut or across a dissolve', camJump <= 0.01, `${camJump.toFixed(4)} at ${camAt.toFixed(3)} s`)
   check('nostos: no one comes, goes or jumps in shot', pops.length === 0, pops.slice(0, 10).join(', '))
 }

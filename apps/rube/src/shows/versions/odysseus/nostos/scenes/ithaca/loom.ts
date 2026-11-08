@@ -49,7 +49,7 @@ const BEAT = 0.22
  * The shed at `t`: how far the heddle rod sits off its middle, one way after an even count of passes and the other
  * after an odd. It turns over across `BEAT` after each pass lands, so it is never a jump from one frame to the next.
  */
-function shedAt(t: number): number {
+export function shedAt(t: number): number {
   const side = (n: number) => (n % 2 === 0 ? 1 : -1)
   const k = passesBy(t)
   if (k === 0) return side(0) * 0.012
