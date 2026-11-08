@@ -67,13 +67,18 @@ const HULL: Pt[] = [
   [1.9, -0.3],
   [1.3, DECK],
   [-1.2, DECK],
+  // The stern's post: up its forward face, the hook curling forward over the deck at its top, and down its after face.
+  // (Its after face ran forward of its forward face, so the outline crossed itself and the post pinched to a point:
+  // a teardrop on a stalk.)
   [-1.75, -0.32],
-  [-2.05, -0.6],
-  [-2.1, -0.95], // the stern's tail, rising
-  [-1.95, -1.18],
-  [-1.8, -1.1], // and curling back over
-  [-1.95, -0.88],
-  [-1.98, -0.6],
+  [-2.0, -0.62],
+  [-2.03, -0.9],
+  [-1.89, -0.99],
+  [-1.78, -1.08], // the hook's tip
+  [-1.95, -1.21],
+  [-2.15, -1.08],
+  [-2.18, -0.86],
+  [-2.2, -0.58],
   [-2.2, -0.2],
   [-2.05, 0.18],
   [-1.6, 0.38],
