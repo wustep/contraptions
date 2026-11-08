@@ -323,11 +323,14 @@ export function ithacaActors(): Actor[] {
     { id: TELEMACHUS_ID, color: TELEMACHUS, rim: TELEMACHUS_RIM, size: TELEMACHUS_SIZE, path: telemachusPath(), turn: -0.6 },
     // Each suitor faces his own way at the feast, a few towards each other, one at his cup. Antinous is the biggest and
     // the darkest of them, and after the arrow the colour goes out of him; so it goes out of each of them he throws.
+    // They are inside the house: from the dissolve to the west, where the house is one dark shape shut against the
+    // sunset, they are not drawn (they showed as discs on its wall, 514-549 s, wherever the frame took in the house).
     ...suitors.map(({ path, dies }, i): Actor =>
       i === ANTINOUS_I
-        ? { id: SUITORS_ID + i, color: ANTINOUS, rim: ANTINOUS_RIM, size: ANTINOUS_SIZE, path, turn: -0.9, colorAt: (t) => mix(ANTINOUS, DEAD, 0.9 * smooth(t, TRIAL.strike + 0.2, TRIAL.strike + 1.4)), under: (t) => t > TRIAL.strike + 0.4 }
+        ? { id: SUITORS_ID + i, color: ANTINOUS, rim: ANTINOUS_RIM, size: ANTINOUS_SIZE, path, turn: -0.9, on: (t) => t < TRIAL.fade, colorAt: (t) => mix(ANTINOUS, DEAD, 0.9 * smooth(t, TRIAL.strike + 0.2, TRIAL.strike + 1.4)), under: (t) => t > TRIAL.strike + 0.4 }
         : {
             id: SUITORS_ID + i,
+            on: (t) => t < TRIAL.fade,
             color: SUITOR,
             rim: SUITOR_RIM,
             size: SUITOR_SIZE,
