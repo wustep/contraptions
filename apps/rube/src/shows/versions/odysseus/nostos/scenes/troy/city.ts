@@ -590,6 +590,14 @@ export function drawDrain(g: Paint): void {
   const [ax, ay] = DRAIN.from
   const [bx, by] = drainExit()
   const r = DRAIN.r
+  // Under the hill only: its mouth opens along the slope where the bore meets the surface. (It ran its full height to
+  // where the slope comes down to its floor, so its top stood out of the hillside as a square block in the air.)
+  ctx.save()
+  const skin: Pt[] = []
+  for (let x = ax - 0.5; x < bx + 0.5; x += 0.04) skin.push([x, ground(x)])
+  skin.push([bx + 0.5, ground(bx + 0.5)])
+  poly(ctx, [...skin, [bx + 0.5, ay + 1], [ax - 0.5, ay + 1]])
+  ctx.clip()
   poly(ctx, [[ax, ay], [ax, ay - 2 * r], [bx, by - 2 * r], [bx, by]])
   fill(ctx, tone('#24170F', t))
   ctx.beginPath()
@@ -598,6 +606,7 @@ export function drawDrain(g: Paint): void {
   ctx.moveTo(ax, ay - 2 * r)
   ctx.lineTo(bx, by - 2 * r)
   stroke(g, tone('#140D09', t), 1.3)
+  ctx.restore()
 }
 
 /** Where the drain comes out on the hillside: the x where the hill comes down to the drain's floor. */
