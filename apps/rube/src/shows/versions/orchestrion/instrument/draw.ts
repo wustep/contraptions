@@ -142,6 +142,23 @@ export function makeDrawing(perf: Performance, list: Note[]): Drawing {
     h.v.push(n.kind === 'pipe' ? 13.5 * Math.min(1.2, n.v / 18) : n.kind === 'chime' ? 13.5 : n.kind === 'pipe-knock' ? 0 : n.v)
     h.u.push(n.u)
   }
+  /**
+   * Every strike, for its flash and its ring: where, how hard (the blow, the ball's mass and speed, against an ivory
+   * ball's at the design speed), and in which bay's light. And each ball's own strikes, so it lights as it touches.
+   */
+  const strikes = list
+    .filter((n) => n.kind === 'bar' || n.kind === 'string' || n.kind === 'chime')
+    .map((n) => ({ t: n.t, x: n.x, y: n.y, blow: n.kind === 'chime' ? 1.6 : n.mass * (n.v / 13.5), hue: BAYS[m.parts[n.part].bay]?.hue ?? COLORS.light, chime: n.kind === 'chime' }))
+  const strikeTimes = strikes.map((q) => q.t)
+  const touchesOf = new Map<number, { t: number[]; hue: string[]; blow: number[] }>()
+  for (const n of list) {
+    if (n.ball < 0 || (n.kind !== 'bar' && n.kind !== 'string')) continue
+    let b = touchesOf.get(n.ball)
+    if (!b) touchesOf.set(n.ball, (b = { t: [], hue: [], blow: [] }))
+    b.t.push(n.t)
+    b.hue.push(BAYS[m.parts[n.part].bay]?.hue ?? COLORS.light)
+    b.blow.push(n.mass * (n.v / 13.5))
+  }
   const pipeBreath = new Map<number, { tIn: number[]; tOut: number[] }>()
   for (const g of perf.passages) {
     let b = pipeBreath.get(g.part)
@@ -225,6 +242,48 @@ export function makeDrawing(perf: Performance, list: Note[]): Drawing {
     // The trough's end stop on the right.
     g.fillStyle = COLORS.wood
     g.fillRect(m.troughX1 + 0.12, m.troughY(m.troughX1) - 0.45, 0.16, 0.6)
+  }
+
+  /** How far open the trapdoor at the trough's end is, 0 to 1: quickly open as a ball comes to it, and shut again. */
+  const trapTimes = perf.trapped.map((q) => q.t)
+  const trapOpen = (t: number): number => {
+    const i = lastIndex(trapTimes, t)
+    if (i < 0) return 0
+    const age = t - trapTimes[i]
+    return age < 0.06 ? ease(age / 0.06) : age < 0.32 ? 1 : 1 - ease((age - 0.32) / 0.18)
+  }
+
+  /** The trapdoor in the trough's floor at its end, and the chute under the lift's foot down to the bowl. */
+  function chute(g: G, t: number, px: number): void {
+    const pts = m.chute
+    const off = BALL_R + 0.04
+    // The chute: a channel under the balls' centres, from below the trapdoor to its lip over the bowl.
+    g.strokeStyle = COLORS.wood
+    g.lineWidth = 0.09
+    g.lineCap = 'round'
+    g.beginPath()
+    g.moveTo(pts[1][0] + 0.12, pts[1][1] + off)
+    g.lineTo(pts[2][0], pts[2][1] + off)
+    g.stroke()
+    g.strokeStyle = COLORS.felt
+    g.lineWidth = Math.max(px, 0.03)
+    g.beginPath()
+    g.moveTo(pts[1][0] + 0.12, pts[1][1] + off - 0.04)
+    g.lineTo(pts[2][0], pts[2][1] + off - 0.04)
+    g.stroke()
+    // The trapdoor: a brass leaf in the trough's floor, hinged at its far end, swung down as it lets a ball through.
+    const y = m.troughY(m.troughX0) + 0.06
+    const hx = m.troughX0 + 0.26
+    g.save()
+    g.translate(hx, y)
+    g.rotate(-trapOpen(t) * 1.15)
+    g.fillStyle = COLORS.brassDark
+    g.fillRect(-0.5, -0.03, 0.5, 0.06)
+    g.restore()
+    g.fillStyle = COLORS.brass
+    g.beginPath()
+    g.arc(hx, y, 0.04, 0, Math.PI * 2)
+    g.fill()
   }
 
   function rail(g: G, t: number, px: number): void {
@@ -466,7 +525,7 @@ export function makeDrawing(perf: Performance, list: Note[]): Drawing {
     const n = stepAt(perf.bowl, t)
     const into = perf.bowled.slice(0, n).map((b) => perf.balls[b.ball])
     const x = m.bowlX
-    const y = m.liftFoot + 0.12
+    const y = m.bowlY
     const w = 1.45
     pile(g, x, y - 0.03, 2.45, into)
     g.fillStyle = COLORS.wood
@@ -650,6 +709,22 @@ export function makeDrawing(perf: Performance, list: Note[]): Drawing {
         y += (tr.y[i + 1] - y) * f
       }
       ball(g, x, y, 1, perf.balls[tr.id])
+      // As it touches a part, the ball catches that part's light, for an instant.
+      const touch = touchesOf.get(tr.id)
+      const j = touch ? lastIndex(touch.t, t) : -1
+      const age = j >= 0 ? t - touch!.t[j] : Infinity
+      if (age < 0.16) {
+        const a = Math.min(0.8, 0.35 + 0.3 * touch!.blow[j]) * (1 - age / 0.16) ** 2
+        const r = BALL_R * 2.1
+        g.save()
+        g.globalCompositeOperation = 'lighter'
+        const grad = g.createRadialGradient(x, y, BALL_R * 0.3, x, y, r)
+        grad.addColorStop(0, rgba(mix(touch!.hue[j], COLORS.light, 0.5), a))
+        grad.addColorStop(1, rgba(touch!.hue[j], 0))
+        g.fillStyle = grad
+        g.fillRect(x - r, y - r, r * 2, r * 2)
+        g.restore()
+      }
     }
   }
 
@@ -667,7 +742,21 @@ export function makeDrawing(perf: Performance, list: Note[]): Drawing {
     }
     for (const b of bars) {
       const a = envelope(hits.get(b.id), t, barRing(b.hz, b.e >= METAL_E) * 0.6)
-      spot((b.ax + b.bx) / 2, (b.ay + b.by) / 2, 0.45 + b.len * 0.5, hue(b.bay), a * 0.22)
+      if (a < 0.01) continue
+      // Along the bar: the light lies the length of what is ringing, not round it.
+      const r = b.len * 0.62 + 0.22
+      g.save()
+      g.translate((b.ax + b.bx) / 2, (b.ay + b.by) / 2)
+      g.rotate(Math.atan2(b.by - b.ay, b.bx - b.ax))
+      g.scale(1, 0.42)
+      const grad = g.createRadialGradient(0, 0, 0, 0, 0, r)
+      grad.addColorStop(0, rgba(mix(hue(b.bay), COLORS.light, 0.25), Math.min(0.5, a * 0.34)))
+      grad.addColorStop(0.55, rgba(hue(b.bay), Math.min(0.22, a * 0.14)))
+      grad.addColorStop(1, rgba(hue(b.bay), 0))
+      g.fillStyle = grad
+      g.fillRect(-r, -r, r * 2, r * 2)
+      g.restore()
+      spot((b.ax + b.bx) / 2, (b.ay + b.by) / 2, 0.45 + b.len * 0.5, hue(b.bay), a * 0.12)
     }
     for (const s of strings) {
       const h = hits.get(s.id)
@@ -696,12 +785,70 @@ export function makeDrawing(perf: Performance, list: Note[]): Drawing {
         a = Math.max(a, t <= b.tOut[i] ? ease((t - b.tIn[i]) / 0.06) : Math.exp(-(t - b.tOut[i]) / 0.6))
         i--
       }
+      // Its breath out of the foot as the ball leaves: a puff of air, spreading.
+      let k = lastIndex(b.tOut, t)
+      while (k >= 0 && t - b.tOut[k] < 0.9) {
+        const f = (t - b.tOut[k]) / 0.9
+        const r = 0.18 + 0.75 * (1 - (1 - f) ** 3)
+        g.strokeStyle = rgba(hue(p.bay), 0.3 * (1 - f) ** 2)
+        g.lineWidth = 0.035 * (1 - f) + 0.01
+        g.beginPath()
+        g.ellipse(p.bx, p.by + 0.12 + f * 0.25, r, r * 0.38, 0, 0, Math.PI * 2)
+        g.stroke()
+        k--
+      }
       if (a < 0.01) continue
       const grad = g.createRadialGradient(p.ax, p.ay, 0, p.ax, p.ay, 1.3)
       grad.addColorStop(0, rgba(hue(p.bay), a * 0.28))
       grad.addColorStop(1, rgba(hue(p.bay), 0))
       g.fillStyle = grad
       g.fillRect(p.ax - 1.3, p.ay - 1.3, 2.6, 2.6)
+      // The column itself, lit where its air presses hardest: an open pipe's note has its pressure at the middle and
+      // none at the open ends, so the light is a sine along the bore, and it breathes a little with the air.
+      const w = PIPE_BORE + PIPE_WALL * 2
+      const shimmer = 1 + 0.12 * Math.sin(2 * Math.PI * 5.3 * t + p.id)
+      const col = g.createLinearGradient(0, p.ay, 0, p.by)
+      for (let j = 0; j <= 8; j++) col.addColorStop(j / 8, rgba(hue(p.bay), a * 0.17 * shimmer * Math.sin((Math.PI * j) / 8)))
+      g.fillStyle = col
+      g.fillRect(p.ax - w / 2, p.ay, w, p.len)
+      const halo = g.createLinearGradient(0, p.ay, 0, p.by)
+      for (let j = 0; j <= 8; j++) halo.addColorStop(j / 8, rgba(hue(p.bay), a * 0.06 * Math.sin((Math.PI * j) / 8)))
+      g.fillStyle = halo
+      g.fillRect(p.ax - w * 1.4, p.ay, w * 2.8, p.len)
+    }
+    g.restore()
+  }
+
+  /**
+   * Every strike, seen: a flash where the ball met the part, and a thin ring of the bay's light going out from it as
+   * the sound does, as big as the blow (a brass ball's is twice an ivory one's) and gone in two thirds of a second.
+   */
+  function rings(g: G, t: number, px: number): void {
+    const LIFE = 0.65
+    let i = lastIndex(strikeTimes, t)
+    if (i < 0) return
+    g.save()
+    g.globalCompositeOperation = 'lighter'
+    for (; i >= 0 && t - strikes[i].t < LIFE; i--) {
+      const q = strikes[i]
+      const age = t - q.t
+      const f = age / LIFE
+      const size = q.chime ? 1.9 : Math.min(1.7, 0.45 + 0.55 * Math.pow(q.blow, 0.75))
+      const strength = q.chime ? 0.5 : Math.min(1, 0.35 + 0.45 * q.blow)
+      const r = size * (0.12 + 0.88 * (1 - (1 - f) ** 3))
+      g.strokeStyle = rgba(mix(q.hue, COLORS.light, 0.2), 0.34 * strength * (1 - f) ** 2)
+      g.lineWidth = Math.max(px, 0.03 * (1 - f) + 0.008)
+      g.beginPath()
+      g.arc(q.x, q.y, r, 0, Math.PI * 2)
+      g.stroke()
+      if (age < 0.14) {
+        const fr = 0.18 + 0.2 * size
+        const flash = g.createRadialGradient(q.x, q.y, 0, q.x, q.y, fr)
+        flash.addColorStop(0, rgba(mix(q.hue, COLORS.light, 0.65), 0.6 * strength * (1 - age / 0.14) ** 2))
+        flash.addColorStop(1, rgba(q.hue, 0))
+        g.fillStyle = flash
+        g.fillRect(q.x - fr, q.y - fr, fr * 2, fr * 2)
+      }
     }
     g.restore()
   }
@@ -714,6 +861,7 @@ export function makeDrawing(perf: Performance, list: Note[]): Drawing {
       const px = 1 / k
       background(g, t)
       frame(g, px)
+      chute(g, t, px)
       chimesAndHammers(g, t, px)
       lift(g, t, px)
       track(g, px)
@@ -734,6 +882,7 @@ export function makeDrawing(perf: Performance, list: Note[]): Drawing {
       for (const q of pipes) pipe(g, q, t, px)
       pipeGlows(g, t)
       glows(g, t)
+      rings(g, t, px)
       g.restore()
     },
   }

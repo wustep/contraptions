@@ -97,6 +97,8 @@ export function checkOrchestrion(perf: Performance, version: ShowVersion, check:
     brassOut.length === 10 && brassOut.every((b) => b.t < tickTime(CODA)) && codaReleases.length === 1 && run.balls[codaReleases[0].ball] === 'glass' &&
     Math.abs(codaReleases[0].t - tickTime(CODA)) < 1e-9)
   check('orchestrion: the hopper\'s track always has room for every ball waiting on it', run.queue.most <= run.queue.room, `${run.queue.most} of ${run.queue.room}`)
+  check('orchestrion: every ball the trap takes is seen going down the chute into the bowl, in the order it was taken',
+    run.trapped.length === run.bowled.length && run.trapped.every((q, i) => run.bowled[i].ball === q.ball && run.bowled[i].t > q.t + 0.5 && run.bowled[i].t < q.t + 2))
   check('orchestrion: a chime is struck at every change of chord, the new chord\'s',
     run.strikes.length === CODA / TICKS_PER_BAY + 1 && run.strikes.every((s, i) => m.parts[s.part].bay === bayAt(i * TICKS_PER_BAY)))
 

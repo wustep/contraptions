@@ -87,6 +87,8 @@ const RETIRES = [190, 196, 202, 210, 218]
 /** From this tick, in the last chord before the coda, the trap takes every ball that comes to it. */
 const EMPTY = CODA - 14
 
+/** Down the chute to the bowl, cells a second. */
+const CHUTE_SPEED = 3.4
 /** The track's balls roll this fast, cells a second. */
 const TRACK_SPEED = 2.2
 /** The trough's. */
@@ -95,7 +97,7 @@ const TROUGH_SPEED = 4.2
 export const LIFT_SPEED = 3
 export const CUP = 1.25
 
-export type Mode = 'jar' | 'track' | 'free' | 'trough' | 'wait' | 'lift' | 'bowl'
+export type Mode = 'jar' | 'track' | 'free' | 'trough' | 'wait' | 'lift' | 'chute' | 'bowl'
 
 /** Where a ball is, sampled: times and positions, and a flag for where it is not drawn by itself (the jar, the bowl). */
 export interface Track {
@@ -147,6 +149,8 @@ export interface Performance {
   balls: BallKind[]
   /** The balls into the bowl, in order. */
   bowled: { t: number; ball: number }[]
+  /** When the trap opened for each of them, at the trough's end. */
+  trapped: { t: number; ball: number }[]
   /** The most balls ever waiting on the hopper's track at once, and how many it has room for. */
   queue: { most: number; at: number; room: number }
 }
@@ -202,6 +206,22 @@ export function perform(lenient = false, retires: number[] = RETIRES): Performan
   const kinds = FEEDS.map((f) => f.kind)
   const feedTicks = FEEDS.map((f) => f.tick)
   const bowled: Performance['bowled'] = []
+  const trapped: Performance['trapped'] = []
+  // The chute, walked at a ball's rolling speed.
+  const legs = machine.chute.slice(1).map(([x, y], i) => Math.hypot(x - machine.chute[i][0], y - machine.chute[i][1]))
+  const chuteLen = legs.reduce((a, b) => a + b, 0)
+  const chuteAt = (d: number): [number, number] => {
+    for (let i = 0; i < legs.length; i++) {
+      if (d <= legs[i] || i === legs.length - 1) {
+        const f = Math.min(1, d / legs[i])
+        const [ax, ay] = machine.chute[i]
+        const [bx, by] = machine.chute[i + 1]
+        return [ax + (bx - ax) * f, ay + (by - ay) * f]
+      }
+      d -= legs[i]
+    }
+    return machine.chute[machine.chute.length - 1]
+  }
   const states: State[] = FEEDS.map((_, id) => ({ id, mode: 'jar', s: 0, x: 0, y: 0, vx: 0, vy: 0, until: Infinity, x0: 0, t0: 0 }))
   const tracks: Track[] = states.map((s) => ({ id: s.id, t: [], x: [], y: [], shown: [] }))
   const contacts: Contact[] = []
@@ -361,13 +381,15 @@ export function perform(lenient = false, retires: number[] = RETIRES): Performan
         st.y = machine.troughY(st.x) - BALL_R
         const heavy = (trap && kinds[st.id] === 'brass') || emptying
         if (t >= st.until && (retiring > 0 || heavy)) {
-          // The trap at the trough's end: into the bowl, to rest. Set for weight, a brass ball's falls open under it.
+          // The trap at the trough's end opens under it (set for weight, a brass ball's falls open under it), and it
+          // runs down the chute into the bowl, to rest.
           if (!heavy) retiring--
-          st.mode = 'bowl'
-          knocks.push({ t, kind: 'bowl', v: TROUGH_SPEED, x: machine.bowlX, y: machine.liftFoot, ball: st.id })
-          record(st, t, false)
-          bowl.push([t, count('bowl')])
-          bowled.push({ t, ball: st.id })
+          st.mode = 'chute'
+          st.t0 = t
+          st.until = t + chuteLen / CHUTE_SPEED
+          knocks.push({ t, kind: 'flap', v: 1.4, x: machine.troughX0, y: machine.liftFoot, ball: st.id })
+          trapped.push({ t, ball: st.id })
+          record(st, t)
         } else if (t >= st.until) {
           // Waits for the next cup to come round the foot.
           const phase = (t * LIFT_SPEED) / CUP
@@ -376,6 +398,15 @@ export function perform(lenient = false, retires: number[] = RETIRES): Performan
           st.x = machine.liftX
           st.y = machine.liftFoot - BALL_R
           record(st, t)
+        } else if (sampleKinematic) record(st, t)
+      } else if (st.mode === 'chute') {
+        ;[st.x, st.y] = chuteAt(Math.min(chuteLen, (t - st.t0) * CHUTE_SPEED))
+        if (t >= st.until) {
+          st.mode = 'bowl'
+          knocks.push({ t, kind: 'bowl', v: CHUTE_SPEED, x: machine.bowlX, y: machine.bowlY, ball: st.id })
+          record(st, t, false)
+          bowl.push([t, count('bowl')])
+          bowled.push({ t, ball: st.id })
         } else if (sampleKinematic) record(st, t)
       } else if (st.mode === 'wait' && t >= st.until) {
         st.mode = 'lift'
@@ -430,5 +461,5 @@ export function perform(lenient = false, retires: number[] = RETIRES): Performan
       tr.shown.unshift(false)
     }
   }
-  return { machine, duration: end, tracks, contacts, passages, knocks, strikes, flaps, ticks, releases, jar, bowl, balls: kinds, bowled, queue: { most, at: mostAt, room: Math.floor(trackLen / SLOT) } }
+  return { machine, duration: end, tracks, contacts, passages, knocks, strikes, flaps, ticks, releases, jar, bowl, balls: kinds, bowled, trapped, queue: { most, at: mostAt, room: Math.floor(trackLen / SLOT) } }
 }

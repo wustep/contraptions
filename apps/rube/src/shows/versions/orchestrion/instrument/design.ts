@@ -101,8 +101,14 @@ export interface Machine {
   track: { x0: number; y0: number; x1: number; y1: number }
   /** The jar over the track, and where on the track it lets a ball down (cells up the track from the escapement). */
   jar: { x: number; bottom: number; top: number; w: number; s: number }
-  /** The bowl the trap lets balls down into, beside the lift's foot. */
+  /** The bowl the trap lets balls down into, beside the lift's foot, below the trough's end. */
   bowlX: number
+  bowlY: number
+  /**
+   * The way from the trap to the bowl: through the trapdoor in the trough's floor at its end, down a chute under the
+   * lift's foot, and off its end into the bowl. A ball's centre, in order.
+   */
+  chute: [number, number][]
   /** The beam the chimes hang from. */
   beamY: number
   /** The gate flaps: which bay, and its gap on the rail. */
@@ -215,16 +221,24 @@ export function buildMachine(): Machine {
   const jarBottom = track.y1 + ((track.y0 - track.y1) / trackLen) * jarS - BALL_R - 0.16
   const jar = { x: jarX, bottom: jarBottom, top: jarBottom - 2.75, w: 1.75, s: jarS }
   const bowlX = liftX - 2.2
+  const liftFoot = troughY(troughX0)
+  const bowlY = liftFoot + 1.05
+  const chute: [number, number][] = [
+    [troughX0, liftFoot - BALL_R],
+    [troughX0 - 0.08, liftFoot + 0.42],
+    [bowlX + 0.95, liftFoot + 0.78],
+    [bowlX + 0.35, bowlY - 0.45],
+  ]
 
   // What there is to see: the bowl at the left, the beam and the jar at the top, the trough's foot at the bottom.
   const box = {
     x0: bowlX - 1.75,
     y0: Math.min(beamY - 0.3, jar.top - 0.2),
     x1: Math.max(troughX1, ...bays.map((b) => b.box.x1)) + 0.45,
-    y1: troughY(troughX0) + 0.3,
+    y1: Math.max(troughY(troughX0) + 0.3, bowlY + 0.3),
   }
 
-  return { parts, segs, sensors, bays, troughY, troughX0, troughX1, liftX, liftFoot: troughY(troughX0), liftHead, track, jar, bowlX, beamY, gates, rail: { x0: railX0, x1: lastGate }, box }
+  return { parts, segs, sensors, bays, troughY, troughX0, troughX1, liftX, liftFoot, liftHead, track, jar, bowlX, bowlY, chute, beamY, gates, rail: { x0: railX0, x1: lastGate }, box }
 }
 
 function designBay(bay: Bay, k: number, gateX: number, add: (part: Omit<Part, 'id'>) => Part, segs: Seg[], sensors: Sensor[]): BayPlan {

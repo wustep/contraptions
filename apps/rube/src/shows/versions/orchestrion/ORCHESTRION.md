@@ -148,11 +148,24 @@ audio context at all (the headless checks), the show is the same, silent.
 ## The picture
 
 A dim room and a lamp. The parts are drawn in their own materials (aluminium and rosewood bars on felt pins at their
-nodes, 0.224 of the way in, as a real free bar is held), quiet until struck. What sounds glows in its bay's light for
-as long as it rings, with the same decay its voice has. A string trembles, and its swing is drawn as the lens a
-long exposure would see. A pipe's brass warms while a ball is in it. The camera holds the instrument and leans toward
-what is sounding. A 16:9 frame tall enough for one bay is already most of the instrument wide, so it never cuts in
-close, except to follow the first ball out of the jar.
+nodes, 0.224 of the way in, as a real free bar is held), quiet until struck, and the balls in theirs: ivory, clear
+glass with the lamp gathered low in it, brass. Everything that sounds is seen sounding, in its bay's light, for as
+long as it rings, with the same decay its voice has (`draw.ts`):
+
+- **A strike** is a flash where the ball met the part, and a thin ring of light going out from it as the sound does,
+  as big as the blow: a brass ball's ring is twice an ivory one's. The ball itself catches the part's light for an
+  instant as it touches.
+- **A bar** lights along its length, not round it, and dips a hair and rings back.
+- **A string** trembles, its swing drawn as the lens a long exposure would see.
+- **A pipe** is lit inside where its air presses hardest: an open pipe's note has its pressure at the middle of the
+  bore and none at the open ends, so the light is a sine along the tube, breathing a little. Its brass warms while the
+  ball is in it, and a puff of air spreads from its foot as the ball leaves.
+- **A chime** swings on its cord and glows, its mallet drawn back as the gate's count comes round.
+- **The trap** is a brass leaf in the trough's floor at its end. It swings down under each ball it takes (with a small
+  knock), and the ball runs down a chute under the lift's foot into the bowl.
+
+The camera holds the instrument and leans toward what is sounding. A 16:9 frame tall enough for one bay is already
+most of the instrument wide, so it never cuts in close, except to follow the first ball out of the jar.
 
 ## Files
 
