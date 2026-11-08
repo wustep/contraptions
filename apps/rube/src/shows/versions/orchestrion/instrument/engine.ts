@@ -215,7 +215,9 @@ export function defineEngine() {
     }
 
     function bar(hz: number, v: number, u: number, metal: boolean, hard: number, gl: number, gr: number): Voice[] {
-      const tc = contactTime(v, (metal ? 0.00055 : 0.0009) * hard)
+      // A hard ball on a hard bar: a quarter of a millisecond on aluminium, half on rosewood, so the bar's
+      // second mode (four times the note) is in the attack, as it is on a struck vibraphone or marimba.
+      const tc = contactTime(v, (metal ? 0.00025 : 0.0005) * hard)
       const t1 = barRing(hz, metal)
       const ratios = metal ? [1, 3.99, 9.83] : [1, 3.93, 9.24]
       const f = ratios.map((q) => q * hz)
@@ -233,8 +235,9 @@ export function defineEngine() {
     function string(hz: number, v: number, u: number, hard: number, gl: number, gr: number): Voice {
       const T60 = stringRing(hz)
       const len = Math.ceil(T60 * sr)
-      // The loop: N whole samples, the loss filter's half a sample, and an all-pass for the rest.
-      const S = 0.5
+      // The loop: N whole samples, the loss filter's delay (S samples), and an all-pass for the rest. A light loss
+      // filter: a harp string's upper harmonics ring on, not dying in the first few periods.
+      const S = 0.3
       const period = sr / hz
       const whole = Math.floor(period - S - 0.1)
       const frac = period - S - whole
@@ -253,8 +256,8 @@ export function defineEngine() {
       }
       const pick = Math.max(1, Math.round(Math.min(u, 1 - u) * whole))
       const level = 0.55 * Math.pow(v / 13.5, 1.05)
-      // A soundboard's gentleness: the top above 3.5 kHz taken down, as a harp's wood does.
-      const soft = 1 - Math.exp((-2 * Math.PI * 3500) / sr)
+      // A soundboard's gentleness: the top above 4.5 kHz taken down, as a harp's wood does.
+      const soft = 1 - Math.exp((-2 * Math.PI * 4500) / sr)
       const block = decay(0.995)
       const fade = sr * 0.5
       let idx = 0
