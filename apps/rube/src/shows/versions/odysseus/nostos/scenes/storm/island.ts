@@ -111,10 +111,13 @@ export function drawIsland(g: Paint): void {
     [1, mix(lit(GRASS_SHADE), '#1E2420', 0.75)],
   ])
   ctx.fill()
-  // The beaches: a band of sand along the ground where it meets the water, either side.
+  // The beaches: a band of sand along the ground where it meets the water, either side, thinning out to nothing at both
+  // ends, up the hill and down under the water. (It was as thick at its ends as in its middle and stopped square: a
+  // notch against the grass, and a block of sand seen through the sea, 279-304 s.)
   for (const [a, b] of [[495.6, 499.6], [520.2, 523.8]] as const) {
     const top = pts.filter(([x]) => x >= a && x <= b)
-    poly(ctx, [...top, ...[...top].reverse().map(([x, y]): Pt => [x, y + 0.22])])
+    const deep = ([x, y]: Pt): Pt => [x, y + 0.22 * smooth(x, a, a + 0.9) * (1 - smooth(x, b - 0.9, b))]
+    poly(ctx, [...top, ...[...top].reverse().map(deep)])
     fill(ctx, lit(SAND))
   }
   // Dry scrub on the near slope, below the pasture's edge: a few low dark clumps, bigger as they come down towards us.
