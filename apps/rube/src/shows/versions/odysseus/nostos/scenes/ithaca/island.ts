@@ -72,6 +72,13 @@ const SCRUBS: [number, number, number][] = [
   [812.6, -9.02, 0.26],
   [829.6, -9.02, 0.32],
   [805.0, -0.4, 0.22],
+  // On the beds' ledges where they come out of the faces, and over the west cliff's edge.
+  [807.45, -7.1, 0.2],
+  [807.2, -4.6, 0.17],
+  [806.9, -2.1, 0.19],
+  [833.3, -4.2, 0.22],
+  [831.75, -6.9, 0.19],
+  [830.75, -8.95, 0.2],
 ]
 
 /** The olive trees on the top: where each stands, how tall, and how it leans. */
@@ -193,10 +200,11 @@ export function drawIsland(g: Paint): void {
   ctx.save()
   blob(ctx, OUTLINE)
   ctx.clip()
+  // Green scrub over the limestone, not bare earth: a hilltop the house is built on.
   poly(ctx, [[CLIFF_E.top, TOP], [CLIFF_W.top, TOP], [CLIFF_W.top - 0.4, TOP + 0.16], [CLIFF_E.top + 0.3, TOP + 0.2]])
-  fill(ctx, againstSun('#8C7F5E', t))
+  fill(ctx, againstSun('#6C7350', t))
   poly(ctx, [[CLIFF_E.top, TOP], [CLIFF_W.top, TOP], [CLIFF_W.top - 0.2, TOP + 0.05], [CLIFF_E.top + 0.15, TOP + 0.06]])
-  fill(ctx, againstSun('#A8996C', t))
+  fill(ctx, againstSun('#868E60', t))
   ctx.restore()
   for (const [x, y, r] of SCRUBS) drawScrub(g, x, y, r)
   for (const [x, h, lean] of OLIVES) drawOlive(g, x, TOP, h, lean)

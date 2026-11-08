@@ -25,6 +25,7 @@ import {
   WELL,
   WINDOW,
 } from './geo'
+import { KEEP_SPAN, drawKeep, keepOutline, merlons } from './keep'
 import { drawLoom } from './loom'
 import {
   BRONZE,
@@ -61,8 +62,9 @@ import { ARROW, armTip, arrowShown, arrowTail, arrowY, axeShiver, axeUp, drawOf,
  */
 
 const ink = (t: number) => mix('#2A231C', '#120E0B', nightness(t))
-/** Whether any of the house is in the frame: nothing of it stands west of the courtyard's wall (GATE.wall). */
-const IN_VIEW = (g: Paint) => !(g.view.x1 < GATE.wall[0] - 0.1 || g.view.x0 > 831 || g.view.y0 > -8.4 || g.view.y1 < -13)
+/** Whether any of the house is in the frame: its terraces, from under the courtyard to past the bastion, to its tower. */
+const IN_VIEW = (g: Paint) =>
+  !(g.view.x1 < KEEP_SPAN.x0 - 0.1 || g.view.x0 > Math.max(831, KEEP_SPAN.x1 + 0.1) || g.view.y0 > KEEP_SPAN.foot + 0.05 || g.view.y1 < KEEP_SPAN.top - 0.1)
 
 export function drawPalace(g: Paint): void {
   if (!IN_VIEW(g)) return
@@ -71,6 +73,7 @@ export function drawPalace(g: Paint): void {
     drawSilhouette(g)
     return
   }
+  drawKeep(g)
   drawCourtyard(g)
   drawShell(g)
   drawHallInside(g)
@@ -99,6 +102,11 @@ function drawShell(g: Paint): void {
   fill(ctx, stone)
   rect(ctx, ROOM.x0 - WALL - 0.06, ROOM.ceil - SLAB - 0.06, ROOM.x1 - ROOM.x0 + 2 * WALL + 0.12, 0.07)
   fill(ctx, shade)
+  // The flat roofs' crenellated edges: the terrace's parapet and the room's roof.
+  ctx.beginPath()
+  merlons(ctx, TERRACE.x0, TERRACE.x1 + WALL, TERRACE.y - 0.31)
+  merlons(ctx, ROOM.x0 - WALL - 0.06, ROOM.x1 + WALL + 0.06, ROOM.ceil - SLAB - 0.06)
+  fill(ctx, stone)
 }
 
 /** The courtyard: its back wall face-on, from the gate to the hall, the house's great jar by it, and the gate. */
@@ -109,6 +117,9 @@ function drawCourtyard(g: Paint): void {
   fill(ctx, mix(outdoors(STONE, t), outdoors(STONE_SHADE, t), 0.35))
   rect(ctx, x0, TOP - GATE.wallH - 0.06, HALL.x0 - x0, 0.06)
   fill(ctx, outdoors(STONE_SHADE, t))
+  ctx.beginPath()
+  merlons(ctx, x0, HALL.x0 - WALL, TOP - GATE.wallH - 0.06)
+  fill(ctx, mix(outdoors(STONE, t), outdoors(STONE_SHADE, t), 0.35))
   drawJar(g, 816.7, TOP)
   const timber = outdoors(TIMBER, t)
   for (const side of [-1, 1]) {
@@ -421,6 +432,7 @@ function drawSilhouette(g: Paint): void {
   ctx.rect(HALL.x0 - WALL, HALL.ceil - SLAB, HALL.x1 - HALL.x0 + 2 * WALL, HALL.floor - HALL.ceil + SLAB + 0.01)
   ctx.rect(ROOM.x0 - WALL, ROOM.ceil - SLAB, ROOM.x1 - ROOM.x0 + 2 * WALL, ROOM.floor - ROOM.ceil + SLAB + 0.01)
   ctx.rect(TERRACE.x0, TERRACE.y - 0.31, TERRACE.x1 - TERRACE.x0 + WALL, 0.32)
+  keepOutline(ctx)
   fill(ctx, againstSun(STONE_SHADE, t))
 }
 
@@ -462,6 +474,9 @@ export function overPalace(g: Paint): void {
   fill(ctx, stone)
   rect(ctx, x0, TOP - GATE.wallH - 0.05, GATE.x - GATE.half - x0, 0.05)
   fill(ctx, shade)
+  ctx.beginPath()
+  merlons(ctx, x0, GATE.x - GATE.half - 0.09, TOP - GATE.wallH - 0.05)
+  fill(ctx, stone)
   rect(ctx, GATE.x - GATE.half - 0.09, TOP - GATE.h - 0.09, 0.09, GATE.h + 0.09)
   fill(ctx, outdoors(TIMBER, t))
   void CLOTH
