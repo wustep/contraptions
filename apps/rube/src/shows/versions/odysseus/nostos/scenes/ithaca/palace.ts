@@ -477,7 +477,11 @@ export function overPalace(g: Paint): void {
   ctx.beginPath()
   merlons(ctx, x0, GATE.x - GATE.half - 0.09, TOP - GATE.wallH - 0.05)
   fill(ctx, stone)
-  rect(ctx, GATE.x - GATE.half - 0.09, TOP - GATE.h - 0.09, 0.09, GATE.h + 0.09)
+  // The near post, and the lintel's near end over the wall as at its far end (the wall, laid over it, cut the lintel
+  // off flush with this post, 437-441 s).
+  rect(ctx, GATE.x - GATE.half - 0.09, TOP - GATE.h, 0.09, GATE.h)
+  fill(ctx, outdoors(TIMBER, t))
+  rect(ctx, GATE.x - GATE.half - 0.14, TOP - GATE.h - 0.09, 0.28, 0.09)
   fill(ctx, outdoors(TIMBER, t))
   void CLOTH
 }
