@@ -399,10 +399,16 @@ export function drawGiant(g: Paint, gi: number): void {
   // The head turns a little to where it is throwing.
   const look = cur ? side * 0.16 * smoother(t, cur.tr - 2.0, cur.tr - 1.2) * (1 - smoother(t, cur.tr + 0.6, cur.tr + 2.0)) : 0
   // The fog takes it by colour alone, all of it at once, so no part of it is ever seen through another; and nothing of
-  // it is ever below the cliff's top, where the wood stands.
+  // it is ever below the cliff's top, where the wood stands. The cliff's own top, not a level line: cut off flat at TOP,
+  // his hips stood down over the lit face where the top is high (205-222 s), and stopped in the air over a gully.
   ctx.save()
   ctx.beginPath()
-  ctx.rect(view.x0 - 1, view.y0 - 1, view.x1 - view.x0 + 2, TOP - view.y0 + 1)
+  const ca = G.x - 6 * s
+  const cb = G.x + 6 * s
+  ctx.moveTo(ca, view.y0 - 1)
+  ctx.lineTo(cb, view.y0 - 1)
+  for (let x = cb; x >= ca - 0.2; x -= 0.2) ctx.lineTo(Math.max(ca, x), cliffTop(Math.max(ca, x)))
+  ctx.closePath()
   ctx.clip()
   // Except at its very first: the fog's colour is not quite the sky's behind it, so a giant that is all fog would still
   // stand out of the sky in one frame. It comes up from nothing over its first moments, while it is still nearly all
@@ -445,8 +451,9 @@ export function drawGiant(g: Paint, gi: number): void {
   stroke(g, ink, lw)
   if (!raised) drawArm([tsh, tel, thd])
   // Under the belt, his hips and legs going down into the wood (cut off at the cliff's top with the rest): where the
-  // pines stand thin, the sky showed through them under his belt, a body that ended at the waist (212-216.5 s).
-  poly(ctx, [P([-1.3, -3.1]), P([1.3, -3.1]), P([1.55, 1.0]), P([-1.55, 1.0])])
+  // pines stand thin, the sky showed through them under his belt, a body that ended at the waist (212-216.5 s). Long
+  // enough to reach the cliff's top behind the gully by the last giant, two cells under TOP.
+  poly(ctx, [P([-1.3, -3.1]), P([1.3, -3.1]), P([1.72, 2.6]), P([-1.72, 2.6])])
   fill(ctx, c(STEEL.deep))
   stroke(g, ink, lw)
   // The body: a cuirass in two planes, its chest drawn on it in one line, and a belt.
