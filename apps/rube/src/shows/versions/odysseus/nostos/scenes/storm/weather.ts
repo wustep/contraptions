@@ -218,7 +218,8 @@ export function drawBolt(g: Paint): void {
 /** The sky's grey lifted a little at the strike and settled: three keys over the base plan's storm. */
 const STORM = { top: '#1E2224', low: '#3C4245', cloud: '#2B3032', cover: 0.95, far: '#3B4446', near: '#1E2729', body: '#172022', deep: '#040607', lit: '#7E898A', edge: '#0B1011' }
 export const STRIKE_SKY: SkyKey[] = [
-  { t: STRIKE - 0.05, ...STORM },
+  // The flash comes up from the cut itself: begun 50 ms before it, it lit the last frames of the shot before.
+  { t: STRIKE - 1e-6, ...STORM },
   { t: STRIKE + 0.06, ...STORM, top: '#353C40', low: '#5A6366', cloud: '#40474A' },
   { t: STRIKE + 0.7, ...STORM },
 ]
