@@ -460,16 +460,20 @@ export function drawGiant(g: Paint, gi: number): void {
   poly(ctx, [P([-1.45, -3.7]), P([1.45, -3.7]), P([1.35, -3.05]), P([-1.35, -3.05])])
   fill(ctx, c(STEEL.deep))
   stroke(g, ink, lw)
-  // A plate over each shoulder.
-  for (const w of [-1, 1] as const) {
+  // A plate over each shoulder; the sword arm's after the arm, so that arm comes out from under its plate as the
+  // other does (it was laid over its plate, its round end on top of the steel).
+  const plate = (w: -1 | 1) => {
     ctx.beginPath()
     const c0 = P([w * 1.95, -7.1])
     ctx.ellipse(c0[0], c0[1], 1.1 * s, 0.7 * s, w * 0.28, 0, Math.PI * 2)
     fill(ctx, c(w < 0 ? STEEL.lit : STEEL.side))
     stroke(g, ink, lw)
   }
+  const swordSide: -1 | 1 = osh[0] < 0 ? -1 : 1
+  plate(-swordSide as -1 | 1)
   // The arm on the sword, over the body.
   drawArm([P(osh), P(oel), P(pommel)])
+  plate(swordSide)
   // The helmet: a dome coming down into cheek guards, a crest standing up off it, and a T cut through the front for
   // the eyes and the mouth, dark all the way in.
   const hx = look
