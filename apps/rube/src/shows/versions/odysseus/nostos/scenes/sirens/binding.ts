@@ -18,6 +18,21 @@ export const MAST_AT: Pt = [-0.015, DECK - 0.13]
 const MAST_X = 0.15
 const BLOCK: Pt = [0.26, DECK - 1.95]
 
+/** When the furling sail has come up clear of the block. */
+const BLOCK_CLEAR = 254.45
+
+/**
+ * Man 1, beside the mast aft: once man 0 has stepped back hauling, he moves aft out of the way of the hero's strains
+ * (lunging aft as the rocks went astern, the hero went half into him, 268.6-274.4 s), and back to his place after.
+ */
+export function man1At(t: number): Pt {
+  const [x, y] = seat(1)
+  // A touch aft as the hero comes to the mast beside him (they stood a little into each other, 255.2-257.8 s); the rest
+  // once man 0 is out of the way.
+  const aft = 0.025 * smooth(t, 254.4, 255.2) + 0.135 * smooth(t, COILS[2] + 0.4, COILS[2] + 1.4)
+  return [x - aft * (1 - smooth(t, RELEASE + 0.4, RELEASE + 1.4)), y]
+}
+
 /** The three beats on which a turn closes over him. */
 export const COILS = [beatNear(255.86).t, beatNear(256.61).t, beatNear(257.36).t]
 /** When the turns are cast off: the rocks well astern. */
@@ -77,11 +92,15 @@ export function drawBinding(g: Paint): void {
   const gone = smooth(t, RELEASE + 0.9, RELEASE + 1.9)
   if (gone >= 1) return
   const a = 1 - gone
-  // The block under the yard.
+  // The block under the yard, behind the sail: seen as the sail comes in over it (drawn at once, it came on in a frame,
+  // on the sail's face, 253.0 s).
   const blk = W(BLOCK)
-  circle(ctx, blk[0], blk[1], 0.085)
-  fill(ctx, rgba('#6B5436', a))
-  stroke(g, rgba(INK, a), 1.6)
+  const shown = a * smooth(t, BLOCK_CLEAR - 0.35, BLOCK_CLEAR)
+  if (shown > 0.003) {
+    circle(ctx, blk[0], blk[1], 0.085)
+    fill(ctx, rgba('#6B5436', shown))
+    stroke(g, rgba(INK, shown), 1.6)
+  }
   // The line: from man 0's hands up to the block, and down the mast to the turns. Taut while he hauls; slack after.
   const m0 = man0At(t)
   const hands = W([m0[0] + 0.1, m0[1] - 0.06])
