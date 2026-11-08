@@ -39,6 +39,13 @@ function floorAt(x: number): number {
   return step(i).y
 }
 const on = (x: number, r = R_T): Pt => [x, floorAt(x) - r]
+/** The riser at the west end of the level ground at x (the forecourt has none): a ball's middle stays R_T off it. */
+function riser(x: number): number {
+  if (x <= STEPS.x0) return -Infinity
+  return step(Math.min(STEPS.n - 1, Math.floor((x - STEPS.x0) / STEPS.run))).x0
+}
+/** Where a body thrown or sliding west to x comes to rest: against the riser, if it reaches it, not in the stone. */
+const stop = (x: number): number => Math.max(x, riser(x) + R_T + 0.01)
 /** Where one stands on step `i` (0 the top; the last is level with the street). */
 const onStep = (i: number): Pt => [step(i).x0 + STEPS.run * 0.5, step(i).y - R_T]
 const TOP: Pt = [STEPS.x0 - 0.18, FORECOURT.y - R_T]
@@ -80,9 +87,11 @@ class Way {
   /** Struck at `at`: thrown on `by` the way he was going (west), down, a short roll of `slide`, and still. */
   struck(at: number, by: number, lift = 0.16, slide = 0.1): number {
     this.wait(at)
-    const land = on(this.p[0] - by)
+    // Each where his fall stops: against the riser of the step above, if he reaches it (two lay a third of a ball
+    // into the stone, 117.5-141 s).
+    const land = on(stop(this.p[0] - by))
     const T = flightFor(this.p, land, lift)
-    const lie = on(land[0] - slide)
+    const lie = on(stop(land[0] - slide))
     this.m.push(fly(this.p, land, at, at + T), roll([land, lie], at + T, at + T + 0.35, 'out'), rest(lie, at + T + 0.35, 141))
     return at
   }
