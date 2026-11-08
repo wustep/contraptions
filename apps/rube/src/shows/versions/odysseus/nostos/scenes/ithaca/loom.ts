@@ -42,6 +42,21 @@ export function shuttleAt(t: number): number {
 /** How many passes have landed by `t` (for the heddle's turn). */
 const passesBy = (t: number): number => PASSES.filter((p) => p <= t).length
 
+/** How long, after a pass lands, the heddle takes to turn over and the row just laid to be beaten into the cloth. */
+const BEAT = 0.22
+
+/**
+ * The shed at `t`: how far the heddle rod sits off its middle, one way after an even count of passes and the other
+ * after an odd. It turns over across `BEAT` after each pass lands, so it is never a jump from one frame to the next.
+ */
+function shedAt(t: number): number {
+  const side = (n: number) => (n % 2 === 0 ? 1 : -1)
+  const k = passesBy(t)
+  if (k === 0) return side(0) * 0.012
+  const u = smoother(t, PASSES[k - 1], PASSES[k - 1] + BEAT)
+  return (side(k - 1) + (side(k) - side(k - 1)) * u) * 0.012
+}
+
 /** One row of weft, as a share of the warp: woven in by a pass by day, picked out by a pass by night. */
 const ROW = 0.024
 
@@ -95,7 +110,7 @@ export function drawLoom(g: Paint): void {
   // The warp below the cloth: a pale field, its threads gathered in bundles to the weights.
   const span = foot - top - 0.12
   const fell = top + 0.1 + span * woven(t)
-  const shed = (passesBy(t) % 2 === 0 ? 1 : -1) * 0.012
+  const shed = shedAt(t)
   rect(ctx, x0 + 0.05, fell, x1 - x0 - 0.1, foot - fell)
   fill(ctx, rgba(warp, 0.55))
   const bundles = 8
@@ -138,11 +153,22 @@ export function drawLoom(g: Paint): void {
   // The beam, with the cloth's roll on it.
   rect(ctx, x0 - 0.07, top - 0.03, x1 - x0 + 0.14, 0.07)
   fill(ctx, timber)
-  // The shuttle at the fell, and the red weft trailing from the edge it left.
+  // The shuttle at the fell, and the red weft trailing from the edge it left. The row it has just laid stays across
+  // the warp while it is beaten in, fading into the cloth, rather than going in one frame as the shuttle lands.
   if (atLoom(t)) {
     const s = shuttleAt(t)
     const sx = LOOM.x + (LOOM.half - 0.09) * s
-    const from = passesBy(t) % 2 === 0 ? x0 + 0.05 : x1 - 0.05
+    const k = passesBy(t)
+    const from = k % 2 === 0 ? x0 + 0.05 : x1 - 0.05
+    const laid = k > 0 ? 1 - smoother(t, PASSES[k - 1], PASSES[k - 1] + BEAT) : 0
+    if (laid > 0) {
+      // From the edge the last pass left to where the shuttle came to rest, on the side it now waits at.
+      const rest = k % 2 === 0 ? -1 : 1
+      ctx.beginPath()
+      ctx.moveTo(rest < 0 ? x1 - 0.05 : x0 + 0.05, fell + 0.01)
+      ctx.lineTo(LOOM.x + (LOOM.half - 0.09) * rest, fell + 0.01)
+      stroke(g, rgba(indoors(MADDER, t), laid), 1.1)
+    }
     ctx.beginPath()
     ctx.moveTo(from, fell + 0.01)
     ctx.lineTo(sx, fell + 0.01)
