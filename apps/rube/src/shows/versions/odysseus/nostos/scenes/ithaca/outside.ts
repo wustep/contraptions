@@ -30,11 +30,13 @@ export function drawHoist(g: Paint): void {
   // The rope: down to each basket from either side of the wheel.
   const hy = heroBasketY(t)
   const sy = stonesBasketY(t)
+  // Made fast to each bail's top (a quadratic to 0.34 over the rim, so its top is 0.175 over it: the ropes stopped
+  // a little short of the bails, 418-427 s).
   ctx.beginPath()
   ctx.moveTo(HOIST.hero, py)
-  ctx.lineTo(HOIST.hero, hy - BASKET.h - 0.2)
+  ctx.lineTo(HOIST.hero, hy - BASKET.h - 0.172)
   ctx.moveTo(HOIST.stones, py)
-  ctx.lineTo(HOIST.stones, sy - BASKET.h - 0.2)
+  ctx.lineTo(HOIST.stones, sy - BASKET.h - 0.172)
   stroke(g, outdoors('#5C4A36', t), 1.1)
   // The wheel.
   circle(ctx, px, py, 0.22)
