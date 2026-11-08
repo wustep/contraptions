@@ -48,20 +48,31 @@ export function drawShore(g: Paint): void {
 }
 
 /** The beach: its ground from the water's edge back to the horizon, and the wet sand along the water. */
-function drawBeach(g: Paint, haze: string): void {
-  const { ctx, view } = g
+/** The beach's ground, from the water's edge back to the horizon, added to the current path: false if out of view. */
+function beachOutline(ctx: CanvasRenderingContext2D, view: Paint['view']): boolean {
   const a = Math.max(BEACH.x0 - 2, view.x0 - 1)
   const b = Math.min(BEACH.x1 + 2, view.x1 + 1)
-  if (b <= a) return
+  if (b <= a) return false
   const hy = horizonOf(view)
   // The front edge: the water's edge along the beach, going back to the horizon at both ends.
   const front = (x: number) => hy + (EDGE - hy) * along(x)
   const step = Math.max(0.25, (b - a) / 120)
-  ctx.beginPath()
   ctx.moveTo(a, hy)
   for (let x = a; x <= b + step; x += step) ctx.lineTo(Math.min(b, x), front(Math.min(b, x)))
   ctx.lineTo(b, hy)
   ctx.closePath()
+  return true
+}
+
+function drawBeach(g: Paint, haze: string): void {
+  const { ctx, view } = g
+  const a = Math.max(BEACH.x0 - 2, view.x0 - 1)
+  const b = Math.min(BEACH.x1 + 2, view.x1 + 1)
+  ctx.beginPath()
+  if (!beachOutline(ctx, view)) return
+  const hy = horizonOf(view)
+  const front = (x: number) => hy + (EDGE - hy) * along(x)
+  const step = Math.max(0.25, (b - a) / 120)
   const gr = ctx.createLinearGradient(0, EDGE, 0, hy)
   gr.addColorStop(0, SAND)
   gr.addColorStop(0.7, mix(SAND, haze, 0.18))
@@ -128,6 +139,13 @@ const STACKS: [number, number, number, number][] = [
 /** Black stacks standing in the sea, each a pillar with a few flat faces, paler the further back. */
 function drawStacks(g: Paint, haze: string): void {
   const { ctx, view } = g
+  // Never over the beach's ground, which is nearer: a stack going past the beach's end with the slower parallax of its
+  // distance came over the sand and stood on it (229.3-231.5 s); it goes behind it.
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(view.x0 - 2, view.y0 - 2, view.x1 - view.x0 + 4, view.y1 - view.y0 + 4)
+  beachOutline(ctx, view)
+  ctx.clip('evenodd')
   for (const [x, d, h, w] of STACKS) {
     const L = layer(view, d)
     const sx = L.x(x)
@@ -136,6 +154,7 @@ function drawStacks(g: Paint, haze: string): void {
     poly(ctx, [P(-0.5, 0.02), P(-0.44, -0.55), P(-0.3, -0.9), P(-0.1, -1), P(0.18, -0.96), P(0.34, -0.74), P(0.42, -0.4), P(0.5, 0.02)])
     fill(ctx, mix(ROCK, haze, 0.08 + d / 70))
   }
+  ctx.restore()
 }
 
 /** The trench: cut behind him as he rolls, a dark red furrow along the water's edge. */
