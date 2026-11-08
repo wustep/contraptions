@@ -1,0 +1,6 @@
+Orchestrion has no recording.
+
+Every sound in it is synthesized in the browser, from the show's own physics simulation
+(versions/orchestrion/instrument/): modal bars, Karplus–Strong strings, waveguide pipes and
+chimes, excited by the balls' contacts as the simulation logs them, then placed in a room and
+limited with Web Audio. No samples, no third-party audio, nothing to license.
