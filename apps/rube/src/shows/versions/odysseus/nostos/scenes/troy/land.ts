@@ -327,7 +327,9 @@ export function drawTroyFar(g: Paint): void {
   if (a <= 0.01) return
   const L = layer(view, 70)
   const hill: Pt[] = []
-  for (let x = -60; x <= SHORE + 2; x += 1.5) hill.push([L.x(x), L.y(Math.min(0, ground(x)))])
+  // Inland the hill comes down to the plain over its last cells: it began on the height's top, a square cliff at the
+  // left of the shots putting out at dawn (129-143 s).
+  for (let x = -84; x <= SHORE + 2; x += 1.5) hill.push([L.x(x), L.y(Math.min(0, ground(x)) * smooth(x, -84, -62))])
   ctx.save()
   ctx.globalAlpha = a
   ctx.beginPath()
