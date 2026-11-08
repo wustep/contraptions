@@ -1,6 +1,7 @@
-import { blob, fill, mix, poly, rgba, smooth, smoother, stroke, vgrad, type Paint } from '../../draw'
+import { blob, fill, frameH, mix, poly, rgba, smooth, smoother, stroke, vgrad, type Paint } from '../../draw'
 import type { Pt } from '../../path'
 import { layer } from '../../world/depth'
+import { horizonOf } from '../../world/sea'
 import { skyAt } from '../../world/sky'
 import { flame } from '../troy/city'
 
@@ -173,17 +174,11 @@ function drawRidge(g: Paint, air: string): void {
     [495.8, 0.05], [497.6, -0.7], [499.8, -1.7], [502.5, -2.6], [505.5, -3.3], [507.8, -4.1], [509.6, -4.5],
     [511.2, -4.2], [513.4, -3.7], [515.8, -3.9], [518.4, -3.2], [521.0, -2.0], [523.6, 0.05],
   ]
-  // Its foot goes down behind the pasture in front of it wherever its own waterline is above the pasture's edge: on a
-  // tall stage (whose horizon is higher) it stood on a strip of open sea behind the cattle, two islands with a channel
-  // between them (287-293 s, phones).
-  const top = ridge.slice(1, -1).map(([x, y]) => P(x, y))
-  const foot: Pt[] = []
-  for (let k = 0; k <= 24; k++) {
-    const lx = 523.6 + (495.8 - 523.6) * (k / 24)
-    const wx = L.x(lx)
-    foot.push([wx, Math.max(L.y(0.05), ground(wx) + 0.15)])
-  }
-  poly(ctx, [P(495.8, 0.05), ...top, P(523.6, 0.05), ...foot])
+  // It stands on its waterline as a 16:9 frame has it, the horizon taken from the composed frame: a tall stage sets its
+  // horizon higher, which lifted the ridge's foot off the island onto a strip of open sea behind the cattle, two
+  // islands with a channel between them (287-293 s, phones). At 16:9 and wider this is its own waterline.
+  const water = horizonOf({ ...view, h: frameH(view) }) * (1 - L.s) + 0.05 * L.s
+  poly(ctx, [[L.x(495.8), water], ...ridge.slice(1, -1).map(([x, y]) => P(x, y)), [L.x(523.6), water]])
   fill(ctx, rgba(mix(lit(GRASS_SHADE), air, 0.35), a))
   // Bare limestone breaking through at its highest shoulder: an outcrop standing a little out of the skyline, its side
   // away from the sun in shade, so it is rock and not a patch laid on the grass.
