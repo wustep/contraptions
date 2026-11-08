@@ -25,6 +25,7 @@ import { HULL } from '../src/shows/versions/odysseus/nostos/world/ship'
 import { ROOM, SLAB, WELL } from '../src/shows/versions/odysseus/nostos/scenes/ithaca/geo'
 import { SUITORS_ID } from '../src/shows/versions/odysseus/nostos/cast'
 import { drawSteps } from '../src/shows/versions/odysseus/nostos/scenes/troy/city'
+import { drawHost } from '../src/shows/versions/odysseus/nostos/scenes/troy/host'
 import { STEPS, step as troyStep } from '../src/shows/versions/odysseus/nostos/scenes/troy/geo'
 import type { Pt } from '../src/shows/versions/odysseus/nostos/path'
 import type { Paint } from '../src/shows/versions/odysseus/nostos/draw'
@@ -239,4 +240,29 @@ export function checkNostos(perf: Performance, version: ShowVersion, check: Chec
   drawSteps(paint)
   const wrong = Array.from({ length: STEPS.n }, (_, i) => i).filter((i) => !treads.some((y) => Math.abs(y - troyStep(i).y) < 1e-9))
   check('nostos: Troy\'s steps stand under their treads, each lit tread where the balls on it rest', treads.length === STEPS.n && wrong.length === 0, `${treads.length} treads; off: ${wrong.join(', ')}`)
+
+  // Far drawings stand behind every scene's own: the fjord's far walls are drawn before the Cyclops' island (drawn
+  // after it, they stood over its shoulder as the camera came out to it).
+  const names = show.universe().pieces.map((p) => p.piece.name)
+  check('nostos: the fjord\'s far walls are drawn behind the Cyclops\' island', names.indexOf('giants-far') >= 0 && names.indexOf('giants-far') < names.indexOf('cyclops-island'), `${names.indexOf('giants-far')} / ${names.indexOf('cyclops-island')}`)
+
+  // A crowd's ranks go by the composed frame: a stage nearly four frames tall (a portrait phone) draws Agamemnon's host
+  // as a 16:9 one does, not an empty hill.
+  const discs = (view: Paint['view']) => {
+    let n = 0
+    const counter = new Proxy({} as Record<string | symbol, unknown>, {
+      get(target, prop) {
+        if (prop in target) return target[prop]
+        if (prop === 'arc' || prop === 'ellipse') return () => { n++ }
+        if (prop === 'createLinearGradient' || prop === 'createRadialGradient') return () => ({ addColorStop() {} })
+        return () => undefined
+      },
+      set(target, prop, v) { target[prop] = v; return true },
+    }) as unknown as CanvasRenderingContext2D
+    drawHost({ ctx: counter, k: 100, t: 115, view, px: 0.01 })
+    return n
+  }
+  const wideHost = discs({ x0: -31.9, x1: -10.1, y0: -12, y1: 0.25, cx: -21, cy: -5.9, h: 12.25 })
+  const tallHost = discs({ x0: -31.9, x1: -10.1, y0: -29.5, y1: 17.7, cx: -21, cy: -5.9, h: 47.2 })
+  check('nostos: Agamemnon\'s host is drawn on a tall phone as on a 16:9 frame (ranks go by the composed frame)', tallHost >= wideHost * 0.9 && wideHost > 50, `${tallHost} / ${wideHost} discs`)
 }
