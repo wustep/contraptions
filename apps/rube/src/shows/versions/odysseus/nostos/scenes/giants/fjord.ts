@@ -59,18 +59,21 @@ export function drawFar(g: Paint): void {
     const b = Math.min(CLIFF.x1 + 10, lx1 + 2)
     if (b <= a) continue
     const step = 1.4
-    const top = (x: number) => {
+    // The crest at the k-th point of a saw of pine tops laid along the wall from a fixed line in it: the teeth go with
+    // the wall as the camera pans. (Laid from the frame's edge, every point slid with the camera and the teeth swapped
+    // peak for notch every time the edge crossed one, 210-222 s.)
+    const crest = (k: number) => {
+      const x = k * step
       const ends = smooth(x, CLIFF.x0 - 6, CLIFF.x0 + 10) * (1 - smooth(x, CLIFF.x1 - 4, CLIFF.x1 + 10))
-      return -(h + 2.2 * Math.sin(x * 0.11 + d) + 1.4 * Math.sin(x * 0.27 + d * 0.3)) * ends
+      const tooth = ((k % 2) + 2) % 2 ? 0 : 0.9
+      return -(h + 2.2 * Math.sin(x * 0.11 + d) + 1.4 * Math.sin(x * 0.27 + d * 0.3)) * ends - tooth
     }
+    const k0 = Math.floor(a / step)
+    const k1 = Math.ceil(b / step) + 1
     ctx.beginPath()
-    ctx.moveTo(L.x(a), L.y(0.2))
-    for (let x = a; x <= b + step; x += step) {
-      // A saw of pine tops along the crest.
-      const y = top(x) - (Math.floor(x / step) % 2 ? 0 : 0.9)
-      ctx.lineTo(L.x(x), L.y(y))
-    }
-    ctx.lineTo(L.x(b + step), L.y(0.2))
+    ctx.moveTo(L.x(k0 * step), L.y(0.2))
+    for (let k = k0; k <= k1; k++) ctx.lineTo(L.x(k * step), L.y(crest(k)))
+    ctx.lineTo(L.x(k1 * step), L.y(0.2))
     ctx.closePath()
     fill(ctx, mix(ROCK.face, fog, pale))
   }
