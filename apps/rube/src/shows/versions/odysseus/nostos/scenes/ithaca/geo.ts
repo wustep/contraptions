@@ -67,8 +67,12 @@ export const TERRACE = { x0: ROOM.x1, x1: HALL.x1, y: ROOM.floor }
  * to the room, and through it to the terrace. Their top comes up through an opening in the room's floor.
  */
 export const STAIRS = { x0: 819.7, x1: 822.1, steps: 6 }
-/** The opening in the room's floor over the stairs' top. */
-export const STAIRWELL = { x0: 821.25, x1: 822.1 }
+/**
+ * The opening in the room's floor over the stairs' top: wide enough that whoever hops up the top flight clears the
+ * floor's cut edge (at 821.25 it was half a ball from the fifth step's riser, and every ball going up or down the top
+ * flight went behind the slab). Penelope at the stairs' head stands with her middle over the floor.
+ */
+export const STAIRWELL = { x0: 821.0, x1: 822.1 }
 /** The hearth by the east door, where the beggar sits; one painted column under the room's wall, Knossos's way. */
 export const HEARTH = { x: 819.4, half: 0.25 }
 export const COLUMNS = [822.45]
