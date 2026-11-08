@@ -291,6 +291,16 @@ const veilOf = (gi: Giant, t: number): number => 1 - 0.7 * smoother(t, gi.emerge
 /** How far below its full height it still is: it rises out of the wood as it comes out of the fog. */
 const sunkOf = (gi: Giant, t: number): number => 1.6 * (1 - smoother(t, gi.emerge - 0.4, gi.emerge + 2.2))
 
+/**
+ * The side a giant keeps its throwing arm on between throws: the side it throws from (each giant's throws are all to
+ * one side). At rest on the right always, the one that throws to its left changed hands, sword and all, in the frame
+ * its throw began and again in the frame it ended (199.92 s, 204.42 s).
+ */
+function restSide(gi: number): 1 | -1 {
+  const th = THROWS.find((x) => x.giant === gi)
+  return th ? sideOf(th) : 1
+}
+
 /** The throw a giant is making at `t`, if any, and its release time. */
 function throwOf(gi: number, t: number): { th: Throw; tr: number } | null {
   for (const th of THROWS) {
@@ -357,7 +367,7 @@ export function heldAt(gi: number, t: number): { hand: Pt; boulder: Throw | null
   const s = G.size
   const base = TOP + sunkOf(G, t)
   const cur = throwOf(gi, t)
-  const side = cur ? sideOf(cur.th) : 1
+  const side = cur ? sideOf(cur.th) : restSide(gi)
   const rel = cur ? handOf(t, cur.tr) : ([0.45, 4.3] as Pt)
   return {
     hand: [G.x + (SHOULDER[0] + rel[0]) * side * s, base + (SHOULDER[1] + rel[1]) * s],
@@ -381,7 +391,7 @@ export function drawGiant(g: Paint, gi: number): void {
   const Y = (v: number): number => base + (v + (v < -3.5 ? breath : 0)) * s
   const P = (v: Pt): Pt => [X(v[0]), Y(v[1])]
   const cur = throwOf(gi, t)
-  const side = cur ? sideOf(cur.th) : 1
+  const side = cur ? sideOf(cur.th) : restSide(gi)
   // The head turns a little to where it is throwing.
   const look = cur ? side * 0.16 * smoother(t, cur.tr - 2.0, cur.tr - 1.2) * (1 - smoother(t, cur.tr + 0.6, cur.tr + 2.0)) : 0
   // The fog takes it by colour alone, all of it at once, so no part of it is ever seen through another; and nothing of
