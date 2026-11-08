@@ -190,9 +190,12 @@ function telemachusPath(): Path {
   m.push(rest(inHall, TRIAL.inside - 0.2, 448.6))
   const atAxe: Pt = [820.31 - 0.24, fy]
   m.push(roll([inHall, atAxe], 448.6, 450.58))
-  // Back to the doorway, at his father's east side.
+  // Back to the doorway, at his father's east side: up to him at the threshold and over him (he rolled through his
+  // father, 453.2-453.4 s).
   const doorway: Pt = [818.18, fy]
-  m.push(roll([atAxe, inHall, doorway], 451.4, 453.6))
+  const behind: Pt = [818.45 + R + R * s + 0.01, fy]
+  const over = hopTo(behind, doorway, 453.6, 0.3)
+  m.push(roll([atAxe, inHall, behind], 451.4, over.t0, 'inout'), over)
   // Antinous comes at him and the arrow takes him at his feet. Then over the dead man to the stairs, to stand on them
   // between the suitors and his mother (`battle.ts`); and down to his father when it is over.
   const fight = sonFight(doorway)
