@@ -116,10 +116,17 @@ const PLACES: [number, 1 | 2][] = [
 ]
 export const PLACE_COUNT = PLACES.length
 export function slot(k: number, hero: boolean): Pt {
-  const [x, row] = PLACES[Math.max(0, Math.min(PLACES.length - 1, k))]
-  if (row === 1) return [x, ROW1 + (hero ? MAN_R - HERO_R : 0)]
+  const i = Math.max(0, Math.min(PLACES.length - 1, k))
+  const [x, row] = PLACES[i]
+  if (row === 1) return [x - (hero && i > 0 ? (PLACES[i - 1][1] === 2 ? HERO_BACK : HERO_R - MAN_R) : 0), ROW1 + (hero ? MAN_R - HERO_R : 0)]
   return [x, hero ? ROW2_HERO : ROW2_MAN]
 }
+/**
+ * How far back of his place on the floor he sits when a man is on the row over him, ahead: far enough that they touch
+ * (with a man on the floor ahead, by how much bigger he is). The places are spaced for men, and he is bigger, so the
+ * man ahead sank into him, 77.9-81.8 s.
+ */
+const HERO_BACK = Math.sqrt((MAN_R + HERO_R) ** 2 - (ROW1 + MAN_R - HERO_R - ROW2_MAN) ** 2) - (PLACES[0][0] - PLACES[1][0])
 /** The floor's end by the hatch, and the hatch's hinge, where the rope is made fast. */
 export const FLOOR_END: Pt = [1.25, FLOOR_Y]
 export const HATCH_HINGE: Pt = [1.12, -5.22]
