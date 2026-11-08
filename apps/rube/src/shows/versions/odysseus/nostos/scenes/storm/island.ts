@@ -173,7 +173,17 @@ function drawRidge(g: Paint, air: string): void {
     [495.8, 0.05], [497.6, -0.7], [499.8, -1.7], [502.5, -2.6], [505.5, -3.3], [507.8, -4.1], [509.6, -4.5],
     [511.2, -4.2], [513.4, -3.7], [515.8, -3.9], [518.4, -3.2], [521.0, -2.0], [523.6, 0.05],
   ]
-  poly(ctx, ridge.map(([x, y]) => P(x, y)))
+  // Its foot goes down behind the pasture in front of it wherever its own waterline is above the pasture's edge: on a
+  // tall stage (whose horizon is higher) it stood on a strip of open sea behind the cattle, two islands with a channel
+  // between them (287-293 s, phones).
+  const top = ridge.slice(1, -1).map(([x, y]) => P(x, y))
+  const foot: Pt[] = []
+  for (let k = 0; k <= 24; k++) {
+    const lx = 523.6 + (495.8 - 523.6) * (k / 24)
+    const wx = L.x(lx)
+    foot.push([wx, Math.max(L.y(0.05), ground(wx) + 0.15)])
+  }
+  poly(ctx, [P(495.8, 0.05), ...top, P(523.6, 0.05), ...foot])
   fill(ctx, rgba(mix(lit(GRASS_SHADE), air, 0.35), a))
   // Bare limestone breaking through at its highest shoulder: an outcrop standing a little out of the skyline, its side
   // away from the sun in shade, so it is rock and not a patch laid on the grass.
