@@ -212,8 +212,10 @@ function manPath(m: number): Move[] {
   w.wait(151.75 + 0.12 * m).rollTo(CREEP_X.men[m], 155.0, r)
   w.wait(157.0 + 0.1 * (3 - m)).rollTo(HIDE_X.men[m], 159.0 + 0.15 * (3 - m), r)
   const [step, ledge, club] = CLIMB[m]
-  w.hop([STEP_X - 0.2 * (m % 2), STEP.top - r], step, 0.16)
-  w.hop([LEDGE_X - 0.1 * (m % 2), LEDGE.top - r], ledge, 0.16)
+  // Two to a step and two to the ledge, side by side and touching, the first up ahead (a fifth and a tenth of a cell
+  // apart, the second up landed half inside the first, and they went on onto the club as one, 164.9-166.9 s).
+  w.hop([STEP_X - 0.24 * (m % 2), STEP.top - r], step, 0.16)
+  w.hop([LEDGE_X - 0.23 * (m % 2), LEDGE.top - r], ledge, 0.16)
   // Along the ledge and onto the club's butt, to its place: arriving as the club takes the weight.
   const onto = Math.max(ledge + 0.08, club - 0.62)
   w.wait(onto)
