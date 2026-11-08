@@ -122,11 +122,13 @@ export function drawShip(g: Paint, pose: Pose, look: ShipLook): void {
     // The trim along the gunwale, and the eye on the bow.
     poly(ctx, [[1.88, -0.27], [1.3, DECK + 0.06], [-1.2, DECK + 0.06], [-1.7, -0.27], [-1.68, -0.2], [-1.2, DECK + 0.13], [1.3, DECK + 0.13], [1.86, -0.2]])
     fill(ctx, trim)
+    // The eye under the trim, clear of the waterline (at -0.06 it sat on it, and any pitch of the bow put half of it
+    // under the sea's tint: a broken white mark at the bow).
     ctx.beginPath()
-    ctx.ellipse(1.82, -0.06, 0.1, 0.06, 0, 0, Math.PI * 2)
+    ctx.ellipse(1.82, -0.13, 0.1, 0.06, 0, 0, Math.PI * 2)
     fill(ctx, mix('#E8DFC8', air, far * 0.7))
     ctx.beginPath()
-    ctx.arc(1.84, -0.06, 0.035, 0, Math.PI * 2)
+    ctx.arc(1.84, -0.13, 0.035, 0, Math.PI * 2)
     fill(ctx, hull)
     // The steering oar at the stern.
     ctx.beginPath()
