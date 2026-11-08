@@ -471,10 +471,12 @@ export function drawRidge(g: Paint, t: number, ridge: Pt, skin: string, rock: st
   // The head, low and forward: a heavy brow, a jaw.
   blob(ctx, [P(1.9, -9.6), P(2.2, -10.9), P(3.3, -11.3), P(4.3, -10.8), P(4.6, -9.9), P(4.2, -9.2), P(3.9, -8.4), P(2.8, -8.2)])
   ctx.fill()
-  // The neck, and the arms: from both shoulders, bent out at the elbows, up to the rock.
+  // The neck, and the arms: from both shoulders, bent out at the elbows, up to the rock. The far shoulder is set inside
+  // the trunk's outline: at its top, its round end stood up over his back as a knob once his hands came down after the
+  // throw (183.3-184.9 s).
   ctx.beginPath()
   limb(ctx, P(0.8, -8.4), P(2.7, -9.5), 1.7 * k, 1.3 * k)
-  for (const [sx, sy, side] of [[-2.4, -8.2, -1], [1.0, -8.6, 1]] as const) {
+  for (const [sx, sy, side] of [[-2.2, -7.7, -1], [1.0, -8.6, 1]] as const) {
     const sh = P(sx, sy)
     const mid: Pt = [(sh[0] + hands[0]) / 2, (sh[1] + hands[1]) / 2]
     const el: Pt = [mid[0] + side * 1.6 * k, mid[1] + 0.4 * k]
