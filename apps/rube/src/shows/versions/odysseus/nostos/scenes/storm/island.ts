@@ -186,11 +186,26 @@ function drawRidge(g: Paint, air: string): void {
   fill(ctx, rgba(lit(mix('#8F8672', air, 0.35)), a))
   poly(ctx, [P(507.5, -3.7), P(508.4, -4.3), P(509.2, -4.75), P(509.35, -4.2), P(509.0, -3.65)])
   fill(ctx, rgba(lit(mix('#6F685A', air, 0.35)), a))
-  // Scrub in its folds: a few broad dark masses, not a scatter.
-  for (const [x, y, w, h] of [[503.6, -2.85, 1.3, 0.38], [513.9, -3.6, 1.6, 0.34], [518.9, -2.95, 1.1, 0.3]] as const) {
-    ctx.beginPath()
-    ctx.ellipse(L.x(x), L.y(y), w * L.s, h * L.s, 0, Math.PI, 0)
-    ctx.closePath()
+  // Scrub in its folds: a few broad dark masses, not a scatter, each lying along the skyline under it (half-domes on a
+  // level base, they stood off the slope with sky under one end of their flat feet, 282-304 s).
+  const sky = (x: number): number => {
+    for (let i = 1; i < ridge.length; i++) {
+      const [x0, y0] = ridge[i - 1]
+      const [x1, y1] = ridge[i]
+      if (x <= x1) return y0 + ((y1 - y0) * (x - x0)) / (x1 - x0)
+    }
+    return ridge[ridge.length - 1][1]
+  }
+  for (const [x, w, h] of [[503.6, 1.3, 0.38], [513.9, 1.6, 0.34], [518.9, 1.1, 0.3]] as const) {
+    const top: Pt[] = []
+    const foot: Pt[] = []
+    for (let k = 0; k <= 16; k++) {
+      const u = (k / 16) * 2 - 1
+      const xi = x + u * w
+      top.push(P(xi, sky(xi) - h * Math.sqrt(1 - u * u)))
+      foot.unshift(P(xi, sky(xi) + 0.05))
+    }
+    poly(ctx, [...top, ...foot])
     fill(ctx, rgba(mix(lit(OLIVE), air, 0.4), a))
   }
 }
