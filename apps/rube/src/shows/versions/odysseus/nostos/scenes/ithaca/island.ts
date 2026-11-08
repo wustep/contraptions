@@ -163,9 +163,14 @@ export function drawIsland(g: Paint): void {
   poly(ctx, SHADE_W)
   fill(ctx, mix(stone, shade, 1 - fromWest))
   ctx.restore()
-  // Its foot along the south face, darker where the sea wets it.
+  // Its foot along the south face, darker where the sea wets it: inside the mass's outline (its corner at the west
+  // cliff's foot stood out of the rounded outline as a square tooth, over the jetty's root through the end, 520-549 s).
+  ctx.save()
+  blob(ctx, OUTLINE)
+  ctx.clip()
   poly(ctx, [...WET, [CLIFF_W.foot, 0.6], [CLIFF_E.foot, 0.6]])
   fill(ctx, mix(mix(stone, shade, 0.28 * aslant), rock(ROCK, t), 0.3))
+  ctx.restore()
   // Each bed's ledge: the shadow under it, straight along the bed and thinning away into the rock, never ending square;
   // cut off by the face itself, and gone as the island goes dark against the sun at the end.
   const ledges = 0.4 * (1 - smooth(t, TRIAL.fade - 1.3, TRIAL.fade + 1.0))
