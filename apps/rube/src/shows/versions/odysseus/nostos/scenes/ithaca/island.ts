@@ -76,13 +76,14 @@ const SCRUBS: [number, number, number][] = [
   [829.6, -9.02, 0.32],
   // On the beach at the cliff's foot, on the sand's rounded edge there (it stood 0.08 over it).
   [805.0, -0.31, 0.22],
-  // On the beds' ledges where they come out of the faces, and over the west cliff's edge.
+  // On the beds' ledges where they come out of the faces, and at the west cliff's edge, on its level top (out on the
+  // rounding edge, its flat foot overhung the rock with sky under it: a mushroom cap in the end silhouette).
   [807.45, -7.1, 0.2],
   [807.2, -4.6, 0.17],
   [806.9, -2.1, 0.19],
   [833.3, -4.2, 0.22],
   [831.75, -6.9, 0.19],
-  [830.75, -8.95, 0.2],
+  [830.38, -9.0, 0.19],
 ]
 
 /** The olive trees on the top: where each stands, how tall, and how it leans. */
