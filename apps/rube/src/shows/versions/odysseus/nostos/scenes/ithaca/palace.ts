@@ -536,6 +536,8 @@ function drawArrow(g: Paint): void {
   stroke(g, indoors('#6C5236', t), 1.5)
   poly(ctx, [[head, y], [head + 0.06, y - 0.022], [head + 0.06, y + 0.022]])
   fill(ctx, indoors(BRONZE_LIGHT, t))
-  poly(ctx, [[tail, y], [tail - 0.07, y - 0.03], [tail - 0.09, y], [tail - 0.07, y + 0.03]])
+  // The fletching: two vanes rising off the shaft from their front to their full depth at the nock, so they go with the
+  // head. (A kite sharp at the nock, it read as a second head pointing back: the arrow flying east out of Antinous.)
+  poly(ctx, [[tail - 0.1, y], [tail - 0.045, y - 0.032], [tail - 0.006, y - 0.032], [tail - 0.006, y + 0.032], [tail - 0.045, y + 0.032]])
   fill(ctx, indoors(CLOTH, t))
 }
