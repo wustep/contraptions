@@ -108,7 +108,11 @@ export function drawKeep(g: Paint): void {
   // scrub on the lower one's step where it reaches past the upper one.
   const [upper, lower] = TERRACES
   coursed(g, lower.x0, lower.y0, lower.x1, lower.y1, mix(stone, outdoors(STONE_SHADE, t), 0.75))
+  // Where the lower terrace reaches past the upper one, the hill comes down to its step in a bank of scrub from the
+  // top's grassy edge (without it the step sat in a dark slot under the top's edge, its scrub in the slot, 38-46 s).
   for (const [a, b] of [[lower.x0, upper.x0], [upper.x1, lower.x1]]) {
+    rect(ctx, a, TOP + 0.1, b - a, lower.y0 - TOP - 0.1)
+    fill(ctx, againstSun(mix(SCRUB, SCRUB_DARK, 0.55), t))
     rect(ctx, a, lower.y0, b - a, 0.06)
     fill(ctx, againstSun(SCRUB, t))
   }
