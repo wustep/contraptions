@@ -1,4 +1,4 @@
-import { clamp01, fill, hash, mix, poly, smooth, stroke, type Paint } from '../../draw'
+import { clamp01, fill, frameH, hash, mix, poly, smooth, stroke, type Paint } from '../../draw'
 import type { Pt } from '../../path'
 import { layer } from '../../world/depth'
 import { horizonOf } from '../../world/sea'
@@ -267,7 +267,8 @@ export function drawRanks(g: Paint): void {
     // The lane's middle depth sets its colour and whether it is drawn at all.
     const dMid = NEAR * Math.exp(((lane + 0.5) / LANES) * ln)
     const Lm = layer(view, dMid)
-    const lit = smooth((R * 0.86 * Lm.s) / view.h, 1 / 420, 1 / 160)
+    // By the composed frame's size, not the stage's (a tall phone thinned the crowd going back into the dark).
+    const lit = smooth((R * 0.86 * Lm.s) / frameH(view), 1 / 420, 1 / 160)
     if (lit < 0.03) continue
     const f = (lane + 0.5) / LANES
     const groundC = mix(SAND, haze, 0.06 + 0.2 * f)

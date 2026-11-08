@@ -1,4 +1,4 @@
-import { blob, clamp01, curve, fill, mix, poly, rgba, smooth, stroke, type Paint } from '../../draw'
+import { blob, clamp01, curve, fill, frameH, mix, poly, rgba, smooth, stroke, type Paint } from '../../draw'
 import { M } from '../../music'
 import type { Pt } from '../../path'
 import { layer } from '../../world/depth'
@@ -139,7 +139,7 @@ export function drawGround(g: Paint, below = false): void {
   }
   const edge = (a: number, b: number): Pt[] => {
     const pts: Pt[] = []
-    const step = Math.max(0.08, view.h / 220)
+    const step = Math.max(0.08, frameH(view) / 220)
     for (let x = a; x < b; x += step) pts.push([x, ground(x)])
     pts.push([b, ground(b)])
     return pts
