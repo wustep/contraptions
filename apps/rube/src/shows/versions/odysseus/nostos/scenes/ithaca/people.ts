@@ -30,7 +30,7 @@ const ROOM_ON = (size: number) => on(ROOM.floor, size)
  * here first and falls from here. (They fell from the lip itself, so a third of each was behind the slab's cut face as
  * it went through the floor: the three suitors at 457.9, 467.5 and 476.5 s, and the hero at 494.5 s.)
  */
-const OVER_WELL = (size: number): number => WELL.x - WELL.half + R * size + 0.045
+const OVER_WELL = (size: number): number => WELL.x - WELL.half + R * size + 0.06
 /** What a suitor is once the colour has gone out of him: darker than the hall's dado behind him, where the living are lighter. */
 const DEAD = '#1F2226'
 
