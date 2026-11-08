@@ -1,6 +1,6 @@
 import { blob, mix, ring, smooth, smoother, type Paint } from '../../draw'
 import type { Pt } from '../../path'
-import { BOULDER_IN, BOULDER_OUT, BOULDER_R, EYE, SPLASH_X, T } from './plan'
+import { BOULDER_IN, BOULDER_OUT, BOULDER_R, EYE, FLOOR, SPLASH_X, T } from './plan'
 import { FLOCK, HAND_X } from './sheep'
 
 /**
@@ -174,7 +174,37 @@ export function poseAt(t: number): Pose {
   const breath = 0.035 * Math.sin(t * 1.4)
   const jolt = 0.12 * ring(t, T.strike, 2.6, 0.3)
   p = moved(p, [jolt, -jolt * 0.4], [0, breath])
-  return { ...p, hand: handAt(t, p) }
+  return { ...p, hand: offTheFloor(handAt(t, p), p.elbow, openAt(t)) }
+}
+
+/**
+ * The hand at `h`, lifted just clear of the cave's floor wherever its fingers would go into it (the shape `hand()`
+ * draws: palm, three fingers and thumb, turned along the forearm). Resting by him, sitting, and laid across the door,
+ * his open fingers reached a quarter of a cell down into the rock (148-150, 157-170 and 176-181 s).
+ */
+function offTheFloor(h: Pt, elbow: Pt, open: number): Pt {
+  const toward = Math.atan2(h[1] - elbow[1], h[0] - elbow[0])
+  const c = Math.cos(toward)
+  const n = Math.sin(toward)
+  // The lowest point, in the hand's own frame turned to the world: y only.
+  const y = (p: Pt) => p[0] * n + p[1] * c
+  let low = 0
+  for (let k = 0; k < 16; k++) {
+    const a = (k / 16) * Math.PI * 2
+    low = Math.max(low, y([Math.cos(a) * 0.36, Math.sin(a) * 0.27]))
+  }
+  for (let f = 0; f < 3; f++) {
+    const spread = (f - 1) * (0.22 + 0.2 * open)
+    const len = 0.12 + 0.3 * open
+    const base: Pt = [Math.cos(spread) * 0.26, Math.sin(spread) * 0.26]
+    const curl = spread + (1 - open) * 1.7
+    const tip: Pt = [base[0] + Math.cos(curl) * len, base[1] + Math.sin(curl) * len]
+    low = Math.max(low, y(base) + 0.085, y(tip) + 0.07)
+  }
+  const thumb = -1.1 + 0.5 * (1 - open)
+  low = Math.max(low, y([0.05 + Math.cos(thumb) * 0.3, -0.18 + Math.sin(thumb) * 0.3]) + 0.06)
+  const over = h[1] + low - (FLOOR - 0.006)
+  return over > 0 ? [h[0], h[1] - over] : h
 }
 
 /** Where his near hand is at `t`. */
