@@ -4,7 +4,7 @@ import type { Placed } from '../../../../../../plan'
 import type { Pt } from '../../path'
 import { END } from '../../voyage'
 import { brazierLight, drawBrazier, drawBucketBack, drawBucketFront, drawFires, drawStatue, drawSteps, drawTemple, drawTower, drawTownBehind } from './city'
-import { FORECOURT, PLINTH } from './geo'
+import { FORECOURT, PLINTH, ground } from './geo'
 import { BRAZIER } from './city'
 import { drawCrowd, drawTrojans, spearsInside } from './crowd'
 import { drawHost } from './host'
@@ -32,6 +32,18 @@ function drawTheHorse(g: Paint): void {
   if (p.x < view.x0 - 4 || p.x > view.x1 + 4) return
   const fire = t > M.answer - 1
   const lit = fire ? Math.min(1, brazierLight(t) * 1.2 + firelight(p.x, t) * 0.6) : Math.min(1, sun(t) * 2)
+  // On the beach, nothing of it under the sand: listing in the surf, its sledge's sea end went down into the beach,
+  // and showed through the earth under the sand's lit edge (0-5.7 s).
+  const beach = t <= M.second + 1
+  if (beach) {
+    g.ctx.save()
+    g.ctx.beginPath()
+    g.ctx.moveTo(p.x - 5, view.y0 - 1)
+    g.ctx.lineTo(p.x + 5, view.y0 - 1)
+    for (let x = p.x + 5; x >= p.x - 5.01; x -= 0.1) g.ctx.lineTo(x, ground(x))
+    g.ctx.closePath()
+    g.ctx.clip()
+  }
   drawHorse(g, p, {
     ink: '#0E0E10',
     hide: tone(MAT.hide, t, { fire: fire ? firelight(p.x, t) * 0.25 : 0 }),
@@ -44,6 +56,7 @@ function drawTheHorse(g: Paint): void {
     slivers: fire ? 0.25 + 0.4 * brazierLight(t) : sun(t) * 1.8,
     inside: fire ? undefined : (toLocal) => spearsInside(g, toLocal),
   })
+  if (beach) g.ctx.restore()
 }
 
 /** The rope from the hatch to Athena's neck: thrown out in an arc, dipping under whoever rides it, and slipping off her. */
