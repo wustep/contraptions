@@ -158,6 +158,8 @@ const HAUL = 0.95
 const haul = (T: number): number => 1 + HAUL * (breath(T) - 0.5) * (1 - smooth(T, cue(168.7), cue(169.6)))
 /** The car's pace at `T`, as a share of the plain pace: off the brake over a beat, the haul, and the sheave's brake from 171 to the stop. */
 const paceAt = (T: number): number => (T <= GO || T >= LAND ? 0 : T < CRUISE ? ((T - GO) / DA) * haul(T) : T < BRAKE ? haul(T) : 1 - (T - BRAKE) / DB)
+/** For `check:shows`: the lift's pace at `T`, as a share of its plain pace. */
+export const liftPace = paceAt
 /** How far the car has climbed, as a table worked out once: the pace summed, 200 to the second, and scaled to end at the collar. */
 const CLIMB_DT = 1 / 200
 const CLIMB = (() => {

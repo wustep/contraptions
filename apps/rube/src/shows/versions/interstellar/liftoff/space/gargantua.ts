@@ -134,6 +134,10 @@ const CLOSE = PULL0 + 0.82
 const GLOW_ON = CLOSE + 0.5
 const OPEN0 = CLOSE + 0.9
 
+/** For `check:shows`: when he touches the watch, and when the camera leaves it. */
+export const WATCH_TOUCH = TOUCH
+export const WATCH_LEFT = PULL0
+
 /** The strikes, on the music. */
 export const GARGANTUA_HITS = [CATCH, LATCH, NODE_A, SWALLOW, BEHIND, NODE_B, CREST, NODE_A2, BEHIND2, NODE_B2, RELEASE, HORIZON, PASS_A, PASS_B, LAND, TOUCH]
 
