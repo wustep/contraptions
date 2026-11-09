@@ -4,7 +4,7 @@ import { clamp, easeInQuad, easeOutCubic } from '../../../../../../../../src/cor
 import { FLOOR, mixHex, R, type Pt } from '../../../../../parts'
 import { alpha, box, carried, frame, hash, knock, lastOf, part, puff, route, smooth, type Companion, type Ctx, type Way } from '../kit'
 import { beat, beats, DROP } from '../music'
-import { dropTime, hop } from '../physics'
+import { dropTime, G_EARTH, hop } from '../physics'
 import { DUST, MURPH_SMALL, MURPH_YOUNG } from '../worlds'
 import { cornWall, stalk } from './corn'
 import { drawFence } from './fence'
@@ -289,6 +289,8 @@ interface TruckState {
   /** Where the fence stands, and where the ditch runs under the jump. */
   fence: number
   ditch: [number, number]
+  /** The stand of corn across the road that he floors it into on the drop: where each stalk is, when the grille takes it, and when the tail lets it go. */
+  stand: { x: number; at: number; freed: number }[]
 }
 
 /**
@@ -387,9 +389,13 @@ function bodyAt(t: number, calm = false): { pitch: number; lift: number } {
   if (catchUp > 0) pitch += 0.02 * Math.exp(-catchUp / 0.25) * Math.sin(catchUp * 25)
   // Pulling away and picking up through the gather: it sits back on its springs as it gathers speed.
   if (t > CATCH && t < DROP) pitch -= 0.03 * pullAt(t)
-  // Off the line: it squats.
+  // The drop: it digs in. The tail goes down hard on its springs and the nose comes up, in under a tenth of a second,
+  // and it rocks back level over the next second.
   const go = t - DROP
-  if (go > 0) pitch -= 0.06 * Math.exp(-go / 0.45) * smooth(go, 0, 0.18)
+  if (go > 0) {
+    pitch -= 0.125 * smooth(go, 0, 0.09) * Math.exp(-go / 0.4) * (0.62 + 0.38 * Math.cos(go * 9.5))
+    lift -= 0.03 * smooth(go, 0, 0.07) * Math.exp(-go / 0.22)
+  }
   // The ditch: off the lip nose-up, over, down nose-first, and a hard squash on the springs.
   const air = jumpAt(t)
   if (air > 0) {
@@ -443,7 +449,9 @@ function doorAt(t: number): number {
 function poseAt(s: TruckState, t: number, calm = false): Pickup {
   const { pitch, lift } = bodyAt(t, calm)
   const rear = rearAt(s.b0, t)
-  return { rear, road: GROUND, pitch, lift, air: jumpAt(t) * 0.92, turn: (rear - s.b0) / WHEEL_R, door: doorAt(t), lamp: t > LIGHTS ? (t < LIGHTS + 0.25 ? (Math.sin((t - LIGHTS) * 80) > 0 ? 1 : 0.3) : 1) : 0 }
+  // On the drop the wheels break loose and spin a moment before they bite.
+  const spin = t > DROP ? 4.5 * (1 - Math.exp(-(t - DROP) / 0.28)) : 0
+  return { rear, road: GROUND, pitch, lift, air: jumpAt(t) * 0.92, turn: (rear - s.b0) / WHEEL_R + spin, door: doorAt(t), lamp: t > LIGHTS ? (t < LIGHTS + 0.25 ? (Math.sin((t - LIGHTS) * 80) > 0 ? 1 : 0.3) : 1) : 0 }
 }
 
 /** A body point (u along, v up) at show time `t`, in the part's frame. */
@@ -595,12 +603,37 @@ function murphTruck(s: TruckState, edge: number, t: number): Companion {
   return { x: q[0], y: q[1], scale: MURPH_SMALL, color: MURPH_YOUNG }
 }
 
+/** How many stalks stand across the road where he floors it. */
+const STAND = 5
+
+/**
+ * The drop is the loudest bass note of the cue, and the corn takes it. From where the truck is, a wave goes out
+ * through the field both ways at 8 cells a second: as it passes, the tops are thrown over away from the truck and
+ * down, and swing back and through a few times, less each time and less with distance. How far the top at `x` is
+ * over and down at show time `t` (cells, for a wall of full height).
+ */
+function blowAt(s: TruckState, t: number): (x: number) => [number, number] {
+  const age = t - DROP
+  if (age <= 0 || age > 3.2) return () => [0, 0]
+  const x0 = rearAt(s.b0, DROP) + LEN * 0.6
+  return (x) => {
+    const d = x - x0
+    const since = age - Math.abs(d) / 8
+    if (since <= 0) return [0, 0]
+    const amp = 0.3 * Math.exp(-Math.abs(d) / 6.5) * Math.exp(-since / 0.5) * smooth(since, 0, 0.1)
+    const swing = Math.cos(since * 10.5)
+    // (Away from the truck on both sides, and through nothing right behind it: thrown apart there, the tops opened a
+    // notch in the wall over the cab.)
+    return [Math.tanh(d / 1.3) * amp * swing, 0.22 * amp * (0.5 + 0.5 * swing)]
+  }
+}
+
 /**
  * The drop: as he floors it, the crows in the corn go up all at once, a ripple of them, beating hard up out of the
  * tops, then low over the field: the quicker ones away ahead of the truck, the slower dropping back over it as it
  * goes by under them. In front of the corn, behind the truck and the drone.
  */
-const FLUSH = { n: 16, at: DROP + 0.04, life: 4.5 }
+const FLUSH = { n: 24, at: DROP + 0.02, life: 4.5 }
 function drawFlush(p: p5, s: TruckState, c: Ctx, t: number, f: ReturnType<typeof frame>): void {
   const age0 = t - FLUSH.at
   if (age0 < 0 || age0 > FLUSH.life + 0.4) return
@@ -613,7 +646,7 @@ function drawFlush(p: p5, s: TruckState, c: Ctx, t: number, f: ReturnType<typeof
   p.stroke(alpha(p, ink, 0.85))
   p.strokeWeight(Math.max(0.9, weight * 0.6))
   for (let j = 0; j < FLUSH.n; j++) {
-    const age = age0 - 0.4 * hash(j, 61)
+    const age = age0 - 0.32 * hash(j, 61) ** 1.5
     if (age < 0 || age > FLUSH.life) continue
     // Up out of the tops of the tall corn round the nose and ahead of it, hard at first, then low over the tops: the
     // quicker ones away ahead, the slower dropping back over the truck as it goes by under them.
@@ -657,12 +690,12 @@ export const truck = part<TruckState>(
     const fall = dropTime(GROUND - BALL_V)
     const edge = -0.5 + 1.25 * (at(LAND) - fall)
     const b0 = edge + 1.25 * fall - 0.35
-    const s: TruckState = { begin: slot.begin, b0, stalks: [], freed: [], edge: 0, fence: 0, ditch: [0, 0] }
+    const s: TruckState = { begin: slot.begin, b0, stalks: [], freed: [], edge: 0, fence: 0, ditch: [0, 0], stand: [] }
     s.stalks = STALKS.map((t) => rearAt(b0, t) + LEN + 0.04)
-    // When the truck's tail has cleared each stalk (or it is left lying where the truck stopped, a while later).
-    s.freed = s.stalks.map((x, i) => {
-      let lo = STALKS[i]
-      let hi = STALKS[i] + 1.6
+    // When the truck's tail has cleared a stalk it took at `from` (or it is left lying where the truck stopped, a while later).
+    const clear = (x: number, from: number): number => {
+      let lo = from
+      let hi = from + 1.6
       if (rearAt(b0, hi) < x + 0.3) return hi
       for (let j = 0; j < 40; j++) {
         const mid = (lo + hi) / 2
@@ -670,7 +703,22 @@ export const truck = part<TruckState>(
         else hi = mid
       }
       return hi
-    })
+    }
+    s.freed = s.stalks.map((x, i) => clear(x, STALKS[i]))
+    // The stand he floors it into: the first stalk at his grille on the drop itself, the rest a hand's breadth apart
+    // behind it, each taken as the nose gets to it.
+    for (let j = 0; j < STAND; j++) {
+      const x = rearAt(b0, DROP) + LEN + 0.04 + j * 0.2 + (j ? (hash(j, 71) - 0.5) * 0.06 : 0)
+      let lo = DROP
+      let hi = DROP + 1
+      for (let i = 0; i < 40; i++) {
+        const mid = (lo + hi) / 2
+        if (rearAt(b0, mid) + LEN + 0.04 < x) lo = mid
+        else hi = mid
+      }
+      const at = j ? hi : DROP
+      s.stand.push({ x, at, freed: clear(x, at) })
+    }
     s.fence = rearAt(b0, FENCE) + LEN + 0.04
     // The ditch lies under the truck's middle at the top of its jump. (The truck flies less than its wheelbase, so no
     // stretch of road is cleared by both wheels in the air: a ditch fitted between them came out narrower than its own
@@ -711,6 +759,87 @@ export const truck = part<TruckState>(
   },
 )
 
+/**
+ * The drop, at the back wheels: they break loose and dig. Dirt is thrown out behind in a fan, each clod on its own
+ * arc under the farm's gravity, and the dust they tear up rolls back off the road in one bank, five clouds of it
+ * leaving the wheel inside a third of a second, slowing, rising and thinning where they were left.
+ */
+function drawDig(p: p5, s: TruckState, c: Ctx, t: number): void {
+  const age = t - DROP
+  if (age < 0 || age > 2.4) return
+  const { k, ink, weight } = c
+  const X = (v: number) => v * k
+  const wheel = rearAt(s.b0, DROP) + WHEELS[0]
+  for (let j = 0; j < 5; j++) {
+    const a = age - j * 0.065
+    if (a < 0) continue
+    const life = 1.5 + 0.18 * j
+    if (a > life) continue
+    const u = a / life
+    // Thrown back from where the wheel was when it left, losing its pace over half a second.
+    const from = rearAt(s.b0, DROP + j * 0.065) + WHEELS[0] - 0.12
+    const back = (1.3 + 0.22 * j) * 0.55 * (1 - Math.exp(-a / 0.55))
+    const up = 0.16 + (0.5 + 0.1 * j) * (1 - Math.exp(-a / 0.8))
+    p.push()
+    p.drawingContext.globalAlpha = (1 - u) ** 1.6 * 0.9
+    puff(p, k, alpha(p, ink, 0.5).toString(), weight * 0.6, j % 2 ? DUST.husk : DUST.bone, from - back, GROUND - up, 0.15 + 0.34 * (1 - Math.exp(-a / 0.5)) + 0.03 * j)
+    p.pop()
+  }
+  // The clods: out of the dust and down onto the road, where each lies a moment and is gone.
+  for (let j = 0; j < 11; j++) {
+    const a = age - 0.03 * (j % 4)
+    if (a < 0) continue
+    const vx = -(1.6 + 3.2 * hash(j, 81))
+    const vy = 2.2 + 3.4 * hash(j, 82)
+    const T = (2 * vy) / G_EARTH
+    const lie = a - T
+    if (lie > 0.5) continue
+    const fly = Math.min(a, T)
+    const x = wheel - 0.1 + vx * fly
+    const y = GROUND - 0.03 - Math.max(0, vy * fly - 0.5 * G_EARTH * fly * fly)
+    const r = 0.022 + 0.022 * hash(j, 83)
+    p.noStroke()
+    p.fill(alpha(p, mixHex(DUST.wood, ink, 0.45), lie > 0 ? 1 - lie / 0.5 : 1))
+    p.circle(X(x), X(y), X(2 * r))
+  }
+}
+
+/**
+ * The drop, at the grille: he floors it into the stand of corn across the road, and it bursts. Torn leaves and husks
+ * go up over the hood and forward, tumbling, and come down on the road ahead under the farm's gravity. In front of
+ * the truck.
+ */
+function drawChaff(p: p5, s: TruckState, c: Ctx, t: number): void {
+  const { k, ink, weight } = c
+  const X = (v: number) => v * k
+  for (const [j, q] of s.stand.entries()) {
+    for (let i = 0; i < 4; i++) {
+      const a = t - q.at - 0.02 * i
+      if (a < 0 || a > 1.5) continue
+      const n = j * 4 + i
+      const vx = CHASE_PACE * 0.7 + (hash(n, 91) - 0.25) * 3.4
+      const vy = 2.6 + 3.6 * hash(n, 92)
+      const x = q.x + 0.02 + vx * a * Math.exp(-a * 0.5)
+      const y = GROUND - 0.5 - 0.5 * hash(n, 93) - vy * a + 0.5 * G_EARTH * 0.55 * a * a
+      if (y > GROUND - 0.02) continue
+      const len = 0.1 + 0.1 * hash(n, 94)
+      const turn = (hash(n, 95) - 0.5) * 2 + a * (6 + 8 * hash(n, 96)) * (n % 2 ? 1 : -1)
+      p.push()
+      p.translate(X(x), X(y))
+      p.rotate(turn)
+      p.drawingContext.globalAlpha = a > 1.1 ? 1 - (a - 1.1) / 0.4 : 1
+      solid(p, ink, weight * 0.55, n % 3 ? DUST.leaf : DUST.husk)
+      // A scrap of leaf: pointed at both ends.
+      p.beginShape()
+      p.vertex(X(-len / 2), 0)
+      p.quadraticVertex(0, X(-len * 0.3), X(len / 2), 0)
+      p.quadraticVertex(0, X(len * 0.3), X(-len / 2), 0)
+      p.endShape(p.CLOSE)
+      p.pop()
+    }
+  }
+}
+
 function drawTruck(p: p5, s: TruckState, c: Ctx): void {
   const { k, ink, weight } = c
   const t = c.t + s.begin
@@ -722,8 +851,13 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
     // Each wall starts where it has height: a wall of no height would be a bare line along its foot, across the bank.
     // The tall one comes up over its own height, not as a cliff; at the dam both end as steeply as each other, so the
     // two tops do not run side by side down to the edge.
-    cornWall(p, k, ink, weight, { x0: Math.max(f.x0 - 1, s.b0 + 0.6), x1: wx1, foot: GROUND - 0.35, h: 2.6, t, fill: DUST.husk, seed: 31, taper: [s.b0 + 0.6, s.edge - 0.1], rise: [2.6, 1.2] })
-    cornWall(p, k, ink, weight, { x0: Math.max(f.x0 - 1, s.b0 + 1.4), x1: wx1, foot: GROUND - 0.1, h: 1.25, t: t + 1, fill: DUST.sage, seed: 32, tassels: false, taper: [s.b0 + 1.4, s.edge - 0.1] })
+    const blow = blowAt(s, t)
+    const near = (x: number): [number, number] => {
+      const [bx, by] = blow(x)
+      return [bx * 0.6, by * 0.5]
+    }
+    cornWall(p, k, ink, weight, { x0: Math.max(f.x0 - 1, s.b0 + 0.6), x1: wx1, foot: GROUND - 0.35, h: 2.6, t, fill: DUST.husk, seed: 31, taper: [s.b0 + 0.6, s.edge - 0.1], rise: [2.6, 1.2], blow })
+    cornWall(p, k, ink, weight, { x0: Math.max(f.x0 - 1, s.b0 + 1.4), x1: wx1, foot: GROUND - 0.1, h: 1.25, t: t + 1, fill: DUST.sage, seed: 32, tassels: false, taper: [s.b0 + 1.4, s.edge - 0.1], blow: near })
   }
   drawFlush(p, s, c, t, f)
   // The road's bank, down to the field past the dam: the dam's face is its end. Without it, once the camera came down
@@ -808,25 +942,28 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
   // The fence: two posts and two rails across the field; on the downbeat the grille takes the rails (`fence.ts`).
   drawFence(p, k, ink, weight, s.fence, GROUND, t - FENCE, CHASE_PACE)
 
-  // The stalks the grille takes: standing, bent under, and back up behind.
-  for (let i = 0; i < s.stalks.length; i++) {
-    const x = s.stalks[i]
-    if (x < f.x0 - 2 || x > f.x1 + 2) continue
-    const since = t - STALKS[i]
-    const still = Math.sin(t * 1.1 + i) * 0.03
+  // The stalks the grille takes: standing, bent under, and back up behind. Those still standing take the drop's wave
+  // with the field behind them.
+  const blown = blowAt(s, t)
+  const taken = (x: number, at: number, free: number, seed: number, h: number) => {
+    if (x < f.x0 - 2 || x > f.x1 + 2) return
+    const since = t - at
+    const still = Math.sin(t * 1.1 + seed) * 0.03 + blown(x)[0] * 1.4
     let sway = still
     if (since > -0.05) {
       // Taken by the grille on the beat and pressed flat under the truck; when its tail has gone by, the stalk comes
       // up again slowly, heavy with its ear: nearly a second to stand, one soft swing past upright, and still.
-      const freed = t - s.freed[i]
-      if (freed < 0) sway = 1.25 * smooth(since, -0.05, 0.08)
+      const freed = t - free
+      if (freed < 0) sway = still + (1.25 - still) * smooth(since, -0.05, 0.08)
       else sway = still + (1.25 - still) * Math.exp(-freed / 0.55) * (Math.cos(freed * 2.4) + 0.76 * Math.sin(freed * 2.4))
     }
-    stalk(p, k, ink, weight * 0.85, { x, foot: GROUND, h: 1.55 + hash(i, 7) * 0.25, seed: i + 500, sway, shake: since > 0 ? Math.exp(-since / 1.1) : 0, plain: true })
+    stalk(p, k, ink, weight * 0.85, { x, foot: GROUND, h, seed: seed + 500, sway, shake: since > 0 ? Math.exp(-since / 1.1) : 0, plain: true })
   }
+  for (let i = 0; i < s.stalks.length; i++) taken(s.stalks[i], STALKS[i], s.freed[i], i, 1.55 + hash(i, 7) * 0.25)
+  for (const [j, q] of s.stand.entries()) taken(q.x, q.at, q.freed, 40 + j, 1.5 + hash(j, 72) * 0.4)
 
   // Dust: one kick off the line, then one off the back wheels on each bar's downbeat. One cloud each, never a trail.
-  const kicks = [CATCH + 0.3, DROP, beat(72), beat(76), beat(80), STOP]
+  const kicks = [CATCH + 0.3, beat(72), beat(76), beat(80), STOP]
   for (const at of kicks) {
     const age = t - at
     if (age < 0 || age > 1.4) continue
@@ -837,6 +974,7 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
     puff(p, k, alpha(p, ink, 0.5).toString(), weight * 0.6, DUST.husk, cx, GROUND - 0.18 - age * 0.3, 0.16 + age * 0.3)
     p.pop()
   }
+  drawDig(p, s, c, t)
 
   // The truck itself. Once he is out, the door swings in front of nobody.
   const pose = poseAt(s, t)
@@ -845,6 +983,8 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
     doorPickup(p, k, ink, weight, pose)
     glassPickup(p, k, ink, weight, pose)
   }
+
+  drawChaff(p, s, c, t)
 
   // Exhaust: a puff a turn of the engine, a cloud at each rev, left hanging where it came out of the pipe.
   const puffs = [...CRANKS, CATCH, REV, DROP]

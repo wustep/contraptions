@@ -121,7 +121,27 @@ export function leafTip(s: Stalk, i: number): [number, number] {
  * it. The field reads as a field without a thousand leaves to look at; only
  * the stalks the ball or the truck touches are drawn stalk by stalk.
  */
-export function cornWall(p: p5, k: number, ink: string, weight: number, o: { x0: number; x1: number; foot: number; h: number; t: number; fill: string; seed: number; tassels?: boolean; alpha?: number; taper?: [number, number]; rise?: number | [number, number] }): void {
+export function cornWall(
+  p: p5,
+  k: number,
+  ink: string,
+  weight: number,
+  o: {
+    x0: number
+    x1: number
+    foot: number
+    h: number
+    t: number
+    fill: string
+    seed: number
+    tassels?: boolean
+    alpha?: number
+    taper?: [number, number]
+    rise?: number | [number, number]
+    /** Something going through the field: how far the top at `x` is pushed over and down by it (cells), as a share of a full-height wall. */
+    blow?: (x: number) => [number, number]
+  },
+): void {
   const step = 0.2
   const X = (x: number) => x * k
   const i0 = Math.floor(o.x0 / step) - 1
@@ -136,7 +156,8 @@ export function cornWall(p: p5, k: number, ink: string, weight: number, o: { x0:
     const k2 = e * e * (3 - 2 * e)
     // Sways as much as it stands: at full sway where it had no height, the ink's last stub at the foot was a flick.
     const sway = Math.sin(o.t * 0.9 + x * 0.55) * 0.05 * k2
-    return { x: x + sway, y: o.foot - o.h * (0.86 + 0.14 * hash(i, o.seed)) * k2, k: k2 }
+    const [bx, by] = o.blow ? o.blow(x) : [0, 0]
+    return { x: x + sway + bx * k2, y: o.foot - (o.h * (0.86 + 0.14 * hash(i, o.seed)) - by) * k2, k: k2 }
   }
   p.push()
   if (o.alpha !== undefined) p.drawingContext.globalAlpha = o.alpha
