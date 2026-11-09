@@ -7,10 +7,12 @@ import measured from '../../../scripts/shows/plans/time-onsets.json'
 import { STRIKES } from '../src/shows/versions/time/kick/hits'
 import { BEATS, BRASS, CREDITS_AT, DURATION, HALVES, KICK, LAST, ONSETS, PEAK, PIANO, PIANO_SPIN, PULSE, RECORDING, RELEASE, SEAM, STRINGS, SUMMIT, SWELL, bar } from '../src/shows/versions/time/kick/music'
 import { CALVING, Q, bolt, cabinY, towerFall, weightY } from '../src/shows/versions/time/kick/limbo/limbo-geo'
+import { HEAVE } from '../src/shows/versions/time/kick/rain/rain-city'
+import { FISCHER_SNOW, HIT, T as SNOW_T } from '../src/shows/versions/time/kick/snow/snow-geo'
 import { CARDS, CREDITS_OK, blackAt, creditsAt } from '../src/shows/versions/time/kick/credits'
 import { COVERED, PUNCHES, coverAt, rollAt } from '../src/shows/versions/time/kick/score'
 import { FIRST } from '../src/shows/versions/time/kick/seams'
-import { BAND, COLUMN, DOWN, OFF, RAIN_GEO, SLEEP_BANDS, SPLASH, UP, VAN, clock, depthAt, vanAt, weightless, LEVELS, DEPTH } from '../src/shows/versions/time/kick/stack'
+import { BAND, COLUMN, DOWN, OFF, RAIN_GEO, ROLL, SLEEP_BANDS, SPLASH, UP, VAN, clock, depthAt, vanAt, weightless, LEVELS, DEPTH } from '../src/shows/versions/time/kick/stack'
 import type { KickShow } from '../src/shows/versions/time/kick/show'
 import type { Who } from '../src/shows/versions/time/kick/kit'
 import { KID_ID } from '../src/shows/versions/time/kick/worlds'
@@ -234,6 +236,20 @@ export function checkKick(perf: Performance, version: ShowVersion, check: Check)
   check('kick: the van is on the river\'s bed by the crest, and from there he only rises, to the surface on the release',
     Math.abs(lowest - RAIN_GEO.bed) < 0.05 && Math.abs(vanAt(bar(55) + 2).y - rest.y) < 1e-6 && at(bar(55))[1] > RAIN_GEO.river + 2 && sinks <= 1e-4 && at(RELEASE - 0.001)[1] < RAIN_GEO.river,
     `van's lowest corner ${lowest.toFixed(2)} (bed ${RAIN_GEO.bed}); he is at ${at(bar(55))[1].toFixed(2)} on the crest; sinks ${sinks.toFixed(4)}`)
+
+  // Causes before effects. The van's flip has something to flip on: the heaved slab of the deck stands at its nose as
+  // it begins; and the corridor is not seen to turn before the van is seen to go over (a cut up to it on the brake's
+  // release). Mal's shot finds Fischer standing, knocks him along the floor, and only then does the floor take him.
+  const nose = vanAt(ROLL.from).x + VAN.size[0] / 2
+  check('kick: the van flips on the heaved slab of the deck, seen in a cut up to it as the corridor\'s brake comes off',
+    Math.abs(nose - HEAVE.x) < 0.15 && HEAVE.x < RAIN_GEO.deckEnd - 1 && cameraCuts.some((c) => near(c, ROLL.from, 1e-3)) &&
+    cam(ROLL.from + 0.3).y < BAND.rain.bottom && rollAt(ROLL.from + 0.3) === 0, `nose ${nose.toFixed(2)}, slab ${HEAVE.x}`)
+  const fAt = (t: number) => FISCHER_SNOW.at(t)
+  const stood = Math.hypot(fAt(SNOW_T.shot)[0] - fAt(SNOW_T.shot - 0.3)[0], fAt(SNOW_T.shot)[1] - fAt(SNOW_T.shot - 0.3)[1])
+  const knocked = fAt(HIT.to)[0] - fAt(HIT.from)[0]
+  check('kick: Mal\'s shot finds Fischer standing at the door, knocks him along the floor, and then the floor takes him',
+    stood < 1e-6 && knocked > 0.4 && Math.abs(fAt(HIT.to)[1] - fAt(HIT.from)[1]) < 1e-6 && HIT.from > SNOW_T.shot && fAt(HIT.sink + 0.6)[1] > fAt(HIT.sink)[1] + 0.2 &&
+    cameraCuts.some((c) => c > SNOW_T.shot && c < HIT.to), `stood ${stood.toFixed(3)}, knocked ${knocked.toFixed(2)}`)
 
   // The blink and the veil are full at their cuts, and nothing else is covered; the last chord cuts to black for good.
   check('kick: going under inside a blink, home through a veil of morning: full at their cuts, and only there',
