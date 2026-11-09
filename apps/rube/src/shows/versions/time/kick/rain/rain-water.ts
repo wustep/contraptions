@@ -149,6 +149,7 @@ export function drawTicks(pen: Pen, f: View, t: number): void {
 
 const E_SPLASH = eff(SPLASH)
 const SILT = mixHex(RAIN.riverLight, RAIN.kerb, 0.45)
+const FAR_WATER = mixHex(mixHex(RAIN.buildingDark, RAIN.far, 0.6), RAIN.riverLight, 0.66)
 /** Where the van's nose meets the water. */
 const IMPACT: Pt = [vanPoint(vanAt(SPLASH), 1.05, 0.2)[0], RAIN_GEO.river]
 
@@ -176,6 +177,18 @@ export function overRiver(pen: Pen, f: View, t: number): void {
   for (let x = x0; x <= x1 + step; x += step) body.lineTo(Math.min(x, x1) * k, surfaceAt(Math.min(x, x1), t) * k)
   body.lineTo(x1 * k, RAIN_GEO.bed * k)
   body.closePath()
+  // In a trough the surface lies a little under the line the far water is painted down to, and the dark behind the
+  // river showed there as a black sliver along it (plain in the close shots, either side of whoever floats): the far
+  // water's own tone is carried down to the surface.
+  const gap = new Path2D()
+  gap.moveTo(x0 * k, (RAIN_GEO.river - 0.03) * k)
+  for (let x = x0; x <= x1 + step; x += step) gap.lineTo(Math.min(x, x1) * k, Math.max(RAIN_GEO.river - 0.03, surfaceAt(Math.min(x, x1), t) + 0.01) * k)
+  gap.lineTo(x1 * k, (RAIN_GEO.river - 0.03) * k)
+  gap.closePath()
+  ctx.save()
+  ctx.fillStyle = FAR_WATER
+  ctx.fill(gap)
+  ctx.restore()
   const g = ctx.createLinearGradient(0, RAIN_GEO.river * k, 0, RAIN_GEO.bed * k)
   g.addColorStop(0, rgba(RAIN.river, 0.4))
   g.addColorStop(0.5, rgba(mixHex(RAIN.river, RAIN.street, 0.2), 0.55))
