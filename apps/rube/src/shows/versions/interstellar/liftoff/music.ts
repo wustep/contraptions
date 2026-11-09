@@ -60,3 +60,8 @@ export const UNDOCK = cue(184)
 /** The peak, and the last full hit before the cue stops. */
 export const PEAK = cue(228)
 export const FINAL = cue(232)
+/**
+ * The last chord, struck on FINAL, is held for 1.8 s and then cut off: its loudness, level from 255.5 s, falls away
+ * between 256.9 and 257.5 s, and after that there is only the room it was played in, dying away. Where it is cut off.
+ */
+export const CHORD_OFF = 257.3
