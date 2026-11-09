@@ -421,7 +421,37 @@ export const CALVING: Calving[] = [
   // top, on the kick.
   { tower: 3, hit: bar(47), top: 74.7, h: 4.8, w: 1.3, side: 1, fall: 3.0 },
   { tower: 3, hit: bar(48), top: 74.0, h: 5.5, w: 1.5, side: 1, off: 1.3, fall: 3.4 },
+  // The kick: as they are thrown out of limbo the city goes into the sea, tower after tower, the nearest first and on
+  // out along the bay, one on every beat and off-beat of the summit's first bar (the great wide sees the whole row go).
+  { tower: 4, hit: half(192), top: 74.6, h: 6.6, w: 3.0, side: -1, fall: 1.7, big: true },
+  { tower: 6, hit: beat(193), top: 71.2, h: 8.6, w: 3.6, side: 1, fall: 2.0, big: true },
+  { tower: 8, hit: half(193), top: 70.6, h: 9.2, w: 4.2, side: -1, fall: 2.2, big: true },
+  { tower: 10, hit: beat(194), top: 72.2, h: 8.0, w: 3.4, side: 1, fall: 2.2, big: true },
+  { tower: 12, hit: half(194), top: 71.6, h: 8.6, w: 4.0, side: -1, fall: 2.3, big: true },
+  { tower: 14, hit: beat(195), top: 73.0, h: 7.4, w: 3.4, side: 1, fall: 2.3, big: true },
+  { tower: 16, hit: half(195), top: 72.6, h: 7.8, w: 3.8, side: -1, fall: 2.4, big: true },
+  { tower: 18, hit: bar(49), top: 73.8, h: 7.0, w: 3.2, side: 1, fall: 2.4, big: true },
+  // And the slighter ones between them, a beat behind their neighbours.
+  { tower: 7, hit: beat(194), top: 73.6, h: 6.8, w: 2.6, side: 1, fall: 2.0, big: true },
+  { tower: 9, hit: beat(195), top: 74.0, h: 6.4, w: 2.8, side: -1, fall: 2.2, big: true },
+  { tower: 11, hit: half(195), top: 76.0, h: 5.2, w: 2.2, side: 1, fall: 2.0, big: true },
+  { tower: 13, hit: bar(49), top: 75.0, h: 5.8, w: 2.6, side: -1, fall: 2.2, big: true },
 ]
+
+/**
+ * Limbo's kick: what falls. The other three kicks each drop the thing the sleepers lie in (the fortress, the lift, the
+ * van); limbo's had none, and its downbeat, the cue's hardest, cut to a wide in which nothing moved. As they are thrown
+ * out of it the tower they built comes down: straight down into its own footing, heavy and slow as a dream's things
+ * fall, leaning a little to the sea as it goes. `drop` is how far it has sunk (cells), `lean` its tilt (radians).
+ */
+export const TOWER_FALL = { at: Q.kick, g: 4.4, lean: -0.085, depth: 16.5 }
+export function towerFall(t: number): { u: number; drop: number; lean: number } | null {
+  const u = t - TOWER_FALL.at
+  if (u < 0) return null
+  // A shudder as its footing goes, and then down.
+  const drop = Math.min(TOWER_FALL.depth, 0.5 * TOWER_FALL.g * u * u)
+  return { u, drop, lean: TOWER_FALL.lean * sm(u / 2.6) }
+}
 /** The prologue's one sign: a slab on the broken tower slips on its crack (bar 3), and hangs there leaning. */
 export const CRACK = { tower: 3, at: P.crack, slab: 6 }
 

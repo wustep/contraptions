@@ -8,6 +8,7 @@ import { G } from '../physics'
 import { DOWN, FISCHER_DOWN, FISCHER_UP, ORIGIN, UP, exitFor, local } from '../stack'
 import { FISCHER, KID_DARK, KID_ID, KID_SCALE, LIMBO } from '../worlds'
 import {
+  ANNEX,
   BOTTOM,
   BREAK_X,
   CABIN,
@@ -16,6 +17,7 @@ import {
   FALL_G,
   FIRST_AT,
   GARDEN_VIEW,
+  GROUND,
   HIS,
   KICK_AT,
   KIDS_AT,
@@ -30,6 +32,8 @@ import {
   SEA,
   SPOTS,
   TOP_OF_SKY,
+  TOWER,
+  TOWER_FALL,
   UPRUSH,
   WAIT_X,
   ariadneAt,
@@ -42,6 +46,7 @@ import {
   sandY,
   sm,
   smoother,
+  towerFall,
   washFront,
 } from './limbo-geo'
 import { drawCity, drawFarSea, drawGarden, drawGardenAir, drawGround, drawSea, drawSeaOver, drawSky, drawWash, surface } from './limbo-land'
@@ -141,7 +146,7 @@ export const limboSet = scenery<null>({
     drawGround(pen, f)
     drawWash(pen, t, f)
     drawGarden(pen, t, f)
-    drawTowerBack(pen, t, f)
+    falling(pen, t, () => drawTowerBack(pen, t, f))
     p.pop()
     ctx.restore()
   },
@@ -158,13 +163,64 @@ export const limboSet = scenery<null>({
     p.push()
     drawGardenAir(pen, t, f)
     drawSeaOver(pen, t, f)
-    drawTowerFront(pen, t, f)
+    falling(pen, t, () => drawTowerFront(pen, t, f))
+    drawTowerDust(pen, t, f)
     drawPlunge(pen, t)
     drawKicks(pen, t)
     p.pop()
     ctx.restore()
   },
 })
+
+/**
+ * The tower as it comes down on the kick (`towerFall`): drawn sunk into its own footing and leaning, and cut off at the
+ * ground it goes into. Before the kick it is drawn as it stands.
+ */
+function falling(pen: Pen, t: number, draw: () => void): void {
+  const fall = towerFall(t)
+  if (!fall) return draw()
+  if (fall.drop >= TOWER_FALL.depth) return
+  const ctx = ctxOf(pen.p)
+  const { k } = pen
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect((ANNEX.x0 - 6) * k, (TOP_OF_SKY - 2) * k, (TOWER.x1 - ANNEX.x0 + 12) * k, (GROUND + 0.04 - TOP_OF_SKY + 2) * k)
+  ctx.clip()
+  const px = ((ANNEX.x0 + TOWER.x1) / 2) * k
+  const py = (GROUND + fall.drop) * k
+  ctx.translate(px, py)
+  ctx.rotate(fall.lean)
+  ctx.translate(-px, -py + fall.drop * k)
+  pen.p.push()
+  draw()
+  pen.p.pop()
+  ctx.restore()
+}
+
+/** The dust of it: a bank rolling out along the ground both ways from its foot, climbing as the tower goes into it, and hanging. */
+const DUST = mixHex(LIMBO.sand, LIMBO.foam, 0.4)
+const DUST_SHADE = mixHex(LIMBO.sandWet, LIMBO.concreteDark, 0.35)
+function drawTowerDust(pen: Pen, t: number, f: ReturnType<typeof frame>): void {
+  const fall = towerFall(t)
+  if (!fall || fall.u > 16) return
+  if (f.x1 < ANNEX.x0 - 16 || f.x0 > TOWER.x1 + 16 || f.y1 < GROUND - 14 || f.y0 > GROUND + 2) return
+  const { u } = fall
+  const cx = (ANNEX.x0 + TOWER.x1) / 2
+  const come = sm(u / 0.18)
+  const fade = u < 5 ? 1 : Math.exp(-(u - 5) / 3.5)
+  const out = sm(u / 3.4)
+  // The bank: lobes along the ground, the outer ones later and lower; its own shade under it, its top paler.
+  for (let i = -5; i <= 5; i++) {
+    const q = Math.abs(i) / 5
+    const x = cx + i * (0.55 + 1.05 * out)
+    const h = (2.6 - 1.5 * q) * (1 - Math.exp(-u / (0.35 + 0.6 * q))) + 0.42 * u * (1 - q) * (1 - q)
+    const r = 1.2 + 0.9 * out
+    soft(pen, x + 0.2, GROUND - h * 0.3 + 0.1, r * 1.1, 0.5 + h * 0.5, DUST_SHADE, 0.6 * come * fade)
+    soft(pen, x, GROUND - h * 0.55, r, 0.45 + h * 0.5, DUST, 0.92 * come * fade * (1 - 0.3 * q))
+  }
+  // The sea shoved out from its foot: a low surge of white water running off along the surface.
+  for (let j = 0; j < 3; j++) soft(pen, ANNEX.x0 - 1.0 - (1.6 + 0.9 * j) * u, GROUND + 0.75 + 0.25 * j, 1.1 + 0.3 * u, 0.16, LIMBO.foam, 0.6 * come * Math.exp(-u / (2 + j)))
+}
 
 /** Where they go into the sea: a crown of spray, and the water closing over them. */
 function drawPlunge(pen: Pen, t: number): void {

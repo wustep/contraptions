@@ -1,4 +1,4 @@
-import { R, type Pt } from '../../../../parts'
+import { R, mixHex, type Pt } from '../../../../parts'
 import { rgba } from './cast'
 import { box, frame, hash, scenery } from './kit'
 import { SEAM } from './music'
@@ -82,17 +82,23 @@ export const sleep = scenery<null>({
     for (const [a, b] of span ? [span] : []) {
       if (!wide || t < a || t > b) continue
       const at = wide.where(t)
-      // The streak: where he was over the last half second, thinning and fading back along his climb.
+      // The streak: where he was over the last half second, thinning and fading back along his climb. In the director's
+      // great wide it is the throw itself, the one thing going up through a dream that is coming down: his own colour,
+      // firm at his heels and paling back down the column over the last second and more of his climb (pale and half a
+      // second long, at a hundred cells it was a hair that could not be found).
+      const great = wide.spans.some(([g0, g1]) => t >= g0 && t <= g1)
+      const n = great ? 26 : 10
+      const dt = great ? 0.05 : 0.05
       ctx.save()
       ctx.lineCap = 'round'
-      for (let j = 0; j < 10; j++) {
-        const s0 = Math.max(a, t - j * 0.05)
-        const s1 = Math.max(a, t - (j + 1) * 0.05)
+      for (let j = 0; j < n; j++) {
+        const s0 = Math.max(a, t - j * dt)
+        const s1 = Math.max(a, t - (j + 1) * dt)
         if (s1 >= s0) break
         const p0 = wide.where(s0)
         const p1 = wide.where(s1)
-        ctx.strokeStyle = rgba(SLEEP.mote, 0.5 * (1 - j / 10))
-        ctx.lineWidth = Math.max(1, 2 * R * k * (1 - j / 12))
+        ctx.strokeStyle = great ? rgba(mixHex(COBB, SLEEP.mote, Math.min(1, (j / n) * 1.3)), 0.95 * (1 - j / n) ** 0.7) : rgba(SLEEP.mote, 0.5 * (1 - j / 10))
+        ctx.lineWidth = great ? Math.max(1.6, 2 * R * k * (1 - (0.6 * j) / n)) : Math.max(1, 2 * R * k * (1 - j / 12))
         ctx.beginPath()
         ctx.moveTo(p0[0] * k, p0[1] * k)
         ctx.lineTo(p1[0] * k, p1[1] * k)

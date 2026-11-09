@@ -169,7 +169,7 @@ const MARKS = (legs: Leg[]): MarkPlan => {
 export const PUNCHES: [number, number][] = [
   // Down into limbo, on the drums.
   [PEAK, 0.4],
-  [KICK.limbo, 0.55],
+  [KICK.limbo, 0.85],
   [KICK.snow, 0.6],
   [KICK.hotel, 0.65],
   [KICK.rain, 0.95],
@@ -199,9 +199,11 @@ const STACK_WIDES: { from: number; to: number; keys: Shot[]; backCells: number; 
   {
     from: KICK.limbo,
     to: bar(49),
+    // Out to the whole dream on the downbeat, then in after them: down on limbo coming apart and the fortress they are
+    // thrown up into, so the bar is a move toward the vault and not a held diagram.
     keys: [
       { t: KICK.limbo, cells: 104, hold: [3, 41.5], cut: true },
-      { t: bar(49) - 0.02, cells: 95, hold: [2.4, 43.5] },
+      { t: bar(49) - 0.02, cells: 58, hold: [2.2, 66.5] },
     ],
     backCells: 5.0,
     backOff: [0.6, -0.4],
