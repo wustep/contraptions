@@ -288,9 +288,12 @@ export const river = part<State>(
       // Up out of the dark with them, and out to the van hanging off the bridge's end over the river.
       follow(slot.begin + 0.8, 7.7, [0.35, -0.3]),
       hold(T_LAND - 0.3, 8.6, [1.3, 0.3]),
-      // In on the three of them in it as it goes, its lamps failing; back for the water coming up at it.
-      hold(T_FLICKER[1] + 0.2, 6.6, [1.75, 1.7]),
-      hold(T_FLICKER[3] + 0.1, 8.2, [2.15, 4.4]),
+      // They are in it, and it is falling for real now. The frame drops ahead of it and waits: the bridge's broken end
+      // at its top, the river at its foot, and the van comes down through it, faster and faster, at the water. (Held
+      // on the van all the way down, nothing but rain went by it: for four seconds it hung in one pose in the middle
+      // of the picture, and the splash came from nowhere.)
+      hold(T_FLICKER[0], 9.6, [2.0, 4.3]),
+      hold(T_FLICKER[3] + 0.1, 9.4, [2.2, 4.7]),
       // The splash: framed for it, the river and the air over it.
       hold(SPLASH, 8.6, [2.4, 5.8]),
       // Down after the van as it goes to the bottom, the surface a pale line going up out of the frame's top; then, on
