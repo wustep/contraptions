@@ -102,7 +102,8 @@ into the next world's cells and the camera moves by exactly the same amount at t
   fortress, and cuts to the vault on the paddles (187.061).
 - **The camera rolls twice**: 180° as Paris folds over (and is left upside down until the jolt), and once right round
   with the hotel's turning corridor, the room standing still on the screen while the building wheels round it.
-- **The punches**: the plunge into limbo (152.770) and the four kicks, the river's the biggest.
+- **The punches**: the plunge into limbo (152.770) and the four kicks, the river's the biggest; lesser ones as each
+  great tower of limbo's city goes into the sea on the drums. On each the frame is also knocked down and rings back.
 - **The end** is a hard cut to black on the last chord (274.617), the top still wobbling.
 
 ## Time runs slower above
@@ -144,7 +145,7 @@ Times are show seconds; bar *n* is `bar(n)`, beat *k* is `beat(k)`.
 | 122.294 → 141.340 | | the snow | *Cut* to the mountain whole, the fortress under it; out of the sky onto the shoulder under the summit in low cold sun; **the run**, the camera leading them down the face: over the cornice, the great air over the fortress roof (a held wide, bar 34), the hairpin, the air over the crevasse (bar 36), guards on snowmobiles behind them, to the fortress's gate. |
 | 141.340 → **145.154** | | | Fischer goes on alone, in at the gate and down the hall to his father's door, the camera after him. *Cut to Mal* (143.279) on the piste above in the rock's blue shadow, the rifle coming up; **the shot**; *cut back* (145.642): Fischer knocked along the floor at the vault's door, and the floor taking him; Cobb in the air off the ledge. |
 | 148.951 → **152.770** | the peak | down | They lie by the gate; the floor goes soft; into the dark after him. |
-| 152.770 → 160.392 | the drums | limbo | *Cut* to all of limbo. They fall into its sea as its city calves on the drums, tower after tower sliding into the water in white plumes; washed up, in surf that now breaks on every beat, on the shore **at the show's first frame** (the circle). |
+| 152.770 → 160.392 | the drums | limbo | *Cut* to all of limbo, a tower's head going into the sea on the downbeat. They fall into its sea as its city calves on the drums, tower after tower sliding into the water in white plumes; washed up, in surf that now breaks on every beat, on the shore **at the show's first frame** (the circle). |
 | 163.719 → 168.009 | | | Up the tower in the lift, the city falling round it. |
 | 168.009 | | | Their room: Mal at the table, the top still spinning; Fischer held. |
 | 171.817 → **175.631** | | | **The choice**: Mal steps onto the lift's counterweight deck; the garden, the children's backs; he takes his lever and draws the bolt, and on the chord the rope takes up at once: it snatches him up out of the frame, and the frame stays with her as she goes down the slot under their room into the dark, by degrees, her eye turned up after him and his down after her. *Cut* (178.016) to the roof as his cage reaches it. |
@@ -807,8 +808,9 @@ What changed, in that order:
   silt hanging in it, so there is an up.
 - **Weightless** (107.07 to 118.5): the frame floats too, leaning slowly one way and back the other, square again as
   the floor takes them; on bar 30 the sleepers' line bows under them and plucks the bundle, which swings.
-- **The peak's middle** (152.8 to 168): a tower stands out in the sea (west of the show's first frame); its top goes
-  in on bar 41's off-beat and the wave it raises is the one that washes them up on bar 42. The surf breaks on every
+- **The peak's middle** (152.8 to 168): a tower stands out in the sea (west of the show's first frame); its head is in
+  the water on the peak's downbeat, the rest of it goes in on bar 41's off-beat, and the wave that raises is the one
+  that washes them up on bar 42. The surf breaks on every
   beat for the drums' first four bars. Each great tower's fall jolts the frame. The ride up the tower jerks on each
   beat of its bar as the city goes down round it.
 - **The shot** (141.3 to 147): Fischer goes on alone down the hall to his father's door, the camera in after him, and
@@ -838,8 +840,10 @@ the shot before it; in the drum they come back down to its floor as it comes lev
 wall of a level room) and lift off it weightless; the drums come in on a blow, the head of the tower out in the sea in
 the water on the peak's downbeat; going under through the hotel's footings, the patch over each of them has the
 footing's piers and thins into the dark (a box, and each of them cropped flat across coming out of it); the bridge's
-pier goes into the bed's own ground at its foot. (And the prologue's cracked slab is the right slab again: the list
-it is counted in had grown under it.)
+pier goes into the bed's own ground at its foot; and for its real fall (201 to 206) the van comes down through a held
+frame, the bridge's broken end at its top and the river at its foot (held on the van, it hung in one pose in the
+middle of the picture and the splash came from nowhere). (And the prologue's cracked slab is the right slab again:
+the list it is counted in had grown under it.)
 
 That viewer's ratings of the hits, one to five: the brass 3, the swell 4, the drums 3, letting her go 2 ("she is gone
 in a second and a half under a pull-out"), limbo's kick 3, the snow's 4, the hotel's 4, the river's 5, the release 4.
