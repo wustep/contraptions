@@ -254,7 +254,15 @@ export function cabinY(t: number): number {
   if (t < RESET[0]) return ride(t, P.liftGo, P.arrive, GROUND, ROOM)
   if (t < Q.liftGo) return ride(t, RESET[0], RESET[1], ROOM, GROUND)
   if (t < Q.letGo) return ride(t, Q.liftGo, Q.arrive, GROUND, ROOM)
-  return ride(t, Q.letGo, Q.roof, ROOM, ROOF)
+  // Let go: the bolt was all that held them level, and the rope takes up at once. The weight drops and the cabin is
+  // snatched up on the chord itself, then runs on up and comes to rest at the roof (eased from rest, as the first ride
+  // is, nothing moved for a third of a second after the downbeat: the let-go was late on its chord).
+  return lerp(ROOM, ROOF, snatch((t - Q.letGo) / (Q.roof - Q.letGo)))
+}
+/** A rope taking up a load at once: under way from the first instant, slowing to rest. */
+export const snatch = (u: number): number => {
+  const v = clamp01(u)
+  return 0.5 * (1 - (1 - v) ** 3) + 0.5 * v * v * (3 - 2 * v)
 }
 /** The weight's deck at t: half as far as the cabin, the other way (and a little lower under Mal as she takes hold). */
 export function weightY(t: number): number {
@@ -271,7 +279,9 @@ export function bolt(t: number): number {
   if (t < P.arrive) return 0
   if (t < RESET[0]) return sm((t - P.arrive) / 0.12)
   if (t < Q.arrive) return 1 - sm((t - RESET[0]) / 0.2)
-  return sm((t - Q.arrive) / 0.12) * (1 - sm((t - Q.letGo) / 0.14))
+  // Drawn clear by the downbeat (still half across for a tenth of a second after it, it was left behind in the doorway
+  // as the cabin went up past it).
+  return sm((t - Q.arrive) / 0.12) * (1 - sm((t - Q.letGo + 0.1) / 0.1))
 }
 /** The lever in the cabin that draws the bolt: 0 home, 1 pulled. */
 export const lever = (t: number): number => (t < Q.lever - 0.3 ? 0 : 0.35 * sm((t - Q.lever + 0.3) / 0.35) + 0.65 * sm((t - Q.letGo + 0.12) / 0.18)) * (1 - sm((t - Q.roof) / 0.6))

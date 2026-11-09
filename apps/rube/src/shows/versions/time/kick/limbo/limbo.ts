@@ -524,7 +524,10 @@ function limboShots(_slot: Slot): PartShot[] {
   const O = ORIGIN.limbo
   const h = hold(O)
   return [
-    { t: 153.9, cells: 10, off: [4.6, 0.8], w: 0 },
+    // The drums: a cut, on the downbeat, to all of limbo at once: the sea, the shore, the tower, and the city going into
+    // the water, the two of them dropping out of the dark over it (followed down, they were half way through the
+    // dark on the downbeat, and the first tower had fallen before the city was in the picture).
+    { ...h(Q.begin + 0.001, 21, [0.4, 78.1]), cut: true },
     h(155.9, 18.5, [1.0, 80.6]),
     h(157.4, 15.5, [-1.2, 82.6]),
     h(159.3, 9.5, [-5.8, 85.8]),
@@ -542,10 +545,11 @@ function limboShots(_slot: Slot): PartShot[] {
     { ...h(Q.children, 3.4, GARDEN_VIEW), cut: true },
     h(Q.lever - 0.1, 3.15, plus(GARDEN_VIEW, [0.1, 0.05])),
     { ...h(Q.lever, 3.8, [-1.1, 77.6]), cut: true },
-    h(Q.letGo, 3.7, [-1.12, 77.6]),
-    // Up with him as the cage rises, so under Zoom too he stays in the picture.
-    h(176.9, 4.4, [-1.3, 76.25]),
-    h(177.4, 5.0, [-1.05, 75.3]),
+    h(Q.letGo, 3.7, [-1.12, 77.68]),
+    // The two of them parting in one frame: it opens as she goes down into the dark and the same rope takes him up
+    // (it went up with him alone, and she left by the frame's foot unseen); then on up with him to the roof.
+    h(Q.letGo + 1.2, 5.8, [-1.2, 77.0]),
+    h(177.3, 6.4, [-0.95, 76.35]),
     h(178.3, 7.2, [0.2, 75.45]),
     h(Q.fischerKick + 0.35, 7.5, [0.9, 75.4]),
     // Fischer gone, in close on the two of them at the edge: her leap, and him a beat behind her.
@@ -562,7 +566,7 @@ export const LIMBO_WIDE: [number, number][] = [
   // The garden cutaways: he is in the room, out of the frame.
   [P.breath6, P.breath7],
   [Q.children, Q.lever],
-  // The great wide as they go into the sea.
-  [155.4, 158.6],
+  // The great wide as they go into the sea, from the cut on the drums.
+  [Q.begin, 158.6],
 ]
 

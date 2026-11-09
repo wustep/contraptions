@@ -188,7 +188,9 @@ export const rain = part<State>(
       follow(T_DROP, 3.6, [0, 0.3]),
       follow(89.9, 5.0, [0, 0.2]),
       follow(90.8, 6.6, [0, 0.6]),
-      follow(slot.end, 7.0, [0.0, 0.6]),
+      // Into the dark with them, the frame coming up over them so the hotel's roof stays under its foot: nothing of the
+      // level below is seen before its downbeat.
+      follow(slot.end, 5.6, [0.0, -1.35]),
     ]
   },
 )

@@ -262,9 +262,13 @@ export const hotel = part<State>(
     const follow = (t: number, cells: number, off: Pt): PartShot => ({ t, cells, off, w: 0 })
     const hold = (t: number, cells: number, at: Pt, cut = false): PartShot => ({ t, cells, hold: Lh(at), w: 1, ...(cut ? { cut } : {}) })
     const keys: PartShot[] = [
-      // Down through the roof, looking into the corridor under it; landed, looking along it.
-      follow(92.35, 5.8, [0.3, 0.7]),
-      follow(93.2, 5.25, [1.25, -0.72]),
+      // The brass: a cut, on the downbeat, to the corridor itself, its lamps coming up, the dark of sleep over its roof
+      // and the three of them dropping out of it (the level arrives with its layer, as Paris, the plane and the rain
+      // did: followed down, they were half way through the dark on the downbeat and the corridor slid up after it).
+      // Held as they come through the roof and land; then in, looking along it.
+      { t: slot.begin + 0.001, cells: 7.4, hold: Lh([-8.4, 18.85]), w: 1, cut: true },
+      hold(T.land - 0.2, 7.2, [-8.3, 18.95]),
+      follow(93.6, 5.25, [1.25, -0.72]),
       // The drum: close, the camera turning with it (a point fixed in the drum's own frame, leaning toward the three
       // of them, so the room holds still on the screen while gravity swings round it and they run round its walls).
       ...drumKeys(),
@@ -282,7 +286,9 @@ export const hotel = part<State>(
       hold(116.5, 5.1, [10.35, 20.45]),
       // Down with them through the floors into the dark.
       follow(118.7, 6.2, [0.15, -0.15]),
-      follow(121.8, 6.6, [0.1, 0.15]),
+      follow(121.2, 6.4, [0.1, 0.1]),
+      // Into the dark with them, the frame coming up over them: the snow's sky is not seen before its downbeat.
+      follow(slot.end, 5.6, [0.1, -1.35]),
     ]
     return keys.filter((k) => k.t > slot.begin && k.t <= slot.end + 1e-6)
   },

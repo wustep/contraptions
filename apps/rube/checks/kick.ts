@@ -31,7 +31,11 @@ const WIDE: [number, number][] = [
   // great wide of the fall into the sea as the city calves (he is under the water).
   [23.25, 27.052],
   [172.298, 174.69],
-  [155.4, 158.6],
+  [152.77, 158.6],
+  // The brass and the swell: the cut, on each downbeat, to the level's own wide, the three of them dropping in at its
+  // top out of the dark (limbo's, on the peak, is its great wide above).
+  [91.824, 92.15],
+  [122.294, 123.15],
   // The snow: the cut to Mal on the piste above, the rifle, the shot (he is on the ledge below).
   [143.279, 145.642],
   // The hotel: the cutaway up to the van coming out of its flip, landing and rolling to the broken end (he is in the drum).

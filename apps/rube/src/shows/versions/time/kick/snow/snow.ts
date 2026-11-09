@@ -110,9 +110,11 @@ function snowShots(begin: number): PartShot[] {
   void begin
   const cut = (k: PartShot): PartShot => ({ ...k, cut: true })
   return [
-    // Out of the dark with them; down on the shoulder under the summit, the sky over them.
-    follow(T.in + 0.5, 6.0, 0, 0.8),
-    hold(T.land + 0.35, 6.4, 9.4, 46.3),
+    // The swell: a cut, on the downbeat, out of the dark to the whole mountain in its light: the summit, the shoulder
+    // they come down on, the fortress under it (followed down, the dark was still half the frame on the downbeat and
+    // the mountain came up over the next second). Then in on them with the orchestra, all the way to the cornice.
+    cut(hold(T.in + 0.001, 16.4, 6.0, 47.1)),
+    hold(T.land + 0.2, 15.0, 6.2, 47.2),
     hold(T.dropC, 7.2, 7.4, 47.0),
     // Close after them down the face, leading them, the fortress's roof going by under them.
     follow(T.dropF + 0.7, 7.4, -1.1, 0.6),
@@ -142,7 +144,9 @@ function snowShots(begin: number): PartShot[] {
     hold(T.cLand3 + 0.8, 7.0, -7.9, 55.1),
     hold(T.case, 5.8, -8.1, 55.3),
     follow(T.sink + 1.2, 6.2, 0, 0.6),
-    follow(T.out - 0.1, 7.0, 0, 0.8),
+    follow(T.out - 0.9, 6.4, 0, 0.3),
+    // Into the dark with them, the frame coming up over them: limbo's sky is not seen before its downbeat.
+    follow(T.out, 5.6, 0, -1.35),
   ]
 }
 
