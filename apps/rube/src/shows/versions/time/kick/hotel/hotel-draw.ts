@@ -1061,7 +1061,7 @@ function drawSuiteLine(g: Pen, t: number): void {
   if (t > T.catch - 0.3) {
     const u = t - (T.catch - 0.3)
     const hang = 1 - (1 - Math.cos(2 * Math.PI * clamp01((t - T.catch - HANG.from) / (HANG.to - HANG.from)))) / 2
-    bow = 0.08 * ss(u / 0.3) * hang * (1 - ss((t - T.catch - 3.1) / 0.8)) + 0.05 * Math.exp(-Math.max(0, t - T.catch) / 0.8) * Math.sin(Math.max(0, t - T.catch) * 9)
+    bow = 0.2 * ss(u / 0.3) * hang * (1 - ss((t - T.catch - 3.1) / 0.8)) + 0.13 * Math.exp(-Math.max(0, t - T.catch) / 0.8) * Math.sin(Math.max(0, t - T.catch) * 9)
     if (t > T.catch + HANG.to) bow += 0.04 * Math.exp(-(t - T.catch - HANG.to) / 0.6) * Math.sin((t - T.catch - HANG.to) * 8)
   }
   const mid: Pt = [lerp(top[0], foot[0], 0.3) + bow, lerp(top[1], foot[1], 0.3)]

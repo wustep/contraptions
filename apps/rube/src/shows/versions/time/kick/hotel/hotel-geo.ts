@@ -479,7 +479,16 @@ export function bundleAt(t: number): { at: Pt; turn: number; inCab: boolean } {
     const y = lerp(BUNDLE_SUITE[1], HOTEL_GEO.top + BUNDLE_CAB[1], u) - 0.25 * Math.sin(Math.PI * u)
     return { at: [x, y], turn: 0.1 * Math.sin(Math.PI * u), inCab: false }
   }
-  return { at: BUNDLE_SUITE, turn: 0.05 * Math.sin(c * 0.6), inCab: false }
+  // On the line when the three of them fetch up against it (bar 30): the bundle is plucked toward them and swings
+  // back, and back again, dying (it hung dead still, and nothing showed the line take their weight).
+  const k = tug(t)
+  return { at: [BUNDLE_SUITE[0] - 0.16 * k, BUNDLE_SUITE[1] + 0.2 * k], turn: 0.05 * Math.sin(c * 0.6) - 0.16 * k, inCab: false }
+}
+/** The pluck of the suite's line as they come to rest against it: 1 at its first reach, swinging and dying. */
+export function tug(t: number): number {
+  const u = t - T.catch
+  if (u < 0 || u > 6) return 0
+  return (1 - Math.exp(-u / 0.07)) * Math.exp(-u / 1.1) * Math.cos(u * 5.2)
 }
 
 /* ------------------------------------------------------------------ the camera's roll */
@@ -489,4 +498,14 @@ export function bundleAt(t: number): { at: Pt; turn: number; inCab: boolean } {
  * gravity swings round it: from the brake coming off on the brass until the cut up to the van. Square everywhere
  * else (the cut is where it goes back to square: the whole turn is done by then but for a fifth).
  */
-export const roll = (t: number): number => (t >= T.turn && t < T.away ? -drumAngle(t) : 0)
+export const roll = (t: number): number => (t >= T.turn && t < T.away ? -drumAngle(t) : adrift(t))
+/**
+ * Weightless, the frame floats too: from the cut back on bar 28 it leans slowly over one way and back the other, as
+ * everything in the hotel does, and is square again as the floor takes them (bar 31). A twelfth of a turn at most, in
+ * no hurry: nothing here is level, and nothing says which way is down.
+ */
+export function adrift(t: number): number {
+  const u = (t - T.off) / (T.emerge - T.off)
+  if (u <= 0 || u >= 1) return 0
+  return 0.13 * Math.sin(2 * Math.PI * u) * Math.sqrt(Math.sin(Math.PI * u))
+}
