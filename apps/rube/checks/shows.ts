@@ -35,9 +35,13 @@ import { checkCornfield } from './cornfield'
 // import type { EpilogueShow } from '../src/shows/versions/la-la-land/epilogue/show'
 import { STRIKES } from '../src/shows/versions/interstellar/liftoff/hits'
 import { SWITCH, ZOOM_FREE as LIFTOFF_ZOOM_FREE, zoomFreeSpan } from '../src/shows/versions/interstellar/liftoff/score'
-import { ACT2, DURATION as LIFTOFF_END, IGNITION, LAST as LAST_HIT, MIX_END, UNDOCK, beat as chaseBeat, cue } from '../src/shows/versions/interstellar/liftoff/music'
+import { ACT2, CHORD_OFF, DROP as LIFTOFF_DROP, DURATION as LIFTOFF_END, IGNITION, LAST as LAST_HIT, MIX_END, SWELL, UNDOCK, beat as chaseBeat, cue, swell } from '../src/shows/versions/interstellar/liftoff/music'
 import { CARDS as LIFTOFF_CARDS, CREDITS_OK, creditsAt } from '../src/shows/versions/interstellar/liftoff/credits'
-import { FALL_NOTES, GHOST_REST } from '../src/shows/versions/interstellar/liftoff/earth/house'
+import { FALL_NOTES, GHOST_REST, STAY_OPEN } from '../src/shows/versions/interstellar/liftoff/earth/house'
+import { MORSE_SWING, MORSE_UNIT, STAY_KEYS, WATCH_ON_SHELF, WATCH_R, keyed } from '../src/shows/versions/interstellar/liftoff/earth/watch'
+import { WATCH_LEFT, WATCH_TOUCH } from '../src/shows/versions/interstellar/liftoff/space/gargantua'
+import { liftPace } from '../src/shows/versions/interstellar/liftoff/act2/hub'
+import ntfcLoudness from '../../../scripts/shows/plans/liftoff-ntfc-loudness.json'
 import { IN_BED, WAKE } from '../src/shows/versions/interstellar/liftoff/act2/replica'
 import { CAMP_MEET as LIFTOFF_CAMP_MEET } from '../src/shows/versions/interstellar/liftoff/act2/edmunds'
 import { BRAND as BRAND_HEX, MURPH as MURPH_HEX, MURPH_YOUNG as MURPH_YOUNG_HEX } from '../src/shows/versions/interstellar/liftoff/worlds'
@@ -829,6 +833,77 @@ async function main(): Promise<void> {
           show.at(chaseBeat(190)).ball.ghost && show.at(LAST_HIT).ball.ghost && show.at(120.8).ball.ghost &&
           !show.at(WAKE + 0.05).ball.ghost && WAKE <= 126 && IN_BED < WAKE &&
           inBed.every((q) => Math.hypot(q[0] - bed[0], q[1] - bed[1]) < 0.06))
+        // Pass 168. The watch says STAY where it can be read. Its second hand's keys are the word in Morse, in the
+        // code's proportions (a dash three dots, a dot between marks, three between letters), thrown far enough to see;
+        // the show opens close on it while the hand ticks the word through; and in the tesseract the camera stays on it,
+        // close, from his touch through its first two letters.
+        {
+          const CODE: Record<string, string> = { '...': 'S', '-': 'T', '.-': 'A', '-.--': 'Y' }
+          const letters: string[] = ['']
+          STAY_KEYS.forEach(([a, b], i) => {
+            if (i > 0 && a - STAY_KEYS[i - 1][1] > 2 * MORSE_UNIT) letters.push('')
+            letters[letters.length - 1] += b - a > 2 * MORSE_UNIT ? '-' : '.'
+          })
+          const gaps = STAY_KEYS.slice(1).map(([a], i) => (a - STAY_KEYS[i][1]) / MORSE_UNIT)
+          const lens = STAY_KEYS.map(([a, b]) => (b - a) / MORSE_UNIT)
+          check('liftoff: the watch\'s second hand spells STAY in Morse, in the code\'s own proportions, and is thrown far enough to see',
+            letters.map((l) => CODE[l] ?? '?').join('') === 'STAY' && lens.every((l) => near(l, 1, 1e-6) || near(l, 3, 1e-6)) && gaps.every((g) => near(g, 1, 1e-6) || near(g, 3, 1e-6)) &&
+            MORSE_UNIT >= 0.1 && MORSE_SWING >= 2.5 && keyed(STAY_KEYS[3][0] + 0.2) > 0.9 && keyed(STAY_KEYS[3][1] + 0.12) < 0.1 && keyed(-1) === 0,
+            `${letters.join(' ')}; unit ${MORSE_UNIT}, swing ${MORSE_SWING}`)
+          // How big the dial is in the frame (its radius over the frame's height), and whether it is in the frame.
+          const dialAt = (t: number, at: [number, number]) => {
+            const f = perf.camera!(t)
+            return { size: WATCH_R / f.cells, in: Math.abs(at[0] - f.x) < (f.cells * 8) / 9 - 2 * WATCH_R && Math.abs(at[1] - f.y) < f.cells / 2 - 2 * WATCH_R }
+          }
+          const dial: [number, number] = [WATCH_ON_SHELF[0], WATCH_ON_SHELF[1] - 2 - 1.72 * WATCH_R]
+          let small = Infinity
+          let out = 0
+          const wordEnd = STAY_OPEN + STAY_KEYS[STAY_KEYS.length - 1][1]
+          for (let t = 0; t <= STAY_OPEN + STAY_KEYS[6][1]; t += 0.05) {
+            const d = dialAt(t, dial)
+            small = Math.min(small, d.size)
+            if (!d.in) out++
+          }
+          check('liftoff: the show opens close on the watch (its dial a quarter of the frame\'s height or more) through the word\'s first three letters and the start of its fourth, and the word is out before the lander goes',
+            small >= 0.12 && out === 0 && STAY_OPEN < 0.5 && wordEnd < FALL_NOTES.lander - 0.3 && dialAt(wordEnd, dial).in, `smallest ${small.toFixed(3)}, out ${out}, word ends ${wordEnd.toFixed(2)}`)
+          let far = 0
+          for (let t = WATCH_TOUCH + 0.2; t <= WATCH_LEFT; t += 0.05) far = Math.max(far, perf.camera!(t).cells)
+          check('liftoff: in the tesseract the camera stays close on the watch from his touch through three dots and into the dash',
+            WATCH_LEFT - WATCH_TOUCH >= STAY_KEYS[3][0] + 2 * MORSE_UNIT && far <= 0.95 && show.at(WATCH_TOUCH + 0.5).ball.ghost, `${(WATCH_LEFT - WATCH_TOUCH).toFixed(2)} s, widest ${far.toFixed(2)} cells`)
+        }
+        // The drop throws the camera back and the truck up the frame; at the tower the camera comes down close on Murph as
+        // the cage goes up, and she is well inside it when she runs into TARS's slab.
+        {
+          const before = perf.camera!(LIFTOFF_DROP - 0.1)
+          const after = perf.camera!(LIFTOFF_DROP + 0.36)
+          const lead = (t: number) => perf.camera!(t).x - show.where(t)[0]
+          check('liftoff: the drop throws the camera back (a tenth wider inside four tenths of a second, the truck lunging up the frame), and it comes in again',
+            after.cells > before.cells * 1.08 && lead(LIFTOFF_DROP + 0.36) < lead(LIFTOFF_DROP - 0.1) - 0.4 && perf.camera!(46).cells < before.cells, `${before.cells.toFixed(2)} to ${after.cells.toFixed(2)}`)
+          const hit = chaseBeat(120.5)
+          const f = perf.camera!(hit + 0.1)
+          const m = show.murph(hit + 0.1)
+          check('liftoff: at the tower the camera is close on Murph as she runs into TARS\'s slab (under three and a half cells, her well inside), and back up on the two at the window by the countdown',
+            !!m && f.cells <= 3.5 && Math.abs(m.x - f.x) < f.cells * 0.6 && Math.abs(m.y - f.y) < f.cells * 0.4 && perf.camera!(chaseBeat(124.5)).cells > 8, `cells ${f.cells.toFixed(2)}`)
+        }
+        // The lift hauls with the organ's swells, and the last chord's end is the end of all motion.
+        {
+          const table = ntfcLoudness as { swell: number[]; chord_off: number }
+          check('liftoff: the cue\'s loudness, half a beat at a time, is the measured one, and the last chord\'s end is where it was measured',
+            SWELL.length === table.swell.length && SWELL.every((v, i) => near(v, table.swell[i], 1e-9)) && Math.abs(CHORD_OFF - table.chord_off) <= 0.06 && near(swell(cue(184)), 1, 1e-9))
+          check('liftoff: the lift hauls with the organ: half as fast again on the swells of 163 and 167 as in the gaps before them, and at its plain pace when he leaves the floor',
+            liftPace(cue(163.2)) > 1.3 * liftPace(cue(161.8)) && liftPace(cue(167.2)) > 1.3 * liftPace(cue(165.9)) && near(liftPace(cue(170)), 1, 1e-6), `${liftPace(cue(161.8)).toFixed(2)} ${liftPace(cue(163.2)).toFixed(2)} ${liftPace(cue(165.9)).toFixed(2)} ${liftPace(cue(167.2)).toFixed(2)}`)
+          const move = (who: (t: number) => { x: number; y: number } | null, a: number, b: number) => {
+            const p = who(a)
+            const q = who(b)
+            return p && q ? Math.hypot(p.x - q.x, p.y - q.y) : Infinity
+          }
+          const him = (t: number) => ({ x: show.where(t)[0], y: show.where(t)[1] })
+          const her = (t: number) => show.brand(t)
+          const still = [him, her].every((w) => move(w, CHORD_OFF, CHORD_OFF + 3) < 1e-6)
+          const moving = [him, her].every((w) => move(w, CHORD_OFF - 0.45, CHORD_OFF) > 0.003)
+          const camStill = Math.abs(perf.camera!(CHORD_OFF).cells - perf.camera!(CHORD_OFF + 2).cells) < 1e-6 && Math.abs(perf.camera!(CHORD_OFF - 0.4).cells - perf.camera!(CHORD_OFF).cells) > 0.02
+          check('liftoff: through the last chord the two of them and the camera are still coming in, and when it is cut off all three are at rest', still && moving && camStill)
+        }
         // The far side of the ring is played the right way up: the camera rolls a third of a turn while the ball is in
         // the air across the axis, and back as the lift nears the hub, square again for the bay and the cut outside.
         const rollOf = (t: number) => perf.camera!(t).angle ?? 0
@@ -854,7 +929,9 @@ async function main(): Promise<void> {
           const y = dx * Math.sin(a) + dy * Math.cos(a)
           return Math.abs(x) < (f.cells * 16) / 9 / 2 + 0.2 && Math.abs(y) < f.cells / 2 + 0.2
         }
-        const withHim = [72.5, 75, 80, 83, 86, 90, 94, 98, 101]
+        // (Not while the cage climbs, 74.5 to 77.4 s: the camera is down at the tower's foot with Murph, and the two of
+        // them are up out of the frame.)
+        const withHim = [72.5, 74, 78, 80, 83, 86, 90, 94, 98, 101]
         const inOrbit = [106, 109, 111]
         const atCamp = [LIFTOFF_CAMP_MEET + 0.5, MIX_END - 0.5, 270, LIFTOFF_END - 0.5]
         const station = [177, 178.5, 179.25, 180.5]
@@ -862,7 +939,9 @@ async function main(): Promise<void> {
         // (Not 190: as the lift climbs and the camera turns back, the far-side house comes back into the bottom of the
         // frame, and she is in it, at her threshold, watching the car go.)
         const murphAway = [60, 100, 130, 140, 150, 215, 250, 260, 280]
-        const murphYoung = [0, 3, 6, 10, 14, 16.4, 17.5, 18.5, 19.5, 33, 40, 48, 68.8, 69.6, 74, 75.3, 78]
+        // (From 6 s: the show opens close on Cooper's watch at the far end of the shelf, and the camera draws back to
+        // her bed under the window as the lander goes.)
+        const murphYoung = [6, 8, 10, 14, 16.4, 17.5, 18.5, 19.5, 33, 40, 48, 68.8, 69.6, 74, 75.3, 78]
         const miss: string[] = []
         for (const t of [...withHim, ...inOrbit, ...atCamp]) if (!inShot(t, show.brand(t))) miss.push(`Brand not in shot ${t}`)
         for (const t of brandAway) if (inShot(t, show.brand(t))) miss.push(`Brand in shot ${t}`)
@@ -882,9 +961,10 @@ async function main(): Promise<void> {
         check('liftoff: where they are, one ball each, each its own id, and no one else',
           two.every(({ t, b }) => b.length === 1 + (show.brand(t) ? 1 : 0) + (show.murph(t) ? 1 : 0) && new Set(b.map((x) => x.id)).size === b.length) &&
           [60, 70, 130, 200, 245].every((t) => (show.at(t).balls?.length ?? 1) <= 1 + (show.brand(t) ? 1 : 0) + (show.murph(t) ? 1 : 0)))
-        // Under Zoom (1.5 times closer) Cooper stays in the frame, but for three shots that are about something bigger
-        // than him: the cage going up out of the top while Murph is kept back at the tower's foot, the whip through
-        // the sphere, and the pull-back from the replica to the whole ring.
+        // Under Zoom (1.5 times closer) Cooper stays in the frame, but for the shots that are about something more
+        // than him (`ZOOM_FREE`): his watch, at the opening and in the tesseract; the cage going up out of the top
+        // while Murph is kept back at the tower's foot; the whip through the sphere; and the pull-back from the replica
+        // to the whole ring.
         // Across the axis, on a phone, he is a speck of under a CSS pixel: the streak that marks him judges his size on the
         // screen (canvas pixels over the density), and keeps a halo of at least 9 CSS pixels round him (pass 68).
         {
@@ -895,12 +975,13 @@ async function main(): Promise<void> {
             // and fades it in off the bat, since on a phone he is small already at the hit (it popped on: pass 72)
             streak.includes('smooth(T, HIT + 0.04, HIT + 0.38)'))
         }
-        // In the show's own frame, Cooper's whole ball is in shot every 0.02 s but for the two shots written to lose him:
-        // the cage going up out of the top, and the whip through the sphere. (The swoop back from the ring's reveal once
+        // In the show's own frame, Cooper's whole ball is in shot every 0.02 s but for the three shots written to lose him:
+        // the opening, close on his watch at the other end of the shelf until the camera draws back to the room; the
+        // cage going up out of the top; and the whip through the sphere. (The swoop back from the ring's reveal once
         // shut ahead of coming down and lost him under the bottom edge for most of a second.)
         const ownMiss: string[] = []
         for (let t = 0; t <= MIX_END; t += 0.02) {
-          if (([[74.9, 77.3], [103.7, 104.3]] as [number, number][]).some(([a, b]) => t > a && t < b)) continue
+          if (([[-1, 4.4], [73.9, 77.5], [103.7, 104.3]] as [number, number][]).some(([a, b]) => t > a && t < b)) continue
           const f = perf.camera!(t)
           const a = f.angle ?? 0
           const [hx, hy] = show.where(t)
@@ -908,7 +989,7 @@ async function main(): Promise<void> {
           const dy = hy - f.y
           if (!(Math.abs(dx * Math.cos(a) - dy * Math.sin(a)) < (f.cells * 8) / 9 - BALL_R && Math.abs(dx * Math.sin(a) + dy * Math.cos(a)) < f.cells / 2 - BALL_R)) ownMiss.push(t.toFixed(2))
         }
-        check('liftoff: in the show\'s own frame Cooper\'s whole ball is in shot, but for the cage\'s climb and the whip through the sphere', ownMiss.length === 0, ownMiss.slice(0, 12).join(' '))
+        check('liftoff: in the show\'s own frame Cooper\'s whole ball is in shot, but for the opening on his watch, the cage\'s climb and the whip through the sphere', ownMiss.length === 0, ownMiss.slice(0, 12).join(' '))
         // Two balls are never drawn into each other: they come close (the meetings), never overlap. The one exception is in
         // NASA's bunker, where he rolls through the place Brand waits while the bunker's wall hides both.
         const overlaps: string[] = []
@@ -983,7 +1064,7 @@ async function main(): Promise<void> {
           const edge = 2 * BALL_R
           if (!(Math.abs(dx * Math.cos(a) - dy * Math.sin(a)) < (zc * 8) / 9 - edge && Math.abs(dx * Math.sin(a) + dy * Math.cos(a)) < zc / 2 - edge)) zoomMiss.push(t.toFixed(1))
         }
-        check('liftoff: under Zoom Cooper\'s whole ball is well inside the frame, but for the cage\'s climb, the whip through the sphere and the ring\'s reveal', zoomMiss.length === 0, zoomMiss.join(' '))
+        check('liftoff: under Zoom Cooper\'s whole ball is well inside the frame, but for the two shots of his watch, the cage\'s climb, the whip through the sphere and the ring\'s reveal', zoomMiss.length === 0, zoomMiss.join(' '))
         // Out of the wormhole's far mouth the whip hands over to the Ranger: the camera does not stop dead while it flies.
         let slowest = Infinity
         for (let t = cue(213) - 0.3; t < cue(213) + 0.6; t += 1 / 60) {

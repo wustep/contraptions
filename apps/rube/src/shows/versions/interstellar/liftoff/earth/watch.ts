@@ -12,9 +12,14 @@ import { alpha } from '../kit'
  * two plain tan hands at 7:37, a thin silver second hand, and a black strap.
  * No numbers and no words.
  *
- * The second hand does not sweep. It sits at 45 seconds and ticks back and
- * forth, a second each way, in Morse: the film's message. `from` holds it
- * still until the message starts, for the tesseract, where it is sent.
+ * The second hand does not sweep. It sits at 45 seconds and ticks forward and
+ * back in Morse: the film's message, STAY, in the code's own proportions (a
+ * dash three dots long, a dot between the marks of a letter, three between
+ * letters, seven between words). A key throws it forward three and a half marks
+ * with a snap and a hair of overshoot, and it stays there for the key's
+ * length, so a dot is a flick and a dash a held jump: the difference is seen,
+ * not counted. `from` holds it still until the message starts, for the
+ * tesseract, where it is sent.
  *
  * It is stood up on a shelf, face out, its strap a closed loop behind it.
  */
@@ -28,6 +33,8 @@ const STEEL = '#C4C9CF'
 const STEEL_LIGHT = '#EEF1F4'
 const DIAL = '#16181B'
 const LUME = '#D8B888'
+/** The lume as it shows in the dark. */
+const LUME_LIT = '#EBD9A8'
 const SILVER = '#DCE0E4'
 const STRAP = '#17171A'
 
@@ -38,47 +45,51 @@ export interface WatchStyle {
   glint?: number
   /** Show time from which the second hand ticks its Morse, from the message's start; before it, still at 45. Left out, it always ticks. */
   from?: number
+  /**
+   * In the dark (the opening's first seconds): only what shows there, at this strength, 0..1. The lume of the marks
+   * and the two hands, and the first light along the steel of the case and the second hand. Drawn over the dark.
+   */
+  night?: number
 }
 
 /* ------------------------------------------------------------------ the second hand, in Morse */
 
-/** STAY, in Morse, over and over: dot, dash; each a tick forward held for its length, then back. */
+/** STAY, in Morse, over and over. */
 const MORSE = '... - .- -.--'
-const DOT = 0.22
-const DASH = 0.6
-const GAP = 0.22
-const LETTER = 0.6
-const WORD = 1.6
-const KEYS: [number, number][] = (() => {
+/** The code's unit: a dot. A word takes 35 of them, 3.85 s, and seven more go by before it starts again. */
+export const MORSE_UNIT = 0.11
+/** How far a key throws the hand forward of 45, in marks (seconds of the dial). */
+export const MORSE_SWING = 3.5
+/** Each key of one word: when the hand goes forward and when it comes back, in seconds from the word's start. */
+export const STAY_KEYS: readonly (readonly [number, number])[] = (() => {
   const out: [number, number][] = []
   let t = 0
-  for (let i = 0; i < MORSE.length; i++) {
-    const ch = MORSE[i]
+  for (const ch of MORSE) {
     if (ch === ' ') {
-      t += LETTER - GAP
+      // Between letters, three units: one is already there after the last mark.
+      t += 2 * MORSE_UNIT
       continue
     }
-    const len = ch === '.' ? DOT : DASH
+    const len = (ch === '.' ? 1 : 3) * MORSE_UNIT
     out.push([t, t + len])
-    t += len + GAP
+    t += len + MORSE_UNIT
   }
-  out.push([t + WORD, t + WORD])
   return out
 })()
-const PERIOD = KEYS[KEYS.length - 1][0]
+/** One word, first key down to last key up; and the word with the gap after it. */
+export const STAY_LENGTH = STAY_KEYS[STAY_KEYS.length - 1][1]
+export const STAY_PERIOD = STAY_LENGTH + 7 * MORSE_UNIT
 
-/** How far the second hand is forward of 45 at show time `t`: 0 at rest, 1 on a key, with a quick ease each way. */
-function keyed(t: number): number {
-  const u = ((t % PERIOD) + PERIOD) % PERIOD
-  const edge = 0.035
-  for (let i = 0; i < KEYS.length - 1; i++) {
-    const [a, b] = KEYS[i]
-    if (u < a - edge || u > b + edge) continue
-    const up = Math.min(1, Math.max(0, (u - a + edge) / edge))
-    const down = Math.min(1, Math.max(0, (b + edge - u) / edge))
-    return Math.min(up, down)
-  }
-  return 0
+/** A step the hand takes: there in under three hundredths of a second, a hair past, and still. */
+const snap = (s: number): number => (s <= 0 ? 0 : 1 - Math.exp(-s / 0.016) * Math.cos(s * 58))
+
+/** How far the second hand is forward of 45, `t` seconds after the message started: 0 at rest, 1 on a key. */
+export function keyed(t: number): number {
+  if (t < 0) return 0
+  const u = t % STAY_PERIOD
+  let on = 0
+  for (const [a, b] of STAY_KEYS) on += snap(u - a) - snap(u - b)
+  return on
 }
 
 /* ------------------------------------------------------------------ the watch */
@@ -96,6 +107,82 @@ export function drawWatch(p: p5, k: number, ink: string, weight: number, x: numb
   p.translate(X(x), X(y))
   const cy = -(r + r * 0.72)
   const lug = r * 0.92
+  const D = r * 0.8
+  const at = (a: number, rr: number): [number, number] => [X(Math.sin(a) * rr), X(cy - Math.cos(a) * rr)]
+  // A small, precise thing: its lines are finer than the room's.
+  const fine = Math.min(weight * 0.55, Math.max(0.6, R * 0.05))
+
+  // The hours: tan bars at twelve, three, six and nine, tan dots between. No numbers, no words: it is the show's
+  // watch, drawn as the show draws, not a catalogue's.
+  const marks = (fill: string | p5.Color) => {
+    p.noStroke()
+    p.fill(fill as string)
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2
+      if (i % 3 === 0) {
+        p.push()
+        p.translate(...at(a, D * 0.74))
+        p.rotate(a)
+        p.rect(0, 0, Math.max(1.2, X(D * 0.1)), Math.max(2, X(D * 0.28)), Math.max(0.5, X(D * 0.03)))
+        p.pop()
+      } else {
+        const [nx, ny] = at(a, D * 0.78)
+        p.circle(nx, ny, Math.max(1, X(D * 0.11)))
+      }
+    }
+  }
+  // The hands, at 7:37: two plain tapered hands, the hour short and broad, the minute long and slim.
+  const hourA = ((7 + 37 / 60) / 12) * Math.PI * 2
+  const minA = (37 / 60) * Math.PI * 2
+  const hand = (a: number, pts: [number, number][], fill: string | p5.Color, inked: boolean) => {
+    p.push()
+    p.translate(0, X(cy))
+    p.rotate(a)
+    if (inked) solid(p, ink, Math.max(0.4, fine * 0.5), fill as string)
+    else {
+      p.noStroke()
+      p.fill(fill as string)
+    }
+    p.beginShape()
+    for (const [hx, hy] of pts) p.vertex(X(hx * D), X(-hy * D))
+    p.endShape(p.CLOSE)
+    p.pop()
+  }
+  const hands = (fill: string | p5.Color, inked: boolean) => {
+    hand(hourA, [[0, -0.1], [0.08, 0.02], [0.05, 0.42], [0, 0.52], [-0.05, 0.42], [-0.08, 0.02]], fill, inked)
+    hand(minA, [[0, -0.12], [0.055, 0.02], [0.03, 0.72], [0, 0.82], [-0.03, 0.72], [-0.055, 0.02]], fill, inked)
+  }
+  // The second hand: thin silver, with a tail, at 45, thrown forward on each key of the Morse.
+  const second = (stroke: string | p5.Color) => {
+    const on = style.from === undefined ? keyed(t) : keyed(t - style.from)
+    const secA = ((45 + MORSE_SWING * on) / 60) * Math.PI * 2
+    p.stroke(stroke as string)
+    p.strokeWeight(Math.max(0.6, R * 0.025))
+    const [sx, sy] = at(secA, D * 0.88)
+    const [tx, ty] = at(secA + Math.PI, D * 0.22)
+    p.line(tx, ty, sx, sy)
+    p.noStroke()
+    p.fill(stroke as string)
+    p.circle(0, X(cy), Math.max(1.5, X(r * 0.1)))
+  }
+  // The first light along the polished bezel.
+  const bezelLight = (stroke: string | p5.Color) => {
+    p.noFill()
+    p.stroke(stroke as string)
+    p.strokeWeight(Math.max(0.8, R * 0.06))
+    p.arc(0, X(cy), X(2 * r * 0.92), X(2 * r * 0.92), Math.PI * 1.05, Math.PI * 1.55)
+  }
+
+  // In the dark, over it: the lume, and what little light there is on the steel.
+  const night = style.night ?? 0
+  if (night > 0) {
+    if (R > 6) bezelLight(alpha(p, STEEL_LIGHT, 0.4 * night))
+    marks(alpha(p, LUME_LIT, 0.8 * night))
+    hands(alpha(p, LUME_LIT, 0.8 * night), false)
+    second(alpha(p, STEEL_LIGHT, 0.95 * night))
+    p.pop()
+    return
+  }
 
   // The strap: black alligator leather, a cream stitch running a hair in from each edge. On a shelf it stands the way
   // a buckled watch stands, the band a closed loop behind the case: from the front we see it rise from the twelve
@@ -125,8 +212,6 @@ export function drawWatch(p: p5, k: number, ink: string, weight: number, x: numb
   solid(p, ink, edgeW, STRAP)
   p.rect(0, X(cy - r * 1.42), X(lug * 0.98), X(r * 0.16), X(r * 0.04))
 
-  // A small, precise thing: its lines are finer than the room's.
-  const fine = Math.min(weight * 0.55, Math.max(0.6, R * 0.05))
   // The lugs, top and bottom, where the strap meets the case.
   solid(p, ink, fine, STEEL)
   for (const s of [-1, 1]) p.rect(0, X(cy + s * r * 0.98), X(lug * 0.95), X(r * 0.3), X(r * 0.06))
@@ -136,63 +221,13 @@ export function drawWatch(p: p5, k: number, ink: string, weight: number, x: numb
   // The case: steel, a polished bezel with a highlight.
   solid(p, ink, fine * 1.3, STEEL)
   p.circle(0, X(cy), X(2 * r))
-  if (R > 6) {
-    p.noFill()
-    p.stroke(alpha(p, STEEL_LIGHT, 0.9))
-    p.strokeWeight(Math.max(0.8, R * 0.06))
-    p.arc(0, X(cy), X(2 * r * 0.92), X(2 * r * 0.92), Math.PI * 1.05, Math.PI * 1.55)
-  }
+  if (R > 6) bezelLight(alpha(p, STEEL_LIGHT, 0.9))
   // The dial: black.
-  const D = r * 0.8
   solid(p, ink, fine * 0.6, DIAL)
   p.circle(0, X(cy), X(2 * D))
-  const at = (a: number, rr: number): [number, number] => [X(Math.sin(a) * rr), X(cy - Math.cos(a) * rr)]
-
-  // The hours: tan bars at twelve, three, six and nine, tan dots between. No numbers, no words: it is the show's
-  // watch, drawn as the show draws, not a catalogue's.
-  p.noStroke()
-  p.fill(LUME)
-  for (let i = 0; i < 12; i++) {
-    const a = (i / 12) * Math.PI * 2
-    if (i % 3 === 0) {
-      p.push()
-      p.translate(...at(a, D * 0.74))
-      p.rotate(a)
-      p.rect(0, 0, Math.max(1.2, X(D * 0.1)), Math.max(2, X(D * 0.28)), Math.max(0.5, X(D * 0.03)))
-      p.pop()
-    } else {
-      const [nx, ny] = at(a, D * 0.78)
-      p.circle(nx, ny, Math.max(1, X(D * 0.11)))
-    }
-  }
-
-  // The hands, at 7:37.
-  const hourA = ((7 + 37 / 60) / 12) * Math.PI * 2
-  const minA = (37 / 60) * Math.PI * 2
-  const hand = (a: number, pts: [number, number][], fill: string) => {
-    p.push()
-    p.translate(0, X(cy))
-    p.rotate(a)
-    solid(p, ink, Math.max(0.4, fine * 0.5), fill)
-    p.beginShape()
-    for (const [hx, hy] of pts) p.vertex(X(hx * D), X(-hy * D))
-    p.endShape(p.CLOSE)
-    p.pop()
-  }
-  // Two plain tapered hands: the hour short and broad, the minute long and slim.
-  hand(hourA, [[0, -0.1], [0.08, 0.02], [0.05, 0.42], [0, 0.52], [-0.05, 0.42], [-0.08, 0.02]], LUME)
-  hand(minA, [[0, -0.12], [0.055, 0.02], [0.03, 0.72], [0, 0.82], [-0.03, 0.72], [-0.055, 0.02]], LUME)
-  // The second hand: thin silver, with a tail, ticking at 45 in Morse.
-  const sec = 45 + (style.from === undefined ? keyed(t) : t < style.from ? 0 : keyed(t - style.from))
-  const secA = (sec / 60) * Math.PI * 2
-  p.stroke(SILVER)
-  p.strokeWeight(Math.max(0.6, R * 0.025))
-  const [sx, sy] = at(secA, D * 0.88)
-  const [tx, ty] = at(secA + Math.PI, D * 0.22)
-  p.line(tx, ty, sx, sy)
-  p.noStroke()
-  p.fill(SILVER)
-  p.circle(0, X(cy), Math.max(1.5, X(r * 0.1)))
+  marks(LUME)
+  hands(LUME, true)
+  second(SILVER)
   // The glass's glint.
   const g = style.glint ?? 0.35
   if (g > 0.01) {

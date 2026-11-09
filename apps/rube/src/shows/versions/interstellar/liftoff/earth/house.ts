@@ -476,6 +476,8 @@ export const GHOST_REST: Pt = (() => {
 export const LANDER_X = -0.05
 /** Where the watch stands: `WATCH_ON_SHELF`, placed so its strap's tail stays inside the case. */
 const WATCH_X = WATCH_ON_SHELF[0]
+/** Show time at which the watch's hand starts its first word: the show opens on it, and the word is out before the lander goes. */
+export const STAY_OPEN = 0.15
 export const FALL_NOTES = { lander: 5.126, books: SHELF_HITS }
 
 /**
@@ -728,8 +730,9 @@ function drawShelf(p: p5, s: ShelfState, c: Ctx): void {
     book(p, c, bx, FLOOR - 0.08, 0.09, 0.28 - (j % 2) * 0.03, BOOK_COLORS[(j + 2) % 6], 0)
   }
 
-  // Cooper's watch, stood on the left end of the top shelf, keeping time; it never falls.
-  drawWatch(p, k, ink, weight, WATCH_X, TOP, t)
+  // Cooper's watch, stood on the left end of the top shelf; it never falls. Its second hand ticks the message from the
+  // show's first moments, where the camera is close on it (STAY_OPEN: the dark draws its lume again, `earth/sky.ts`).
+  drawWatch(p, k, ink, weight, WATCH_X, TOP, t + s.begin, { from: STAY_OPEN })
 
   // The lander model: a shiver, then over the edge on the first note, and down on its side.
   lander(p, c, s.lander.x, t - s.lander.hit)

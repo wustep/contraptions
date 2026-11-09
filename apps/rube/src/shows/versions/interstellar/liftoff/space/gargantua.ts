@@ -109,26 +109,34 @@ const PASS_A = beat(190)
 const PASS_B = LAST
 const LAND = beat(193)
 /**
- * Then the ten books, in the opening's order and its Morse run about three
- * and a half times as fast: the first a quarter second after the lander, the
- * last 1.44 s after it. Only the lander is on a strike; the books keep the Morse.
+ * Then the ten books, in the opening's order and its Morse run about four
+ * times as fast: the first a quarter second after the lander, the
+ * last 1.3 s after it. Only the lander is on a strike; the books keep the Morse.
  */
 const FIRST_BOOK = LAND + 0.26
-const SQUEEZE = (FALL_NOTES.books[FALL_NOTES.books.length - 1] - FALL_NOTES.books[0]) / (LAND + 1.441 - FIRST_BOOK)
+const SQUEEZE = (FALL_NOTES.books[FALL_NOTES.books.length - 1] - FALL_NOTES.books[0]) / (LAND + 1.3 - FIRST_BOOK)
 const PUSHES = FALL_NOTES.books.map((n) => FIRST_BOOK + (n - FALL_NOTES.books[0]) / SQUEEZE)
 /** The last book goes, and he goes back along the row to Cooper's watch at its end. */
 const LAST_BOOK = PUSHES[PUSHES.length - 1]
-const TO_WATCH = LAST_BOOK + 0.12
-const AT_WATCH = LAST_BOOK + 0.5
-/** He touches the watch, on an eighth: until then its second hand is still at 45; from then it ticks the message. */
-const TOUCH = beat(196.5)
-/** The grand pull-back from the watch, once its hand has ticked twice, out to the tesseract's rooms going on every way. */
-const PULL0 = TOUCH + 0.6
+const TO_WATCH = LAST_BOOK + 0.06
+const AT_WATCH = LAST_BOOK + 0.42
+/** He touches the watch, on the beat: until then its second hand is still at 45; from then it ticks the message. */
+const TOUCH = beat(196)
+/**
+ * The camera stays on the watch while its hand says the first two letters, three dots and a dash (1.21 s of the
+ * message: `STAY_KEYS`), coming in on it as it goes. Then the grand pull-back, out to the tesseract's rooms going on
+ * every way. (It stayed 0.6 s, two dots: nobody could know the hand was saying anything.)
+ */
+const PULL0 = TOUCH + 1.16
 /** Then it lets him go: the bridge, the fall back through it and the dark into the bed (IN_BED), and the wake (WAKE). */
-const CLOSE = PULL0 + 0.85
+const CLOSE = PULL0 + 0.82
 /** The warm light he drifts toward, and the room opening out of it round him. */
 const GLOW_ON = CLOSE + 0.5
 const OPEN0 = CLOSE + 0.9
+
+/** For `check:shows`: when he touches the watch, and when the camera leaves it. */
+export const WATCH_TOUCH = TOUCH
+export const WATCH_LEFT = PULL0
 
 /** The strikes, on the music. */
 export const GARGANTUA_HITS = [CATCH, LATCH, NODE_A, SWALLOW, BEHIND, NODE_B, CREST, NODE_A2, BEHIND2, NODE_B2, RELEASE, HORIZON, PASS_A, PASS_B, LAND, TOUCH]
@@ -504,8 +512,9 @@ export const gargantua = part<GargState>(
       { t: LAST_BOOK, cells: 2.35, hold: [back(0.5), Y_BALL - 0.12], w: 1 },
       // In on the watch as he comes to it, and closer as he touches it, so its hand is seen to start.
       { t: AT_WATCH + 0.1, cells: 1.35, hold: [(SHORT_OF_WATCH[0] + WATCH_X) / 2, Y_BALL - 0.06], w: 1 },
-      { t: TOUCH + 0.25, cells: 0.95, hold: [WATCH_X - 0.08, Y_BALL - 0.04], w: 1 },
-      { t: PULL0, cells: 0.9, hold: [WATCH_X - 0.08, Y_BALL - 0.04], w: 1 },
+      { t: TOUCH + 0.2, cells: 0.9, hold: [WATCH_X - 0.08, Y_BALL - 0.04], w: 1 },
+      // And on in, slowly, while the hand ticks: the dial a third of the frame's height by the dash.
+      { t: PULL0, cells: 0.56, hold: [WATCH_X - 0.05, Y_BALL - 0.02], w: 1 },
       // The grand pull-back: Murph's bookcase is one of rooms going on every way, into the depth.
       { t: CLOSE, cells: 9.5, hold: [back(0.75), Y_BALL - 0.25], w: 1 },
       // It lets him go: with him as he falls back through it, closer, looking the way he goes; the room opens under him.

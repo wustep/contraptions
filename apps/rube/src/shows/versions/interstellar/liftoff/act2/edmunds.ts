@@ -3,7 +3,7 @@ import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInQuad, easeOutCubic } from '../../../../../../../../src/core/ease'
 import { laneAt, mixHex, R, type Lane, type Pt, type Seg } from '../../../../../parts'
 import { alpha, box, carried, frame, glassLimb, hash, knock, lastOf, lensedArc, part, puff, route, smooth, type Companion, type Ctx, type PartShot, type Riders, type Way } from '../kit'
-import { cue, DURATION, FINAL, MIX_END, PEAK } from '../music'
+import { CHORD_OFF, cue, DURATION, FINAL, MIX_END, PEAK } from '../music'
 import { G_EARTH, hop } from '../physics'
 import { BRAND, DARK, VOID } from '../worlds'
 import { clearOfFarm, dawnBands, drawCirrus, drawPlainStory, drawSettlement, RANGES, shadow, sunlight, type Site } from './edmunds-farm'
@@ -33,11 +33,14 @@ import { clearOfFarm, dawnBands, drawCirrus, drawPlainStory, drawSettlement, RAN
  * On the ground: the canopy swings open (229), the ramp runs out and slams
  * down (230) and she sets off from the cairn; the seat leans Cooper out over
  * the nose (230½), he floats a beat and lands on the ramp (231½), rolls down into the camp
- * and stops on the plate at the foot of its lamp, and on the last hit (232)
- * the lamp lights. The stop on the plate drops, he rolls on, and under the
- * lamp, as the music stops, they meet (CAMP_MEET) and rest together. The
- * camera draws back and holds, the sun's edge comes up behind the cairn, and
- * the credits roll over the two of them.
+ * and stops on the plate at the foot of its lamp, and on the last chord
+ * (232) the lamp lights, and its light is on the sand and on them. The stop
+ * on the plate drops, he rolls on, and under the lamp she stops just short
+ * of him on the chord's last pulse (CAMP_MEET); through the rest of it each
+ * leans the last of the way in, and when it is cut off (CHORD_OFF) they are
+ * at rest, and the camera with them. In the silence it draws back, the
+ * sun's edge comes up behind the cairn, and the credits roll over the two
+ * of them.
  *
  * The part's frame: the ball comes in hidden at the wormhole's centre,
  * (-0.5, 0). The landing ground is at y = G (the ball rolling on it is at
@@ -386,13 +389,17 @@ const MEET_H: Pt = [PLATE_X + 0.42, G - R]
 /** Light between them that reads at any size, past the width of both outlines: close, never touching. */
 const MEET_GAP = 0.13
 const MEET_B: Pt = [MEET_H[0] + 2 * R + MEET_GAP, G - R]
+/** Where he is at rest, having leaned the last of the way in. */
+const MEET_REST: Pt = [MEET_H[0] + 0.02, G - R]
 /** Where she waits, by the cairn's side. */
 const WAIT: Pt = [CAIRN_X - 0.5, G - R]
-/** She stops just short: a soft lean toward him as she comes to rest, and back. */
-const give = (T: number): number => {
-  const s = T - CAMP_MEET
-  return s <= 0 ? 0 : -0.02 * Math.sin(Math.PI * clamp(s / 0.5)) * (s < 0.5 ? 1 : 0)
-}
+/**
+ * She stops just short (CAMP_MEET, the chord's last pulse). Then, through what is left of the chord, each leans the
+ * last of the way in to the other, slowly, and they are at rest as it is cut off (CHORD_OFF): the music stops and
+ * nothing in the frame is moving. Still a hand's breadth apart (centres 0.35 cells), not pressed together.
+ */
+const LEAN = 0.02
+const leanIn = (T: number): number => LEAN * smooth(T, CAMP_MEET + 0.12, CHORD_OFF)
 /** Brand at her camp: waiting by the cairn, then out across the camp to him, and at rest with him under the lamp. */
 function brandAt(T: number): Companion {
   if (T < SET_OUT) return { x: WAIT[0], y: WAIT[1] }
@@ -402,7 +409,7 @@ function brandAt(T: number): Companion {
     const e = 4 * u * u * u - 3 * u * u * u * u
     return { x: lerp(WAIT[0], MEET_B[0], e), y: WAIT[1] }
   }
-  return { x: MEET_B[0] + give(T), y: MEET_B[1] }
+  return { x: MEET_B[0] - leanIn(T), y: MEET_B[1] }
 }
 
 /** The lob out of the cockpit: unhurried, a full beat in the air and no higher than it needs to clear the nose. */
@@ -482,10 +489,10 @@ export const edmunds = part<EdmundsState>(
         { at: at(LAMP) + 0.13, p: [stop[0] - 0.045, stop[1]], ease: 'out' },
         { at: at(STOP_DOWN[0]), p: REST, ease: 'inout' },
         { at: at(CAMP_MEET), p: MEET_H, ease: 'inout' },
-        { at: at(CAMP_MEET) + 0.21, p: [MEET_H[0] - 0.012, MEET_H[1]], ease: 'out' },
-        { at: at(CAMP_MEET) + 0.42, p: MEET_H, ease: 'inout' },
-        { at: end, p: MEET_H },
       ]),
+      // And the last of the way in to her, as she to him, at rest when the chord is cut off.
+      ...carried((a) => [MEET_H[0] + leanIn(a + slot.begin), MEET_H[1]], at(CAMP_MEET), at(CHORD_OFF), 24),
+      ...route([{ at: at(CHORD_OFF), p: MEET_REST }, { at: end, p: MEET_REST }]),
     )
     const lane: Lane = { segs, fire: at(OUT) }
     // Before it is out he is in the seat of its image coming up through the mouth, at the image's scale: the lane
@@ -498,7 +505,7 @@ export const edmunds = part<EdmundsState>(
     }
     return {
       cells: box(-4, -5, CAIRN_X + 6, G + 3, 2),
-      exit: [MEET_H[0] + 0.5, MEET_H[1]],
+      exit: [MEET_REST[0] + 0.5, MEET_REST[1]],
       lane,
       state: { begin: slot.begin, lane },
       riders,
@@ -535,8 +542,10 @@ function shotsFor(slot: { begin: number; end: number }): PartShot[] {
     // In on the two of them as they meet under the lamp, and held close through the music's last bars: the
     // film's last reunion, near enough to see. Then, in the silence, back to the whole of the camp at dawn.
     { t: CAMP_MEET - 0.35, cells: 3.7, hold: [(MEET_H[0] + MEET_B[0]) / 2, G - 0.9], w: 0.95 },
-    { t: CAMP_MEET + 0.55, cells: 2.9, hold: [(MEET_H[0] + MEET_B[0]) / 2, G - 0.8], w: 1 },
-    { t: 259.7, cells: 2.75, hold: [(MEET_H[0] + MEET_B[0]) / 2, G - 0.8], w: 1 },
+    // The push in goes on through the chord and stops with it: when it is cut off the frame is still, and stays so
+    // through the silence, until the draw-back.
+    { t: CHORD_OFF, cells: 2.8, hold: [(MEET_H[0] + MEET_B[0]) / 2, G - 0.8], w: 1 },
+    { t: 259.7, cells: 2.8, hold: [(MEET_H[0] + MEET_B[0]) / 2, G - 0.8], w: 1 },
     // The draw-back is unhurried: eight seconds out to the whole camp as the first cards come, and it never stops,
     // going on, slower, under the rest of the credits and up a little into the sky they are written in.
     { t: 267.5, cells: END_CELLS, hold: END_HOLD },
@@ -643,6 +652,7 @@ function drawAll(p: p5, s: EdmundsState, c: Ctx): void {
   throughMouth(p, c, T, () => drawRanger(p, c, T))
   drawRamp(p, c, T)
   drawDust(p, c, T, 1)
+  drawLampPool(p, c, v, T)
   drawBallShadow(p, s, c, T)
   ctx.restore()
   if (opening) {
@@ -668,7 +678,7 @@ function drawOver(p: p5, s: EdmundsState, c: Ctx): void {
   // Over him too, so what is still in the mouth is all behind its glass.
   drawMouthGlass(p, c, T)
   drawPlateLip(p, c, T)
-  drawLampLight(p, c, v, T)
+  drawLampLight(p, s, c, v, T)
 }
 
 /* ------------------------------------------------------------------ the sky */
@@ -1923,7 +1933,7 @@ function drawCamp(p: p5, c: Ctx, v: View, T: number): void {
   p.rect(X(MAST_X - 0.02), X(LAMP_Y + 0.02), X(0.26), X(0.2), X(0.03))
   solid(p, ink, weight * 0.8, DARK.slate)
   p.rect(X(MAST_X - 0.02), X(LAMP_Y - 0.1), X(0.34), X(0.06), X(0.02))
-  solid(p, ink, weight * 0.7, lampOn ? mixHex(DARK.gold, VOID.ink, 0.55) : mixHex(DARK.slate, VOID.bg, 0.4))
+  solid(p, ink, weight * 0.7, lampOn ? mixHex(LAMP_WARM, VOID.bg, 1 - lampLit(T)) : mixHex(DARK.slate, VOID.bg, 0.4))
   p.circle(X(MAST_X - 0.13), X(LAMP_Y + 0.02), X(0.14))
 
   // The plate at the mast's foot, and the stop the ball comes up against (it drops into the plate once the lamp is lit).
@@ -2002,50 +2012,96 @@ function drawPlateLip(p: p5, c: Ctx, T: number): void {
   }
 }
 
-function drawLampLight(p: p5, c: Ctx, v: View, T: number): void {
+/** The lamp's light: the lens, and what it falls on. A warm white, never a glow: flat shapes of it. */
+const LAMP_WARM = '#FFE6AE'
+const LAMP_AT: Pt = [MAST_X - 0.13, LAMP_Y + 0.02]
+/** How lit it is, 0..1: it catches with a flicker on the last chord and is steady. */
+function lampLit(T: number): number {
+  const d = T - LAMP
+  if (d < 0) return 0
+  const flick = d < 0.2 ? (Math.sin(d * 95) > -0.3 ? 1 : 0.4) : 1
+  return smooth(d, 0, 0.04) * flick
+}
+/** It swells as it catches, and a little again as the two of them meet under it. */
+const lampSwell = (T: number): number => Math.max(knock(T - LAMP, 0.4), 0.45 * pulse(T - CAMP_MEET, 0.25, 1.1))
+/** How far its light reaches along the ground, in cells: it opens out over the first half second. */
+const lampReach = (T: number): number => (1.25 + 1.05 * smooth(T - LAMP, 0, 0.5)) * (1 + 0.1 * lampSwell(T))
+/** As the sun comes up the day takes over from it: the lens stays lit, its light on the ground all but goes. */
+const lampDay = (v: View, T: number): number => 1 - 0.8 * sunlight(siteOf(v, T))
+
+/**
+ * Its light on the ground, under everything that stands in it: the sand lit, in three flat steps, warmest at the
+ * mast's foot. This is what the cue's last chord does to the picture: the camp was dusk, and now there is a lit
+ * place in it, and the two of them are in it. (It was a faint smudge laid over them: the chord lit a lens.)
+ */
+function drawLampPool(p: p5, c: Ctx, v: View, T: number): void {
+  const on = lampLit(T) * lampDay(v, T)
+  if (on <= 0.004) return
+  const X = (x: number) => x * c.k
+  const flat = Math.max(0.07, Math.min(0.3, v.A * 0.22))
+  const reach = lampReach(T)
+  const swell = lampSwell(T)
+  p.noStroke()
+  for (const [size, a] of [[1, 0.2], [0.66, 0.18], [0.34, 0.2]] as const) {
+    p.fill(alpha(p, mixHex(DARK.gold, LAMP_WARM, 0.25 + 0.5 * (1 - size)), (a + 0.05 * swell) * on))
+    p.ellipse(X(LAMP_AT[0] + 0.02), X(G + 0.02 * reach), X(2 * reach * size), X(2 * reach * size * flat))
+  }
+}
+
+/**
+ * Its light in the air and on the two of them, over them. The cone is what hangs of the landing's dust, lit: four
+ * wedges, each a little narrower, so its sides are soft, fading down to nothing at the ground where the pool is. And
+ * each of them wears it on the side toward the lamp, an arc of light inside the rim, as the dome wears the dawn.
+ */
+function drawLampLight(p: p5, s: EdmundsState, c: Ctx, v: View, T: number): void {
   if (T < LAMP) return
   const { k } = c
   const X = (x: number) => x * k
-  const d = T - LAMP
-  // It catches with a flicker and settles to a steady light; it swells a little again as the two of them meet under
-  // it. Light as shape, not bloom: a flat cone down from the lens, and a flat pool on the ground in two steps.
-  const flick = d < 0.2 ? (Math.sin(d * 95) > -0.3 ? 1 : 0.4) : 1
-  const on = smooth(d, 0, 0.04) * flick
-  const swell = Math.max(knock(d, 0.4), 0.45 * pulse(T - CAMP_MEET, 0.25, 1.1))
-  const lx = MAST_X - 0.13
-  const ly = LAMP_Y + 0.02
-  const flat = Math.max(0.07, Math.min(0.3, v.A * 0.22))
-  const reach = (1.1 + 0.9 * smooth(d, 0, 0.5)) * (1 + 0.12 * swell)
-  // As the sun comes up the day takes over from it: the lens stays lit, its light on the ground all but goes.
-  const day = 1 - 0.75 * sunlight(siteOf(v, T))
+  const on = lampLit(T)
+  const day = lampDay(v, T)
+  const swell = lampSwell(T)
+  const [lx, ly] = LAMP_AT
+  const reach = lampReach(T)
   p.noStroke()
-  // The cone: three wedges, each a little narrower, so its sides soften outward, and each fading down to nothing at the
-  // ground, where the pool takes over. One flat wedge had hard slanting sides, and its foot ruled a line across the
-  // ramp and the sand either side of the pool.
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const a = ((0.05 + 0.04 * swell) * on * day) / 3
+  const a = ((0.13 + 0.05 * swell) * on * day) / 4
   const g = ctx.createLinearGradient(0, X(ly), 0, X(G))
-  g.addColorStop(0, rgba(DARK.gold, a))
-  g.addColorStop(0.55, rgba(DARK.gold, a * 0.75))
+  g.addColorStop(0, rgba(LAMP_WARM, a))
+  g.addColorStop(0.5, rgba(DARK.gold, a * 0.8))
   g.addColorStop(1, rgba(DARK.gold, 0))
   ctx.fillStyle = g
-  for (let i = 0; i < 3; i++) {
-    const w = 0.6 + 0.2 * i
+  for (let i = 0; i < 4; i++) {
+    const w = 0.5 + 0.17 * i
     ctx.beginPath()
     ctx.moveTo(X(lx - 0.05), X(ly + 0.07))
     ctx.lineTo(X(lx + 0.05), X(ly + 0.07))
-    ctx.lineTo(X(lx + 0.55 * reach * w), X(G))
-    ctx.lineTo(X(lx - 0.7 * reach * w), X(G))
+    ctx.lineTo(X(lx + 0.75 * reach * w), X(G))
+    ctx.lineTo(X(lx - 0.75 * reach * w), X(G))
     ctx.closePath()
     ctx.fill()
   }
-  p.fill(alpha(p, DARK.gold, (0.12 + 0.08 * swell) * on * day))
-  p.ellipse(X(lx - 0.08), X(G), X(2 * reach), X(2 * reach * flat))
-  p.fill(alpha(p, mixHex(DARK.gold, VOID.ink, 0.45), (0.12 + 0.08 * swell) * on * day))
-  p.ellipse(X(lx - 0.08), X(G), X(reach), X(reach * flat))
+  // On each of them, toward the lamp.
+  const lit = (x: number, y: number) => {
+    const d = Math.hypot(x - lx, y - ly)
+    const near = (1 - smooth(Math.abs(x - lx), reach * 0.55, reach * 1.05)) * on * day
+    if (near <= 0.01 || d < 0.4) return
+    const to = Math.atan2(ly - y, lx - x)
+    p.noFill()
+    p.strokeCap(p.ROUND)
+    p.stroke(alpha(p, LAMP_WARM, 0.5 * near))
+    p.strokeWeight(X(R * 0.15))
+    p.arc(X(x), X(y), X(2 * R * 0.74), X(2 * R * 0.74), to - 0.75, to + 0.75)
+  }
+  const her = brandAt(T)
+  lit(her.x, her.y)
+  const b = laneAt(s.lane, c.t)
+  if (!b.hidden) lit(b.x, b.y)
 }
 
-/** A dark spot under each ball on the ground: they sit on the sand, not over it. */
+/**
+ * A dark spot under each ball on the ground: they sit on the sand, not over it. Once the lamp is lit and they are in
+ * its light, each one's is thrown a little away from the mast, longer the further off it is.
+ */
 function drawBallShadow(p: p5, s: EdmundsState, c: Ctx, T: number): void {
   const { k } = c
   const X = (x: number) => x * k
@@ -2054,17 +2110,23 @@ function drawBallShadow(p: p5, s: EdmundsState, c: Ctx, T: number): void {
   const v = viewOf(frame(p, k), T)
   const site = siteOf(v, T)
   const lit = sunlight(site) > 0.01
+  const lamp = lampLit(T) * lampDay(v, T)
+  const reach = lampReach(T)
+  const spot = (x: number, a: number) => {
+    const d = x - LAMP_AT[0]
+    const cast = lamp * (1 - smooth(Math.abs(d), reach * 0.6, reach * 1.1))
+    const throwX = cast * d * 0.2
+    p.noStroke()
+    p.fill(alpha(p, VOID.bg, (0.5 + 0.12 * cast) * a))
+    p.ellipse(X(x - 0.04 * (1 - cast) + throwX), X(G - 0.005), X(0.3 + Math.abs(throwX) * 1.4), X(0.05))
+  }
   if (lit) shadow(p, c, v, site, her.x - R, her.x + R, 1, false)
-  p.noStroke()
-  p.fill(alpha(p, VOID.bg, 0.5))
-  p.ellipse(X(her.x - 0.04), X(G - 0.005), X(0.3), X(0.05))
+  spot(her.x, 1)
   if (T < ONRAMP) return
   const b = laneAt(s.lane, c.t)
   const h = G - (b.y + R)
   if (b.x < FOOT[0] - 0.2) return
   const a = 1 - smooth(h, 0, 0.35)
   if (lit && a > 0.5) shadow(p, c, v, site, b.x - R, b.x + R, 1, false)
-  p.noStroke()
-  p.fill(alpha(p, VOID.bg, 0.5 * a))
-  p.ellipse(X(b.x - 0.04), X(G - 0.005), X(0.3), X(0.05))
+  spot(b.x, a)
 }

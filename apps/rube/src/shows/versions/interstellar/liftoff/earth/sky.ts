@@ -3,7 +3,8 @@ import { mixHex } from '../../../../../parts'
 import { alpha, frame, hash, scenery, smooth } from '../kit'
 import { DUST } from '../worlds'
 import { base, crows, dustWall, farmsteads, freight, groundOf, type Far } from './far'
-import { WINDOW } from './house'
+import { STAY_OPEN, WINDOW } from './house'
+import { drawWatch, WATCH_ON_SHELF } from './watch'
 import { dayAt, windAt } from './light'
 
 /**
@@ -162,8 +163,16 @@ export const sky = scenery<SkyState>({
  * the first bars, least of all where the first light comes in, by the window,
  * and he sits at the end of the top shelf nearest it. (It used to be least
  * round him, a pocket of light on the ball that read as a spotlight.)
+ *
+ * The show opens close on Cooper's watch at the far end of that shelf, in the
+ * dark. What a watch shows in the dark is drawn again over it: the lume of
+ * its marks and hands, and the first light on its steel and on the second
+ * hand, which is ticking the message. As the dawn comes up the paint under
+ * it takes over.
  */
 const PANE = [(WINDOW.x0 + WINDOW.x1) / 2, (WINDOW.y0 + WINDOW.y1) / 2]
+/** The shelf's part stands two cells up from the house's floor (`score.ts`). */
+const WATCH_AT = [WATCH_ON_SHELF[0], WATCH_ON_SHELF[1] - 2]
 
 export const dawn = scenery<null>({
   name: 'dawn',
@@ -183,5 +192,6 @@ export const dawn = scenery<null>({
     g.addColorStop(1, `rgba(20, 22, 36, ${0.92 * dark})`)
     ctx.fillStyle = g
     ctx.fillRect(X(f.x0), X(f.y0), X(f.x1 - f.x0), X(f.y1 - f.y0))
+    drawWatch(p, k, c.ink, c.weight, WATCH_AT[0], WATCH_AT[1], t, { from: STAY_OPEN, night: dark })
   },
 })

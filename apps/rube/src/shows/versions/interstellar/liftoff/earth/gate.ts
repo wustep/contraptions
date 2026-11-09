@@ -261,6 +261,9 @@ const M_HIT = beat(120.5)
 const M_AGAIN = beat(122)
 const M_OUT = beat(142)
 const MR = R * MURPH_SMALL
+/** How far she backs away from the slab after her last try, and where her mark is when she has (radians: up, and toward the tower). */
+const M_BACK = 0.24
+const M_LOOK = -0.95
 /** The billow off the pad reaches the tower's foot: TARS spreads its slabs out in front of her. */
 const SHIELD = IGNITION + 0.45
 
@@ -351,11 +354,13 @@ function murphBase(s: GateState, t: number): Companion {
     const w = (t - (M_AGAIN - 0.3)) / 0.3
     x = stop - 0.16 + 0.16 * w * w
   } else {
-    // A small give back off it, and back a little from it, and she waits.
+    // A small give back off it; then she backs away from it, slowly, and waits there.
     const k = t - M_AGAIN
-    x = stop - 0.08 * (1 - Math.exp(-k / 0.1)) - 0.14 * smooth(k, 0.6, 2.2)
+    x = stop - 0.08 * (1 - Math.exp(-k / 0.1)) - M_BACK * smooth(k, 0.12, 1.5)
   }
-  return { x, y, scale: MURPH_SMALL, color: MURPH_YOUNG }
+  // Her mark rolls with her (on her own radius), and where she comes to rest it is up and toward the tower: she has
+  // backed away to look up at the window he went to.
+  return { x, y, scale: MURPH_SMALL, color: MURPH_YOUNG, spin: (x - (stop - 0.08 - M_BACK)) / MR + M_LOOK }
 }
 
 /* ------------------------------------------------------------------ Brand */

@@ -173,18 +173,23 @@ export const gantry = part<GantryState>(
     }
   },
   () => [
-    // From the gate's framing of the tower's foot straight into the climb: no push in.
+    // From the gate's framing of the tower's foot into the climb, with the cage as it lifts.
     { t: RISE[0] + 0.6, cells: 7.4, off: [0.9, -0.4] },
-    // The tower's foot and the cage going up out of it: Murph racing up the apron after them, TARS's slab across her
-    // way (120), into it (120½), and again (122). Held, the cage rising up through the top of the frame.
-    // (Low enough that under Zoom, 1.5 times closer, she and the slab are still in at the bottom.)
-    { t: beat(119.6), cells: 7.0, hold: [0.1, -2.0], w: 0.95 },
-    { t: beat(122.2), cells: 7.6, hold: [0.2, -2.2], w: 0.95 },
-    // The two-shot of the countdown: the two of them in the window at the top of the frame, and at the foot of the
-    // tower, at the bottom, Murph, kept back by TARS, looking up. Held while the lamps go out, to the arm swinging back.
+    // Then the camera lets the cage go, and comes down and in on what he is leaving. Murph is out of the bunker after
+    // them (119) and racing up the apron; TARS's slab comes down across her way (120); she runs into it (120½), is
+    // thrown back, and goes at it once more (122). The shot is hers: close on the tower's foot, her and the slab, the
+    // cage's cable running up out of the top of the frame. (It was held seven cells wide, an establishing shot of a
+    // bunker, a tower and a rocket in which she was a dot.)
+    { t: beat(119.3), cells: 4.6, hold: [-0.05, -1.0], w: 1 },
+    { t: beat(120), cells: 2.9, hold: [-0.12, -0.62], w: 1 },
+    { t: beat(122.3), cells: 2.75, hold: [-0.12, -0.6], w: 1 },
+    // And up the tower from her to where she is looking. The two-shot of the countdown: the two of them in the window
+    // at the top of the frame, and at the foot of the tower, at the bottom, Murph, kept back by TARS. Held while the
+    // lamps go out, to the arm swinging back.
     // (Under Zoom, 1.5 times closer, it keeps the window: the two of them are the shot's lead.) Not held dead: it
     // breathes out a little and rises while the lamps go out, the storm looming over the tower, before the push in.
-    { t: SEATED, cells: 9.8, hold: [RX - 1.5, -4.6] },
+    // (It gets there a quarter of a second after they do: up the tower in a second and a quarter, not a whip.)
+    { t: beat(124.4), cells: 9.8, hold: [RX - 1.5, -4.6] },
     { t: beat(130.5), cells: 10.3, hold: [RX - 1.35, -4.8] },
     // The countdown: a slow push in on the two in the window as the lamps go out, and the ignition throws it wide again.
     // Close enough, by the last lamp, that the two of them read as two, side by side at the glass. The push goes on to

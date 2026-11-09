@@ -83,8 +83,8 @@ const MIDY = SHELF_TOP + 0.46
  * of the tesseract onto the pillow, and a moment later wakes, a ball again,
  * and the quilt slides. (`space/gargantua.ts` plays it; the room is drawn here.)
  */
-export const IN_BED = 125.62
-export const WAKE = 125.82
+export const IN_BED = 125.78
+export const WAKE = 125.98
 /** How far he has sunk the pillow: as he lands, and settling. */
 const pillowDip = (T: number): number => {
   const s = T - IN_BED
@@ -681,7 +681,7 @@ function drawCase(p: p5, c: Ctx, t: number): void {
   drawLander(p, c, LANDER_X, SHELF_TOP, 0)
 
 
-  // Cooper's watch, standing at the left end of the top shelf, keeping the organ's time: its second hand goes a second a beat.
+  // Cooper's watch, standing at the left end of the top shelf as the museum keeps it, its second hand still ticking the message.
   drawWatch(p, k, ink, w, WATCH_ON_SHELF[0], WATCH_ON_SHELF[1], ACT2 + t)
   p.pop()
 }

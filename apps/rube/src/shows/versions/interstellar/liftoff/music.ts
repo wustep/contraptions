@@ -60,3 +60,39 @@ export const UNDOCK = cue(184)
 /** The peak, and the last full hit before the cue stops. */
 export const PEAK = cue(228)
 export const FINAL = cue(232)
+/**
+ * The last chord, struck on FINAL, is held for 1.8 s and then cut off: its loudness, level from 255.5 s, falls away
+ * between 256.9 and 257.5 s, and after that there is only the room it was played in, dying away. Where it is cut off
+ * (4 dB down from the chord's level: `scripts/shows/liftoff-ntfc-loudness.py`).
+ */
+export const CHORD_OFF = 257.25
+
+/**
+ * How loud the cue is, half a beat at a time, from beat 150 to beat 234: 0 is 10.5 dB under the mix's peak, 1 is 2.5 dB
+ * under it (measured by `scripts/shows/liftoff-ntfc-loudness.py` into `scripts/shows/plans/liftoff-ntfc-loudness.json`;
+ * `check:shows` holds these to that file). From beat 155 the organ breathes in four-beat swells: a chord struck on the
+ * second half of the bar's third beat, held over the bar line, and let go by the middle of the next bar's second.
+ */
+export const SWELL_FROM = 150
+export const SWELL: readonly number[] = [
+  0.25, 0.33, 0.27, 0.29, 0.1, 0.1, 0.2, 0, 0, 0.04, 0.57, 1, 0.9, 0.58, 0.42, 0,
+  0.47, 1, 0.88, 0.84, 0.63, 0.44, 0.3, 0, 0.17, 0.58, 0.81, 0.76, 0.63, 0.24, 0.45, 0,
+  0.1, 0.89, 0.84, 0.81, 0.7, 0.58, 0.5, 0.06, 0.22, 0.66, 0.83, 1, 0.95, 0.63, 0.52, 0.17,
+  0.35, 0.93, 0.76, 0.9, 0.69, 0.52, 0.29, 0.12, 0.26, 0.51, 0.7, 0.8, 0.49, 0.3, 0.45, 0.07,
+  0.34, 0.77, 0.81, 1, 1, 1, 1, 0.91, 0.76, 0.92, 0.79, 0.79, 0.77, 0.67, 0.43, 0.1,
+  0.32, 0.57, 0.66, 0.64, 0.72, 0.07, 0.18, 0.49, 0.67, 0.78, 0.84, 0.8, 0.73, 0.62, 0.35, 0,
+  0.1, 0.51, 0.67, 0.95, 0.88, 0.85, 0.75, 0.6, 0.54, 0.68, 0.58, 0.67, 0.38, 0.42, 0.3, 0.11,
+  0.25, 0.31, 0.58, 0.79, 0.56, 0.08, 0, 0.17, 0.41, 0.75, 0.54, 0.48, 0.45, 0.53, 0.2, 0,
+  0, 0.29, 0.44, 0.83, 0.62, 0.55, 0.37, 0.18, 0.21, 0.4, 0.43, 0.48, 0.31, 0.14, 0.11, 0,
+  0.04, 0.17, 0.25, 0.41, 0.34, 0.18, 0.19, 0.36, 0.46, 0.5, 0.49, 0.67, 0.62, 0.65, 0.68, 0.79,
+  0.79, 0.92, 0.85, 0.87, 0.96, 0.97, 1, 0.76, 0.21,
+]
+/** The cue's loudness at show time `t`, 0..1, eased from one half beat to the next. Nothing before beat 150 or after 234. */
+export function swell(t: number): number {
+  const h = ((t - CUE2_ORIGIN) / CUE2_PERIOD - SWELL_FROM) * 2
+  if (h <= 0) return SWELL[0]
+  if (h >= SWELL.length - 1) return SWELL[SWELL.length - 1]
+  const i = Math.floor(h)
+  const u = h - i
+  return SWELL[i] + (SWELL[i + 1] - SWELL[i]) * u * u * (3 - 2 * u)
+}
