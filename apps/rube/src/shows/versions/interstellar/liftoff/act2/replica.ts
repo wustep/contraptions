@@ -681,7 +681,7 @@ function drawCase(p: p5, c: Ctx, t: number): void {
   drawLander(p, c, LANDER_X, SHELF_TOP, 0)
 
 
-  // Cooper's watch, standing at the left end of the top shelf, keeping the organ's time: its second hand goes a second a beat.
+  // Cooper's watch, standing at the left end of the top shelf as the museum keeps it, its second hand still ticking the message.
   drawWatch(p, k, ink, w, WATCH_ON_SHELF[0], WATCH_ON_SHELF[1], ACT2 + t)
   p.pop()
 }

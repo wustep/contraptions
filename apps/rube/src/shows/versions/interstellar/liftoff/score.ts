@@ -8,8 +8,8 @@ import { LiftoffShow } from './show'
 import { BALL, EARTH, FARM, SPACE, STATION, VOID } from './worlds'
 import { dawn, sky } from './earth/sky'
 import { grade } from './earth/grade'
-import { house, porch, shelf, stairs, toy } from './earth/house'
-import { WATCH_ON_SHELF, WATCH_R } from './earth/watch'
+import { house, porch, shelf, STAY_OPEN, stairs, toy } from './earth/house'
+import { STAY_LENGTH, WATCH_ON_SHELF, WATCH_R } from './earth/watch'
 import { cornrow } from './earth/field'
 import { yard, YARD_END } from './earth/yard'
 import { rearAt, truck } from './earth/truck'
@@ -54,6 +54,8 @@ import { credits } from './credits'
 
 /** The opening's close shot: the watch a third of the way in from the left, the lander and the first books beside it. */
 const WATCH_SHOT: Pt = [WATCH_ON_SHELF[0] + 0.19, WATCH_ON_SHELF[1] - 2 - WATCH_R * 2]
+/** The middle of its dial, in the world (the shelf's part stands two cells up from the house's floor). */
+const WATCH_DIAL: Pt = [WATCH_ON_SHELF[0], WATCH_ON_SHELF[1] - 2 - WATCH_R * 1.72]
 
 /** The deck stops being drawn half a second after the whip through the sphere to Miller (beat 166): nothing after it looks back down at it. */
 const CLOUD_GONE = beat(166) + 0.5
@@ -212,12 +214,13 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
   const shots: Shot[] = [
     // The show opens on Cooper's watch, close, at the left end of Murph's top shelf, in the dark: its second hand ticks
     // the message once through (`STAY_OPEN`, 3.85 s) with the model lander beside it. Then the camera draws back to
-    // the room, the shelf and her bed under the window, arriving as the lander goes (5.13) and she wakes.
+    // the room, the shelf and her bed under the window, and is there, still, for the first clear note: the lander
+    // goes (5.13) and she wakes.
     { t: 0, cells: 0.52, hold: WATCH_SHOT },
-    { t: 2.9, cells: 0.6, hold: WATCH_SHOT },
+    { t: 3.3, cells: 0.62, hold: WATCH_SHOT },
     // (Centred so that under Zoom, 1.5 times closer, her pillow is still in with the shelf's books.)
-    { t: 5.9, cells: 2.95, hold: [1.52, -2.55] },
-    { t: 6.2, cells: 2.95, hold: [1.52, -2.55] },
+    { t: 5.05, cells: 2.95, hold: [1.52, -2.55] },
+    { t: 5.5, cells: 2.95, hold: [1.52, -2.55] },
     { t: 12.3, cells: 3.1, hold: [2.1, -2.55], w: 0.7 },
     { t: 15.5, cells: 3.3, w: 0.35, hold: [4.4, -2.3] },
     { t: 17.2, cells: 3.8, w: 0 },
@@ -275,7 +278,15 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
     // (Where he has been and is about to be, over about a second, as the follow camera smooths him: a frame locked to
     // his own jolts would jolt with every strike.)
     const [hx, hy] = smoothed(t)
-    return { ...f, angle: rollAt(t), focus: [f.x + (hx - f.x) * w, f.y + (hy - f.y) * w] }
+    const focus: Pt = [f.x + (hx - f.x) * w, f.y + (hy - f.y) * w]
+    // At the opening Zoom's focus is the watch itself, until its word is out: as the camera draws back along the shelf
+    // Zoom's closer frame stays with the hand to its last dash, and only then lets it go.
+    const onWatch = 1 - smooth(t, STAY_OPEN + STAY_LENGTH, STAY_OPEN + STAY_LENGTH + 0.7)
+    if (onWatch > 0) {
+      focus[0] += (WATCH_DIAL[0] - focus[0]) * onWatch
+      focus[1] += (WATCH_DIAL[1] - focus[1]) * onWatch
+    }
+    return { ...f, angle: rollAt(t), focus }
   }
   return { show, camera }
 }
@@ -286,7 +297,7 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
  * watch again in the tesseract, while its hand says its first letters; and the pull-back from the replica to the
  * whole ring. (The first starts before the show does, so Zoom is on the watch from the first frame.)
  */
-export const ZOOM_FREE: [number, number][] = [[-1.5, 5.9], [73.4, 77.3], [103.7, 104.3], [122.6, 123.95], [130.4, 137.2]]
+export const ZOOM_FREE: [number, number][] = [[-1.5, 5.2], [73.4, 77.3], [103.7, 104.3], [122.6, 123.95], [130.4, 137.2]]
 /** The stretch a Zoom-free shot really takes, with its eases: itself if it is long, half a second more each side if it is short. */
 export const zoomFreeSpan = ([a, b]: [number, number]): [number, number] => (b - a >= 2 ? [a, b] : [a - 0.5, b + 0.5])
 
