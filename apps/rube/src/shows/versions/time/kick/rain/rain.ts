@@ -179,8 +179,12 @@ export const rain = part<State>(
       hold(T_GO - 0.6, 9.4, [-39.4, -2.35]),
       // With the van up the street, and onto the bridge: wider, to see the drop to the river under it.
       follow(T_GO + 1.4, 7.4, [1.9, -1.3]),
-      follow(T_PUDDLES[2] + 0.2, 7.0, [2.0, -1.2]),
-      follow(T_JOINT + 0.8, 11, [1.4, 1.9]),
+      follow(T_PUDDLES[1], 7.2, [2.0, -1.2]),
+      // One long pull back as the van leaves the street for the bridge, to the bridge whole: the river under it, and
+      // ahead of the van its far end gone, the deck torn off, the railing hanging, a slab of it heaved up in the road
+      // (following the van, the frame stopped short of all that, and the broken end was first seen when the van was
+      // already in the air over it).
+      hold(T_JOINT + 0.8, 15, [-11.4, 1.9]),
       // Cut close on the case as it opens: the three of them in the van, its lines to them; the bench goes soft under
       // them and they sink into it. Then out with them, down under the deck, into the river and the dark.
       { t: T_CASE, cells: 2.7, off: [0.1, -0.12], w: 0, cut: true },
@@ -205,6 +209,17 @@ const RIVER_WHO = [
 const TEAR = '#FFF6E4'
 
 const RIVER_BREAKS = [RISE, T_LAND, SPLASH, T_C_OUT, WAKE]
+/** When he comes through the surface at the end: his crown at the waterline. */
+const C_BREACH = (() => {
+  let lo = WAKE - 1
+  let hi = WAKE
+  for (let i = 0; i < 40; i++) {
+    const mid = (lo + hi) / 2
+    if (cobbRiver(mid)[1] - 0.13 > RAIN_GEO.river) lo = mid
+    else hi = mid
+  }
+  return (lo + hi) / 2
+})()
 
 export const river = part<State>(
   {
@@ -229,6 +244,8 @@ export const river = part<State>(
       plume(P, [door[0], Math.min(door[1], RAIN_GEO.river)], t - T_BURST, 0.3, 77)
       plume(P, [ariadneRiver(T_A_UP)[0], RAIN_GEO.river], t - T_A_UP + 0.1, 0.14, 71)
       plume(P, [fischerRiver(T_F_UP)[0], RAIN_GEO.river], t - T_F_UP + 0.1, 0.14, 73)
+      // And him, last, on the release: the water breaks over him as he comes through it.
+      plume(P, [C_END[0], RAIN_GEO.river], t - C_BREACH, 0.2, 79)
       p.pop()
     },
   },

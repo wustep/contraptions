@@ -265,11 +265,26 @@ export function cabinY(t: number): number {
   if (t < P.liftGo) return GROUND
   if (t < RESET[0]) return ride(t, P.liftGo, P.arrive, GROUND, ROOM)
   if (t < Q.liftGo) return ride(t, RESET[0], RESET[1], ROOM, GROUND)
-  if (t < Q.letGo) return ride(t, Q.liftGo, Q.arrive, GROUND, ROOM)
+  if (t < Q.letGo) return ride(t, Q.liftGo, Q.arrive, GROUND, ROOM) + shudder(t)
   // Let go: the bolt was all that held them level, and the rope takes up at once. The weight drops and the cabin is
   // snatched up on the chord itself, then runs on up and comes to rest at the roof (eased from rest, as the first ride
   // is, nothing moved for a third of a second after the downbeat: the let-go was late on its chord).
   return lerp(ROOM, ROOF, snatch((t - Q.letGo) / (Q.roof - Q.letGo)))
+}
+/**
+ * The return's ride up is not the prologue's: the city is going into the sea round the tower, and on each beat of the
+ * drums' bar the rope jerks, the cabin dropping back a hand's breadth and caught (the weight, the wheel and whoever
+ * rides it with it). Nothing by the time it reaches the room.
+ */
+export function shudder(t: number): number {
+  if (t < Q.liftGo || t > Q.arrive) return 0
+  let v = 0
+  for (const at of [beat(173), beat(174), beat(175)]) {
+    const u = t - at
+    if (u < 0) continue
+    v += 0.085 * Math.exp(-u / 0.13) * Math.sin(2 * Math.PI * 5.5 * u)
+  }
+  return v * (1 - sm((t - (Q.arrive - 0.35)) / 0.35))
 }
 /** A rope taking up a load at once: under way from the first instant, slowing to rest. */
 export const snatch = (u: number): number => {
@@ -452,18 +467,19 @@ export const CALVING: Calving[] = [
   { tower: 3, hit: bar(48), top: 74.0, h: 5.5, w: 1.5, side: 1, off: 1.3, fall: 3.4 },
   // The kick: as they are thrown out of limbo the city goes into the sea, tower after tower, the nearest first and on
   // out along the bay, one on every beat and off-beat of the summit's first bar (the great wide sees the whole row go).
-  { tower: 4, hit: half(192), top: 74.6, h: 6.6, w: 3.0, side: -1, fall: 1.7, big: true },
-  { tower: 6, hit: beat(193), top: 71.2, h: 8.6, w: 3.6, side: 1, fall: 2.0, big: true },
-  { tower: 8, hit: half(193), top: 70.6, h: 9.2, w: 4.2, side: -1, fall: 2.2, big: true },
-  { tower: 10, hit: beat(194), top: 72.2, h: 8.0, w: 3.4, side: 1, fall: 2.2, big: true },
-  { tower: 12, hit: half(194), top: 71.6, h: 8.6, w: 4.0, side: -1, fall: 2.3, big: true },
-  { tower: 14, hit: beat(195), top: 73.0, h: 7.4, w: 3.4, side: 1, fall: 2.3, big: true },
-  { tower: 16, hit: half(195), top: 72.6, h: 7.8, w: 3.8, side: -1, fall: 2.4, big: true },
-  { tower: 18, hit: bar(49), top: 73.8, h: 7.0, w: 3.2, side: 1, fall: 2.4, big: true },
+  // The nearest is in the water on the downbeat itself.
+  { tower: 4, hit: bar(48), top: 74.6, h: 6.6, w: 3.0, side: -1, fall: 1.7, big: true },
+  { tower: 6, hit: half(192), top: 71.2, h: 8.6, w: 3.6, side: 1, fall: 2.0, big: true },
+  { tower: 8, hit: beat(193), top: 70.6, h: 9.2, w: 4.2, side: -1, fall: 2.2, big: true },
+  { tower: 10, hit: half(193), top: 72.2, h: 8.0, w: 3.4, side: 1, fall: 2.2, big: true },
+  { tower: 12, hit: beat(194), top: 71.6, h: 8.6, w: 4.0, side: -1, fall: 2.3, big: true },
+  { tower: 14, hit: half(194), top: 73.0, h: 7.4, w: 3.4, side: 1, fall: 2.3, big: true },
+  { tower: 16, hit: beat(195), top: 72.6, h: 7.8, w: 3.8, side: -1, fall: 2.4, big: true },
+  { tower: 18, hit: half(195), top: 73.8, h: 7.0, w: 3.2, side: 1, fall: 2.4, big: true },
   // And the slighter ones between them, a beat behind their neighbours.
-  { tower: 7, hit: beat(194), top: 73.6, h: 6.8, w: 2.6, side: 1, fall: 2.0, big: true },
-  { tower: 9, hit: beat(195), top: 74.0, h: 6.4, w: 2.8, side: -1, fall: 2.2, big: true },
-  { tower: 11, hit: half(195), top: 76.0, h: 5.2, w: 2.2, side: 1, fall: 2.0, big: true },
+  { tower: 7, hit: beat(193), top: 73.6, h: 6.8, w: 2.6, side: 1, fall: 2.0, big: true },
+  { tower: 9, hit: beat(194), top: 74.0, h: 6.4, w: 2.8, side: -1, fall: 2.2, big: true },
+  { tower: 11, hit: beat(195), top: 76.0, h: 5.2, w: 2.2, side: 1, fall: 2.0, big: true },
   { tower: 13, hit: bar(49), top: 75.0, h: 5.8, w: 2.6, side: -1, fall: 2.2, big: true },
 ]
 
@@ -477,8 +493,11 @@ export const TOWER_FALL = { at: Q.kick, g: 4.4, lean: -0.085, depth: 16.5 }
 export function towerFall(t: number): { u: number; drop: number; lean: number } | null {
   const u = t - TOWER_FALL.at
   if (u < 0) return null
-  // A shudder as its footing goes, and then down.
-  const drop = Math.min(TOWER_FALL.depth, 0.5 * TOWER_FALL.g * u * u)
+  // Its footing goes on the downbeat: it drops a floor's depth at once (a twentieth of a second: the hit), hangs on
+  // what is left under it for a moment, and then goes down, gathering.
+  const give = 1.05 * (1 - Math.exp(-u / 0.045))
+  const v = Math.max(0, u - 0.22)
+  const drop = Math.min(TOWER_FALL.depth, give + 0.5 * TOWER_FALL.g * v * v)
   return { u, drop, lean: TOWER_FALL.lean * sm(u / 2.6) }
 }
 /** The prologue's one sign: a slab on the broken tower slips on its crack (bar 3), and hangs there leaning. */

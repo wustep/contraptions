@@ -195,6 +195,7 @@ function vaultShots(): PartShot[] {
   const O = ORIGIN.vault
   const hold = (t: number, cells: number, x: number, y: number): PartShot => ({ t, cells, hold: local(O, [x, y]), w: 1 })
   const follow = (t: number, cells: number, ox = 0, oy = 0): PartShot => ({ t, cells, w: 0, off: [ox, oy] })
+  const cut = (k: PartShot): PartShot => ({ ...k, cut: true })
   return [
     // Up out of the dark after them, through the valley and the floor.
     follow(T.vIn + 0.45, 8.4, 0, -0.6),
@@ -203,11 +204,14 @@ function vaultShots(): PartShot[] {
     hold(T.door, 4.6, 1.2, 55.0),
     // Close on him at his father's bed, the pinwheel.
     hold(T.pinwheel, 4.2, 1.35, 55.0),
-    hold(T.charges, 4.6, 1.2, 55.3),
-    // The fortress comes down under them; the kick throws them up out of it.
-    hold(T.kick, 6.4, 0.6, 57.1),
-    follow(T.kick + 0.45, 7.8, 0, 1.6),
-    follow(T.vOut, 8.6, 0, 1.4),
+    hold(T.charges - 0.02, 4.3, 1.3, 55.05),
+    // The charges: a cut out to the fortress whole, and for the beat it is seen to come down, all of it, into the
+    // footing they blew, the three of them riding its floor; on the downbeat it hits, and throws them up out through
+    // its roof. (The camera stayed inside on a floor sagging under them and left with them on the downbeat: the
+    // snow's kick had a thing that falls, and it was never seen to fall, nor to land.)
+    cut(hold(T.charges, 15, 0.4, 53.4)),
+    hold(T.kick, 13.2, 0.4, 54.7),
+    follow(T.vOut, 9.2, 0, 1.4),
   ]
 }
 

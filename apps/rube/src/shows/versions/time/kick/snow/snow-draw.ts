@@ -486,6 +486,23 @@ export function drawVaultPart(p: p5, c: Ctx, t: number, o: Pt): void {
       // Thin and wide (strong and round, on the underside's dark it read as four lamps lit).
       for (const px of [-5.2, -2.1, 1.0, 4.1]) puff(p, k, [px, FLOOR_Y + 0.95 + fortDrop(t) - 0.2 * u], r, mixHex(SNOW.snowShade, SNOW.concreteDark, 0.45), 0.36 * a)
     }
+    // The kick: the floor hits the bottom of its blown footing. The dust of it is driven out along the floor both ways
+    // from under the three of them, low and fast, and up the walls at the hall's ends, and hangs.
+    const v = t - T.kick
+    if (v >= 0 && v < 2.2) {
+      const y = FLOOR_Y + fortDrop(T.kick)
+      const come = Math.min(1, v / 0.03)
+      const fade = Math.exp(-v / 0.55)
+      const dust = mixHex(SNOW.snowShade, SNOW.concrete, 0.4)
+      for (const side of [-1, 1]) {
+        for (let j = 0; j < 6; j++) {
+          const out = (0.5 + 1.25 * j) * (1 - Math.exp(-v / (0.07 + 0.035 * j)))
+          const x = REST.c + side * out
+          if (x < -6.6 || x > 6.6) continue
+          puff(p, k, [x, y - 0.12 - (0.5 + 0.12 * j) * v], 0.5 + 0.22 * j + 0.9 * v, dust, 0.62 * come * fade * (1 - j / 9))
+        }
+      }
+    }
   })
 }
 

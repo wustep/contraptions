@@ -192,6 +192,22 @@ function punch(t: number): number {
 }
 
 /**
+ * And the frame takes the blow: on each punch it is knocked down and rings back, twice, gone in a third of a second
+ * (the push in alone is a twentieth of the picture's size at most, and the kicks landed soft). Cells of the frame's
+ * height: the river's, the biggest, is under a thirtieth.
+ */
+const JOLT = 0.03
+function jolt(t: number): number {
+  let v = 0
+  for (const [at, s] of PUNCHES) {
+    const u = t - at
+    if (u < 0 || u > 0.6) continue
+    v += JOLT * s * Math.exp(-u / 0.1) * Math.sin(2 * Math.PI * 8.5 * u)
+  }
+  return v
+}
+
+/**
  * The director's great wides of the stack (the dream's thesis): the whole dream seen at once, the four levels one under
  * the other in the dark of sleep, each with the kick it holds. On the summit's first downbeat, limbo's kick, the camera
  * cuts out to all four (the tower on the shore, the fortress on the mountain, the lift in its shaft with Arthur's charges,
@@ -334,8 +350,11 @@ export function compose(): { show: KickShow; camera: (t: number) => Framing } {
   })
   const camera = (t: number): Framing => {
     const owner = show.owner(t)
-    const f = cams[owner](t)
-    const cells = f.cells * (1 - punch(t))
+    const g = cams[owner](t)
+    const cells = g.cells * (1 - punch(t))
+    // The blow goes down the screen whichever way the frame is turned.
+    const [jx, jy] = turn([0, jolt(t) * cells], -(g.angle ?? 0))
+    const f = { ...g, x: g.x + jx, y: g.y + jy }
     // Zoom keeps him in: the shots are composed for this frame, and the closer one about the same middle left him on
     // its edge, or past it (at the booth and through the house he rode its foot). His place is the focus while he is
     // well inside this frame, letting go of it smoothly toward its edge, so a shot he is not in (the children, the

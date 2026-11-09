@@ -207,14 +207,14 @@ function drawTowerDust(pen: Pen, t: number, f: ReturnType<typeof frame>): void {
   if (f.x1 < ANNEX.x0 - 16 || f.x0 > TOWER.x1 + 16 || f.y1 < GROUND - 14 || f.y0 > GROUND + 2) return
   const { u } = fall
   const cx = (ANNEX.x0 + TOWER.x1) / 2
-  const come = sm(u / 0.18)
+  const come = sm(u / 0.06)
   const fade = u < 5 ? 1 : Math.exp(-(u - 5) / 3.5)
   const out = sm(u / 3.4)
   // The bank: lobes along the ground, the outer ones later and lower; its own shade under it, its top paler.
   for (let i = -5; i <= 5; i++) {
     const q = Math.abs(i) / 5
     const x = cx + i * (0.55 + 1.05 * out)
-    const h = (2.6 - 1.5 * q) * (1 - Math.exp(-u / (0.35 + 0.6 * q))) + 0.42 * u * (1 - q) * (1 - q)
+    const h = (2.6 - 1.5 * q) * (1 - Math.exp(-u / (0.12 + 0.6 * q))) + 0.42 * u * (1 - q) * (1 - q)
     const r = 1.2 + 0.9 * out
     soft(pen, x + 0.2, GROUND - h * 0.3 + 0.1, r * 1.1, 0.5 + h * 0.5, DUST_SHADE, 0.6 * come * fade)
     soft(pen, x, GROUND - h * 0.55, r, 0.45 + h * 0.5, DUST, 0.92 * come * fade * (1 - 0.3 * q))
