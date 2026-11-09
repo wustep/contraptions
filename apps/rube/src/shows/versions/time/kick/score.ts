@@ -3,7 +3,7 @@ import type { Framing } from '../../../registry'
 import { director, follower, type Shot } from './camera'
 import { black } from './credits'
 import { box, frame, lay, scenery, standing, type Chain, type Link } from './kit'
-import { DURATION, KICK, PEAK, SEAM, bar } from './music'
+import { DURATION, KICK, PEAK, SEAM, bar, beat, half } from './music'
 import { FIRST, SEAMS } from './seams'
 import { beacon, sleep, sparkInWides, SLEEP_CELLS } from './sleep'
 import type { MarkPlan } from './marks'
@@ -167,8 +167,12 @@ const MARKS = (legs: Leg[]): MarkPlan => {
  * the hit is sharp, the recovery long and damped. The river's is the biggest: the van into the water, the last kick.
  */
 export const PUNCHES: [number, number][] = [
-  // Down into limbo, on the drums.
+  // Down into limbo, on the drums; and a lesser one as each great tower of the city goes into the sea on them.
   [PEAK, 0.4],
+  [beat(162), 0.22],
+  [bar(41), 0.3],
+  [half(164), 0.32],
+  [bar(43), 0.26],
   [KICK.limbo, 0.85],
   [KICK.snow, 0.6],
   [KICK.hotel, 0.65],

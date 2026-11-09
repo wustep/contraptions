@@ -102,6 +102,7 @@ export const LIMBO_HITS: number[] = [
   Q.splash,
   half(163),
   Q.under,
+  half(164),
   Q.lift,
   Q.circle,
   beat(170),
@@ -528,9 +529,11 @@ function limboShots(_slot: Slot): PartShot[] {
     // the water, the two of them dropping out of the dark over it (followed down, they were half way through the
     // dark on the downbeat, and the first tower had fallen before the city was in the picture).
     { ...h(Q.begin + 0.001, 21, [0.4, 78.1]), cut: true },
-    h(155.9, 18.5, [1.0, 80.6]),
-    h(157.4, 15.5, [-1.2, 82.6]),
-    h(159.3, 9.5, [-5.8, 85.8]),
+    // Over toward the sea as they go into it: the tower standing out in it, its top going in (bar 41's off-beat), and
+    // the wave that raises running in to the shore with them in it.
+    h(155.9, 18.5, [0.2, 80.8]),
+    h(157.3, 15.5, [-3.6, 82.9]),
+    h(159.3, 9.5, [-6.6, 85.9]),
     h(Q.circle + 0.72, FIRST.cells, plus(FIRST_AT, FIRST.frame)),
     h(Q.circle + 1.2, FIRST.cells, plus(FIRST_AT, FIRST.frame)),
     h(162.6, 7.0, [-3.4, 85.0]),

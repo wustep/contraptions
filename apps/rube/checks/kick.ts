@@ -37,9 +37,12 @@ const WIDE: [number, number][] = [
   // top out of the dark (limbo's, on the peak, is its great wide above).
   [91.824, 92.15],
   [122.294, 123.15],
-  // The snow: the cut to Mal on the piste above, the rifle, the shot (he is on the ledge below).
-  [143.279, 145.642],
-  // The hotel: the cutaway up to the van coming out of its flip, landing and rolling to the broken end (he is in the drum).
+  // The snow: Fischer goes on alone down the hall to the vault's door, the camera in after him (he waits on the
+  // ledge); the cut to Mal on the piste above, the rifle, the shot.
+  [141.6, 145.642],
+  // The hotel: the cutaway up to the van as it begins to go over (bar 25 to the next off-beat but one), and the one to
+  // it coming out of its flip, landing and rolling to the broken end (he is in the drum).
+  [95.632, 97.077],
   [103.254, 107.068],
   // Home: the camera leaves him with the children and holds on the top, alone, to the last chord.
   [265.1, 274.62],

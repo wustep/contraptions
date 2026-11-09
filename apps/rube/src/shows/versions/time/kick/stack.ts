@@ -215,7 +215,9 @@ export const local = (origin: Pt, at: Pt): Pt => [at[0] - origin[0], at[1] - ori
  * the column into the vault ahead of the others, where Eames's paddles wait.
  */
 export const FISCHER_DOWN: Crossing = {
-  t: bar(38) + 1.9,
+  // A beat later than it was: struck, he is knocked along the floor and lies a moment before it takes him (he went
+  // under in the instant he was shot, and was gone before the picture came back to him).
+  t: bar(38) + 2.85,
   at: [-1.2, 67],
   v: [0, 5],
   ariadne: null,

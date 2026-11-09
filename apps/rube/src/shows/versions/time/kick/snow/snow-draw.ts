@@ -1,9 +1,9 @@
 import type p5 from 'p5'
 import { mixHex, R, type Pt } from '../../../../../parts'
-import { beam, puff, rgba, sink, tear } from '../cast'
+import { beam, puff, rgba, sink, streak, tear } from '../cast'
 import { hash, type Ctx } from '../kit'
 import { FISCHER_DOWN } from '../stack'
-import { SNOW } from '../worlds'
+import { FISCHER, SNOW } from '../worlds'
 import {
   A_SHIFT,
   ARIADNE_SNOW,
@@ -20,6 +20,7 @@ import {
   GUARD_HAIR,
   GUARD_LAND,
   GUARDS,
+  HIT,
   kickTears,
   LIE_A,
   LIE_C,
@@ -60,7 +61,7 @@ function crossing(m: Motion, a: number, b: number, y: number): number {
   }
   return (lo + hi) / 2
 }
-const F_THROUGH = crossing(FISCHER_SNOW, T.shot, FISCHER_DOWN.t, FLOOR_Y + 0.45)
+const F_THROUGH = crossing(FISCHER_SNOW, HIT.sink, FISCHER_DOWN.t, FLOOR_Y + 0.45)
 const C_THROUGH = crossing(COBB, T.sink, T.out, FLOOR_Y + 0.45)
 const A_THROUGH = crossing(ARIADNE_SNOW, T.sink, T.out, FLOOR_Y + 0.45)
 
@@ -434,7 +435,9 @@ export function drawSnowPart(p: p5, c: Ctx, t: number, o: Pt): void {
     // The floor goes soft under them: Fischer where he is shot; Cobb and Ariadne by the gate as the case opens.
     // No ring out from the shot across the floor (a hairline ring, the one in the show): the flash at the rifle and
     // his going under at once are the hit.
-    sink(p, k, [SHOT_X, FLOOR_Y], t - T.shot - 0.3, F_THROUGH - T.shot - 0.3, 0.8)
+    // The blow itself is the streak behind him as it knocks him along the floor, in his colour, as every throw is.
+    streak(p, k, (s) => FISCHER_SNOW.at(s), HIT.from, t, FISCHER)
+    sink(p, k, [SHOT_X, FLOOR_Y], t - HIT.sink, F_THROUGH - HIT.sink, 0.8)
     sink(p, k, [LIE_C, FLOOR_Y], t - T.sink, C_THROUGH - T.sink, 0.75)
     sink(p, k, [LIE_A, FLOOR_Y], t - T.sink, A_THROUGH - T.sink, 0.7)
     drawCaseLines(ctx, c, t)

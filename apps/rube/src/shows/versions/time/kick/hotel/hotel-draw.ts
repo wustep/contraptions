@@ -1090,9 +1090,11 @@ function drawArthur(g: Pen, f: View, t: number): void {
     // Up off the floor and over to the sleepers' far end, upright in the air, his hand on their rope.
     const u = ss(tau / 3)
     const stand: Pt = [13.55, B.top - 0.78 - 0.25 * ss(tau / 1.5)]
-    const by: Pt = [b.at[0] + 1.62, b.at[1] + 0.3]
+    // Well clear of the floor and what stands on it, and lying back in the air (a little off upright, his feet came to
+    // the nightstand's top and he read as standing on it, leaning).
+    const by: Pt = [b.at[0] + 1.78, b.at[1] - 0.08]
     p = [lerp(stand[0], by[0], u) + 0.04 * Math.sin(tau * 0.5), lerp(stand[1], by[1], u) + 0.03 * Math.sin(tau * 0.37)]
-    turn = lerp(0, -0.22, u) + 0.03 * Math.sin(tau * 0.41)
+    turn = lerp(0, -0.62, u) + 0.03 * Math.sin(tau * 0.41)
     reach = u
   } else if (c < TOW.to) {
     // Towing them, ahead of them along the corridor.

@@ -266,12 +266,20 @@ export const hotel = part<State>(
       // and the three of them dropping out of it (the level arrives with its layer, as Paris, the plane and the rain
       // did: followed down, they were half way through the dark on the downbeat and the corridor slid up after it).
       // Held as they come through the roof and land; then in, looking along it.
-      { t: slot.begin + 0.001, cells: 7.4, hold: Lh([-8.4, 18.85]), w: 1, cut: true },
-      hold(T.land - 0.2, 7.2, [-8.3, 18.95]),
-      follow(93.6, 5.25, [1.25, -0.72]),
+      // Wide enough to be a place at once (the top floor from its end wall to the lift, the rooms under it), as the
+      // mountain and limbo are on theirs; then in on them as they land and go along it.
+      { t: slot.begin + 0.001, cells: 12, hold: Lh([-8.0, 20.6]), w: 1, cut: true },
+      hold(T.land + 0.25, 9.4, [-8.2, 20.0]),
+      follow(94.5, 5.5, [1.25, -0.72]),
       // The drum: close, the camera turning with it (a point fixed in the drum's own frame, leaning toward the three
       // of them, so the room holds still on the screen while gravity swings round it and they run round its walls).
       ...drumKeys(),
+      // The cause, before its effect: on bar 25, as the brake comes off, a cut up to the van a level over them, its
+      // nose into the heaved slab of the bridge's deck and its tail coming up, slow as the rain hanging round it; and
+      // back on the next off-beat to the corridor, already going over with it. (The corridor turned for seven seconds
+      // before a van was seen at all, and then one coming out of a flip nobody had seen begin.)
+      hold(T.turn, 4.8, [-5.35, -1.02], true),
+      hold(T.fr - 0.02, 5.0, [-5.05, -1.3]),
       // Cut up to the van on bar 27: steeply over in the air above the deck, coming round, down on its wheels
       // (beat 110) and rolling to the broken end.
       hold(T.away, 5.2, [-2.95, -1.35], true),
@@ -299,12 +307,15 @@ export const hotel = part<State>(
 const LEAN = 0.5
 function drumKeys(): PartShot[] {
   const out: PartShot[] = []
-  for (let t = 95.0; t < T.away - 0.06; t += 0.1) {
+  const key = (t: number, cut = false): PartShot => {
     const [lx, ly] = drumLean(t)
     const at = add(DRUM, rot(drumAngle(t), [lx * LEAN, ly * LEAN]))
     const cells = 4.5 - 0.3 * ss((t - 95.0) / 3)
-    out.push({ t, cells, hold: Lh(at), w: 1 })
+    return { t, cells, hold: Lh(at), w: 1, ...(cut ? { cut } : {}) }
   }
+  // But for the cutaway to the van as it begins to go over (bar 25 to the off-beat after the next beat): back on a cut.
+  for (let t = 95.0; t < T.away - 0.06; t += 0.1) if (t < T.turn - 0.02 || t > T.fr + 0.05) out.push(key(t))
+  out.push(key(T.turn - 0.012), key(T.fr, true))
   return out
 }
 

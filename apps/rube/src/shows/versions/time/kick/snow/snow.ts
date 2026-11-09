@@ -133,15 +133,22 @@ function snowShots(begin: number): PartShot[] {
     hold(T.cutJ2 - 0.05, 11.2, -16.1, 52.5),
     cut(hold(T.cutJ2, 7.6, -10.2, 54.6)),
     // The ledge and the gate: Fischer goes in.
-    hold(T.stopC + 0.2, 7.8, -8.9, 54.9),
-    hold(T.gate + 0.5, 8.0, -6.6, 55.0),
+    // (A little east of where it was: the guard pulled up at the crevasse's edge was sliced by the frame's left side.)
+    hold(T.stopC + 0.2, 7.8, -8.0, 54.9),
+    // Fischer goes on alone, through the gate and down the hall to his father's door: in after him, the two of them
+    // left on the ledge (held wide on all three, he was a pale speck creeping into the dark for three seconds, and
+    // nobody could say afterwards who had been shot; and Mal's rifle poked in at the frame's top before her cut).
+    hold(T.gate + 0.25, 7.3, -7.3, 55.05),
+    hold(T.malCut - 0.03, 4.8, -3.1, 55.05),
     // Cut to Mal, close, still on the piste above the ledge, bringing the rifle up; the shot; back to Fischer going
     // down at the vault's door, and Cobb off the ledge too late.
     cut(hold(T.malCut, 4.0, -10.6, 50.85)),
     hold(T.shot + 0.3, 3.8, -10.55, 50.9),
     cut(hold(T.malBack, 7.4, -5.2, 55.0)),
-    // Down with Cobb to the gate; the case; they lie down and go under.
-    hold(T.cLand3 + 0.8, 7.0, -7.9, 55.1),
+    // Held on the two ends of it, him knocked down at the door and going under, Cobb off the ledge too late; then down
+    // with Cobb to the gate; the case; they lie down and go under.
+    hold(T.cLand3 + 0.75, 7.4, -5.45, 55.0),
+    hold(T.aLand3 + 0.7, 7.0, -7.9, 55.1),
     hold(T.case, 5.8, -8.1, 55.3),
     follow(T.sink + 1.2, 6.2, 0, 0.6),
     follow(T.out - 0.9, 6.4, 0, 0.3),

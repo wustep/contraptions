@@ -531,6 +531,8 @@ export function drawLampLight(pen: Pen, f: View, te: number): void {
   }
 }
 
+/** The heaved slab of the deck the van's nose goes into where it flips: its lip (x, height) and its length. */
+export const HEAVE = { x: -4.86, h: 0.22, len: 1.05 }
 /** The bridge: its abutment, its piers and steel arches, its deck, to its broken end; the railing is drawn over. */
 export function drawBridge(pen: Pen, f: View): void {
   const { p, k, ink, w } = pen
@@ -621,6 +623,28 @@ export function drawBridge(pen: Pen, f: View): void {
   p.strokeCap(p.ROUND)
   // The deck: a slab from the street to its broken end (its face is drawn again over the balls, for the going under).
   deckFace(pen)
+  // Toward its broken end the deck has heaved: a slab tipped up on its bars, its lip a wheel's height over the road,
+  // facing the way the van comes. It is what the van's nose goes into, and goes over (`stack.ts`, `vanAt`: nothing
+  // stood in the road where it flipped).
+  {
+    const x = HEAVE.x
+    p.stroke(ink)
+    p.strokeWeight(w * 0.7)
+    p.fill(mixHex(RAIN.bridge, RAIN.steel, 0.25))
+    p.beginShape()
+    p.vertex((x - 0.02) * k, 0.02 * k)
+    p.vertex(x * k, -HEAVE.h * k)
+    p.vertex((x + 0.16) * k, -(HEAVE.h + 0.03) * k)
+    p.vertex((x + HEAVE.len) * k, 0.02 * k)
+    p.endShape(p.CLOSE)
+    // Its wet top, and the dark under its lip.
+    p.stroke(rgba(RAIN.streetWet, 0.9))
+    p.strokeWeight(Math.max(1, 0.05 * k))
+    p.line((x + 0.2) * k, -(HEAVE.h - 0.005) * k, (x + HEAVE.len - 0.12) * k, -0.03 * k)
+    p.stroke(mixHex(RAIN.steel, ink, 0.3))
+    p.strokeWeight(Math.max(0.8, 0.035 * k))
+    for (const d of [0.04, 0.1]) p.line((x - 0.02) * k, -(HEAVE.h * d * 6) * k, (x - 0.1 - d) * k, -(HEAVE.h * d * 6 - 0.05) * k)
+  }
   // The broken end: bars bent down out of the concrete.
   p.stroke(mixHex(RAIN.steel, ink, 0.3))
   p.strokeWeight(Math.max(0.8, 0.035 * k))

@@ -230,8 +230,16 @@ export function reach(tk: number): number {
 }
 export const UPRUSH = 1.7
 export const BACKWASH = 2.1
+/**
+ * The wave the sea tower's fall raises: born where its top goes in, on that off-beat, and at the shore on bar 42 (a
+ * breaker's own speed carries it there in that time: `CREST_V`), twice the height of the sea's own.
+ */
+export const SEA_WAVE = { from: half(164), at: bar(42), h: 1.0 }
+const isSeaWave = (tk: number): boolean => Math.abs(tk - SEA_WAVE.at) < 1e-6
 /** A breaker's crest height as it comes in. */
-export const crestH = (tk: number): number => 0.3 + 0.38 * roughness(tk)
+export const crestH = (tk: number): number => (isSeaWave(tk) ? SEA_WAVE.h : 0.3 + 0.38 * roughness(tk))
+/** How much of a breaker there is yet at `t`: all of it, but for the sea tower's wave, which is not there until the fall. */
+export const crestUp = (tk: number, t: number): number => (isSeaWave(tk) ? sm((t - SEA_WAVE.from) / 0.45) : 1)
 /** How fast a crest comes in to the shore (cells a second). */
 export const CREST_V = 1.9
 
@@ -393,9 +401,12 @@ export const CITY: Tower[] = [
   { x: 2.6, w: 1.8, top: 74.4, base: 86.2, far: 0.2, mid: true },
   { x: 12.6, w: 3.0, top: 71.2, base: 86.3, far: 0.12, mid: true },
   { x: 8.8, w: 2.2, top: 72.0, base: 86.25, far: 0.22, mid: true },
+  // One standing out in the sea, west of the shore (out of the show's first frame, in any shape of frame): the one
+  // whose fall, in the return, raises the wave that washes them up.
+  { x: -13.7, w: 2.2, top: 76.2, base: 86.45, far: 0.16, mid: true },
 ]
 /** The middle towers' indices. */
-export const MID = { garden: 20, bay: 21, house: 22 } as const
+export const MID = { garden: 20, bay: 21, house: 22, sea: 23 } as const
 /** How much the far layer (the far sea, the city) moves with the camera: it is far, so it moves less. */
 export const PARALLAX = 0.22
 
@@ -427,6 +438,10 @@ export const CALVING: Calving[] = [
   { tower: MID.bay, hit: bar(41), top: 71.2, h: 6.4, w: 3.0, side: 1, fall: 2.4, big: true },
   { tower: MID.house, hit: half(165), top: 72.0, h: 6.0, w: 2.2, side: -1, fall: half(165) - half(163), big: true },
   { tower: MID.bay, hit: bar(43), top: 77.6, h: 4.6, w: 3.0, side: -1, fall: bar(43) - beat(170), big: true },
+  // The tower out in the sea: its top goes in on bar 41's off-beat, toward the shore, and the sea it throws up is the
+  // wave that carries them in on bar 42 (`SEA_WAVE`): the circle back to the show's first frame has a cause, and the
+  // drums a machine (it was a wave like any other, on a quiet beach).
+  { tower: MID.sea, hit: half(164), top: 76.2, h: 6.4, w: 2.2, side: 1, fall: 2.5, big: true },
   // As they go up the tower, far off.
   { tower: 2, hit: beat(174), top: 77.0, h: 3.0, w: 0.9, side: 1, fall: 2.3 },
   // Seen through the room's long window: the tower behind theirs sheds a corner.

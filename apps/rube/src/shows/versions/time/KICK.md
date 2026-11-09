@@ -83,13 +83,21 @@ into the next world's cells and the camera moves by exactly the same amount at t
   **a blink** (68.970, bar 18: the frame darkens as his eyes close and opens on the rain); into the plane on the release
   (213.717: he breaks the river's surface and wakes with a start); home through **a veil of morning** (244.187, the
   glare off the arrivals hall's glass).
-- **Inside the dream there is no cut at all**: he goes down from level to level, and back up, on one path. Going under is
-  a fall through the floor (the floor gone soft, `sink`); a kick is a fall that throws him up (`tear` where it throws
-  him through a ceiling).
+- **Inside the dream his path has no cut at all**: he goes down from level to level, and back up, on one path. Going
+  under is a fall through the floor (the floor gone soft, `sink`); a kick is a fall that throws him up (`tear` where it
+  throws him through a ceiling).
+- **But each level arrives on a cut of the camera's**, as the worlds do: on the brass (91.824), the swell (122.294) and
+  the peak (152.770) the camera goes from the dark over the level to the level's own wide (the corridor with its lamps
+  coming up; the mountain, its shoulder and the fortress; all of limbo, its city going into the sea), the three of them
+  dropping into the top of it. Up to each downbeat the frame rides up over them, so nothing of the level below is seen
+  early.
 - **The great wide** (`score.ts`, `STACK_WIDES`): on the summit's first downbeat, limbo's kick (183.247), the camera cuts
   out to the whole dream at once, the four levels one under the other in the dark (the van hanging off the bridge over
-  the frozen river; the lift in its shaft with Arthur's charges; the fortress on the mountain; the tower on the shore),
-  the thrown ones a spark climbing through the dark; it eases in, and cuts back to the vault on the paddles (187.061).
+  the frozen river; the lift in its shaft with Arthur's charges; the fortress on the mountain; the tower on the shore).
+  Limbo's kick drops what they built: the tower goes down into its own footing on the downbeat and the city into the
+  sea after it, tower by tower along the bay on the bar's beats, while the thrown ones go up the column as a streak in
+  his colour. The camera goes in after them, down on limbo and the fortress, and cuts to the vault on the paddles
+  (187.061).
 - **The camera rolls twice**: 180° as Paris folds over (and is left upside down until the jolt), and once right round
   with the hotel's turning corridor, the room standing still on the screen while the building wheels round it.
 - **The punches**: the plunge into limbo (152.770) and the four kicks, the river's the biggest.
@@ -126,27 +134,27 @@ Times are show seconds; bar *n* is `bar(n)`, beat *k* is `beat(k)`.
 | 75.165 → 76.586 | | | **The freight train**: its headlight stabs up the street through the rain (Mal, still on the pavement, lit once by it), and a black wall of locomotive tears down the middle of the street, flings the waiting cars and smashes the taxi high over the van; everything near it shakes. |
 | 80.388 → 88.010 | | | The van pulls away in front of the wagons and onto the bridge; the case opens. |
 | 86.129 → **91.824** | the brass | down | *Close*: the three lie back in the van, the case's lines to their wrists; the bench goes soft under them (88.010) and they sink through it and the deck, fall into the river, through its bed and the dark of sleep. |
-| 91.824 | | the hotel | Through the hotel's roof onto the top floor. |
+| 91.824 | | the hotel | *Cut* to the corridor, its lamps coming up; through the hotel's roof onto the top floor. |
 | 95.632 → 103.254 | | | **The corridor turns** as the van flips: a drum of the corridor, end-on, that stands still on the screen while the building wheels round it; they run up its wall, across its ceiling and down. |
 | 103.254 → 107.068 | | (the rain) | The van coming out of its flip over the deck, landing, rolling to the broken end. |
-| **107.068** | | | It goes off the end: **weightless**. They drift down the corridor; a trolley's bottle knocked adrift; Arthur towing the sleepers on a line. |
+| **107.068** | | | It goes off the end: **weightless**. The frame floats with them, leaning one way and back the other; they drift down the corridor; a trolley's bottle knocked adrift (bar 29); they fetch up on the sleepers' line, which bows and plucks the bundle (bar 30). |
 | 118.498 → **122.294** | the swell | down | Drawn down through the suite's floor, the rooms under it and the lobby, into the dark. |
-| 122.294 → 141.340 | | the snow | Out of the sky onto the shoulder under the summit in low cold sun; **the run**, the camera leading them down the face: over the cornice, the great air over the fortress roof (a held wide, bar 34), the hairpin, the air over the crevasse (bar 36), guards on snowmobiles behind them, to the fortress's gate. |
+| 122.294 → 141.340 | | the snow | *Cut* to the mountain whole, the fortress under it; out of the sky onto the shoulder under the summit in low cold sun; **the run**, the camera leading them down the face: over the cornice, the great air over the fortress roof (a held wide, bar 34), the hairpin, the air over the crevasse (bar 36), guards on snowmobiles behind them, to the fortress's gate. |
 | 143.279 → **145.154** | | | *Cut to Mal* on the piste above in the rock's blue shadow, the rifle coming up; **the shot**; *cut back* (145.642): Fischer going down through the floor at the vault's door, Cobb in the air off the ledge. |
 | 148.951 → **152.770** | the peak | down | They lie by the gate; the floor goes soft; into the dark after him. |
-| 152.770 → 160.392 | the drums | limbo | They fall into limbo's sea as its city calves on the drums, tower after tower sliding into the water in white plumes; washed up on the shore **at the show's first frame** (the circle). |
+| 152.770 → 160.392 | the drums | limbo | *Cut* to all of limbo. They fall into its sea as its city calves on the drums, tower after tower sliding into the water in white plumes; washed up, in surf that now breaks on every beat, on the shore **at the show's first frame** (the circle). |
 | 163.719 → 168.009 | | | Up the tower in the lift, the city falling round it. |
 | 168.009 | | | Their room: Mal at the table, the top still spinning; Fischer held. |
-| 171.817 → **175.631** | | | **The choice**: Mal steps onto the lift's counterweight deck; the garden, the children's backs; he takes his lever and draws the bolt: she sinks away into the dark, gone, and the same rope lifts him to the roof. |
+| 171.817 → **175.631** | | | **The choice**: Mal steps onto the lift's counterweight deck; the garden, the children's backs; he takes his lever and draws the bolt, and on the chord the rope takes up at once: she goes down the slot into the dark by degrees as the same rope snatches him up to the roof, the two of them parting in one frame. |
 | 178.492 → 182.296 | | | On the roof Ariadne pushes Fischer off (his kick carries him up to the vault); she leaps; he steps off after her. |
-| **183.247** | the summit | limbo → | **Limbo's kick**: thrown straight up. *The great wide*: the whole dream at once. |
+| **183.247** | the summit | limbo → | **Limbo's kick**: thrown straight up; the tower comes down, and the city after it on the bar's beats. *The great wide*: the whole dream at once, the camera going in after them. |
 | 185.151 → 188.965 | | the snow | Up through the fortress floor into the vault: the paddles on Fischer (187.061), the great round door rolls aside, **the pinwheel** turns in his father's last breath. |
 | **190.869** | | → | **The snow's kick**: the fortress comes down and throws the three of them up. |
 | 192.569 → 194.682 | | the hotel | Up the weightless shaft into the lift among the tied sleepers; Arthur's charges blow. |
 | **198.485** | | → | **The hotel's kick**: the cabin slams into its pit and throws them up. |
 | 199.585 → 202.304 | | the rain | Up through the riverbed and the river into the van hanging off the bridge; the rain falls again. |
 | **206.107** | | | **The rain's kick**: the van into the river, the show's biggest splash. |
-| 206.583 → 213.717 | the release | | Under: Ariadne and Fischer out through the burst door; Cobb last, drawn down in its wake, and up to **the surface** on 213.717. |
+| 206.583 → 213.717 | the release | | Under: Ariadne and Fischer out through the burst door; Cobb goes down with the van to the river's bed, where it lands on its nose in its own silt on the crest (209.926); the whole last bar is his rise from the dark to the day, faster and faster, to **the surface** on 213.717. |
 | **213.717** | | the plane | *Cut*: awake with a start. Morning: the lines reel home, the lid shuts; Fischer puts his own shade up into the sun. |
 | 228.955 | | | The landing, the front-on wide, the wings flexing. |
 | 231.840 → 244.187 | | | The jet bridge, the hall; **the stamp** on his passport on bar 63; out through the glass doors into the glare. |

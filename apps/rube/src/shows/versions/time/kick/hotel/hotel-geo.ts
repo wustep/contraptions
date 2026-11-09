@@ -495,10 +495,11 @@ export function tug(t: number): number {
 
 /**
  * The camera turns with the drum (radians, clockwise on the screen), so that on the screen the room stands still and
- * gravity swings round it: from the brake coming off on the brass until the cut up to the van. Square everywhere
- * else (the cut is where it goes back to square: the whole turn is done by then but for a fifth).
+ * gravity swings round it: from the cut back from the van as it begins to go over (the off-beat after the brake comes
+ * off: the cutaway itself is square) until the cut up to the van again. Square everywhere else (the cut is where it
+ * goes back to square: the whole turn is done by then but for a fifth).
  */
-export const roll = (t: number): number => (t >= T.turn && t < T.away ? -drumAngle(t) : adrift(t))
+export const roll = (t: number): number => (t >= T.fr && t < T.away ? -drumAngle(t) : adrift(t))
 /**
  * Weightless, the frame floats too: from the cut back on bar 28 it leans slowly over one way and back the other, as
  * everything in the hotel does, and is square again as the floor takes them (bar 31). A twelfth of a turn at most, in
