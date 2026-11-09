@@ -455,8 +455,12 @@ const SHADES: { pts: Pt[]; color: string }[] = [
       [-7.2, 47.35],
       [-6.1, 50.8],
       [-5.2, 58],
-      [16, 58],
-      [16, 44.3],
+      // Its east end is the foot of the guards' ridge, a rib running down the face as the others do (a ruled vertical
+      // at x 16, top to bottom, it stood as a seam between blue and white wherever a wide saw that far east).
+      [20.4, 58],
+      [19.0, 53.2],
+      [17.4, 48.2],
+      [16.2, 44.3],
       [SHOULDER.right, SHOULDER.y + 0.02],
       [SHOULDER.lip, SHOULDER.y + 0.02],
       [6.2, 44.42],

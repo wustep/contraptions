@@ -5,7 +5,8 @@
 import type { Performance, ShowVersion } from '../src/shows/registry'
 import measured from '../../../scripts/shows/plans/time-onsets.json'
 import { STRIKES } from '../src/shows/versions/time/kick/hits'
-import { BEATS, BRASS, CREDITS_AT, DURATION, HALVES, KICK, LAST, ONSETS, PEAK, PIANO, PIANO_SPIN, PULSE, RECORDING, RELEASE, SEAM, STRINGS, SUMMIT, SWELL } from '../src/shows/versions/time/kick/music'
+import { BEATS, BRASS, CREDITS_AT, DURATION, HALVES, KICK, LAST, ONSETS, PEAK, PIANO, PIANO_SPIN, PULSE, RECORDING, RELEASE, SEAM, STRINGS, SUMMIT, SWELL, bar } from '../src/shows/versions/time/kick/music'
+import { CALVING, Q, bolt, cabinY, towerFall, weightY } from '../src/shows/versions/time/kick/limbo/limbo-geo'
 import { CARDS, CREDITS_OK, blackAt, creditsAt } from '../src/shows/versions/time/kick/credits'
 import { COVERED, PUNCHES, coverAt, rollAt } from '../src/shows/versions/time/kick/score'
 import { FIRST } from '../src/shows/versions/time/kick/seams'
@@ -187,6 +188,44 @@ export function checkKick(perf: Performance, version: ShowVersion, check: Check)
   check('kick: the camera\'s roll never turns faster than a turn in six seconds', spin <= (2 * Math.PI) / 6, `${spin.toFixed(2)} rad/s at ${spinAt.toFixed(2)} s`)
   check('kick: the camera\'s biggest push is the river\'s, the last kick', PUNCHES.every(([p, s]) => p === KICK.rain || s < PUNCHES.find(([a]) => a === KICK.rain)![1]))
   check('kick: the show opens on its first frame', near(cam(0).cells, FIRST.cells, 1e-6))
+
+  // The layers inside the dream arrive as the others do, on a cut: on the brass, the swell and the peak the camera cuts
+  // to the level's own wide, and the frame before each is still in the dark over it (followed down, the downbeat fell
+  // with them half way through the dark and the level sliding up after it).
+  const layerCuts = ([['hotel', BRASS], ['snow', SWELL], ['limbo', PEAK]] as const).map(([level, t]) => {
+    const cut = cameraCuts.some((c) => c >= t - 1e-6 && c <= t + 0.005)
+    const before = cam(t - 0.05)
+    const after = cam(t + 0.05)
+    const dark = before.y + before.cells / 2 < BAND[level].top + 0.3
+    const lit = after.y + after.cells / 2 > BAND[level].top + 4
+    return cut && dark && lit ? '' : `${level}: cut ${cut}, dark before ${dark} (${(before.y + before.cells / 2).toFixed(2)}), the level after ${lit}`
+  }).filter(Boolean)
+  check('kick: the brass, the swell and the peak each arrive on a cut out of the dark to their level\'s wide', layerCuts.length === 0, layerCuts.join('; '))
+
+  // Letting her go is on its chord: the bolt is clear by the downbeat, and within a tenth of a second the rope has
+  // taken the cabin up and the weight down (eased from rest, nothing moved for a third of a second).
+  const up01 = cabinY(Q.letGo) - cabinY(Q.letGo + 0.1)
+  const down05 = weightY(Q.letGo + 0.5) - weightY(Q.letGo)
+  check('kick: he lets her go on the chord: the bolt clear, the cabin up and the weight down at once',
+    bolt(Q.letGo) < 0.01 && bolt(Q.letGo - 0.3) > 0.99 && up01 > 0.2 && down05 > 0.4 && Math.abs(cabinY(Q.roof) - cabinY(Q.roof + 1)) < 1e-6,
+    `cabin up ${up01.toFixed(2)} in 0.1 s, weight down ${down05.toFixed(2)} in 0.5 s`)
+
+  // Limbo's kick drops something too: the tower stands until the downbeat and is down within the bar, and the city goes
+  // into the sea along the bay on the bar's beats and off-beats.
+  const cascade = CALVING.filter((e) => e.big && e.hit > KICK.limbo + 0.01 && e.hit <= bar(49) + 0.01)
+  check('kick: on limbo\'s kick the tower comes down, and the city after it on the bar\'s beats',
+    towerFall(KICK.limbo - 0.01) === null && (towerFall(KICK.limbo + 0.3)?.drop ?? 0) > 0.1 && (towerFall(bar(49))?.drop ?? 0) > 14 &&
+    cascade.length >= 8 && cascade.every((e) => onBeat(e.hit, 0.03)), `${cascade.length} towers`)
+
+  // The river after the splash: the van is on the bed by the crest (resting on it, not in it), he is the last out of
+  // it, and from there he only rises, to break the surface on the release.
+  const rest = vanAt(bar(55))
+  const lowest = rest.y + (VAN.size[0] / 2) * Math.abs(Math.sin(rest.angle)) + (VAN.size[1] / 2) * Math.abs(Math.cos(rest.angle))
+  let sinks = 0
+  for (let t = bar(55) + 0.4; t < RELEASE - 0.01; t += 0.02) sinks = Math.max(sinks, at(t + 0.02)[1] - at(t)[1])
+  check('kick: the van is on the river\'s bed by the crest, and from there he only rises, to the surface on the release',
+    Math.abs(lowest - RAIN_GEO.bed) < 0.05 && Math.abs(vanAt(bar(55) + 2).y - rest.y) < 1e-6 && at(bar(55))[1] > RAIN_GEO.river + 2 && sinks <= 1e-4 && at(RELEASE - 0.001)[1] < RAIN_GEO.river,
+    `van's lowest corner ${lowest.toFixed(2)} (bed ${RAIN_GEO.bed}); he is at ${at(bar(55))[1].toFixed(2)} on the crest; sinks ${sinks.toFixed(4)}`)
 
   // The blink and the veil are full at their cuts, and nothing else is covered; the last chord cuts to black for good.
   check('kick: going under inside a blink, home through a veil of morning: full at their cuts, and only there',
