@@ -26,6 +26,7 @@ import {
   WATERLINE,
   WAVES,
   crestH,
+  crestUp,
   lerp,
   roughness,
   sandY,
@@ -502,7 +503,7 @@ export function surface(x: number, t: number): number {
     let wf: number
     if (ahead >= 0) {
       xc = BREAK_X - CREST_V * ahead
-      h = crestH(tk) * (0.2 + 0.8 * sm(1 - ahead / 5.5))
+      h = crestH(tk) * (0.2 + 0.8 * sm(1 - ahead / 5.5)) * crestUp(tk, t)
       wf = lerp(0.62, 0.24, sm(1 - ahead / 2.5))
     } else {
       // Going over, its water slumps forward onto the beach as the wash (in place, it only sank away).

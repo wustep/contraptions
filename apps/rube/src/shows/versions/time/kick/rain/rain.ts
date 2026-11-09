@@ -173,14 +173,21 @@ export const rain = part<State>(
       // The door slams: cut out on it to the street ahead of the van, close. Out of nowhere the train's headlamp stabs
       // in along it; the locomotive comes on through the waiting cars, a black wall filling the frame, and takes the
       // taxi on bar 20; then its wagons thunder past behind the van.
-      { t: T_SLAM, cells: 8, hold: local(RAIN_AT, [-37.8, -2.25]), w: 1, cut: true },
+      // The cut is to Mal: close, standing on the pavement in the rain with her eye on the van, the street dark behind
+      // her. The lamp comes on behind her; and the camera draws back from her as what she has brought comes through.
+      // (Cut wide, she was a speck at the kerb that nothing tied to the train.)
+      { t: T_SLAM, cells: 4.3, hold: local(RAIN_AT, [MAL_AT[0] - 0.35, -1.2]), w: 1, cut: true },
       hold(T_IMPACT, 7.8, [-38.0, -2.2]),
       hold(T_IMPACT + 1.6, 8.3, [-38.6, -2.2]),
       hold(T_GO - 0.6, 9.4, [-39.4, -2.35]),
       // With the van up the street, and onto the bridge: wider, to see the drop to the river under it.
       follow(T_GO + 1.4, 7.4, [1.9, -1.3]),
-      follow(T_PUDDLES[2] + 0.2, 7.0, [2.0, -1.2]),
-      follow(T_JOINT + 0.8, 11, [1.4, 1.9]),
+      follow(T_PUDDLES[1], 7.2, [2.0, -1.2]),
+      // One long pull back as the van leaves the street for the bridge, to the bridge whole: the river under it, and
+      // ahead of the van its far end gone, the deck torn off, the railing hanging, a slab of it heaved up in the road
+      // (following the van, the frame stopped short of all that, and the broken end was first seen when the van was
+      // already in the air over it).
+      hold(T_JOINT + 0.8, 15, [-11.4, 1.9]),
       // Cut close on the case as it opens: the three of them in the van, its lines to them; the bench goes soft under
       // them and they sink into it. Then out with them, down under the deck, into the river and the dark.
       { t: T_CASE, cells: 2.7, off: [0.1, -0.12], w: 0, cut: true },
@@ -188,7 +195,9 @@ export const rain = part<State>(
       follow(T_DROP, 3.6, [0, 0.3]),
       follow(89.9, 5.0, [0, 0.2]),
       follow(90.8, 6.6, [0, 0.6]),
-      follow(slot.end, 7.0, [0.0, 0.6]),
+      // Into the dark with them, the frame coming up over them so the hotel's roof stays under its foot: nothing of the
+      // level below is seen before its downbeat.
+      follow(slot.end, 5.6, [0.0, -1.35]),
     ]
   },
 )
@@ -203,11 +212,31 @@ const RIVER_WHO = [
 const TEAR = '#FFF6E4'
 
 const RIVER_BREAKS = [RISE, T_LAND, SPLASH, T_C_OUT, WAKE]
+/** When he comes through the surface at the end: his crown at the waterline. */
+const C_BREACH = (() => {
+  let lo = WAKE - 1
+  let hi = WAKE
+  for (let i = 0; i < 40; i++) {
+    const mid = (lo + hi) / 2
+    if (cobbRiver(mid)[1] - 0.13 > RAIN_GEO.river) lo = mid
+    else hi = mid
+  }
+  return (lo + hi) / 2
+})()
 
 export const river = part<State>(
   {
     name: 'river',
-    draw: () => {},
+    // Him, last, on the release: the water he breaks through, thrown up behind him (drawn over him, its white hid him
+    // at the very cut that is matched on him).
+    draw: (p, s, c) => {
+      const t = s.begin + c.t
+      if (t < C_BREACH || t > WAKE + 0.5) return
+      p.push()
+      p.translate(-ORIGIN.river[0] * c.k, -ORIGIN.river[1] * c.k)
+      plume(penOf(p, c), [C_END[0], RAIN_GEO.river], t - C_BREACH, 0.2, 79)
+      p.pop()
+    },
     over: (p, s, c) => {
       const t = s.begin + c.t
       if (t < RISE - 0.1 || t > WAKE + 0.5) return
@@ -259,14 +288,19 @@ export const river = part<State>(
       // Up out of the dark with them, and out to the van hanging off the bridge's end over the river.
       follow(slot.begin + 0.8, 7.7, [0.35, -0.3]),
       hold(T_LAND - 0.3, 8.6, [1.3, 0.3]),
-      // In on the three of them in it as it goes, its lamps failing; back for the water coming up at it.
-      hold(T_FLICKER[1] + 0.2, 6.6, [1.75, 1.7]),
-      hold(T_FLICKER[3] + 0.1, 8.2, [2.15, 4.4]),
+      // They are in it, and it is falling for real now. The frame drops ahead of it and waits: the bridge's broken end
+      // at its top, the river at its foot, and the van comes down through it, faster and faster, at the water. (Held
+      // on the van all the way down, nothing but rain went by it: for four seconds it hung in one pose in the middle
+      // of the picture, and the splash came from nowhere.)
+      hold(T_FLICKER[0], 9.6, [2.0, 4.3]),
+      hold(T_FLICKER[3] + 0.1, 9.4, [2.2, 4.7]),
       // The splash: framed for it, the river and the air over it.
       hold(SPLASH, 8.6, [2.4, 5.8]),
-      hold(T_A_UP + 0.5, 7.0, [2.4, 7.5]),
-      hold(T_C_OUT, 5.4, [2.55, 8.55]),
-      follow(T_C_OUT + 1.9, 4.8, [0.2, -0.55]),
+      // Down after the van as it goes to the bottom, the surface a pale line going up out of the frame's top; then, on
+      // the crest, up with him all the way from the dark to the light, the frame leading him.
+      hold(T_A_UP + 0.5, 7.2, [2.5, 8.3]),
+      hold(T_C_OUT, 5.8, [2.9, 10.3]),
+      follow(T_C_OUT + 2.0, 5.0, [0.15, -0.7]),
       follow(slot.end, seam.cells, off),
     ]
   },

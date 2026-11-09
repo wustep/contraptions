@@ -197,11 +197,14 @@ export const Q = {
   letGo: bar(46),
   roof: half(186),
   push: beat(187),
-  fischerKick: bar(47),
-  ariadneLeap: half(190),
-  stepOff: beat(191),
+  /** Fischer hits the ground at the tower's foot, and is thrown up (a fall of the tower's height from the push). */
+  fischerKick: half(188),
+  /** She leaps (up, and out), and he steps off after her on the off-beat: they land together. */
+  ariadneLeap: beat(190),
+  stepOff: half(190),
+  /** They hit the ground at the tower's foot: the kick. */
   kick: bar(48),
-  /** They tear up out of limbo's sky into the dark, on the off-beat after the kick. */
+  /** The off-beat after the kick: the camera cuts out to the whole dream as they go up out of limbo's sky. */
   tear: half(192),
   end: UP.snow.t,
 } as const
@@ -213,6 +216,10 @@ export const WAVES: number[] = (() => {
   const out: number[] = []
   for (let n = -1; n <= 72; n++) out.push(n === 0 ? P.wave0 : bar(n))
   out.push(half(165))
+  // The peak: with the city going into it the sea is up, and for the drums' first four bars a breaker comes in on
+  // every beat, not every bar: the surf they are washed up in, and that comes up the sand after them (the return to
+  // the shore was the opening's quiet beach again, under the drums).
+  for (let k = 161; k < 176; k++) if (k % 4 !== 0) out.push(beat(k))
   return out.sort((a, b) => a - b)
 })()
 /** How big the sea is at t: calm at dusk in the pad, heavy at the peak. */
@@ -226,8 +233,16 @@ export function reach(tk: number): number {
 }
 export const UPRUSH = 1.7
 export const BACKWASH = 2.1
+/**
+ * The wave the sea tower's fall raises: born where its top goes in, on that off-beat, and at the shore on bar 42 (a
+ * breaker's own speed carries it there in that time: `CREST_V`), twice the height of the sea's own.
+ */
+export const SEA_WAVE = { from: half(164), at: bar(42), h: 1.0 }
+const isSeaWave = (tk: number): boolean => Math.abs(tk - SEA_WAVE.at) < 1e-6
 /** A breaker's crest height as it comes in. */
-export const crestH = (tk: number): number => 0.3 + 0.38 * roughness(tk)
+export const crestH = (tk: number): number => (isSeaWave(tk) ? SEA_WAVE.h : 0.3 + 0.38 * roughness(tk))
+/** How much of a breaker there is yet at `t`: all of it, but for the sea tower's wave, which is not there until the fall. */
+export const crestUp = (tk: number, t: number): number => (isSeaWave(tk) ? sm((t - SEA_WAVE.from) / 0.45) : 1)
 /** How fast a crest comes in to the shore (cells a second). */
 export const CREST_V = 1.9
 
@@ -253,8 +268,35 @@ export function cabinY(t: number): number {
   if (t < P.liftGo) return GROUND
   if (t < RESET[0]) return ride(t, P.liftGo, P.arrive, GROUND, ROOM)
   if (t < Q.liftGo) return ride(t, RESET[0], RESET[1], ROOM, GROUND)
-  if (t < Q.letGo) return ride(t, Q.liftGo, Q.arrive, GROUND, ROOM)
-  return ride(t, Q.letGo, Q.roof, ROOM, ROOF)
+  if (t < Q.letGo) return ride(t, Q.liftGo, Q.arrive, GROUND, ROOM) + shudder(t)
+  // Let go: the bolt was all that held them level, and the rope takes up at once. The weight drops and the cabin is
+  // snatched up on the chord itself, then runs on up and comes to rest at the roof (eased from rest, as the first ride
+  // is, nothing moved for a third of a second after the downbeat: the let-go was late on its chord).
+  return lerp(ROOM, ROOF, snatch((t - Q.letGo) / (Q.roof - Q.letGo)))
+}
+/**
+ * The return's ride up is not the prologue's: the city is going into the sea round the tower, and on each beat of the
+ * drums' bar the rope jerks, the cabin dropping back a hand's breadth and caught (the weight, the wheel and whoever
+ * rides it with it). Nothing by the time it reaches the room.
+ */
+export function shudder(t: number): number {
+  if (t < Q.liftGo || t > Q.arrive) return 0
+  let v = 0
+  for (const at of [beat(173), beat(174), beat(175)]) {
+    const u = t - at
+    if (u < 0) continue
+    v += 0.085 * Math.exp(-u / 0.13) * Math.sin(2 * Math.PI * 5.5 * u)
+  }
+  return v * (1 - sm((t - (Q.arrive - 0.35)) / 0.35))
+}
+/**
+ * A rope taking up a load at once: a jerk in the first instant (an eighth of the way in a twentieth of a second), and
+ * then on steadily, gathering a little, to the stop at the top. (Slowing to rest from a rush, she was down the slot and
+ * into the dark in a second and a half: her going had no time in it.)
+ */
+export const snatch = (u: number): number => {
+  const v = clamp01(u)
+  return (0.12 * (1 - Math.exp(-v / 0.02)) + 0.88 * Math.pow(v, 1.15)) / (0.12 * (1 - Math.exp(-1 / 0.02)) + 0.88)
 }
 /** The weight's deck at t: half as far as the cabin, the other way (and a little lower under Mal as she takes hold). */
 export function weightY(t: number): number {
@@ -271,7 +313,9 @@ export function bolt(t: number): number {
   if (t < P.arrive) return 0
   if (t < RESET[0]) return sm((t - P.arrive) / 0.12)
   if (t < Q.arrive) return 1 - sm((t - RESET[0]) / 0.2)
-  return sm((t - Q.arrive) / 0.12) * (1 - sm((t - Q.letGo) / 0.14))
+  // Drawn clear by the downbeat (still half across for a tenth of a second after it, it was left behind in the doorway
+  // as the cabin went up past it).
+  return sm((t - Q.arrive) / 0.12) * (1 - sm((t - Q.letGo + 0.1) / 0.1))
 }
 /** The lever in the cabin that draws the bolt: 0 home, 1 pulled. */
 export const lever = (t: number): number => (t < Q.lever - 0.3 ? 0 : 0.35 * sm((t - Q.lever + 0.3) / 0.35) + 0.65 * sm((t - Q.letGo + 0.12) / 0.18)) * (1 - sm((t - Q.roof) / 0.6))
@@ -379,9 +423,12 @@ export const CITY: Tower[] = [
   { x: 2.6, w: 1.8, top: 74.4, base: 86.2, far: 0.2, mid: true },
   { x: 12.6, w: 3.0, top: 71.2, base: 86.3, far: 0.12, mid: true },
   { x: 8.8, w: 2.2, top: 72.0, base: 86.25, far: 0.22, mid: true },
+  // One standing out in the sea, west of the shore (out of the show's first frame, in any shape of frame): the one
+  // whose fall, in the return, raises the wave that washes them up.
+  { x: -13.7, w: 2.2, top: 74.2, base: 86.45, far: 0.16, mid: true },
 ]
 /** The middle towers' indices. */
-export const MID = { garden: 20, bay: 21, house: 22 } as const
+export const MID = { garden: 20, bay: 21, house: 22, sea: 23 } as const
 /** How much the far layer (the far sea, the city) moves with the camera: it is far, so it moves less. */
 export const PARALLAX = 0.22
 
@@ -421,7 +468,48 @@ export const CALVING: Calving[] = [
   // top, on the kick.
   { tower: 3, hit: bar(47), top: 74.7, h: 4.8, w: 1.3, side: 1, fall: 3.0 },
   { tower: 3, hit: bar(48), top: 74.0, h: 5.5, w: 1.5, side: 1, off: 1.3, fall: 3.4 },
+  // (New ones go after these: `CRACK.slab` counts from the head of this list.)
+  // The tower out in the sea, in two. Its head is in the water on the peak's downbeat itself, the first thing seen of
+  // limbo's return: the drums come in on a blow. The rest of it goes in on bar 41's off-beat, toward the shore, and the
+  // sea it throws up is the wave that carries them in on bar 42 (`SEA_WAVE`): the circle back to the show's first frame
+  // has a cause, and the drums a machine (it was a wave like any other, on a quiet beach).
+  { tower: MID.sea, hit: bar(40), top: 74.2, h: 3.4, w: 2.2, side: -1, fall: 2.2, big: true },
+  { tower: MID.sea, hit: half(164), top: 77.6, h: 5.4, w: 2.2, side: 1, fall: 2.5, big: true },
+  // The kick: as they are thrown out of limbo the city goes into the sea, tower after tower, the nearest first and on
+  // out along the bay, one on every beat and off-beat of the summit's first bar (the great wide sees the whole row go).
+  // The nearest is in the water on the downbeat itself.
+  { tower: 4, hit: bar(48), top: 74.6, h: 6.6, w: 3.0, side: -1, fall: 1.7, big: true },
+  { tower: 6, hit: half(192), top: 71.2, h: 8.6, w: 3.6, side: 1, fall: 2.0, big: true },
+  { tower: 8, hit: beat(193), top: 70.6, h: 9.2, w: 4.2, side: -1, fall: 2.2, big: true },
+  { tower: 10, hit: half(193), top: 72.2, h: 8.0, w: 3.4, side: 1, fall: 2.2, big: true },
+  { tower: 12, hit: beat(194), top: 71.6, h: 8.6, w: 4.0, side: -1, fall: 2.3, big: true },
+  { tower: 14, hit: half(194), top: 73.0, h: 7.4, w: 3.4, side: 1, fall: 2.3, big: true },
+  { tower: 16, hit: beat(195), top: 72.6, h: 7.8, w: 3.8, side: -1, fall: 2.4, big: true },
+  { tower: 18, hit: half(195), top: 73.8, h: 7.0, w: 3.2, side: 1, fall: 2.4, big: true },
+  // And the slighter ones between them, a beat behind their neighbours.
+  { tower: 7, hit: beat(193), top: 73.6, h: 6.8, w: 2.6, side: 1, fall: 2.0, big: true },
+  { tower: 9, hit: beat(194), top: 74.0, h: 6.4, w: 2.8, side: -1, fall: 2.2, big: true },
+  { tower: 11, hit: beat(195), top: 76.0, h: 5.2, w: 2.2, side: 1, fall: 2.0, big: true },
+  { tower: 13, hit: bar(49), top: 75.0, h: 5.8, w: 2.6, side: -1, fall: 2.2, big: true },
 ]
+
+/**
+ * Limbo's kick: what falls. The other three kicks each drop the thing the sleepers lie in (the fortress, the lift, the
+ * van); limbo's had none, and its downbeat, the cue's hardest, cut to a wide in which nothing moved. As they are thrown
+ * out of it the tower they built comes down: straight down into its own footing, heavy and slow as a dream's things
+ * fall, leaning a little to the sea as it goes. `drop` is how far it has sunk (cells), `lean` its tilt (radians).
+ */
+export const TOWER_FALL = { at: Q.kick, g: 4.4, lean: -0.085, depth: 16.5 }
+export function towerFall(t: number): { u: number; drop: number; lean: number } | null {
+  const u = t - TOWER_FALL.at
+  if (u < 0) return null
+  // Its footing goes on the downbeat: it drops a floor's depth at once (a twentieth of a second: the hit), hangs on
+  // what is left under it for a moment, and then goes down, gathering.
+  const give = 1.05 * (1 - Math.exp(-u / 0.045))
+  const v = Math.max(0, u - 0.22)
+  const drop = Math.min(TOWER_FALL.depth, give + 0.5 * TOWER_FALL.g * v * v)
+  return { u, drop, lean: TOWER_FALL.lean * sm(u / 2.6) }
+}
 /** The prologue's one sign: a slab on the broken tower slips on its crack (bar 3), and hangs there leaning. */
 export const CRACK = { tower: 3, at: P.crack, slab: 6 }
 
@@ -454,13 +542,10 @@ export const EDGE_X = TOWER.x1 - 0.05
 export const WAIT_X = 0.98
 export const RUN_UP = 0.7
 export const RUN_V = (2 * (EDGE_X - WAIT_X)) / RUN_UP
-export const STEP_V: Pt = [0.9, 0]
-export const KICK_AT: Pt = (() => {
-  const T = Q.end - Q.kick
-  const v0 = UP.snow.v[1] - G * T
-  const y = UP.snow.at[1] - (v0 * T + 0.5 * G * T * T)
-  return [EDGE_X + STEP_V[0] * (Q.kick - Q.stepOff), y]
-})()
+export const STEP_V: Pt = [0.68, 0]
+/** On the ground at the tower's foot (the lawn of the garden): where each of them lands, and the kick throws them from. */
+export const ON_GROUND = GROUND - R
+export const KICK_AT: Pt = [EDGE_X + STEP_V[0] * (Q.kick - Q.stepOff), ON_GROUND]
 /** His hop off the edge: the up speed that brings him to the kick's point on the downbeat. */
 export const STEP_VY = (() => {
   const T = Q.kick - Q.stepOff
@@ -499,13 +584,8 @@ export const ARIADNE_BACK: Pt = [TOWER.x1 - 0.66, ON_ROOF]
 /** His roll off the edge, and the kick's point for him. */
 const F_OFF_X = TOWER.x1 + 0.03
 const F_ROLL = 0.06
-const F_VX = 1.0
-export const F_KICK_AT: Pt = (() => {
-  const T = FISCHER_UP.t - Q.fischerKick
-  const v0 = FISCHER_UP.v[1] - G * T
-  const y = FISCHER_UP.at[1] - (v0 * T + 0.5 * G * T * T)
-  return [F_OFF_X + F_VX * (Q.fischerKick - Q.push - F_ROLL), y]
-})()
+const F_VX = 0.8
+export const F_KICK_AT: Pt = [F_OFF_X + F_VX * (Q.fischerKick - Q.push - F_ROLL), ON_GROUND]
 const F_VY = (() => {
   const T = Q.fischerKick - Q.push - F_ROLL
   return (F_KICK_AT[1] - ON_ROOF - 0.5 * G * T * T) / T
@@ -513,7 +593,7 @@ const F_VY = (() => {
 /** Ariadne goes up the ladder first and he follows her (led), up through the hatch; on the roof she lets him by. */
 const A_CLIMB = Q.gateOpen + 0.68
 const F_CLIMB = A_CLIMB + 0.7
-const fKick = kickPath(F_KICK_AT[0], F_KICK_AT[1], Q.fischerKick, FISCHER_UP.at[0], FISCHER_UP.at[1], FISCHER_UP.t, FISCHER_UP.v[1])
+export const fKick = kickPath(F_KICK_AT[0], F_KICK_AT[1], Q.fischerKick, FISCHER_UP.at[0], FISCHER_UP.at[1], FISCHER_UP.t, FISCHER_UP.v[1])
 
 /** A straight, eased move from a to b between t0 and t1. */
 const move = (t: number, t0: number, t1: number, a: Pt, b: Pt, ease: (u: number) => number = smoother): Pt => lerpPt(a, b, ease((t - t0) / (t1 - t0)))
@@ -575,7 +655,8 @@ export function malPrologue(t: number): Pt {
 }
 /** The return: up out of the hatch to Fischer on the roof, down with him into the room, to her chair; then to the weight. */
 export const MAL_R_FROM = 149.6
-export const MAL_R_TO = Q.roof + 0.7
+/** She is gone into the dark of the slot, behind the tower's front; her span ends just after the cut in to the roof's edge. */
+export const MAL_R_TO = Q.ariadneLeap + 0.05
 export function malReturn(t: number): Pt {
   if (t < Q.hold) {
     return legs(t, [
@@ -603,18 +684,14 @@ const A_SPLASH = (() => {
 /** Her leap off the edge (quick and sure, a beat before his step), and her kick's point. */
 const A_LEAP_X = TOWER.x1 - 0.1
 const A_LEAP_VX = 0.34
-export const A_KICK_AT: Pt = (() => {
-  const off = UP.snow.ariadne!
-  const T = Q.end - Q.kick
-  const v0 = UP.snow.v[1] - G * T
-  const y = UP.snow.at[1] + off[1] - (v0 * T + 0.5 * G * T * T)
-  return [A_LEAP_X + A_LEAP_VX * (Q.kick - Q.ariadneLeap), y]
-})()
+export const A_KICK_AT: Pt = [A_LEAP_X + A_LEAP_VX * (Q.kick - Q.ariadneLeap), ON_GROUND]
 const A_LEAP_VY = (() => {
   const T = Q.kick - Q.ariadneLeap
   return (A_KICK_AT[1] - ON_ROOF - 0.5 * G * T * T) / T
 })()
-const aKick = kickPath(A_KICK_AT[0], A_KICK_AT[1], Q.kick, UP.snow.at[0] + UP.snow.ariadne![0], UP.snow.at[1] + UP.snow.ariadne![1], Q.end, UP.snow.v[1])
+export const aKick = kickPath(A_KICK_AT[0], A_KICK_AT[1], Q.kick, UP.snow.at[0] + UP.snow.ariadne![0], UP.snow.at[1] + UP.snow.ariadne![1], Q.end, UP.snow.v[1])
+/** His own throw up from the kick. */
+export const cKick = kickPath(KICK_AT[0], KICK_AT[1], Q.kick, UP.snow.at[0], UP.snow.at[1], Q.end, UP.snow.v[1])
 /** Where the waves leave her at the circle: a little up the beach from him. */
 export const A_CIRCLE: Pt = onSand(-5.85)
 

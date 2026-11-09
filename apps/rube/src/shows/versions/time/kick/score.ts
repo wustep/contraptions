@@ -3,13 +3,13 @@ import type { Framing } from '../../../registry'
 import { director, follower, type Shot } from './camera'
 import { black } from './credits'
 import { box, frame, lay, scenery, standing, type Chain, type Link } from './kit'
-import { DURATION, KICK, PEAK, SEAM, bar } from './music'
+import { DURATION, KICK, PEAK, SEAM, bar, beat, half } from './music'
 import { FIRST, SEAMS } from './seams'
 import { beacon, sleep, sparkInWides, SLEEP_CELLS } from './sleep'
 import type { MarkPlan } from './marks'
 import { KickShow, type Leg, type Riders, type Spans, type WorldSet } from './show'
 import { ORIGIN, UP } from './stack'
-import { ARIADNE_ID, COBB, FISCHER_ID, type WorldKey } from './worlds'
+import { ARIADNE_ID, COBB, FISCHER_ID, MAL_ID, type WorldKey } from './worlds'
 import { Q } from './limbo/limbo-geo'
 import { SEATED, SINK_AT, T_GO, T_TAXI_DOOR } from './rain/rain-geo'
 import { drumMark, T as HOTEL_T, type Who } from './hotel/hotel-geo'
@@ -140,7 +140,7 @@ const SETS = (): Partial<Record<WorldKey, WorldSet>> => ({
  * before it), the hotel's drum as it turns with them in it, weightless and on down to the snow and the run on skis,
  * afloat in limbo's swell, and from the river's bed up into the hanging van and under the water to the surface.
  */
-const MARKS = (legs: Leg[]): MarkPlan => {
+const MARKS = (legs: Leg[], show: KickShow): MarkPlan => {
   const all = [0, ARIADNE_ID, FISCHER_ID]
   const ids: Record<Who, number> = { cobb: 0, ariadne: ARIADNE_ID, fischer: FISCHER_ID }
   const paris = legs.find((l) => l.world === 'paris')
@@ -159,6 +159,37 @@ const MARKS = (legs: Leg[]): MarkPlan => {
     turned: (['cobb', 'ariadne', 'fischer'] as Who[]).map((who) => ({ id: ids[who], from: HOTEL_T.turn, to: HOTEL_T.off, at: (t: number) => drumMark(who, t) })),
     covered: COVERED,
     own: paris ? [[paris.from, paris.to]] : [],
+    // His eye is on her from the moment she steps onto the weight, and stays on her as he lets her go: it follows her
+    // down into the dark as the rope takes him up, until she is gone and he is at the roof. (His mark lay wherever his
+    // last roll had left it: he let her go without looking at her.)
+    gazes: [
+      {
+        id: 0,
+        from: Q.hold - 0.35,
+        to: Q.roof + 0.3,
+        ease: 0.45,
+        at: (t) => {
+          const m = show.who(t, 'mal')
+          if (!m) return null
+          const [x, y] = show.where(t)
+          return Math.atan2(m.y - y, m.x - x)
+        },
+      },
+      // And hers is on him: as she stands on the weight, and up after him as it takes her down. (The part turns her
+      // eye to him, but she had rolled across the room since, and it had rolled round with her to the floor.)
+      {
+        id: MAL_ID,
+        from: Q.hold - 0.35,
+        to: Q.roof + 0.6,
+        ease: 0.45,
+        at: (t) => {
+          const m = show.who(t, 'mal')
+          if (!m) return null
+          const [x, y] = show.where(t)
+          return Math.atan2(y - m.y, x - m.x)
+        },
+      },
+    ],
   }
 }
 
@@ -167,9 +198,13 @@ const MARKS = (legs: Leg[]): MarkPlan => {
  * the hit is sharp, the recovery long and damped. The river's is the biggest: the van into the water, the last kick.
  */
 export const PUNCHES: [number, number][] = [
-  // Down into limbo, on the drums.
+  // Down into limbo, on the drums; and a lesser one as each great tower of the city goes into the sea on them.
   [PEAK, 0.4],
-  [KICK.limbo, 0.55],
+  [beat(162), 0.22],
+  [bar(41), 0.3],
+  [half(164), 0.32],
+  [bar(43), 0.26],
+  [KICK.limbo, 0.85],
   [KICK.snow, 0.6],
   [KICK.hotel, 0.65],
   [KICK.rain, 0.95],
@@ -188,6 +223,22 @@ function punch(t: number): number {
 }
 
 /**
+ * And the frame takes the blow: on each punch it is knocked down and rings back, twice, gone in a third of a second
+ * (the push in alone is a twentieth of the picture's size at most, and the kicks landed soft). Cells of the frame's
+ * height: the river's, the biggest, is under a thirtieth.
+ */
+const JOLT = 0.03
+function jolt(t: number): number {
+  let v = 0
+  for (const [at, s] of PUNCHES) {
+    const u = t - at
+    if (u < 0 || u > 0.6) continue
+    v += JOLT * s * Math.exp(-u / 0.1) * Math.sin(2 * Math.PI * 8.5 * u)
+  }
+  return v
+}
+
+/**
  * The director's great wides of the stack (the dream's thesis): the whole dream seen at once, the four levels one under
  * the other in the dark of sleep, each with the kick it holds. On the summit's first downbeat, limbo's kick, the camera
  * cuts out to all four (the tower on the shore, the fortress on the mountain, the lift in its shaft with Arthur's charges,
@@ -197,11 +248,14 @@ function punch(t: number): number {
  */
 const STACK_WIDES: { from: number; to: number; keys: Shot[]; backCells: number; backOff: [number, number] }[] = [
   {
-    from: KICK.limbo,
+    // The downbeat itself is the blow, seen close: they hit the ground at the tower's foot (`limbo.ts`). On the off-beat
+    // after it, out to the whole dream, and then in after them: down on limbo coming apart and the fortress they are
+    // thrown up into, so the bar is a move toward the vault and not a held diagram.
+    from: Q.tear,
     to: bar(49),
     keys: [
-      { t: KICK.limbo, cells: 104, hold: [3, 41.5], cut: true },
-      { t: bar(49) - 0.02, cells: 95, hold: [2.4, 43.5] },
+      { t: Q.tear, cells: 104, hold: [3, 41.5], cut: true },
+      { t: bar(49) - 0.02, cells: 58, hold: [2.2, 66.5] },
     ],
     backCells: 5.0,
     backOff: [0.6, -0.4],
@@ -256,12 +310,12 @@ export function compose(): { show: KickShow; camera: (t: number) => Framing } {
   })
 
   const show = new KickShow(legs, SETS(), DURATION, riders, company.sort((a, b) => a.from - b.from))
-  show.markPlan = MARKS(legs)
+  show.markPlan = MARKS(legs, show)
   // Sitting in the van as it drives off, each of them drew a streak behind them in the window, as if thrown.
   show.trailsOff = [[T_GO, SINK_AT.seat]]
   sparkInWides(
     (t) => show.where(t),
-    STACK_WIDES.map((w) => [w.from, w.to]),
+    STACK_WIDES.map((w) => [w.from, w.to, KICK.limbo]),
     legs.filter((l) => l.world === 'dream').map((l) => [l.from, l.to]),
     legs.filter((l) => l.world === 'paris').map((l) => [l.from, l.to]),
   )
@@ -328,8 +382,11 @@ export function compose(): { show: KickShow; camera: (t: number) => Framing } {
   })
   const camera = (t: number): Framing => {
     const owner = show.owner(t)
-    const f = cams[owner](t)
-    const cells = f.cells * (1 - punch(t))
+    const g = cams[owner](t)
+    const cells = g.cells * (1 - punch(t))
+    // The blow goes down the screen whichever way the frame is turned.
+    const [jx, jy] = turn([0, jolt(t) * cells], -(g.angle ?? 0))
+    const f = { ...g, x: g.x + jx, y: g.y + jy }
     // Zoom keeps him in: the shots are composed for this frame, and the closer one about the same middle left him on
     // its edge, or past it (at the booth and through the house he rode its foot). His place is the focus while he is
     // well inside this frame, letting go of it smoothly toward its edge, so a shot he is not in (the children, the

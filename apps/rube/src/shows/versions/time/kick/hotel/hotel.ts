@@ -1,5 +1,5 @@
 import type p5 from 'p5'
-import { R, type Pt, type Seg } from '../../../../../parts'
+import { R, mixHex, type Pt, type Seg } from '../../../../../parts'
 import { rgba, sink, tear } from '../cast'
 import { box, carried, frame, part, scenery, type Company, type Ctx, type PartShot } from '../kit'
 import { ORIGIN, exitFor, local } from '../stack'
@@ -111,8 +111,57 @@ const companyOf = (who: Exclude<Who, 'cobb'>, from: number, to: number, origin: 
 interface State {
   begin: number
 }
-/** A patch of a slab drawn over the ball where it is inside it, so it goes into the surface and comes out of the other. */
-function patch(g: Pen, x: number, y0: number, y1: number, fill: string, top: string | null, hw = 0.5, bottom: string | null = null): void {
+/**
+ * A patch of a slab drawn over the ball where it is inside it, so it goes into the surface and comes out of the other.
+ * `footing`: the slab is the hotel's footings, which have their piers (every three cells) and go out into the dark of
+ * sleep under them: the patch has the piers that cross it, and thins to nothing under the floor, as the footings do
+ * into the dark. (Flat and a cell deep, it showed as a box cut out of the piers, and they came out from under its foot,
+ * in the dark, each cropped flat across by an edge that was not there to be seen.)
+ */
+function patch(g: Pen, x: number, y0: number, y1: number, fill: string, top: string | null, hw = 0.5, bottom: string | null = null, footing = false): void {
+  if (footing) {
+    const { c, k } = g
+    // Whole under the lobby's floor line, then thinning away: the footings are a cell deep and going into the dark.
+    const SOLID = 0.28
+    const FADE = 0.62
+    const ya = y0 + SOLID
+    // Across the patch: the footing's dark concrete, and its piers where they cross it.
+    const parts: [number, number, string][] = []
+    let from = x - hw
+    for (let px = Math.ceil((x - hw - 0.25) / 3) * 3; px - 0.25 < x + hw; px += 3) {
+      const a0 = Math.max(x - hw, px - 0.25)
+      const b0 = Math.min(x + hw, px + 0.25)
+      if (b0 <= a0) continue
+      if (a0 > from) parts.push([from, a0, fill])
+      parts.push([a0, b0, C.concrete])
+      from = b0
+    }
+    if (from < x + hw) parts.push([from, x + hw, fill])
+    // The dark of sleep's feather at a height, as `feather` lays it.
+    const dark = (y: number) => Math.max(0, Math.min(1, (y - (B.foot - FEATHER)) / FEATHER))
+    for (const [a0, b0, base] of parts) {
+      c.fillStyle = base
+      c.fillRect(a0 * k, y0 * k, (b0 - a0) * k, SOLID * k)
+      // Thinning: one gradient, the concrete going into the dark as it goes clear (laid as the slab and then the dark,
+      // each at part strength, it came out paler than the footings round it: a box).
+      const gr = c.createLinearGradient(0, ya * k, 0, (ya + FADE) * k)
+      for (let i = 0; i <= 8; i++) gr.addColorStop(i / 8, rgba(mixHex(base, SLEEP.mid, dark(ya + (FADE * i) / 8)), 1 - i / 8))
+      c.fillStyle = gr
+      c.fillRect(a0 * k, ya * k, (b0 - a0) * k, FADE * k)
+    }
+    if (top) {
+      c.fillStyle = top
+      c.fillRect((x - hw) * k, y0 * k, 2 * hw * k, 0.1 * k)
+    }
+    feather(g, x - hw, x + hw, y0, ya)
+    c.strokeStyle = g.ink
+    c.lineWidth = g.w * 0.8
+    c.beginPath()
+    c.moveTo((x - hw) * k, y0 * k)
+    c.lineTo((x + hw) * k, y0 * k)
+    c.stroke()
+    return
+  }
   const { c, k } = g
   c.fillStyle = fill
   c.fillRect((x - hw) * k, y0 * k, 2 * hw * k, (y1 - y0) * k)
@@ -199,7 +248,7 @@ function hotelOver(g: Pen, t: number): void {
     d.slabs.forEach((s, i) => {
       const sl = SLABS[i]
       const px = hotelAt(d.who, s.enter)[0]
-      if (t > s.enter - 0.1 && t < s.out + 0.05) patch(g, hotelAt(d.who, t)[0], sl.y0, sl.y1, sl.fill, sl.top, 0.5, sl.bottom)
+      if (t > s.enter - 0.1 && t < s.out + 0.05) patch(g, hotelAt(d.who, t)[0], sl.y0, sl.y1, sl.fill, sl.top, i === 2 ? R + 0.07 : 0.5, sl.bottom, i === 2)
       sink(g.p, g.k, [px, sl.y0], t - s.enter, s.through - s.enter, 0.75)
       if (i < 2) sink(g.p, g.k, [px, sl.y1], t - s.under, s.out - s.under, 0.6)
     })
@@ -231,7 +280,7 @@ function liftOver(g: Pen, t: number): void {
 
 /* ------------------------------------------------------------------ the hotel */
 
-const HOTEL_BREAKS = [T.land, T.go, T.stop, T.turn, T.fr, T.run2, T.rc, T.run3, T.cl, T.run4, T.lf, T.off, T.push, T.knock, T.catch, T.emerge]
+const HOTEL_BREAKS = [T.land, T.go, T.stop, T.turn, T.fr, T.run2, T.rc, T.run3, T.cl, T.run4, T.lf, T.level, T.off, T.push, T.knock, T.catch, T.emerge]
 const Lh = (p: Pt): Pt => local(ORIGIN.hotel, p)
 
 export const hotel = part<State>(
@@ -262,12 +311,24 @@ export const hotel = part<State>(
     const follow = (t: number, cells: number, off: Pt): PartShot => ({ t, cells, off, w: 0 })
     const hold = (t: number, cells: number, at: Pt, cut = false): PartShot => ({ t, cells, hold: Lh(at), w: 1, ...(cut ? { cut } : {}) })
     const keys: PartShot[] = [
-      // Down through the roof, looking into the corridor under it; landed, looking along it.
-      follow(92.35, 5.8, [0.3, 0.7]),
-      follow(93.2, 5.25, [1.25, -0.72]),
+      // The brass: a cut, on the downbeat, to the corridor itself, its lamps coming up, the dark of sleep over its roof
+      // and the three of them dropping out of it (the level arrives with its layer, as Paris, the plane and the rain
+      // did: followed down, they were half way through the dark on the downbeat and the corridor slid up after it).
+      // Held as they come through the roof and land; then in, looking along it.
+      // Wide enough to be a place at once (the top floor from its end wall to the lift, the rooms under it), as the
+      // mountain and limbo are on theirs; then in on them as they land and go along it.
+      { t: slot.begin + 0.001, cells: 12, hold: Lh([-7.3, 20.6]), w: 1, cut: true },
+      hold(T.land + 0.25, 9.4, [-8.2, 20.0]),
+      follow(94.5, 5.5, [1.25, -0.72]),
       // The drum: close, the camera turning with it (a point fixed in the drum's own frame, leaning toward the three
       // of them, so the room holds still on the screen while gravity swings round it and they run round its walls).
       ...drumKeys(),
+      // The cause, before its effect: on bar 25, as the brake comes off, a cut up to the van a level over them, its
+      // nose into the heaved slab of the bridge's deck and its tail coming up, slow as the rain hanging round it; and
+      // back on the next off-beat to the corridor, already going over with it. (The corridor turned for seven seconds
+      // before a van was seen at all, and then one coming out of a flip nobody had seen begin.)
+      hold(T.turn, 4.8, [-5.35, -1.02], true),
+      hold(T.fr - 0.02, 5.0, [-5.05, -1.3]),
       // Cut up to the van on bar 27: steeply over in the air above the deck, coming round, down on its wheels
       // (beat 110) and rolling to the broken end.
       hold(T.away, 5.2, [-2.95, -1.35], true),
@@ -282,7 +343,9 @@ export const hotel = part<State>(
       hold(116.5, 5.1, [10.35, 20.45]),
       // Down with them through the floors into the dark.
       follow(118.7, 6.2, [0.15, -0.15]),
-      follow(121.8, 6.6, [0.1, 0.15]),
+      follow(121.2, 6.4, [0.1, 0.1]),
+      // Into the dark with them, the frame coming up over them: the snow's sky is not seen before its downbeat.
+      follow(slot.end, 5.6, [0.1, -1.35]),
     ]
     return keys.filter((k) => k.t > slot.begin && k.t <= slot.end + 1e-6)
   },
@@ -293,12 +356,15 @@ export const hotel = part<State>(
 const LEAN = 0.5
 function drumKeys(): PartShot[] {
   const out: PartShot[] = []
-  for (let t = 95.0; t < T.away - 0.06; t += 0.1) {
+  const key = (t: number, cut = false): PartShot => {
     const [lx, ly] = drumLean(t)
     const at = add(DRUM, rot(drumAngle(t), [lx * LEAN, ly * LEAN]))
     const cells = 4.5 - 0.3 * ss((t - 95.0) / 3)
-    out.push({ t, cells, hold: Lh(at), w: 1 })
+    return { t, cells, hold: Lh(at), w: 1, ...(cut ? { cut } : {}) }
   }
+  // But for the cutaway to the van as it begins to go over (bar 25 to the off-beat after the next beat): back on a cut.
+  for (let t = 95.0; t < T.away - 0.06; t += 0.1) if (t < T.turn - 0.02 || t > T.fr + 0.05) out.push(key(t))
+  out.push(key(T.turn - 0.012), key(T.fr, true))
   return out
 }
 

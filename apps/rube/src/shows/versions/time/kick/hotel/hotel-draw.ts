@@ -1061,7 +1061,7 @@ function drawSuiteLine(g: Pen, t: number): void {
   if (t > T.catch - 0.3) {
     const u = t - (T.catch - 0.3)
     const hang = 1 - (1 - Math.cos(2 * Math.PI * clamp01((t - T.catch - HANG.from) / (HANG.to - HANG.from)))) / 2
-    bow = 0.08 * ss(u / 0.3) * hang * (1 - ss((t - T.catch - 3.1) / 0.8)) + 0.05 * Math.exp(-Math.max(0, t - T.catch) / 0.8) * Math.sin(Math.max(0, t - T.catch) * 9)
+    bow = 0.2 * ss(u / 0.3) * hang * (1 - ss((t - T.catch - 3.1) / 0.8)) + 0.13 * Math.exp(-Math.max(0, t - T.catch) / 0.8) * Math.sin(Math.max(0, t - T.catch) * 9)
     if (t > T.catch + HANG.to) bow += 0.04 * Math.exp(-(t - T.catch - HANG.to) / 0.6) * Math.sin((t - T.catch - HANG.to) * 8)
   }
   const mid: Pt = [lerp(top[0], foot[0], 0.3) + bow, lerp(top[1], foot[1], 0.3)]
@@ -1090,9 +1090,11 @@ function drawArthur(g: Pen, f: View, t: number): void {
     // Up off the floor and over to the sleepers' far end, upright in the air, his hand on their rope.
     const u = ss(tau / 3)
     const stand: Pt = [13.55, B.top - 0.78 - 0.25 * ss(tau / 1.5)]
-    const by: Pt = [b.at[0] + 1.62, b.at[1] + 0.3]
+    // Well clear of the floor and what stands on it, and lying back in the air (a little off upright, his feet came to
+    // the nightstand's top and he read as standing on it, leaning).
+    const by: Pt = [b.at[0] + 1.78, b.at[1] - 0.08]
     p = [lerp(stand[0], by[0], u) + 0.04 * Math.sin(tau * 0.5), lerp(stand[1], by[1], u) + 0.03 * Math.sin(tau * 0.37)]
-    turn = lerp(0, -0.22, u) + 0.03 * Math.sin(tau * 0.41)
+    turn = lerp(0, -0.62, u) + 0.03 * Math.sin(tau * 0.41)
     reach = u
   } else if (c < TOW.to) {
     // Towing them, ahead of them along the corridor.

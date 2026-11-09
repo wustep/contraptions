@@ -455,8 +455,12 @@ const SHADES: { pts: Pt[]; color: string }[] = [
       [-7.2, 47.35],
       [-6.1, 50.8],
       [-5.2, 58],
-      [16, 58],
-      [16, 44.3],
+      // Its east end is the foot of the guards' ridge, a rib running down the face as the others do (a ruled vertical
+      // at x 16, top to bottom, it stood as a seam between blue and white wherever a wide saw that far east).
+      [20.4, 58],
+      [19.0, 53.2],
+      [17.4, 48.2],
+      [16.2, 44.3],
       [SHOULDER.right, SHOULDER.y + 0.02],
       [SHOULDER.lip, SHOULDER.y + 0.02],
       [6.2, 44.42],
@@ -1012,13 +1016,15 @@ function drawValley(ctx: C2D, c: Ctx, x0: number, x1: number, st: number): void 
     k,
     SNOW.rock,
   )
-  // The apron at the gate: a snow terrace on the face's foot, level with the vault's floor.
+  // The apron at the gate: a snow terrace on the face's foot, level with the vault's floor. It runs in under the
+  // fortress's wall (`APRON_IN`): stopped at the wall's face, the gateway showed bright snow through it once the
+  // fortress had come down past the apron's top, a white post beside the fallen wall.
   fill(
     ctx,
     [
       [LEDGE.lip - 2.4, FLOOR_Y],
-      [GATE_X + 0.05, FLOOR_Y],
-      [GATE_X + 0.05, FORT.foot + 0.4],
+      [GATE_X + APRON_IN, FLOOR_Y],
+      [GATE_X + APRON_IN, FORT.foot + 0.4],
       [GATE_X - 1.6, VALLEY_Y - 0.3],
       [LEDGE.lip - 4.8, VALLEY_Y - 0.3],
       [LEDGE.lip - 3.4, FLOOR_Y + 1.3],
@@ -1030,8 +1036,8 @@ function drawValley(ctx: C2D, c: Ctx, x0: number, x1: number, st: number): void 
     ctx,
     [
       [LEDGE.lip - 3.4, FLOOR_Y + 0.32],
-      [GATE_X + 0.05, FLOOR_Y + 0.32],
-      [GATE_X + 0.05, FLOOR_Y + 0.62],
+      [GATE_X + APRON_IN, FLOOR_Y + 0.32],
+      [GATE_X + APRON_IN, FLOOR_Y + 0.62],
       [LEDGE.lip - 3.2, FLOOR_Y + 0.7],
     ],
     k,
@@ -1042,8 +1048,8 @@ function drawValley(ctx: C2D, c: Ctx, x0: number, x1: number, st: number): void 
   {
     const apron: Pt[] = [
       [LEDGE.lip - 2.4, FLOOR_Y],
-      [GATE_X + 0.05, FLOOR_Y],
-      [GATE_X + 0.05, FORT.foot + 0.4],
+      [GATE_X + APRON_IN, FLOOR_Y],
+      [GATE_X + APRON_IN, FORT.foot + 0.4],
       [GATE_X - 1.6, VALLEY_Y - 0.3],
       [LEDGE.lip - 4.8, VALLEY_Y - 0.3],
       [LEDGE.lip - 3.4, FLOOR_Y + 1.3],
@@ -1057,7 +1063,7 @@ function drawValley(ctx: C2D, c: Ctx, x0: number, x1: number, st: number): void 
     cg.addColorStop(0.3, SNOW.rock)
     cg.addColorStop(1, SNOW.rockDark)
     ctx.fillStyle = cg
-    ctx.fillRect((LEDGE.lip - 5) * k, top * k, (GATE_X - LEDGE.lip + 5.2) * k, (VALLEY_Y - top) * k)
+    ctx.fillRect((LEDGE.lip - 5) * k, top * k, (GATE_X + APRON_IN + 0.1 - LEDGE.lip + 5) * k, (VALLEY_Y - top) * k)
     ctx.restore()
   }
   // Near pines in the valley, swaying a little on the snow's clock, and some on the face's foot.
@@ -1074,6 +1080,9 @@ function drawValley(ctx: C2D, c: Ctx, x0: number, x1: number, st: number): void 
 
 /* ------------------------------------------------------------------ the fortress */
 
+/** How far the apron's ground runs in under the fortress's left wall. */
+const APRON_IN = 0.5
+
 /** How far the fortress has come down at `t`, each piece: the sag from the charges (show time), then its fall. */
 function collapse(t: number): { sag: number; tau: number } {
   const sag = fortDrop(t)
@@ -1081,8 +1090,16 @@ function collapse(t: number): { sag: number; tau: number } {
   return { sag, tau }
 }
 
-/** How far the ground floor has sunk into its blown footing after the kick (settling), cells. */
-const settle = (tau: number) => 1.3 * (1 - Math.exp(-tau / 0.45))
+/**
+ * How far the ground floor has sunk into its blown footing after the kick, cells. On the kick it has hit the bottom of
+ * what its charges blew, and stops dead (that stop is what throws them: sinking on from the downbeat at the speed it
+ * fell, nothing landed, and they left a floor that was still going down); it bounces a hand's breadth, and then the
+ * footing crumbles under it and it settles, slowly at first.
+ */
+const settle = (tau: number) => {
+  const crumble = ss((tau - 0.12) / 1.3)
+  return 1.3 * crumble * crumble - 0.1 * Math.exp(-tau / 0.09) * Math.sin(Math.min(Math.PI, tau / 0.055))
+}
 
 /**
  * The fortress. Its pieces: the ground floor (cut away) on its footing; the upper floor's left wing and main block; the
