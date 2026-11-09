@@ -862,7 +862,9 @@ async function main(): Promise<void> {
         // (Not 190: as the lift climbs and the camera turns back, the far-side house comes back into the bottom of the
         // frame, and she is in it, at her threshold, watching the car go.)
         const murphAway = [60, 100, 130, 140, 150, 215, 250, 260, 280]
-        const murphYoung = [0, 3, 6, 10, 14, 16.4, 17.5, 18.5, 19.5, 33, 40, 48, 68.8, 69.6, 74, 75.3, 78]
+        // (From 6 s: the show opens close on Cooper's watch at the far end of the shelf, and the camera draws back to
+        // her bed under the window as the lander goes.)
+        const murphYoung = [6, 8, 10, 14, 16.4, 17.5, 18.5, 19.5, 33, 40, 48, 68.8, 69.6, 74, 75.3, 78]
         const miss: string[] = []
         for (const t of [...withHim, ...inOrbit, ...atCamp]) if (!inShot(t, show.brand(t))) miss.push(`Brand not in shot ${t}`)
         for (const t of brandAway) if (inShot(t, show.brand(t))) miss.push(`Brand in shot ${t}`)
@@ -882,9 +884,10 @@ async function main(): Promise<void> {
         check('liftoff: where they are, one ball each, each its own id, and no one else',
           two.every(({ t, b }) => b.length === 1 + (show.brand(t) ? 1 : 0) + (show.murph(t) ? 1 : 0) && new Set(b.map((x) => x.id)).size === b.length) &&
           [60, 70, 130, 200, 245].every((t) => (show.at(t).balls?.length ?? 1) <= 1 + (show.brand(t) ? 1 : 0) + (show.murph(t) ? 1 : 0)))
-        // Under Zoom (1.5 times closer) Cooper stays in the frame, but for three shots that are about something bigger
-        // than him: the cage going up out of the top while Murph is kept back at the tower's foot, the whip through
-        // the sphere, and the pull-back from the replica to the whole ring.
+        // Under Zoom (1.5 times closer) Cooper stays in the frame, but for the shots that are about something more
+        // than him (`ZOOM_FREE`): his watch, at the opening and in the tesseract; the cage going up out of the top
+        // while Murph is kept back at the tower's foot; the whip through the sphere; and the pull-back from the replica
+        // to the whole ring.
         // Across the axis, on a phone, he is a speck of under a CSS pixel: the streak that marks him judges his size on the
         // screen (canvas pixels over the density), and keeps a halo of at least 9 CSS pixels round him (pass 68).
         {
@@ -895,12 +898,13 @@ async function main(): Promise<void> {
             // and fades it in off the bat, since on a phone he is small already at the hit (it popped on: pass 72)
             streak.includes('smooth(T, HIT + 0.04, HIT + 0.38)'))
         }
-        // In the show's own frame, Cooper's whole ball is in shot every 0.02 s but for the two shots written to lose him:
-        // the cage going up out of the top, and the whip through the sphere. (The swoop back from the ring's reveal once
+        // In the show's own frame, Cooper's whole ball is in shot every 0.02 s but for the three shots written to lose him:
+        // the opening, close on his watch at the other end of the shelf until the camera draws back to the room; the
+        // cage going up out of the top; and the whip through the sphere. (The swoop back from the ring's reveal once
         // shut ahead of coming down and lost him under the bottom edge for most of a second.)
         const ownMiss: string[] = []
         for (let t = 0; t <= MIX_END; t += 0.02) {
-          if (([[74.9, 77.3], [103.7, 104.3]] as [number, number][]).some(([a, b]) => t > a && t < b)) continue
+          if (([[-1, 4.4], [74.9, 77.3], [103.7, 104.3]] as [number, number][]).some(([a, b]) => t > a && t < b)) continue
           const f = perf.camera!(t)
           const a = f.angle ?? 0
           const [hx, hy] = show.where(t)
@@ -908,7 +912,7 @@ async function main(): Promise<void> {
           const dy = hy - f.y
           if (!(Math.abs(dx * Math.cos(a) - dy * Math.sin(a)) < (f.cells * 8) / 9 - BALL_R && Math.abs(dx * Math.sin(a) + dy * Math.cos(a)) < f.cells / 2 - BALL_R)) ownMiss.push(t.toFixed(2))
         }
-        check('liftoff: in the show\'s own frame Cooper\'s whole ball is in shot, but for the cage\'s climb and the whip through the sphere', ownMiss.length === 0, ownMiss.slice(0, 12).join(' '))
+        check('liftoff: in the show\'s own frame Cooper\'s whole ball is in shot, but for the opening on his watch, the cage\'s climb and the whip through the sphere', ownMiss.length === 0, ownMiss.slice(0, 12).join(' '))
         // Two balls are never drawn into each other: they come close (the meetings), never overlap. The one exception is in
         // NASA's bunker, where he rolls through the place Brand waits while the bunker's wall hides both.
         const overlaps: string[] = []
@@ -983,7 +987,7 @@ async function main(): Promise<void> {
           const edge = 2 * BALL_R
           if (!(Math.abs(dx * Math.cos(a) - dy * Math.sin(a)) < (zc * 8) / 9 - edge && Math.abs(dx * Math.sin(a) + dy * Math.cos(a)) < zc / 2 - edge)) zoomMiss.push(t.toFixed(1))
         }
-        check('liftoff: under Zoom Cooper\'s whole ball is well inside the frame, but for the cage\'s climb, the whip through the sphere and the ring\'s reveal', zoomMiss.length === 0, zoomMiss.join(' '))
+        check('liftoff: under Zoom Cooper\'s whole ball is well inside the frame, but for the two shots of his watch, the cage\'s climb, the whip through the sphere and the ring\'s reveal', zoomMiss.length === 0, zoomMiss.join(' '))
         // Out of the wormhole's far mouth the whip hands over to the Ranger: the camera does not stop dead while it flies.
         let slowest = Infinity
         for (let t = cue(213) - 0.3; t < cue(213) + 0.6; t += 1 / 60) {

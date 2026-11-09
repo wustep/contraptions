@@ -9,6 +9,7 @@ import { BALL, EARTH, FARM, SPACE, STATION, VOID } from './worlds'
 import { dawn, sky } from './earth/sky'
 import { grade } from './earth/grade'
 import { house, porch, shelf, stairs, toy } from './earth/house'
+import { WATCH_ON_SHELF, WATCH_R } from './earth/watch'
 import { cornrow } from './earth/field'
 import { yard, YARD_END } from './earth/yard'
 import { rearAt, truck } from './earth/truck'
@@ -50,6 +51,9 @@ import { credits } from './credits'
  *   b166    Miller's world
  *   b180    Gargantua (a slingshot, two turns), the tesseract, the last hit on beat 191, the watch, the fall into bed
  */
+
+/** The opening's close shot: the watch a third of the way in from the left, the lander and the first books beside it. */
+const WATCH_SHOT: Pt = [WATCH_ON_SHELF[0] + 0.19, WATCH_ON_SHELF[1] - 2 - WATCH_R * 2]
 
 /** The deck stops being drawn half a second after the whip through the sphere to Miller (beat 166): nothing after it looks back down at it. */
 const CLOUD_GONE = beat(166) + 0.5
@@ -206,12 +210,14 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
 
   iris.center = show.where(UNDOCK) as Pt
   const shots: Shot[] = [
-    // Dawn in Murph's room: a slow push in through the piano's first bars on the shelf and her bed under the window,
-    // arriving as the first book goes (5.13) and she wakes.
-    { t: 0, cells: 3.8, hold: [1.7, -2.4] },
+    // The show opens on Cooper's watch, close, at the left end of Murph's top shelf, in the dark: its second hand ticks
+    // the message once through (`STAY_OPEN`, 3.85 s) with the model lander beside it. Then the camera draws back to
+    // the room, the shelf and her bed under the window, arriving as the lander goes (5.13) and she wakes.
+    { t: 0, cells: 0.52, hold: WATCH_SHOT },
+    { t: 2.9, cells: 0.6, hold: WATCH_SHOT },
     // (Centred so that under Zoom, 1.5 times closer, her pillow is still in with the shelf's books.)
-    { t: 5.2, cells: 2.95, hold: [1.52, -2.55] },
-    { t: 5.5, cells: 2.95, hold: [1.52, -2.55] },
+    { t: 5.9, cells: 2.95, hold: [1.52, -2.55] },
+    { t: 6.2, cells: 2.95, hold: [1.52, -2.55] },
     { t: 12.3, cells: 3.1, hold: [2.1, -2.55], w: 0.7 },
     { t: 15.5, cells: 3.3, w: 0.35, hold: [4.4, -2.3] },
     { t: 17.2, cells: 3.8, w: 0 },
@@ -253,8 +259,8 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
   const camera = (t: number): Framing => {
     const f = follow(t)
     // Zoom's focus is Cooper: the shots are composed for the wide frame, and under Zoom some left him on its edge or
-    // past it (the two of them in the rocket's window, over a frame that holds the tower's foot). Not in the three
-    // shots that are about more than him, and eased in and out of those so Zoom never jumps.
+    // past it (the two of them in the rocket's window, over a frame that holds the tower's foot). Not in the shots
+    // that are about more than him (`ZOOM_FREE`), and eased in and out of those so Zoom never jumps.
     const w = ZOOM_FREE.reduce((m, [a, b]) => {
       const [lo, hi] = zoomFreeSpan([a, b])
       const e = (hi - lo - (b - a)) / 2 || Math.min(1, (b - a) / 3)
@@ -271,10 +277,12 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
 }
 
 /**
- * Under Zoom, the shots that are bigger than Cooper: the cage going up out of the top while Murph is kept back at the
- * tower's foot, the whip through the sphere, and the pull-back from the replica to the whole ring.
+ * Under Zoom, the shots that are about more than Cooper: the opening on his watch, at the far end of the shelf from
+ * him; the cage going up out of the top while Murph is kept back at the tower's foot; the whip through the sphere; the
+ * watch again in the tesseract, while its hand says its first letters; and the pull-back from the replica to the
+ * whole ring. (The first starts before the show does, so Zoom is on the watch from the first frame.)
  */
-export const ZOOM_FREE: [number, number][] = [[74.9, 77.3], [103.7, 104.3], [130.4, 137.2]]
+export const ZOOM_FREE: [number, number][] = [[-1.5, 5.9], [74.9, 77.3], [103.7, 104.3], [122.6, 123.95], [130.4, 137.2]]
 /** The stretch a Zoom-free shot really takes, with its eases: itself if it is long, half a second more each side if it is short. */
 export const zoomFreeSpan = ([a, b]: [number, number]): [number, number] => (b - a >= 2 ? [a, b] : [a - 0.5, b + 0.5])
 
