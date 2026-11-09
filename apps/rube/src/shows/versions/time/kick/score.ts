@@ -140,7 +140,7 @@ const SETS = (): Partial<Record<WorldKey, WorldSet>> => ({
  * before it), the hotel's drum as it turns with them in it, weightless and on down to the snow and the run on skis,
  * afloat in limbo's swell, and from the river's bed up into the hanging van and under the water to the surface.
  */
-const MARKS = (legs: Leg[]): MarkPlan => {
+const MARKS = (legs: Leg[], show: KickShow): MarkPlan => {
   const all = [0, ARIADNE_ID, FISCHER_ID]
   const ids: Record<Who, number> = { cobb: 0, ariadne: ARIADNE_ID, fischer: FISCHER_ID }
   const paris = legs.find((l) => l.world === 'paris')
@@ -159,6 +159,23 @@ const MARKS = (legs: Leg[]): MarkPlan => {
     turned: (['cobb', 'ariadne', 'fischer'] as Who[]).map((who) => ({ id: ids[who], from: HOTEL_T.turn, to: HOTEL_T.off, at: (t: number) => drumMark(who, t) })),
     covered: COVERED,
     own: paris ? [[paris.from, paris.to]] : [],
+    // His eye is on her from the moment she steps onto the weight, and stays on her as he lets her go: it follows her
+    // down into the dark as the rope takes him up, until she is gone and he is at the roof. (His mark lay wherever his
+    // last roll had left it: he let her go without looking at her.)
+    gazes: [
+      {
+        id: 0,
+        from: Q.hold - 0.35,
+        to: Q.roof + 0.3,
+        ease: 0.45,
+        at: (t) => {
+          const m = show.who(t, 'mal')
+          if (!m) return null
+          const [x, y] = show.where(t)
+          return Math.atan2(m.y - y, m.x - x)
+        },
+      },
+    ],
   }
 }
 
@@ -278,7 +295,7 @@ export function compose(): { show: KickShow; camera: (t: number) => Framing } {
   })
 
   const show = new KickShow(legs, SETS(), DURATION, riders, company.sort((a, b) => a.from - b.from))
-  show.markPlan = MARKS(legs)
+  show.markPlan = MARKS(legs, show)
   // Sitting in the van as it drives off, each of them drew a streak behind them in the window, as if thrown.
   show.trailsOff = [[T_GO, SINK_AT.seat]]
   sparkInWides(

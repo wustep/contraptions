@@ -40,8 +40,10 @@ const WIDE: [number, number][] = [
   // The snow: Fischer goes on alone down the hall to the vault's door, the camera in after him (he waits on the
   // ledge); the cut to Mal on the piste above, the rifle, the shot.
   [141.6, 145.642],
-  // The rain: the pull back to the bridge whole as the van drives out onto it, its broken end ahead (he is in the van,
-  // at the frame's left).
+  // The rain: the cut to Mal on the pavement as the train's lamp comes on behind her, the camera drawing back from her
+  // to the van as it comes through (he is in the van, up the street); and the pull back to the bridge whole as the van
+  // drives out onto it, its broken end ahead (he is in the van, at the frame's left).
+  [74.688, 76.7],
   [83.6, 86.129],
   // The hotel: the cutaway up to the van as it begins to go over (bar 25 to the next off-beat but one), and the one to
   // it coming out of its flip, landing and rolling to the broken end (he is in the drum).

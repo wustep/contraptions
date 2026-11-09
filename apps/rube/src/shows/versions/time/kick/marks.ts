@@ -40,6 +40,21 @@ export interface MarkPlan {
   covered: number[]
   /** Stretches whose marks a part already rolls itself (Paris, where the street folds over): left as it has them. */
   own: [number, number][]
+  /** Looks the director gives a rolling ball (`Gaze`). */
+  gazes?: Gaze[]
+}
+
+/**
+ * A look given to a ball that otherwise rolls: from `from` its mark turns, the short way and over `ease` seconds, from
+ * wherever its rolling has left it to the heading `at(t)` gives (radians, as a mark is; null: nothing to look at), and
+ * stays on it until `to`; after that it rolls on from where the look left it. No jump at either end.
+ */
+export interface Gaze {
+  id: number
+  from: number
+  to: number
+  ease: number
+  at: (t: number) => number | null
 }
 
 /** The balls at `t` as the parts have them, which leg has Cobb, and where the leg's world measures x from. */
@@ -159,6 +174,30 @@ export function marks(plan: MarkPlan, duration: number, sample: (t: number) => M
       const start = before ? shown(a - 1) + tr.inc[a] : after ? shown(b + 1) - tr.inc[b + 1] - tr.v[b] : tr.raw[a]
       for (let j = a; j <= b; j++) tr.v[j] += start
       i = b + 1
+    }
+  }
+
+  // The director's looks, laid over the rolling: eased in from the rolled mark, and carried on from at their end.
+  for (const g of plan.gazes ?? []) {
+    const tr = tracks.get(g.id)
+    if (!tr) continue
+    const i0 = Math.ceil(g.from / DT)
+    let off = 0
+    let was: number | null = null
+    for (let i = i0; i < n; i++) {
+      if (tr.kind[i] !== Kind.Rolled || (i > i0 && !tr.link[i])) break
+      const t = i * DT
+      const want = t <= g.to ? g.at(t) : null
+      if (want !== null) {
+        // The short way round, and then whichever way keeps on from the last sample (never a flip through a half turn).
+        let d = want - tr.v[i]
+        const ref = was ?? 0
+        d -= Math.round((d - ref) / (2 * Math.PI)) * 2 * Math.PI
+        was = d
+        const u = Math.max(0, Math.min(1, (t - g.from) / g.ease))
+        off = d * u * u * (3 - 2 * u)
+      }
+      tr.v[i] += off
     }
   }
 

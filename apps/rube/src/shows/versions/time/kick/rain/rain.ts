@@ -173,7 +173,10 @@ export const rain = part<State>(
       // The door slams: cut out on it to the street ahead of the van, close. Out of nowhere the train's headlamp stabs
       // in along it; the locomotive comes on through the waiting cars, a black wall filling the frame, and takes the
       // taxi on bar 20; then its wagons thunder past behind the van.
-      { t: T_SLAM, cells: 8, hold: local(RAIN_AT, [-37.8, -2.25]), w: 1, cut: true },
+      // The cut is to Mal: close, standing on the pavement in the rain with her eye on the van, the street dark behind
+      // her. The lamp comes on behind her; and the camera draws back from her as what she has brought comes through.
+      // (Cut wide, she was a speck at the kerb that nothing tied to the train.)
+      { t: T_SLAM, cells: 4.3, hold: local(RAIN_AT, [MAL_AT[0] - 0.35, -1.2]), w: 1, cut: true },
       hold(T_IMPACT, 7.8, [-38.0, -2.2]),
       hold(T_IMPACT + 1.6, 8.3, [-38.6, -2.2]),
       hold(T_GO - 0.6, 9.4, [-39.4, -2.35]),
