@@ -91,13 +91,15 @@ into the next world's cells and the camera moves by exactly the same amount at t
   coming up; the mountain, its shoulder and the fortress; all of limbo, its city going into the sea), the three of them
   dropping into the top of it. Up to each downbeat the frame rides up over them, so nothing of the level below is seen
   early.
-- **The great wide** (`score.ts`, `STACK_WIDES`): on the summit's first downbeat, limbo's kick (183.247), the camera cuts
-  out to the whole dream at once, the four levels one under the other in the dark (the van hanging off the bridge over
-  the frozen river; the lift in its shaft with Arthur's charges; the fortress on the mountain; the tower on the shore).
-  Limbo's kick drops what they built: the tower goes down into its own footing on the downbeat and the city into the
-  sea after it, tower by tower along the bay on the bar's beats, while the thrown ones go up the column as a streak in
-  his colour. The camera goes in after them, down on limbo and the fortress, and cuts to the vault on the paddles
-  (187.061).
+- **Limbo's kick is a blow, seen close** (183.247, the cue's hardest downbeat): he falls the tower's whole height, the
+  camera down its face with him, and hits the ground at its foot on the downbeat; the tower's footing goes with the
+  blow, and he is thrown up out of the frame.
+- **The great wide** (`score.ts`, `STACK_WIDES`): on the off-beat after it (183.723) the camera cuts out to the whole
+  dream at once, the four levels one under the other in the dark (the van hanging off the bridge over the frozen river;
+  the lift in its shaft with Arthur's charges; the fortress on the mountain; the tower on the shore). The tower goes
+  down into its own footing and the city into the sea after it, tower by tower along the bay on the bar's beats, while
+  the thrown ones go up the column as a streak in his colour. The camera goes in after them, down on limbo and the
+  fortress, and cuts to the vault on the paddles (187.061).
 - **The camera rolls twice**: 180° as Paris folds over (and is left upside down until the jolt), and once right round
   with the hotel's turning corridor, the room standing still on the screen while the building wheels round it.
 - **The punches**: the plunge into limbo (152.770) and the four kicks, the river's the biggest.
@@ -146,8 +148,8 @@ Times are show seconds; bar *n* is `bar(n)`, beat *k* is `beat(k)`.
 | 163.719 → 168.009 | | | Up the tower in the lift, the city falling round it. |
 | 168.009 | | | Their room: Mal at the table, the top still spinning; Fischer held. |
 | 171.817 → **175.631** | | | **The choice**: Mal steps onto the lift's counterweight deck; the garden, the children's backs; he takes his lever and draws the bolt, and on the chord the rope takes up at once: she goes down the slot into the dark by degrees as the same rope snatches him up to the roof, the two of them parting in one frame. |
-| 178.492 → 182.296 | | | On the roof Ariadne pushes Fischer off (his kick carries him up to the vault); she leaps; he steps off after her. |
-| **183.247** | the summit | limbo → | **Limbo's kick**: thrown straight up; the tower comes down, and the city after it on the bar's beats. *The great wide*: the whole dream at once, the camera going in after them. |
+| 178.492 → 181.819 | | | On the roof Ariadne pushes Fischer off; the camera draws back to hold the roof and the ground: he falls the tower's height, hits the ground at its foot (179.932) and is thrown up past them, to the vault. *Cut* close on the edge: she leaps (181.343); he steps off after her (181.819). |
+| **183.247** | the summit | limbo → | **Limbo's kick**: down the tower's face with him; they hit the lawn at its foot on the downbeat and are thrown straight up; the tower's footing goes. On the off-beat (183.723) *the great wide*: the whole dream at once, the tower coming down and the city after it on the bar's beats, the camera going in after them. |
 | 185.151 → 188.965 | | the snow | Up through the fortress floor into the vault: the paddles on Fischer (187.061), the great round door rolls aside, **the pinwheel** turns in his father's last breath. |
 | 189.940 → **190.869** | | → | The charges: *cut out* to the fortress whole, coming down into the footing they blew. **The snow's kick**: its floor stops dead in its dust and throws the three of them up through the roof, the wing and the tower breaking away. |
 | 192.569 → 194.682 | | the hotel | Up the weightless shaft into the lift among the tied sleepers; Arthur's charges blow. |
@@ -201,8 +203,10 @@ Christopher Nolan (2010); Drawn with p5.js. There is no title card. After the la
 - the cue's landmarks struck (every layer's downbeat, the four kicks, the release, the piano, the top, the last chord)
   and nine in ten of all 72 chords;
 - the brass, the swell and the peak each arriving on a cut out of the dark to the level's own wide; letting her go on
-  its chord (the bolt clear, the cabin up and the weight down at once); the tower down within limbo's kick's bar and
-  the city after it on the beats; the van on the river's bed by the crest (resting on it, not in it) and him only
+  its chord (the bolt clear, the cabin up and the weight down at once); limbo's kick a fall that lands (on the ground at the tower's foot on the downbeat, seen close, the great
+  wide a half-beat after), the tower down within its bar and the city after it on the beats, a tower in the sea on the
+  peak's downbeat, the cracked slab still the one that falls on bar 47; the van flipping on its slab, seen; the shot
+  finding Fischer standing; the van on the river's bed by the crest (resting on it, not in it) and him only
   rising from there to the surface on the release;
 - the camera cuts inside a world only on a strike, never whips, never rolls faster than a turn in six seconds, and its
   biggest punch is the river's; the blink and the veil full at their cuts and only there; the cut to black on the last
@@ -776,10 +780,16 @@ not felt in the machines. The weaknesses were written down before anything was c
 
 What changed, in that order:
 
-- **Limbo's kick** (183.25 to 187.06): the tower they built goes down into its own footing on the downbeat (a floor's
-  depth at once, then gathering), in a bank of its dust; the city goes into the sea after it, tower by tower out along
-  the bay, one on every beat and off-beat of the bar; the throw is one tapered stroke in his colour up the column; and
-  the camera does not hold: it goes in after them, down onto limbo and the fortress they are thrown up into.
+- **Limbo's kick** (178.5 to 187.06): it was a turn in mid-air half way down the tower, and the downbeat cut away from
+  it. Under the show's own gravity a fall from the roof to the ground at the tower's foot takes a beat and a half: she
+  leaps on beat 190, he steps off on the off-beat, and they hit the lawn of the garden together on the downbeat, seen
+  close, the camera down the tower's face with him; dust, the frame knocked down, and they are streaks up out of it.
+  The tower they built goes down into its own footing with the blow (a floor's depth at once, then gathering), in a
+  bank of its dust. On the off-beat the cut out to the whole dream: the city goes into the sea after it, tower by tower
+  out along the bay, one on every beat and off-beat of the bar; the throw is one tapered stroke in his colour up the
+  column; and the camera does not hold: it goes in after them, down onto limbo and the fortress they are thrown up
+  into. Fischer's kick, a bar before, is the same blow, seen from a wide that holds the roof and the ground. (The
+  crossing into the snow is 0.89 s after the kick now, not 0.6: `music.ts`, `UP_LAG`.)
 - **Letting her go** (171.8 to 177.5): on the chord the bolt is already clear and the rope takes up at once, the cabin
   snatched up and the weight dropping; the slit under their room is seen into while the tower is cut away, so the
   weight hangs there before and she goes down into the dark by degrees; the bolt rides with the cabin (it was left
@@ -818,6 +828,30 @@ brass's cut is to the whole top floor, a place at once; Arthur floats clear of t
 the guard pulled up at the crevasse is not sliced by the frame's edge; a beam of light fades to nothing at its far end
 (the train's ended on a ruled edge across the wet street); the mountain's blue shade ends on a rib, not a ruled
 vertical; no dark sliver along the river's surface in a trough; the apron's ground runs in under the fortress's wall.
+
+A second viewer new to it (the dream only, after those changes) rated the hits and named what still had no cause on
+the screen. From that: limbo's kick as above ("they step off and are already rising: no hit"); the van's nose dips as
+its front wheels leave the deck, and it carries its speed over the edge (level, its wheels rolled on along the air for
+most of a second, and it stopped dead on the edge before it tipped), so the hotel's weightlessness has its cause in
+the shot before it; in the drum they come back down to its floor as it comes level (they were found stacked up the
+wall of a level room) and lift off it weightless; the drums come in on a blow, the head of the tower out in the sea in
+the water on the peak's downbeat; going under through the hotel's footings, the patch over each of them has the
+footing's piers and thins into the dark (a box, and each of them cropped flat across coming out of it); the bridge's
+pier goes into the bed's own ground at its foot. (And the prologue's cracked slab is the right slab again: the list
+it is counted in had grown under it.)
+
+That viewer's ratings of the hits, one to five: the brass 3, the swell 4, the drums 3, letting her go 2, limbo's kick
+3, the snow's 4, the hotel's 4, the river's 5, the release 4. Limbo's kick and the drums were reworked after those
+ratings; letting her go was not (see below).
+
+Not done, and why:
+- **Letting her go is still small in the frame** (175.6): the turn of the story is a lever, a bolt and a weight in a
+  slot a fifth of a cell wide. It lands on its chord and can be followed now, but a viewer who blinks misses it. A
+  closer shot of the bolt would need the room's cutaway redrawn at that size.
+- **The cabin on the plane** (61.3 to 68.9) and **the plane after the release** (214 to 229) are quiet stretches a
+  cold viewer called slack. The first is seven seconds of a drip on the beat; the second is the music's own fall away.
+- **Going under is still read by some as falling into the river** (88 to 92): there is no cue for sleep but the case's
+  lines and the floor going soft.
 
 Weighed and left as they are: the café's debris hanging in one pattern until Paris ends (the dream's stillness, on
 purpose); the children dark until they turn (the story's last card); the plane's long quiet after the release (the
