@@ -1,7 +1,7 @@
 import { mixHex, type Pt } from '../../../../../parts'
 import { puff, rgba } from '../cast'
 import { hash } from '../kit'
-import { BAND, RAIN_GEO, SPLASH, clock, rate, vanAt } from '../stack'
+import { BAND, RAIN_GEO, SPLASH, VAN, clock, rate, vanAt } from '../stack'
 import { RAIN } from '../worlds'
 import { QUAY_L, QUAY_R, seen, type Pen, type View } from './rain-city'
 import { eff, sm, vanPoint } from './rain-geo'
@@ -148,6 +148,7 @@ export function drawTicks(pen: Pen, f: View, t: number): void {
 /* ------------------------------------------------------------------ the river, over the balls */
 
 const E_SPLASH = eff(SPLASH)
+const SILT = mixHex(RAIN.riverLight, RAIN.kerb, 0.45)
 /** Where the van's nose meets the water. */
 const IMPACT: Pt = [vanPoint(vanAt(SPLASH), 1.05, 0.2)[0], RAIN_GEO.river]
 
@@ -182,7 +183,29 @@ export function overRiver(pen: Pen, f: View, t: number): void {
   ctx.save()
   ctx.fillStyle = g
   ctx.fill(body)
+  // The day in the water under its surface, going out with depth: what he rises toward (one flat dark from the
+  // surface down, there was no up in it).
+  const day = ctx.createLinearGradient(0, RAIN_GEO.river * k, 0, (RAIN_GEO.river + 2.6) * k)
+  day.addColorStop(0, rgba(RAIN.riverLight, 0.42))
+  day.addColorStop(0.35, rgba(RAIN.riverLight, 0.2))
+  day.addColorStop(1, rgba(RAIN.riverLight, 0))
+  ctx.fillStyle = day
+  ctx.fill(body)
   ctx.restore()
+  silt(pen, f, t)
+  // The van on the bed, on the crest: the silt it puts up, rolling out along the bottom both ways and hanging.
+  const down = eff(t) - eff(SPLASH + VAN.sink)
+  if (down > 0 && down < 7) {
+    const nose = vanPoint(vanAt(SPLASH + VAN.sink), 1.2, 0.5)
+    const fade = Math.exp(-down / 2.6)
+    const come = sm(down / 0.12)
+    for (const side of [-1, 1]) {
+      for (let j = 0; j < 3; j++) {
+        const out = (0.35 + 0.55 * j) * (1 - Math.exp(-down / (0.5 + 0.3 * j)))
+        puff(pen.p, k, [nose[0] + side * out, RAIN_GEO.bed - 0.12 - 0.16 * down * (1 - j / 4)], 0.42 + 0.3 * down ** 0.6, SILT, 0.34 * fade * come * (1 - j / 5))
+      }
+    }
+  }
   // The surface: a pale line where it meets the air, and the air's grey on it.
   const line = new Path2D()
   for (let x = x0; x <= x1 + step; x += step) {
@@ -196,6 +219,38 @@ export function overRiver(pen: Pen, f: View, t: number): void {
   ctx.stroke(line)
   ctx.restore()
   bubbles(pen, f, t)
+}
+
+/**
+ * What hangs in the river: fine silt, each grain all but still in the water, paler nearer the day. Seen close only;
+ * it is what goes by when the camera goes down after the van and comes up with him.
+ */
+function silt(pen: Pen, f: View, t: number): void {
+  const { ctx, k } = pen
+  if (k < 60) return
+  const c = clock('rain', t)
+  const x0 = Math.floor(Math.max(QUAY_L, f.x0 - 1))
+  const x1 = Math.ceil(Math.min(QUAY_R, f.x1 + 1))
+  const y0 = Math.max(RAIN_GEO.river + 0.15, f.y0 - 0.5)
+  const y1 = Math.min(RAIN_GEO.bed, f.y1 + 0.5)
+  if (y1 <= y0) return
+  ctx.save()
+  for (let cx = x0; cx <= x1; cx++) {
+    for (let cy = Math.floor(y0); cy <= Math.floor(y1); cy++) {
+      for (let j = 0; j < 5; j++) {
+        const id = cy * 53 + j
+        const x = cx + hash(cx, id, 41) + 0.05 * Math.sin(c * 0.6 + id)
+        const y = cy + hash(cx, id, 42) + 0.03 * Math.sin(c * 0.45 + id * 1.7)
+        if (y < y0 || y > y1 || y < surfaceAt(x, t) + 0.12) continue
+        const depth = (y - RAIN_GEO.river) / (RAIN_GEO.bed - RAIN_GEO.river)
+        ctx.fillStyle = rgba(RAIN.riverLight, (0.34 - 0.24 * depth) * (0.5 + 0.5 * hash(cx, id, 43)))
+        ctx.beginPath()
+        ctx.arc(x * k, y * k, Math.max(0.7, (0.012 + 0.012 * hash(cx, id, 44)) * k), 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
+  }
+  ctx.restore()
 }
 
 /** The van's air going up out of it as it sinks: small, many, never ball-sized. */

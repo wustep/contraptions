@@ -334,6 +334,8 @@ export const VAN = {
   water: [2.4, 7.3] as Pt,
   waterTilt: 0.9,
   size: [2.6, 1.15] as Pt,
+  /** How long it takes to go down from the surface to the bed (to the crest: bar 55). */
+  sink: bar(55) - KICK.rain,
 }
 export const OFF = VAN.off
 export const SPLASH = VAN.splash
@@ -393,10 +395,17 @@ export function vanAt(t: number): { x: number; y: number; angle: number; air: bo
     const [wx, wy] = VAN.water
     return { x: hx + (wx - hx) * p, y: hy + (wy - hy) * p * p, angle: TAU + VAN.hangTilt + (VAN.waterTilt - VAN.hangTilt) * p, air: true }
   }
-  // Sinking after the splash: down through the river to the bed over ten seconds, settling.
-  const s = smoothstep((t - SPLASH) / 10)
+  // Sinking after the splash: on down at the speed it hit the water, the river slowing it, and lost in the dark at the
+  // river's bottom by the crest, the summit's last bar (over ten seconds, eased from rest, it hung just under the
+  // surface for the two loudest bars of the cue, and he got out of it a ball's width down).
+  const u = Math.max(0, Math.min(1, (t - SPLASH) / VAN.sink))
+  const s = u * (1.6 - 0.6 * u)
   const [wx, wy] = VAN.water
-  return { x: wx + 0.4 * s, y: wy + (RAIN_GEO.bed - 0.6 - wy) * s, angle: TAU + VAN.waterTilt + 0.2 * s, air: false }
+  // It comes to rest on its nose: its lowest corner on the bed (with its middle 0.6 over the bed, as it was, its nose
+  // went half a cell down into the ground under the river).
+  const a = VAN.waterTilt + 0.2
+  const low = (VAN.size[0] / 2) * Math.sin(a) + (VAN.size[1] / 2) * Math.cos(a)
+  return { x: wx + 0.4 * s, y: wy + (RAIN_GEO.bed - low - wy) * s, angle: TAU + VAN.waterTilt + 0.2 * s, air: false }
 }
 
 /**

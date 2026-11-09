@@ -266,9 +266,11 @@ export const river = part<State>(
       hold(T_FLICKER[3] + 0.1, 8.2, [2.15, 4.4]),
       // The splash: framed for it, the river and the air over it.
       hold(SPLASH, 8.6, [2.4, 5.8]),
-      hold(T_A_UP + 0.5, 7.0, [2.4, 7.5]),
-      hold(T_C_OUT, 5.4, [2.55, 8.55]),
-      follow(T_C_OUT + 1.9, 4.8, [0.2, -0.55]),
+      // Down after the van as it goes to the bottom, the surface a pale line going up out of the frame's top; then, on
+      // the crest, up with him all the way from the dark to the light, the frame leading him.
+      hold(T_A_UP + 0.5, 7.2, [2.5, 8.3]),
+      hold(T_C_OUT, 5.8, [2.9, 10.3]),
+      follow(T_C_OUT + 2.0, 5.0, [0.15, -0.7]),
       follow(slot.end, seam.cells, off),
     ]
   },
