@@ -289,10 +289,14 @@ export function shudder(t: number): number {
   }
   return v * (1 - sm((t - (Q.arrive - 0.35)) / 0.35))
 }
-/** A rope taking up a load at once: under way from the first instant, slowing to rest. */
+/**
+ * A rope taking up a load at once: a jerk in the first instant (an eighth of the way in a twentieth of a second), and
+ * then on steadily, gathering a little, to the stop at the top. (Slowing to rest from a rush, she was down the slot and
+ * into the dark in a second and a half: her going had no time in it.)
+ */
 export const snatch = (u: number): number => {
   const v = clamp01(u)
-  return 0.5 * (1 - (1 - v) ** 3) + 0.5 * v * v * (3 - 2 * v)
+  return (0.12 * (1 - Math.exp(-v / 0.02)) + 0.88 * Math.pow(v, 1.15)) / (0.12 * (1 - Math.exp(-1 / 0.02)) + 0.88)
 }
 /** The weight's deck at t: half as far as the cabin, the other way (and a little lower under Mal as she takes hold). */
 export function weightY(t: number): number {

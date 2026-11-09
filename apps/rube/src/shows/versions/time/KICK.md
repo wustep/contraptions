@@ -147,7 +147,7 @@ Times are show seconds; bar *n* is `bar(n)`, beat *k* is `beat(k)`.
 | 152.770 → 160.392 | the drums | limbo | *Cut* to all of limbo. They fall into its sea as its city calves on the drums, tower after tower sliding into the water in white plumes; washed up, in surf that now breaks on every beat, on the shore **at the show's first frame** (the circle). |
 | 163.719 → 168.009 | | | Up the tower in the lift, the city falling round it. |
 | 168.009 | | | Their room: Mal at the table, the top still spinning; Fischer held. |
-| 171.817 → **175.631** | | | **The choice**: Mal steps onto the lift's counterweight deck; the garden, the children's backs; he takes his lever and draws the bolt, and on the chord the rope takes up at once: she goes down the slot into the dark by degrees as the same rope snatches him up to the roof, the two of them parting in one frame. |
+| 171.817 → **175.631** | | | **The choice**: Mal steps onto the lift's counterweight deck; the garden, the children's backs; he takes his lever and draws the bolt, and on the chord the rope takes up at once: it snatches him up out of the frame, and the frame stays with her as she goes down the slot under their room into the dark, by degrees, her eye turned up after him and his down after her. *Cut* (178.016) to the roof as his cage reaches it. |
 | 178.492 → 181.819 | | | On the roof Ariadne pushes Fischer off; the camera draws back to hold the roof and the ground: he falls the tower's height, hits the ground at its foot (179.932) and is thrown up past them, to the vault. *Cut* close on the edge: she leaps (181.343); he steps off after her (181.819). |
 | **183.247** | the summit | limbo → | **Limbo's kick**: down the tower's face with him; they hit the lawn at its foot on the downbeat and are thrown straight up; the tower's footing goes. On the off-beat (183.723) *the great wide*: the whole dream at once, the tower coming down and the city after it on the bar's beats, the camera going in after them. |
 | 185.151 → 188.965 | | the snow | Up through the fortress floor into the vault: the paddles on Fischer (187.061), the great round door rolls aside, **the pinwheel** turns in his father's last breath. |
@@ -793,9 +793,10 @@ What changed, in that order:
 - **Letting her go** (171.8 to 177.5): on the chord the bolt is already clear and the rope takes up at once, the cabin
   snatched up and the weight dropping; the slit under their room is seen into while the tower is cut away, so the
   weight hangs there before and she goes down into the dark by degrees; the bolt rides with the cabin (it was left
-  behind in the doorway); the frame opens on the two of them parting. His eye is on her from the moment she steps onto
-  the weight, and follows her down as he rises (`marks.ts`, `Gaze`: a look laid over a rolling mark, eased in and
-  rolled on from).
+  behind in the doorway). The shot is hers: the rope takes him up out of the top of the frame, and the frame stays, and
+  goes down a little with her, the top still spinning on the table over her, until his cage is at the roof and the
+  picture cuts up to it. His eye is on her from the moment she steps onto the weight, and hers on him, and each
+  follows the other as they part (`marks.ts`, `Gaze`: a look laid over a rolling mark, eased in and rolled on from).
 - **The layers** (91.82, 122.29, 152.77): each level arrives on a cut of the camera's to its own wide, as Paris, the
   plane and the waking do; up to each downbeat the frame rides up over the three of them so nothing of the level
   below shows early.
@@ -840,14 +841,13 @@ footing's piers and thins into the dark (a box, and each of them cropped flat ac
 pier goes into the bed's own ground at its foot. (And the prologue's cracked slab is the right slab again: the list
 it is counted in had grown under it.)
 
-That viewer's ratings of the hits, one to five: the brass 3, the swell 4, the drums 3, letting her go 2, limbo's kick
-3, the snow's 4, the hotel's 4, the river's 5, the release 4. Limbo's kick and the drums were reworked after those
-ratings; letting her go was not (see below).
+That viewer's ratings of the hits, one to five: the brass 3, the swell 4, the drums 3, letting her go 2 ("she is gone
+in a second and a half under a pull-out"), limbo's kick 3, the snow's 4, the hotel's 4, the river's 5, the release 4.
+Limbo's kick, the drums and letting her go were all reworked after those ratings, and have not been read cold since.
 
 Not done, and why:
-- **Letting her go is still small in the frame** (175.6): the turn of the story is a lever, a bolt and a weight in a
-  slot a fifth of a cell wide. It lands on its chord and can be followed now, but a viewer who blinks misses it. A
-  closer shot of the bolt would need the room's cutaway redrawn at that size.
+- **His own gesture at the lever is still small** (175.3 to 175.6): the turn of the story is a lunge of a fifth of a
+  cell at a lever on a cage. What it does is plain now; that he does it can still be missed.
 - **The cabin on the plane** (61.3 to 68.9) and **the plane after the release** (214 to 229) are quiet stretches a
   cold viewer called slack. The first is seven seconds of a drip on the beat; the second is the music's own fall away.
 - **Going under is still read by some as falling into the river** (88 to 92): there is no cue for sleep but the case's

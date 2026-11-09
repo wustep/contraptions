@@ -45,7 +45,7 @@ export interface MarkPlan {
 }
 
 /**
- * A look given to a ball that otherwise rolls: from `from` its mark turns, the short way and over `ease` seconds, from
+ * A look given to a ball that otherwise rolls (or whose part's look has rolled away with it): from `from` its mark turns, the short way and over `ease` seconds, from
  * wherever its rolling has left it to the heading `at(t)` gives (radians, as a mark is; null: nothing to look at), and
  * stays on it until `to`; after that it rolls on from where the look left it. No jump at either end.
  */
@@ -184,13 +184,16 @@ export function marks(plan: MarkPlan, duration: number, sample: (t: number) => M
     const i0 = Math.ceil(g.from / DT)
     let off = 0
     let was: number | null = null
+    const kind = tr.kind[i0]
     for (let i = i0; i < n; i++) {
-      if (tr.kind[i] !== Kind.Rolled || (i > i0 && !tr.link[i])) break
+      if ((kind !== Kind.Rolled && kind !== Kind.Looked) || tr.kind[i] !== kind || (i > i0 && !tr.link[i])) break
       const t = i * DT
       const want = t <= g.to ? g.at(t) : null
       if (want !== null) {
+        // From what is shown now: its rolling, or a part's look and what it has rolled on from it since.
+        const shown = kind === Kind.Looked ? tr.part[i] + tr.v[i] : tr.v[i]
         // The short way round, and then whichever way keeps on from the last sample (never a flip through a half turn).
-        let d = want - tr.v[i]
+        let d = want - shown
         const ref = was ?? 0
         d -= Math.round((d - ref) / (2 * Math.PI)) * 2 * Math.PI
         was = d

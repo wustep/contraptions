@@ -9,7 +9,7 @@ import { beacon, sleep, sparkInWides, SLEEP_CELLS } from './sleep'
 import type { MarkPlan } from './marks'
 import { KickShow, type Leg, type Riders, type Spans, type WorldSet } from './show'
 import { ORIGIN, UP } from './stack'
-import { ARIADNE_ID, COBB, FISCHER_ID, type WorldKey } from './worlds'
+import { ARIADNE_ID, COBB, FISCHER_ID, MAL_ID, type WorldKey } from './worlds'
 import { Q } from './limbo/limbo-geo'
 import { SEATED, SINK_AT, T_GO, T_TAXI_DOOR } from './rain/rain-geo'
 import { drumMark, T as HOTEL_T, type Who } from './hotel/hotel-geo'
@@ -173,6 +173,20 @@ const MARKS = (legs: Leg[], show: KickShow): MarkPlan => {
           if (!m) return null
           const [x, y] = show.where(t)
           return Math.atan2(m.y - y, m.x - x)
+        },
+      },
+      // And hers is on him: as she stands on the weight, and up after him as it takes her down. (The part turns her
+      // eye to him, but she had rolled across the room since, and it had rolled round with her to the floor.)
+      {
+        id: MAL_ID,
+        from: Q.hold - 0.35,
+        to: Q.roof + 0.6,
+        ease: 0.45,
+        at: (t) => {
+          const m = show.who(t, 'mal')
+          if (!m) return null
+          const [x, y] = show.where(t)
+          return Math.atan2(y - m.y, x - m.x)
         },
       },
     ],

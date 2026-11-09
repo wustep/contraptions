@@ -35,6 +35,9 @@ const WIDE: [number, number][] = [
   // great wide of the fall into the sea as the city calves (he is under the water).
   [23.25, 27.052],
   [172.298, 174.69],
+  // Letting her go: the rope takes him up out of the frame, and the frame stays with her as she goes down into the dark
+  // (to the cut up to the roof as his cage reaches it).
+  [175.631, 178.016],
   [152.77, 158.6],
   // The brass and the swell: the cut, on each downbeat, to the level's own wide, the three of them dropping in at its
   // top out of the dark (limbo's, on the peak, is its great wide above).

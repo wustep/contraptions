@@ -583,10 +583,14 @@ function limboShots(_slot: Slot, cobb: (t: number) => Pt): PartShot[] {
     h(Q.lever - 0.1, 3.15, plus(GARDEN_VIEW, [0.1, 0.05])),
     { ...h(Q.lever, 3.8, [-1.1, 77.6]), cut: true },
     h(Q.letGo, 3.7, [-1.12, 77.68]),
-    // The two of them parting in one frame: it opens as she goes down into the dark and the same rope takes him up
-    // (it went up with him alone, and she left by the frame's foot unseen); then on up with him to the roof.
-    h(Q.letGo + 1.2, 5.8, [-1.2, 77.0]),
-    h(177.3, 6.4, [-0.95, 76.35]),
+    // He lets her go, and the shot is hers: the rope takes him up out of the top of the frame, and the frame stays, and
+    // goes down a little with her, as she sinks under their room into the dark, her eye turned up after him, the top
+    // still spinning on the table over her. (It went up with him, and she left by the frame's foot unseen; then it
+    // opened on the two of them parting, and she was a small thing gone in a second.) On the off-beat his cage is at
+    // the roof: a cut up to it.
+    h(Q.letGo + 0.9, 3.8, [-1.15, 78.2]),
+    h(Q.roof - 0.03, 3.9, [-1.15, 78.85]),
+    { ...h(Q.roof, 7.6, [0.1, 75.5]), cut: true },
     h(178.3, 8.4, [0.3, 75.7]),
     // Back from the roof as Fischer goes over, far enough to see where a fall from it ends: he hits the ground at the
     // tower's foot and is thrown up past the two of them. (The roof alone was held, and he turned round in mid-air at
