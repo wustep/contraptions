@@ -182,13 +182,14 @@ export const gantry = part<GantryState>(
     // bunker, a tower and a rocket in which she was a dot.)
     { t: beat(119.3), cells: 4.6, hold: [-0.05, -1.0], w: 1 },
     { t: beat(120), cells: 2.9, hold: [-0.12, -0.62], w: 1 },
-    { t: beat(122.5), cells: 2.75, hold: [-0.12, -0.6], w: 1 },
+    { t: beat(122.3), cells: 2.75, hold: [-0.12, -0.6], w: 1 },
     // And up the tower from her to where she is looking. The two-shot of the countdown: the two of them in the window
     // at the top of the frame, and at the foot of the tower, at the bottom, Murph, kept back by TARS. Held while the
     // lamps go out, to the arm swinging back.
     // (Under Zoom, 1.5 times closer, it keeps the window: the two of them are the shot's lead.) Not held dead: it
     // breathes out a little and rises while the lamps go out, the storm looming over the tower, before the push in.
-    { t: SEATED, cells: 9.8, hold: [RX - 1.5, -4.6] },
+    // (It gets there a quarter of a second after they do: up the tower in a second and a quarter, not a whip.)
+    { t: beat(124.4), cells: 9.8, hold: [RX - 1.5, -4.6] },
     { t: beat(130.5), cells: 10.3, hold: [RX - 1.35, -4.8] },
     // The countdown: a slow push in on the two in the window as the lamps go out, and the ignition throws it wide again.
     // Close enough, by the last lamp, that the two of them read as two, side by side at the glass. The push goes on to

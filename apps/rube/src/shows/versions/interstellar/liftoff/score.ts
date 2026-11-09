@@ -297,7 +297,7 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
  * watch again in the tesseract, while its hand says its first letters; and the pull-back from the replica to the
  * whole ring. (The first starts before the show does, so Zoom is on the watch from the first frame.)
  */
-export const ZOOM_FREE: [number, number][] = [[-1.5, 5.2], [73.4, 77.3], [103.7, 104.3], [122.6, 123.95], [130.4, 137.2]]
+export const ZOOM_FREE: [number, number][] = [[-1.5, 5.2], [73.4, 77.5], [103.7, 104.3], [122.6, 123.95], [130.4, 137.2]]
 /** The stretch a Zoom-free shot really takes, with its eases: itself if it is long, half a second more each side if it is short. */
 export const zoomFreeSpan = ([a, b]: [number, number]): [number, number] => (b - a >= 2 ? [a, b] : [a - 0.5, b + 0.5])
 

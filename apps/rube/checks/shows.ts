@@ -929,7 +929,7 @@ async function main(): Promise<void> {
           const y = dx * Math.sin(a) + dy * Math.cos(a)
           return Math.abs(x) < (f.cells * 16) / 9 / 2 + 0.2 && Math.abs(y) < f.cells / 2 + 0.2
         }
-        // (Not while the cage climbs, 74.5 to 77.2 s: the camera is down at the tower's foot with Murph, and the two of
+        // (Not while the cage climbs, 74.5 to 77.4 s: the camera is down at the tower's foot with Murph, and the two of
         // them are up out of the frame.)
         const withHim = [72.5, 74, 78, 80, 83, 86, 90, 94, 98, 101]
         const inOrbit = [106, 109, 111]
@@ -981,7 +981,7 @@ async function main(): Promise<void> {
         // shut ahead of coming down and lost him under the bottom edge for most of a second.)
         const ownMiss: string[] = []
         for (let t = 0; t <= MIX_END; t += 0.02) {
-          if (([[-1, 4.4], [73.9, 77.3], [103.7, 104.3]] as [number, number][]).some(([a, b]) => t > a && t < b)) continue
+          if (([[-1, 4.4], [73.9, 77.5], [103.7, 104.3]] as [number, number][]).some(([a, b]) => t > a && t < b)) continue
           const f = perf.camera!(t)
           const a = f.angle ?? 0
           const [hx, hy] = show.where(t)
