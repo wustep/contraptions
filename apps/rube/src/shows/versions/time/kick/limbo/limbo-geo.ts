@@ -197,11 +197,14 @@ export const Q = {
   letGo: bar(46),
   roof: half(186),
   push: beat(187),
-  fischerKick: bar(47),
-  ariadneLeap: half(190),
-  stepOff: beat(191),
+  /** Fischer hits the ground at the tower's foot, and is thrown up (a fall of the tower's height from the push). */
+  fischerKick: half(188),
+  /** She leaps (up, and out), and he steps off after her on the off-beat: they land together. */
+  ariadneLeap: beat(190),
+  stepOff: half(190),
+  /** They hit the ground at the tower's foot: the kick. */
   kick: bar(48),
-  /** They tear up out of limbo's sky into the dark, on the off-beat after the kick. */
+  /** The off-beat after the kick: the camera cuts out to the whole dream as they go up out of limbo's sky. */
   tear: half(192),
   end: UP.snow.t,
 } as const
@@ -532,13 +535,10 @@ export const EDGE_X = TOWER.x1 - 0.05
 export const WAIT_X = 0.98
 export const RUN_UP = 0.7
 export const RUN_V = (2 * (EDGE_X - WAIT_X)) / RUN_UP
-export const STEP_V: Pt = [0.9, 0]
-export const KICK_AT: Pt = (() => {
-  const T = Q.end - Q.kick
-  const v0 = UP.snow.v[1] - G * T
-  const y = UP.snow.at[1] - (v0 * T + 0.5 * G * T * T)
-  return [EDGE_X + STEP_V[0] * (Q.kick - Q.stepOff), y]
-})()
+export const STEP_V: Pt = [0.68, 0]
+/** On the ground at the tower's foot (the lawn of the garden): where each of them lands, and the kick throws them from. */
+export const ON_GROUND = GROUND - R
+export const KICK_AT: Pt = [EDGE_X + STEP_V[0] * (Q.kick - Q.stepOff), ON_GROUND]
 /** His hop off the edge: the up speed that brings him to the kick's point on the downbeat. */
 export const STEP_VY = (() => {
   const T = Q.kick - Q.stepOff
@@ -577,13 +577,8 @@ export const ARIADNE_BACK: Pt = [TOWER.x1 - 0.66, ON_ROOF]
 /** His roll off the edge, and the kick's point for him. */
 const F_OFF_X = TOWER.x1 + 0.03
 const F_ROLL = 0.06
-const F_VX = 1.0
-export const F_KICK_AT: Pt = (() => {
-  const T = FISCHER_UP.t - Q.fischerKick
-  const v0 = FISCHER_UP.v[1] - G * T
-  const y = FISCHER_UP.at[1] - (v0 * T + 0.5 * G * T * T)
-  return [F_OFF_X + F_VX * (Q.fischerKick - Q.push - F_ROLL), y]
-})()
+const F_VX = 0.8
+export const F_KICK_AT: Pt = [F_OFF_X + F_VX * (Q.fischerKick - Q.push - F_ROLL), ON_GROUND]
 const F_VY = (() => {
   const T = Q.fischerKick - Q.push - F_ROLL
   return (F_KICK_AT[1] - ON_ROOF - 0.5 * G * T * T) / T
@@ -591,7 +586,7 @@ const F_VY = (() => {
 /** Ariadne goes up the ladder first and he follows her (led), up through the hatch; on the roof she lets him by. */
 const A_CLIMB = Q.gateOpen + 0.68
 const F_CLIMB = A_CLIMB + 0.7
-const fKick = kickPath(F_KICK_AT[0], F_KICK_AT[1], Q.fischerKick, FISCHER_UP.at[0], FISCHER_UP.at[1], FISCHER_UP.t, FISCHER_UP.v[1])
+export const fKick = kickPath(F_KICK_AT[0], F_KICK_AT[1], Q.fischerKick, FISCHER_UP.at[0], FISCHER_UP.at[1], FISCHER_UP.t, FISCHER_UP.v[1])
 
 /** A straight, eased move from a to b between t0 and t1. */
 const move = (t: number, t0: number, t1: number, a: Pt, b: Pt, ease: (u: number) => number = smoother): Pt => lerpPt(a, b, ease((t - t0) / (t1 - t0)))
@@ -653,7 +648,8 @@ export function malPrologue(t: number): Pt {
 }
 /** The return: up out of the hatch to Fischer on the roof, down with him into the room, to her chair; then to the weight. */
 export const MAL_R_FROM = 149.6
-export const MAL_R_TO = Q.roof + 0.7
+/** She is gone into the dark of the slot, behind the tower's front; her span ends just after the cut in to the roof's edge. */
+export const MAL_R_TO = Q.ariadneLeap + 0.05
 export function malReturn(t: number): Pt {
   if (t < Q.hold) {
     return legs(t, [
@@ -681,18 +677,14 @@ const A_SPLASH = (() => {
 /** Her leap off the edge (quick and sure, a beat before his step), and her kick's point. */
 const A_LEAP_X = TOWER.x1 - 0.1
 const A_LEAP_VX = 0.34
-export const A_KICK_AT: Pt = (() => {
-  const off = UP.snow.ariadne!
-  const T = Q.end - Q.kick
-  const v0 = UP.snow.v[1] - G * T
-  const y = UP.snow.at[1] + off[1] - (v0 * T + 0.5 * G * T * T)
-  return [A_LEAP_X + A_LEAP_VX * (Q.kick - Q.ariadneLeap), y]
-})()
+export const A_KICK_AT: Pt = [A_LEAP_X + A_LEAP_VX * (Q.kick - Q.ariadneLeap), ON_GROUND]
 const A_LEAP_VY = (() => {
   const T = Q.kick - Q.ariadneLeap
   return (A_KICK_AT[1] - ON_ROOF - 0.5 * G * T * T) / T
 })()
-const aKick = kickPath(A_KICK_AT[0], A_KICK_AT[1], Q.kick, UP.snow.at[0] + UP.snow.ariadne![0], UP.snow.at[1] + UP.snow.ariadne![1], Q.end, UP.snow.v[1])
+export const aKick = kickPath(A_KICK_AT[0], A_KICK_AT[1], Q.kick, UP.snow.at[0] + UP.snow.ariadne![0], UP.snow.at[1] + UP.snow.ariadne![1], Q.end, UP.snow.v[1])
+/** His own throw up from the kick. */
+export const cKick = kickPath(KICK_AT[0], KICK_AT[1], Q.kick, UP.snow.at[0], UP.snow.at[1], Q.end, UP.snow.v[1])
 /** Where the waves leave her at the circle: a little up the beach from him. */
 export const A_CIRCLE: Pt = onSand(-5.85)
 

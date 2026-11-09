@@ -3,17 +3,19 @@ import type { ShowBall } from '../../../../../show'
 import { streak, tear } from '../cast'
 import { box, carried, frame, part, scenery, type Company, type PartShot, type Riders, type Slot } from '../kit'
 import { FIRST, SEAMS } from '../seams'
-import { beat, half } from '../music'
+import { bar, beat, half } from '../music'
 import { G } from '../physics'
-import { DOWN, FISCHER_DOWN, FISCHER_UP, ORIGIN, UP, exitFor, local } from '../stack'
-import { FISCHER, KID_DARK, KID_ID, KID_SCALE, LIMBO } from '../worlds'
+import { DOWN, FISCHER_DOWN, FISCHER_UP, ORIGIN, exitFor, local } from '../stack'
+import { ARIADNE, COBB, FISCHER, KID_DARK, KID_ID, KID_SCALE, LIMBO } from '../worlds'
 import {
   ANNEX,
   BOTTOM,
   BREAK_X,
   CABIN,
   CABIN_DOOR_X,
+  A_KICK_AT,
   EDGE_X,
+  F_KICK_AT,
   FALL_G,
   FIRST_AT,
   GARDEN_VIEW,
@@ -25,6 +27,9 @@ import {
   MAL_R_FROM,
   MAL_R_TO,
   ON_ROOF,
+  aKick,
+  cKick,
+  fKick,
   P,
   Q,
   RUN_UP,
@@ -39,7 +44,6 @@ import {
   ariadneAt,
   cabinY,
   fischerAt,
-  kickPath,
   lerp,
   malPrologue,
   malReturn,
@@ -118,6 +122,9 @@ export const LIMBO_HITS: number[] = [
   Q.letGo,
   Q.roof,
   Q.push,
+  // Bar 47: the slab that slipped on its crack in the prologue goes into the sea at last (behind the roof); and on
+  // its off-beat Fischer hits the ground at the tower's foot.
+  bar(47),
   Q.fischerKick,
   Q.ariadneLeap,
   Q.stepOff,
@@ -219,8 +226,6 @@ function drawTowerDust(pen: Pen, t: number, f: ReturnType<typeof frame>): void {
     soft(pen, x + 0.2, GROUND - h * 0.3 + 0.1, r * 1.1, 0.5 + h * 0.5, DUST_SHADE, 0.6 * come * fade)
     soft(pen, x, GROUND - h * 0.55, r, 0.45 + h * 0.5, DUST, 0.92 * come * fade * (1 - 0.3 * q))
   }
-  // The sea shoved out from its foot: a low surge of white water running off along the surface.
-  for (let j = 0; j < 3; j++) soft(pen, ANNEX.x0 - 1.0 - (1.6 + 0.9 * j) * u, GROUND + 0.75 + 0.25 * j, 1.1 + 0.3 * u, 0.16, LIMBO.foam, 0.6 * come * Math.exp(-u / (2 + j)))
 }
 
 /** Where they go into the sea: a crown of spray, and the water closing over them. */
@@ -245,13 +250,38 @@ function drawPlunge(pen: Pen, t: number): void {
  * turned into the throw was lost on the pale sky); and where they leave limbo's sky, the tear.
  */
 function drawKicks(pen: Pen, t: number): void {
-  streak(pen.p, pen.k, fischerAt, Q.fischerKick, t, FISCHER)
+  // Each of them hits the ground at the tower's foot and is thrown up: the dust of the blow, low along the lawn, and
+  // the streak of the throw behind them.
+  for (const [at, when, path, color] of [
+    [F_KICK_AT, Q.fischerKick, fKick, FISCHER],
+    [A_KICK_AT, Q.kick, aKick, ARIADNE],
+    [KICK_AT, Q.kick, cKick, COBB],
+  ] as const) {
+    const u = t - when
+    if (u >= 0 && u < 2.4) {
+      const fade = Math.exp(-u / 0.6)
+      for (const side of [-1, 1]) for (let j = 0; j < 3; j++) soft(pen, at[0] + side * (0.2 + 0.5 * j) * (1 - Math.exp(-u / (0.08 + 0.05 * j))), GROUND - 0.1 - 0.25 * u, 0.3 + 0.12 * j + 0.5 * u, 0.16 + 0.3 * u, IMPACT, 0.7 * fade * sm(u / 0.03) * (1 - j / 5))
+    }
+    streak(pen.p, pen.k, path, when, t, color)
+  }
   // The tear in the top of the sky, as they go up out of it into the dark.
-  const through = (x: number, when: number) => tear(pen.p, pen.k, [x, TOP_OF_SKY + 0.6], t - when, 1.2, LIMBO.foam)
-  through(FISCHER_UP.at[0], FISCHER_UP.t - 0.13)
-  through(UP.snow.at[0], Q.tear)
-  through(UP.snow.at[0] + UP.snow.ariadne![0], Q.tear + 0.02)
+  const through = (path: (s: number) => Pt, from: number, to: number) => {
+    const y = TOP_OF_SKY + 0.6
+    let a = from
+    let b = to
+    for (let i = 0; i < 30; i++) {
+      const m = (a + b) / 2
+      if (path(m)[1] > y) a = m
+      else b = m
+    }
+    tear(pen.p, pen.k, [path(a)[0], y], t - a, 1.2, LIMBO.foam)
+  }
+  through(fKick, Q.fischerKick, FISCHER_UP.t)
+  through(cKick, Q.kick, Q.end)
+  through(aKick, Q.kick, Q.end)
 }
+/** The dust a body puts up where it hits the lawn. */
+const IMPACT = mixHex(LIMBO.sand, LIMBO.foam, 0.4)
 
 /* ------------------------------------------------------------------ the children (his memory) */
 
@@ -390,12 +420,11 @@ function limboLane(): Seg[] {
   push(...over((u) => [lerp(CABIN_DOOR_X, WAIT_X, (1 - Math.cos(Math.PI * u)) / 2), ON_ROOF], at(Q.roof + 0.55), at(180.9), 20))
   push(still(lastTo(segs), Q.stepOff - RUN_UP - now()))
   push({ from: [WAIT_X, ON_ROOF], to: [EDGE_X, ON_ROOF], dur: RUN_UP, ramp: [0, RUN_V] })
-  // He steps off the edge, and falls.
+  // He steps off the edge, and falls the tower's whole height.
   const Tf = Q.kick - Q.stepOff
   push({ from: [EDGE_X, ON_ROOF], to: KICK_AT, dur: Tf, arc: (G * Tf * Tf) / 8 })
-  // The kick: thrown straight up the column, out of limbo.
-  const up = kickPath(KICK_AT[0], KICK_AT[1], Q.kick, UP.snow.at[0], UP.snow.at[1], Q.end, UP.snow.v[1])
-  push(...carried((s) => up(s + b), at(Q.kick), at(Q.end), 72))
+  // The kick: he hits the ground at the tower's foot, and is thrown straight up the column, out of limbo.
+  push(...carried((s) => cKick(s + b), at(Q.kick), at(Q.end), 96))
   return segs
 }
 
@@ -480,7 +509,11 @@ export const limbo = part<LimboState>(
       company,
     }
   },
-  (slot) => limboShots(slot),
+  (slot, built) =>
+    limboShots(slot, (t) => {
+      const q = laneAt(built.lane, t - slot.begin)
+      return [q.x + ORIGIN.limbo[0], q.y + ORIGIN.limbo[1]]
+    }),
 )
 
 /* ------------------------------------------------------------------ the camera */
@@ -522,7 +555,7 @@ function shoreShots(slot: Slot): PartShot[] {
  * tower and up it; the room (the top close, then all of them); the choice, holding the two of them; up with him to the
  * roof; the push, Fischer's kick, the step, the fall; and the kick, wide, as they go up out of the frame's top.
  */
-function limboShots(_slot: Slot): PartShot[] {
+function limboShots(_slot: Slot, cobb: (t: number) => Pt): PartShot[] {
   const O = ORIGIN.limbo
   const h = hold(O)
   return [
@@ -554,13 +587,25 @@ function limboShots(_slot: Slot): PartShot[] {
     // (it went up with him alone, and she left by the frame's foot unseen); then on up with him to the roof.
     h(Q.letGo + 1.2, 5.8, [-1.2, 77.0]),
     h(177.3, 6.4, [-0.95, 76.35]),
-    h(178.3, 7.2, [0.2, 75.45]),
-    h(Q.fischerKick + 0.35, 7.5, [0.9, 75.4]),
-    // Fischer gone, in close on the two of them at the edge: her leap, and him a beat behind her.
-    h(Q.ariadneLeap - 0.2, 4.4, [0.95, 74.35]),
-    h(Q.stepOff, 5.8, [1.05, 74.9]),
-    h(Q.kick, 7.6, [1.1, 77.0]),
-    // The kick: the camera goes up with them, keeping them in the frame's upper third, at their speed into the dark.
+    h(178.3, 8.4, [0.3, 75.7]),
+    // Back from the roof as Fischer goes over, far enough to see where a fall from it ends: he hits the ground at the
+    // tower's foot and is thrown up past the two of them. (The roof alone was held, and he turned round in mid-air at
+    // the frame's foot: nothing said what a kick is.)
+    h(Q.fischerKick, 16, [1.4, 79.1]),
+    h(Q.ariadneLeap - 0.03, 16, [1.4, 79.0]),
+    // Fischer gone, a cut in close on the two of them at the edge: her leap, on the beat, and him a half-beat behind.
+    { ...h(Q.ariadneLeap, 4.6, [1.0, 74.3]), cut: true },
+    h(Q.stepOff, 5.0, [1.25, 74.55]),
+    // Down the tower's face with him, all the way, the frame getting ahead of him to the ground and waiting there: the
+    // kick is seen. He hits the lawn at its foot on the summit's downbeat and is gone up out of the frame, the tower's
+    // footing going with the blow; the frame holds on that for half a beat, and on the off-beat the director cuts out
+    // to the whole dream (`score.ts`).
+    ...Array.from({ length: 10 }, (_, i) => {
+      const u = (i + 1) / 10
+      const t = Q.stepOff + (Q.kick - 0.04 - Q.stepOff) * u
+      return h(t, 5.0 * Math.pow(6.4 / 5.0, u), [1.25, Math.min(cobb(t)[1] + 0.3 + 1.5 * u, 84.6)])
+    }),
+    h(Q.tear, 6.4, [1.25, 84.55]),
     { t: Q.end, cells: 9, off: [0.25, 2.4], w: 0 },
   ]
 }

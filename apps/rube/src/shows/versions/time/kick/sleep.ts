@@ -21,10 +21,11 @@ const FEATHER = 1.4
  * with the streak of his climb behind it, all the way up, not only where he crosses the dark. So too whenever the
  * frame is out that far on the dream (`dream`, his legs in it; Overview sees the whole stack the whole time).
  */
-let wide: { where: (t: number) => Pt; spans: [number, number][]; dream: [number, number][]; awake: [number, number][] } | null = null
+let wide: { where: (t: number) => Pt; spans: [number, number, number?][]; dream: [number, number][]; awake: [number, number][] } | null = null
 /** How tall a frame (cells) is far enough out on the stack for him to be drawn as a spark. */
 const FAR_OUT = 40
-export function sparkInWides(where: (t: number) => Pt, spans: [number, number][], dream: [number, number][], awake: [number, number][] = []): void {
+/** A span may name the moment the throw it shows began (before the cut out to it): its streak goes back that far. */
+export function sparkInWides(where: (t: number) => Pt, spans: [number, number, number?][], dream: [number, number][], awake: [number, number][] = []): void {
   wide = { where, spans, dream, awake }
 }
 
@@ -86,7 +87,9 @@ export const sleep = scenery<null>({
       // great wide it is the throw itself, the one thing going up through a dream that is coming down: his own colour,
       // firm at his heels and paling back down the column over the last second and more of his climb (pale and half a
       // second long, at a hundred cells it was a hair that could not be found).
-      const great = wide.spans.some(([g0, g1]) => t >= g0 && t <= g1)
+      const own = wide.spans.find(([g0, g1]) => t >= g0 && t <= g1)
+      const great = !!own
+      const since = own?.[2] ?? a
       ctx.save()
       if (great) {
         // One tapered stroke, his colour at his heels paling to nothing back down the column (laid as overlapping
@@ -94,7 +97,7 @@ export const sleep = scenery<null>({
         const pts: Pt[] = []
         for (let j = 0; j <= 28; j++) {
           const s0 = t - j * 0.05
-          if (s0 < a) break
+          if (s0 < since) break
           pts.push(wide.where(s0))
         }
         if (pts.length > 1) {

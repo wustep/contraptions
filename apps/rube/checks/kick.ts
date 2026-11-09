@@ -12,7 +12,7 @@ import { FISCHER_SNOW, HIT, T as SNOW_T } from '../src/shows/versions/time/kick/
 import { CARDS, CREDITS_OK, blackAt, creditsAt } from '../src/shows/versions/time/kick/credits'
 import { COVERED, PUNCHES, coverAt, rollAt } from '../src/shows/versions/time/kick/score'
 import { FIRST } from '../src/shows/versions/time/kick/seams'
-import { BAND, COLUMN, DOWN, OFF, RAIN_GEO, ROLL, SLEEP_BANDS, SPLASH, UP, VAN, clock, depthAt, vanAt, weightless, LEVELS, DEPTH } from '../src/shows/versions/time/kick/stack'
+import { BAND, COLUMN, DOWN, LIMBO_GEO, OFF, RAIN_GEO, ROLL, SLEEP_BANDS, SPLASH, UP, VAN, clock, depthAt, vanAt, weightless, LEVELS, DEPTH } from '../src/shows/versions/time/kick/stack'
 import type { KickShow } from '../src/shows/versions/time/kick/show'
 import type { Who } from '../src/shows/versions/time/kick/kit'
 import { KID_ID } from '../src/shows/versions/time/kick/worlds'
@@ -25,8 +25,9 @@ type Check = (name: string, ok: boolean, detail?: string) => void
  * is below it. Each is a stretch of show seconds, said by the part that frames it.
  */
 const WIDE: [number, number][] = [
-  // The director's great wide of the stack, on the summit's first downbeat: the whole dream at once, while they rise
-  // from limbo into the vault.
+  // Limbo's kick: they hit the ground at the tower's foot on the summit's first downbeat and are thrown up out of the
+  // frame; on the off-beat, the director's great wide of the stack: the whole dream at once, while they rise from
+  // limbo into the vault.
   [183.247, 187.061],
   // Paris: the fold's wide, the far quai's fronts coming up and over (he is at the curve's foot).
   [41.2, 43.5],
@@ -219,6 +220,14 @@ export function checkKick(perf: Performance, version: ShowVersion, check: Check)
   check('kick: he lets her go on the chord: the bolt clear, the cabin up and the weight down at once',
     bolt(Q.letGo) < 0.01 && bolt(Q.letGo - 0.3) > 0.99 && up01 > 0.2 && down05 > 0.4 && Math.abs(cabinY(Q.roof) - cabinY(Q.roof + 1)) < 1e-6,
     `cabin up ${up01.toFixed(2)} in 0.1 s, weight down ${down05.toFixed(2)} in 0.5 s`)
+
+  // Limbo's kick is a blow: he falls the tower's whole height, hits the ground at its foot on the downbeat, and is
+  // thrown up from there under gravity; it is seen close, and the cut out to the whole dream comes on the off-beat.
+  const hitY = at(KICK.limbo)[1]
+  check('kick: limbo\'s kick is a fall that lands: on the ground at the tower\'s foot on the downbeat, seen close, the great wide a half-beat after',
+    Math.abs(hitY - (LIMBO_GEO.ground - R)) < 0.02 && vel(KICK.limbo - 0.05)[1] > 10 && vel(KICK.limbo + 0.05)[1] < -20 &&
+    cam(KICK.limbo + 0.1).cells < 8 && cam(Q.tear + 0.05).cells > 60 && cameraCuts.some((c) => near(c, Q.tear, 1e-3)) && !cameraCuts.some((c) => near(c, KICK.limbo, 1e-3)),
+    `lands at y ${hitY.toFixed(2)} (ground ${(LIMBO_GEO.ground - R).toFixed(2)}), ${vel(KICK.limbo - 0.05)[1].toFixed(1)} then ${vel(KICK.limbo + 0.05)[1].toFixed(1)} c/s`)
 
   // Limbo's kick drops something too: the tower stands until the downbeat and is down within the bar, and the city goes
   // into the sea along the bay on the bar's beats and off-beats.

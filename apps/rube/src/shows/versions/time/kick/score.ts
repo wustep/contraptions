@@ -234,12 +234,13 @@ function jolt(t: number): number {
  */
 const STACK_WIDES: { from: number; to: number; keys: Shot[]; backCells: number; backOff: [number, number] }[] = [
   {
-    from: KICK.limbo,
-    to: bar(49),
-    // Out to the whole dream on the downbeat, then in after them: down on limbo coming apart and the fortress they are
+    // The downbeat itself is the blow, seen close: they hit the ground at the tower's foot (`limbo.ts`). On the off-beat
+    // after it, out to the whole dream, and then in after them: down on limbo coming apart and the fortress they are
     // thrown up into, so the bar is a move toward the vault and not a held diagram.
+    from: Q.tear,
+    to: bar(49),
     keys: [
-      { t: KICK.limbo, cells: 104, hold: [3, 41.5], cut: true },
+      { t: Q.tear, cells: 104, hold: [3, 41.5], cut: true },
       { t: bar(49) - 0.02, cells: 58, hold: [2.2, 66.5] },
     ],
     backCells: 5.0,
@@ -300,7 +301,7 @@ export function compose(): { show: KickShow; camera: (t: number) => Framing } {
   show.trailsOff = [[T_GO, SINK_AT.seat]]
   sparkInWides(
     (t) => show.where(t),
-    STACK_WIDES.map((w) => [w.from, w.to]),
+    STACK_WIDES.map((w) => [w.from, w.to, KICK.limbo]),
     legs.filter((l) => l.world === 'dream').map((l) => [l.from, l.to]),
     legs.filter((l) => l.world === 'paris').map((l) => [l.from, l.to]),
   )

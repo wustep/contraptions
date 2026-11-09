@@ -61,7 +61,7 @@ export const T = {
   /* the vault */
   vIn: SEAM.vault,
   fUp: FISCHER_UP.t,
-  fThrough: beat(190),
+  fThrough: half(190),
   cThrough: beat(194),
   paddles: bar(49),
   wheel: half(196),

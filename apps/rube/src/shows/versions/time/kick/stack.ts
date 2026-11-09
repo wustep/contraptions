@@ -1,5 +1,5 @@
 import type { Pt } from '../../../../parts'
-import { BRASS, KICK, PEAK, RELEASE, SEAM, SWELL, bar, beat } from './music'
+import { BRASS, KICK, PEAK, RELEASE, SEAM, SWELL, bar, beat, half } from './music'
 
 /**
  * The dream, stacked (the director's; fixed: build to it). One world, `dream`, in four levels one under the other,
@@ -167,7 +167,7 @@ export const UP: Record<'snow' | 'hotel' | 'rain', Crossing> = {
     v: [0, -16.35],
     ariadne: [-0.5, 0.35],
     fischer: null,
-    what: 'out of limbo into the snow: they jumped off the tower\'s roof, fell, and on the summit\'s downbeat are thrown straight up; under gravity they come to rest on the vault\'s floor (y 56), where Fischer went before them',
+    what: 'out of limbo into the snow: they jumped off the tower\'s roof, fell its whole height, and on the summit\'s downbeat hit the ground at its foot and are thrown straight up; under gravity they come to rest on the vault\'s floor (y 56), where Fischer went before them',
   },
   hotel: {
     t: SEAM.lift,
@@ -225,12 +225,14 @@ export const FISCHER_DOWN: Crossing = {
   what: 'Fischer alone, shot, sinking through the vault\'s floor; out of the dark he falls onto the tower\'s roof in limbo',
 }
 export const FISCHER_UP: Crossing = {
-  t: bar(47) + 0.6,
+  // Pushed on the beat before bar 47, he falls the tower's height and hits the ground at its foot (y 86.37) on bar 47's
+  // off-beat; thrown up from there under gravity, he crosses the dark 0.904 s later.
+  t: half(188) + (Math.sqrt(16 ** 2 + 2 * 12 * (86.37 - 67)) - 16) / 12,
   at: [0.7, 67],
   v: [0, -16],
   ariadne: null,
   fischer: null,
-  what: 'Fischer alone, pushed off the tower\'s roof and thrown up; he comes to rest on the vault\'s floor (y 56), on his back',
+  what: 'Fischer alone, pushed off the tower\'s roof; he hits the ground at its foot and is thrown up; he comes to rest on the vault\'s floor (y 56), on his back',
 }
 
 /* ------------------------------------------------------------------ where the ball is, and the clocks */
