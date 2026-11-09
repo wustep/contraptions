@@ -131,16 +131,16 @@ Times are show seconds; bar *n* is `bar(n)`, beat *k* is `beat(k)`.
 | **61.342** | the pulse | the plane | *Cut, a jolt*: first class at night, the silver case between his seat and Ariadne's, a drop in its chamber on every beat, a bead of light down every line. |
 | 65.162 | | | He sinks his weight on the plunger; the drip quickens to the eighths; the lamp goes out on bar 18 as the blink comes down. |
 | **68.970** | | the rain | *Through the blink*: under an awning in the rain. Fischer's taxi; he is knocked into the van. |
-| 75.165 → 76.586 | | | **The freight train**: its headlight stabs up the street through the rain (Mal, still on the pavement, lit once by it), and a black wall of locomotive tears down the middle of the street, flings the waiting cars and smashes the taxi high over the van; everything near it shakes. |
-| 80.388 → 88.010 | | | The van pulls away in front of the wagons and onto the bridge; the case opens. |
+| 74.688 → 76.586 | | | **The freight train**: *cut to Mal*, close, on the pavement in the rain; its headlight comes on behind her and stabs up the street, and as the camera draws back from her a black wall of locomotive tears down the middle of the street, flings the waiting cars and smashes the taxi high over the van; everything near it shakes. |
+| 80.388 → 88.010 | | | The van pulls away in front of the wagons and out onto the bridge, seen whole as the camera pulls back: its far end is torn off, a slab of the deck heaved up before it; the case opens. |
 | 86.129 → **91.824** | the brass | down | *Close*: the three lie back in the van, the case's lines to their wrists; the bench goes soft under them (88.010) and they sink through it and the deck, fall into the river, through its bed and the dark of sleep. |
 | 91.824 | | the hotel | *Cut* to the corridor, its lamps coming up; through the hotel's roof onto the top floor. |
-| 95.632 → 103.254 | | | **The corridor turns** as the van flips: a drum of the corridor, end-on, that stands still on the screen while the building wheels round it; they run up its wall, across its ceiling and down. |
+| 95.632 → 103.254 | | | *Cut up to the van* (bar 25), nose-first into the heaved slab, its tail coming up; back on the off-beat: **the corridor turns** as the van flips: a drum of the corridor, end-on, that stands still on the screen while the building wheels round it; they run up its wall, across its ceiling and down. |
 | 103.254 → 107.068 | | (the rain) | The van coming out of its flip over the deck, landing, rolling to the broken end. |
 | **107.068** | | | It goes off the end: **weightless**. The frame floats with them, leaning one way and back the other; they drift down the corridor; a trolley's bottle knocked adrift (bar 29); they fetch up on the sleepers' line, which bows and plucks the bundle (bar 30). |
 | 118.498 → **122.294** | the swell | down | Drawn down through the suite's floor, the rooms under it and the lobby, into the dark. |
 | 122.294 → 141.340 | | the snow | *Cut* to the mountain whole, the fortress under it; out of the sky onto the shoulder under the summit in low cold sun; **the run**, the camera leading them down the face: over the cornice, the great air over the fortress roof (a held wide, bar 34), the hairpin, the air over the crevasse (bar 36), guards on snowmobiles behind them, to the fortress's gate. |
-| 143.279 → **145.154** | | | *Cut to Mal* on the piste above in the rock's blue shadow, the rifle coming up; **the shot**; *cut back* (145.642): Fischer going down through the floor at the vault's door, Cobb in the air off the ledge. |
+| 141.340 → **145.154** | | | Fischer goes on alone, in at the gate and down the hall to his father's door, the camera after him. *Cut to Mal* (143.279) on the piste above in the rock's blue shadow, the rifle coming up; **the shot**; *cut back* (145.642): Fischer knocked along the floor at the vault's door, and the floor taking him; Cobb in the air off the ledge. |
 | 148.951 → **152.770** | the peak | down | They lie by the gate; the floor goes soft; into the dark after him. |
 | 152.770 → 160.392 | the drums | limbo | *Cut* to all of limbo. They fall into its sea as its city calves on the drums, tower after tower sliding into the water in white plumes; washed up, in surf that now breaks on every beat, on the shore **at the show's first frame** (the circle). |
 | 163.719 → 168.009 | | | Up the tower in the lift, the city falling round it. |
@@ -149,7 +149,7 @@ Times are show seconds; bar *n* is `bar(n)`, beat *k* is `beat(k)`.
 | 178.492 → 182.296 | | | On the roof Ariadne pushes Fischer off (his kick carries him up to the vault); she leaps; he steps off after her. |
 | **183.247** | the summit | limbo → | **Limbo's kick**: thrown straight up; the tower comes down, and the city after it on the bar's beats. *The great wide*: the whole dream at once, the camera going in after them. |
 | 185.151 → 188.965 | | the snow | Up through the fortress floor into the vault: the paddles on Fischer (187.061), the great round door rolls aside, **the pinwheel** turns in his father's last breath. |
-| **190.869** | | → | **The snow's kick**: the fortress comes down and throws the three of them up. |
+| 189.940 → **190.869** | | → | The charges: *cut out* to the fortress whole, coming down into the footing they blew. **The snow's kick**: its floor stops dead in its dust and throws the three of them up through the roof, the wing and the tower breaking away. |
 | 192.569 → 194.682 | | the hotel | Up the weightless shaft into the lift among the tied sleepers; Arthur's charges blow. |
 | **198.485** | | → | **The hotel's kick**: the cabin slams into its pit and throws them up. |
 | 199.585 → 202.304 | | the rain | Up through the riverbed and the river into the van hanging off the bridge; the rain falls again. |
@@ -200,12 +200,17 @@ Christopher Nolan (2010); Drawn with p5.js. There is no title card. After the la
 - every strike on a beat or an off-beat (±30 ms) or a measured onset (±40 ms), and every part strikes;
 - the cue's landmarks struck (every layer's downbeat, the four kicks, the release, the piano, the top, the last chord)
   and nine in ten of all 72 chords;
+- the brass, the swell and the peak each arriving on a cut out of the dark to the level's own wide; letting her go on
+  its chord (the bolt clear, the cabin up and the weight down at once); the tower down within limbo's kick's bar and
+  the city after it on the beats; the van on the river's bed by the crest (resting on it, not in it) and him only
+  rising from there to the surface on the release;
 - the camera cuts inside a world only on a strike, never whips, never rolls faster than a turn in six seconds, and its
   biggest punch is the river's; the blink and the veil full at their cuts and only there; the cut to black on the last
   chord;
 - Cobb in the frame under Zoom and findable outside a few declared shots (the fold's wide; limbo's garden cutaways and
-  its great wide of the fall; the hotel's cutaway to the van; the snow's cut to Mal; the director's great wide of the
-  stack; the top alone at the end); never hidden long;
+  its great wide of the fall; the cut to Mal at the train and the bridge seen whole; the cuts to each level's wide on
+  its downbeat; the hotel's two cutaways to the van; Fischer down the hall and the snow's cut to Mal; the director's
+  great wide of the stack; the top alone at the end); never hidden long;
 - Ariadne, Fischer, Mal and the children where the story has them;
 - the end credits' words, and the onset file being this recording's.
 
@@ -747,6 +752,80 @@ desktop). Nothing changed:
   dark of sleep. Set to 0.65 (more of the extra picture over the composed frame) home and the plane gain sky, but in
   the dream what is over a level is the dark of sleep, and the hotel's and the snow's tall frames went half navy.
   One number holds for the whole show, so it stays midway.
+
+## A director's pass on the arc and the music (Claude Fable 5.2)
+
+Not another polish wave: the passes above fixed drawing. This one watched the show against the cue (every second, then
+every half second, wide, ultrawide and on a phone held upright; a tenth of a second either side of every landmark; the
+score read bar by bar from the measured loudness and downbeat strengths) and asked where the music and the story were
+not felt in the machines. The weaknesses were written down before anything was changed, as a viewer feels them:
+
+1. **The cue's hardest downbeat fell on a still picture.** 183.25: the cut to the whole stack, held a bar, nothing
+   moving but a three-pixel spark. Limbo's kick was the only one with nothing that falls.
+2. **Letting Mal go was late on its chord and not a machine.** A dark weight in a black slot; an eased rope that hardly
+   moved for a third of a second; she was gone in the frame she began to sink, and the camera left with him.
+3. **Three layers of the orchestra arrived on nothing.** The brass, the swell and the drums each came in while three
+   specks were half way through the dark, the level sliding up after the downbeat.
+4. **The cue's last two loud bars played over slack.** The van hung under the surface, he got out beside it and
+   drifted *down*, and came up in the last 0.7 s.
+5. **The weightless hotel hung for ten seconds.**
+6. **The peak's middle re-ran the prologue's beach and lift at the prologue's pace**, under drums and full brass.
+7. **Mal's shot did not land**, and the run before it was specks on white.
+8. **Causes came after effects, or not at all**: the corridor turned seven seconds before a van was seen; the bridge
+   was first seen broken when the van was already in the air off it; the fortress's fall was never seen.
+
+What changed, in that order:
+
+- **Limbo's kick** (183.25 to 187.06): the tower they built goes down into its own footing on the downbeat (a floor's
+  depth at once, then gathering), in a bank of its dust; the city goes into the sea after it, tower by tower out along
+  the bay, one on every beat and off-beat of the bar; the throw is one tapered stroke in his colour up the column; and
+  the camera does not hold: it goes in after them, down onto limbo and the fortress they are thrown up into.
+- **Letting her go** (171.8 to 177.5): on the chord the bolt is already clear and the rope takes up at once, the cabin
+  snatched up and the weight dropping; the slit under their room is seen into while the tower is cut away, so the
+  weight hangs there before and she goes down into the dark by degrees; the bolt rides with the cabin (it was left
+  behind in the doorway); the frame opens on the two of them parting. His eye is on her from the moment she steps onto
+  the weight, and follows her down as he rises (`marks.ts`, `Gaze`: a look laid over a rolling mark, eased in and
+  rolled on from).
+- **The layers** (91.82, 122.29, 152.77): each level arrives on a cut of the camera's to its own wide, as Paris, the
+  plane and the waking do; up to each downbeat the frame rides up over the three of them so nothing of the level
+  below shows early.
+- **The river** (206.1 to 213.7): the van goes to the bottom at the speed it hit the water and lands on its nose in
+  its own silt on the crest (it used to come to rest with its nose half a cell into the riverbed); he is the last one
+  in it; the camera goes down after it; and the whole last bar is his rise from the dark to the day, faster and
+  faster, breaking the surface in a burst of water on the release. The water has the day in it under the surface and
+  silt hanging in it, so there is an up.
+- **Weightless** (107.07 to 118.5): the frame floats too, leaning slowly one way and back the other, square again as
+  the floor takes them; on bar 30 the sleepers' line bows under them and plucks the bundle, which swings.
+- **The peak's middle** (152.8 to 168): a tower stands out in the sea (west of the show's first frame); its top goes
+  in on bar 41's off-beat and the wave it raises is the one that washes them up on bar 42. The surf breaks on every
+  beat for the drums' first four bars. Each great tower's fall jolts the frame. The ride up the tower jerks on each
+  beat of its bar as the city goes down round it.
+- **The shot** (141.3 to 147): Fischer goes on alone down the hall to his father's door, the camera in after him, and
+  stops there; cut to Mal; the blow knocks him along the floor as the picture cuts back, and then the floor takes him
+  (he was still rolling when shot, and already under the floor when we came back).
+- **Causes**: on bar 25, as the drum's brake comes off, a cut up to the van going nose-first into a heaved slab of the
+  bridge's deck, its tail coming up, and back on the off-beat to the corridor going over with it. The van drives out
+  onto a bridge seen whole, its far end torn off ahead of it. On the charges the camera cuts out to the fortress
+  whole, and it is seen to come down into the footing they blew; on the downbeat its floor stops dead in a burst of
+  dust and throws them out through the roof.
+- **Every kick is felt in the frame**: knocked down and ringing back, twice, gone in a third of a second, under the
+  push in that was already there.
+- **Mal** (74.7 to 76.6): the cut on the van door's slam is to her, close, on the pavement in the rain; the train's
+  lamp comes on behind her and the camera draws back from her as it comes through.
+
+A viewer new to it (a cold read of half-second sheets, no notes) then said what still did not read, and from that: the
+brass's cut is to the whole top floor, a place at once; Arthur floats clear of the nightstand he seemed to stand on;
+the guard pulled up at the crevasse is not sliced by the frame's edge; a beam of light fades to nothing at its far end
+(the train's ended on a ruled edge across the wet street); the mountain's blue shade ends on a rib, not a ruled
+vertical; no dark sliver along the river's surface in a trough; the apron's ground runs in under the fortress's wall.
+
+Weighed and left as they are: the café's debris hanging in one pattern until Paris ends (the dream's stillness, on
+purpose); the children dark until they turn (the story's last card); the plane's long quiet after the release (the
+music's own fall away); going under as a soft dark in the floor (the show's one gesture for it, drawn the same
+everywhere).
+
+Frame time is unchanged: the main-thread paint at the new shots is within a millisecond of what it was, the great
+wide the same four to five milliseconds.
 
 ## Inception nods
 
