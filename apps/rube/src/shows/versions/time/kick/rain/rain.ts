@@ -227,7 +227,16 @@ const C_BREACH = (() => {
 export const river = part<State>(
   {
     name: 'river',
-    draw: () => {},
+    // Him, last, on the release: the water he breaks through, thrown up behind him (drawn over him, its white hid him
+    // at the very cut that is matched on him).
+    draw: (p, s, c) => {
+      const t = s.begin + c.t
+      if (t < C_BREACH || t > WAKE + 0.5) return
+      p.push()
+      p.translate(-ORIGIN.river[0] * c.k, -ORIGIN.river[1] * c.k)
+      plume(penOf(p, c), [C_END[0], RAIN_GEO.river], t - C_BREACH, 0.2, 79)
+      p.pop()
+    },
     over: (p, s, c) => {
       const t = s.begin + c.t
       if (t < RISE - 0.1 || t > WAKE + 0.5) return
@@ -247,8 +256,6 @@ export const river = part<State>(
       plume(P, [door[0], Math.min(door[1], RAIN_GEO.river)], t - T_BURST, 0.3, 77)
       plume(P, [ariadneRiver(T_A_UP)[0], RAIN_GEO.river], t - T_A_UP + 0.1, 0.14, 71)
       plume(P, [fischerRiver(T_F_UP)[0], RAIN_GEO.river], t - T_F_UP + 0.1, 0.14, 73)
-      // And him, last, on the release: the water breaks over him as he comes through it.
-      plume(P, [C_END[0], RAIN_GEO.river], t - C_BREACH, 0.2, 79)
       p.pop()
     },
   },
