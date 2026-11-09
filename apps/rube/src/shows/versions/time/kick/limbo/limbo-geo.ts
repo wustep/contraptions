@@ -213,6 +213,10 @@ export const WAVES: number[] = (() => {
   const out: number[] = []
   for (let n = -1; n <= 72; n++) out.push(n === 0 ? P.wave0 : bar(n))
   out.push(half(165))
+  // The peak: with the city going into it the sea is up, and for the drums' first four bars a breaker comes in on
+  // every beat, not every bar: the surf they are washed up in, and that comes up the sand after them (the return to
+  // the shore was the opening's quiet beach again, under the drums).
+  for (let k = 161; k < 176; k++) if (k % 4 !== 0) out.push(beat(k))
   return out.sort((a, b) => a - b)
 })()
 /** How big the sea is at t: calm at dusk in the pad, heavy at the peak. */
