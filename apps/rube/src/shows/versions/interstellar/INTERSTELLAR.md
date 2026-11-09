@@ -231,7 +231,24 @@ There is no title card. After p5.js's card goes (about 287.5 s), the camp holds 
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish pass 167 (latest)
+## Polish pass 168 (latest)
+
+A director's pass (Nov 9 2026, Fable 5.2): the show watched whole against the score, then scrubbed on the clock (a frame a second in 16:9, 16:10, 2.4:1 and an upright phone's stage, then a tenth of a second round each cut, hit and landmark), with every visual event held against a map of the recording.
+
+**The score, mapped** (from the mix, measured once more for loudness as well as onsets: total, bass under 110 Hz, and treble, every 23 ms).
+- *Cornfield Chase.* Piano alone to 33.1 s, 30 dB under the peak. The organ comes in at 33.1 and gathers. **The drop, 42.48 s, is the loudest bass note of the whole first cue**: one note, 20 dB over what is round it, gone in a second and a half. Then the 96 bpm comb, brightening bar by bar. The pedal at beat 134 (83.76 s) lifts the bass 15 dB and holds it. The loudest stretch is beats 181 to 190 (113 to 118.8 s), with bass notes on 176 and 183. The last hit (119.41) is a release: the sound is gone by 122.5, and 122.5 to 126.5 is silence.
+- *No Time for Caution.* Quiet to beat 131, a first swell over 132 to 138 (155.5 to 161.5 s), sharp accents on 122, 134, 140 and 152. **From beat 155 (178.5 s) the organ breathes in four-beat swells**: the trough on the bar's second beat, the rise on its third, the crest on its fourth, the release on the downbeat. The crests are 155, 159, 163, 167, 171, 175, 179 and 183 (178.5 s and every 4 s to 206.5), each 5 to 6 dB over its trough. Beat 184 (207.5 s) is the loudest thing in the show and holds for two seconds. The swells go on over Saturn (crests on 191, 195, 199, 203, 207, 211, 215). It is quieter from 217 to 226, then climbs without a break from 226 to **the last chord, struck on 232 (255.5 s) and held to 257.3 s**, where it is cut off; its room dies away to 262.7.
+
+**The weaknesses, as a viewer feels them**, written down before anything was changed, in the order they were taken on:
+1. **The watch says nothing.** The film's most private picture is in the show three times and cannot be seen once. Its second hand moves one mark, on a watch whose face is under forty pixels across; in the tesseract, where he sets it going, the camera stays 0.6 s, two dots, and leaves. STAY is spelled, and nobody reads it.
+2. **The drop does not drop.** The biggest note of the first cue lands on a truck that keeps its pose, a small puff at a wheel, and crows that are specks in the top strip of the frame. Nothing in the picture takes the blow.
+3. **Leaving has no goodbye.** The one shot that is about what he leaves (the cage going up, Murph kept back by TARS at the tower's foot) is staged as an establishing shot: she is a dot among a bunker, a tower and a rocket, and the eye never finds her.
+4. **The last chord lights a lamp nobody sees.** On the cue's last hit a lens goes from dark to tan and a faint smudge comes on the sand. The two of them meet in front of it unlit, and when the chord is cut off, 1.8 s later, nothing in the picture knows.
+5. **The loud half of Act II does not breathe.** From 178.5 s the organ swells every four beats, and the machines tick evenly under it. The lift's climb, twelve seconds of the loudest music before the undock, is a small car in a tube with two thirds of the frame pale air.
+6. **Act II's first minute is framed loose.** Round the working ring and the ballpark (139 to 164 s) the machines stand in a strip of the frame, tilted with the ground, with half the picture haze and a quarter of it black: the rising action is the sparsest stretch of the show.
+7. **Odd details**, found along the way (listed below as they were fixed).
+
+## Polish pass 167
 
 Polish wave 6 (Oct 26 2026): the end credits on the player's page on a phone, upright and on its side; the farm at full size again; and the cost of what these six waves added, measured against pass 162.
 
