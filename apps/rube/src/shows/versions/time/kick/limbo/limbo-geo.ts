@@ -421,7 +421,7 @@ export const CITY: Tower[] = [
   { x: 8.8, w: 2.2, top: 72.0, base: 86.25, far: 0.22, mid: true },
   // One standing out in the sea, west of the shore (out of the show's first frame, in any shape of frame): the one
   // whose fall, in the return, raises the wave that washes them up.
-  { x: -13.7, w: 2.2, top: 76.2, base: 86.45, far: 0.16, mid: true },
+  { x: -13.7, w: 2.2, top: 74.2, base: 86.45, far: 0.16, mid: true },
 ]
 /** The middle towers' indices. */
 export const MID = { garden: 20, bay: 21, house: 22, sea: 23 } as const
@@ -456,10 +456,6 @@ export const CALVING: Calving[] = [
   { tower: MID.bay, hit: bar(41), top: 71.2, h: 6.4, w: 3.0, side: 1, fall: 2.4, big: true },
   { tower: MID.house, hit: half(165), top: 72.0, h: 6.0, w: 2.2, side: -1, fall: half(165) - half(163), big: true },
   { tower: MID.bay, hit: bar(43), top: 77.6, h: 4.6, w: 3.0, side: -1, fall: bar(43) - beat(170), big: true },
-  // The tower out in the sea: its top goes in on bar 41's off-beat, toward the shore, and the sea it throws up is the
-  // wave that carries them in on bar 42 (`SEA_WAVE`): the circle back to the show's first frame has a cause, and the
-  // drums a machine (it was a wave like any other, on a quiet beach).
-  { tower: MID.sea, hit: half(164), top: 76.2, h: 6.4, w: 2.2, side: 1, fall: 2.5, big: true },
   // As they go up the tower, far off.
   { tower: 2, hit: beat(174), top: 77.0, h: 3.0, w: 0.9, side: 1, fall: 2.3 },
   // Seen through the room's long window: the tower behind theirs sheds a corner.
@@ -468,6 +464,13 @@ export const CALVING: Calving[] = [
   // top, on the kick.
   { tower: 3, hit: bar(47), top: 74.7, h: 4.8, w: 1.3, side: 1, fall: 3.0 },
   { tower: 3, hit: bar(48), top: 74.0, h: 5.5, w: 1.5, side: 1, off: 1.3, fall: 3.4 },
+  // (New ones go after these: `CRACK.slab` counts from the head of this list.)
+  // The tower out in the sea, in two. Its head is in the water on the peak's downbeat itself, the first thing seen of
+  // limbo's return: the drums come in on a blow. The rest of it goes in on bar 41's off-beat, toward the shore, and the
+  // sea it throws up is the wave that carries them in on bar 42 (`SEA_WAVE`): the circle back to the show's first frame
+  // has a cause, and the drums a machine (it was a wave like any other, on a quiet beach).
+  { tower: MID.sea, hit: bar(40), top: 74.2, h: 3.4, w: 2.2, side: -1, fall: 2.2, big: true },
+  { tower: MID.sea, hit: half(164), top: 77.6, h: 5.4, w: 2.2, side: 1, fall: 2.5, big: true },
   // The kick: as they are thrown out of limbo the city goes into the sea, tower after tower, the nearest first and on
   // out along the bay, one on every beat and off-beat of the summit's first bar (the great wide sees the whole row go).
   // The nearest is in the water on the downbeat itself.

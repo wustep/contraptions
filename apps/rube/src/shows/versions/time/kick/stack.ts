@@ -358,6 +358,38 @@ const FLIP_TO = -2.4
 const FLIP_LIFT = 1.75
 /** Where its centre is as it goes off the edge. */
 const EDGE = 0.2
+/** Its axles: how far each is along it from its middle, and under it (the wheels' radius is 0.19, so level it rides 0.62 up). */
+const AXLE: Pt = [0.85, 0.43]
+/** How far its nose has dipped by `OFF`, its front wheels over nothing and its rear still on the deck (radians). */
+const DIP = 0.2
+/** When its front wheels roll off the deck's broken end. */
+const NOSE_OFF = VAN.rollTo + ((RAIN_GEO.deckEnd - AXLE[0] - FLIP_TO) / (EDGE - FLIP_TO)) * (VAN.off - VAN.rollTo)
+/** Rolling to the broken end, down on its wheels: and from `NOSE_OFF`, its nose dipping about its rear axle. */
+function rolling(t: number): { x: number; y: number; angle: number } {
+  const [, y0] = VAN.under
+  const u = (t - VAN.rollTo) / (VAN.off - VAN.rollTo)
+  const settle = 0.08 * Math.sin(Math.PI * Math.min(1, u * 3)) * (1 - u)
+  const x = FLIP_TO + (EDGE - FLIP_TO) * u
+  if (t <= NOSE_OFF) return { x, y: y0 + settle, angle: 0 }
+  // Its front wheels are over nothing (level, they rolled on along the air for most of a second): its nose goes down,
+  // turning about its rear axle, which rolls on along the deck.
+  const v = (t - NOSE_OFF) / (VAN.off - NOSE_OFF)
+  const a = DIP * v * v
+  return { x: x - AXLE[0] + AXLE[0] * Math.cos(a) + AXLE[1] * Math.sin(a), y: y0 + AXLE[1] + AXLE[0] * Math.sin(a) - AXLE[1] * Math.cos(a), angle: a }
+}
+/** Its pose and its speed as it goes off (`OFF`): the tip carries on from them. */
+const GONE = (() => {
+  const h = 1e-3
+  const a = rolling(VAN.off - h)
+  const b = rolling(VAN.off)
+  return { ...b, vx: (b.x - a.x) / h, vy: (b.y - a.y) / h, va: (b.angle - a.angle) / h }
+})()
+/** From a value and its speed to another at rest, over `T` seconds: `s` is the share of the way through. */
+const settleTo = (s: number, p0: number, v0: number, p1: number, T: number): number => {
+  const s2 = s * s
+  const s3 = s2 * s
+  return (2 * s3 - 3 * s2 + 1) * p0 + (s3 - 2 * s2 + s) * T * v0 + (-2 * s3 + 3 * s2) * p1
+}
 
 /**
  * The van's pose at show time `t` (from `DOWN.hotel.t` on; before it the rain builder drives it and must meet this
@@ -378,16 +410,16 @@ export function vanAt(t: number): { x: number; y: number; angle: number; air: bo
     return { x: FLIP_FROM + (FLIP_TO - FLIP_FROM) * u, y: y0 - FLIP_LIFT * Math.sin(Math.PI * u), angle: e * TAU, air: true }
   }
   if (t <= OFF) {
-    // Down on its wheels with a settle, and on to the broken end.
-    const u = (t - ROLL.to) / (OFF - ROLL.to)
-    const settle = 0.08 * Math.sin(Math.PI * Math.min(1, u * 3)) * (1 - u)
-    return { x: FLIP_TO + (EDGE - FLIP_TO) * u, y: y0 + settle, angle: TAU, air: false }
+    // Down on its wheels with a settle, and on to the broken end, its nose going down as its front wheels leave it.
+    const r = rolling(t)
+    return { x: r.x, y: r.y, angle: TAU + r.angle, air: false }
   }
   if (t <= OFF + TIP) {
-    // Tipping off the edge, nose down, clear of it: slow, as the rain's time is slow now.
-    const u = smoothstep((t - OFF) / TIP)
+    // Tipping off the edge, nose down, clear of it: on from the speed it rolled off at, slowing to its hang (slow, as
+    // the rain's time is slow now). (It stopped dead on the edge, and then began to tip.)
+    const s = Math.max(0, Math.min(1, (t - OFF) / TIP))
     const [hx, hy] = VAN.hang
-    return { x: EDGE + (hx - EDGE) * u, y: y0 + (hy - y0) * u * u, angle: TAU + VAN.hangTilt * u, air: true }
+    return { x: settleTo(s, GONE.x, GONE.vx, hx, TIP), y: settleTo(s, GONE.y, GONE.vy, hy, TIP), angle: TAU + settleTo(s, GONE.angle, GONE.va, VAN.hangTilt, TIP), air: true }
   }
   if (t <= SPLASH) {
     // The fall, on the rain's own clock: its progress is the rain's time since it tipped over the rain's time to the

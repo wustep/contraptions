@@ -559,9 +559,13 @@ export function drawBridge(pen: Pen, f: View): void {
     const ctx = pen.ctx
     const murk = ctx.createLinearGradient(0, (RAIN_GEO.river + 0.6) * k, 0, (RAIN_GEO.bed + 0.25) * k)
     const deep = mixHex(RAIN.river, RAIN.street, 0.55)
+    // To the bed's own ground by its foot (in a murk of its own, paler than the bed it stands on, its foot still ended
+    // square on it and a little under it: a pale post with a ruled end, as they sank past it).
+    const bed = mixHex(RAIN.river, GROUND, 0.55)
     murk.addColorStop(0, rgba(deep, 0))
-    murk.addColorStop(0.75, rgba(deep, 0.9))
-    murk.addColorStop(1, rgba(deep, 1))
+    murk.addColorStop(0.5, rgba(deep, 0.85))
+    murk.addColorStop(0.9, rgba(bed, 1))
+    murk.addColorStop(1, rgba(bed, 1))
     ctx.save()
     ctx.beginPath()
     ctx.moveTo((x - 0.62) * k, SPRING * k)

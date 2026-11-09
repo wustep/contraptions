@@ -6,7 +6,7 @@ import type { Performance, ShowVersion } from '../src/shows/registry'
 import measured from '../../../scripts/shows/plans/time-onsets.json'
 import { STRIKES } from '../src/shows/versions/time/kick/hits'
 import { BEATS, BRASS, CREDITS_AT, DURATION, HALVES, KICK, LAST, ONSETS, PEAK, PIANO, PIANO_SPIN, PULSE, RECORDING, RELEASE, SEAM, STRINGS, SUMMIT, SWELL, bar } from '../src/shows/versions/time/kick/music'
-import { CALVING, Q, bolt, cabinY, towerFall, weightY } from '../src/shows/versions/time/kick/limbo/limbo-geo'
+import { CALVING, CRACK, Q, bolt, cabinY, towerFall, weightY } from '../src/shows/versions/time/kick/limbo/limbo-geo'
 import { HEAVE } from '../src/shows/versions/time/kick/rain/rain-city'
 import { FISCHER_SNOW, HIT, T as SNOW_T } from '../src/shows/versions/time/kick/snow/snow-geo'
 import { CARDS, CREDITS_OK, blackAt, creditsAt } from '../src/shows/versions/time/kick/credits'
@@ -228,6 +228,11 @@ export function checkKick(perf: Performance, version: ShowVersion, check: Check)
     Math.abs(hitY - (LIMBO_GEO.ground - R)) < 0.02 && vel(KICK.limbo - 0.05)[1] > 10 && vel(KICK.limbo + 0.05)[1] < -20 &&
     cam(KICK.limbo + 0.1).cells < 8 && cam(Q.tear + 0.05).cells > 60 && cameraCuts.some((c) => near(c, Q.tear, 1e-3)) && !cameraCuts.some((c) => near(c, KICK.limbo, 1e-3)),
     `lands at y ${hitY.toFixed(2)} (ground ${(LIMBO_GEO.ground - R).toFixed(2)}), ${vel(KICK.limbo - 0.05)[1].toFixed(1)} then ${vel(KICK.limbo + 0.05)[1].toFixed(1)} c/s`)
+
+  // The prologue's one sign, the slab that slips on its crack, is still the slab that goes on bar 47 (the list it is
+  // counted in grew), and the drums come in on a blow: a tower's head in the sea on the peak's downbeat.
+  check('kick: the cracked slab is the one that falls on bar 47, and a tower is in the sea on the peak\'s downbeat',
+    CALVING[CRACK.slab]?.tower === CRACK.tower && near(CALVING[CRACK.slab].hit, bar(47), 1e-6) && CALVING.some((e) => e.big && near(e.hit, PEAK, 1e-6)))
 
   // Limbo's kick drops something too: the tower stands until the downbeat and is down within the bar, and the city goes
   // into the sea along the bay on the bar's beats and off-beats.

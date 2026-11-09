@@ -1,5 +1,5 @@
 import type p5 from 'p5'
-import { R, type Pt, type Seg } from '../../../../../parts'
+import { R, mixHex, type Pt, type Seg } from '../../../../../parts'
 import { rgba, sink, tear } from '../cast'
 import { box, carried, frame, part, scenery, type Company, type Ctx, type PartShot } from '../kit'
 import { ORIGIN, exitFor, local } from '../stack'
@@ -111,8 +111,57 @@ const companyOf = (who: Exclude<Who, 'cobb'>, from: number, to: number, origin: 
 interface State {
   begin: number
 }
-/** A patch of a slab drawn over the ball where it is inside it, so it goes into the surface and comes out of the other. */
-function patch(g: Pen, x: number, y0: number, y1: number, fill: string, top: string | null, hw = 0.5, bottom: string | null = null): void {
+/**
+ * A patch of a slab drawn over the ball where it is inside it, so it goes into the surface and comes out of the other.
+ * `footing`: the slab is the hotel's footings, which have their piers (every three cells) and go out into the dark of
+ * sleep under them: the patch has the piers that cross it, and thins to nothing under the floor, as the footings do
+ * into the dark. (Flat and a cell deep, it showed as a box cut out of the piers, and they came out from under its foot,
+ * in the dark, each cropped flat across by an edge that was not there to be seen.)
+ */
+function patch(g: Pen, x: number, y0: number, y1: number, fill: string, top: string | null, hw = 0.5, bottom: string | null = null, footing = false): void {
+  if (footing) {
+    const { c, k } = g
+    // Whole under the lobby's floor line, then thinning away: the footings are a cell deep and going into the dark.
+    const SOLID = 0.28
+    const FADE = 0.62
+    const ya = y0 + SOLID
+    // Across the patch: the footing's dark concrete, and its piers where they cross it.
+    const parts: [number, number, string][] = []
+    let from = x - hw
+    for (let px = Math.ceil((x - hw - 0.25) / 3) * 3; px - 0.25 < x + hw; px += 3) {
+      const a0 = Math.max(x - hw, px - 0.25)
+      const b0 = Math.min(x + hw, px + 0.25)
+      if (b0 <= a0) continue
+      if (a0 > from) parts.push([from, a0, fill])
+      parts.push([a0, b0, C.concrete])
+      from = b0
+    }
+    if (from < x + hw) parts.push([from, x + hw, fill])
+    // The dark of sleep's feather at a height, as `feather` lays it.
+    const dark = (y: number) => Math.max(0, Math.min(1, (y - (B.foot - FEATHER)) / FEATHER))
+    for (const [a0, b0, base] of parts) {
+      c.fillStyle = base
+      c.fillRect(a0 * k, y0 * k, (b0 - a0) * k, SOLID * k)
+      // Thinning: one gradient, the concrete going into the dark as it goes clear (laid as the slab and then the dark,
+      // each at part strength, it came out paler than the footings round it: a box).
+      const gr = c.createLinearGradient(0, ya * k, 0, (ya + FADE) * k)
+      for (let i = 0; i <= 8; i++) gr.addColorStop(i / 8, rgba(mixHex(base, SLEEP.mid, dark(ya + (FADE * i) / 8)), 1 - i / 8))
+      c.fillStyle = gr
+      c.fillRect(a0 * k, ya * k, (b0 - a0) * k, FADE * k)
+    }
+    if (top) {
+      c.fillStyle = top
+      c.fillRect((x - hw) * k, y0 * k, 2 * hw * k, 0.1 * k)
+    }
+    feather(g, x - hw, x + hw, y0, ya)
+    c.strokeStyle = g.ink
+    c.lineWidth = g.w * 0.8
+    c.beginPath()
+    c.moveTo((x - hw) * k, y0 * k)
+    c.lineTo((x + hw) * k, y0 * k)
+    c.stroke()
+    return
+  }
   const { c, k } = g
   c.fillStyle = fill
   c.fillRect((x - hw) * k, y0 * k, 2 * hw * k, (y1 - y0) * k)
@@ -199,7 +248,7 @@ function hotelOver(g: Pen, t: number): void {
     d.slabs.forEach((s, i) => {
       const sl = SLABS[i]
       const px = hotelAt(d.who, s.enter)[0]
-      if (t > s.enter - 0.1 && t < s.out + 0.05) patch(g, hotelAt(d.who, t)[0], sl.y0, sl.y1, sl.fill, sl.top, 0.5, sl.bottom)
+      if (t > s.enter - 0.1 && t < s.out + 0.05) patch(g, hotelAt(d.who, t)[0], sl.y0, sl.y1, sl.fill, sl.top, i === 2 ? R + 0.07 : 0.5, sl.bottom, i === 2)
       sink(g.p, g.k, [px, sl.y0], t - s.enter, s.through - s.enter, 0.75)
       if (i < 2) sink(g.p, g.k, [px, sl.y1], t - s.under, s.out - s.under, 0.6)
     })
@@ -231,7 +280,7 @@ function liftOver(g: Pen, t: number): void {
 
 /* ------------------------------------------------------------------ the hotel */
 
-const HOTEL_BREAKS = [T.land, T.go, T.stop, T.turn, T.fr, T.run2, T.rc, T.run3, T.cl, T.run4, T.lf, T.off, T.push, T.knock, T.catch, T.emerge]
+const HOTEL_BREAKS = [T.land, T.go, T.stop, T.turn, T.fr, T.run2, T.rc, T.run3, T.cl, T.run4, T.lf, T.level, T.off, T.push, T.knock, T.catch, T.emerge]
 const Lh = (p: Pt): Pt => local(ORIGIN.hotel, p)
 
 export const hotel = part<State>(

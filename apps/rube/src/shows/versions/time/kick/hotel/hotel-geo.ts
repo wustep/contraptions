@@ -226,7 +226,10 @@ export function trainS(t: number): number {
   if (t < T.cl) return run(T.run3, T.cl, QUARTER)
   if (t < T.run4) return 2 * QUARTER
   if (t < T.lf) return run(T.run4, T.lf, 2 * QUARTER)
-  return 3 * QUARTER
+  // The last of the turn: as the drum comes level again they roll down off what was its wall onto its floor, back to
+  // where they stood (a whole circuit of it for its whole turn). They were left a ball's width up the wall of a level
+  // room for two seconds, and found there, stacked, when the picture came back to them.
+  return 3 * QUARTER + (QUARTER + s0) * ss((t - T.lf) / (T.level - T.lf))
 }
 /** A ball in the drum: round its path, turned with it. */
 export const inDrum = (who: Who, t: number): Pt => add(DRUM, rot(drumAngle(t), around(trainS(t) - BACK[who])))
@@ -305,7 +308,9 @@ function drift(who: Who, t: number): Pt {
   const from = LF_OFF[who]
   const u = ss((t - T.push) / 1.4)
   const v = ss((t - (T.catch - 1.6)) / 1.6)
-  const mid: Pt = [lerp(from[0], FORM_DRIFT[who][0], u), lerp(from[1], FORM_DRIFT[who][1], u)]
+  // One who was behind him on the floor and drifts to the far side of him goes over him, not through him.
+  const over = from[0] * FORM_DRIFT[who][0] < 0 ? 0.34 * Math.sin(Math.PI * u) : 0
+  const mid: Pt = [lerp(from[0], FORM_DRIFT[who][0], u), lerp(from[1], FORM_DRIFT[who][1], u) - over]
   const off: Pt = [lerp(mid[0], FORM[who][0], v), lerp(mid[1], FORM[who][1], v)]
   return add(add(c, off), bob(who, t))
 }
