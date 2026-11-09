@@ -467,8 +467,10 @@ export const rim = part<Plan>(
       { t: B(122.6), cells: 4.9, hold: at(pl.tram0 + 0.6, 0.75), w: 0.6 },
       { t: B(123.6), cells: 5.0, off: lead(pl.b(123.6), 0.8, 0.55), w: 0 },
       { t: B(126.5), cells: 5.0, off: lead(pl.b(126.5), 0.8, 0.55), w: 0 },
-      { t: B(127.8), cells: 4.3, off: lead(pl.b(127.8), 0.35, 0.95), w: 0 },
-      { t: B(130.5), cells: 4.3, off: lead(pl.b(130.5), 0.35, 0.95), w: 0 },
+      // The louvres are low, a cell off the ground, and the ground is nearly a wall here: closer, and less of the
+      // empty air inward of them, so the bays he trips are a third of the frame and not a strip down its edge.
+      { t: B(127.8), cells: 3.5, off: lead(pl.b(127.8), 0.3, 0.62), w: 0 },
+      { t: B(130.5), cells: 3.5, off: lead(pl.b(130.5), 0.3, 0.62), w: 0 },
       { t: slot.end, cells: 5.0, off: lead(pl.end, 0.5, 0.5), w: 0 },
     ]
     return keys
