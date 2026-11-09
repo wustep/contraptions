@@ -33,11 +33,14 @@ import { clearOfFarm, dawnBands, drawCirrus, drawPlainStory, drawSettlement, RAN
  * On the ground: the canopy swings open (229), the ramp runs out and slams
  * down (230) and she sets off from the cairn; the seat leans Cooper out over
  * the nose (230½), he floats a beat and lands on the ramp (231½), rolls down into the camp
- * and stops on the plate at the foot of its lamp, and on the last hit (232)
- * the lamp lights. The stop on the plate drops, he rolls on, and under the
- * lamp, as the music stops, they meet (CAMP_MEET) and rest together. The
- * camera draws back and holds, the sun's edge comes up behind the cairn, and
- * the credits roll over the two of them.
+ * and stops on the plate at the foot of its lamp, and on the last chord
+ * (232) the lamp lights, and its light is on the sand and on them. The stop
+ * on the plate drops, he rolls on, and under the lamp she stops just short
+ * of him on the chord's last pulse (CAMP_MEET); through the rest of it each
+ * leans the last of the way in, and when it is cut off (CHORD_OFF) they are
+ * at rest, and the camera with them. In the silence it draws back, the
+ * sun's edge comes up behind the cairn, and the credits roll over the two
+ * of them.
  *
  * The part's frame: the ball comes in hidden at the wormhole's centre,
  * (-0.5, 0). The landing ground is at y = G (the ball rolling on it is at
