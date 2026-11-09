@@ -904,7 +904,7 @@ async function main(): Promise<void> {
         // shut ahead of coming down and lost him under the bottom edge for most of a second.)
         const ownMiss: string[] = []
         for (let t = 0; t <= MIX_END; t += 0.02) {
-          if (([[-1, 4.4], [74.9, 77.3], [103.7, 104.3]] as [number, number][]).some(([a, b]) => t > a && t < b)) continue
+          if (([[-1, 4.4], [73.9, 77.3], [103.7, 104.3]] as [number, number][]).some(([a, b]) => t > a && t < b)) continue
           const f = perf.camera!(t)
           const a = f.angle ?? 0
           const [hx, hy] = show.where(t)
