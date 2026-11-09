@@ -369,7 +369,8 @@ function limboLane(): Seg[] {
   // Up the beach to the lift, Ariadne ahead of him; up the tower as he went before.
   push(...over(rollOver(FIRST_AT[0], CABIN.x - 0.2), at(Q.circle + 1.0), at(Q.gateShut - 0.1), 24))
   push(still(lastTo(segs), Q.liftGo - now()))
-  push(...carried((s) => [CABIN.x - 0.2, cabinY(s + b) - R], at(Q.liftGo), at(Q.arrive), 24))
+  // Finely: the rope jerks on the drums' beats (`shudder`), and he rides the cabin's floor through each.
+  push(...carried((s) => [CABIN.x - 0.2, cabinY(s + b) - R], at(Q.liftGo), at(Q.arrive), 240))
   // In the room: to the cabin's door when she is out; and there he stays, face to face with Mal.
   push(still(lastTo(segs), 169.4 - now()))
   push({ from: lastTo(segs), to: [CABIN_DOOR_X, lastTo(segs)[1]], dur: 0.8, ease: 'inout' })
