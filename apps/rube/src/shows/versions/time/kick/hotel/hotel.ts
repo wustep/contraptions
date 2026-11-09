@@ -268,7 +268,7 @@ export const hotel = part<State>(
       // Held as they come through the roof and land; then in, looking along it.
       // Wide enough to be a place at once (the top floor from its end wall to the lift, the rooms under it), as the
       // mountain and limbo are on theirs; then in on them as they land and go along it.
-      { t: slot.begin + 0.001, cells: 12, hold: Lh([-8.0, 20.6]), w: 1, cut: true },
+      { t: slot.begin + 0.001, cells: 12, hold: Lh([-7.3, 20.6]), w: 1, cut: true },
       hold(T.land + 0.25, 9.4, [-8.2, 20.0]),
       follow(94.5, 5.5, [1.25, -0.72]),
       // The drum: close, the camera turning with it (a point fixed in the drum's own frame, leaning toward the three
