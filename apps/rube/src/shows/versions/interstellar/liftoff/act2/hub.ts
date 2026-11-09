@@ -3,7 +3,7 @@ import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInOutSine, easeOutBack } from '../../../../../../../../src/core/ease'
 import { FLOOR, mixHex, R, type Pt } from '../../../../../parts'
 import { alpha, carried, knock, lastOf, part, puff, route, smooth, type Ctx, type PartShot } from '../kit'
-import { cue } from '../music'
+import { cue, swell } from '../music'
 import { DUST } from '../worlds'
 import { fromRim, RIM_R, SEAM, stationFrame } from './station'
 import { drawBayDepth } from './hub-bay'
@@ -133,7 +133,46 @@ const RING_OUT = 3.3
 const S_TOP = RIM_R - RING_OUT - CAR_TOP
 const DA = CRUISE - GO
 const DB = LAND - BRAKE
-const V = S_TOP / (DA / 2 + (BRAKE - CRUISE) + DB / 2)
+/**
+ * The organ's breath, as the lift's winch feels it: the cue's loudness (`swell`), a little behind it and smoothed, as a
+ * heavy thing follows what drives it. 0..1.
+ */
+function breath(T: number): number {
+  let sum = 0
+  let w = 0
+  for (let j = 0; j <= 12; j++) {
+    const k = Math.exp(-j / 3.5)
+    sum += k * swell(T - 0.1 * j)
+    w += k
+  }
+  return sum / w
+}
+/**
+ * The winch hauls with the organ. The climb has one pace overall (a landing a beat, the hub on 172), but inside it
+ * the car goes by the cue's swells: it heaves when the chord is struck (162½, 166½), half as fast again, and sags to
+ * little over half its pace in the gaps between. From 169 the haul evens out to the plain pace, which is what he
+ * leaves the floor with on 170, so the car is never driven up under him once he is free of it. How hard it is hauling
+ * at `T`, as a share of the plain pace.
+ */
+const HAUL = 0.95
+const haul = (T: number): number => 1 + HAUL * (breath(T) - 0.5) * (1 - smooth(T, cue(168.7), cue(169.6)))
+/** The car's pace at `T`, as a share of the plain pace: off the brake over a beat, the haul, and the sheave's brake from 171 to the stop. */
+const paceAt = (T: number): number => (T <= GO || T >= LAND ? 0 : T < CRUISE ? ((T - GO) / DA) * haul(T) : T < BRAKE ? haul(T) : 1 - (T - BRAKE) / DB)
+/** How far the car has climbed, as a table worked out once: the pace summed, 200 to the second, and scaled to end at the collar. */
+const CLIMB_DT = 1 / 200
+const CLIMB = (() => {
+  const n = Math.ceil((LAND - GO) / CLIMB_DT)
+  const out = new Float64Array(n + 1)
+  for (let i = 1; i <= n; i++) {
+    const a = GO + (i - 1) * CLIMB_DT
+    out[i] = out[i - 1] + (CLIMB_DT / 6) * (paceAt(a) + 4 * paceAt(a + CLIMB_DT / 2) + paceAt(Math.min(LAND, a + CLIMB_DT)))
+  }
+  const scale = S_TOP / out[n]
+  for (let i = 0; i <= n; i++) out[i] *= scale
+  return { s: out, v: scale }
+})()
+/** The plain pace, cells a second: what the car is doing from 169½ to the brake, and what he floats off at. */
+const V = CLIMB.v
 /** The shaft's walls: the car's lane, and the counterweight's beside it on the +u side. */
 const WALL_L = -0.58
 const WALL_R = 1.1
@@ -169,18 +208,10 @@ const CATCH_R = 1.95
 /** How far the car's floor is up the spoke. */
 function carS(T: number): number {
   if (T <= GO) return 0
-  if (T < CRUISE) {
-    const x = T - GO
-    return (0.5 * V * x * x) / DA
-  }
-  const s1 = 0.5 * V * DA
-  if (T < BRAKE) return s1 + V * (T - CRUISE)
-  const s2 = s1 + V * (BRAKE - CRUISE)
-  if (T < LAND) {
-    const x = T - BRAKE
-    return s2 + V * x - (0.5 * V * x * x) / DB
-  }
-  return S_TOP
+  if (T >= LAND) return S_TOP
+  const f = (T - GO) / CLIMB_DT
+  const i = Math.min(CLIMB.s.length - 2, Math.floor(f))
+  return CLIMB.s[i] + (CLIMB.s[i + 1] - CLIMB.s[i]) * (f - i)
 }
 
 /** The car's jolt as its roller takes each landing's flag, the lurch off, and the thump at the top. */
@@ -390,14 +421,16 @@ export const hub = part<HubState>(
       // The gate, framed as the ballpark pulls out from the meeting (it leaves this key to the hub): the car, him in it,
       // and her on the floor outside. Then out with the car as it lurches off.
       { t: slot.begin, cells: 2.6, hold: SP(-0.42, -0.62), w: 1 },
-      { t: GO + 0.5, cells: 5, hold: SP(0, -(carS(GO + 0.5) + FLOOR + 0.6)), w: 1 },
-      // The climb: near enough to read the first hops; then the camera stops following and holds wide on the spoke, and
-      // the car climbs up through the frame, its lit landings trailing below it, while the station turns round it; then
-      // up with it into the float.
-      { t: cue(162), cells: 6, off: lead(1.0) },
-      // (Held a cell and a half lower down the spoke than where the car is on 166, so that the car comes up into the
-      // frame's lower part rather than along its bottom edge, and is still in under Zoom, 1.5 times closer.)
-      { t: cue(163.5), cells: 10, hold: low, w: 0.95 },
+      // Held there as the brake comes off and the car lifts: him going up past her, her staying. The same shot as the
+      // cage at the tower, a lifetime on, and this time she has sent him. (It pulled straight out to the whole house
+      // on the brake, and she was a dot at the moment he left her.)
+      { t: cue(160.75), cells: 2.75, hold: SP(-0.4, -0.78), w: 1 },
+      // Then up and out after the car, the house falling away under it with her at her door: one move, widening all
+      // the way, the lit landings trailing below the car while the station turns round it. Its wide end is held a
+      // cell and a half lower down the spoke than where the car is on 166, so that the car comes up into the frame's
+      // lower part rather than along its bottom edge, and is still in under Zoom, 1.5 times closer.
+      { t: cue(162.2), cells: 5.6, off: lead(1.0) },
+      { t: cue(164), cells: 8, hold: low, w: 0.9 },
       { t: cue(166.5), cells: 10, hold: low, w: 0.95 },
       // The step on 168: out wide, the car halfway up the spoke and the hub ahead of it.
       { t: cue(168.5), cells: 8.6, hold: mid(cue(168.5), 0.42), w: 0.8 },
@@ -574,6 +607,7 @@ function drawShaft(p: p5, c: Ctx, T: number): void {
   for (const u of [CAR_L - 0.03, CAR_R + 0.03]) p.line(X(u), X(0), X(u), X(vTop))
   // The landings: a band round the tube, a flag on the wall the car's roller throws over, and a lamp outside that
   // lights on the beat and stays lit, so the lit lamps climb the spoke behind the car.
+  const burn = breath(T) * (1 - smooth(T, LAND + 2.5, LAND + 6))
   for (let i = 0; i < RIB_V.length; i++) {
     const v = RIB_V[i]
     const since = T - RIBS[i]
@@ -607,12 +641,13 @@ function drawShaft(p: p5, c: Ctx, T: number): void {
     const on = smooth(since, -0.02, 0.14)
     const lx = WALL_L - 0.22
     if (on > 0) {
-      // Its light on the air by the slit: one small flat fan, warm. The lit glass says lit or dark; this only says
-      // which way it shines.
+      // Its light on the air by the slit: one flat fan, warm. The lamps are fed off the winch, so they burn with the
+      // organ as the car hauls with it: a small fan in the gaps, and at each swell every lamp lit so far opens out
+      // together, more of them each time, until at the brake the whole spoke is burning behind him.
       const ctx = p.drawingContext as CanvasRenderingContext2D
       ctx.save()
-      ctx.fillStyle = alpha(p, LAMP_POOL, 0.16 * on).toString()
-      for (const [reach, spread] of [[0.4, 0.24]]) {
+      ctx.fillStyle = alpha(p, LAMP_POOL, (0.12 + 0.15 * burn) * on).toString()
+      for (const [reach, spread] of [[0.34 + 0.4 * burn, 0.24 + 0.2 * burn]]) {
         ctx.beginPath()
         ctx.moveTo(X(lx - 0.02), X(v - 0.03))
         ctx.arc(X(lx - 0.02), X(v), X(reach), Math.PI - spread, Math.PI + spread)

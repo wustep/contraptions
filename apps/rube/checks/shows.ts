@@ -854,7 +854,9 @@ async function main(): Promise<void> {
           const y = dx * Math.sin(a) + dy * Math.cos(a)
           return Math.abs(x) < (f.cells * 16) / 9 / 2 + 0.2 && Math.abs(y) < f.cells / 2 + 0.2
         }
-        const withHim = [72.5, 75, 80, 83, 86, 90, 94, 98, 101]
+        // (Not while the cage climbs, 74.5 to 77.2 s: the camera is down at the tower's foot with Murph, and the two of
+        // them are up out of the frame.)
+        const withHim = [72.5, 74, 78, 80, 83, 86, 90, 94, 98, 101]
         const inOrbit = [106, 109, 111]
         const atCamp = [LIFTOFF_CAMP_MEET + 0.5, MIX_END - 0.5, 270, LIFTOFF_END - 0.5]
         const station = [177, 178.5, 179.25, 180.5]
