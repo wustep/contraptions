@@ -208,8 +208,12 @@ export interface Performance {
   show: Show
   /** Seconds of show. The player holds the last frame there. */
   duration: number
-  /** Authored framing. Left out, the stage follows the ball as Machine does. */
-  camera?(t: number): Framing
+  /**
+   * Authored framing. Left out, the stage follows the ball as Machine does. A camera may ask the stage's shape
+   * (`aspect`, its width over its height; left out, 16:9) and compose for it: Struck sets its lanes closer on a
+   * phone held upright, where a 16:9 frame's worth of the machine would be a thin band across the middle.
+   */
+  camera?(t: number, aspect?: number): Framing
   /** Whether the show's cuts are drawn at `t`: the iris at a portal, the fade up from ink. Left out, they are. */
   cuts?(t: number): boolean
   /**
@@ -390,6 +394,7 @@ const SHELVED: Record<string, Section> = {
   bolero: 'Ambient',
   gymnopedie: 'Ambient',
   orchestrion: 'Ambient',
+  struck: 'Machine',
   'soft-lamp': 'Ambient',
 }
 export const sectionOf = (work: string): Section => SHELVED[work] ?? 'Movies'
@@ -399,7 +404,7 @@ export const sectionOf = (work: string): Section => SHELVED[work] ?? 'Movies'
  * music through YouTube's player, so the Show card keeps the player's box open while its show loads, rather than
  * opening it once the music is known (`player.ts`). `check:shows` holds this to what each take actually loads.
  */
-const OWN_RECORDINGS = new Set(['clair-de-lune', 'premiere-arabesque', 'bolero', 'gymnopedie', 'raindrop', 'orchestrion'])
+const OWN_RECORDINGS = new Set(['clair-de-lune', 'premiere-arabesque', 'bolero', 'gymnopedie', 'raindrop', 'orchestrion', 'struck'])
 /** Whether a work's music comes from YouTube's player, known before its show loads. */
 export const musicOnYouTube = (work: string): boolean => !OWN_RECORDINGS.has(work)
 

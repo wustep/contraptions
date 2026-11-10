@@ -1,0 +1,9 @@
+Struck
+
+Music: Johann Sebastian Bach (1685-1750), Prelude in C major, BWV 846, from The Well-Tempered Clavier, Book I.
+Public domain. The notes are the autograph's 35 bars (without the bar Schwencke added), typed in by hand in
+works/prelude.ts.
+
+There is no recording. Every sound is synthesized in the page by physical models (works/engine.ts) at the moment a
+ball in the show's machine makes a contact. Some of the models' physics and constants follow Stephen Wu's
+"instruments" project (wustep/instruments), and the papers it cites; the comments in engine.ts say which.

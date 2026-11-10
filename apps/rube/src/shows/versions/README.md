@@ -38,7 +38,7 @@ The folder and file names are addresses, so they are chosen once:
   Takes sort by name, and the first is the work's own page, unless the registry
   puts another first (`PREFERRED_TAKES`: Epilogue's and Cornfield Chase's Opus).
 - **Shelf**: the picker and Theater set the works out as **Machine** (Clair de
-  Lune, Première Arabesque, Cornfield Chase, Raindrop), **Movies** and **Ambient**
+  Lune, Première Arabesque, Cornfield Chase, Raindrop, Struck), **Movies** and **Ambient**
   (Gymnopédie, Soft Lamp, Ostinato, Orchestrion). A work is Movies unless `SHELVED` in `../registry.ts` names it.
 - **Favourites**: `FAVORITES` in `../registry.ts` ranks them (Voyage, Epilogue,
   Everything, Clair de Lune). The picker stars them and pins them to the top of
@@ -186,6 +186,16 @@ limited with Web Audio. There is no recording; a saved video gets the same voice
 Each bay is built from the ball's flight so its bounces land on sixteenths; `check:shows` holds every ball to its
 bay's design. The write-up, with how each sound maps to the physics, is
 `apps/rube/src/shows/versions/orchestrion/ORCHESTRION.md`.
+
+`struck/fable52` (in the picker, **Struck**, on the Machine shelf, one take, **Fable 5.2**) is Bach's Prelude in C
+major, BWV 846, played by steel balls on the insides of instruments, with no recording: every note is a physical model
+(a tine, a felt hammer and its string, a stopped pipe on a bellows, a bowed cello string) sounding live in the page at
+the moment of contact, on Orchestrion's `SoundtrackSpec.live`. The machine is laid out as a score, across it being
+time: every ball crosses at one speed and only its height is designed (level rails, falls, bounces under real
+gravity). One ball plays the line at first; a second, a third and at last five share it, let go by latches the struck
+parts trip, and the last bar's chord is four balls landing at once and a bow. Its camera composes for the stage's
+shape (`Performance.camera`'s `aspect`). `check:shows` holds the machine to the score and to its physics
+(`apps/rube/checks/struck.ts`). The write-up is `apps/rube/src/shows/versions/struck/STRUCK.md`.
 
 `metronome/` is not in the picker. It is a worked example of a time map: a
 procedural machine under a steady beat, and a struck bar on every strike,

@@ -137,7 +137,7 @@ function paintFrame(
   dest?: { x: number; y: number; w: number; h: number },
 ): { x: number; y: number; w: number; h: number; cam: { x: number; y: number }; k: number } {
   const here = perf.show.at(time)
-  const cam: Framing = perf.camera?.(time) ?? followCamera(perf.show, time, here)
+  const cam: Framing = perf.camera?.(time, (dest?.w ?? p.width) / (dest?.h ?? p.height)) ?? followCamera(perf.show, time, here)
   // Zoom is a tighter follow. Overview is the whole world and wins if both are asked.
   // Zoom holds where the camera asks (`zoomDrop`, `zoomSlide`, `zoomFull`) and slides over, if it must, to keep a focus
   // the camera names well inside its closer frame (`zoomed`).
