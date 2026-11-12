@@ -31,6 +31,9 @@ export const well = defineContraption({
     bench(p, k, ink, weight, LIP, x1, false)
     belt(p, k, ink, weight, fill, LIP, x1, u * BELT_SPAN)
     landing(p, k, ink, weight, GUIDE, LIP, BENCH)
-    wellFrame(p, k, ink, weight, PART_Y)
+    // The frame's buffers sit 0.3 under the passenger line, tuned for the
+    // cascade's centre line of 0. Under a part on the bench that put them in
+    // the row below; here they sit just under the car's slab, inside the cell.
+    wellFrame(p, k, ink, weight, PART_Y - 0.07)
   },
 })

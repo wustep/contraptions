@@ -22,7 +22,10 @@ export const gear = defineContraption({
     // shaft skewering both wheels edge to edge.
     p.line(-gap, 0, gap, 0)
 
-    for (const [cx, spin] of [[-gap, rot], [gap, -rot + Math.PI / s.n]] as const) {
+    // The driven wheel is offset half a pitch measured from the mesh point,
+    // which is on its far side — measured from its own zero, an odd tooth
+    // count put both wheels' teeth on the mesh line at the same instants.
+    for (const [cx, spin] of [[-gap, rot], [gap, -rot + Math.PI + Math.PI / s.n]] as const) {
       p.push()
       p.translate(cx, 0)
       p.rotate(spin)

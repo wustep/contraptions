@@ -322,9 +322,15 @@ export const lift = definePort({
         if (u < LIFT_UP) return [0, carY]
         return [(u - LIFT_UP) * ROLL_V, highY]
       })
-      // The car: a platform under the ball with an open frame around it.
+      // The car: a platform under the ball and a roof over it, hung from
+      // the cable, with nothing at the ball's height on either side. The
+      // ball rolls on from the west and off to the east, and a closed frame
+      // drew its wall straight across the ball both times.
       outline(p, c.ink, c.weight)
-      p.rect(0, (carY - 0.04) * k, 0.38 * k, (D + 0.08) * k)
+      const roof = carY - 0.2
+      p.line(-0.19 * k, roof * k, 0.19 * k, roof * k)
+      p.line(-0.19 * k, roof * k, -0.19 * k, (roof + 0.06) * k)
+      p.line(0.19 * k, roof * k, 0.19 * k, (roof + 0.06) * k)
       solid(p, c.ink, c.weight, s.color)
       p.rect(0, (carY + D / 2 + 0.03) * k, 0.38 * k, 0.06 * k)
     })
@@ -359,7 +365,6 @@ export const paddle = definePort({
   setup: ({ color }) => ({ color }),
   draw: (p, s, c) => {
     const k = c.size
-    clipBox(p, c.w, c.h, () => rolling(p, s, c, FALL, (u) => [0, -0.5 + u * FALL_V]))
     gear(p, k, c.ink, c.weight, gearAngle(s.link, c.u), 0)
     p.push()
     p.rotate(s.link.spin * (s.link.drive?.(c.u) ?? 0))
@@ -371,6 +376,9 @@ export const paddle = definePort({
     p.pop()
     solid(p, c.ink, c.weight, s.color)
     p.circle(0, 0, 0.1 * k)
+    // The ball goes on last: it falls straight through the hub, and drawn
+    // first it vanished behind the top blade for the frames before the kick.
+    clipBox(p, c.w, c.h, () => rolling(p, s, c, FALL, (u) => [0, -0.5 + u * FALL_V]))
   },
 })
 
@@ -575,9 +583,10 @@ export const bell = definePort({
       p.push()
       p.stroke(s.color)
       p.noFill()
+      // The striker comes up on the west side, so the sound comes off there.
       for (let i = 1; i <= 2; i++) {
-        const r = bw * (0.9 + i * 0.3 + hit * 0.2) * k
-        p.arc(bw * 0.4 * k, -0.15 * k, r, r, -0.5, 0.5)
+        const r = bw * (0.9 + i * 0.3 + (1 - hit) * 0.2) * k
+        p.arc(-bw * 0.4 * k, -0.15 * k, r, r, Math.PI - 0.5, Math.PI + 0.5)
       }
       p.pop()
     }
@@ -598,14 +607,15 @@ export const bell = definePort({
     p.pop()
 
     // The striker stands right at the edge, where a bar or a rod from the
-    // next cell can reach it, and pivots up into the bell's lip.
+    // next cell can reach it, and pivots up into the bell's lip. At full
+    // swing the knob lands on the lip's corner; shorter, it stopped in air.
     p.push()
     p.translate(-0.44 * k, FLOOR * k)
     p.rotate(arm)
     outline(p, c.ink, c.weight)
-    p.line(0, 0, 0, -0.42 * k)
+    p.line(0, 0, 0, -0.5 * k)
     solid(p, c.ink, c.weight, s.color)
-    p.circle(0, -0.42 * k, 0.1 * k)
+    p.circle(0, -0.5 * k, 0.1 * k)
     p.pop()
   },
 })

@@ -19,7 +19,10 @@ export const wavy = defineContraption({
     for (let i = 0; i < 80; i++) {
       const n = i / 79
       const y = lerp(-size / 2, size / 2 - blockH, n)
-      const x = (size / 4) * Math.sin(n * Math.PI * 2 * s.cycles + phase)
+      // An envelope pins both ends: the top to the rail, the bottom to the
+      // block. Without it the cord's foot slid corner to corner across the
+      // block it is meant to be anchored by.
+      const x = (size / 4) * Math.sin(n * Math.PI) * Math.sin(n * Math.PI * 2 * s.cycles + phase)
       p.vertex(x, y)
     }
     p.endShape()

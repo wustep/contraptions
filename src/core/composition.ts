@@ -495,8 +495,33 @@ function buildGrid(
  * phase. This is the working view when you are building a new machine, and the
  * fastest way to see whether the set still hangs together as one language.
  */
-/** Cell columns the catalog packs into. */
-const CATALOG_COLS = 10
+/**
+ * Cell columns the catalog packs into. Ten is the widest the sheet goes; a
+ * short catalog is packed narrower so it fills the square instead of sitting
+ * as two thin shelves in a field of empty paper.
+ */
+const CATALOG_MAX_COLS = 10
+const CATALOG_MIN_COLS = 4
+
+type Shelf = { items: CatalogEntry[]; used: number; height: number }
+
+/** Shelf-pack `ordered` into rows at most `cols` units wide. */
+function packShelves(ordered: CatalogEntry[], cols: number): Shelf[] {
+  const shelves: Shelf[] = []
+  let shelf: Shelf = { items: [], used: 0, height: 1 }
+  for (const entry of ordered) {
+    const [cw, ch] = entry.contraption.span ?? [1, 1]
+    if (shelf.used + cw > cols && shelf.items.length) {
+      shelves.push(shelf)
+      shelf = { items: [], used: 0, height: 1 }
+    }
+    shelf.items.push(entry)
+    shelf.used += cw
+    shelf.height = Math.max(shelf.height, ch)
+  }
+  if (shelf.items.length) shelves.push(shelf)
+  return shelves
+}
 
 function buildCatalog(options: Options, canvas: number, entries: CatalogEntry[], modeLabel: string): Composition {
   const theme = themeByName(options.theme)
@@ -523,32 +548,32 @@ function buildCatalog(options: Options, canvas: number, entries: CatalogEntry[],
     return roleRank(a) - roleRank(b) || a.label.localeCompare(b.label)
   })
 
-  type Shelf = { items: CatalogEntry[]; used: number; height: number }
-  const shelves: Shelf[] = []
-  let shelf: Shelf = { items: [], used: 0, height: 1 }
-  for (const entry of ordered) {
-    const [cw, ch] = entry.contraption.span ?? [1, 1]
-    if (shelf.used + cw > CATALOG_COLS && shelf.items.length) {
-      shelves.push(shelf)
-      shelf = { items: [], used: 0, height: 1 }
-    }
-    shelf.items.push(entry)
-    shelf.used += cw
-    shelf.height = Math.max(shelf.height, ch)
-  }
-  if (shelf.items.length) shelves.push(shelf)
-
-  const unitRows = shelves.reduce((sum, s) => sum + s.height, 0)
   const area = canvas * ART_INSET
   const headroom = canvas * 0.055
-  // Caption block under every shelf, sized off the column width so it tracks
-  // the drawing rather than the canvas. It has to clear two lines of type plus
-  // its offset, or a tall machine on the next shelf grows up through it — a
+  // The unit a sheet `cols` wide is drawn at: the narrower of what the width
+  // allows and what the stacked shelves plus their caption blocks allow.
+  // Caption blocks are sized off the column width so they track the drawing
+  // rather than the canvas. They have to clear two lines of type plus their
+  // offset, or a tall machine on the next shelf grows up through them — a
   // 1x2 reaches a full two units above its own shelf line.
-  const byWidth = area / CATALOG_COLS
-  const capBlock = byWidth * 0.62
-  const byHeight = (canvas - headroom - canvas * 0.03 - shelves.length * capBlock) / unitRows
-  const unit = Math.min(byWidth, byHeight)
+  const fit = (cols: number) => {
+    const shelves = packShelves(ordered, cols)
+    const unitRows = shelves.reduce((sum, s) => sum + s.height, 0)
+    const byWidth = area / cols
+    const capBlock = byWidth * 0.62
+    const byHeight = (canvas - headroom - canvas * 0.03 - shelves.length * capBlock) / unitRows
+    return { shelves, unitRows, capBlock, unit: Math.min(byWidth, byHeight) }
+  }
+  // A 15-machine world at ten columns is two shelves in a sea of paper. Try
+  // every width the widest machine allows and keep the one that draws the
+  // machines largest; ties go to the wider sheet, which reads more evenly.
+  const widest = Math.max(1, ...ordered.map((e) => (e.contraption.span ?? [1, 1])[0]))
+  let best = fit(CATALOG_MAX_COLS)
+  for (let cols = CATALOG_MAX_COLS - 1; cols >= Math.max(CATALOG_MIN_COLS, widest); cols--) {
+    const next = fit(cols)
+    if (next.unit > best.unit + 1e-6) best = next
+  }
+  const { shelves, unitRows, capBlock, unit } = best
   const cap = Math.min(capBlock, unit * 0.68)
   const type = Math.max(7.5, unit * 0.125)
 

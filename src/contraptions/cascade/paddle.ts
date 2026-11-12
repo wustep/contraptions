@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { outline, solid } from '../../core/draw'
 import { easeOutCubic, seg } from '../../core/ease'
-import { floor, rollLane, since, type Beat } from './parts'
+import { TOKEN, floor, rollLane, since, type Beat } from './parts'
 
 /**
  * A paddle wheel hung over the line with one blade down in the ball's way:
@@ -15,8 +15,12 @@ const FIRE = 0.4
 const HUB = -0.18
 /** Short of the rail so the wheel is mounted over a continuous line. */
 const BLADE = 0.26
-/** Where the ball meets the hanging blade. */
-const MEET = -0.05
+/**
+ * Where the ball waits against the hanging blade: its east edge on the
+ * blade's west face. Parked with its centre there instead, the ball sat
+ * with the blade through its middle.
+ */
+const MEET = -(0.045 + TOKEN / 2)
 
 export const paddle = defineContraption<Beat>({
   name: 'paddle',

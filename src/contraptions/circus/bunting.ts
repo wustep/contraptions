@@ -1,6 +1,6 @@
 import { defineContraption } from '../../core/define'
 import { outline, solid } from '../../core/draw'
-import { second } from './circus'
+import { ground, second } from './circus'
 
 /**
  * A string of pennants slung across the top of the cell, and a gust running
@@ -31,6 +31,9 @@ export const bunting = defineContraption({
   setup: ({ color, rng, theme }) => ({ color, alt: second(rng, theme, color) }),
   draw: (p, s, { size: k, u, ink, weight }) => {
     outline(p, ink, weight)
+    // Every act stands on the ring's ground line; without it the string of
+    // flags left a one-cell gap in the floor running across the piece.
+    ground(p, k, 1)
     p.beginShape()
     p.vertex(A[0] * k, A[1] * k)
     p.quadraticVertex(C[0] * k, C[1] * k, B[0] * k, B[1] * k)

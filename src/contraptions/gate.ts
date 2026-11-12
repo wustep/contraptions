@@ -1,6 +1,6 @@
 import { defineContraption } from '../core/define'
 import { floorRail, outline, solid } from '../core/draw'
-import { easeOutBack, easeOutQuad } from '../core/ease'
+import { easeInOutCubic, easeOutBack, easeOutQuad } from '../core/ease'
 
 /**
  * A crossing barrier that drops when its machine fires and lifts back out of
@@ -31,8 +31,15 @@ export const gate = defineContraption({
     const boom = size * BOOM
     const post = size * 0.09
     const bar = size * 0.12
-    // Slam down on the signal, then ease back up as it decays.
-    const down = fired > 0 ? easeOutBack(Math.min(1, fired * 1.6)) : 0
+    // Slam down over the first frames of the signal, rest on the stop, then
+    // ease back up as it decays. `fired` steps to 1 on the fire frame, so a
+    // boom driven by it directly was horizontal in a single frame.
+    const k = 1 - fired
+    const down =
+      fired <= 0 ? 0
+      : k < 0.2 ? easeOutBack(k / 0.2)
+      : k < 0.45 ? 1
+      : 1 - easeInOutCubic((k - 0.45) / 0.55)
     const angle = -Math.PI / 2 + (Math.PI / 2) * easeOutQuad(down)
 
     outline(p, ink, weight)

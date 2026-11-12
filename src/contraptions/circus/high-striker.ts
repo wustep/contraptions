@@ -45,12 +45,15 @@ export const highStriker = defineContraption({
       : u < 0.86 ? TILT
       : u < 0.94 ? lerp(TILT, -TILT, easeInOutSine(seg(u, 0.86, 0.94)))
       : -TILT
-    const seat = FULCRUM[1] + HALF * Math.sin(tilt) - 0.065
+    // The puck sits on the tower end of the lever, which is the fulcrum's
+    // west arm: its height is the arm's *minus* HALF·sin(tilt). With the
+    // sign of the east arm it hung a puck's height above the lever at rest.
+    const seat = FULCRUM[1] - HALF * Math.sin(tilt) - 0.065
     const puck =
       u < 0.65 ? seat
       : u < 0.82 ? lerp(FULCRUM[1] - HALF * Math.sin(TILT) - 0.065, HIT_Y, easeOutQuad(seg(u, 0.65, 0.82)))
       : u < 0.84 ? HIT_Y
-      : lerp(HIT_Y, FULCRUM[1] + HALF * Math.sin(-TILT) - 0.065, easeInQuad(seg(u, 0.84, 0.98)))
+      : lerp(HIT_Y, FULCRUM[1] - HALF * Math.sin(-TILT) - 0.065, easeInQuad(seg(u, 0.84, 0.98)))
     const head: [number, number] = [PIVOT[0] + MALLET * Math.sin(mallet), PIVOT[1] + MALLET * Math.cos(mallet)]
     const ring = fade(u, 0.82, 0.18)
 

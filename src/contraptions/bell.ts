@@ -32,7 +32,7 @@ export const bell = defineContraption({
         for (let i = 1; i <= 2; i++) {
           // The widest ring has to close inside the cell: its centre is half a
           // bell out, so the radius (half of r) is capped at the rest.
-          const r = bw * (0.62 + i * 0.2 + fired * 0.22)
+          const r = bw * (0.62 + i * 0.2 + (1 - fired) * 0.22)
           p.arc(side * bw * 0.5, top + drop + bh * 0.5, r, r, side > 0 ? -0.6 : Math.PI - 0.6, side > 0 ? 0.6 : Math.PI + 0.6)
         }
       }

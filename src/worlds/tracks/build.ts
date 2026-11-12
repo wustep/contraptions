@@ -69,6 +69,12 @@ const DELTA: Record<Side, [number, number]> = { N: [0, -1], E: [1, 0], S: [0, 1]
 
 /** Frames a ball spends crossing one plain run cell. Sets the absolute pace. */
 const FRAMES_PER_CELL = 22
+/**
+ * A cell transit as a share of a reactor's period, for timing a knock to the
+ * ball rather than to the gap before the next one. Capped so the settle still
+ * fits inside a short period.
+ */
+const beatOf = (period: number) => Math.min(0.6, FRAMES_PER_CELL / period)
 
 /** Divisors of the loop, so a reactor period always closes. */
 const DIVISORS = Array.from({ length: TRACKS_LOOP }, (_, i) => i + 1).filter((d) => TRACKS_LOOP % d === 0)
@@ -241,7 +247,8 @@ export function buildTracks(options: Options, canvas: number): Composition {
         state.variant = cellRng.weighted(['rail', 'conveyor', 'gate'] as Variant[], (v) => (v === 'rail' ? 3.2 : v === 'conveyor' ? 1.2 : 1))
         if (state.variant === 'gate') {
           instPeriod = period
-          phase = mod(-Math.round(passFrame(s.start + s.span * 0.4)), period)
+          state.beat = beatOf(period)
+          phase = mod(-Math.round(passFrame(s.start + s.span * 0.25)), period)
         }
       }
       instances.push({
@@ -281,6 +288,7 @@ export function buildTracks(options: Options, canvas: number): Composition {
         const state = reactor.setup({ rng: cellRng, size, w: size, h: size, theme, cell, color: cellRng.pick(theme.colors) }) as ReactorState
         state.face = reactorFace
         state.dir = s.track.out === 'E' || s.track.out === 'S' ? 1 : -1
+        state.beat = beatOf(period)
         // Contact: a hanging feeler or pedal meets the ball mid-cell; a side
         // arm meets it a third of the way down the tube.
         const contact = s.start + s.span * (s.kind === 'run' ? 0.5 : 0.3)
@@ -361,6 +369,7 @@ export function tracksCatalog(): CatalogEntry[] {
     state: (state) => {
       state.kind = shape.kind
       state.variant = shape.variant
+      state.beat = beatOf(period)
     },
     overlay: (cell, { color }) => {
       const path = pieces(shape.kind)
@@ -378,8 +387,8 @@ export function tracksCatalog(): CatalogEntry[] {
         p.circle(px, py, D * cell.size)
       }
     },
-    // A gate's clock starts as the ball reaches the flap, 40% of the way across.
-    phase: shape.variant === 'gate' ? -Math.round(FRAMES_PER_CELL * 0.4) : 0,
+    // A gate's clock starts a quarter of the way across, a beat before the ball reaches the flap.
+    phase: shape.variant === 'gate' ? -Math.round(FRAMES_PER_CELL * 0.25) : 0,
   }))
   for (const reactor of reactors) entries.push(reactorDemo(reactor, period))
   return entries
@@ -409,6 +418,7 @@ function reactorDemo(reactor: Reactor, period: number): CatalogEntry {
       const s = reactor.setup({ ...ctx, w: ctx.size, h: ctx.size })
       s.face = face
       s.dir = 1
+      s.beat = beatOf(period)
       return s
     },
     draw: (p, s, ctx) => {

@@ -31,15 +31,23 @@ export const spotlight = defineContraption({
     stroke(p, k, PIVOT[0] - 0.16, 0.5, PIVOT[0], PIVOT[1] + 0.14)
     stroke(p, k, PIVOT[0] + 0.16, 0.5, PIVOT[0], PIVOT[1] + 0.14)
 
+    // The beam is clipped to the cell in the cell's own frame. Clipped
+    // inside the lamp's frame, the square turned with the lamp: the beam
+    // stopped short of the cell top with a bare edge and spilled sideways
+    // into the next act at full pan.
+    if (reach > 0.02) {
+      clipCell(p, k, () => {
+        p.push()
+        p.translate(PIVOT[0] * k, PIVOT[1] * k)
+        p.rotate(pan)
+        solid(p, ink, weight, s.color)
+        p.quad(-0.1 * k, -HEAD * k, 0.1 * k, -HEAD * k, (0.1 + 0.4 * reach) * k, (-HEAD - reach) * k, (-0.1 - 0.4 * reach) * k, (-HEAD - reach) * k)
+        p.pop()
+      })
+    }
     p.push()
     p.translate(PIVOT[0] * k, PIVOT[1] * k)
     p.rotate(pan)
-    if (reach > 0.02) {
-      clipCell(p, k, () => {
-        solid(p, ink, weight, s.color)
-        p.quad(-0.1 * k, -HEAD * k, 0.1 * k, -HEAD * k, (0.1 + 0.4 * reach) * k, (-HEAD - reach) * k, (-0.1 - 0.4 * reach) * k, (-HEAD - reach) * k)
-      })
-    }
     solid(p, ink, weight, s.color)
     p.quad(-0.07 * k, 0, 0.07 * k, 0, 0.11 * k, -HEAD * k, -0.11 * k, -HEAD * k)
     solid(p, ink, weight, theme.bg)

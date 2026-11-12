@@ -22,13 +22,17 @@ export const marbleRun = defineContraption({
     const d = size * 0.4
     const edge = w / 2 - weight
     const travel = edge - d * 0.55
-    const pitch = h / (n + 0.5)
+    // The ball starts a ramp sitting on its high end, so the stack of ramps
+    // leaves most of a ball's height clear at the top: pitched off the full
+    // height, the first ramp's ball was cut off by the footprint edge.
+    const head = d * 0.85
+    const pitch = (h - head) / (n + 0.5)
     // Steep enough that the switchback fills its square instead of reading as
     // two long horizontals with air between them.
     const tilt = pitch * 0.62
     const lip = d * 0.75
     /** Mid-height of ramp i. */
-    const mid = (i: number) => -h / 2 + pitch * (i + 0.55)
+    const mid = (i: number) => -h / 2 + head + pitch * (i + 0.55)
     /** Ramps alternate; even ramps run left to right. */
     const rightward = (i: number) => i % 2 === 0
 

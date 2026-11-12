@@ -18,7 +18,10 @@ export const flip = defineContraption({
     const card = size * 0.62
     const phase = mod(u * s.dir, 1)
     const turn = easeInOutSine(phase < 0.5 ? phase * 2 : (phase - 0.5) * 2)
-    const face = phase < 0.5 ? s.color : s.back
+    // The card is edge-on a quarter of the way through each half-turn, so
+    // that is where the face changes — swapping at the flat-on moment showed
+    // one colour narrowing to a line and widening back before it switched.
+    const face = mod(phase + 0.25, 1) < 0.5 ? s.color : s.back
     const w = Math.abs(Math.cos(turn * Math.PI)) * card
 
     outline(p, ink, weight)

@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { outline, solid } from '../../core/draw'
 import { mod } from '../../core/ease'
-import { knob, second } from './circus'
+import { ground, knob, second } from './circus'
 
 /**
  * An arrow sign rimmed with bulbs, every third one lit, the lit ones chasing
@@ -57,6 +57,10 @@ export const marquee = defineContraption({
     const step = Math.floor(u * STEPS)
     const all = fired > 0.35
 
+    // The sign hangs in the cell, but the cell is still a piece of the ring
+    // floor: without the ground line it read as a hole in the floor.
+    outline(p, ink, weight)
+    ground(p, k, 1)
     solid(p, ink, weight, s.color)
     p.beginShape()
     for (const [x, y] of ARROW) p.vertex(x * k, y * k)

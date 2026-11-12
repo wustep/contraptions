@@ -36,6 +36,10 @@ export const metronome = defineContraption({
     p.line(0, pivotY, tipX, tipY)
 
     solid(p, ink, weight, s.color)
-    p.rect(bobX, bobY, size * 0.2, size * 0.11)
+    p.push()
+    p.translate(bobX, bobY)
+    p.rotate(theta)
+    p.rect(0, 0, size * 0.2, size * 0.11)
+    p.pop()
   },
 })

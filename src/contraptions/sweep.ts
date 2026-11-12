@@ -16,7 +16,10 @@ export const sweep = defineContraption({
     p.push()
     p.noStroke()
     p.fill(s.color)
-    p.arc(0, 0, r * 2, r * 2, a - s.trail, a, p.PIE)
+    // The wedge is what the hand just swept past, so it sits on the side the
+    // hand came from.
+    const from = s.dir > 0 ? a - s.trail : a
+    p.arc(0, 0, r * 2, r * 2, from, from + s.trail, p.PIE)
     p.pop()
 
     outline(p, ink, weight)

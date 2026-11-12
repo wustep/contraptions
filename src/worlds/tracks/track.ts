@@ -31,6 +31,8 @@ export interface SegState {
   color: string
   kind: Kind
   variant: Variant
+  /** For a gate: the share of its period a ball takes to cross the cell. */
+  beat?: number
 }
 
 type Pt = [number, number]
@@ -177,14 +179,19 @@ export function drawTrack(
       }
       floorLine(p, k, -0.5, 0.5)
       if (s.variant === 'gate') {
-        // A flap hung from a bracket; the ball shoulders it open and it swings shut.
-        const open = easeOutCubic(seg(u, 0, 0.05)) - easeInOutCubic(seg(u, 0.1, 0.24))
+        // A flap hung from a bracket; the ball shoulders it open and it
+        // swings shut. Timed in beats: the clock starts a quarter of the
+        // way across, the flap is up by the time the ball reaches it, and it
+        // drops once the ball is out. Timed against the period instead, the
+        // ball rolled through a shut flap and it opened after.
+        const b = s.beat ?? 1
+        const open = easeOutCubic(seg(u, 0, 0.2 * b)) - easeInOutCubic(seg(u, 1.0 * b, 1.6 * b))
         const hinge = FLOOR - D - 0.12
         p.line(0.08 * k, hinge * k, 0.08 * k, (hinge - 0.12) * k)
         p.line(-0.04 * k, (hinge - 0.12) * k, 0.2 * k, (hinge - 0.12) * k)
         p.push()
         p.translate(0.08 * k, hinge * k)
-        p.rotate(open * 1.1)
+        p.rotate(open * 1.3)
         solid(p, ink, weight, s.color)
         p.rect(0, ((FLOOR - hinge) / 2 - 0.015) * k, 0.07 * k, (FLOOR - hinge - 0.03) * k)
         p.pop()

@@ -13,7 +13,9 @@ export const conveyor = defineContraption({
   setup: ({ color, rng }) => ({ color, dir: rng.sign() }),
   draw: (p, s, { size, u, ink, weight }) => {
     const roller = size * 0.15
-    const span = size * 0.3
+    // The crates wrap across the whole cell, so the belt has to reach the
+    // cell edges too — a belt shorter than the crates' run left them floating.
+    const span = size / 2 - roller
     const spacing = size / 3
     const crate = size * 0.2
     const travel = mod(u * s.dir, 1) * spacing * 3
@@ -25,7 +27,7 @@ export const conveyor = defineContraption({
       p.arc(-span, 0, roller * 2, roller * 2, Math.PI / 2, Math.PI * 1.5)
       p.arc(span, 0, roller * 2, roller * 2, Math.PI * 1.5, Math.PI / 2)
       p.line(-span, 0, span, 0)
-      for (let i = -2; i <= 3; i++) {
+      for (let i = 0; i < 3; i++) {
         const x = mod(i * spacing + travel, spacing * 3) - spacing * 1.5
         solid(p, ink, weight, s.color)
         p.rect(x, -roller - crate / 2, crate, crate)

@@ -18,7 +18,12 @@ export const beltDrive = defineContraption({
     const run = cx * 2
     const arc = Math.PI * r
     const perim = run * 2 + arc * 2
-    const rot = u * Math.PI * 2 * s.dir
+    // The rim turns with the belt: one loop moves the belt `perim`, which is
+    // perim / r radians of wheel. Snapped to a whole number of spoke pitches
+    // so the wheel closes the loop where it started.
+    const pitch = (Math.PI * 2) / s.spokes
+    const turns = Math.max(1, Math.round(perim / r / pitch)) * pitch
+    const rot = u * turns * s.dir
 
     outline(p, ink, weight)
     p.line(-cx, -r, cx, -r)
@@ -31,9 +36,10 @@ export const beltDrive = defineContraption({
       p.translate(x, 0)
       p.rotate(rot)
       outline(p, ink, weight)
-      p.circle(0, 0, r * 1.5)
+      // The rim sits on the belt. Drawn smaller, the belt ran round empty air.
+      p.circle(0, 0, r * 2)
       for (let i = 0; i < s.spokes; i++) {
-        p.line(0, 0, r * 0.75, 0)
+        p.line(0, 0, r, 0)
         p.rotate((Math.PI * 2) / s.spokes)
       }
       p.pop()

@@ -26,14 +26,27 @@ export interface ReactorState {
   face: Face
   /** Which way the ball travels past, +1 for east or south. */
   dir: number
+  /**
+   * How much of this reactor's period a ball takes to cross the cell beside
+   * it. The period is the interval between balls, but the knock has to be
+   * over while the ball is still there, so the flick is timed in beats.
+   */
+  beat?: number
 }
 
 export interface Reactor extends Contraption<ReactorState> {
   faces: Face[]
 }
 
-/** A flick: out fast, back with a little settle. */
-const flick = (u: number) => easeOutCubic(seg(u, 0, 0.05)) - easeInOutCubic(seg(u, 0.09, 0.3))
+/**
+ * A flick: out fast, back with a little settle. Timed against the transit
+ * of the ball, so the feeler is knocked while the ball is passing and
+ * settles once it has gone, however long the gap to the next ball.
+ */
+const flick = (u: number, s: ReactorState) => {
+  const b = s.beat ?? 1
+  return easeOutCubic(seg(u, 0, 0.3 * b)) - easeInOutCubic(seg(u, 0.5 * b, 1.6 * b))
+}
 
 /** Where the ball's top is, in a reactor's frame, for a run in the cell below. */
 const BALL_TOP_BELOW = 1 + BY - D / 2
@@ -44,7 +57,7 @@ const BALL_BOTTOM_ABOVE = -1 + FLOOR
 function hangingFeeler(p: p5, k: number, ink: string, weight: number, color: string, s: ReactorState, u: number): void {
   p.push()
   p.translate(0, 0.5 * k)
-  p.rotate(-s.dir * flick(u) * 0.55)
+  p.rotate(-s.dir * flick(u, s) * 0.55)
   outline(p, ink, weight)
   p.line(0, 0, 0, (BALL_TOP_BELOW - 0.5 + 0.04) * k)
   solid(p, ink, weight, color)
@@ -53,8 +66,8 @@ function hangingFeeler(p: p5, k: number, ink: string, weight: number, color: str
 }
 
 /** A pin poking up through the floor of the run above, pressed as the ball rolls over. */
-function pedal(p: p5, k: number, ink: string, weight: number, color: string, u: number): void {
-  const press = flick(u) * 0.05
+function pedal(p: p5, k: number, ink: string, weight: number, color: string, s: ReactorState, u: number): void {
+  const press = flick(u, s) * 0.05
   outline(p, ink, weight)
   p.line(0, -0.5 * k, 0, (BALL_BOTTOM_ABOVE - 0.04 + press) * k)
   solid(p, ink, weight, color)
@@ -104,7 +117,7 @@ export const bell: Reactor = {
     // The clapper: hinged inside the bell, hanging on through the floor to the ball.
     p.push()
     p.translate(0, (-0.4 + bh * 0.5) * k)
-    p.rotate(-s.dir * flick(u) * 0.4)
+    p.rotate(-s.dir * flick(u, s) * 0.4)
     outline(p, ink, weight)
     p.line(0, 0, 0, (BALL_TOP_BELOW + 0.04 + 0.4 - bh * 0.5) * k)
     solid(p, ink, weight, s.color)
@@ -214,10 +227,12 @@ export const ratchet: Reactor = {
   rotations: [0],
   setup: ({ color }) => ({ color, face: 'N', dir: 1 }),
   draw: (p, s, { size: k, u, ink, weight }) => {
-    // One notch of eight per pass; the wheel is 8-fold symmetric so the loop closes.
+    // One notch of eight per pass. Everything on the wheel repeats eight
+    // times round, so the clock resetting after a notch is invisible; a
+    // single marked spoke snapped back a notch every time a ball went by.
     const step = easeInOutCubic(seg(u, 0.02, 0.14))
     const a = (step * Math.PI * 2) / 8
-    pedal(p, k, ink, weight, s.color, u)
+    pedal(p, k, ink, weight, s.color, s, u)
     outline(p, ink, weight)
     p.line(-0.5 * k, 0.5 * k, 0.5 * k, 0.5 * k)
     p.line(0, -0.5 * k, 0, -0.16 * k)
@@ -228,8 +243,11 @@ export const ratchet: Reactor = {
     p.circle(0, 0, 0.5 * k)
     teeth(p, 0.25 * k, 8, 0.07 * k)
     solid(p, ink, weight, s.color)
-    p.line(0, 0, 0.25 * k, 0)
-    p.circle(0.25 * k, 0, 0.09 * k)
+    for (let i = 0; i < 8; i++) {
+      p.line(0, 0, 0.25 * k, 0)
+      p.circle(0.25 * k, 0, 0.07 * k)
+      p.rotate(Math.PI / 4)
+    }
     p.pop()
     solid(p, ink, weight, s.color)
     p.circle(0, 0.1 * k, 0.09 * k)
@@ -264,7 +282,7 @@ export const dominoes: Reactor = {
     // The lever, hinged at the edge: long arm into the tube, short arm at the bars.
     p.push()
     p.translate(-0.5 * k, 0.16 * k)
-    p.rotate(flick(u) * 0.5)
+    p.rotate(flick(u, s) * 0.5)
     outline(p, ink, weight)
     p.line(0, 0, -0.42 * k, -0.24 * k)
     p.line(0, 0, 0.16 * k, -0.14 * k)

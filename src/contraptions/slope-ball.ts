@@ -8,6 +8,8 @@ export const slopeBall = defineContraption({
   tags: ['track', 'ball'],
   role: 'source',
   fireAt: 0.92,
+  // Gravity gives this one an up: turned, the ball ran up the chute.
+  rotations: [0],
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size, u, ink, weight }) => {
     const d = size * 0.3
