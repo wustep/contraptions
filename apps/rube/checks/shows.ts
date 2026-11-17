@@ -11,7 +11,7 @@ import { modeFromPath } from '../../../src/ui/mode-path'
 import { MODE_LINKS } from '../../../src/ui/shell'
 import { SHOW_SPEEDS, Transport, clockText } from '../src/shows/clock'
 import { SPEEDS, speedLabel } from '../../../src/ui/view'
-import { RENAMED_TAKES, favorites, performanceProblems, pickVersion, placeCard, readShows, sectionOf, shelves, versionPath, zoomed, type Performance, type ShowVersion, musicOnYouTube } from '../src/shows/registry'
+import { DEFAULT_TAKE, RENAMED_TAKES, favorites, performanceProblems, pickVersion, placeCard, readShows, sectionOf, shelves, versionPath, zoomed, type Performance, type ShowVersion, musicOnYouTube } from '../src/shows/registry'
 import { showFromPath, showPath } from '../src/shows/share'
 import { ranOut } from '../src/shows/youtube'
 import { combineSoundtracks } from '../src/shows/soundtrack'
@@ -93,9 +93,15 @@ async function main(): Promise<void> {
   check('the switch is four modes, always', MODE_LINKS.map((m) => m.mode).join() === 'explorations,machine,playground,shows')
   check('a tab is the path it has always been', modeFromPath('/machine/') === 'machine' && modeFromPath('/explorations/') === 'explorations' && modeFromPath('/shows/') === 'shows' && modeFromPath('/playground/') === 'playground')
   check('a deep link without the slash, or with index.html, is the same tab', modeFromPath('/shows') === 'shows' && modeFromPath('/shows/index.html') === 'shows' && modeFromPath('/machine') === 'machine' && modeFromPath('/machine/index.html') === 'machine')
-  check('the site root only forwards to Machine', modeFromPath('/') === null && modeFromPath('/index.html') === null)
+  check('the site root only forwards, to Clair de Lune', modeFromPath('/') === null && modeFromPath('/index.html') === null)
   const door = readFileSync(join(process.cwd(), 'index.html'), 'utf8')
-  check('the front door keeps the query on the way to Machine', door.includes("location.replace('/machine/' + location.search + location.hash)"))
+  check('the front door keeps the query on the way to Clair de Lune', door.includes("location.replace('/shows/clair-de-lune/' + location.search + location.hash)") && door.includes('url=/shows/clair-de-lune/"'))
+  check('the front door still points the way to Machine', door.includes('href="/machine/"'))
+  const vercel = JSON.parse(readFileSync(join(process.cwd(), 'vercel.json'), 'utf8')) as { redirects: { source: string; destination: string; permanent: boolean }[] }
+  const rootRedirect = vercel.redirects.find((r) => r.source === '/')
+  check('Vercel sends / to Clair de Lune, temporarily', rootRedirect?.destination === '/shows/clair-de-lune/' && rootRedirect.permanent === false)
+  const clairShow = showFromPath('/shows/clair-de-lune/')
+  check('/shows/clair-de-lune/ names the work and no take, so it opens Take B', clairShow?.work === 'clair-de-lune' && clairShow.take === null && DEFAULT_TAKE === 'take-b')
   // The old addresses forward straight to where their mode lives now, in one hop, keeping the query.
   for (const [old, to] of [['sandbox', '/explorations/'], ['rube', '/machine/']]) {
     const forward = readFileSync(join(process.cwd(), `${old}/index.html`), 'utf8')

@@ -16,8 +16,9 @@ import { cardPath, showCard, showPath, type ShareCard } from './apps/rube/src/sh
  *   /playground/     pieces and worlds waiting to be let into Machine (apps/rube/src/playground)
  *   /builder/        where new pieces and worlds are made (apps/rube/src/builder); not on the switch
  *
- * `/` forwards to `/machine/`, `/sandbox/` (where Explorations used to live)
- * to `/explorations/`, and `/rube/` (where Machine did) to `/machine/`, each
+ * `/` forwards to Clair de Lune (`/shows/clair-de-lune/`, Take B), `/sandbox/`
+ * (where Explorations used to live) to `/explorations/`, and `/rube/` (where
+ * Machine did) to `/machine/`, each
  * keeping the query. On Vercel all three are temporary redirects
  * (vercel.json), so a link unfurler reads the card of where they go; the
  * forwarding pages carry that card too, for any other host.
@@ -32,20 +33,22 @@ import { cardPath, showCard, showPath, type ShareCard } from './apps/rube/src/sh
 const here = fileURLToPath(new URL('.', import.meta.url))
 
 /**
- * `/` is Machine's old address. Send it on to `/machine/`, query included.
- * Vercel answers `/` with a temporary redirect too (vercel.json), so a link
- * unfurler lands on Machine's card. The built page does the same with a
+ * `/` opens Clair de Lune, the show the site leads with: send it on to `/shows/clair-de-lune/` (Take B, the take a
+ * link to the work opens), query included. Machine stays at `/machine/`. Vercel answers `/` with a temporary
+ * redirect too (vercel.json), so a link unfurler lands on the show's own card. The built page does the same with a
  * script, and carries that card itself, so any other static host agrees.
  */
-function rootToMachine(): Plugin {
+const ROOT = '/shows/clair-de-lune/'
+
+function rootToClair(): Plugin {
   const redirect: Connect.NextHandleFunction = (req, res, next) => {
     const m = /^\/(\?.*)?$/.exec(req.url ?? '')
     if (!m) return next()
-    res.writeHead(302, { Location: `/machine/${m[1] ?? ''}` })
+    res.writeHead(302, { Location: `${ROOT}${m[1] ?? ''}` })
     res.end()
   }
   return {
-    name: 'root-to-machine',
+    name: 'root-to-clair',
     configureServer: (server) => { server.middlewares.use(redirect) },
     configurePreviewServer: (server) => { server.middlewares.use(redirect) },
   }
@@ -191,7 +194,7 @@ function playgroundStaysLazy(): Plugin {
 
 export default defineConfig({
   appType: 'mpa',
-  plugins: [rootToMachine(), trailingSlash(), showPages(), playgroundStaysLazy()],
+  plugins: [rootToClair(), trailingSlash(), showPages(), playgroundStaysLazy()],
   // Share cards and other files that must land at the site root (`/og.png`).
   publicDir: 'public',
   server: { port: 8791, open: false },

@@ -48,6 +48,7 @@ Vercel runs only the site build (`npm run build:site`, set in `vercel.json`), an
 
 | Path | What is there |
 | --- | --- |
+| `/` | Clair de Lune (Take B), forwarding to `/shows/clair-de-lune/` |
 | `/machine/` | Machine |
 | `/explorations/` | Explorations |
 | `/shows/` | Shows, opening on Clair de Lune |
@@ -57,13 +58,13 @@ Vercel runs only the site build (`npm run build:site`, set in `vercel.json`), an
 | `/playground/` | Playground |
 | `/builder/` | the Builder (hidden) |
 
-Old links still work. `/` goes to `/machine/`, `/sandbox/` to `/explorations/` and `/rube/` to `/machine/`, all keeping the query. `/shows/?show=<work>&take=<take>` still opens a show, and so does `/theater/?show=<work>&take=<take>`. A take that has been renamed still opens at its old address (`/shows/la-la-land/opus55-sebs/` is now `/shows/la-la-land/opus5-5/`). A path without its trailing slash works too. `<work>` and `<take>` are folder and file names under `apps/rube/src/shows/versions/`; see its README.
+`/` goes to `/shows/clair-de-lune/`, keeping the query. Old links still work: `/sandbox/` to `/explorations/` and `/rube/` to `/machine/`, all keeping the query. `/shows/?show=<work>&take=<take>` still opens a show, and so does `/theater/?show=<work>&take=<take>`. A take that has been renamed still opens at its old address (`/shows/la-la-land/opus55-sebs/` is now `/shows/la-la-land/opus5-5/`). A path without its trailing slash works too. `<work>` and `<take>` are folder and file names under `apps/rube/src/shows/versions/`; see its README.
 
 ## Where things are
 
 ```
 machine/, explorations/, shows/, theater/, playground/, builder/   one page per mode
-index.html, sandbox/, rube/     old addresses, which only redirect
+index.html, sandbox/, rube/     forwarding addresses, which only redirect
 src/                          Explorations, and what every mode shares
   core/  contraptions/  worlds/  ui/
 apps/rube/                    Machine, and the modes built on it
