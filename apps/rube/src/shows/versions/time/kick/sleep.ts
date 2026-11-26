@@ -1,4 +1,4 @@
-import { R, type Pt } from '../../../../parts'
+import { R, mixHex, type Pt } from '../../../../parts'
 import { rgba } from './cast'
 import { box, frame, hash, scenery } from './kit'
 import { SEAM } from './music'
@@ -21,10 +21,11 @@ const FEATHER = 1.4
  * with the streak of his climb behind it, all the way up, not only where he crosses the dark. So too whenever the
  * frame is out that far on the dream (`dream`, his legs in it; Overview sees the whole stack the whole time).
  */
-let wide: { where: (t: number) => Pt; spans: [number, number][]; dream: [number, number][]; awake: [number, number][] } | null = null
+let wide: { where: (t: number) => Pt; spans: [number, number, number?][]; dream: [number, number][]; awake: [number, number][] } | null = null
 /** How tall a frame (cells) is far enough out on the stack for him to be drawn as a spark. */
 const FAR_OUT = 40
-export function sparkInWides(where: (t: number) => Pt, spans: [number, number][], dream: [number, number][], awake: [number, number][] = []): void {
+/** A span may name the moment the throw it shows began (before the cut out to it): its streak goes back that far. */
+export function sparkInWides(where: (t: number) => Pt, spans: [number, number, number?][], dream: [number, number][], awake: [number, number][] = []): void {
   wide = { where, spans, dream, awake }
 }
 
@@ -82,21 +83,63 @@ export const sleep = scenery<null>({
     for (const [a, b] of span ? [span] : []) {
       if (!wide || t < a || t > b) continue
       const at = wide.where(t)
-      // The streak: where he was over the last half second, thinning and fading back along his climb.
+      // The streak: where he was over the last half second, thinning and fading back along his climb. In the director's
+      // great wide it is the throw itself, the one thing going up through a dream that is coming down: his own colour,
+      // firm at his heels and paling back down the column over the last second and more of his climb (pale and half a
+      // second long, at a hundred cells it was a hair that could not be found).
+      const own = wide.spans.find(([g0, g1]) => t >= g0 && t <= g1)
+      const great = !!own
+      const since = own?.[2] ?? a
       ctx.save()
-      ctx.lineCap = 'round'
-      for (let j = 0; j < 10; j++) {
-        const s0 = Math.max(a, t - j * 0.05)
-        const s1 = Math.max(a, t - (j + 1) * 0.05)
-        if (s1 >= s0) break
-        const p0 = wide.where(s0)
-        const p1 = wide.where(s1)
-        ctx.strokeStyle = rgba(SLEEP.mote, 0.5 * (1 - j / 10))
-        ctx.lineWidth = Math.max(1, 2 * R * k * (1 - j / 12))
-        ctx.beginPath()
-        ctx.moveTo(p0[0] * k, p0[1] * k)
-        ctx.lineTo(p1[0] * k, p1[1] * k)
-        ctx.stroke()
+      if (great) {
+        // One tapered stroke, his colour at his heels paling to nothing back down the column (laid as overlapping
+        // round-ended pieces, each a little fainter, it read as a string of dots).
+        const pts: Pt[] = []
+        for (let j = 0; j <= 28; j++) {
+          const s0 = t - j * 0.05
+          if (s0 < since) break
+          pts.push(wide.where(s0))
+        }
+        if (pts.length > 1) {
+          const half = (j: number) => Math.max(0.5, R * k * (1 - (0.75 * j) / (pts.length - 1)))
+          const side = (sgn: number) => pts.map((q, j): Pt => {
+            const n = pts[Math.min(pts.length - 1, j + 1)]
+            const m = pts[Math.max(0, j - 1)]
+            const dx = m[0] - n[0]
+            const dy = m[1] - n[1]
+            const L = Math.hypot(dx, dy) || 1
+            return [q[0] * k + (sgn * -dy * half(j)) / L, q[1] * k + (sgn * dx * half(j)) / L]
+          })
+          const left = side(1)
+          const right = side(-1).reverse()
+          const head = pts[0]
+          const tail = pts[pts.length - 1]
+          const g = ctx.createLinearGradient(head[0] * k, head[1] * k, tail[0] * k, tail[1] * k)
+          g.addColorStop(0, rgba(COBB, 0.95))
+          g.addColorStop(0.45, rgba(mixHex(COBB, SLEEP.mote, 0.5), 0.6))
+          g.addColorStop(1, rgba(SLEEP.mote, 0))
+          ctx.fillStyle = g
+          ctx.beginPath()
+          ctx.moveTo(left[0][0], left[0][1])
+          for (const q of [...left.slice(1), ...right]) ctx.lineTo(q[0], q[1])
+          ctx.closePath()
+          ctx.fill()
+        }
+      } else {
+        ctx.lineCap = 'round'
+        for (let j = 0; j < 10; j++) {
+          const s0 = Math.max(a, t - j * 0.05)
+          const s1 = Math.max(a, t - (j + 1) * 0.05)
+          if (s1 >= s0) break
+          const p0 = wide.where(s0)
+          const p1 = wide.where(s1)
+          ctx.strokeStyle = rgba(SLEEP.mote, 0.5 * (1 - j / 10))
+          ctx.lineWidth = Math.max(1, 2 * R * k * (1 - j / 12))
+          ctx.beginPath()
+          ctx.moveTo(p0[0] * k, p0[1] * k)
+          ctx.lineTo(p1[0] * k, p1[1] * k)
+          ctx.stroke()
+        }
       }
       ctx.restore()
       // The spark is the ball's own size, and never under four pixels across: drawn bigger (a disc twice and more his

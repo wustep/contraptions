@@ -297,6 +297,9 @@ function drawLift(pen: Pen, t: number): void {
   line(pen, [SLOT.x0 + 0.03, ROOF], [SLOT.x0 + 0.03, wy + CW.h + 0.08], ROPE, 0.8)
   line(pen, [SLOT.x1 - 0.03, ROOF + TOWER.roofSlab], [SLOT.x1 - 0.03, wy + CW.h + 0.08], ROPE, 0.8)
   line(pen, [SLOT.x0 + 0.03, wy + CW.h + 0.08], [SLOT.x1 - 0.03, wy + CW.h + 0.08], ROPE, 0.8)
+  // The live fall runs as the cabin goes (the other is made fast at the roof and stands still): its splices go by.
+  const paid = GROUND - cabinY(t)
+  for (let y = ROOF + 0.3 + (((paid % 1.3) + 1.3) % 1.3); y < wy + CW.h; y += 1.3) line(pen, [SLOT.x0 - 0.005, y], [SLOT.x0 + 0.065, y], ROPE, 1.3)
   box(pen, wx0, wy, wx1, wy + CW.h, mixHex(CONCRETE, CONCRETE_DARK, 0.35), 0.7)
   box(pen, wx0 - 0.03, wy - 0.02, wx1 + 0.03, wy + 0.05, IRON, 0.6)
   box(pen, CW.x - 0.12, wy + CW.h + 0.03, CW.x + 0.12, wy + CW.h + 0.12, IRON, 0.5)
@@ -329,17 +332,20 @@ function drawLiftFront(pen: Pen, t: number): void {
   }
   // The bolt at the room: a bar shot from the cabin's post across the doorway into the weight's deck.
   const bo = bolt(t)
-  const by = ROOM - 0.42
+  // The bolt and its housing are the cabin's and ride with it; its keeper is the weight's.
+  const by = cy - 0.42
   const near = Math.abs(cy - ROOM) < 0.02
   if (near || bo > 0.01) {
     const bx0 = cx1 - 0.16
     const bx1 = lerp(cx1 + 0.02, SLOT.x0 + 0.06, bo)
     box(pen, bx0, by - 0.03, bx1, by + 0.03, IRON, 0.6)
     box(pen, cx1 - 0.18, by - 0.07, cx1 - 0.02, by + 0.07, IRON, 0.6)
-    // Its keeper on the weight's deck post.
-    const wy = weightY(t)
+  }
+  // Its keeper on the weight's deck post (while the weight is up at the room).
+  const wy = weightY(t)
+  if (wy < ROOM + 0.6 && wy > ROOM - 0.2) {
     line(pen, [SLOT.x0 + 0.04, wy], [SLOT.x0 + 0.04, wy - 0.5], IRON, 0.8)
-    box(pen, SLOT.x0 + 0.01, by - 0.06, SLOT.x0 + 0.1, by + 0.06, null, 0.6, IRON)
+    box(pen, SLOT.x0 + 0.01, wy - 0.48, SLOT.x0 + 0.1, wy - 0.36, null, 0.6, IRON)
   }
   // The lever on the post: home, taken, pulled.
   // Long enough, and its knob pale enough, to be seen against the cage's dark: it is his choice, and it was an iron
@@ -367,12 +373,22 @@ function boards(pen: Pen, x0: number, x1: number, y0: number, y1: number): void 
  * The tower's front below their room: always there (the doll's house opens only where he is: the lift, the room). A
  * dark slit runs down it under the weight's slot: what goes down there goes into the dark.
  */
-function drawFrontLower(pen: Pen): void {
+function drawFrontLower(pen: Pen, cut: number): void {
   const { x0, x1 } = TOWER
   const top = ROOM + FLOOR_SLAB
-  box(pen, x0, top, x1, GROUND, CONCRETE_DUSK, 0.8)
-  vwash(pen, x0, x1, top, GROUND, [
-    [0, LIMBO.skyWarm, 0.1],
+  // In two pieces round the slit, and one under it.
+  box(pen, x0, top, SLOT.x0, GROUND, CONCRETE_DUSK, 0)
+  box(pen, SLOT.x1, top, x1, GROUND, CONCRETE_DUSK, 0)
+  box(pen, SLOT.x0 - 0.01, top + 2.59, SLOT.x1 + 0.01, GROUND, CONCRETE_DUSK, 0)
+  box(pen, x0, top, x1, GROUND, null, 0.8)
+  for (const [a, b] of [[x0, SLOT.x0], [SLOT.x1, x1]] as const) {
+    vwash(pen, a, b, top, GROUND, [
+      [0, LIMBO.skyWarm, 0.1],
+      [1, LIMBO.seaDeep, 0.12],
+    ])
+  }
+  vwash(pen, SLOT.x0, SLOT.x1, top + 2.6, GROUND, [
+    [0, LIMBO.skyWarm, 0.1 * (1 - 2.6 / (GROUND - top))],
     [1, LIMBO.seaDeep, 0.12],
   ])
   for (const fy of FLOORS) if (fy < ROOM - 0.01 || fy > ROOM + 0.01) line(pen, [x0, fy], [x1, fy], mixHex(pen.ink, CONCRETE_DUSK, 0.45), 0.55)
@@ -391,8 +407,21 @@ function drawFrontLower(pen: Pen): void {
     }
   }
   boards(pen, x0, x1, top, GROUND)
-  // The slit: black under the room's floor, fading into the concrete further down.
-  box(pen, SLOT.x0, top, SLOT.x1, top + 2.6, SLEEP.deep, 0.6)
+  // The slit: black under the room's floor, fading into the concrete further down. While the tower is cut away it is
+  // seen into: the weight hangs in it under the room's floor, and what goes down it goes into the dark by degrees
+  // (shut black from the floor's line, she was gone in the frame she began to sink, and nothing said a weight hung
+  // there at all).
+  const open = Math.min(1, cut)
+  const a = (v: number) => 1 - open * (1 - v)
+  vwash(pen, SLOT.x0, SLOT.x1, top, top + 2.6, [
+    [0, SLEEP.deep, a(0.1)],
+    [0.3, SLEEP.deep, a(0.42)],
+    [0.56, SLEEP.deep, a(0.8)],
+    [0.74, SLEEP.deep, a(0.97)],
+    [0.8, SLEEP.deep, 1],
+    [1, SLEEP.deep, 1],
+  ])
+  box(pen, SLOT.x0, top, SLOT.x1, top + 2.6, null, 0.6)
   vwash(pen, SLOT.x0 + 0.01, SLOT.x1 - 0.01, top + 1.6, top + 2.6, [
     [0, SLEEP.deep, 0],
     [1, CONCRETE_DUSK, 1],
@@ -455,6 +484,8 @@ function drawFrontAnnex(pen: Pen): void {
 export function drawTowerBack(pen: Pen, t: number, f: Frame): void {
   if (!seen(f)) return
   const cut = cutaway(t)
+  // The slot's back, behind the slit in the front.
+  box(pen, SLOT.x0, ROOM - 0.02, SLOT.x1, ROOM + 3.0, SHAFT, 0)
   if (cut > 0.001) {
     drawInside(pen)
     drawRoom(pen, t, lamp(t))
@@ -473,13 +504,13 @@ export function drawTowerFront(pen: Pen, t: number, f: Frame): void {
     // above it, it darkened him in hard-edged halves as he rolled across the slot from the cage).
     vwash(pen, SLOT.x0, SLOT.x1, ROOM, ROOM + FLOOR_SLAB, [
       [0, SLEEP.deep, 0],
-      [1, SLEEP.deep, 0.85],
+      [1, SLEEP.deep, 0.1],
     ])
     // The ladder's corner under the hatch is out of the lamp's light.
     soft(pen, LADDER.x, (ROOF + ROOM) / 2 - 0.4, 0.42, 1.5, SLEEP.deep, 0.35)
   }
   // The front of the tower: below the room always; the lift and the room closing over when he is not inside.
-  drawFrontLower(pen)
+  drawFrontLower(pen, cut)
   faded(pen, 1 - cut, () => {
     drawFrontUpper(pen, Math.min(1, lamp(t)))
     drawFrontAnnex(pen)

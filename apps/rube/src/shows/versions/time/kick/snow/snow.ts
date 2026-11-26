@@ -110,9 +110,11 @@ function snowShots(begin: number): PartShot[] {
   void begin
   const cut = (k: PartShot): PartShot => ({ ...k, cut: true })
   return [
-    // Out of the dark with them; down on the shoulder under the summit, the sky over them.
-    follow(T.in + 0.5, 6.0, 0, 0.8),
-    hold(T.land + 0.35, 6.4, 9.4, 46.3),
+    // The swell: a cut, on the downbeat, out of the dark to the whole mountain in its light: the summit, the shoulder
+    // they come down on, the fortress under it (followed down, the dark was still half the frame on the downbeat and
+    // the mountain came up over the next second). Then in on them with the orchestra, all the way to the cornice.
+    cut(hold(T.in + 0.001, 16.4, 6.0, 47.1)),
+    hold(T.land + 0.2, 15.0, 6.2, 47.2),
     hold(T.dropC, 7.2, 7.4, 47.0),
     // Close after them down the face, leading them, the fortress's roof going by under them.
     follow(T.dropF + 0.7, 7.4, -1.1, 0.6),
@@ -131,18 +133,27 @@ function snowShots(begin: number): PartShot[] {
     hold(T.cutJ2 - 0.05, 11.2, -16.1, 52.5),
     cut(hold(T.cutJ2, 7.6, -10.2, 54.6)),
     // The ledge and the gate: Fischer goes in.
-    hold(T.stopC + 0.2, 7.8, -8.9, 54.9),
-    hold(T.gate + 0.5, 8.0, -6.6, 55.0),
+    // (A little east of where it was: the guard pulled up at the crevasse's edge was sliced by the frame's left side.)
+    hold(T.stopC + 0.2, 7.8, -8.0, 54.9),
+    // Fischer goes on alone, through the gate and down the hall to his father's door: in after him, the two of them
+    // left on the ledge (held wide on all three, he was a pale speck creeping into the dark for three seconds, and
+    // nobody could say afterwards who had been shot; and Mal's rifle poked in at the frame's top before her cut).
+    hold(T.gate + 0.25, 7.3, -7.3, 55.05),
+    hold(T.malCut - 0.03, 4.8, -3.1, 55.05),
     // Cut to Mal, close, still on the piste above the ledge, bringing the rifle up; the shot; back to Fischer going
     // down at the vault's door, and Cobb off the ledge too late.
     cut(hold(T.malCut, 4.0, -10.6, 50.85)),
     hold(T.shot + 0.3, 3.8, -10.55, 50.9),
     cut(hold(T.malBack, 7.4, -5.2, 55.0)),
-    // Down with Cobb to the gate; the case; they lie down and go under.
-    hold(T.cLand3 + 0.8, 7.0, -7.9, 55.1),
+    // Held on the two ends of it, him knocked down at the door and going under, Cobb off the ledge too late; then down
+    // with Cobb to the gate; the case; they lie down and go under.
+    hold(T.cLand3 + 0.75, 7.4, -5.45, 55.0),
+    hold(T.aLand3 + 0.7, 7.0, -7.9, 55.1),
     hold(T.case, 5.8, -8.1, 55.3),
     follow(T.sink + 1.2, 6.2, 0, 0.6),
-    follow(T.out - 0.1, 7.0, 0, 0.8),
+    follow(T.out - 0.9, 6.4, 0, 0.3),
+    // Into the dark with them, the frame coming up over them: limbo's sky is not seen before its downbeat.
+    follow(T.out, 5.6, 0, -1.35),
   ]
 }
 
@@ -184,6 +195,7 @@ function vaultShots(): PartShot[] {
   const O = ORIGIN.vault
   const hold = (t: number, cells: number, x: number, y: number): PartShot => ({ t, cells, hold: local(O, [x, y]), w: 1 })
   const follow = (t: number, cells: number, ox = 0, oy = 0): PartShot => ({ t, cells, w: 0, off: [ox, oy] })
+  const cut = (k: PartShot): PartShot => ({ ...k, cut: true })
   return [
     // Up out of the dark after them, through the valley and the floor.
     follow(T.vIn + 0.45, 8.4, 0, -0.6),
@@ -192,11 +204,14 @@ function vaultShots(): PartShot[] {
     hold(T.door, 4.6, 1.2, 55.0),
     // Close on him at his father's bed, the pinwheel.
     hold(T.pinwheel, 4.2, 1.35, 55.0),
-    hold(T.charges, 4.6, 1.2, 55.3),
-    // The fortress comes down under them; the kick throws them up out of it.
-    hold(T.kick, 6.4, 0.6, 57.1),
-    follow(T.kick + 0.45, 7.8, 0, 1.6),
-    follow(T.vOut, 8.6, 0, 1.4),
+    hold(T.charges - 0.02, 4.3, 1.3, 55.05),
+    // The charges: a cut out to the fortress whole, and for the beat it is seen to come down, all of it, into the
+    // footing they blew, the three of them riding its floor; on the downbeat it hits, and throws them up out through
+    // its roof. (The camera stayed inside on a floor sagging under them and left with them on the downbeat: the
+    // snow's kick had a thing that falls, and it was never seen to fall, nor to land.)
+    cut(hold(T.charges, 15, 0.4, 53.4)),
+    hold(T.kick, 13.2, 0.4, 54.7),
+    follow(T.vOut, 9.2, 0, 1.4),
   ]
 }
 

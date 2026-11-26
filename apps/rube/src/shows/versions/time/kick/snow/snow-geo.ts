@@ -61,7 +61,7 @@ export const T = {
   /* the vault */
   vIn: SEAM.vault,
   fUp: FISCHER_UP.t,
-  fThrough: beat(190),
+  fThrough: half(190),
   cThrough: beat(194),
   paddles: bar(49),
   wheel: half(196),
@@ -466,6 +466,12 @@ export const ARIADNE_SNOW = new Motion([
   sinkTo(LIE_A, REST_Y, DOWN.limbo.at[1] + DOWN.limbo.ariadne![1], T.sink, T.out),
 ])
 
+/**
+ * Mal's shot, at his end: he has stopped before the vault's door (`stop`), `by` short of where the stack has him go
+ * under; the blow knocks him that far along the floor (`from` to `to`: it is seen as the picture cuts back to him, half
+ * a beat after the shot is seen to leave her rifle), and there the floor takes him (`sink`).
+ */
+export const HIT = { by: 0.55, stop: T.shot - 0.35, from: T.shot + 0.4, to: T.shot + 0.82, sink: T.shot + 0.86 }
 /** Fischer's own way from the crevasse: down the lower branch, the gate, the antechamber to the vault door. */
 const F_J2 = T.j2Land + F_SHIFT
 /** He reaches the gate's threshold just after it has started up. */
@@ -482,9 +488,10 @@ function fischerIn(): Phase[] {
     1,
     LOWER_GATE,
   )
-  const T2x = T.shot - F_GATE_T
-  const L2 = LOWER.len - LOWER_GATE
-  const v2 = (2 * L2) / T2x - F_GATE_V
+  // Down the hall to his father's door, slowing, and still before it (he was still rolling as he was shot).
+  const T2x = HIT.stop - F_GATE_T
+  const L2 = LOWER.len - LOWER_GATE - HIT.by
+  const along = hermite(0, F_GATE_V, L2, 0, T2x)
   // Down the lower branch the skis lie along its line either side of him, so they turn through its first corner (along
   // the corner's two straights, they snapped round from level to steep in a frame).
   const line = (s: number): number => {
@@ -495,7 +502,10 @@ function fischerIn(): Phase[] {
   const skiOff = (t: number) => (t < F_GATE_T - 0.05 ? line(run(knots, t - F_J2)) : null)
   return [
     { t0: F_J2, t1: F_GATE_T, at: (t) => LOWER.at(run(knots, t - F_J2)), ski: skiOff },
-    { t0: F_GATE_T, t1: T.shot, at: (t) => LOWER.at(LOWER_GATE + F_GATE_V * (t - F_GATE_T) + (0.5 * (v2 - F_GATE_V) * (t - F_GATE_T) ** 2) / T2x) },
+    { t0: F_GATE_T, t1: HIT.stop, at: (t) => LOWER.at(LOWER_GATE + along(t - F_GATE_T)) },
+    { t0: HIT.stop, t1: HIT.from, at: () => [SHOT_X - HIT.by, REST_Y] },
+    // The blow: knocked along the floor to where it takes him, quick off it and dragging to a stop.
+    { t0: HIT.from, t1: HIT.sink, at: (t) => [SHOT_X - HIT.by * (1 - Math.min(1, (t - HIT.from) / (HIT.to - HIT.from))) ** 3, REST_Y] },
   ]
 }
 export const FISCHER_SNOW = new Motion([
@@ -504,8 +514,8 @@ export const FISCHER_SNOW = new Motion([
   slide(F_IN[0], F_LAND_T + 0.001, T.dropF, Y_REST),
   shifted(RUN, -F_SHIFT, T.dropF, F_J2),
   ...fischerIn(),
-  // Shot: he goes down into the floor at once and falls through the mountain into the dark (`FISCHER_DOWN`).
-  sinkTo2(SHOT_X, REST_Y, T.shot, FISCHER_DOWN.t),
+  // Shot: knocked down, he goes into the floor and falls through the mountain into the dark (`FISCHER_DOWN`).
+  sinkTo2(SHOT_X, REST_Y, HIT.sink, FISCHER_DOWN.t),
 ])
 /**
  * Shot, Fischer goes down into the floor slowly at first (a body going under, the floor soft), and once through it

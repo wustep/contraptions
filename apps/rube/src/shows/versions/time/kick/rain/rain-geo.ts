@@ -521,21 +521,25 @@ export function cobbRiver(t: number): Pt {
   if (t <= T_C_OUT) return sat(t, SEAT_U.cobb, T_LAND)
   return [keyed(C_OUT_X, t), keyed(C_OUT_Y, t)]
 }
-// Out of the door: pushed out clear of the van's side (its roof is toward the light now), drawn down a little in its
-// wake as it sinks away under him, then turned up toward the light, and up through the surface on the release.
+// He goes down with the van, the last one in it, to the river's bottom, where it is lost in the dark; on the crest
+// (the summit's last bar) he pushes out clear of its side, and the whole bar is his rise from the bottom to the light:
+// slowly at first, then faster and faster, and up through the surface on the release. (He got out just under the
+// surface, hung there going down beside it for three seconds, and came up in the last one.)
 const C_OUT0 = sat(T_C_OUT, SEAT_U.cobb, T_LAND)
 const C_OUT_V = vanVel(T_C_OUT)
 const PUSH = 1.2
+const C_RISE = C_OUT0[1] - C_END[1]
 const C_OUT_X: Key[] = [
   [T_C_OUT, C_OUT0[0], C_OUT_V[0] + PUSH * Math.sin(vanAt(T_C_OUT).angle)],
-  [beat(221), C_END[0], 0.15],
-  [T_TURN, C_END[0] + 0.05, 0],
+  [beat(221), C_END[0] + 0.14, 0.08],
+  [T_TURN, C_END[0] + 0.1, -0.06],
   [WAKE, C_END[0], 0],
 ]
 const C_OUT_Y: Key[] = [
   [T_C_OUT, C_OUT0[1], C_OUT_V[1] - PUSH * Math.cos(vanAt(T_C_OUT).angle)],
-  [beat(221), C_OUT0[1] + 0.13, 0.3],
-  [T_TURN, C_OUT0[1] + 0.53, 0],
+  [beat(221), C_OUT0[1] - 0.075 * C_RISE, -0.12 * C_RISE],
+  [T_TURN, C_OUT0[1] - 0.24 * C_RISE, -0.24 * C_RISE],
+  [beat(223), C_OUT0[1] - 0.54 * C_RISE, -0.44 * C_RISE],
   [WAKE, C_END[1], -2.4],
 ]
 

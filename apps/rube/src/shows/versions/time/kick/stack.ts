@@ -1,5 +1,5 @@
 import type { Pt } from '../../../../parts'
-import { BRASS, KICK, PEAK, RELEASE, SEAM, SWELL, bar, beat } from './music'
+import { BRASS, KICK, PEAK, RELEASE, SEAM, SWELL, bar, beat, half } from './music'
 
 /**
  * The dream, stacked (the director's; fixed: build to it). One world, `dream`, in four levels one under the other,
@@ -167,7 +167,7 @@ export const UP: Record<'snow' | 'hotel' | 'rain', Crossing> = {
     v: [0, -16.35],
     ariadne: [-0.5, 0.35],
     fischer: null,
-    what: 'out of limbo into the snow: they jumped off the tower\'s roof, fell, and on the summit\'s downbeat are thrown straight up; under gravity they come to rest on the vault\'s floor (y 56), where Fischer went before them',
+    what: 'out of limbo into the snow: they jumped off the tower\'s roof, fell its whole height, and on the summit\'s downbeat hit the ground at its foot and are thrown straight up; under gravity they come to rest on the vault\'s floor (y 56), where Fischer went before them',
   },
   hotel: {
     t: SEAM.lift,
@@ -215,7 +215,9 @@ export const local = (origin: Pt, at: Pt): Pt => [at[0] - origin[0], at[1] - ori
  * the column into the vault ahead of the others, where Eames's paddles wait.
  */
 export const FISCHER_DOWN: Crossing = {
-  t: bar(38) + 1.9,
+  // A beat later than it was: struck, he is knocked along the floor and lies a moment before it takes him (he went
+  // under in the instant he was shot, and was gone before the picture came back to him).
+  t: bar(38) + 2.85,
   at: [-1.2, 67],
   v: [0, 5],
   ariadne: null,
@@ -223,12 +225,14 @@ export const FISCHER_DOWN: Crossing = {
   what: 'Fischer alone, shot, sinking through the vault\'s floor; out of the dark he falls onto the tower\'s roof in limbo',
 }
 export const FISCHER_UP: Crossing = {
-  t: bar(47) + 0.6,
+  // Pushed on the beat before bar 47, he falls the tower's height and hits the ground at its foot (y 86.37) on bar 47's
+  // off-beat; thrown up from there under gravity, he crosses the dark 0.904 s later.
+  t: half(188) + (Math.sqrt(16 ** 2 + 2 * 12 * (86.37 - 67)) - 16) / 12,
   at: [0.7, 67],
   v: [0, -16],
   ariadne: null,
   fischer: null,
-  what: 'Fischer alone, pushed off the tower\'s roof and thrown up; he comes to rest on the vault\'s floor (y 56), on his back',
+  what: 'Fischer alone, pushed off the tower\'s roof; he hits the ground at its foot and is thrown up; he comes to rest on the vault\'s floor (y 56), on his back',
 }
 
 /* ------------------------------------------------------------------ where the ball is, and the clocks */
@@ -334,6 +338,8 @@ export const VAN = {
   water: [2.4, 7.3] as Pt,
   waterTilt: 0.9,
   size: [2.6, 1.15] as Pt,
+  /** How long it takes to go down from the surface to the bed (to the crest: bar 55). */
+  sink: bar(55) - KICK.rain,
 }
 export const OFF = VAN.off
 export const SPLASH = VAN.splash
@@ -352,6 +358,38 @@ const FLIP_TO = -2.4
 const FLIP_LIFT = 1.75
 /** Where its centre is as it goes off the edge. */
 const EDGE = 0.2
+/** Its axles: how far each is along it from its middle, and under it (the wheels' radius is 0.19, so level it rides 0.62 up). */
+const AXLE: Pt = [0.85, 0.43]
+/** How far its nose has dipped by `OFF`, its front wheels over nothing and its rear still on the deck (radians). */
+const DIP = 0.2
+/** When its front wheels roll off the deck's broken end. */
+const NOSE_OFF = VAN.rollTo + ((RAIN_GEO.deckEnd - AXLE[0] - FLIP_TO) / (EDGE - FLIP_TO)) * (VAN.off - VAN.rollTo)
+/** Rolling to the broken end, down on its wheels: and from `NOSE_OFF`, its nose dipping about its rear axle. */
+function rolling(t: number): { x: number; y: number; angle: number } {
+  const [, y0] = VAN.under
+  const u = (t - VAN.rollTo) / (VAN.off - VAN.rollTo)
+  const settle = 0.08 * Math.sin(Math.PI * Math.min(1, u * 3)) * (1 - u)
+  const x = FLIP_TO + (EDGE - FLIP_TO) * u
+  if (t <= NOSE_OFF) return { x, y: y0 + settle, angle: 0 }
+  // Its front wheels are over nothing (level, they rolled on along the air for most of a second): its nose goes down,
+  // turning about its rear axle, which rolls on along the deck.
+  const v = (t - NOSE_OFF) / (VAN.off - NOSE_OFF)
+  const a = DIP * v * v
+  return { x: x - AXLE[0] + AXLE[0] * Math.cos(a) + AXLE[1] * Math.sin(a), y: y0 + AXLE[1] + AXLE[0] * Math.sin(a) - AXLE[1] * Math.cos(a), angle: a }
+}
+/** Its pose and its speed as it goes off (`OFF`): the tip carries on from them. */
+const GONE = (() => {
+  const h = 1e-3
+  const a = rolling(VAN.off - h)
+  const b = rolling(VAN.off)
+  return { ...b, vx: (b.x - a.x) / h, vy: (b.y - a.y) / h, va: (b.angle - a.angle) / h }
+})()
+/** From a value and its speed to another at rest, over `T` seconds: `s` is the share of the way through. */
+const settleTo = (s: number, p0: number, v0: number, p1: number, T: number): number => {
+  const s2 = s * s
+  const s3 = s2 * s
+  return (2 * s3 - 3 * s2 + 1) * p0 + (s3 - 2 * s2 + s) * T * v0 + (-2 * s3 + 3 * s2) * p1
+}
 
 /**
  * The van's pose at show time `t` (from `DOWN.hotel.t` on; before it the rain builder drives it and must meet this
@@ -372,16 +410,16 @@ export function vanAt(t: number): { x: number; y: number; angle: number; air: bo
     return { x: FLIP_FROM + (FLIP_TO - FLIP_FROM) * u, y: y0 - FLIP_LIFT * Math.sin(Math.PI * u), angle: e * TAU, air: true }
   }
   if (t <= OFF) {
-    // Down on its wheels with a settle, and on to the broken end.
-    const u = (t - ROLL.to) / (OFF - ROLL.to)
-    const settle = 0.08 * Math.sin(Math.PI * Math.min(1, u * 3)) * (1 - u)
-    return { x: FLIP_TO + (EDGE - FLIP_TO) * u, y: y0 + settle, angle: TAU, air: false }
+    // Down on its wheels with a settle, and on to the broken end, its nose going down as its front wheels leave it.
+    const r = rolling(t)
+    return { x: r.x, y: r.y, angle: TAU + r.angle, air: false }
   }
   if (t <= OFF + TIP) {
-    // Tipping off the edge, nose down, clear of it: slow, as the rain's time is slow now.
-    const u = smoothstep((t - OFF) / TIP)
+    // Tipping off the edge, nose down, clear of it: on from the speed it rolled off at, slowing to its hang (slow, as
+    // the rain's time is slow now). (It stopped dead on the edge, and then began to tip.)
+    const s = Math.max(0, Math.min(1, (t - OFF) / TIP))
     const [hx, hy] = VAN.hang
-    return { x: EDGE + (hx - EDGE) * u, y: y0 + (hy - y0) * u * u, angle: TAU + VAN.hangTilt * u, air: true }
+    return { x: settleTo(s, GONE.x, GONE.vx, hx, TIP), y: settleTo(s, GONE.y, GONE.vy, hy, TIP), angle: TAU + settleTo(s, GONE.angle, GONE.va, VAN.hangTilt, TIP), air: true }
   }
   if (t <= SPLASH) {
     // The fall, on the rain's own clock: its progress is the rain's time since it tipped over the rain's time to the
@@ -393,10 +431,17 @@ export function vanAt(t: number): { x: number; y: number; angle: number; air: bo
     const [wx, wy] = VAN.water
     return { x: hx + (wx - hx) * p, y: hy + (wy - hy) * p * p, angle: TAU + VAN.hangTilt + (VAN.waterTilt - VAN.hangTilt) * p, air: true }
   }
-  // Sinking after the splash: down through the river to the bed over ten seconds, settling.
-  const s = smoothstep((t - SPLASH) / 10)
+  // Sinking after the splash: on down at the speed it hit the water, the river slowing it, and lost in the dark at the
+  // river's bottom by the crest, the summit's last bar (over ten seconds, eased from rest, it hung just under the
+  // surface for the two loudest bars of the cue, and he got out of it a ball's width down).
+  const u = Math.max(0, Math.min(1, (t - SPLASH) / VAN.sink))
+  const s = u * (1.6 - 0.6 * u)
   const [wx, wy] = VAN.water
-  return { x: wx + 0.4 * s, y: wy + (RAIN_GEO.bed - 0.6 - wy) * s, angle: TAU + VAN.waterTilt + 0.2 * s, air: false }
+  // It comes to rest on its nose: its lowest corner on the bed (with its middle 0.6 over the bed, as it was, its nose
+  // went half a cell down into the ground under the river).
+  const a = VAN.waterTilt + 0.2
+  const low = (VAN.size[0] / 2) * Math.sin(a) + (VAN.size[1] / 2) * Math.cos(a)
+  return { x: wx + 0.4 * s, y: wy + (RAIN_GEO.bed - low - wy) * s, angle: TAU + VAN.waterTilt + 0.2 * s, air: false }
 }
 
 /**

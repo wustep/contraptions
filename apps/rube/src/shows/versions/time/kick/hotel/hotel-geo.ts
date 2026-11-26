@@ -226,7 +226,10 @@ export function trainS(t: number): number {
   if (t < T.cl) return run(T.run3, T.cl, QUARTER)
   if (t < T.run4) return 2 * QUARTER
   if (t < T.lf) return run(T.run4, T.lf, 2 * QUARTER)
-  return 3 * QUARTER
+  // The last of the turn: as the drum comes level again they roll down off what was its wall onto its floor, back to
+  // where they stood (a whole circuit of it for its whole turn). They were left a ball's width up the wall of a level
+  // room for two seconds, and found there, stacked, when the picture came back to them.
+  return 3 * QUARTER + (QUARTER + s0) * ss((t - T.lf) / (T.level - T.lf))
 }
 /** A ball in the drum: round its path, turned with it. */
 export const inDrum = (who: Who, t: number): Pt => add(DRUM, rot(drumAngle(t), around(trainS(t) - BACK[who])))
@@ -305,7 +308,9 @@ function drift(who: Who, t: number): Pt {
   const from = LF_OFF[who]
   const u = ss((t - T.push) / 1.4)
   const v = ss((t - (T.catch - 1.6)) / 1.6)
-  const mid: Pt = [lerp(from[0], FORM_DRIFT[who][0], u), lerp(from[1], FORM_DRIFT[who][1], u)]
+  // One who was behind him on the floor and drifts to the far side of him goes over him, not through him.
+  const over = from[0] * FORM_DRIFT[who][0] < 0 ? 0.34 * Math.sin(Math.PI * u) : 0
+  const mid: Pt = [lerp(from[0], FORM_DRIFT[who][0], u), lerp(from[1], FORM_DRIFT[who][1], u) - over]
   const off: Pt = [lerp(mid[0], FORM[who][0], v), lerp(mid[1], FORM[who][1], v)]
   return add(add(c, off), bob(who, t))
 }
@@ -479,14 +484,34 @@ export function bundleAt(t: number): { at: Pt; turn: number; inCab: boolean } {
     const y = lerp(BUNDLE_SUITE[1], HOTEL_GEO.top + BUNDLE_CAB[1], u) - 0.25 * Math.sin(Math.PI * u)
     return { at: [x, y], turn: 0.1 * Math.sin(Math.PI * u), inCab: false }
   }
-  return { at: BUNDLE_SUITE, turn: 0.05 * Math.sin(c * 0.6), inCab: false }
+  // On the line when the three of them fetch up against it (bar 30): the bundle is plucked toward them and swings
+  // back, and back again, dying (it hung dead still, and nothing showed the line take their weight).
+  const k = tug(t)
+  return { at: [BUNDLE_SUITE[0] - 0.16 * k, BUNDLE_SUITE[1] + 0.2 * k], turn: 0.05 * Math.sin(c * 0.6) - 0.16 * k, inCab: false }
+}
+/** The pluck of the suite's line as they come to rest against it: 1 at its first reach, swinging and dying. */
+export function tug(t: number): number {
+  const u = t - T.catch
+  if (u < 0 || u > 6) return 0
+  return (1 - Math.exp(-u / 0.07)) * Math.exp(-u / 1.1) * Math.cos(u * 5.2)
 }
 
 /* ------------------------------------------------------------------ the camera's roll */
 
 /**
  * The camera turns with the drum (radians, clockwise on the screen), so that on the screen the room stands still and
- * gravity swings round it: from the brake coming off on the brass until the cut up to the van. Square everywhere
- * else (the cut is where it goes back to square: the whole turn is done by then but for a fifth).
+ * gravity swings round it: from the cut back from the van as it begins to go over (the off-beat after the brake comes
+ * off: the cutaway itself is square) until the cut up to the van again. Square everywhere else (the cut is where it
+ * goes back to square: the whole turn is done by then but for a fifth).
  */
-export const roll = (t: number): number => (t >= T.turn && t < T.away ? -drumAngle(t) : 0)
+export const roll = (t: number): number => (t >= T.fr && t < T.away ? -drumAngle(t) : adrift(t))
+/**
+ * Weightless, the frame floats too: from the cut back on bar 28 it leans slowly over one way and back the other, as
+ * everything in the hotel does, and is square again as the floor takes them (bar 31). A twelfth of a turn at most, in
+ * no hurry: nothing here is level, and nothing says which way is down.
+ */
+export function adrift(t: number): number {
+  const u = (t - T.off) / (T.emerge - T.off)
+  if (u <= 0 || u >= 1) return 0
+  return 0.13 * Math.sin(2 * Math.PI * u) * Math.sqrt(Math.sin(Math.PI * u))
+}

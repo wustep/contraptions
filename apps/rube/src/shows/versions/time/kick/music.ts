@@ -171,7 +171,14 @@ export const KICK = {
   hotel: bar(52),
   rain: bar(54),
 } as const
-export const UP_LAG = { limbo: 0.6, snow: 0.8, hotel: 1.1 } as const
+export const UP_LAG = {
+  // Limbo's kick is a fall that lands: off the tower's roof onto the ground at its foot (y 86.37) on the downbeat, and
+  // thrown up from there under gravity (12 cells a second a second) to cross the dark (y 67) at 16.35 cells a second:
+  // 0.892 s. (It was a turn in mid-air half way down the tower, 0.6 s under the crossing: a kick with no blow in it.)
+  limbo: (Math.sqrt(16.35 ** 2 + 2 * 12 * (86.37 - 67)) - 16.35) / 12,
+  snow: 0.8,
+  hotel: 1.1,
+} as const
 
 /** When the credits come, once the last chord has rung away in the dark. */
 export const CREDITS_AT = 277.0

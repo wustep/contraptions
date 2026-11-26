@@ -83,7 +83,9 @@ export function beam(p: p5, k: number, from: Pt, to: Pt, w0: number, w1: number,
     const g = ctx.createLinearGradient(from[0] * k, from[1] * k, to[0] * k, to[1] * k)
     g.addColorStop(0, rgba(color, a * share))
     g.addColorStop(0.7, rgba(color, a * share * 0.45))
-    g.addColorStop(1, rgba(color, a * share * 0.08))
+    // To nothing at its far end (left at a twelfth, eight cones deep, a long beam ended on a ruled edge across whatever
+    // it fell on: the train's, across the wet street, in the close shot of Mal).
+    g.addColorStop(1, rgba(color, 0))
     const h0 = (w0 * spread) / 2
     const h1 = (w1 * spread) / 2
     ctx.beginPath()

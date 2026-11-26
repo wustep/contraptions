@@ -1,9 +1,9 @@
 import type p5 from 'p5'
 import { mixHex, R, type Pt } from '../../../../../parts'
-import { beam, puff, rgba, sink, tear } from '../cast'
+import { beam, puff, rgba, sink, streak, tear } from '../cast'
 import { hash, type Ctx } from '../kit'
 import { FISCHER_DOWN } from '../stack'
-import { SNOW } from '../worlds'
+import { FISCHER, SNOW } from '../worlds'
 import {
   A_SHIFT,
   ARIADNE_SNOW,
@@ -20,6 +20,7 @@ import {
   GUARD_HAIR,
   GUARD_LAND,
   GUARDS,
+  HIT,
   kickTears,
   LIE_A,
   LIE_C,
@@ -60,7 +61,7 @@ function crossing(m: Motion, a: number, b: number, y: number): number {
   }
   return (lo + hi) / 2
 }
-const F_THROUGH = crossing(FISCHER_SNOW, T.shot, FISCHER_DOWN.t, FLOOR_Y + 0.45)
+const F_THROUGH = crossing(FISCHER_SNOW, HIT.sink, FISCHER_DOWN.t, FLOOR_Y + 0.45)
 const C_THROUGH = crossing(COBB, T.sink, T.out, FLOOR_Y + 0.45)
 const A_THROUGH = crossing(ARIADNE_SNOW, T.sink, T.out, FLOOR_Y + 0.45)
 
@@ -434,7 +435,9 @@ export function drawSnowPart(p: p5, c: Ctx, t: number, o: Pt): void {
     // The floor goes soft under them: Fischer where he is shot; Cobb and Ariadne by the gate as the case opens.
     // No ring out from the shot across the floor (a hairline ring, the one in the show): the flash at the rifle and
     // his going under at once are the hit.
-    sink(p, k, [SHOT_X, FLOOR_Y], t - T.shot - 0.3, F_THROUGH - T.shot - 0.3, 0.8)
+    // The blow itself is the streak behind him as it knocks him along the floor, in his colour, as every throw is.
+    streak(p, k, (s) => FISCHER_SNOW.at(s), HIT.from, t, FISCHER)
+    sink(p, k, [SHOT_X, FLOOR_Y], t - HIT.sink, F_THROUGH - HIT.sink, 0.8)
     sink(p, k, [LIE_C, FLOOR_Y], t - T.sink, C_THROUGH - T.sink, 0.75)
     sink(p, k, [LIE_A, FLOOR_Y], t - T.sink, A_THROUGH - T.sink, 0.7)
     drawCaseLines(ctx, c, t)
@@ -482,6 +485,23 @@ export function drawVaultPart(p: p5, c: Ctx, t: number, o: Pt): void {
       const r = 0.7 + 1.3 * (1 - Math.exp(-u / 0.25))
       // Thin and wide (strong and round, on the underside's dark it read as four lamps lit).
       for (const px of [-5.2, -2.1, 1.0, 4.1]) puff(p, k, [px, FLOOR_Y + 0.95 + fortDrop(t) - 0.2 * u], r, mixHex(SNOW.snowShade, SNOW.concreteDark, 0.45), 0.36 * a)
+    }
+    // The kick: the floor hits the bottom of its blown footing. The dust of it is driven out along the floor both ways
+    // from under the three of them, low and fast, and up the walls at the hall's ends, and hangs.
+    const v = t - T.kick
+    if (v >= 0 && v < 2.2) {
+      const y = FLOOR_Y + fortDrop(T.kick)
+      const come = Math.min(1, v / 0.03)
+      const fade = Math.exp(-v / 0.55)
+      const dust = mixHex(SNOW.snowShade, SNOW.concrete, 0.4)
+      for (const side of [-1, 1]) {
+        for (let j = 0; j < 6; j++) {
+          const out = (0.5 + 1.25 * j) * (1 - Math.exp(-v / (0.07 + 0.035 * j)))
+          const x = REST.c + side * out
+          if (x < -6.6 || x > 6.6) continue
+          puff(p, k, [x, y - 0.12 - (0.5 + 0.12 * j) * v], 0.5 + 0.22 * j + 0.9 * v, dust, 0.62 * come * fade * (1 - j / 9))
+        }
+      }
     }
   })
 }

@@ -5,11 +5,14 @@
 import type { Performance, ShowVersion } from '../src/shows/registry'
 import measured from '../../../scripts/shows/plans/time-onsets.json'
 import { STRIKES } from '../src/shows/versions/time/kick/hits'
-import { BEATS, BRASS, CREDITS_AT, DURATION, HALVES, KICK, LAST, ONSETS, PEAK, PIANO, PIANO_SPIN, PULSE, RECORDING, RELEASE, SEAM, STRINGS, SUMMIT, SWELL } from '../src/shows/versions/time/kick/music'
+import { BEATS, BRASS, CREDITS_AT, DURATION, HALVES, KICK, LAST, ONSETS, PEAK, PIANO, PIANO_SPIN, PULSE, RECORDING, RELEASE, SEAM, STRINGS, SUMMIT, SWELL, bar } from '../src/shows/versions/time/kick/music'
+import { CALVING, CRACK, Q, bolt, cabinY, towerFall, weightY } from '../src/shows/versions/time/kick/limbo/limbo-geo'
+import { HEAVE } from '../src/shows/versions/time/kick/rain/rain-city'
+import { FISCHER_SNOW, HIT, T as SNOW_T } from '../src/shows/versions/time/kick/snow/snow-geo'
 import { CARDS, CREDITS_OK, blackAt, creditsAt } from '../src/shows/versions/time/kick/credits'
 import { COVERED, PUNCHES, coverAt, rollAt } from '../src/shows/versions/time/kick/score'
 import { FIRST } from '../src/shows/versions/time/kick/seams'
-import { BAND, COLUMN, DOWN, OFF, RAIN_GEO, SLEEP_BANDS, SPLASH, UP, VAN, clock, depthAt, vanAt, weightless, LEVELS, DEPTH } from '../src/shows/versions/time/kick/stack'
+import { BAND, COLUMN, DOWN, LIMBO_GEO, OFF, RAIN_GEO, ROLL, SLEEP_BANDS, SPLASH, UP, VAN, clock, depthAt, vanAt, weightless, LEVELS, DEPTH } from '../src/shows/versions/time/kick/stack'
 import type { KickShow } from '../src/shows/versions/time/kick/show'
 import type { Who } from '../src/shows/versions/time/kick/kit'
 import { KID_ID } from '../src/shows/versions/time/kick/worlds'
@@ -22,8 +25,9 @@ type Check = (name: string, ok: boolean, detail?: string) => void
  * is below it. Each is a stretch of show seconds, said by the part that frames it.
  */
 const WIDE: [number, number][] = [
-  // The director's great wide of the stack, on the summit's first downbeat: the whole dream at once, while they rise
-  // from limbo into the vault.
+  // Limbo's kick: they hit the ground at the tower's foot on the summit's first downbeat and are thrown up out of the
+  // frame; on the off-beat, the director's great wide of the stack: the whole dream at once, while they rise from
+  // limbo into the vault.
   [183.247, 187.061],
   // Paris: the fold's wide, the far quai's fronts coming up and over (he is at the curve's foot).
   [41.2, 43.5],
@@ -31,10 +35,25 @@ const WIDE: [number, number][] = [
   // great wide of the fall into the sea as the city calves (he is under the water).
   [23.25, 27.052],
   [172.298, 174.69],
-  [155.4, 158.6],
-  // The snow: the cut to Mal on the piste above, the rifle, the shot (he is on the ledge below).
-  [143.279, 145.642],
-  // The hotel: the cutaway up to the van coming out of its flip, landing and rolling to the broken end (he is in the drum).
+  // Letting her go: the rope takes him up out of the frame, and the frame stays with her as she goes down into the dark
+  // (to the cut up to the roof as his cage reaches it).
+  [175.631, 178.016],
+  [152.77, 158.6],
+  // The brass and the swell: the cut, on each downbeat, to the level's own wide, the three of them dropping in at its
+  // top out of the dark (limbo's, on the peak, is its great wide above).
+  [91.824, 92.15],
+  [122.294, 123.15],
+  // The snow: Fischer goes on alone down the hall to the vault's door, the camera in after him (he waits on the
+  // ledge); the cut to Mal on the piste above, the rifle, the shot.
+  [141.6, 145.642],
+  // The rain: the cut to Mal on the pavement as the train's lamp comes on behind her, the camera drawing back from her
+  // to the van as it comes through (he is in the van, up the street); and the pull back to the bridge whole as the van
+  // drives out onto it, its broken end ahead (he is in the van, at the frame's left).
+  [74.688, 76.7],
+  [83.6, 86.129],
+  // The hotel: the cutaway up to the van as it begins to go over (bar 25 to the next off-beat but one), and the one to
+  // it coming out of its flip, landing and rolling to the broken end (he is in the drum).
+  [95.632, 97.077],
   [103.254, 107.068],
   // Home: the camera leaves him with the children and holds on the top, alone, to the last chord.
   [265.1, 274.62],
@@ -183,6 +202,71 @@ export function checkKick(perf: Performance, version: ShowVersion, check: Check)
   check('kick: the camera\'s roll never turns faster than a turn in six seconds', spin <= (2 * Math.PI) / 6, `${spin.toFixed(2)} rad/s at ${spinAt.toFixed(2)} s`)
   check('kick: the camera\'s biggest push is the river\'s, the last kick', PUNCHES.every(([p, s]) => p === KICK.rain || s < PUNCHES.find(([a]) => a === KICK.rain)![1]))
   check('kick: the show opens on its first frame', near(cam(0).cells, FIRST.cells, 1e-6))
+
+  // The layers inside the dream arrive as the others do, on a cut: on the brass, the swell and the peak the camera cuts
+  // to the level's own wide, and the frame before each is still in the dark over it (followed down, the downbeat fell
+  // with them half way through the dark and the level sliding up after it).
+  const layerCuts = ([['hotel', BRASS], ['snow', SWELL], ['limbo', PEAK]] as const).map(([level, t]) => {
+    const cut = cameraCuts.some((c) => c >= t - 1e-6 && c <= t + 0.005)
+    const before = cam(t - 0.05)
+    const after = cam(t + 0.05)
+    const dark = before.y + before.cells / 2 < BAND[level].top + 0.3
+    const lit = after.y + after.cells / 2 > BAND[level].top + 4
+    return cut && dark && lit ? '' : `${level}: cut ${cut}, dark before ${dark} (${(before.y + before.cells / 2).toFixed(2)}), the level after ${lit}`
+  }).filter(Boolean)
+  check('kick: the brass, the swell and the peak each arrive on a cut out of the dark to their level\'s wide', layerCuts.length === 0, layerCuts.join('; '))
+
+  // Letting her go is on its chord: the bolt is clear by the downbeat, and within a tenth of a second the rope has
+  // taken the cabin up and the weight down (eased from rest, nothing moved for a third of a second).
+  const up01 = cabinY(Q.letGo) - cabinY(Q.letGo + 0.1)
+  const down05 = weightY(Q.letGo + 0.5) - weightY(Q.letGo)
+  check('kick: he lets her go on the chord: the bolt clear, the cabin up and the weight down at once',
+    bolt(Q.letGo) < 0.01 && bolt(Q.letGo - 0.3) > 0.99 && up01 > 0.2 && down05 > 0.4 && Math.abs(cabinY(Q.roof) - cabinY(Q.roof + 1)) < 1e-6,
+    `cabin up ${up01.toFixed(2)} in 0.1 s, weight down ${down05.toFixed(2)} in 0.5 s`)
+
+  // Limbo's kick is a blow: he falls the tower's whole height, hits the ground at its foot on the downbeat, and is
+  // thrown up from there under gravity; it is seen close, and the cut out to the whole dream comes on the off-beat.
+  const hitY = at(KICK.limbo)[1]
+  check('kick: limbo\'s kick is a fall that lands: on the ground at the tower\'s foot on the downbeat, seen close, the great wide a half-beat after',
+    Math.abs(hitY - (LIMBO_GEO.ground - R)) < 0.02 && vel(KICK.limbo - 0.05)[1] > 10 && vel(KICK.limbo + 0.05)[1] < -20 &&
+    cam(KICK.limbo + 0.1).cells < 8 && cam(Q.tear + 0.05).cells > 60 && cameraCuts.some((c) => near(c, Q.tear, 1e-3)) && !cameraCuts.some((c) => near(c, KICK.limbo, 1e-3)),
+    `lands at y ${hitY.toFixed(2)} (ground ${(LIMBO_GEO.ground - R).toFixed(2)}), ${vel(KICK.limbo - 0.05)[1].toFixed(1)} then ${vel(KICK.limbo + 0.05)[1].toFixed(1)} c/s`)
+
+  // The prologue's one sign, the slab that slips on its crack, is still the slab that goes on bar 47 (the list it is
+  // counted in grew), and the drums come in on a blow: a tower's head in the sea on the peak's downbeat.
+  check('kick: the cracked slab is the one that falls on bar 47, and a tower is in the sea on the peak\'s downbeat',
+    CALVING[CRACK.slab]?.tower === CRACK.tower && near(CALVING[CRACK.slab].hit, bar(47), 1e-6) && CALVING.some((e) => e.big && near(e.hit, PEAK, 1e-6)))
+
+  // Limbo's kick drops something too: the tower stands until the downbeat and is down within the bar, and the city goes
+  // into the sea along the bay on the bar's beats and off-beats.
+  const cascade = CALVING.filter((e) => e.big && e.hit > KICK.limbo + 0.01 && e.hit <= bar(49) + 0.01)
+  check('kick: on limbo\'s kick the tower comes down, and the city after it on the bar\'s beats',
+    towerFall(KICK.limbo - 0.01) === null && (towerFall(KICK.limbo + 0.3)?.drop ?? 0) > 0.1 && (towerFall(bar(49))?.drop ?? 0) > 14 &&
+    cascade.length >= 8 && cascade.every((e) => onBeat(e.hit, 0.03)), `${cascade.length} towers`)
+
+  // The river after the splash: the van is on the bed by the crest (resting on it, not in it), he is the last out of
+  // it, and from there he only rises, to break the surface on the release.
+  const rest = vanAt(bar(55))
+  const lowest = rest.y + (VAN.size[0] / 2) * Math.abs(Math.sin(rest.angle)) + (VAN.size[1] / 2) * Math.abs(Math.cos(rest.angle))
+  let sinks = 0
+  for (let t = bar(55) + 0.4; t < RELEASE - 0.01; t += 0.02) sinks = Math.max(sinks, at(t + 0.02)[1] - at(t)[1])
+  check('kick: the van is on the river\'s bed by the crest, and from there he only rises, to the surface on the release',
+    Math.abs(lowest - RAIN_GEO.bed) < 0.05 && Math.abs(vanAt(bar(55) + 2).y - rest.y) < 1e-6 && at(bar(55))[1] > RAIN_GEO.river + 2 && sinks <= 1e-4 && at(RELEASE - 0.001)[1] < RAIN_GEO.river,
+    `van's lowest corner ${lowest.toFixed(2)} (bed ${RAIN_GEO.bed}); he is at ${at(bar(55))[1].toFixed(2)} on the crest; sinks ${sinks.toFixed(4)}`)
+
+  // Causes before effects. The van's flip has something to flip on: the heaved slab of the deck stands at its nose as
+  // it begins; and the corridor is not seen to turn before the van is seen to go over (a cut up to it on the brake's
+  // release). Mal's shot finds Fischer standing, knocks him along the floor, and only then does the floor take him.
+  const nose = vanAt(ROLL.from).x + VAN.size[0] / 2
+  check('kick: the van flips on the heaved slab of the deck, seen in a cut up to it as the corridor\'s brake comes off',
+    Math.abs(nose - HEAVE.x) < 0.15 && HEAVE.x < RAIN_GEO.deckEnd - 1 && cameraCuts.some((c) => near(c, ROLL.from, 1e-3)) &&
+    cam(ROLL.from + 0.3).y < BAND.rain.bottom && rollAt(ROLL.from + 0.3) === 0, `nose ${nose.toFixed(2)}, slab ${HEAVE.x}`)
+  const fAt = (t: number) => FISCHER_SNOW.at(t)
+  const stood = Math.hypot(fAt(SNOW_T.shot)[0] - fAt(SNOW_T.shot - 0.3)[0], fAt(SNOW_T.shot)[1] - fAt(SNOW_T.shot - 0.3)[1])
+  const knocked = fAt(HIT.to)[0] - fAt(HIT.from)[0]
+  check('kick: Mal\'s shot finds Fischer standing at the door, knocks him along the floor, and then the floor takes him',
+    stood < 1e-6 && knocked > 0.4 && Math.abs(fAt(HIT.to)[1] - fAt(HIT.from)[1]) < 1e-6 && HIT.from > SNOW_T.shot && fAt(HIT.sink + 0.6)[1] > fAt(HIT.sink)[1] + 0.2 &&
+    cameraCuts.some((c) => c > SNOW_T.shot && c < HIT.to), `stood ${stood.toFixed(3)}, knocked ${knocked.toFixed(2)}`)
 
   // The blink and the veil are full at their cuts, and nothing else is covered; the last chord cuts to black for good.
   check('kick: going under inside a blink, home through a veil of morning: full at their cuts, and only there',
