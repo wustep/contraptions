@@ -312,7 +312,8 @@ export function compose(): { show: KickShow; camera: (t: number) => Framing } {
   const show = new KickShow(legs, SETS(), DURATION, riders, company.sort((a, b) => a.from - b.from))
   show.markPlan = MARKS(legs, show)
   // Sitting in the van as it drives off, each of them drew a streak behind them in the window, as if thrown.
-  show.trailsOff = [[T_GO, SINK_AT.seat]]
+  // The same in the lift: pinned to its floor as the charges drive it down the shaft, they streaked as if falling.
+  show.trailsOff = [[T_GO, SINK_AT.seat], [HOTEL_T.blast, HOTEL_T.slam]]
   sparkInWides(
     (t) => show.where(t),
     STACK_WIDES.map((w) => [w.from, w.to, KICK.limbo]),
