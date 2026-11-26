@@ -69,6 +69,11 @@ export class Show {
    * apart and read as a string of other balls). A show opts in by overriding it.
    */
   public readonly trail?: 'discs' | 'smear'
+  /**
+   * Optional, 'smear' only: a shorter reach (cells) and a lower peak opacity for the streak than the engine's
+   * (2.5 R and 0.3). Only a streak longer or stronger than these is cut back; a slower ball's is drawn as before.
+   */
+  public readonly smearCap?: { reach: number; peak: number }
   /** Optional: true while the show wants no trail at all behind its balls (unset: always a trail). */
   trailOff?(t: number): boolean
 

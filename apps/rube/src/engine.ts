@@ -362,7 +362,7 @@ export function drawWorld(
         pts.push({ x: back.x, y: back.y, scale: back.scale })
       }
       pts.push({ x: here.x, y: here.y, scale: here.scale })
-      smear(p, pts, here.ball.color, sx, sy, k)
+      smear(p, pts, here.ball.color, sx, sy, k, show.smearCap)
     } else if (!here.ball.ghost) {
       // Only a fast ball leaves a trail: a ball rolling at the rail's pace is followed by the eye and needs none, and
       // the soft discs behind it read as a glow. It comes in with the speed, so it never pops on, and it is never
@@ -430,7 +430,7 @@ function paintRiders(
         pts.push({ x: prev.x, y: prev.y, scale: prev.scale ?? 1 })
       }
       pts.push({ x: rider.x, y: rider.y, scale })
-      smear(p, pts, rider.color, sx, sy, k)
+      smear(p, pts, rider.color, sx, sy, k, show.smearCap)
     } else if (!rider.ghost) {
       for (let n = 0; n < backs.length; n++) {
         const i = 4 - n
@@ -469,19 +469,21 @@ function smear(
   sx: (x: number) => number,
   sy: (y: number) => number,
   k: number,
+  cap?: { reach: number; peak: number },
 ): void {
   if (all.length < 2) return
-  // Walk back from the ball, keeping at most SMEAR_MAX of arc; the last kept segment is cut to fit.
+  // Walk back from the ball, keeping at most `reach` of arc; the last kept segment is cut to fit.
+  const reach = Math.min(SMEAR_MAX, cap?.reach ?? SMEAR_MAX)
   const pts: { x: number; y: number; scale: number }[] = [all[all.length - 1]]
   let len = 0
   for (let i = all.length - 2; i >= 0; i--) {
     const a = pts[0]
     const b = all[i]
     const d = Math.hypot(b.x - a.x, b.y - a.y)
-    if (len + d >= SMEAR_MAX) {
-      const f = d > 1e-9 ? (SMEAR_MAX - len) / d : 0
+    if (len + d >= reach) {
+      const f = d > 1e-9 ? (reach - len) / d : 0
       pts.unshift({ x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f, scale: a.scale + (b.scale - a.scale) * f })
-      len = SMEAR_MAX
+      len = reach
       break
     }
     pts.unshift(b)
@@ -503,11 +505,11 @@ function smear(
     left.push([sx(pts[i].x) + nx, sy(pts[i].y) + ny])
     right.push([sx(pts[i].x) - nx, sy(pts[i].y) - ny])
   }
-  // Clear at the tail to about 0.3 at the ball, along the streak's own line. Straight onto the canvas, inside a
-  // save and restore, so p5's note of the fill it last set stays true.
+  // Clear at the tail to about 0.3 at the ball (or the show's lower peak), along the streak's own line. Straight onto
+  // the canvas, inside a save and restore, so p5's note of the fill it last set stays true.
   const c = p.color(color)
   const rgb = `${Math.round(p.red(c))}, ${Math.round(p.green(c))}, ${Math.round(p.blue(c))}`
-  const top = Math.min(0.3, 0.1 + 0.2 * (len / SMEAR_MAX))
+  const top = Math.min(cap?.peak ?? 0.3, 0.3, 0.1 + 0.2 * (len / SMEAR_MAX))
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const tail = pts[0]
   const head = pts[n]
